@@ -1,0 +1,45 @@
+/* Only demo */
+@media (max-width: 1000px) {
+  .welcome-message {
+    display: none;
+  }
+}
+
+h3 small {
+	font-size: 75%;
+}
+
+.vcenter {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.vbottom {
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+
+a.navbar-minimalize.btn-primary.btn-outline:hover .fa-bars {
+  color: white;
+}
+
+a.navbar-minimalize.btn-primary.btn-outline:focus, a.navbar-minimalize.btn-primary.btn-outline:active {
+  background-color: #f3f3f4;
+}
+
+a.navbar-minimalize.btn-primary.btn-outline:focus .fa-bars, a.navbar-minimalize.btn-primary.btn-outline:active .fa-bars {
+  color: $primary;
+}
+
+a.navbar-minimalize.btn-primary.btn-outline:focus:hover .fa-bars, a.navbar-minimalize.btn-primary.btn-outline:active:hover .fa-bars {
+  color: white;
+}
+
+a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn-primary.btn-outline:active:hover {
+  background-color: $primary;
+}
+
+.project_is_billable .checkbox label {
+  padding-left: 0px;
+}

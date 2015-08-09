@@ -1,0 +1,41 @@
+// Font
+$font-stack: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+// Basic Colors
+$primary: #3C8DC5;           // Primary color
+$default: #7D8087;      // Default color
+$success: #01579B;           // Success color
+$info: #A1C436;          // Info color
+$warning: #e58646;         // Warrning color
+$danger: #ed5565;            // Danger color
+
+// Various colors
+$text-color: #676a6c;           // Body text
+$gray: #f3f3f4;                 // Background wrapper color
+$light-gray: #d1dade;           // Default label, badget
+$label-badget-color: #5e5e5e;
+$light-blue: #f3f6fb;
+
+// Spiner color and margin
+$spin-color: $primary;
+$spin-margin: 0 auto;
+
+// IBOX colors ( default panel colors)
+$border-color: #e7eaec;   // IBox border
+$ibox-title-bg: white;    // IBox Background header
+$ibox-content-bg: white;  // IBox Background content
+
+//Sidebar width
+$sidebar-width: 180px;
+
+// Boxed layout width
+$boxed-width: 1200px;
+$boxed-backgound: image-url("patterns/shattered.png");
+
+//Border radius for buttons
+$btn-border-radius: 3px;
+
+//Navigation
+$nav-bg: #1f2532;
+$nav-profile-pattern: image-url("patterns/binding_dark.png") no-repeat;
+$nav-text-color: #c5ccd7;

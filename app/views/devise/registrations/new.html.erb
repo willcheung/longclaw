@@ -1,0 +1,40 @@
+<div class="middle-box text-center loginscreen animated">
+  <div>
+      <div>
+          <h1 class="logo-name">IN+</h1>
+      </div>
+      <p>Your personal secretary organizing your emails and filling out your timesheets!</p>
+
+      <a class="btn btn-md btn-primary btn-block" href="<%= user_omniauth_authorize_url(:google_oauth2) %>">Sign Up Using Google</a>
+
+      <!--
+      <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+        <%= devise_error_messages! %>
+
+        <div class="field">
+          <%= f.label :email %><br />
+          <%= f.email_field :email, autofocus: true %>
+        </div>
+
+        <div class="field">
+          <%= f.label :password %>
+          <% if @validatable %>
+          <em>(<%= @minimum_password_length %> characters minimum)</em>
+          <% end %><br />
+          <%= f.password_field :password, autocomplete: "off" %>
+        </div>
+
+        <div class="field">
+          <%= f.label :password_confirmation %><br />
+          <%= f.password_field :password_confirmation, autocomplete: "off" %>
+        </div>
+
+        <div class="actions">
+          <%= f.submit "Sign up" %>
+        </div>
+      <% end %>
+
+      <%= render "devise/shared/links" %>
+      -->
+  </div>
+</div>

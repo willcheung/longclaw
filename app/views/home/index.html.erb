@@ -1,0 +1,78 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Home</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Projects You've Worked On</h5>
+            </div>
+            <div class="ibox-content">
+                <div class="row">
+                    <div class="col-lg-9">
+                        <% if @auth != nil %>
+                        <% @auth.each do |key, value| %>
+                          <h1><%= key %> </h1>
+                          <p><%= value %> </p>
+                        <% end %>
+                        <% end %>
+                    </div>
+                    <div class="col-lg-3">
+                        <ul class="stat-list">
+                            <li>
+                                <h2 class="no-margins">2,346</h2>
+                                <small>Total orders in period</small>
+                                <div class="stat-percent">48% <i class="fa fa-level-up text-navy"></i></div>
+                                <div class="progress progress-mini">
+                                    <div style="width: 48%;" class="progress-bar"></div>
+                                </div>
+                            </li>
+                            <li>
+                                <h2 class="no-margins ">4,422</h2>
+                                <small>Orders in last month</small>
+                                <div class="stat-percent">60% <i class="fa fa-level-down text-navy"></i></div>
+                                <div class="progress progress-mini">
+                                    <div style="width: 60%;" class="progress-bar"></div>
+                                </div>
+                            </li>
+                            <li>
+                                <h2 class="no-margins ">9,180</h2>
+                                <small>Monthly income from orders</small>
+                                <div class="stat-percent">22% <i class="fa fa-bolt text-navy"></i></div>
+                                <div class="progress progress-mini">
+                                    <div style="width: 22%;" class="progress-bar"></div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Get Started</h5>
+            </div>
+            <div class="ibox-content">
+                <button type="button" class="btn btn-info btn-lg">
+                    <i class="fa fa-clock-o"></i>
+                    &nbsp;Track Time
+                </button>
+                <div class="pull-right m-t-md m-r-xl">Fill in your timesheet</div>
+                <button type="button" class="btn btn-plain btn-md">
+                    <i class="fa fa-briefcase"></i>
+                    &nbsp;Create Projects
+                </button>
+                <div class="pull-right m-t-md m-r-xl"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="account-modal" class="modal fade" aria-hidden="true">
+</div>
+

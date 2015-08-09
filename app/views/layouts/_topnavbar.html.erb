@@ -1,0 +1,35 @@
+<div class="row border-bottom">
+    <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+        <div class="navbar-header">
+            <a class="navbar-minimalize minimalize-style-2 btn btn-primary btn-outline" href="#"><i class="fa fa-bars"></i> </a>
+            <form role="search" class="navbar-form-custom" method="post" action="">
+                <div class="form-group">
+                    <span class="fa fa-search"></span><input type="text" placeholder="Search" class="form-control" name="top-search" id="top-search" style="border: 1px;"/>
+                </div>
+            </form>
+        </div>
+        <ul class="nav navbar-top-links navbar-right">
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="fa fa-question-circle fa-lg"></i>
+                </a>
+                <ul class="dropdown-menu">
+                        <li><a href="">Getting Started</a></li>
+                        <li><a href="">Contact Support</a></li>
+                    </ul>
+            </li>
+            <li class="divider"></li>
+            <li class="dropdown">
+                <a data-toggle="dropdown" class="dropdown-toggle" href="#">  
+                    <span class="m-r-xs"><img alt="image" class="img-circle" style="width:30px;" src="<%= current_user.image_url %>"/></span> 
+                    <strong class="font-bold"><%= get_full_name(current_user) %></strong><b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="">Settings</a></li>
+                    <li class="divider"></li>
+                    <li><a href="<%= destroy_user_session_path %>">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</div>

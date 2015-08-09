@@ -1,0 +1,94 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Projects</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li class="active">
+                <strong>Projects</strong>
+            </li>
+        </ol>
+    </div>
+    <div class="col-lg-2">
+        <%= link_to '+ New Project', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="wrapper wrapper-content animated fadeInUp">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="col-lg-3">
+                        <div class="btn-group">
+                            <div class="font-bold m-b-xs">Project Status:</div>
+                            <button class="btn btn-sm btn-white" type="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                            <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;Active&nbsp;&nbsp;&nbsp;</button>
+                            <button class="btn btn-sm btn-white" type="button">Archived</button>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="btn-group">
+                            <div class="font-bold m-b-xs">Project Role:</div>
+                            <button class="btn btn-sm btn-white" type="button">I'm Project Owner</button>
+                            <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;&nbsp;I'm Member&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                        </div>
+                    </div>
+                    <div class="col-lg-offset-3 col-lg-3">
+                        <div class="font-bold">&nbsp;</div>
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <% @projects.each do |account,projects| %>
+                    <div class="clear">
+                    <h2><%= account.name %> <span class="badge vcenter"> <%= projects.size %></span></h2>
+                    <% projects.each do |p| %>
+                    <div class="col-lg-6 m-b-sm">
+                        <div class="ibox-title">
+                            <div class="col-sm-9" style="padding-left:0">
+                                <h3><a href="<%= project_path(p) %>"><%= p.name %></a> &nbsp;&nbsp;&nbsp;&nbsp;<small><%= p.project_code %></small></h3>
+                            </div>
+                            <div class="col-lg-3 team-members m-t-none">
+                                <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a1.jpg') %>"></a>
+                                <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
+                                <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a3.jpg') %>"></a>
+                            </div>
+                        </div>
+                        <div class="ibox-content">
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <p><small>Budgeted:</small><br/> <big><%= get_value_or_na(p.budgeted_hours) %></big></p>
+                                </div>
+                                <div class="col-sm-2">
+                                    <p><small>Actual:</small><br/> <big><%= @total_hours["#{p.id}"] ||= 0.0 %>h</big></p>
+                                </div>
+                                <div class="col-sm-2">
+                                    <p><small>Remaining:</small><br/> <big>150h</big></p>
+                                </div>
+                                <div class="col-sm-2">
+                                    <p><small>Duration:</small><br/> <big>53d</big></p>
+                                </div>
+                                <div class="col-sm-3 col-sm-offset-1">
+                                    <div class="progress">
+                                      <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: 60%;">
+                                        60%
+                                      </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% end %>
+                </div>
+                    <% end %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%= render 'projects/modal', modal_id: 'new_project_modal' %>

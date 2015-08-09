@@ -1,0 +1,43 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Create New Account</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= accounts_path %>">Accounts</a>
+            </li>
+            <li class="active">
+                <strong>New</strong>
+            </li>
+        </ol>
+    </div>
+    <div class="col-lg-2">
+
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+	<div class="row">
+		<div class="ibox float-e-margins">
+			<div class="col-sm-6 b-r">
+      	<div class="ibox-content">  
+				  <%= simple_form_for @account, :html => { :class => "form-horizontal" } do |f| %>
+				   
+				      <%= f.input :name, :required => true %>
+				      <%= f.input :website, :hint => "(optional)", :prepend => "http://", :input_html => { :class => "col-lg-10" } %>
+
+				      <%= f.input :address, :input_html => { :class => "col-lg-10" } %>
+				      <%= f.input :phone, :input_html => { :class => "col-lg-10" } %>
+				      <%= f.input :description, :input_html => { :class => "col-lg-10" } %>
+
+				      <%= f.button :submit, :button_html => { :class => "btn btn-sm btn-primary m-t-n-xs" } %>
+				  <% end %>
+
+				<%= link_to 'Back', accounts_path %>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

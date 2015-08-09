@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  account_id: 1
+  billable: false
+  description: MyText
+
+two:
+  name: MyString
+  account_id: 1
+  billable: false
+  description: MyText
