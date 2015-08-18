@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150702212857) do
+ActiveRecord::Schema.define(version: 20150817185033) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -48,13 +48,17 @@ ActiveRecord::Schema.define(version: 20150702212857) do
 
   create_table "contacts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.uuid     "account_id"
-    t.string   "first_name", default: "", null: false
-    t.string   "last_name",  default: "", null: false
-    t.string   "email",      default: "", null: false
-    t.string   "phone",      default: "", null: false
-    t.string   "title",      default: "", null: false
-    t.datetime "created_at",              null: false
-    t.datetime "updated_at",              null: false
+    t.string   "first_name",                 default: "", null: false
+    t.string   "last_name",                  default: "", null: false
+    t.string   "email",           limit: 64, default: "", null: false
+    t.string   "phone",           limit: 32, default: "", null: false
+    t.string   "title",                      default: "", null: false
+    t.datetime "created_at",                              null: false
+    t.datetime "updated_at",                              null: false
+    t.string   "alt_email",       limit: 64
+    t.string   "mobile",          limit: 32
+    t.text     "background_info"
+    t.string   "department"
   end
 
   create_table "harvest_csv_import", id: false, force: :cascade do |t|

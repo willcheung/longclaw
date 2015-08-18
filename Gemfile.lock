@@ -71,6 +71,7 @@ GEM
     execjs (2.5.2)
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
+    ffaker (2.1.0)
     globalid (0.3.5)
       activesupport (>= 4.1.0)
     hashie (3.4.2)
@@ -198,6 +199,7 @@ DEPENDENCIES
   cocoon
   coffee-rails (~> 4.0.1)
   devise (~> 3.4.1)
+  ffaker
   jbuilder (~> 1.2)
   jquery-rails
   omniauth-google-oauth2

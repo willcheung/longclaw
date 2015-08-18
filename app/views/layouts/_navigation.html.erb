@@ -18,14 +18,14 @@
             <li class="<%= is_active_controller('home') %>">
                 <a href="<%= root_path %>"><i class="fa fa-home"></i> <span class="nav-label">Home</span></a>
             </li>
-            <li class="<%= is_active_controller('contacts') %>">
-                <a href="<%= contacts_path %>"><i class="fa fa-user"></i> <span class="nav-label">Contacts</span></a>
-            </li>
             <li class="<%= is_active_controller('accounts') %>">
                 <a href="<%= accounts_path %>"><i class="fa fa-th-large"></i> <span class="nav-label">Accounts</span></a>
             </li>
             <li class="<%= is_active_controller('projects') %>">
                 <a href="<%= projects_path %>"><i class="fa fa-briefcase"></i> <span class="nav-label">Projects</span></a>
+            </li>
+            <li class="<%= is_active_controller('contacts') %>">
+                <a href="<%= contacts_path %>"><i class="fa fa-user"></i> <span class="nav-label">Contacts</span></a>
             </li>
             <li class="">
                 <a href=""><i class="fa fa-thumb-tack"></i> <span class="nav-label">Pinned Items</span></a>

@@ -13,6 +13,7 @@ class AccountsController < ApplicationController
   # GET /accounts/1.json
   def show
     @active_projects = @account.projects.where("projects.status = 'Active'")
+    @account_contacts = @account.contacts
   end
 
   # GET /accounts/new

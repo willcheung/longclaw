@@ -1,0 +1,43 @@
+# == Schema Information
+#
+# Table name: contacts
+#
+#  id              :uuid             not null, primary key
+#  account_id      :uuid
+#  first_name      :string           default(""), not null
+#  last_name       :string           default(""), not null
+#  email           :string(64)       default(""), not null
+#  phone           :string(32)       default(""), not null
+#  title           :string           default(""), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  alt_email       :string(64)
+#  mobile          :string(32)
+#  background_info :text
+#  department      :string
+#
+
+<%
+  require "ffaker"
+  puts "Loading contacts..."
+
+  department_list = [ "", "Sales", "Professional Services", "Clinical Operations", "Customer Success", "Marketing", "Medical Reviewers", "PMO", "Engineering", "Data Science & Engineering" ]
+  account_uuid = Account.pluck(:id)
+
+  for i in (1 .. rand(20) + 400) do
+%>
+contact_<%= i %>:
+  id          : <%= FFaker::Guid.guid %>
+  account_id  : <%= account_uuid.sample %>
+  first_name  : <%= first_name = FFaker::Name.first_name %>
+  last_name   : <%= last_name = FFaker::Name.last_name %>
+  title       : <%= FFaker::Job.title %>
+  department  : <%= department_list.sample %>
+  email       : <%= FFaker::Internet.email.sub(/^.+?@/, "#{first_name}#{last_name.first}@".downcase) %>
+  alt_email   : <%= FFaker::Internet.email.sub(/^.+?@/, "#{first_name}#{rand(9999)}@".downcase) if rand(10) < 3 %>
+  phone       : <%= FFaker::PhoneNumber.short_phone_number %>
+  mobile      : <%= FFaker::PhoneNumber.short_phone_number if rand(10) < 6 %>
+  created_at  : <%= created_at = (rand(60) + 2).days.ago + rand(600).minutes; created_at.to_s(:db) %>
+  updated_at  : <%= (created_at + rand(36_000).seconds).to_s(:db) %>
+  background_info : <%= FFaker::Lorem.paragraph[0,140] if rand(10) < 7 %>
+<% end %>
