@@ -45,7 +45,7 @@
                 <div class="col-lg-12">
                     <% @projects.each do |account,projects| %>
                     <div class="clear">
-                    <h2><%= account.name %> <span class="badge vcenter"> <%= projects.size %></span></h2>
+                    <h2><%= account.name %></h2>
                     <% projects.each do |p| %>
                     <div class="col-lg-4 m-b-md">
                         <div class="ibox-title" style="min-height:68px;">
@@ -62,7 +62,7 @@
                                     <p class="text-center">Last Activity<br/> <strong><%= time_ago_in_words(p.created_at) %> ago</strong></p>
                                 </div>
                                 <div class="col-xs-4">
-                                    <p class="text-center">Pinned Items<br/> <strong>2 <i class="fa fa-level-up"></i></strong></p>
+                                    <p class="text-center">Pinned Items<br/> <strong>2 <i class="fa fa-level-up text-info"></i></strong></p>
                                 </div>
                             </div>
                             <div class="row m-t-sm">

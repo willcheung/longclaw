@@ -68,8 +68,6 @@ a:hover, a:focus {
   font-weight: 400;
 }
 
-
-
 .text-uppercase {
   text-transform: uppercase;
 }
@@ -275,6 +273,7 @@ body.body-small .footer.fixed {
 .page-heading {
   border-top: 0;
   padding: 0px 10px 20px 10px;
+  //box-shadow: 0px 0px 2px 0px rgba(170,170,170,1);
 }
 
 .panel-heading h1, .panel-heading h2 {

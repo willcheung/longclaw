@@ -1,15 +1,15 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>Projects</h2>
+        <h2><%= @project.name %> &nbsp;&nbsp;&nbsp;&nbsp;<a href="#edit_project_modal" data-toggle="modal" class="btn btn-white btn-xs">Edit project</a></h2>
         <ol class="breadcrumb">
             <li>
                 <a href="<%= root_path %>">Home</a>
             </li>
             <li>
-                <a href="<%= accounts_path %>">Projects</a>
+                <a href="<%= projects_path %>">Projects</a>
             </li>
             <li class="active">
-                <strong><%= @project.name %></strong>
+                <%= @project.name %>
             </li>
         </ol>
     </div>
@@ -22,292 +22,268 @@
     <div class="col-lg-9">
         <div class="wrapper wrapper-content animated fadeInUp">
             <div class="ibox">
+                <div class="ibox-title">
+                    <div class="row">
+                        <div class="col-md-8">
+                                <div class="vdivide">
+                                    <div class="row vdivide">
+                                    <div class="col-sm-4 text-center">
+                                            <span>Last Activity</span>
+                                            <strong><%= time_ago_in_words(@project.created_at) + ' ago' %></strong>
+                                        </div>
+                                    <div class="col-sm-4 text-center">
+                                        <strong>123</strong>
+                                            <span>Conversations</span>
+                                        </div>
+                                    <div class="col-sm-4 text-center">
+                                        <strong>Inactive</strong>
+                                            <span>State</span>
+                                        </div>
+                                  </div>
+                                </div>
+                        </div>
+                    </div>  
+                </div>
+            
                 <div class="ibox-content">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="m-b-md">
-                                <a href="#edit_project_modal" data-toggle="modal" class="btn btn-white btn-xs pull-right">Edit project</a>
-                                <h2><%= @project.name %> &nbsp;&nbsp;&nbsp;&nbsp;<small><%= @project.project_code %></small></h2>
-                                <span>Account: <a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
+
+                    <div class="panel blank-panel">
+                        <div class="panel-heading">
+                            <div class="panel-options">
+                                <ul class="nav nav-tabs">
+                                    <li class="active"><a href="#conversations" data-toggle="tab">Conversations &nbsp;&nbsp;<span class="badge badge-primary">9+</span></a></li>
+                                    <li class=""><a href="#pinned" data-toggle="tab">Pinned Items &nbsp;&nbsp;<span class="badge badge-primary">9+</span></a></li>
+                                </ul>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Metric Widgets -->
-                    <div class="row">
-                        <div class="col-lg-7">
-                            <div class="widget border">
-                                <div class="row">
-                                    <div class="col-xs-3 text-center">
-                                        <span> Budgeted </span>
-                                        <h2 class="font-bold"><%= get_value_or_na(@project.budgeted_hours) %></h2>
-                                    </div>
-                                    <div class="col-xs-3 text-center">
-                                        <span> Total </span>
-                                        <h2 class="font-bold"><%= @grand_total_hours %></h2>
-                                    </div>
-                                    <div class="col-xs-3 text-center">
-                                        <span> Remaining </span>
-                                        <h2 class="font-bold">N/A</h2>
-                                    </div>
-                                    <div class="col-xs-3 text-center">
-                                        <span> Projected </span>
-                                        <h2 class="font-bold">N/A</h2>
-                                    </div>
-                                    <div class="col-xs-12 m-t">
-                                        <div class="progress">
-                                            <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: 60%;">
-                                                60%
+                        <div class="panel-body">
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="conversations">
+                                    <div style="margin-top:-37px;">
+                                        <div class="row comment-header-box">
+                                            <div class="col-lg-12">
+                                                <button type="button" class="btn btn-w-m btn-link btn-sm m-t-sm active">ADD NOTE</button>
+                                                <button type="button" class="btn btn-w-m btn-link btn-sm m-t-sm">ADD PROJECT STATUS</button>
+                                                <div class="col-lg-10" style="padding-top:7px;">
+                                                    <div class="form-group arrow_box">
+                                                      <textarea class="form-control" rows="3" id="comment" style="resize:none;border:none;" placeholder="Add a note here..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="m-t-lg">
+                                                    <%= link_to 'Add Note', '#', 'class' => 'btn btn-primary btn-sm' %>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-5">
-                            <div class="widget border">
-                                <div class="row">
-                                    <div class="col-xs-6 text-center">
-                                        <span> Planned Duration </span>
-                                        <h2 class="font-bold">200 <small>days</small></h2>
-                                        <div class="text-left col-xs-5" style="margin-top:19px;">Start: End:</div>
-                                        <div class="text-left col-xs-7" style="margin-top:19px;">12/23/15 2/15/16</div>
-                                    </div>
-                                    <div class="col-xs-6 text-center">
-                                        <span> Projected Duration</span>
-                                        <h2 class="font-bold">200 <small>days</small></h2>
-                                        <div class="text-left col-xs-12" style="margin-top:19px;">Projected End:</div>
-                                        <div class="text-left col-xs-12"> 12/23/15 </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <h2> Add Note, RAG Status </h2>
+                                    <div class="row m-t-md">
+                                        <div class="col-lg-12">
+                                            <div id="vertical-timeline" class="vertical-container dark-timeline">
+                                                <div class="vertical-timeline-block">
+                                                    <div class="vertical-timeline-icon success-bg">
+                                                        <i class="fa fa-envelope"></i>
+                                                    </div>
 
-                    <!-- Tabs -->
-                    <div class="row m-t-sm">
-                        <div class="col-lg-12">
-                            <div class="panel blank-panel">
-                                <div class="panel-heading">
-                                    <div class="panel-options">
-                                        <ul class="nav nav-tabs">
-                                            <li class="active"><a href="#tab-1" data-toggle="tab">Conversations</a></li>
-                                            <li class=""><a href="#tab-2" data-toggle="tab">Pinned Items</a></li>
-                                            <li class=""><a href="#tab-2" data-toggle="tab">Files</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                                    <div class="vertical-timeline-content">
+                                                        <h2>Proposed Project Timeline</h2>
+                                                        <p>
+                                                            Conference on the sales results for the previous year. Monica please examine sales trends in marketing and products. Below please find the current status of the sale.
+                                                        </p>
+                                                        <span class="vertical-date left">
+                                                            Today <br />
+                                                            <small>3:23pm</small>
+                                                        </span>
+                                                    </div>
+                                                </div>
 
-                                <div class="panel-body">
-                                    <div class="tab-content">
+                                                <div class="vertical-timeline-block">
+                                                    <div class="vertical-timeline-icon info-bg">
+                                                        <i class="fa fa-phone"></i>
+                                                    </div>
 
-                                        <% if false %>
-                                        <!-- Tasks -->
-                                        <div class="tab-pane active" id="tab-1">
-                                            <h5 class="text-right m-r-md"><big>Total:&nbsp;&nbsp; <strong><%= @grand_total_hours %> h</strong></big>&nbsp;</h5>
-                                            <ul class="todo-list m-t">
-                                                <% @tasks.each do |t| %>
-                                                <li>
-                                                    <div class="col-lg-9"><%= best_in_place t, :name, :as => :input, :activator => "#activator-#{t.id}", :html_attrs => { :size => 40 }, :ok_button => "Save", :ok_button_class => "btn btn-info btn-xs m-l-xs" %> <small class="m-l-sm"><a id="activator-<%= t.id %>" href="#">edit</a></small></div>
-                                                    <div class="col-lg-offset-0 text-right m-r-sm">  <%= @total_hours["#{t.id}"] %> h</div>
-                                                </li>
-                                                <% end %>
-                                            </ul>
-                                            <div class="input-group m-t-lg">
-                                                <input type="text" class="form-control" placeholder="Enter task name"> <span class="input-group-btn"> <button type="button" class="btn btn-primary">Add Task</button> </span>
+                                                    <div class="vertical-timeline-content">
+                                                        <h2>Meeting with Customer</h2>
+                                                        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since.</p>
+                                                        <span class="vertical-date left">
+                                                            Today <br />
+                                                            <small>3:23pm</small>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="vertical-timeline-block">
+                                                    <div class="vertical-timeline-icon warning-bg">
+                                                        <i class="fa fa-file-text"></i>
+                                                    </div>
+
+                                                    <div class="vertical-timeline-content">
+                                                        <h2>Weekly Project Status</h2>
+                                                        <p>Go to shop and find some products. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's. </p>
+                                                        <span class="vertical-date left"> Yesterday <br /><small>3:23pm</small></span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="vertical-timeline-block">
+                                                    <div class="vertical-timeline-icon danger-bg">
+                                                        <i class="fa fa-phone"></i>
+                                                    </div>
+
+                                                    <div class="vertical-timeline-content">
+                                                        <h2>Phone with Jeronimo</h2>
+                                                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Iusto, optio, dolorum provident rerum aut hic quasi placeat iure tempora laudantium ipsa ad debitis unde? Iste voluptatibus minus veritatis qui ut.</p>
+                                                        <span class="vertical-date left">Yesterday <br /><small>3:23pm</small></span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="vertical-timeline-block">
+                                                    <div class="vertical-timeline-icon primary-bg">
+                                                        <i class="fa fa-user-md"></i>
+                                                    </div>
+
+                                                    <div class="vertical-timeline-content">
+                                                        <h2>Go to the doctor dr Smith</h2>
+                                                        <p>Find some issue and go to doctor. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s. </p>
+                                                        <span class="vertical-date left">Yesterday <br /><small>3:23pm</small></span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="vertical-timeline-block">
+                                                    <div class="vertical-timeline-icon white-bg">
+                                                        <i class="fa fa-comments"></i>
+                                                    </div>
+
+                                                    <div class="vertical-timeline-content">
+                                                        <h2>Chat with Monica and Sandra</h2>
+                                                        <p>Web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like). </p>
+                                                        <span class="vertical-date left">Yesterday <br /><small>3:23pm</small></span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <% end %>
-
-                                        <!-- Pinned Emails -->
-                                        <div class="tab-pane" id="tab-2">
-
-                                            <table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Privacy</th>
-                                                        <th>Title</th>
-                                                        <th>Date</th>
-                                                        <th>Email</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
-                                                        </td>
-                                                        <td>
-                                                            Create project in webapp
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable.
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
-                                                        </td>
-                                                        <td>
-                                                            Various versions
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
-                                                        </td>
-                                                        <td>
-                                                            There are many variations
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
-                                                        </td>
-                                                        <td>
-                                                            Latin words
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                Latin words, combined with a handful of model Publicence structures
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
-                                                        </td>
-                                                        <td>
-                                                            The generated Lorem
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                The generated Lorem Ipsum is therefore always free from repetition, injected humour, or non-characteristic words etc.
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
-                                                        </td>
-                                                        <td>
-                                                            The first line
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
-                                                        </td>
-                                                        <td>
-                                                            The standard chunk
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested.
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
-                                                        </td>
-                                                        <td>
-                                                            Lorem Ipsum is that
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable.
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <span class="label label-warning"><i class="fa fa-unlock"></i> Public</span>
-                                                        </td>
-                                                        <td>
-                                                            Contrary to popular
-                                                        </td>
-
-                                                        <td>
-                                                            14.07.2014 10:16:36
-                                                        </td>
-                                                        <td>
-                                                            <p class="small">
-                                                                Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical
-                                                            </p>
-                                                        </td>
-
-                                                    </tr>
-
-                                                </tbody>
-                                            </table>
 
                                         </div>
                                     </div>
-
                                 </div>
 
+                                <div class="tab-pane" id="pinned">
+                                    <table class="table table-striped">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
+                                                </td>
+                                                <td>
+                                                    Create project in webapp
+                                                </td>
+
+                                                <td>
+                                                    14.07.2014 10:16:36
+                                                </td>
+                                                <td>
+                                                    <p class="small">
+                                                        Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable.
+                                                    </p>
+                                                </td>
+
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
+                                                </td>
+                                                <td>
+                                                    Various versions
+                                                </td>
+
+                                                <td>
+                                                    14.07.2014 10:16:36
+                                                </td>
+                                                <td>
+                                                    <p class="small">
+                                                        Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
+                                                    </p>
+                                                </td>
+
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
+                                                </td>
+                                                <td>
+                                                    There are many variations
+                                                </td>
+
+                                                <td>
+                                                    14.07.2014 10:16:36
+                                                </td>
+                                                <td>
+                                                    <p class="small">
+                                                        There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which
+                                                    </p>
+                                                </td>
+
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
+                                                </td>
+                                                <td>
+                                                    Latin words
+                                                </td>
+
+                                                <td>
+                                                    14.07.2014 10:16:36
+                                                </td>
+                                                <td>
+                                                    <p class="small">
+                                                        Latin words, combined with a handful of model Publicence structures
+                                                    </p>
+                                                </td>
+
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
+                                                </td>
+                                                <td>
+                                                    The generated Lorem
+                                                </td>
+
+                                                <td>
+                                                    14.07.2014 10:16:36
+                                                </td>
+                                                <td>
+                                                    <p class="small">
+                                                        The generated Lorem Ipsum is therefore always free from repetition, injected humour, or non-characteristic words etc.
+                                                    </p>
+                                                </td>
+
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
+                                                </td>
+                                                <td>
+                                                    The first line
+                                                </td>
+
+                                                <td>
+                                                    14.07.2014 10:16:36
+                                                </td>
+                                                <td>
+                                                    <p class="small">
+                                                        The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
+                                                    </p>
+                                                </td>
+
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -322,7 +298,7 @@
                     <img alt="image" class="img-circle" src="<%= image_path('a2.jpg') %>">
                     <img alt="image" class="img-circle" src="<%= image_path('a4.jpg') %>">
                     <img alt="image" class="img-circle" src="<%= image_path('a5.jpg') %>">
-                    <button class="btn btn-info btn-circle" type="button">
+                    <button class="btn btn-success btn-circle" type="button">
                         <i class="fa fa-plus"></i>
                     </button>
                 </dd>
@@ -334,19 +310,19 @@
             <% else %>
             <%= @project.description %>
             <% end %>
-            
+
             <ul class="list-group clear-list m-t-sm">
                 <li class="list-group-item first-item">
                     <strong>Status:</strong>
-                    <span class="label label-primary pull-right">Active</span>
+                    <span class="label label-default pull-right">Active</span>
                 </li>
                 <li class="list-group-item">
                     <strong>Project Owner:</strong>
                     <span class="pull-right"><%= get_full_name(@project.user) %></span>
                 </li>
                 <li class="list-group-item">
-                    <strong>Billable:</strong>
-                    <span class="pull-right"><%= get_yn(@project.is_billable) %></span>
+                    <strong>Account:</strong>
+                    <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
                 </li>
                 <li class="list-group-item small m-t-md first-item">
                     <span class="pull-right"><%= @project.updated_at.to_formatted_s(:long) %></span>

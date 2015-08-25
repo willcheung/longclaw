@@ -702,6 +702,10 @@ table.dataTable thead .sorting:after {
   font-size: 14px;
 }
 
+.todo-list.medium-list {
+  font-size: 13px;
+}
+
 .todo-list.small-list {
   font-size: 12px;
 }
@@ -1840,7 +1844,7 @@ a.forum-item-title:hover {
   margin-left: 60px;
   background: white;
   border-radius: 0.25em;
-  padding: 1em;
+  padding: .5em 1em;
 }
 .vertical-timeline-content:after {
   content: "";
@@ -1855,13 +1859,21 @@ a.forum-item-title:hover {
 
 .vertical-timeline-content p {
   margin: 1em 0;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 
 .vertical-timeline-content .vertical-date {
   float: left;
-  font-weight: 500;
+  font-weight: 300;
+}
+
+.vertical-timeline-content .vertical-date.left {
+  position: absolute;
+  width: 100%;
+  right: 17%;
+  top: 2px;
+  font-size: 11px;
 }
 
 .vertical-date small {
