@@ -16,6 +16,7 @@ Longclaw::Application.routes.draw do
     #resources :reports
 
     get "projects/show"
+    get "search/results"
   end
 
   devise_scope :user do

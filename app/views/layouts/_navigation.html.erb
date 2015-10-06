@@ -5,14 +5,12 @@
                 <div class="dropdown profile-element">
                     <a href="#">
                         <span class="clear">
-                            <span class="block m-t-xs">
-                                <strong class="font-bold">ContextSmith</strong>
-                            </span>
+                            <div class="block logo"><img/></div>
                         </span>
                     </a>
                 </div>
                 <div class="logo-element">
-                    CS
+                    <span style="font-weight:300">C</span>S
                 </div>
             </li>
             <li class="<%= is_active_controller('home') %>">
@@ -23,9 +21,6 @@
             </li>
             <li class="<%= is_active_controller('projects') %>">
                 <a href="<%= projects_path %>"><i class="fa fa-briefcase"></i> <span class="nav-label">Projects</span></a>
-            </li>
-            <li class="<%= is_active_controller('contacts') %>">
-                <a href="<%= contacts_path %>"><i class="fa fa-user"></i> <span class="nav-label">Contacts</span></a>
             </li>
             <li class="">
                 <a href=""><i class="fa fa-thumb-tack"></i> <span class="nav-label">My Pinned Items</span></a>

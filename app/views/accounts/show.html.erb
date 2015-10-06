@@ -58,8 +58,8 @@
 					        	<% @active_projects.each do |p| %>
 					              	<li>
 					              		<div class="col-lg-7"><a href="<%= project_path(p) %>"><%= p.name %></a></div>
-					              		<div class="col-lg-3"><small>239 conversations</small></div>
-					              		<div class="col-lg-offset-0 text-right m-r-sm"><small>active <%= rand(100) %>d ago</small></div>
+					              		<div class="col-lg-3"><small><%= rand(12..80) %> conversations</small></div>
+					              		<div class="col-lg-offset-0 text-right m-r-sm"><small>active <%= rand(60) %>d ago</small></div>
 					              	</li>
 					             <% end %>
 					        <% else %>
@@ -243,9 +243,7 @@
 					<strong>Address:</strong>
 					<span class="pull-right"> <%= @account.address %> </span>
 				</li>
-				<a href=""><img alt="image" src="https://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=260x150&maptype=roadmap
-					&markers=color:blue%7Clabel:S%7C40.702147,-74.015794&markers=color:green%7Clabel:G%7C40.711614,-74.012318
-					&markers=color:red%7Clabel:C%7C40.718217,-73.998284"></a>
+				<a href=""><img alt="image" src="https://maps.googleapis.com/maps/api/staticmap?center=World+Trade+Center,New+York,NY&zoom=13&size=260x150&maptype=roadmap&markers=color:green%7Clabel:G%7C40.711614,-74.012318"></a>
 					<li class="list-group-item small m-t-md first-item">
 						<span class="pull-right"><%= @account.updated_at.to_formatted_s(:long) %></span>
 						Last Updated:

@@ -40,6 +40,12 @@ a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn
   background-color: $primary;
 }
 
+.nav-header .logo {
+  height: auto;
+  background: url('/assets/logo-white.png') center no-repeat;
+  background-size: 130px;
+}
+
 .btn-circle-xs {
   width: 20px;
   height: 20px;
@@ -48,6 +54,10 @@ a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn
   text-align: center;
   font-size: 11px;
   line-height: 0.7;
+}
+
+.project-team-title {
+  line-height: 1.1;
 }
 
 .vdivide [class*='col-']:not(:last-child):after {
@@ -98,4 +108,51 @@ a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn
   border-bottom-color: #e5e6e7;
   border-width: 8px;
   margin-left: -8px;
+}
+.catchup-title a {
+  color: #999;
+}
+.catchup-title a:hover {
+  color: #555;
+}
+.catchup-title h2 {
+  font-weight: 500;
+}
+.catchup .projects ul{
+  line-height: 2;
+  font-size: 14px;
+}
+hr.catchup {
+  border: 0;
+  height: 0;
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+}
+h2.catchup-project {
+  position: relative;
+  text-align: left;
+  font-weight: 500;
+  margin-top: 30px;
+}
+h2.catchup-project span {
+  background: #fff;
+  padding-right: 15px;
+  position: relative;
+  z-index: 1;
+}
+h2.catchup-project:before {
+  border: 0;
+  height: 0;
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+  content: "";
+  display: block;
+  height: 1px;
+  position: absolute;
+    top: 50%;
+  width: 100%;
+}
+
+h2.catchup-project:before {
+  left: 0;
 }

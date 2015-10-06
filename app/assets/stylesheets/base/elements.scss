@@ -303,6 +303,7 @@
 
 .media-body {
   display: block;
+    width: auto;
 }
 
 .chat-element > .pull-left {
@@ -1741,11 +1742,21 @@ a.forum-item-title:hover {
   border-color: transparent  transparent transparent #f5f5f5;
 }
 
-.dark-timeline .vertical-timeline-block:nth-child(2n) .vertical-timeline-content:before,
-.dark-timeline.center-orientation .vertical-timeline-block:nth-child(2n) .vertical-timeline-content:before
+.dark-timeline .comment .vertical-timeline-content:before
 {
-  border-color: transparent #f5f5f5 transparent transparent;
+  border-color: transparent #fafafa transparent transparent ;
 }
+
+.dark-timeline.center-orientation .comment .vertical-timeline-content:before
+{
+  border-color: transparent transparent transparent #fafafa;
+}
+
+// .dark-timeline .vertical-timeline-block:nth-child(2n) .vertical-timeline-content:before,
+// .dark-timeline.center-orientation .vertical-timeline-block:nth-child(2n) .vertical-timeline-content:before
+// {
+//   border-color: transparent #f5f5f5 transparent transparent;
+// }
 
 .dark-timeline .vertical-timeline-content,
 .dark-timeline.center-orientation .vertical-timeline-content
@@ -1784,6 +1795,20 @@ a.forum-item-title:hover {
 }
 .vertical-timeline-block:last-child {
   margin-bottom: 0;
+}
+.vertical-timeline-block .comment .feed-element {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  overflow: visible;
+}
+.vertical-timeline-block .comment .vertical-timeline-content {
+  background-color: #fafafa;
+}
+.vertical-timeline-block .comment .vertical-timeline-content p,
+.vertical-timeline-block .comment .vertical-timeline-content input {
+  margin: 0.5em 0;
+  font-size: 0.95em;
+  color: #808486;
 }
 @media only screen and (min-width: 1170px) {
   .center-orientation .vertical-timeline-block {
@@ -1838,13 +1863,13 @@ a.forum-item-title:hover {
   }
 }
 
-
 .vertical-timeline-content {
   position: relative;
   margin-left: 60px;
   background: white;
   border-radius: 0.25em;
   padding: .5em 1em;
+  //border-bottom: 1px solid #e7eaec;
 }
 .vertical-timeline-content:after {
   content: "";
@@ -1891,6 +1916,7 @@ a.forum-item-title:hover {
   border: 7px solid transparent;
   border-right: 7px solid white;
 }
+
 @media only screen and (min-width: 768px) {
   .vertical-timeline-content h2 {
     font-size: 18px;
