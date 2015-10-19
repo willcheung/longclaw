@@ -1,201 +1,60 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- So that mobile will display zoomed in -->
-  <meta http-equiv="X-UA-Compatible" content="IE=edge"> <!-- enable media queries for windows phone 8 -->
-  <meta name="format-detection" content="telephone=no"> <!-- disable auto telephone linking in iOS -->
-  <title>ContextSmith Beta Sneak Peek</title>
-  
-  <style type="text/css">
-body {
-  margin: 0;
-  padding: 0;
-  -ms-text-size-adjust: 100%;
-  -webkit-text-size-adjust: 100%;
-}
-table {
-  border-spacing: 0;
-}
-table td {
-  border-collapse: collapse;
-}
-.ExternalClass {
-  width: 100%;
-}
-.ExternalClass,
-.ExternalClass p,
-.ExternalClass span,
-.ExternalClass font,
-.ExternalClass td,
-.ExternalClass div {
-  line-height: 100%;
-}
-.ReadMsgBody {
-  width: 100%;
-  background-color: #ebebeb;
-}
-table {
-  mso-table-lspace: 0pt;
-  mso-table-rspace: 0pt;
-}
-img {
-  -ms-interpolation-mode: bicubic;
-}
-.yshortcuts a {
-  border-bottom: none !important;
-}
-@media screen and (max-width: 659px) {
-  .force-row,
-  .container {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-@media screen and (max-width: 400px) {
-  .container-padding {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-  }
-}
-.ios-footer a {
-  color: #999999 !important;
-  text-decoration: underline;
-}
-</style>
-</head>
 
-<body style="margin:0; padding:0;" bgcolor="#f3f3f4" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+Hi <%= @user.first_name %>,
+<br/>
 
-<!-- 100% background wrapper (grey background) -->
-<table border="0" width="100%" height="100%" cellpadding="0" cellspacing="0" bgcolor="#f3f3f4">
-  <tr>
-    <td align="center" valign="top" bgcolor="#f3f3f4" style="background-color: #f3f3f4;">
+<p>Welcome to our sneak preview! ContextSmith is a smarter way to collaborate on projects. We automatically turn your customer emails into organized project insights news feeds.  Here's a recap of your projects.</p>
 
-      <br>
+Best,<br/>
+ContextSmith Team
+<br/><br/>
 
-      <!-- 600px container (white background) -->
-      <table border="0" width="660" cellpadding="0" cellspacing="0" class="container" style="width:660px;max-width:660px">
-        <tr>
-          <td class="container-padding header" align="left" style="font-family:Helvetica, Arial, sans-serif;font-size:24px;font-weight:bold;padding-bottom:12px;color:#DF4726;padding-left:24px;padding-right:24px">
-            <a href="http://www.contextsmith.com" target="_blank"><img src="http://www.contextsmith.com/files/theme/img/logo.png" style="width: 120px"/></a>
+<!-- User Content -->
+
+<!-- Header -->
+<table style="border-spacing:0;border-collapse:collapse;padding:0;margin:0 auto;width:580px">
+    <tbody>
+       <tr style="padding:0">
+          <td style="word-break:break-word;border-collapse:collapse;padding:0 0 10px;vertical-align:top;text-align:left;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
+             <p style="margin:0;text-align:center;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Prepared for <%= @user.first_name %> <%= @user.last_name %> by <span class="il">ContextSmith</span>. </p>
+             <h2 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:32px">Projects Recap</h2>
+             <h6 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:18px">Last two weeks (8/1 - 8/15)</h6>
           </td>
-        </tr>
-        <tr>
-          <td class="container-padding content" align="left" style="padding-left:24px;padding-right:24px;padding-top:12px;padding-bottom:12px;background-color:#ffffff">
-            <br>
+          <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
+       </tr>
+    </tbody>
+ </table>
 
-            <div class="body-text" style="font-family:Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;text-align:left;color:#333333">
-              Hi <%= @user.first_name %>,
-              <br/>
+ <div style="width:100%;padding-bottom:20px"></div>
 
-              <p>Welcome to our sneak preview! ContextSmith is a smarter way to collaborate on projects. We automatically turn your customer emails into organized project insights news feeds.  Here's a recap of your projects.</p>
-
-              Best,<br/>
-              ContextSmith Team
-              <br/><br/>
-
-              <!-- User Content -->
-
-              <!-- Header -->
-              <table style="border-spacing:0;border-collapse:collapse;padding:0;margin:0 auto;width:580px">
-                  <tbody>
-                     <tr style="padding:0">
-                        <td style="word-break:break-word;border-collapse:collapse;padding:0 0 10px;vertical-align:top;text-align:left;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
-                           <p style="margin:0;text-align:center;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Prepared for <%= @user.first_name %> <%= @user.last_name %> by <span class="il">ContextSmith</span>. </p>
-                           <h2 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:32px">Projects Recap</h2>
-                           <h6 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:18px">Last two weeks (8/1 - 8/15)</h6>
-                        </td>
-                        <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
-                     </tr>
-                  </tbody>
-               </table>
-
-               <div style="width:100%;padding-bottom:20px"></div>
-
-               <!-- Summary -->
-               <div style="margin-bottom:0;padding-bottom:20px">
-                       <h2 style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:400;margin-bottom:20px;color:#676a6c">1 project updated:</h2>
-                       <ul style="margin:0 0 10px;list-style:none;padding:0">
-                           <li style="margin:0 0 0 35px;padding:0;list-style-type:disc">
-                             <div style="font-weight:400;font-size:16px;margin-bottom:10px;color: #337ab7;">Stark Industries Project 1</div>
-                           </li>
-                           <div style="margin:0 0 0 35px;padding:0;">
-                                <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a1.jpg">
-                                <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a2.jpg">
-                                <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a3.jpg">
-                            </div>
-                       </ul>
-               </div>
-
-               <!-- Project Details -->
-              <div style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;padding:0;margin:0 0 20px">
-                  <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
-                     <tbody>
-                        <tr>
-                           <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
-                              <h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;line-height:24px;font-weight:bold;display:inline;background:#ffffff;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none">Stark Industries Project 1</span></h2>
-                           </th>
-                           <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
-                        </tr>
-                     </tbody>
-                  </table>
-                  <p style="margin:0;text-align:left;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Total 32 conversations • 3 collaborators • Last activity 6 days ago</p>
-
-                  <p> Some random stuff here blah blah blah!</p>
+ <!-- Summary -->
+ <div style="margin-bottom:0;padding-bottom:20px">
+         <h2 style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:400;margin-bottom:20px;color:#676a6c">1 project updated:</h2>
+         <ul style="margin:0 0 10px;list-style:none;padding:0">
+             <li style="margin:0 0 0 35px;padding:0;list-style-type:disc">
+               <div style="font-weight:400;font-size:16px;margin-bottom:10px;color: #337ab7;">Stark Industries Project 1</div>
+             </li>
+             <div style="margin:0 0 0 35px;padding:0;">
+                  <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a1.jpg">
+                  <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a2.jpg">
+                  <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a3.jpg">
               </div>
+         </ul>
+ </div>
 
-           </div>
-          </td>
-        </tr>
+ <!-- Project Details -->
+<div style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;padding:0;margin:0 0 20px">
+    <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
+       <tbody>
+          <tr>
+             <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
+                <h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;line-height:24px;font-weight:bold;display:inline;background:#ffffff;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none">Stark Industries Project 1</span></h2>
+             </th>
+             <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
+          </tr>
+       </tbody>
+    </table>
+    <p style="margin:0;text-align:left;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Total 32 conversations • 3 collaborators • Last activity 6 days ago</p>
 
-
-        <!-- footer -->
-        <tr>
-          <td class="container-padding footer-text" align="left" style="font-family:Helvetica, Arial, sans-serif;font-size:12px;line-height:16px;color:#999999;padding-left:24px;padding-right:24px">
-            
-            <table style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; padding: 0;">
-               <tr style="vertical-align: top; text-align: left; width: 100%; padding: 0;" align="left">
-                  <td class="large-width" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; display: table-cell; padding: 0;" align="left" valign="top">
-                     <span class="driver-header-text" style="padding-bottom: 15px;padding-top:5px; display: inline-block; font-size: 10px;">
-                        You are receiving this email because you signed in at <a href="http://www.contextsmith.com" style="color:#999999">ContextSmith.com</a>. We will notify you as soon as our beta release is ready!
-                     </span>
-                  </td>
-               </tr>
-               <tr class="share-section" style="vertical-align: top; text-align: left; width: 100%; display: block; padding: 0;" align="left">
-                  <td class="med-width" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; display: table-cell; width: 63%; padding: 5px 0 0;" align="left" valign="top">
-                     <span class="issued invite" style="font-size: 11px; color: #b2b2b2; display: inline-block;">
-                     <span class="invite-span" style="text-align: left;">
-                     <strong>ContextSmith, Inc.</strong><br>
-                        <span class="ios-footer">
-                           Made in Mountain View, CA<br>
-                        </span>
-                     <a href="http://www.contextsmith.com" style="color:#aaa">www.contextsmith.com</a><br>
-                     </span>
-                     </span>
-                  </td>
-                  <td class="sm-width" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: right; display: table-cell; width: 300px; padding: 0;" align="right" valign="top">
-                     <span class="issued share-icon-span" style="font-size: 11px; color: #b2b2b2; display: inline-block; text-align: right;">
-                     <a href="https://www.facebook.com/ContextSmith/" target="_blank" style="color: #b2b2b2 !important; text-decoration: underline; font-size: 11px;">
-                     <img width="8" height="16" class="share-icons" id="cid_share_facebook" src="http://d1a3f4spazzrp4.cloudfront.net/receipt-new/facebook@2x.png" style="outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; float: none; clear: none; display: inline; padding: 3px 0 0 10px; border: none;" align="none" /></a>
-                     <a href="https://twitter.com/ContextSmith" target="_blank" style="color: #b2b2b2 !important; text-decoration: underline; font-size: 11px;">
-                     <img width="17" height="14" class="share-icons" id="cid_share_twitter" src="http://d1a3f4spazzrp4.cloudfront.net/receipt-new/twitter@2x.png" style="outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; float: none; clear: none; display: inline; padding: 3px 0 0 10px; border: none;" align="none" /></a>
-                     <a href="mailto:info@contextsmith.com" style="color: #b2b2b2 !important; text-decoration: underline; font-size: 11px;">
-                     <img width="20" height="12" class="share-icons" id="cid_share_email" src="http://d1a3f4spazzrp4.cloudfront.net/receipt-new/mail@2x.png" style="outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; float: none; clear: none; display: inline; padding: 3px 0 0 10px; border: none;" align="none" /></a></span>
-                  </td>
-               </tr>
-            </table>
-
-          </td>
-        </tr>
-      </table>
-<!--/600px container -->
-
-
-    </td>
-  </tr>
-</table>
-<!--/100% background wrapper-->
-
-</body>
-</html>
+    <p> Some random stuff here blah blah blah!</p>
+</div>
+          
