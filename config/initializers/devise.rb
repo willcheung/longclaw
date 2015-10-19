@@ -1,6 +1,11 @@
 # Use this hook to configure devise mailer, warden hooks and so forth.
 # Many of these configuration options can be set straight in your model.
 Devise.setup do |config|
+  # Load google api key config file
+  api_keys_config_file = File.join(Rails.root,'config','api_keys.yml')
+  raise "#{api_keys_config_file} is missing!" unless File.exists? api_keys_config_file
+  api_keys_config = YAML.load_file(api_keys_config_file)[Rails.env].symbolize_keys
+
   # The secret key used by Devise. Devise uses this key to generate
   # random tokens. Changing this key will render invalid all existing
   # confirmation, reset password and unlock tokens in the database.
@@ -10,7 +15,7 @@ Devise.setup do |config|
   # Configure the e-mail address which will be shown in Devise::Mailer,
   # note that it will be overwritten if you use your own mailer class
   # with default "from" parameter.
-  config.mailer_sender = 'please-change-me-at-config-initializers-devise@example.com'
+  config.mailer_sender = 'no-reply@contextsmith.com'
 
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'
@@ -241,7 +246,7 @@ Devise.setup do |config|
             'email',
             'profile']
   }
-  config.omniauth :google_oauth2, "9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com", "kMCmqlzYF6pYp6L8-SIP8IGY", google_oauth2_options
+  config.omniauth :google_oauth2, api_keys_config[:google_client_id], api_keys_config[:google_client_secret], google_oauth2_options
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

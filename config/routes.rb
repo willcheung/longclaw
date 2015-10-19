@@ -1,6 +1,5 @@
 Longclaw::Application.routes.draw do
 
-  resources :timesheets
   devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
   # You can have the root of your site routed with "root"
 
@@ -11,9 +10,6 @@ Longclaw::Application.routes.draw do
     resources :accounts 
     resources :contacts
     resources :projects
-    resources :tasks
-    resources :timesheets
-    #resources :reports
 
     get "projects/show"
     get "search/results"

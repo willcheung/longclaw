@@ -32,6 +32,7 @@ group :development do
   gem 'annotate', '~> 2.6.8'
   gem "rails-erd" 								# run 'brew install graphviz' first, then 'bundle exec erd' to generate erd
   gem 'ffaker'										# generate fake data
+  gem "letter_opener"							# email preview
 end
 
 # Use ActiveModel has_secure_password

@@ -38,12 +38,15 @@ class User < ActiveRecord::Base
 	belongs_to 	:organization
 	has_many		:projects
   has_many    :accounts
-  has_many    :timesheets
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :validatable, :omniauthable
+
+  #after_create :send_welcome_email_to_user
+  after_create :send_beta_teaser_email_to_user
+  after_create :create_user_organization
 
   def self.find_for_google_oauth2(auth, signed_in_resource=nil)
     info = auth.info
@@ -69,7 +72,20 @@ class User < ActiveRecord::Base
           oauth_expires_at: Time.at(credentials["expires_at"])
         )
       end
-   end
-end
+    end
+  end
 
+  private
+
+  def send_welcome_email_to_user
+    UserMailer.welcome_email(self).deliver_later
+  end
+
+  def send_beta_teaser_email_to_user
+    UserMailer.beta_teaser_email(self).deliver_later
+  end
+
+  def create_user_organization
+    # Creates seperate organization for users even if they have the same domain
+  end
 end

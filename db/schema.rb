@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150817185033) do
+ActiveRecord::Schema.define(version: 20151019221707) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -114,41 +114,6 @@ ActiveRecord::Schema.define(version: 20150817185033) do
     t.boolean  "is_template",        default: false
     t.datetime "created_at",                         null: false
     t.datetime "updated_at",                         null: false
-  end
-
-  create_table "tasks", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.uuid     "project_id"
-    t.string   "name",            default: "",   null: false
-    t.text     "description"
-    t.integer  "assignee_id"
-    t.string   "status"
-    t.boolean  "is_billable",     default: true
-    t.integer  "hourly_rate"
-    t.string   "external_url"
-    t.integer  "estimated_hours"
-    t.integer  "external_id"
-    t.text     "external_source"
-    t.datetime "created_at",                     null: false
-    t.datetime "updated_at",                     null: false
-  end
-
-  create_table "timesheet_entries", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.uuid     "timesheet_id"
-    t.uuid     "task_id"
-    t.string   "notes"
-    t.date     "date"
-    t.decimal  "hours"
-    t.datetime "created_at",   null: false
-    t.datetime "updated_at",   null: false
-  end
-
-  create_table "timesheets", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.uuid     "user_id"
-    t.integer  "calendar_week"
-    t.string   "year"
-    t.string   "status"
-    t.datetime "created_at",    null: false
-    t.datetime "updated_at",    null: false
   end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|

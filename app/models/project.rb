@@ -27,21 +27,10 @@ class Project < ActiveRecord::Base
 	belongs_to	:user, foreign_key: "owner_id"
 	has_many	:project_members
 	has_many	:contacts, through: "project_members"
-	has_many	:tasks
 
 	validates :name, presence: true, uniqueness: { scope: :account, message: "There's already an project with the same name." }
 	validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
 	STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
-
-	def self.find_total_hours_per_project(projects)
-		project_ids = projects.ids.map { |s| "'#{s}'" }.join(',')
-		return self.find_by_sql("select p.id, sum(hours) as total_hours 
-														from timesheet_entries te
-															join tasks t on te.task_id = t.id
-															join projects p on p.id = t.project_id
-														where p.id in (#{project_ids})
-														group by p.id")
-	end
 
 end

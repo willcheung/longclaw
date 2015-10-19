@@ -12,25 +12,12 @@ class ProjectsController < ApplicationController
 
     # new project
     @project = Project.new
-
-    # total hours for each project
-    a_total_hours = Project.find_total_hours_per_project(projects) # Array
-    @total_hours = Hash[*a_total_hours.map{ |t| [t.id, t.total_hours] }.flatten] # Turn array into Hash
   end
 
   # GET /projects/1
   # GET /projects/1.json
   def show
-    @tasks = @project.tasks
-
-    if @tasks.empty?
-      @grand_total_hours = 0.0
-      @total_hours = 0.0
-    else
-      a_total_hours = Task.find_total_hours_per_task(@tasks)
-      @grand_total_hours = a_total_hours.inject(0) {|sum, hash| sum + hash[:total_hours]}
-      @total_hours = Hash[*a_total_hours.map{ |t| [t.id, t.total_hours] }.flatten] # Turn array into Hash
-    end
+    
   end
 
   # GET /projects/new
