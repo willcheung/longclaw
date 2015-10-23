@@ -12,6 +12,8 @@ gem 'devise', '~> 3.4.1' 					# User Authentication
 gem "omniauth-google-oauth2"
 gem "jquery-rails"
 gem 'best_in_place', '~> 3.0.1'
+gem 'ahoy_email'
+gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankane/ahoy
 
 # Gems used only for assets and not required
 # in production environments by default.

@@ -15,70 +15,77 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-12">
-        <div class="wrapper wrapper-content animated fadeInUp">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="col-lg-3">
-                        <div class="btn-group">
-                            <div class="font-bold m-b-xs">Project Status:</div>
-                            <button class="btn btn-sm btn-white" type="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
-                            <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;Active&nbsp;&nbsp;&nbsp;</button>
-                            <button class="btn btn-sm btn-white" type="button">Archived</button>
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="btn-group">
-                            <div class="font-bold m-b-xs">Project Role:</div>
-                            <button class="btn btn-sm btn-white" type="button">I'm Project Owner</button>
-                            <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;&nbsp;I'm Member&nbsp;&nbsp;&nbsp;&nbsp;</button>
-                        </div>
-                    </div>
-                    <div class="col-lg-offset-3 col-lg-3">
-                        <div class="font-bold">&nbsp;</div>
-                    </div>
-                    
+<div class="wrapper wrapper-content animated fadeInUp">
+    <div class="row">
+        <div class="col-lg-12">
+            <% if @projects.empty? %>
+                <div class="text-center">
+                    <h3>No projects.</h3>
+                    <%= link_to 'Create New Project', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary' %>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-12">
-                    <% @projects.each do |account,projects| %>
-                    <div class="clear">
-                    <h2><%= account.name %></h2>
-                    <% projects.each do |p| %>
-                    <div class="col-lg-4 m-b-md">
-                        <div class="ibox-title" style="min-height:68px;">
-                            <div class="col-sm-12" style="padding:0">
-                                <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
+            <% else %>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="col-lg-3">
+                            <div class="btn-group">
+                                <div class="font-bold m-b-xs">Project Status:</div>
+                                <button class="btn btn-sm btn-white" type="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                                <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;Active&nbsp;&nbsp;&nbsp;</button>
+                                <button class="btn btn-sm btn-white" type="button">Archived</button>
                             </div>
                         </div>
-                        <div class="ibox-content" style="height:130px;">
-                            <div class="row">
-                                <div class="col-xs-4">
-                                    <p class="text-center">Conversations<br/> <strong>125</strong></p>
-                                </div>
-                                <div class="col-xs-4">
-                                    <p class="text-center">Last Activity<br/> <strong><%= time_ago_in_words(p.created_at) %> ago</strong></p>
-                                </div>
-                                <div class="col-xs-4">
-                                    <p class="text-center">Pinned Items<br/> <strong>2 <i class="fa fa-level-up text-info"></i></strong></p>
-                                </div>
-                            </div>
-                            <div class="row m-t-sm">
-                                <div class="col-xs-12 team-members m-t-none">
-                                    <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a1.jpg') %>"></a>
-                                    <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
-                                    <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a3.jpg') %>"></a>
-                                </div>
+                        <div class="col-lg-3">
+                            <div class="btn-group">
+                                <div class="font-bold m-b-xs">Project Role:</div>
+                                <button class="btn btn-sm btn-white" type="button">I'm Project Owner</button>
+                                <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;&nbsp;I'm Member&nbsp;&nbsp;&nbsp;&nbsp;</button>
                             </div>
                         </div>
+                        <div class="col-lg-offset-3 col-lg-3">
+                            <div class="font-bold">&nbsp;</div>
+                        </div>
+                        
                     </div>
-                    <% end %>
                 </div>
-                    <% end %>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <% @projects.each do |account,projects| %>
+                            <div class="clear">
+                                <h2><%= account.name %></h2>
+                                <% projects.each do |p| %>
+                                    <div class="col-lg-4 m-b-md">
+                                        <div class="ibox-title" style="min-height:68px;">
+                                            <div class="col-sm-12" style="padding:0">
+                                                <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
+                                            </div>
+                                        </div>
+                                        <div class="ibox-content" style="height:130px;">
+                                            <div class="row">
+                                                <div class="col-xs-4">
+                                                    <p class="text-center">Conversations<br/> <strong>125</strong></p>
+                                                </div>
+                                                <div class="col-xs-4">
+                                                    <p class="text-center">Last Activity<br/> <strong><%= time_ago_in_words(p.created_at) %> ago</strong></p>
+                                                </div>
+                                                <div class="col-xs-4">
+                                                    <p class="text-center">Pinned Items<br/> <strong>2 <i class="fa fa-level-up text-info"></i></strong></p>
+                                                </div>
+                                            </div>
+                                            <div class="row m-t-sm">
+                                                <div class="col-xs-12 team-members m-t-none">
+                                                    <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a1.jpg') %>"></a>
+                                                    <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
+                                                    <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a3.jpg') %>"></a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% end %>
+                            </div>
+                        <% end %>
+                    </div>
                 </div>
-            </div>
+            <% end %>
         </div>
     </div>
 </div>

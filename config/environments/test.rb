@@ -31,6 +31,8 @@ Longclaw::Application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
+  config.action_mailer.default_url_options = { :host => "test.contextsmith.com" }
+
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 end

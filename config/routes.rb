@@ -19,4 +19,6 @@ Longclaw::Application.routes.draw do
   	root to: "sessions#new"
 	end
 
+  get 'users/send_beta_teaser_email'
+
 end

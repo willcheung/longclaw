@@ -1,4 +1,4 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "\"ContextSmith\" <no-reply@contextsmith.com>"
+  default from: "\"ContextSmith\" <notifications@contextsmith.com>"
   layout 'mailer'
 end

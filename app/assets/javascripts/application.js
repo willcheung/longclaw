@@ -8,11 +8,15 @@
 //= require jquery
 //= require jquery_ujs
 //= require cocoon
+//= require ahoy
 //= require metisMenu/jquery.metisMenu.js
 //= require pace/pace.min.js
 //= require slimscroll/jquery.slimscroll.min.js
 //= require toastr/toastr.min.js
 //= require contextsmith.js
+
+// ahoy analytics
+ahoy.trackAll();
 
 $(document).ready(function() {
   /****************

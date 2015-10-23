@@ -45,7 +45,7 @@ class User < ActiveRecord::Base
          :recoverable, :rememberable, :trackable, :validatable, :omniauthable
 
   #after_create :send_welcome_email_to_user
-  after_create :send_beta_teaser_email_to_user
+  #after_create :send_beta_teaser_email_to_user
   after_create :create_user_organization
 
   def self.find_for_google_oauth2(auth, signed_in_resource=nil)
@@ -82,7 +82,7 @@ class User < ActiveRecord::Base
   end
 
   def send_beta_teaser_email_to_user
-    UserMailer.beta_teaser_email(self).deliver_later
+    UserMailer.beta_teaser_email(self, "").deliver_later
   end
 
   def create_user_organization
