@@ -14,6 +14,7 @@ gem "jquery-rails"
 gem 'best_in_place', '~> 3.0.1'
 gem 'ahoy_email'
 gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankane/ahoy
+gem 'puma'                        # Production web server
 
 # Gems used only for assets and not required
 # in production environments by default.
@@ -28,7 +29,6 @@ group :doc do
   gem 'sdoc', require: false
 end
 
-
 group :development do
   # View schema in models
   gem 'annotate', '~> 2.6.8'
@@ -36,6 +36,8 @@ group :development do
   gem 'ffaker'										# generate fake data
   gem "letter_opener"							# email preview
 end
+
+gem 'rails_12factor', group: :production
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.1.2'
