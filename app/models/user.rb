@@ -52,6 +52,7 @@ class User < ActiveRecord::Base
     info = auth.info
     credentials = auth.credentials
     user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
+    
     if user
       return user
     else

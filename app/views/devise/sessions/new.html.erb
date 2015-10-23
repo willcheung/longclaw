@@ -1,15 +1,12 @@
-<div class="middle-box text-center loginscreen animated">
+<div class="text-center loginscreen animated">
   <div>
+       <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
       <div>
-          <h1 class="logo-name">IN+</h1>
+          <h1 class="logo-name">Log In</h1>
       </div>
-      <h3>Welcome to IN+</h3>
-      <p>Perfectly designed and precisely prepared admin theme with over 50 pages with extra new web app views.</p>
-      <p>Login in. To see it in action.</p>
+      <p class="oauth">Welcome back!</p>
 
-      <a class="btn btn-md btn-primary btn-block" href="<%= user_omniauth_authorize_url(:google_oauth2) %>">Sign In Using Google</a>
-
-      <p class="m-t"> <small>Inspinia we app framework base on Bootstrap 3 &copy; 2015</small> </p>
+      <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log In Using Google</span></button>
   </div>
 </div>
             

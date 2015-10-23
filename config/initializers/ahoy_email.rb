@@ -2,7 +2,7 @@ class EmailSubscriber
 
   def open(event)
     # :message and :controller keys
-    # ahoy = event[:controller].ahoy
+    ahoy = event[:controller].ahoy
     ahoy.track "Email opened", message_id: event[:message].id
   end
 

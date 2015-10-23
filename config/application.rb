@@ -8,6 +8,24 @@ Bundler.require(:default, Rails.env)
 
 module Longclaw
   class Application < Rails::Application
+
+    self.configure do
+        # Load mandrill api key config file
+        api_keys_config_file = File.join(Rails.root,'config','api_keys.yml')
+        raise "#{api_keys_config_file} is missing!" unless File.exists? api_keys_config_file
+        api_keys_config = YAML.load_file(api_keys_config_file)[Rails.env].symbolize_keys
+
+        config.action_mailer.smtp_settings = {
+        address:    'smtp.mandrillapp.com',
+        port:       587,
+        user_name:  api_keys_config[:mandrill_user_name],
+        password:   api_keys_config[:mandrill_api_key],
+        authentication:  'plain',
+        domain:  'contextsmith.com',
+        enable_starttls_auto: true
+        }
+    end
+
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
@@ -20,7 +38,7 @@ module Longclaw
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     # config.i18n.default_locale = :de
 
-    config.assets.precompile += [ 'appviews.css', 'cssanimations.css', 'dashboards.css', 'forms.css', 'gallery.css', 'graphs.css', 'mailbox.css', 'miscellaneous.css', 'pages.css', 'tables.css', 'uielements.css', 'widgets.css' ]
+    # config.assets.precompile += [ 'appviews.css', 'cssanimations.css', 'dashboards.css', 'forms.css', 'gallery.css', 'graphs.css', 'mailbox.css', 'miscellaneous.css', 'pages.css', 'tables.css', 'uielements.css', 'widgets.css' ]
     config.assets.precompile += [ 'appviews.js', 'cssanimations.js', 'dashboards.js', 'forms.js', 'gallery.js', 'graphs.js', 'mailbox.js', 'miscellaneous.js', 'pages.js', 'tables.js', 'uielements.js', 'widgets.js', ]
 
   end

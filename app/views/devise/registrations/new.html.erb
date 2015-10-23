@@ -1,40 +1,13 @@
-<div class="middle-box text-center loginscreen animated">
+<div class="text-center loginscreen animated">
   <div>
+      <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
       <div>
-          <h1 class="logo-name">IN+</h1>
+          <h1 class="logo-name">Sign Up</h1>
       </div>
-      <p>Awesome app built just for you!</p>
+      <p class="oauth">Please sign up using your Google Apps credentials and start collaborating with your team.</p>
 
-      <a class="btn btn-md btn-primary btn-block" href="<%= user_omniauth_authorize_url(:google_oauth2) %>">Sign Up Using Google</a>
+      <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
 
-      <!--
-      <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-        <%= devise_error_messages! %>
-
-        <div class="field">
-          <%= f.label :email %><br />
-          <%= f.email_field :email, autofocus: true %>
-        </div>
-
-        <div class="field">
-          <%= f.label :password %>
-          <% if @validatable %>
-          <em>(<%= @minimum_password_length %> characters minimum)</em>
-          <% end %><br />
-          <%= f.password_field :password, autocomplete: "off" %>
-        </div>
-
-        <div class="field">
-          <%= f.label :password_confirmation %><br />
-          <%= f.password_field :password_confirmation, autocomplete: "off" %>
-        </div>
-
-        <div class="actions">
-          <%= f.submit "Sign up" %>
-        </div>
-      <% end %>
-
-      <%= render "devise/shared/links" %>
-      -->
+      <p class="oauth"><small>No credit card required. No obligations.</small></p>
   </div>
 </div>
