@@ -7,7 +7,6 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require cocoon
 //= require ahoy
 //= require metisMenu/jquery.metisMenu.js
 //= require pace/pace.min.js

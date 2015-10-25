@@ -10,6 +10,6 @@ class UserMailer < ApplicationMailer
     @content = content
 
     track user: user
-    mail(to: @user.email, subject: "Sneak Preview: Project Recap by ContextSmith")
+    mail(to: @user.email, subject: "Sneak Preview: Projects Recap by ContextSmith")
   end
 end

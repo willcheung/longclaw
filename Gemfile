@@ -3,10 +3,10 @@ source 'https://rubygems.org'
 gem 'rails', '4.2.3'
 gem 'bootstrap-sass', '~> 3.3.5'
 gem 'simple_form', '~> 3.1.0'			# run 'rails generate simple_form:install --bootstrap' after installing gem
-gem "cocoon"
-gem 'pg' 													# Use postgresql as the database for Active Record
+gem 'pg' 													# Use postgresql as the database for ActiveRecord
 gem 'sass-rails', '~> 4.0.0' 			# Use SCSS for stylesheets
 # gem 'turbolinks' 									# Turbolinks makes following links in your web application faster. 
+                                    # (creates some weird caching issues so don't include it unless absolutely necessary)
 gem 'jbuilder', '~> 1.2' 					# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'devise', '~> 3.4.1' 					# User Authentication
 gem "omniauth-google-oauth2"
@@ -14,7 +14,7 @@ gem "jquery-rails"
 gem 'best_in_place', '~> 3.0.1'
 gem 'ahoy_email'
 gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankane/ahoy
-gem 'puma'                        # Production web server
+gem 'puma'                        # Web server
 
 # Gems used only for assets and not required
 # in production environments by default.
@@ -37,7 +37,9 @@ group :development do
   gem "letter_opener"							# email preview
 end
 
-gem 'rails_12factor', group: :production
+group :production do
+  gem 'rails_12factor'
+end
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.1.2'
