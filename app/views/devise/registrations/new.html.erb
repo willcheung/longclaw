@@ -1,13 +1,16 @@
 <div class="text-center loginscreen animated">
   <div>
       <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
-      <div>
-          <h1 class="logo-name">Sign Up</h1>
+      <div class="ibox-content middle-box">
+          <h1 class="logo-name oauth">Sign Up</h1>
+      
+      		<p class="oauth">Please sign up using your Google Apps credentials and start collaborating with your team.</p>
+
+      		<button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
+
+      		<p class="oauth"><small>No credit card required. No obligations.</small></p>
       </div>
-      <p class="oauth">Please sign up using your Google Apps credentials and start collaborating with your team.</p>
 
-      <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
-
-      <p class="oauth"><small>No credit card required. No obligations.</small></p>
+      <p class="m-t"><small><a href="http://www.contextsmith.com">contextsmith.com</a> &nbsp;&nbsp;ContextSmith, Inc. © 2015</small> </p>
   </div>
 </div>

@@ -165,20 +165,22 @@ button.oauth {
   font-size: 20px;
   margin: 25px 25px 10px 25px;
 }
+h1.oauth {
+  font-size: 35px;
+  color: #555;
+}
 i.oauth {
   vertical-align: bottom;
   font-size: 25px;
 }
 p.oauth {
   font-size: 15px;
-  color: #bbb;
-  margin-left: 35%;
-  margin-right: 35%;
+  color: #444;
   font-weight: 300;
 }
 a.oauth.logo {
   height: 100px;
-  background: url('/assets/logo-white.png') center no-repeat;
+  background: url('/assets/logo.png') center no-repeat;
   background-size: 150px;
   display:block;
 }

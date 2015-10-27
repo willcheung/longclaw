@@ -11,8 +11,8 @@ Longclaw::Application.routes.draw do
     resources :contacts
     resources :projects
 
-    get "projects/show"
     get "search/results"
+    get "invitations/new"
   end
 
   devise_scope :user do
