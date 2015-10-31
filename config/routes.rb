@@ -1,6 +1,6 @@
 Longclaw::Application.routes.draw do
 
-  devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
+  devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
   # You can have the root of your site routed with "root"
 
   authenticate :user do

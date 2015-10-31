@@ -47,7 +47,8 @@ class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, :validatable, :omniauthable
+         :recoverable, :rememberable, :trackable, :validatable, 
+         :omniauthable, :omniauth_providers => [:google_oauth2]
 
   #after_create :send_welcome_email_to_user
   #after_create :send_beta_teaser_email_to_user
@@ -81,12 +82,11 @@ class User < ActiveRecord::Base
     end
   end
 
-  ########### not used right now ###########
   # https://www.twilio.com/blog/2014/09/gmail-api-oauth-rails.html
-  def to_params
-    {'refresh_token' => refresh_token,
-    'client_id' => ENV['CLIENT_ID'],
-    'client_secret' => ENV['CLIENT_SECRET'],
+  def to_params    
+    {'refresh_token' => oauth_refresh_token,
+    'client_id' => ENV['google_client_id'],
+    'client_secret' => ENV['google_client_secret'],
     'grant_type' => 'refresh_token'}
   end
  
@@ -95,20 +95,20 @@ class User < ActiveRecord::Base
     Net::HTTP.post_form(url, self.to_params)
   end
  
-  def refresh!
+  def refresh_token!
     response = request_token_from_google
     data = JSON.parse(response.body)
     update_attributes(
-    access_token: data['access_token'],
-    expires_at: Time.now + (data['expires_in'].to_i).seconds)
+      oauth_access_token: data['access_token'],
+      oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
   end
  
-  def expired?
+  def token_expired?
     expires_at < Time.now
   end
  
   def fresh_token
-    refresh! if expired?
+    refresh_token! if token_expired?
     access_token
   end
 

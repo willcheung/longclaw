@@ -157,6 +157,13 @@ h2.catchup-project:before {
   left: 0;
 }
 
+.projects p {
+  font-weight: 300;
+}
+.projects strong {
+  font-weight: 500;
+}
+
 button.oauth {
   -webkit-font-smoothing: auto;
   font-weight: 500;

@@ -48,41 +48,42 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-lg-12">
+                    <div class="col-lg-12 projects">
+                        <!-- account, projects -->
                         <% @projects.each do |account,projects| %>
                             <div class="clear">
                                 <h2><%= account.name %></h2>
+                                <!-- projects -->
                                 <% projects.each do |p| %>
-                                    <div class="col-lg-4 m-b-md">
-                                        <div class="ibox-title" style="min-height:68px;">
-                                            <div class="col-sm-12" style="padding:0">
-                                                <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
-                                            </div>
-                                        </div>
-                                        <div class="ibox-content" style="height:130px;">
+                                    <div class="col-lg-12">
+                                        <div class="ibox-content" style="padding-bottom:5px;">
                                             <div class="row">
-                                                <div class="col-xs-4">
+                                                <div class="col-lg-3">
+                                                    <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
+                                                </div>
+                                                <div class="col-sm-2">
                                                     <p class="text-center">Conversations<br/> <strong>125</strong></p>
                                                 </div>
-                                                <div class="col-xs-4">
+                                                <div class="col-sm-2">
                                                     <p class="text-center">Last Activity<br/> <strong><%= time_ago_in_words(p.created_at) %> ago</strong></p>
                                                 </div>
-                                                <div class="col-xs-4">
+                                                <div class="col-sm-2">
                                                     <p class="text-center">Pinned Items<br/> <strong>2 <i class="fa fa-level-up text-info"></i></strong></p>
                                                 </div>
-                                            </div>
-                                            <div class="row m-t-sm">
-                                                <div class="col-xs-12 team-members m-t-none">
+                                                <div class="col-md-3 team-members">
                                                     <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a1.jpg') %>"></a>
                                                     <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
                                                     <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a3.jpg') %>"></a>
+                                                    <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 <% end %>
+                                <!-- projects -->
                             </div>
                         <% end %>
+                        <!-- end account, projects -->
                     </div>
                 </div>
             <% end %>

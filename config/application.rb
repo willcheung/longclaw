@@ -9,17 +9,23 @@ Bundler.require(:default, Rails.env)
 module Longclaw
   class Application < Rails::Application
 
-    self.configure do
-        # Load mandrill api key config file
+    # Load config file into environment 
+    config.before_configuration do
         api_keys_config_file = File.join(Rails.root,'config','api_keys.yml')
         raise "#{api_keys_config_file} is missing!" unless File.exists? api_keys_config_file
         api_keys_config = YAML.load_file(api_keys_config_file)[Rails.env].symbolize_keys
 
+        api_keys_config.each do |key, value|
+        ENV[key.to_s] = value
+        end # end YAML.load_file
+    end
+
+    self.configure do
         config.action_mailer.smtp_settings = {
         address:    'smtp.mandrillapp.com',
         port:       587,
-        user_name:  api_keys_config[:mandrill_user_name],
-        password:   api_keys_config[:mandrill_api_key],
+        user_name:  ENV['mandrill_user_name'],
+        password:   ENV['mandrill_api_key'],
         authentication:  'plain',
         domain:  'contextsmith.com',
         enable_starttls_auto: true
