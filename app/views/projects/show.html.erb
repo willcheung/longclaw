@@ -89,130 +89,171 @@
                                                     <div class="vertical-timeline-icon info-bg">
                                                         <i class="fa fa-envelope"></i>
                                                     </div>
+                                                    <span class="vertical-date left">Today <br />
+                                                        <small>3:23pm</small>
+                                                    </span>
 
                                                     <div class="vertical-timeline-content">
-                                                        <h3>Proposed Project Timeline <small class="pull-right">Ewald, Jonathan, me (3)</small></h3>
-                                                        <p>
-                                                            Conference on the sales results for the previous year. Monica please examine sales trends in marketing and products. Below please find the current status of the sale.
-                                                        </p>
-                                                        <span class="vertical-date left">Today <br />
-                                                            <small>3:23pm</small>
-                                                        </span>
-                                                    </div>
-
-                                                    <div class="comment">
-                                                        <div class="feed-element">
-                                                            <a href="#" class="pull-left">
-                                                                <img alt="image" class="img-circle" src="<%= image_path('a1.jpg') %>">
-                                                            </a>
-                                                            <div class="vertical-timeline-content">
-                                                                <p><strong class="m-r-xs">Monica Momot</strong> Sales is going well! I have put together a report and will invite you to the meeting.  Let's discuss further during that meeting.</p>
-                                                                <span class="vertical-date left">Today <br/><small class="text-muted">4:15pm</small>
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="comment">
-                                                        <div class="feed-element">
-                                                            <a href="#" class="pull-left">
-                                                                <img alt="image" class="img-circle" src="<%= image_path('a2.jpg') %>">
-                                                            </a>
-                                                            <div class="vertical-timeline-content">
-                                                                <p><strong class="m-r-xs">Michael Wong</strong> Great!  Looking forward to it.</p>
-                                                                <span class="vertical-date left">Today <br/><small class="text-muted">5:05pm</small>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- <div class="comment">
-                                                        <div class="feed-element">
-                                                            <a href="#" class="pull-left">
-                                                                <img alt="image" class="img-circle" src="<%= image_path('a3.jpg') %>">
-                                                            </a>
-                                                            <div class="vertical-timeline-content">
-                                                                <div class="form-group">
-                                                                    <input type="text" class="form-control" placeholder="Add a comment...">
+                                                        <h3>Project Status and Timeline <small class="pull-right">Ewald, Jonathan, me (5)</small></h3>
+                                                        
+                                                        <div class="chat-discussion">
+                                                            <div class="chat-message right">
+                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Ewald Bednar </span>
+                                                                    <span class="message-date">Jan 25</span>
+                                                                        <span class="message-content">
+                                                                             <p>
+                                                                                Please take a look at the proposed timeline and sales results.
+                                                                            </p>
+                                                                        </span>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    </div> -->
-                                                </div>
-
-                                                <div class="vertical-timeline-block">
-                                                    <div class="vertical-timeline-icon warning-bg">
-                                                        <i class="fa fa-file-text"></i>
-                                                    </div>
-
-                                                    <div class="vertical-timeline-content">
-                                                        <p>The project is going well with no significant issues.  Here is what happened last week. </p>
-                                                        <ul>
-                                                            <li>Upgraded customer to version 2.0.</li>
-                                                            <li>Thanks to Jessica for providing a full dinner for the everyone who helped to stay after hours to complete the upgrade.</li>
-                                                            <li>On track to hit next project milestone.</li>
-                                                        </ul>
-                                                        <span class="vertical-date left">Yesterday <br /><small>10:23am</small></span>
-                                                    </div>
-                                                    <div class="comment">
-                                                        <div class="feed-element">
-                                                            <a href="#" class="pull-left">
-                                                                <img alt="image" class="img-circle" src="<%= image_path('a2.jpg') %>">
-                                                            </a>
-                                                            <div class="vertical-timeline-content">
-                                                                <p><strong class="m-r-xs">Michael Wong</strong> Great job team!</p>
-                                                                <span class="vertical-date left">Today <br/><small class="text-muted">5:05pm</small>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- <div class="comment">
-                                                        <div class="feed-element">
-                                                            <a href="#" class="pull-left">
-                                                                <img alt="image" class="img-circle" src="<%= image_path('a3.jpg') %>">
-                                                            </a>
-                                                            <div class="vertical-timeline-content">
-                                                                <div class="form-group">
-                                                                    <input type="text" class="form-control" placeholder="Add a comment...">
+                                                            <div class="chat-message left">
+                                                                <img class="message-avatar" src="<%= image_path('a4.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Moshe Wolf </span>
+                                                                    <span class="message-date">Jan 26</span>
+                                                                        <span class="message-content">
+                                                                            <p>
+                                                                                Conference on the sales results for the previous year. Monica please examine sales trends in marketing and products. Below please find the current status of the sale. <a href="#">More...</a>
+                                                                            </p>
+                                                                        </span>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    </div> -->
+                                                            <div class="chat-message left">
+                                                                <img class="message-avatar" src="<%= image_path('a2.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Jonathan Smith </span>
+                                                                    <span class="message-date">Jan 28</span>
+                                                                        <span class="message-content">
+                                                                            <p>Thanks Ewald.  Looking forward to checking out the TP reports!  Looks like fun.</p>
+                                                                        </span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="chat-message right">
+                                                                <img class="message-avatar" src="<%= image_path('a5.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Kelton Skiles </span>
+                                                                    <span class="message-date"> Jan 28 </span>
+                                                                        <span class="message-content">
+                                                                            <p>I've made some changes to the sales results and now it looks like we're on track to make $1B this quarter!  Amazing job team! <a href="#">More...</a></p>
+                                                                        </span>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Comment form -->
+                                                            <div class="chat-message left">
+                                                                <img class="message-avatar" src="<%= image_path('a4.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Moshe Wolf </span>
+                                                                    <div class="form-group">
+                                                                        <input type="text" class="form-control" placeholder="Add a comment...">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div> <!-- chat discussion -->
+
+                                                    </div>
                                                 </div>
 
                                                 <div class="vertical-timeline-block">
                                                     <div class="vertical-timeline-icon success-bg">
                                                         <i class="fa fa-calendar"></i>
                                                     </div>
+                                                    <span class="vertical-date left">Jan 25 <br />
+                                                        <small>5:23pm</small>
+                                                    </span>
 
                                                     <div class="vertical-timeline-content">
                                                         <h3>Meeting with Customer <small class="pull-right">Ewald, Jonathan, Kelton, me (8)</small></h3>
-                                                        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since.</p>
-                                                        <span class="vertical-date left">
-                                                            Today <br />
-                                                            <small>3:23pm</small>
-                                                        </span>
-                                                    </div>
 
-                                                    <!-- <div class="comment">
-                                                        <div class="feed-element">
-                                                            <a href="#" class="pull-left">
-                                                                <img alt="image" class="img-circle" src="<%= image_path('a3.jpg') %>">
-                                                            </a>
-                                                            <div class="vertical-timeline-content">
-                                                                <div class="form-group">
-                                                                    <input type="text" class="form-control" placeholder="Add a comment...">
+                                                        <div class="chat-discussion">
+                                                            <div class="chat-message left">
+                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Ewald Bednar </span>
+                                                                    <span class="message-date">Jan 25</span>
+                                                                        <span class="message-content">
+                                                                             <p>The purpose of the meeting is to go over a very important change.  The change is to decide whether we should have more of meetings like this.</p>
+                                                                        </span>
+                                                                </div>
+                                                            </div>
+                                                    
+                                                        <!-- Comment form -->
+                                                            <div class="chat-message left">
+                                                                <img class="message-avatar" src="<%= image_path('a4.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Moshe Wolf </span>
+                                                                    <div class="form-group">
+                                                                        <input type="text" class="form-control" placeholder="Add a comment...">
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div> -->
+                                                    </div>
                                                 </div>
 
                                                 <div class="vertical-timeline-block">
                                                     <div class="vertical-timeline-icon warning-bg">
                                                         <i class="fa fa-file-text"></i>
                                                     </div>
+                                                    <span class="vertical-date left">Jan 23 <br />
+                                                        <small>1:01pm</small>
+                                                    </span>
+
+                                                    <div class="vertical-timeline-content">
+                                                        <div class="chat-discussion">
+                                                            <div class="chat-message left">
+                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Michael Smith </span>
+                                                                    <span class="message-date">Jan 25</span>
+                                                                        <span class="message-content">
+                                                                            <p>The project is going well with no significant issues.  Here is what happened last week. </p>
+                                                                            <ul>
+                                                                                <li>Upgraded customer to version 2.0.</li>
+                                                                                <li>Thanks to Jessica for providing a full dinner for the everyone who helped to stay after hours to complete the upgrade.</li>
+                                                                                <li>On track to hit next project milestone.</li>
+                                                                            </ul>
+                                                                        </span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="chat-message left">
+                                                                <img class="message-avatar" src="<%= image_path('a3.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Brenda Frazman </span>
+                                                                    <span class="message-date"> Jan 28 </span>
+                                                                    <span class="message-content">
+                                                                        All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet.
+                                                                        It uses a dictionary of over 200 Latin words.
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Comment form -->
+                                                            <div class="chat-message left">
+                                                                <img class="message-avatar" src="<%= image_path('a4.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Moshe Wolf </span>
+                                                                    <div class="form-group">
+                                                                        <input type="text" class="form-control" placeholder="Add a comment...">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="vertical-timeline-block">
+                                                    <div class="vertical-timeline-icon warning-bg">
+                                                        <i class="fa fa-file-text"></i>
+                                                    </div>
+                                                    <span class="vertical-date left">Jan 12 <br />
+                                                        <small>1:45pm</small>
+                                                    </span>
 
                                                     <div class="vertical-timeline-content">
                                                         <h3>Weekly Project Status <small class="pull-right">me, Brandon</small></h3>
                                                         <p>Go to shop and find some products. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's. </p>
-                                                        <span class="vertical-date left"> Yesterday <br /><small>3:23pm</small></span>
                                                     </div>
                                                 </div>
 
@@ -220,11 +261,13 @@
                                                     <div class="vertical-timeline-icon danger-bg">
                                                         <i class="fa fa-phone"></i>
                                                     </div>
+                                                    <span class="vertical-date left">Jan 8 <br />
+                                                        <small>3:45pm</small>
+                                                    </span>
 
                                                     <div class="vertical-timeline-content">
                                                         <h3>Weekly Sync Up Meeting <small class="pull-right">Ewald, Jonathan, Kelton, Moshe, me</small></h3>
                                                         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Iusto, optio, dolorum provident rerum aut hic quasi placeat iure tempora laudantium ipsa ad debitis unde? Iste voluptatibus minus veritatis qui ut.</p>
-                                                        <span class="vertical-date left">Yesterday <br /><small>3:23pm</small></span>
                                                     </div>
                                                 </div>
 
