@@ -19,6 +19,7 @@ Longclaw::Application.routes.draw do
   	root to: "sessions#new"
 	end
 
-  get 'users/send_beta_teaser_email'
+  # Beta Email Teaser
+  post 'users/:id/send_beta_teaser_email/' => 'users#send_beta_teaser_email'
 
 end

@@ -54,6 +54,8 @@ class User < ActiveRecord::Base
   #after_create :send_beta_teaser_email_to_user
   after_create :create_user_organization
 
+  PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646)
+
   def self.find_for_google_oauth2(auth, signed_in_resource=nil)
     info = auth.info
     credentials = auth.credentials

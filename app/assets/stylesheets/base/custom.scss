@@ -191,3 +191,23 @@ a.oauth.logo {
   background-size: 150px;
   display:block;
 }
+
+.initials-circle {
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  padding: 5px;
+  background: #fff;
+  border: 2px solid #666;
+  color: #666;
+  text-align: center;
+  font: 21px Arial, sans-serif;
+}
+hr.message-divider {
+  border: 0;
+  height: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  margin-top: 3px;
+  margin-bottom: 6px;
+}

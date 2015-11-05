@@ -1,60 +1,77 @@
 
-Hi <%= @user.first_name %>,
-<br/>
+<div class="body-text" style="font-family:Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;text-align:left;color:#333333">
+  Hi <%= @user.first_name %>,
+  <br/>
 
-<p>Welcome to our sneak preview! ContextSmith is a smarter way to collaborate on projects. We automatically turn your customer emails into organized project insights news feeds.  Here's a recap of your projects.</p>
+  <p>Welcome to our sneak preview! ContextSmith is a smarter way to collaborate on projects. We automatically turn your customer emails into organized project insights news feeds.  Here's a recap of your projects.</p>
 
-Best,<br/>
-ContextSmith Team
-<br/><br/>
+  Best,<br/>
+  ContextSmith Team
+  <br/><br/>
 
-<!-- User Content -->
+  <!-- User Content -->
 
-<!-- Header -->
-<table style="border-spacing:0;border-collapse:collapse;padding:0;margin:0 auto;width:580px">
-    <tbody>
-       <tr style="padding:0">
-          <td style="word-break:break-word;border-collapse:collapse;padding:0 0 10px;vertical-align:top;text-align:left;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
-             <p style="margin:0;text-align:center;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Prepared for <%= @user.first_name %> <%= @user.last_name %> by <span class="il">ContextSmith</span>. </p>
-             <h2 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:32px">Projects Recap</h2>
-             <h6 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:18px">Last two weeks (8/1 - 8/15)</h6>
-          </td>
-          <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
-       </tr>
-    </tbody>
- </table>
+  <!-- Header -->
+  <table style="border-spacing:0;border-collapse:collapse;padding:0;margin:0 auto;width:580px">
+      <tbody>
+         <tr style="padding:0">
+            <td style="word-break:break-word;border-collapse:collapse;padding:0 0 10px;vertical-align:top;text-align:left;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
+               <p style="margin:0;text-align:center;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Prepared for <%= @user.first_name %> <%= @user.last_name %> by <span class="il">ContextSmith</span>. </p>
+               <h2 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:32px">Projects Recap</h2>
+               <h6 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:18px">Last two weeks (8/1 - 8/15)</h6>
+            </td>
+            <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
+         </tr>
+      </tbody>
+   </table>
 
- <div style="width:100%;padding-bottom:20px"></div>
+   <div style="width:100%;padding-bottom:20px"></div>
+</div>
 
- <!-- Summary -->
- <div style="margin-bottom:0;padding-bottom:20px">
-         <h2 style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:400;margin-bottom:20px;color:#676a6c">1 project updated:</h2>
-         <ul style="margin:0 0 10px;list-style:none;padding:0">
-             <li style="margin:0 0 0 35px;padding:0;list-style-type:disc">
-               <div style="font-weight:400;font-size:16px;margin-bottom:10px;color: #337ab7;">Stark Industries Project 1</div>
-             </li>
-             <div style="margin:0 0 0 35px;padding:0;">
-                  <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a1.jpg">
-                  <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a2.jpg">
-                  <img alt="member" class="img-circle" style="border-radius:50%;width:35px;height:35px;margin-bottom:5px;vertical-align:middle;border:0;" src="http://webapplayers.com/inspinia_admin-v2.2/img/a3.jpg">
-              </div>
-         </ul>
- </div>
+<div class="hr" style="height:1px;border-bottom:1px solid #cccccc">&nbsp;</div>
+<br><br>
+
+<div>
+   <!-- Summary -->
+   <div style="margin-bottom:0;margin-bottom:30px">
+       <h2 style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:400;margin-bottom:20px;color:#676a6c">1 project updated:</h2>
+       <ul style="margin:0 0 10px;list-style:none;padding:0">
+        <% @data.each do |d| %>
+           <li style="margin:10px 0 0 35px;padding:0;list-style-type:disc;clear:both;height:75px;">
+             <div style="font-weight:400;font-size:16px;margin-bottom:10px;color: #337ab7;"><%= d["project_name"] %></div>
+              
+             <div style="margin:0 0 0 15px;padding:0;">
+                <% d["members"].each do |m| %>
+                  <div title="<%= m["name"] %> <<%= m["email"] %>>" style="border-radius:50%;width:24px;height:24px;margin-right:3px;padding:5px;background:<%= User::PROFILE_COLOR[rand(20)%5] %>;border: 1px solid #666;color:#fff;text-align:center;font: 16px Arial, sans-serif;float:left;line-height:25px;cursor:default;">
+                    <%= m["name"].split(' ').first[0,1]%><%= m["name"].split(' ').last[0,1]%>
+                  </div>
+                <% end %>
+             </div>
+           </li>
+           
+        <% end %>
+       </ul>
+   </div>
 
  <!-- Project Details -->
-<div style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;padding:0;margin:0 0 20px">
-    <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
-       <tbody>
-          <tr>
-             <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
-                <h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;line-height:24px;font-weight:bold;display:inline;background:#ffffff;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none">Stark Industries Project 1</span></h2>
-             </th>
-             <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
-          </tr>
-       </tbody>
-    </table>
-    <p style="margin:0;text-align:left;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Total 32 conversations • 3 collaborators • Last activity 6 days ago</p>
+  <% @data.each do |d| %>
 
-    <p><%= @content %></p>
+    <div style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;padding:0;margin:0 0 20px">
+        <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
+           <tbody>
+              <tr>
+                 <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
+                    <h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;line-height:24px;font-weight:bold;display:inline;background:#ffffff;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none">Stark Industries Project 1</span></h2>
+                 </th>
+                 <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
+              </tr>
+           </tbody>
+        </table>
+        <p style="margin:0;text-align:left;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Total 32 conversations • 3 collaborators • Last activity 6 days ago</p>
+
+        <p>Account: <%= d["account_name"] %>, Project: <%= d["project_name"] %></p>
+
+    <% end %>
+    </div>
 </div>
           
