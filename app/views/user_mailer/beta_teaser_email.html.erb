@@ -1,43 +1,69 @@
+<table class="row" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px;">
+  <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
+     <td class="wrapper last" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; position: relative; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 10px 0px 0px;" align="left" valign="top">
+        <table class="twelve columns" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 580px; margin: 0 auto; padding: 0;">
+           <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
+              <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px 0px 10px;" align="left" valign="top">
+                  <p style="color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; text-align: left; line-height: 19px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="left">
+                    Hi <%= @user.first_name %>,
+                    <br/>
 
-<div class="body-text" style="font-family:Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;text-align:left;color:#333333">
-  Hi <%= @user.first_name %>,
-  <br/>
+                    <p>Welcome to our sneak preview! ContextSmith is a smarter way to collaborate on projects. We automatically turn your customer emails into organized project insights news feeds.  Here's a recap of your projects.</p>
 
-  <p>Welcome to our sneak preview! ContextSmith is a smarter way to collaborate on projects. We automatically turn your customer emails into organized project insights news feeds.  Here's a recap of your projects.</p>
+                    Best,<br/>
+                    ContextSmith Team
+                    <br/>
+                  </p>
+              </td>
+              <td class="expander" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; visibility: hidden; width: 0px; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0;" align="left" valign="top"></td>
+           </tr>
+        </table>
+     </td>
+  </tr>
+</table>
 
-  Best,<br/>
-  ContextSmith Team
-  <br/><br/>
-
+<table class="row callout" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px;">
+  <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
+     <td class="wrapper last" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; position: relative; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 10px 0px 20px;" align="left" valign="top">
+        <table class="twelve columns" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 580px; margin: 0 auto; padding: 0;">
+           <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
+              <td class="panel" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; background: #ECF8FF; margin: 0; padding: 10px; border: 1px solid #b9e5ff;" align="left" bgcolor="#ECF8FF" valign="top">
+                 <p style="color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; text-align: left; line-height: 19px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="left">
+                  Feel free to forward this email to a colleague and have them sign up for free beta preview!  You can also <a href="#" style="color: #2ba6cb; text-decoration: none;">click here</a>.
+                </p>
+              </td>
+              <td class="expander" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; visibility: hidden; width: 0px; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0;" align="left" valign="top"></td>
+           </tr>
+        </table>
+     </td>
+  </tr>
+</table>
   <!-- User Content -->
 
   <!-- Header -->
-  <table style="border-spacing:0;border-collapse:collapse;padding:0;margin:0 auto;width:580px">
-      <tbody>
-         <tr style="padding:0">
-            <td style="word-break:break-word;border-collapse:collapse;padding:0 0 10px;vertical-align:top;text-align:left;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
-               <p style="margin:0;text-align:center;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Prepared for <%= @user.first_name %> <%= @user.last_name %> by <span class="il">ContextSmith</span>. </p>
-               <h2 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:32px">Projects Recap</h2>
-               <h6 style="text-align:center;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:1.3;margin:0;padding:0;font-size:18px">Last two weeks (8/1 - 8/15)</h6>
-            </td>
-            <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
-         </tr>
-      </tbody>
-   </table>
-
-   <div style="width:100%;padding-bottom:20px"></div>
-</div>
-
-<div class="hr" style="height:1px;border-bottom:1px solid #cccccc">&nbsp;</div>
-<br><br>
+<table class="row" border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
+  <tr>
+  <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
+    <th class="center" style="width:2%;padding:0 10px;white-space:nowrap;vertical-align:middle">
+      <center>
+        <h1 style="background-color:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:32px;font-weight:200;color:#333333;line-height:normal;text-align:center;margin:0 auto">
+          Projects Recap<br>
+          <span style="font-weight:normal;font-size:18px;font-family:Helvetica,Arial,sans-serif;font-weight:200;color:#333333;">Tuesday, August 18</span>
+        </h1>
+      <center>
+    </th>
+    <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
+  </tr>
+</table>
+<div style="width:100%;padding-bottom:20px"></div>
 
 <div>
    <!-- Summary -->
    <div style="margin-bottom:0;margin-bottom:30px">
-       <h2 style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:400;margin-bottom:20px;color:#676a6c">1 project updated:</h2>
+       <h2 style="font-family:&quot;Helvetica Neue&quot;,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:400;margin-bottom:20px;color:#676a6c"><%= pluralize(@data.size, 'project') %> updated:</h2>
        <ul style="margin:0 0 10px;list-style:none;padding:0">
         <% @data.each do |d| %>
-           <li style="margin:10px 0 0 35px;padding:0;list-style-type:disc;clear:both;height:75px;">
+           <li style="margin:10px 0 0 20px;padding:0;list-style-type:disc;clear:both;height:75px;">
              <div style="font-weight:400;font-size:16px;margin-bottom:10px;color: #337ab7;"><%= d["project_name"] %></div>
               
              <div style="margin:0 0 0 15px;padding:0;">
@@ -61,17 +87,17 @@
            <tbody>
               <tr>
                  <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
-                    <h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;line-height:24px;font-weight:bold;display:inline;background:#ffffff;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none">Stark Industries Project 1</span></h2>
+                    <h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;line-height:24px;font-weight:bold;display:inline;background:#ffffff;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= d["project_name"] %></span></h2>
                  </th>
                  <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
               </tr>
            </tbody>
         </table>
-        <p style="margin:0;text-align:left;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Total 32 conversations • 3 collaborators • Last activity 6 days ago</p>
+        <p style="margin:0;text-align:left;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0">Total <%= pluralize(d["total_conversations"].to_i, 'conversation') %> • <%= pluralize(d["members"].size, 'collaborator') %> • Last activity <%= time_ago_in_words(DateTime.parse(d["last_activity_date"]).to_date) %> ago</p>
 
-        <p>Account: <%= d["account_name"] %>, Project: <%= d["project_name"] %></p>
+        <p>Project content here!!!</p>
 
     <% end %>
     </div>
-</div>
+
           
