@@ -10,10 +10,11 @@ class UsersController < ApplicationController
 
   def send_beta_teaser_email
   	@user = User.find_by_id(params[:id])
+    data = JSON.parse(params.to_json)
 
   	respond_to do |format|
   		if @user
-  			UserMailer.beta_teaser_email(@user, params[:data]).deliver_later
+  			UserMailer.beta_teaser_email(@user, data["_json"]).deliver_later
 
   			format.html { redirect_to('http://www.contextsmith.com') }
   			format.json { render json: @user.email, status: 'User found, sending email.'}

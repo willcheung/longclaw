@@ -54,7 +54,7 @@ class User < ActiveRecord::Base
   #after_create :send_beta_teaser_email_to_user
   after_create :create_user_organization
 
-  PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646)
+  PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
 
   def self.find_for_google_oauth2(auth, signed_in_resource=nil)
     info = auth.info
@@ -84,6 +84,7 @@ class User < ActiveRecord::Base
     end
   end
 
+  # Helper methods
   # https://www.twilio.com/blog/2014/09/gmail-api-oauth-rails.html
   def to_params    
     {'refresh_token' => oauth_refresh_token,
@@ -106,12 +107,12 @@ class User < ActiveRecord::Base
   end
  
   def token_expired?
-    expires_at < Time.now
+    oauth_expires_at < Time.now
   end
  
   def fresh_token
     refresh_token! if token_expired?
-    access_token
+    oauth_access_token
   end
 
   #################################

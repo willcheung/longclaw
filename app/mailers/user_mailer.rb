@@ -1,4 +1,6 @@
 class UserMailer < ApplicationMailer
+  add_template_helper(MailerHelper)
+
   def welcome_email(user)
   	default from: "\"Will Cheung\" <wcheung@contextsmith.com>"
     @user = user
