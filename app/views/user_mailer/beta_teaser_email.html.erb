@@ -8,11 +8,13 @@
                     Hi <%= @user.first_name %>,
                     <br/>
 
-                    <p>Welcome to our sneak preview! ContextSmith is a smarter way to collaborate on projects. We automatically turn your customer emails into organized project insights news feeds.  Here's a recap of your projects.</p>
+                    <p>Welcome to ContextSmith's Beta preview! We automatically turn your team's customer emails into organized project insights, giving you full visibility of communication exchanges with all your customers.</p>
+                    <p>As part of the preview into our contextual magic, we've grouped your external emails into meaningful projects.  Here's a recap of the last two weeks.</p>
 
                     Best,<br/>
-                    ContextSmith Team
+                    ContextSmith Team<br/>
                     <br/>
+                    P.S. We don't store your emails.
                   </p>
               </td>
               <td class="expander" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; visibility: hidden; width: 0px; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0;" align="left" valign="top"></td>
@@ -29,7 +31,8 @@
            <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
               <td class="panel" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; background: #ECF8FF; margin: 0; padding: 10px; border: 1px solid #b9e5ff;" align="left" bgcolor="#ECF8FF" valign="top">
                  <p style="color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; text-align: left; line-height: 19px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="left">
-                  Feel free to forward this email to a colleague and have them sign up for free beta preview!  You can also <a href="#" style="color: #2ba6cb; text-decoration: none;">click here</a>.
+                  We'd love to hear your feedback!  Please email us at <a style="color: #2ba6cb; text-decoration: none;" href="mailto:support@contextsmith.com?subject=Feedback!">support@contextsmith.com</a> or follow us on <a style="color: #2ba6cb; text-decoration: none;" href="https://twitter.com/ContextSmith" target="_blank">Twitter</a> for updates.
+                  If you love what you see, tell a coworker or friend about us!  <a style="color: #2ba6cb; text-decoration: none;" href="http://contextsmith.com/" target="_blank">ContextSmith.com</a>
                 </p>
               </td>
               <td class="expander" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; visibility: hidden; width: 0px; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0;" align="left" valign="top"></td>
@@ -59,34 +62,131 @@
 <div style="width:100%;padding-bottom:20px"></div>
 
 
+<!-- Email breakdown chart -->
+<h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">Email Activities by Projects:</h6>
+<table style="border-spacing:0;border-collapse:collapse;padding:0;width:100%;table-layout:fixed">
+ <tbody>
+    <tr style="padding:0">
+      <% activities_by_projects(@data).each_with_index do |(project,value),index| %>
+        <td width="<%= value %>%" style="width:<%= value %>%!important;word-break:break-word;border-collapse:collapse;padding:0;vertical-align:middle;text-align:left;color:#fff;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:30px;margin:0;font-size:12px;background-color:<%= User::PROFILE_COLOR[index%9] %>;height:30px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">&nbsp;&nbsp;<%= (value.to_i) >= 18 ? truncate(project, length: (value.to_i)) : "" %></td>
+      <% end %>
+    </tr>
+ </tbody>
+</table>
+<!-- Legend -->
+<div style="width:100%;text-align:right;font-size:12px;line-height:25px;color:#888;margin-bottom:30px;">
+  <% activities_by_projects(@data).each_with_index do |(project,value),index| %>
+    <span style="white-space:nowrap">&nbsp;&nbsp;&nbsp;  
+      <span style="background-color:<%= User::PROFILE_COLOR[index%9] %>;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:15px;text-align:center;text-decoration:none;width:15px">&nbsp;</span>&nbsp;<%= project %>
+    </span>
+  <% end %>
+</div>
+
+
 <!-- Summary -->
 <div style="margin-bottom:0;margin-bottom:30px">
    <h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333"><%= pluralize(@data.size, 'project') %> updated:</h2>
+
    <ul style="margin:0 0 10px;list-style:none;padding:0">
     <% @data.each do |d| %>
 
-       <li style="margin:10px 0 0 20px;padding:0;list-style-type:none;clear:both;height:75px;">
-         <h3 style="font-weight:600;font-size:16px;margin-bottom:3px;color: #337ab7;"><%= d["topExternalMemberDomain"] %></h3>
-        
-         <p style="margin:0 0 10px 0;text-align:left;color:#a8a9ad;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;padding:0;font-size:12px;margin-bottom:0"><%= pluralize(d["conversations"].size, 'conversation') %> • <%= pluralize((d["internalMembers"].nil? ? d["externalMembers"].size : (d["internalMembers"]+d["externalMembers"]).size), 'collaborator') %> • Last activity <%= time_ago_in_words(DateTime.strptime(d["lastSentDate"].to_s, '%s')) %> ago</p>
+       <li style="margin:10px 0 0 20px;padding:0;list-style-type:none;clear:both;">
+         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;color: #337ab7;"><%= d["topExternalMemberDomain"] %></h3>
 
-         <div style="margin:0 0 0 15px;padding:0;">
-            <%= rounded_initials_group(d["internalMembers"], d["externalMembers"], "", "border-radius:50%;width:24px;height:24px;margin-right:3px;margin-bottom:3px;padding:5px;border: 1px solid #666;color:#fff;text-align:center;font:14px Arial, sans-serif;float:left;line-height:25px;cursor:default;") %>
-         </div>
+         <!-- metrics -->
+          <table class="row">
+             <tbody>
+                <tr>
+                   <td class="wrapper">
+                      <table class="four columns">
+                         <tbody>
+                            <tr>
+                              <td style="width:150px;color:#37c597;font-size:24px;font-weight:bold;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                                <%= (d["internalMembers"].nil? ? d["externalMembers"].size : (d["internalMembers"]+d["externalMembers"]).size) %><br>
+                                <span style="font-size:14px">collaborators</span>
+                              </td>
+                            </tr>
+                         </tbody>
+                      </table>
+                   </td>
+                   <td class="wrapper">
+                      <table class="four columns">
+                         <tbody>
+                            <tr>
+                              <td style="width:150px;color:#898e95;font-size:24px;font-weight:bold;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                                <%= d["conversations"].size %><br>
+                                <span style="font-size:14px">conversations</span>
+                              </td>
+                            </tr>
+                         </tbody>
+                      </table>
+                   </td>
+                   <td class="expander"></td>
+                   <td class="wrapper">
+                      <table class="four columns">
+                         <tbody>
+                            <tr>
+                              <td style="width:150px;color:#898e95;font-size:24px;font-weight:bold;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                                <span style="font-size:14px">Last activity <br>
+                                <%= time_ago_in_words(DateTime.strptime((d["lastSentDate"]/1000).to_s, '%s')) %> ago</span>
+                              </td>
+                            </tr>
+                         </tbody>
+                      </table>
+                   </td>
+                   <td class="wrapper last">
+                      <table class="four">
+                         <tbody>
+                            <tr>
+                               <td style="width:150px;color:#898e95;font-size:24px;font-weight:bold;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                                  <span style="font-size:14px">Last 14 days</span>
+                                  <table width="140px" border="0" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                      <% a=*(1..14).each do |i| %>
+                                        <td width="0" rowspan="1" valign="bottom">
+                                            <div align="center">
+                                                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                                  <tr>
+                                                    <td width="50%" valign="bottom" >
+                                                        <table width="7" height="<%= i*3 %>" border="0" align="center" bordercolor="#ffffff" bgcolor="#CCCCFF">
+                                                        <tr>
+                                                          <td></td>
+                                                        </tr>
+                                                      </table>
+                                                    </td>
+                                                  </tr>
+                                                </table>
+                                            </div>
+                                        </td>
+                                      <% end %>  
+                                    </tr>
+                                  </table>
+                               </td>
+                            </tr>
+                         </tbody>
+                      </table>
+                   </td>
+                   <td class="expander"></td>
+                </tr>
+             </tbody>
+          </table>
+
        </li>
-       <div style="clear: both;"></div>
-
+       
     <% end %>
    </ul>
 </div>
 
+
+
 <!-- Project Details -->
+<h2 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">Project Details:</h2>
 <% @data.each_with_index do |d,top_member_index| %>
 
-<div style="font-family:Helvetica Neue,helvetica,arial,sans-serif;padding:0;margin:0 0 20px">
+<div style="font-family:Helvetica Neue,helvetica,arial,sans-serif;padding:0;margin:0;">
     
     <!-- Project Header -->
-    <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0 0 20px 0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
+    <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
        <tbody>
           <tr>
              <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
@@ -97,44 +197,74 @@
        </tbody>
     </table>
 
-    <% d["conversations"].each do |c| %>
+    <div style="margin-bottom:15px;margin-top:5px;padding:0">
+      
+    </div>
 
-        <div style="font-size:14px;margin-left:20px;padding:0 0 6px 0">
-            <h4 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;font-size:14px;line-height:19px;font-weight:bold;margin:0 0 5px!important;padding:0!important">
+    <!-- Project Members -->
+    <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0 0 20px 0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
+      <tbody>
+          <tr>
+              <th style="padding:0;vertical-align:middle;width:100px;font-weight:normal;text-align:left;font-size:12px;color:#888">Internal (<%= d["internalMembers"].size %>):</th>
+              <td style="background:#ffffff;text-align:left;font-size:14px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:500px;vertical-align:middle">
+                  <span style="font-weight:200;font-size:14px;color:#555;"><%= get_first_names(d["internalMembers"], nil) %></span>
+              </td>
+            </tr>
+            <tr>
+              <th style="padding:0;vertical-align:middle;width:100px;font-weight:normal;text-align:left;font-size:12px;color:#888">Customer (<%= d["externalMembers"].size %>):</th>
+              <td style="background:#ffffff;text-align:left;font-size:14px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:500px;vertical-align:middle">    
+                  <span style="font-weight:200;font-size:14px;color:#555;"><%= get_first_names(d["externalMembers"], nil) %></span>
+             </td>
+          </tr>
+       </tbody>
+    </table>
+
+    <% d["conversations"].each do |c| %>
+      <table cellspacing="0" cellpadding="0" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px;border-radius:10px;margin-bottom:5px;">
+        <tr><td style="padding:0;margin:0;">
+        <div style="font-size:14px;margin-left:20px;margin-bottom:20px;padding:0 0 6px 0;">
+            <h4 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;font-size:14px;line-height:19px;font-weight:bold;margin:0 0 5px!important;padding:3px 0!important;border-bottom: solid 1px #bbb">
              <%= c["subject"] %>
             </h4>
             <div style="padding:0;margin:0 0 10px 0">
             <% c["contextMessages"].each do |m| %>
                <div style="margin:0">
-                  <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;padding:0;border-top: solid 1px #e9e9e9;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:0!important">
+                  <table border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
                      <tbody>
                         <tr style="padding:3px 0 3px 0;">
-                            <% if d["internalMembers"].include?(m["from"][0]) %>
-                                <th style="padding:2px 5px 2px 0;vertical-align:top;width:9%;font-weight:200;text-align:left;padding-right:5px;font-size:12px;color:#888"><%= rounded_initials_single(m["from"][0]) %></th>
+                          <th style="padding:2px 5px 2px 0;vertical-align:top;width:8%;font-weight:200;text-align:left;font-size:12px;color:#888">
+                            <% if member_of_group?(d["internalMembers"],m["from"][0]) %>
+                                <%= rounded_initials_single(m["from"][0]) %>
                             <% else %>
-                                <th style="padding:2px 5px 2px 0;vertical-align:top;width:9%;font-weight:200;text-align:left;padding-right:5px;font-size:12px;color:#888"><%= DateTime.strptime(m["sentDate"].to_s, '%s').strftime('%b %e') %></th>
+                                &nbsp;
                             <% end %>
+                          </th>
 
-                            <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;padding:0;border-collapse:collapse;border-spacing:0;padding-top:2px;padding-bottom:2px;vertical-align:top;width:82%">
-                                <span style="font-weight:normal;font-size:14px;line-height:15px;color:#444"><b><%= get_first_names(m["from"], nil) %></b> to <%= get_name_or_everyone(m["to"],m["cc"]) %></span>
-                                <br>
-                                <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
-                                    <%= truncate(m["previewContent"], length: 200, separator: ' ') %>
-                                </span>              
-                            </td> 
+                          <td style="<%= member_of_group?(d["internalMembers"],m["from"][0]) ? "background:#ffffff" : "background:#e2eef6" %>;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;padding:8px 4px 10px 8px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;border-radius:10px;border:0;">
+                              <span style="font-weight:normal;font-size:14px;line-height:15px;color:#444"><b><%= get_first_names(m["from"], nil) %></b> to <%= get_name_or_everyone(m["to"],m["cc"]) %></span>
+                              <span style="font-weight:200;font-size:12px;color:#888;float:right;margin-right:20px;"><%= DateTime.strptime((m["sentDate"]/1000).to_s, '%s').strftime('%b %e') %></span>
+                              <br>
+                              <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
+                                  <%= truncate(m["previewContent"], length: 200, separator: ' ') %> <a style="color:##337ab7" target="_blank" href="https://mail.google.com/mail/u/?authuser=<%= @user.email %>#inbox/<%= m["gmailMessageId"] %>">(more)</a>
+                              </span>              
+                          </td> 
                            
-                           <% if d["internalMembers"].include?(m["from"][0]) %>
-                                <th style="padding:2px 5px 2px 0;vertical-align:top;width:9%;font-weight:200;text-align:left;padding-right:5px;font-size:12px;color:#888"><%= DateTime.strptime(m["sentDate"].to_s, '%s').strftime('%b %e') %></th>
+                          <th style="padding:2px 5px 2px 0;vertical-align:top;width:8%;font-weight:200;font-size:12px;color:#888;">
+                            <% if member_of_group?(d["internalMembers"],m["from"][0]) %>
+                                &nbsp;
                             <% else %>
-                                <th style="padding:2px 5px 2px 0;vertical-align:top;width:9%;font-weight:200;text-align:left;padding-right:5px;font-size:12px;color:#888"><%= rounded_initials_single(m["from"][0]) %></th>
+                                <%= rounded_initials_single(m["from"][0]) %>
                             <% end %>
+                          </th>
                         </tr>
-                     </tbody>
-                  </table>
-               </div>
-            <% end %>
+                      </tbody>
+                    </table>
+                </div>
+              <% end %>
             </div>
-        </div>
+          </div>
+        </td></tr>
+      </table>
       
     <% end %>
 
@@ -142,31 +272,8 @@
 
 <% end %>
 
-<h6 style="color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;text-align:left;line-height:1.3;margin:0;padding:0;font-size:18px;width:100%;padding-bottom:5px">Who you interacted with</h6>
-<table style="border-spacing:0;border-collapse:collapse;padding:0;width:100%;table-layout:fixed">
-   <tbody>
-      <tr style="padding:0">
-         <td width="0%" style="width:0%!important;word-break:break-word;border-collapse:collapse;padding:0;vertical-align:middle;text-align:left;color:#fff;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:30px;margin:0;font-size:14px;background-color:#2bb673;height:30px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></td>
-         <td width="0%" style="width:0%!important;word-break:break-word;border-collapse:collapse;padding:0;vertical-align:middle;text-align:left;color:#fff;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:30px;margin:0;font-size:14px;background-color:#cd232a;height:30px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></td>
-         <td width="71.4%" style="width:71.4%!important;word-break:break-word;border-collapse:collapse;padding:0;vertical-align:middle;text-align:left;color:#fff;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:30px;margin:0;font-size:14px;background-color:#f2b336;height:30px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">&nbsp;&nbsp;Coworkers</td>
-         <td width="28.6%" style="width:28.6%!important;word-break:break-word;border-collapse:collapse;padding:0;vertical-align:middle;text-align:left;color:#fff;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:30px;margin:0;font-size:14px;background-color:#42bac3;height:30px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">&nbsp;&nbsp;Others</td>
-      </tr>
-   </tbody>
-</table>
 
-<div style="width:100%;text-align:right;font-size:12px;line-height:25px;color:#888">
-    <span style="background-color:#2bb673;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:15px;text-align:center;text-decoration:none;width:15px">&nbsp;</span>&nbsp;0&nbsp;times with Customers 
-    <span style="white-space:nowrap">&nbsp;&nbsp;&nbsp;
-        <span style="background-color:#cd232a;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:15px;text-align:center;text-decoration:none;width:15px">&nbsp;</span>&nbsp;0&nbsp;with Prospects
-    </span>
-    <span style="white-space:nowrap">&nbsp;&nbsp;&nbsp;
-        <span style="background-color:#f2b336;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:15px;text-align:center;text-decoration:none;width:15px">&nbsp;</span>&nbsp;10&nbsp;with Coworkers
-    </span>
-    <span style="white-space:nowrap">&nbsp;&nbsp;&nbsp;
-        <span style="background-color:#42bac3;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:15px;text-align:center;text-decoration:none;width:15px">&nbsp;</span>&nbsp;4&nbsp;with Others
-    </span>
-</div>
-
+<!--
 <table width="200px" border="0" cellpadding="0" cellspacing="0">
   <tr>
     <% a=*(1..14).each do |i| %>
@@ -188,3 +295,4 @@
     <% end %>  
   </tr>
 </table>
+-->

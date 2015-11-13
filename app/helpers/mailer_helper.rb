@@ -3,29 +3,29 @@ module MailerHelper
         a = []
 
         to.each do |n| 
+          if n["personal"].nil?
+          	a << n["address"]
+          else 
+          	if n["personal"].include?(', ') # Handles last name first
+          		a << n["personal"].split(', ').last.split(' ').first 
+          	else
+              a << n["personal"].split(' ').first 
+            end
+          end
+        end
+
+        unless cc.nil? or cc.empty?
+          cc.each do |n| 
             if n["personal"].nil?
             	a << n["address"]
             else 
-            	if n["personal"].include?(', ') # Handles last name first
+            	if n["personal"].include?(', ')
             		a << n["personal"].split(', ').last
             	else
                 a << n["personal"].split(' ').first 
               end
             end
-        end
-
-        unless cc.nil? or cc.empty?
-            cc.each do |n| 
-                if n["personal"].nil?
-                	a << n["address"]
-                else 
-                	if n["personal"].include?(', ')
-                		a << n["personal"].split(', ').last
-                	else
-                    a << n["personal"].split(' ').first 
-                  end
-                end
-            end
+          end
         end
 
         return a.join(', ')
@@ -38,7 +38,7 @@ module MailerHelper
           member = name["personal"]
       end
 
-    	css_style = "border-radius:50%;width:24px;height:24px;margin-right:3px;margin-bottom:3px;padding:5px;border: 1px solid #666;color:#fff;text-align:center;font:14px Arial,sans-serif;float:left;line-height:25px;cursor:default;"
+    	css_style = "border-radius:50%;width:24px;height:24px;margin:0 3px;margin-bottom:3px;padding:5px;border: 1px solid #666;color:#fff;text-align:center;font:14px Arial,sans-serif;float:left;line-height:25px;cursor:default;"
     	css_style += 'background:' + User::PROFILE_COLOR[(member.length)%9]
     	
     	s = '<div title="' + member + '" style="' + css_style + '">'
@@ -57,23 +57,23 @@ module MailerHelper
         s = ""
 
         external.each do |n|
-            if n["personal"].nil?
-                a << n["address"]
-            else
-                a << n["personal"]
-            end
+          if n["personal"].nil?
+              a << n["address"]
+          else
+              a << n["personal"]
+          end
         end
 
         a << '<span style="line-height:34px;float:left;margin:0 5px 0 2px;">//</span>'
 
         unless internal.nil? or internal.empty?
-            internal.each do |n|
-                if n["personal"].nil?
-                    a << n["address"]
-                else
-                    a << n["personal"]
-                end
+          internal.each do |n|
+            if n["personal"].nil?
+                a << n["address"]
+            else
+                a << n["personal"]
             end
+          end
         end
 
         a.each do |member|
@@ -119,7 +119,32 @@ module MailerHelper
     	end
     end
 
-    def internal_member?(data, index, member)
-    	data[index]["internalMember"].include?(member)
+    def member_of_group?(group, member)
+    	group.include?(member)
+    end
+
+    def activities_by_projects(data)
+        projects = Hash.new
+        total_messages = 0
+        project_messages = 0
+        total_conversations = 0
+
+        data.each do |p|
+          name = p["topExternalMemberDomain"]
+          total_conversations += p["conversations"].size
+          project_messages = 0
+          p["conversations"].each do |c|
+            total_messages += c["contextMessages"].size
+            project_messages += c["contextMessages"].size
+          end
+
+          projects["#{name}"] = project_messages
+        end
+
+        projects.each do |project,value|
+          projects["#{project}"] = '%.1f' % ((value / total_messages.to_f) * 100.0)
+        end
+
+        return projects.sort_by { |name, value| value.to_i }
     end
 end
