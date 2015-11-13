@@ -128,7 +128,7 @@
                             <tr>
                               <td style="width:150px;color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
                                 <span style="font-size:14px">Last activity <br>
-                                <%= time_ago_in_words(DateTime.strptime((d["lastSentDate"]/1000).to_s, '%s')) %> ago</span>
+                                <%= time_ago_in_words(DateTime.strptime(d["lastSentDate"].to_s, '%s')) %> ago</span>
                               </td>
                             </tr>
                          </tbody>
@@ -239,9 +239,9 @@
                             <% end %>
                           </th>
 
-                          <td style="<%= member_of_group?(d["internalMembers"],m["from"][0]) ? "background:#ffffff" : "background:#e2eef6" %>;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;padding:8px 4px 10px 8px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;border-radius:10px;border:0;">
+                          <td style="<%= member_of_group?(d["internalMembers"],m["from"][0]) ? "background:#ffffff" : "background:#e2eef6" %>;text-align:left;font-size:15px;line-height:19px;font-family:Helvetica Neue,helvetica,arial,sans-serif;color:#000000;padding:8px 4px 10px 8px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;border:0;">
                               <span style="font-weight:normal;font-size:14px;line-height:15px;color:#444"><b><%= get_first_names(m["from"], nil) %></b> to <%= get_name_or_everyone(m["to"],m["cc"]) %></span>
-                              <span style="font-weight:200;font-size:12px;color:#888;float:right;margin-right:20px;"><%= DateTime.strptime((m["sentDate"]/1000).to_s, '%s').strftime('%b %e') %></span>
+                              <span style="font-weight:200;font-size:12px;color:#888;float:right;margin-right:20px;"><%= DateTime.strptime(m["sentDate"].to_s, '%s').strftime('%b %e') %></span>
                               <br>
                               <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
                                   <%= truncate(m["previewContent"], length: 200, separator: ' ') %> <a style="color:##337ab7" target="_blank" href="https://mail.google.com/mail/u/?authuser=<%= @user.email %>#inbox/<%= m["gmailMessageId"] %>">(more)</a>

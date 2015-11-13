@@ -14,7 +14,7 @@ class UsersController < ApplicationController
 
   	respond_to do |format|
   		if @user
-  			UserMailer.beta_teaser_email(@user, data["_json"]).deliver_later
+  			#UserMailer.beta_teaser_email(@user, data["_json"]).deliver_later
 
   			format.html { redirect_to('http://www.contextsmith.com') }
   			format.json { render json: @user.email, status: 'User found, sending email.'}
