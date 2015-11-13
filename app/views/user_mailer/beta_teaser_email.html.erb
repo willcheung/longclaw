@@ -101,7 +101,7 @@
                       <table class="four columns">
                          <tbody>
                             <tr>
-                              <td style="width:150px;color:#37c597;font-size:24px;font-weight:bold;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                              <td style="width:150px;color:#A1C436;font-size:24px;font-weight:200;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
                                 <%= (d["internalMembers"].nil? ? d["externalMembers"].size : (d["internalMembers"]+d["externalMembers"]).size) %><br>
                                 <span style="font-size:14px">collaborators</span>
                               </td>
@@ -113,7 +113,7 @@
                       <table class="four columns">
                          <tbody>
                             <tr>
-                              <td style="width:150px;color:#898e95;font-size:24px;font-weight:bold;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                              <td style="width:150px;color:#e58646;font-size:24px;font-weight:200;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
                                 <%= d["conversations"].size %><br>
                                 <span style="font-size:14px">conversations</span>
                               </td>
@@ -126,7 +126,7 @@
                       <table class="four columns">
                          <tbody>
                             <tr>
-                              <td style="width:150px;color:#898e95;font-size:24px;font-weight:bold;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                              <td style="width:150px;color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
                                 <span style="font-size:14px">Last activity <br>
                                 <%= time_ago_in_words(DateTime.strptime((d["lastSentDate"]/1000).to_s, '%s')) %> ago</span>
                               </td>
@@ -138,7 +138,7 @@
                       <table class="four">
                          <tbody>
                             <tr>
-                               <td style="width:150px;color:#898e95;font-size:24px;font-weight:bold;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                               <td style="width:150px;color:#898e95;font-size:24px;font-weight:200;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
                                   <span style="font-size:14px">Last 14 days</span>
                                   <table width="140px" border="0" cellpadding="0" cellspacing="0">
                                     <tr>
@@ -220,8 +220,7 @@
     </table>
 
     <% d["conversations"].each do |c| %>
-      <table cellspacing="0" cellpadding="0" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px;border-radius:10px;margin-bottom:5px;">
-        <tr><td style="padding:0;margin:0;">
+      
         <div style="font-size:14px;margin-left:20px;margin-bottom:20px;padding:0 0 6px 0;">
             <h4 style="font-family:Helvetica Neue,helvetica,arial,sans-serif;font-size:14px;line-height:19px;font-weight:bold;margin:0 0 5px!important;padding:3px 0!important;border-bottom: solid 1px #bbb">
              <%= c["subject"] %>
@@ -263,9 +262,7 @@
               <% end %>
             </div>
           </div>
-        </td></tr>
-      </table>
-      
+
     <% end %>
 
 </div>
