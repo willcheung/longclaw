@@ -10,7 +10,7 @@ class UsersController < ApplicationController
 
   def send_beta_teaser_email
   	@user = User.find_by_id(params[:id])
-    data = JSON.parse(params.to_json)
+    data = JSON.parse(params.force_encoding("ISO-8859-1").encode("UTF-8").to_json)
     #data = ActiveSupport::JSON.decode(params)
 
   	respond_to do |format|
