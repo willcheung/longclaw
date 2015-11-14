@@ -16,14 +16,17 @@ class UsersController < ApplicationController
     data = params["_json"]
 
   	respond_to do |format|
+      puts format.to_s
   		if @user
-  			UserMailer.beta_teaser_email(@user, data, start_date, end_date).deliver_later
-
-  			format.html { redirect_to('http://www.contextsmith.com') }
-  			format.json { render json: @user.email, status: 'User found, sending email.'}
+        begin
+          UserMailer.beta_teaser_email(@user, data, start_date, end_date).deliver_later
+        rescue Exception
+          format.json { render json: 'Something went wrong while sending emails', status: 500}
+        else
+          format.json { render json: @user.email, status: 200}
+        end
   		else
-  			format.html { redirect_to('http://www.contextsmith.com') }
-  			format.json { render json: 'User not found.', status: 'User not found. No email sent.'}
+  			format.json { render json: 'User not found.', status: 500}
   		end
   	end
   end

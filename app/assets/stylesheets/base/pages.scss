@@ -68,8 +68,9 @@
 }
 
 .lockscreen.middle-box {
-  width: 200px;
-  padding-top: 110px;
+  width: 450px;
+  padding-top: 300px;
+  max-width:none;
 }
 
 .loginscreen.middle-box {
@@ -107,20 +108,18 @@
   z-index: 10;
   position: absolute;
   top: 110px;
-  left: 50%;
-  margin-left: -470px;
+  left: 25%;
+  right: 25%;
+  text-align: center;
 }
 
 .lock-word span {
   font-size: 100px;
   font-weight: 600;
-  color: #e9e9e9;
+  color: #dfdfdf;
   display: inline-block;
 }
 
-.lock-word .first-word {
-  margin-right: 160px;
-}
 
 /* DASBOARD */
 
