@@ -88,7 +88,7 @@
     <% @data.each do |d| %>
 
        <li style="margin:10px 0 0 20px;padding:0;list-style-type:none;clear:both;">
-         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;color: #337ab7;"><%= p["topExternalMemberName"].nil? ? p["topExternalMemberDomain"].gsub('.com','').capitalize : p["topExternalMemberName"] %></h3>
+         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;color: #337ab7;"><%= d["topExternalMemberName"].nil? ? d["topExternalMemberDomain"].gsub('.com','').capitalize : d["topExternalMemberName"] %></h3>
 
          <!-- metrics -->
           <table class="row">
