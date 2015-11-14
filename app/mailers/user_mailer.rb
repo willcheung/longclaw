@@ -14,6 +14,6 @@ class UserMailer < ApplicationMailer
     @data = data
 
     track user: user
-    mail(to: @user.email, subject: "Sneak Preview: Projects Recap by ContextSmith")
+    mail(to: @user.email, subject: "Projects Recap by ContextSmith")
   end
 end

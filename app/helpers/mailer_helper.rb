@@ -38,7 +38,7 @@ module MailerHelper
           member = name["personal"]
       end
 
-    	css_style = "border-radius:50%;width:24px;height:24px;margin:0 3px;margin-bottom:3px;padding:5px;border: 1px solid #666;color:#fff;text-align:center;font:14px Arial,sans-serif;float:left;line-height:25px;cursor:default;"
+    	css_style = "border-radius:50%;width:24px;height:24px;margin:0 3px;padding:5px;border:1px solid #666;color:#fff;text-align:center;font-size:14px;float:left;line-height:25px;cursor:default;"
     	css_style += 'background:' + User::PROFILE_COLOR[(member.length)%9]
     	
     	s = '<div title="' + member + '" style="' + css_style + '">'
@@ -130,7 +130,7 @@ module MailerHelper
         total_conversations = 0
 
         data.each do |p|
-          name = p["topExternalMemberDomain"]
+          name = p["topExternalMemberName"]
           total_conversations += p["conversations"].size
           project_messages = 0
           p["conversations"].each do |c|
