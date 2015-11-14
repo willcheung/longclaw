@@ -130,7 +130,7 @@ module MailerHelper
         total_conversations = 0
 
         data.each do |p|
-          name = p["topExternalMemberName"]
+          name = p["topExternalMemberName"].nil? ? p["topExternalMemberDomain"] : p["topExternalMemberName"]
           total_conversations += p["conversations"].size
           project_messages = 0
           p["conversations"].each do |c|

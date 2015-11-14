@@ -11,8 +11,8 @@ class UsersController < ApplicationController
   def send_beta_teaser_email
   	@user = User.find_by_id(params[:id])
 
-    start_date = Time.at(params["startDate"])
-    end_date = Time.at(params["endDate"])
+    start_date = Time.at(params["startDate"].to_i).strftime('%B %e')
+    end_date = Time.at(params["endDate"].to_i).strftime('%B %e')
     data = params["_json"]
 
   	respond_to do |format|
