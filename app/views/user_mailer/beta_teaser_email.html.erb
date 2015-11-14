@@ -73,7 +73,7 @@
 <!-- Legend -->
 <div style="width:100%;text-align:right;font-size:12px;line-height:25px;color:#888;margin-bottom:30px;">
   <% activities_by_projects(@data).each_with_index do |(project,value),index| %>
-    <span style="white-space:nowrap">&nbsp;&nbsp;&nbsp;  
+    <span style="white-space:nowrap"><% if index != 0 %>&nbsp;&nbsp;&nbsp;<% end %>
       <span style="background-color:<%= User::PROFILE_COLOR[index%9] %>;color:#ffffff;display:inline-block;font-size:13px;font-weight:bold;line-height:15px;text-align:center;text-decoration:none;width:15px">&nbsp;</span>&nbsp;<%= project %>
     </span>
   <% end %>
@@ -88,7 +88,7 @@
     <% @data.each do |d| %>
 
        <li style="margin:10px 0 0 20px;padding:0;list-style-type:none;clear:both;">
-         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;color: #337ab7;"><%= d["topExternalMemberName"].nil? ? d["topExternalMemberDomain"].gsub('.com','').capitalize : d["topExternalMemberName"] %></h3>
+         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;color: #337ab7;"><%= get_account_name(d["topExternalMemberName"], d["topExternalMemberDomain"]) %></h3>
 
          <!-- metrics -->
           <table class="row">
@@ -98,9 +98,9 @@
                       <table class="three columns" style="width:150px">
                          <tbody>
                             <tr>
-                              <td style="color:#A1C436;font-size:24px;font-weight:200;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
-                                <%= (d["internalMembers"].nil? ? d["externalMembers"].size : (d["internalMembers"]+d["externalMembers"]).size) %><br>
-                                <span style="font-size:14px">collaborators</span>
+                              <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
+                                <span style="font-size:14px">Last activity <br>
+                                <%= time_ago_in_words(DateTime.strptime(d["lastSentDate"].to_s, '%s')) %> ago</span>
                               </td>
                             </tr>
                          </tbody>
@@ -123,9 +123,9 @@
                       <table class="three columns" style="width:150px">
                          <tbody>
                             <tr>
-                              <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
-                                <span style="font-size:14px">Last activity <br>
-                                <%= time_ago_in_words(DateTime.strptime(d["lastSentDate"].to_s, '%s')) %> ago</span>
+                              <td style="color:#A1C436;font-size:24px;font-weight:200;padding-right:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;">
+                                <%= (d["internalMembers"].nil? ? d["externalMembers"].size : (d["internalMembers"]+d["externalMembers"]).size) %><br>
+                                <span style="font-size:14px">collaborators</span>
                               </td>
                             </tr>
                          </tbody>
@@ -164,7 +164,7 @@
        <tbody>
           <tr>
              <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
-                <h2 style="line-height:24px;font-weight:bold;display:inline;background:#ffffff;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= d["topExternalMemberName"] %> Conversations</span></h2>
+                <h2 style="line-height:24px;font-weight:bold;display:inline;background:#ffffff;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= get_account_name(d["topExternalMemberName"], d["topExternalMemberDomain"]) %> Conversations</span></h2>
              </th>
              <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
           </tr>

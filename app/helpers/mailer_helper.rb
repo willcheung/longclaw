@@ -130,7 +130,7 @@ module MailerHelper
         total_conversations = 0
 
         data.each do |p|
-          name = p["topExternalMemberName"].nil? ? p["topExternalMemberDomain"].gsub('.com','').capitalize : p["topExternalMemberName"]
+          name = get_account_name(p["topExternalMemberName"], p["topExternalMemberDomain"])
           total_conversations += p["conversations"].size
           project_messages = 0
           p["conversations"].each do |c|
@@ -146,5 +146,13 @@ module MailerHelper
         end
 
         return projects.sort_by { |name, value| value.to_i }
+    end
+
+    def get_account_name(name, domain)
+      if name.nil? or name.downcase.include?("domain") or name.downcase.include?("registrar") or name.downcase.include?("registrant")
+        domain.gsub('.com','').capitalize
+      else 
+        name
+      end
     end
 end
