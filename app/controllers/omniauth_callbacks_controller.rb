@@ -5,18 +5,18 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     if @user.persisted?
     	session["devise.google_data"] = request.env["omniauth.auth"]
       @user.refresh_token! if @user.token_expired?
-      flash[:notice] = I18n.t "devise.omniauth_callbacks.success", :kind => "Google"
+      logger.info "Google devise.omniauth_callbacks.success"
       sign_in_and_redirect @user, :event => :authentication
     else
       reset_session
-  		flash[:error] = "Can't verify Google!"
+  		logger.error "Can't verify Google!"
   		redirect_to new_user_registration_path
     end
   end
 
   def failure
   	reset_session
-  	flash[:error] = "Can't verify Google!"
+  	logger.error "Can't verify Google!"
   	redirect_to new_user_registration_path
   end
 end
