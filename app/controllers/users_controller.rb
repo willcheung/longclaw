@@ -20,10 +20,10 @@ class UsersController < ApplicationController
   		if @user
         begin
           UserMailer.beta_teaser_email(@user, data, start_date, end_date).deliver_later
-        rescue Exception
-          format.json { render json: 'Something went wrong while sending emails', status: 500}
+        rescue => e
+          format.json { render json: 'Something went wrong while sending emails ' + e.to_s, status: 500}
         else
-          format.json { render json: @user.email, status: 200}
+          format.json { render json: 'Email sent to ' + @user.email, status: 200}
         end
   		else
   			format.json { render json: 'User not found.', status: 500}
