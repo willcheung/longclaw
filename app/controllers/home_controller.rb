@@ -16,6 +16,8 @@ class HomeController < ApplicationController
 
   	if ENV["RAILS_ENV"] == 'production'
   		callback_base_url = "http://app.contextsmith.com"
+  	elsif ENV["RAILS_ENV"] == 'test'
+  		callback_base_url = "https://guarded-refuge-6063.herokuapp.com"
   	elsif ENV["RAILS_ENV"] == 'development'
   		callback_base_url = "http://localhost:3000"
   	end

@@ -4,6 +4,12 @@ development:
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
 
+test:
+  google_client_id: 9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com
+  google_client_secret: kMCmqlzYF6pYp6L8-SIP8IGY
+  mandrill_user_name: wcheung@contextsmith.com
+  mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
+
 production:
   google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
   google_client_secret: ZbgIgjg6M2LhCUc2RIIOS-TQ

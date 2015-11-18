@@ -37,7 +37,7 @@ group :development do
   gem "letter_opener"							# email preview
 end
 
-group :production do
+group :production, :test do
   gem 'rails_12factor'
 end
 
