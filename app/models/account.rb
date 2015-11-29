@@ -16,6 +16,7 @@
 #  organization_id :uuid
 #  notes           :text
 #  status          :string
+#  domain          :string(64)       default(""), not null
 #
 
 class Account < ActiveRecord::Base

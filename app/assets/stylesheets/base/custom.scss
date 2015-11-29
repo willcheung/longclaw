@@ -211,3 +211,25 @@ hr.message-divider {
   margin-top: 3px;
   margin-bottom: 6px;
 }
+.more-messages {
+  text-align: center;
+  margin: 12px 0;
+}
+.more-messages a {
+  color: #888;
+}
+.rounded-initials {
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  
+  padding:3px;
+  border:1px solid #666;
+  color:#fff;
+  text-align:center;
+  font-size:14px;
+  float:left;
+  line-height:25px;
+  cursor:default;
+  background: #000;
+}

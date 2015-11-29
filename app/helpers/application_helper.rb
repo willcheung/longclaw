@@ -1,10 +1,10 @@
 module ApplicationHelper
     def is_active_controller(controller_name)
-        params[:controller] == controller_name ? "active" : nil
+      params[:controller] == controller_name ? "active" : nil
     end
 
     def is_active_action(action_name)
-        params[:action] == action_name ? "active" : nil
+      params[:action] == action_name ? "active" : nil
     end
 
     def get_full_name(user)
@@ -12,15 +12,19 @@ module ApplicationHelper
     end
 
     def get_yn(bool)
-        bool ? 'Yes' : 'No'
+      bool ? 'Yes' : 'No'
+    end
+
+    def get_short_name(domain)
+      domain.gsub('.com', '')
     end
 
     def get_value_or_na(val)
-        if val.nil?
-            "N/A"
-        else
-            val
-        end
+      if val.nil?
+        "N/A"
+      else
+        val
+      end
     end
 
     def custom_toastr_flash

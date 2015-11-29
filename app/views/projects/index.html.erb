@@ -17,36 +17,13 @@
 
 <div class="wrapper wrapper-content animated fadeInUp">
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-9">
             <% if @projects.empty? %>
                 <div class="text-center">
                     <h3>No projects.</h3>
                     <%= link_to 'Create New Project', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary' %>
                 </div>
             <% else %>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="col-lg-3">
-                            <div class="btn-group">
-                                <div class="font-bold m-b-xs">Project Status:</div>
-                                <button class="btn btn-sm btn-white" type="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
-                                <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;Active&nbsp;&nbsp;&nbsp;</button>
-                                <button class="btn btn-sm btn-white" type="button">Archived</button>
-                            </div>
-                        </div>
-                        <div class="col-lg-3">
-                            <div class="btn-group">
-                                <div class="font-bold m-b-xs">Project Role:</div>
-                                <button class="btn btn-sm btn-white" type="button">I'm Project Owner</button>
-                                <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;&nbsp;I'm Member&nbsp;&nbsp;&nbsp;&nbsp;</button>
-                            </div>
-                        </div>
-                        <div class="col-lg-offset-3 col-lg-3">
-                            <div class="font-bold">&nbsp;</div>
-                        </div>
-                        
-                    </div>
-                </div>
                 <div class="row">
                     <div class="col-lg-12 projects">
                         <!-- account, projects -->
@@ -87,6 +64,27 @@
                     </div>
                 </div>
             <% end %>
+        </div>
+        <div class="col-lg-3">
+            <div class="row m-t-md">
+                <h3>Filter by:</h3>
+                <div class="col-lg-12 m-t-sm">
+                    <div class="btn-group">
+                        <div class="font-bold m-b-xs">Project Status:</div>
+                        <button class="btn btn-sm btn-white" type="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                        <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;Active&nbsp;&nbsp;&nbsp;</button>
+                        <button class="btn btn-sm btn-white" type="button">Archived</button>
+                    </div>
+                </div>
+            
+                <div class="col-lg-12 m-t-lg">
+                    <div class="btn-group">
+                        <div class="font-bold m-b-xs">Project Role:</div>
+                        <button class="btn btn-sm btn-white" type="button">I'm Project Owner</button>
+                        <button class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;&nbsp;&nbsp;I'm Member&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

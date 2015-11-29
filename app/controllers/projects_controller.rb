@@ -1,6 +1,6 @@
 class ProjectsController < ApplicationController
   before_action :set_project, only: [:show, :edit, :update, :destroy]
-  before_action :get_account_names, only: [:index, :new, :show, :edit]
+  before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
 
   # GET /projects
   # GET /projects.json
@@ -17,7 +17,7 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    
+    @team = @project.project_members.includes(contact: [:account])
   end
 
   # GET /projects/new

@@ -15,6 +15,8 @@ gem 'best_in_place', '~> 3.0.1'
 gem 'ahoy_email'
 gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankane/ahoy
 gem 'puma'                        # Web server
+#gem 'whois'
+#gem 'attr_encrypted'             # Encrypting private data!
 
 # Gems used only for assets and not required
 # in production environments by default.
@@ -40,15 +42,3 @@ end
 group :production, :test do
   gem 'rails_12factor'
 end
-
-# Use ActiveModel has_secure_password
-# gem 'bcrypt-ruby', '~> 3.1.2'
-
-# Use unicorn as the app server
-# gem 'unicorn'
-
-# Use Capistrano for deployment
-# gem 'capistrano', group: :development
-
-# Use debugger
-# gem 'debugger', group: [:development, :test]

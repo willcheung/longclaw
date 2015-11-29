@@ -17,7 +17,6 @@
 #  created_by         :uuid
 #  updated_by         :uuid
 #  owner_id           :uuid
-#  is_template        :boolean          default(FALSE)
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #

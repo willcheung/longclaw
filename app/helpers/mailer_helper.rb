@@ -49,6 +49,8 @@ module MailerHelper
       	s += member.split(' ').first[0,1] + member.split(' ').last[0,1]
       end
 
+      s += "</div>"
+
       return s.html_safe
     end
 

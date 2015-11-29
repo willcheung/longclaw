@@ -11,26 +11,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151025003056) do
+ActiveRecord::Schema.define(version: 20151128013541) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",            default: "", null: false
-    t.text     "description",     default: ""
+    t.string   "name",                       default: "", null: false
+    t.text     "description",                default: ""
     t.string   "website"
     t.uuid     "owner_id"
     t.string   "phone"
     t.text     "address"
     t.uuid     "created_by"
     t.uuid     "updated_by"
-    t.datetime "created_at",                   null: false
-    t.datetime "updated_at",                   null: false
+    t.datetime "created_at",                              null: false
+    t.datetime "updated_at",                              null: false
     t.uuid     "organization_id"
     t.text     "notes"
     t.string   "status"
+    t.string   "domain",          limit: 64, default: "", null: false
   end
 
   create_table "ahoy_events", id: :uuid, default: nil, force: :cascade do |t|
@@ -125,7 +126,7 @@ ActiveRecord::Schema.define(version: 20151025003056) do
   end
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",               default: "",    null: false
+    t.string   "name",               default: "",   null: false
     t.uuid     "account_id"
     t.string   "project_code"
     t.boolean  "is_billable",        default: true
@@ -139,9 +140,8 @@ ActiveRecord::Schema.define(version: 20151025003056) do
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
-    t.boolean  "is_template",        default: false
-    t.datetime "created_at",                         null: false
-    t.datetime "updated_at",                         null: false
+    t.datetime "created_at",                        null: false
+    t.datetime "updated_at",                        null: false
   end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
@@ -165,7 +165,6 @@ ActiveRecord::Schema.define(version: 20151025003056) do
     t.datetime "oauth_expires_at"
     t.uuid     "organization_id"
     t.string   "department"
-    t.integer  "hourly_rate"
     t.boolean  "is_billable"
     t.datetime "created_at"
     t.datetime "updated_at"

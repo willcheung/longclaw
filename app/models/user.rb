@@ -23,7 +23,6 @@
 #  oauth_expires_at       :datetime
 #  organization_id        :uuid
 #  department             :string
-#  hourly_rate            :integer
 #  is_billable            :boolean
 #  created_at             :datetime
 #  updated_at             :datetime
