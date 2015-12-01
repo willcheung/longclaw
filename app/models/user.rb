@@ -63,9 +63,24 @@ class User < ActiveRecord::Base
     if user
       return user
     else
-      registered_user = User.where(:email => auth.info.email).first
-      if registered_user
-        return registered_user
+      # Considered referred user if email exists but never signed in before
+      referred_user = User.where(:email => auth.info.email).first
+
+      if referred_user
+        referred_user.update_attributes(
+          first_name: info["first_name"],
+          last_name: info["last_name"],
+          oauth_provider:auth.provider,
+          email: info["email"],
+          image_url: info["image"],
+          oauth_provider_uid: auth.uid,
+          password: Devise.friendly_token[0,20],
+          oauth_access_token: credentials["token"],
+          oauth_refresh_token: credentials["refresh_token"],
+          oauth_expires_at: Time.at(credentials["expires_at"])
+        )
+
+        return referred_user
       else
         user = User.create(
           first_name: info["first_name"],
