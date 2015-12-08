@@ -26,6 +26,7 @@ class Project < ActiveRecord::Base
 	belongs_to	:user, foreign_key: "owner_id"
 	has_many	:project_members
 	has_many	:contacts, through: "project_members"
+	has_many	:conversations
 
 	validates :name, presence: true, uniqueness: { scope: :account, message: "There's already an project with the same name." }
 	validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }

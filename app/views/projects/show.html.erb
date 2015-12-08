@@ -54,8 +54,8 @@
                         <div class="panel-heading">
                             <div class="panel-options">
                                 <ul class="nav nav-tabs">
-                                    <li class="active"><a href="#conversations" data-toggle="tab">Conversations &nbsp;&nbsp;<span class="badge badge-primary">9+</span></a></li>
-                                    <li class=""><a href="#pinned" data-toggle="tab">Pinned Items &nbsp;&nbsp;<span class="badge badge-primary">5</span></a></li>
+                                    <li class="active"><a href="#conversations" data-toggle="tab">Conversations</a></li>
+                                    <li class=""><a href="#pinned" data-toggle="tab"><i class="fa fa-thumb-tack"></i> Pinned Items (5)</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -88,6 +88,9 @@
                                                 <div class="vertical-timeline-block">
                                                     <div class="vertical-timeline-icon white-bg">
                                                         <i class="fa fa-envelope"></i>
+                                                    </div>
+                                                    <div class="vertical-timeline-button">
+                                                        <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
                                                     </div>
                                                     <span class="vertical-date left">Today <br />
                                                         <small>3:23pm</small>
@@ -146,6 +149,9 @@
                                                     <div class="vertical-timeline-icon white-bg">
                                                         <i class="fa fa-calendar"></i>
                                                     </div>
+                                                    <div class="vertical-timeline-button">
+                                                        <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
+                                                    </div>
                                                     <span class="vertical-date left">Jan 25 <br />
                                                         <small>5:23pm</small>
                                                     </span>
@@ -194,6 +200,20 @@
                                                                 </div>
                                                             </div>
                                                             
+                                                            <div class="chat-message right">
+                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
+                                                                <div class="message">
+                                                                    <span class="message-author" href="#"> Ewald Bednar </span> to Everyone
+                                                                    <span class="message-date">Jan 25</span>
+                                                                    <hr class="message-divider"/>
+                                                                        <span class="message-content">
+                                                                             <p>
+                                                                                Please take a look at the proposed timeline and sales results. <a href="#">More...</a>
+                                                                            </p>
+                                                                        </span>
+                                                                </div>
+                                                            </div>
+
                                                             <div class="chat-message left">
                                                                 <img class="message-avatar" src="<%= image_path('a2.jpg') %>" alt="">
                                                                 <div class="message">
@@ -223,6 +243,9 @@
                                                 <div class="vertical-timeline-block">
                                                     <div class="vertical-timeline-icon white-bg">
                                                         <i class="fa fa-file-text"></i>
+                                                    </div>
+                                                    <div class="vertical-timeline-button">
+                                                        <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
                                                     </div>
                                                     <span class="vertical-date left">Jan 23 <br />
                                                         <small>1:01pm</small>

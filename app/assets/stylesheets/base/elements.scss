@@ -1830,6 +1830,19 @@ a.forum-item-title:hover {
   font-size:13px;
 }
 
+.vertical-timeline-block:hover .vertical-timeline-button{
+  display: block;
+}
+.vertical-timeline-button {
+  position: absolute;
+  top: 40px;
+  left: -14px;
+  display: none;
+}
+.vertical-timeline-button .btn {
+  font-size: 11px;
+}
+
 @media only screen and (min-width: 1170px) {
   .center-orientation .vertical-timeline-icon {
     width: 50px;
@@ -1923,6 +1936,16 @@ a.forum-item-title:hover {
   }
   #vertical-timeline::before {
     display: none;
+  }
+  .vertical-timeline-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    z-index:10;
+  }
+  .message-avatar {
+    display:none;
   }
 }
 @media only screen and (min-width: 1170px) {

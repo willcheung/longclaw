@@ -789,7 +789,7 @@ dd.project-people {
 .chat-discussion .chat-message.left .message {
   text-align: left;
   margin-left: 58px;
-  margin-right: 58px;
+  margin-right: 35px;
   background-color: #f3f3f3;
 }
 
@@ -810,8 +810,14 @@ dd.project-people {
 .chat-discussion .chat-message.right .message {
   text-align: left;
   margin-right: 58px;
-  margin-left: 58px;
+  margin-left: 35px;
   background-color: #e2eef7;
+}
+
+@media only screen and (max-width: 768px) {
+  .chat-discussion .chat-message.right .message, .chat-discussion .chat-message.left .message {
+    margin:0;
+  }
 }
 
 .chat-discussion .chat-message.right .message:after 

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151128013541) do
+ActiveRecord::Schema.define(version: 20151203064708) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -90,6 +90,18 @@ ActiveRecord::Schema.define(version: 20151128013541) do
     t.string   "department"
   end
 
+  create_table "conversations", force: :cascade do |t|
+    t.string   "backend_id",           null: false
+    t.integer  "project_id"
+    t.string   "subject",              null: false
+    t.datetime "last_sent_date",       null: false
+    t.string   "last_sent_date_epoch", null: false
+    t.text     "external_members",     null: false
+    t.text     "internal_members",     null: false
+    t.datetime "created_at",           null: false
+    t.datetime "updated_at",           null: false
+  end
+
   create_table "harvest_csv_import", id: false, force: :cascade do |t|
     t.date    "Date"
     t.string  "Client",          limit: 150
@@ -107,6 +119,21 @@ ActiveRecord::Schema.define(version: 20151128013541) do
     t.integer "Hourly Rate"
     t.integer "Billable Amount"
     t.string  "Currency",        limit: 150
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.string   "mime_message_id",               null: false
+    t.string   "gmail_message_id",              null: false
+    t.integer  "conversation_id"
+    t.string   "subject",                       null: false
+    t.string   "sent_date_epoch",               null: false
+    t.datetime "sent_date",                     null: false
+    t.text     "preview_content"
+    t.text     "to",                            null: false
+    t.text     "from",                          null: false
+    t.text     "cc",               default: "", null: false
+    t.datetime "created_at",                    null: false
+    t.datetime "updated_at",                    null: false
   end
 
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
