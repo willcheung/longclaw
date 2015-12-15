@@ -13,6 +13,7 @@ Longclaw::Application.routes.draw do
     resources :projects
 
     get "search/results"
+    get "activities/load"
   end
 
   devise_scope :user do

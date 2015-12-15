@@ -20,8 +20,8 @@
 #
 
 class Account < ActiveRecord::Base
-	has_many 		:contacts
-	has_many		:projects
+	has_many 	:contacts
+	has_many	:projects
 	belongs_to	:organization
 	belongs_to	:user, foreign_key: "owner_id"
 

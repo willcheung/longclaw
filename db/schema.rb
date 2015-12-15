@@ -34,6 +34,26 @@ ActiveRecord::Schema.define(version: 20151203064708) do
     t.string   "domain",          limit: 64, default: "", null: false
   end
 
+  create_table "activities", force: :cascade do |t|
+    t.string   "category",                            null: false
+    t.string   "title",                               null: false
+    t.text     "note",                 default: "",   null: false
+    t.boolean  "is_public",            default: true, null: false
+    t.string   "backend_id"
+    t.datetime "last_sent_date"
+    t.string   "last_sent_date_epoch"
+    t.jsonb    "from",                 default: {},   null: false
+    t.jsonb    "to",                   default: {},   null: false
+    t.jsonb    "cc",                   default: {},   null: false
+    t.jsonb    "email_messages",       default: {},   null: false
+    t.uuid     "project_id",                          null: false
+    t.uuid     "posted_by",                           null: false
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
+  end
+
+  add_index "activities", ["email_messages"], name: "index_activities_on_email_messages", using: :gin
+
   create_table "ahoy_events", id: :uuid, default: nil, force: :cascade do |t|
     t.uuid     "visit_id"
     t.uuid     "user_id"
@@ -90,18 +110,6 @@ ActiveRecord::Schema.define(version: 20151203064708) do
     t.string   "department"
   end
 
-  create_table "conversations", force: :cascade do |t|
-    t.string   "backend_id",           null: false
-    t.integer  "project_id"
-    t.string   "subject",              null: false
-    t.datetime "last_sent_date",       null: false
-    t.string   "last_sent_date_epoch", null: false
-    t.text     "external_members",     null: false
-    t.text     "internal_members",     null: false
-    t.datetime "created_at",           null: false
-    t.datetime "updated_at",           null: false
-  end
-
   create_table "harvest_csv_import", id: false, force: :cascade do |t|
     t.date    "Date"
     t.string  "Client",          limit: 150
@@ -121,21 +129,6 @@ ActiveRecord::Schema.define(version: 20151203064708) do
     t.string  "Currency",        limit: 150
   end
 
-  create_table "messages", force: :cascade do |t|
-    t.string   "mime_message_id",               null: false
-    t.string   "gmail_message_id",              null: false
-    t.integer  "conversation_id"
-    t.string   "subject",                       null: false
-    t.string   "sent_date_epoch",               null: false
-    t.datetime "sent_date",                     null: false
-    t.text     "preview_content"
-    t.text     "to",                            null: false
-    t.text     "from",                          null: false
-    t.text     "cc",               default: "", null: false
-    t.datetime "created_at",                    null: false
-    t.datetime "updated_at",                    null: false
-  end
-
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name"
     t.string   "domain"
@@ -153,22 +146,20 @@ ActiveRecord::Schema.define(version: 20151203064708) do
   end
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",               default: "",   null: false
+    t.string   "name",           default: "",   null: false
     t.uuid     "account_id"
     t.string   "project_code"
-    t.boolean  "is_billable",        default: true
+    t.boolean  "is_billable",    default: true
     t.string   "status"
     t.text     "description"
-    t.date     "planned_start_date"
-    t.date     "planned_end_date"
-    t.date     "actual_start_date"
-    t.date     "actual_end_date"
+    t.date     "start_date"
+    t.date     "end_date"
     t.integer  "budgeted_hours"
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
-    t.datetime "created_at",                        null: false
-    t.datetime "updated_at",                        null: false
+    t.datetime "created_at",                    null: false
+    t.datetime "updated_at",                    null: false
   end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
