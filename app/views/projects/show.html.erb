@@ -63,6 +63,8 @@
                         <div class="panel-body">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="conversations">
+
+                                    <!-- Form -->
                                     <div style="margin-top:-37px;">
                                         <div class="row comment-header-box">
                                             <div class="col-lg-12">
@@ -82,249 +84,58 @@
                                         </div>
                                     </div>
 
+                                    <!-- Activities -->
                                     <div class="row m-t-md">
                                         <div class="col-lg-12">
                                             <div id="vertical-timeline" class="vertical-container dark-timeline">
-                                                <div class="vertical-timeline-block">
-                                                    <div class="vertical-timeline-icon white-bg">
-                                                        <i class="fa fa-envelope"></i>
-                                                    </div>
-                                                    <div class="vertical-timeline-button">
-                                                        <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
-                                                    </div>
-                                                    <span class="vertical-date left">Today <br />
-                                                        <small>3:23pm</small>
-                                                    </span>
 
-                                                    <div class="vertical-timeline-content">
-                                                        <h3>Project Status and Timeline 
-                                                            <small class="pull-right">Ewald, Jonathan, me (5)</small>
-                                                        </h3>
-                                                        <div class="chat-discussion">
-                                                            <div class="chat-message right">
-                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Ewald Bednar </span> to Everyone
-                                                                    <span class="message-date">Jan 25</span>
-                                                                    <hr class="message-divider"/>
-                                                                        <span class="message-content">
-                                                                             <p>
-                                                                                Please take a look at the proposed timeline and sales results. <a href="#">More...</a>
-                                                                            </p>
-                                                                        </span>
-                                                                </div>
-                                                            </div>
+                                                <% @activities.each do |a| %>
+                                                    <div class="vertical-timeline-block">
+                                                        <div class="vertical-timeline-icon white-bg">
+                                                            <i class="fa fa-envelope"></i>
+                                                        </div>
+                                                        <div class="vertical-timeline-button">
+                                                            <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
+                                                        </div>
+                                                        <span class="vertical-date left"><%= a.last_sent_date.strftime("%b %d") %><br />
+                                                            <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
+                                                        </span>
 
-                                                            <div class="more-messages">
-                                                                <a><i class="fa fa-plus-square"></i> &nbsp; 3 older messages</a>
-                                                            </div>
-
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a2.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Jonathan Smith </span> to Moshe
-                                                                    <span class="message-date">Jan 28</span>
-                                                                    <hr class="message-divider"/>
-                                                                        <span class="message-content">
-                                                                            <p>Thanks Ewald.  Looking forward to checking out the TP reports!  Looks like fun.</p>
-                                                                        </span>
-                                                                </div>
-                                                            </div>
-                                                            <!-- Comment form -->
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a4.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Moshe Wolf </span> to Everyone (internal)
-                                                                    <div class="form-group">
-                                                                        <input type="text" class="form-control" placeholder="Add a comment...">
+                                                        <div class="vertical-timeline-content">
+                                                            <h3><%= a.title %>
+                                                                <small class="pull-right"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
+                                                            </h3>
+                                                            <div class="chat-discussion">
+                                                                <% a.email_messages.each do |m| %>
+                                                                
+                                                                    <div class="chat-message <%= is_internal_user?(m.from[0].address) ? "left" : "right" %>">
+                                                                        
+                                                                        <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
+                                                                        
+                                                                        <div class="message">
+                                                                            <span class="message-author" href="#"> <%= m.from[0].personal %> </span> to Everyone
+                                                                            <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
+                                                                            <hr class="message-divider"/>
+                                                                                <span class="message-content">
+                                                                                     <p>
+                                                                                        <%= truncate(m.previewContent, length: 140, separator: ' ') %>
+                                                                                    </p>
+                                                                                </span>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </div>
-                                                        </div> <!-- chat discussion -->
 
-                                                    </div>
-                                                </div>
+                                                                <% end %>
 
-                                                <div class="vertical-timeline-block">
-                                                    <div class="vertical-timeline-icon white-bg">
-                                                        <i class="fa fa-calendar"></i>
-                                                    </div>
-                                                    <div class="vertical-timeline-button">
-                                                        <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
-                                                    </div>
-                                                    <span class="vertical-date left">Jan 25 <br />
-                                                        <small>5:23pm</small>
-                                                    </span>
+                                                                <div class="more-messages">
+                                                                    <a><i class="fa fa-plus-square"></i> &nbsp; 3 older messages</a>
+                                                                </div>
+                                                                
+                                                            </div> <!-- chat discussion -->
 
-                                                    <div class="vertical-timeline-content">
-                                                        <h3>Meeting with Customer <small class="pull-right">Ewald, Jonathan, Kelton, me (8)</small></h3>
-
-                                                        <div class="chat-discussion">
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Ewald Bednar </span> to Everyone
-                                                                    <span class="message-date">Jan 25</span>
-                                                                    <hr class="message-divider"/>
-                                                                        <span class="message-content">
-                                                                             <p>The purpose of the meeting is to go over a very important change.  The change is to decide whether we should have more of meetings like this.</p>
-                                                                        </span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="chat-message right">
-                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Ewald Bednar </span> to Everyone
-                                                                    <span class="message-date">Jan 25</span>
-                                                                    <hr class="message-divider"/>
-                                                                        <span class="message-content">
-                                                                             <p>
-                                                                                Please take a look at the proposed timeline and sales results. <a href="#">More...</a>
-                                                                            </p>
-                                                                        </span>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a4.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Moshe Wolf </span> to Everyone
-                                                                    <span class="message-date">Jan 26</span>
-                                                                    <hr class="message-divider"/>
-                                                                        <span class="message-content">
-                                                                            <p>
-                                                                                Conference on the sales results for the previous year. Monica please examine sales trends in marketing and products. Below please find the current status of the sale. <a href="#">More...</a>
-                                                                            </p>
-                                                                        </span>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div class="chat-message right">
-                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Ewald Bednar </span> to Everyone
-                                                                    <span class="message-date">Jan 25</span>
-                                                                    <hr class="message-divider"/>
-                                                                        <span class="message-content">
-                                                                             <p>
-                                                                                Please take a look at the proposed timeline and sales results. <a href="#">More...</a>
-                                                                            </p>
-                                                                        </span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a2.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Jonathan Smith </span> to Moshe
-                                                                    <span class="message-date">Jan 28</span>
-                                                                    <hr class="message-divider"/>
-                                                                        <span class="message-content">
-                                                                            <p>Thanks Ewald.  Looking forward to checking out the TP reports!  Looks like fun.</p>
-                                                                        </span>
-                                                                </div>
-                                                            </div>
-                                                    
-                                                        <!-- Comment form -->
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a4.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Moshe Wolf </span>
-                                                                    <div class="form-group">
-                                                                        <input type="text" class="form-control" placeholder="Add a comment...">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-
-                                                <div class="vertical-timeline-block">
-                                                    <div class="vertical-timeline-icon white-bg">
-                                                        <i class="fa fa-file-text"></i>
-                                                    </div>
-                                                    <div class="vertical-timeline-button">
-                                                        <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
-                                                    </div>
-                                                    <span class="vertical-date left">Jan 23 <br />
-                                                        <small>1:01pm</small>
-                                                    </span>
-
-                                                    <div class="vertical-timeline-content">
-                                                        <div class="chat-discussion">
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a1.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Michael Smith </span>
-                                                                    <span class="message-date">Jan 25</span>
-                                                                    <hr class="message-divider"/>
-                                                                        <span class="message-content">
-                                                                            <p>The project is going well with no significant issues.  Here is what happened last week. </p>
-                                                                            <ul>
-                                                                                <li>Upgraded customer to version 2.0.</li>
-                                                                                <li>Thanks to Jessica for providing a full dinner for the everyone who helped to stay after hours to complete the upgrade.</li>
-                                                                                <li>On track to hit next project milestone.</li>
-                                                                            </ul>
-                                                                        </span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a3.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Brenda Frazman </span>
-                                                                    <span class="message-date"> Jan 28 </span>
-                                                                    <hr class="message-divider"/>
-                                                                    <span class="message-content">
-                                                                        All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet.
-                                                                        It uses a dictionary of over 200 Latin words.
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <!-- Comment form -->
-                                                            <div class="chat-message left">
-                                                                <img class="message-avatar" src="<%= image_path('a4.jpg') %>" alt="">
-                                                                <div class="message">
-                                                                    <span class="message-author" href="#"> Moshe Wolf </span>
-                                                                    <div class="form-group">
-                                                                        <input type="text" class="form-control" placeholder="Add a comment...">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="vertical-timeline-block">
-                                                    <div class="vertical-timeline-icon white-bg">
-                                                        <i class="fa fa-file-text"></i>
-                                                    </div>
-                                                    <span class="vertical-date left">Jan 12 <br />
-                                                        <small>1:45pm</small>
-                                                    </span>
-
-                                                    <div class="vertical-timeline-content">
-                                                        <h3>Weekly Project Status <small class="pull-right">me, Brandon</small></h3>
-                                                        <p>Go to shop and find some products. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's. </p>
-                                                    </div>
-                                                </div>
-
-                                                <div class="vertical-timeline-block">
-                                                    <div class="vertical-timeline-icon white-bg">
-                                                        <i class="fa fa-phone"></i>
-                                                    </div>
-                                                    <span class="vertical-date left">Jan 8 <br />
-                                                        <small>3:45pm</small>
-                                                    </span>
-
-                                                    <div class="vertical-timeline-content">
-                                                        <h3>Weekly Sync Up Meeting <small class="pull-right">Ewald, Jonathan, Kelton, Moshe, me</small></h3>
-                                                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Iusto, optio, dolorum provident rerum aut hic quasi placeat iure tempora laudantium ipsa ad debitis unde? Iste voluptatibus minus veritatis qui ut.</p>
-                                                    </div>
-                                                </div>
-
+                                                <% end %>
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>
@@ -429,7 +240,7 @@
                     <% @team.each do |m| %>
                         <div class="row m-b-sm">
                             <div class="col-sm-2">
-                                <div class="rounded-initials" style="background:<%= User::PROFILE_COLOR[(m.contact.email.length)%9] %>"><%= m.contact.first_name[0,1] + m.contact.last_name[0,1] %></div>
+                                <%= get_profile_pic(get_full_name(m.contact), m.contact.email, "message-avatar") %>
                             </div>
                             <div class="col-sm-10 project-team-title">
                                 <span><%= get_full_name(m.contact) %></span><br>

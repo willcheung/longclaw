@@ -58,4 +58,20 @@ class Activity < ActiveRecord::Base
 	  	end
 	  end
 	end
+
+	def email_messages
+		messages = JSON.parse(read_attribute(:email_messages).to_json).map { |hash| Hashie::Mash.new(hash) }
+	end
+
+	def from
+		from = JSON.parse(read_attribute(:from).to_json).map { |hash| Hashie::Mash.new(hash) }
+	end
+
+	def to
+		to = JSON.parse(read_attribute(:to).to_json).map { |hash| Hashie::Mash.new(hash) }
+	end
+
+	def cc
+		cc = JSON.parse(read_attribute(:cc).to_json).map { |hash| Hashie::Mash.new(hash) }
+	end
 end
