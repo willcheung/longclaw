@@ -141,7 +141,4 @@ class User < ActiveRecord::Base
     UserMailer.beta_teaser_email(self, "").deliver_later
   end
 
-  def create_user_organization
-    # Creates seperate organization for users even if they have the same domain
-  end
 end

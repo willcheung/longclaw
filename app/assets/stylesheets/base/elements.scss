@@ -1723,36 +1723,8 @@ a.forum-item-title:hover {
   background: #fafafa;
 }
 
-
 .vertical-timeline-content .btn {
   float: right;
-}
-
-#vertical-timeline.light-timeline:before {
-  background: #e7eaec;
-}
-
-
-.dark-timeline .vertical-timeline-content:before
-{
-  border-color: transparent #fafafa transparent transparent ;
-}
-
-.dark-timeline.center-orientation .vertical-timeline-content:before
-{
-  border-color: transparent  transparent transparent #fafafa;
-}
-
-// .dark-timeline .vertical-timeline-block:nth-child(2n) .vertical-timeline-content:before,
-// .dark-timeline.center-orientation .vertical-timeline-block:nth-child(2n) .vertical-timeline-content:before
-// {
-//   border-color: transparent #f5f5f5 transparent transparent;
-// }
-
-.dark-timeline .vertical-timeline-content,
-.dark-timeline.center-orientation .vertical-timeline-content
-{
-  background: #fafafa;
 }
 
 @media only screen and (min-width: 1170px) {
@@ -1766,15 +1738,9 @@ a.forum-item-title:hover {
   }
 }
 
-@media only screen and (max-width: 1170px) {
-  .center-orientation.dark-timeline .vertical-timeline-content:before {
-    border-color: transparent #fafafa transparent transparent;
-  }
-}
-
 .vertical-timeline-block {
   position: relative;
-  margin: 2em 0;
+  margin: 1em 0;
 }
 .vertical-timeline-block:after {
   content: "";
@@ -1828,6 +1794,7 @@ a.forum-item-title:hover {
   margin-left: -12px;
   margin-top: -7px;
   font-size:13px;
+  color: #aaa;
 }
 
 .vertical-timeline-block:hover .vertical-timeline-button{
@@ -1868,24 +1835,19 @@ a.forum-item-title:hover {
   background: white;
   border-radius: 0.25em;
   padding: .5em 1em;
-  //border-bottom: 1px solid #e7eaec;
-}
-.vertical-timeline-content:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-.vertical-timeline-content h2 {
-  font-weight: 400;
-  margin-top: 4px;
+  background: #fafafa;
+  border: 1px solid #f4f5f6;
 }
 
+.vertical-timeline-content h3 {
+  font-weight: 500;
+  margin-top: 4px;
+}
 
 .vertical-timeline-content p {
   margin: 1em 0;
   line-height: 1.4;
 }
-
 
 .vertical-timeline-block .vertical-date {
   float: left;
@@ -1901,17 +1863,6 @@ a.forum-item-title:hover {
 
 .vertical-timeline-block .vertical-date small {
   color: $primary;
-}
-
-.vertical-timeline-content::before {
-  content: '';
-  position: absolute;
-  top: 10px;
-  right: 100%;
-  height: 0;
-  width: 0;
-  border: 7px solid transparent;
-  border-right: 7px solid white;
 }
 
 @media only screen and (min-width: 768px) {
@@ -1948,48 +1899,4 @@ a.forum-item-title:hover {
     display:none;
   }
 }
-@media only screen and (min-width: 1170px) {
-  .center-orientation .vertical-timeline-content {
-    margin-left: 0;
-    padding: 1.6em;
-    width: 45%;
-  }
-  .center-orientation .vertical-timeline-content::before {
-    top: 24px;
-    left: 100%;
-    border-color: transparent;
-    border-left-color: white;
-  }
 
-  .center-orientation .vertical-timeline-content .btn {
-    float: left;
-  }
-  .center-orientation .vertical-timeline-content .vertical-date {
-    position: absolute;
-    width: 100%;
-    left: 122%;
-    top: 2px;
-    font-size: 14px;
-  }
-  .center-orientation .vertical-timeline-block:nth-child(even) .vertical-timeline-content {
-    float: right;
-  }
-  .center-orientation .vertical-timeline-block:nth-child(even) .vertical-timeline-content::before {
-    top: 24px;
-    left: auto;
-    right: 100%;
-    border-color: transparent;
-    border-right-color: white;
-  }
-  .center-orientation .vertical-timeline-block:nth-child(even) .vertical-timeline-content .btn {
-    float: right;
-  }
-  .center-orientation .vertical-timeline-block:nth-child(even) .vertical-timeline-content .vertical-date {
-    left: auto;
-    right: 122%;
-    text-align: right;
-  }
-  .center-orientation .cssanimations .vertical-timeline-content.is-hidden {
-    visibility: hidden;
-  }
-}
