@@ -28,6 +28,9 @@
 #  updated_at             :datetime
 #  invitation_created_at  :datetime
 #  invited_by_id          :uuid
+#  onboarding_step        :integer
+#  cluster_create_date    :datetime
+#  cluster_update_date    :datetime
 #
 # Indexes
 #
@@ -77,11 +80,12 @@ class User < ActiveRecord::Base
           password: Devise.friendly_token[0,20],
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
-          oauth_expires_at: Time.at(credentials["expires_at"])
+          oauth_expires_at: Time.at(credentials["expires_at"]),
+          onboarding_step: 0
         )
 
         return referred_user
-      else
+      else # New User
         user = User.create(
           first_name: info["first_name"],
         	last_name: info["last_name"],
@@ -92,7 +96,8 @@ class User < ActiveRecord::Base
           password: Devise.friendly_token[0,20],
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
-          oauth_expires_at: Time.at(credentials["expires_at"])
+          oauth_expires_at: Time.at(credentials["expires_at"]),
+          onboarding_step: 0
         )
       end
     end

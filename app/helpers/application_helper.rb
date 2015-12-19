@@ -15,6 +15,10 @@ module ApplicationHelper
       bool ? 'Yes' : 'No'
     end
 
+    def get_domain(email)
+      email.split("@").last
+    end
+
     def get_short_name(domain)
       domain.gsub('.com', '')
     end
@@ -28,7 +32,7 @@ module ApplicationHelper
     end
 
     def is_internal_user?(email)
-      current_user.organization.domain.downcase == email.split("@").last.downcase
+      current_user.organization.domain.downcase == get_domain(email).downcase
     end
 
     def get_first_names(from, to, cc)

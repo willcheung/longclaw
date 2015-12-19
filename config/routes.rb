@@ -11,9 +11,11 @@ Longclaw::Application.routes.draw do
     resources :accounts 
     resources :contacts
     resources :projects
+    resources :organizations
 
     get "search/results"
     get "activities/load"
+    get "onboarding/one", "onboarding/two", "onboarding/three", "onboarding/four"
   end
 
   devise_scope :user do
