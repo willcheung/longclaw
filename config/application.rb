@@ -9,6 +9,7 @@ Bundler.require(:default, Rails.env)
 
 module Longclaw
   class Application < Rails::Application
+    config.autoload_paths += %W(#{config.root}/lib) # add modules from /lib
 
     # Load config file into environment 
     config.before_configuration do

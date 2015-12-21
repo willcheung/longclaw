@@ -22,6 +22,9 @@ Longclaw::Application.routes.draw do
   	root to: "sessions#new"
 	end
 
+  # Cluster callback
+  post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'
+
   # Beta Email Teaser
   post 'users/:id/send_beta_teaser_email/' => 'users#send_beta_teaser_email'
 

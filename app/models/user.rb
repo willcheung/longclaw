@@ -40,11 +40,14 @@
 
 require 'net/http'
 require 'json'
+include Utils
 
 class User < ActiveRecord::Base
 	belongs_to 	:organization
-	has_many		:projects
   has_many    :accounts
+  has_many    :project_members
+  has_many    :projects, through: "project_members"
+  has_many    :projects_owner_of, class_name: "Project"
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
@@ -54,7 +57,7 @@ class User < ActiveRecord::Base
 
   #after_create :send_welcome_email_to_user
   #after_create :send_beta_teaser_email_to_user
-  after_create :create_user_organization
+  #after_create :create_user_organization
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
 
@@ -99,6 +102,29 @@ class User < ActiveRecord::Base
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: 0
         )
+      end
+    end
+  end
+
+  def self.create_from_clusters(internal_members, invited_by_id, organization_id)
+    internal_emails = internal_members.map(&:address)
+    existing_emails = User.where(email: internal_emails, organization_id: organization_id).map(&:email)
+    
+    missing_emails = internal_emails - existing_emails
+
+    # Create users who are not in the system
+    internal_members.each do |m|
+      if missing_emails.include?(m.address)
+        puts "Emails missing!!! " + m.personal
+        u = User.new(
+          first_name: get_first_name(m.personal),
+          last_name: get_last_name(m.personal),
+          email: m.address,
+          organization_id: organization_id,
+          invited_by_id: invited_by_id,
+          invitation_created_at: Time.now
+        )
+        u.save(validate: false)
       end
     end
   end

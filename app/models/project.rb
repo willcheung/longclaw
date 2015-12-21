@@ -21,7 +21,7 @@
 
 class Project < ActiveRecord::Base
 	belongs_to 	:account
-	belongs_to	:user, foreign_key: "owner_id"
+	belongs_to	:project_owner, class_name: "User", foreign_key: "owner_id"
 	has_many	:project_members
 	has_many	:contacts, through: "project_members"
 	has_many	:activities
@@ -31,4 +31,9 @@ class Project < ActiveRecord::Base
 
 	STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
 
+	# http://192.168.1.130:8888/newsfeed/search?email=indifferenzetester@gmail.com&token=ya29.UAJP6r81Qf9YXosd8S2a61JlTyL6WmqpZ9zAtThBs5z8sEfIMwwNKPxfVNmqWgyustfcy7g&max=10&ex_clusters=[[patrick.smith@clarizen.com]]
+
+	def self.create_from_clusters()
+
+	end
 end

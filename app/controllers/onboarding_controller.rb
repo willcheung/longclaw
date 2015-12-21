@@ -1,6 +1,6 @@
 class OnboardingController < ApplicationController
 	layout 'empty'
-	
+
 	def one
 
 	end
@@ -15,5 +15,49 @@ class OnboardingController < ApplicationController
 
 	def four
 
+	end
+
+	# curl -H "Content-Type: application/json" --data @/Users/willcheung/Downloads/contextsmith-json-3.txt http://localhost:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
+	def create_clusters
+		user = User.find_by_id(params[:user_id])
+		data = params["_json"]
+
+		respond_to do |format|
+      puts format.to_s
+  		if user and data
+        begin
+          uniq_external_members, uniq_internal_members = get_all_members(data)
+
+	        # Create Accounts and Contacts
+	       	Account.create_from_clusters(uniq_external_members, user.id, user.organization.id)
+
+	       	# Create internal users
+	       	User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
+
+	       	# Create Projects
+	       	Project.create_from_clusters()
+
+        rescue => e
+          format.json { render json: 'Something went wrong while sending emails ' + e.to_s, status: 500}
+          logger.error "ERROR: Something went wrong: " + e.to_s
+        else
+          format.json { render json: 'Clusters created for user ' + user.email, status: 200}
+        end
+  		elsif user.nil?
+  			format.json { render json: 'User not found.', status: 500}
+  			logger.error "ERROR: User not found: " + params[:user_id]
+  		elsif data.nil?
+  			format.json { render json: 'No data.', status: 200}
+
+  			if params["errors"].nil? # no errors
+	  			logger.error "No data return for user: " + params[:user_id]
+	  		else # returns error
+	  			logger.error "ERROR: Code: " + params[:code].to_s + " Error: " + params["message"]
+	  			if params["message"] == "Invalid Credentials"
+	  				logger.error "Token might have expired."
+	  			end
+	  		end
+  		end
+  	end
 	end
 end

@@ -19,7 +19,9 @@
 #  domain          :string(64)       default(""), not null
 #
 
-class Account < ActiveRecord::Base
+include Utils
+
+class Account < ActiveRecord::Base	
 	has_many 	:contacts
 	has_many	:projects
 	belongs_to	:organization
@@ -28,4 +30,45 @@ class Account < ActiveRecord::Base
 	validates :name, presence: true, uniqueness: { scope: :organization, message: "There's already an account with the same name." }
 
 	STATUS = %w(Active Inactive Dead)
+
+	# http://192.168.1.130:8888/newsfeed/cluster?email=indifferenzetester@gmail.com&token=ya29.TwKLjkfsH0pF3PMUbK6JdsuWcVxpMdoMAbWr_nHptgYY-ny3kvhsRCgTqXparZ2-XJNDvEI&max=300&in_domain=comprehend.com&callback=http://192.168.1.50:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
+
+	def self.create_from_clusters(external_members, owner_id, organization_id)
+		grouped_external_members = external_members.group_by{ |x| get_domain(x.address) }
+		existing_accounts = Account.where(domain: grouped_external_members.keys, organization_id: organization_id).includes(:contacts)
+		existing_domains = existing_accounts.map(&:domain)
+
+		# Create missing accounts
+		(grouped_external_members.keys - existing_domains).each do |a|
+     	account = Account.new(domain: a, 
+     								 				name: a, 
+     								 				owner_id: owner_id, 
+     								 				organization_id: organization_id,
+     								 				created_by: owner_id)
+     	account.save(validate: false)
+
+     	grouped_external_members[a].each do |c|
+     		# Create contacts
+     		account.contacts.create(first_name: get_first_name(c.personal),
+     												 		last_name: get_last_name(c.personal),
+     												 		email: c.address)
+     	end
+    end
+
+    # Create contacts for existing accounts
+    existing_accounts.each do |a|
+    	existing_emails = a.contacts.map(&:email)
+    	external_emails = grouped_external_members[a.domain].map(&:address)
+    	missing_emails = external_emails - existing_emails
+
+    	grouped_external_members[a.domain].each do |c|
+    		if missing_emails.include?(c.address)
+	    		a.contacts.create(first_name: get_first_name(c.personal),
+	     											last_name: get_last_name(c.personal),
+	     											email: c.address)
+				end
+    	end
+    end
+
+	end
 end

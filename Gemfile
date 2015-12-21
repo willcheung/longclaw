@@ -16,7 +16,7 @@ gem 'best_in_place', '~> 3.0.1'
 gem 'ahoy_email'
 gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankane/ahoy
 gem 'puma'                        # Web server
-#gem 'whois'
+gem 'whois'
 #gem 'attr_encrypted'             # Encrypting private data!
 
 # Gems used only for assets and not required

@@ -143,6 +143,7 @@ ActiveRecord::Schema.define(version: 20151218230141) do
     t.uuid     "contact_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid     "user_id"
   end
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
