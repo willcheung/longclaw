@@ -243,11 +243,11 @@
                     <% @team.each do |m| %>
                         <div class="row m-b-sm">
                             <div class="col-sm-2">
-                                <%= get_profile_pic(get_full_name(m.contact), m.contact.email, "message-avatar") %>
+                                <%= get_profile_pic(get_full_name(m), m.email, "message-avatar") %>
                             </div>
                             <div class="col-sm-10 project-team-title">
-                                <span><%= get_full_name(m.contact) %></span><br>
-                                <span><small><%= m.contact.title %> <a href="<%= account_path(m.contact.account) %>">@<%= get_short_name(m.contact.account.domain) %></a></small></span>
+                                <span><%= get_full_name(m) %></span><br>
+                                <span><small><%= m.title %> <a href="<%= account_path(m.account) %>">@<%= get_short_name(m.account.domain) %></a></small></span>
                             </div>
                         </div>
                     <% end %>

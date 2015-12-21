@@ -17,7 +17,7 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    @team = @project.project_members.includes(contact: [:account])
+    @team = @project.contacts.includes(:account)
     @activities = @project.activities
   end
 
