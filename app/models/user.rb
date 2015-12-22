@@ -31,6 +31,7 @@
 #  onboarding_step        :integer
 #  cluster_create_date    :datetime
 #  cluster_update_date    :datetime
+#  title                  :string
 #
 # Indexes
 #
@@ -47,7 +48,7 @@ class User < ActiveRecord::Base
   has_many    :accounts
   has_many    :project_members
   has_many    :projects, through: "project_members"
-  has_many    :projects_owner_of, class_name: "Project"
+  has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id"
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
@@ -127,6 +128,10 @@ class User < ActiveRecord::Base
         u.save(validate: false)
       end
     end
+  end
+
+  def is_internal_user?
+    true
   end
 
   # Helper methods

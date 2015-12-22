@@ -9,7 +9,7 @@ module ApplicationHelper
     params[:action] == action_name ? "active" : nil
   end
 
-  def is_internal_user?(email)
+  def is_internal_domain?(email)
     current_user.organization.domain.downcase == get_domain(email).downcase
   end
 
@@ -63,7 +63,7 @@ module ApplicationHelper
   end
 
   def get_profile_pic(name, email, css_class="")
-    if is_internal_user?(email)
+    if is_internal_domain?(email)
       u = User.find_by_email(email)
       if u.nil? or u.image_url.nil? or u.image_url.empty?
         get_rounded_initials_from_name(name, css_class)

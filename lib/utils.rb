@@ -35,11 +35,30 @@ module Utils
 	  domain.gsub('.com', '')
 	end
 
+	def get_short_name_account_path(member)
+		if member.is_internal_user?
+			"@"+get_short_name(get_domain(member.email))
+		else
+			link_to("@"+get_short_name(member.account.domain), account_path(member.account))
+		end
+	end
+
 	def get_value_or_na(val)
 	  if val.nil?
 	    "N/A"
 	  else
 	    val
 	  end
+	end
+
+	def dice_coefficient(team_a, team_b)
+    a_set = team_a.to_set
+    b_set = team_b.to_set
+
+    intersect = (a_set & b_set).size.to_f
+    union = (a_set | b_set).size.to_f
+    dice  = intersect / union
+
+    return dice
 	end
 end

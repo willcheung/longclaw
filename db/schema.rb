@@ -161,6 +161,7 @@ ActiveRecord::Schema.define(version: 20151218230141) do
     t.uuid     "owner_id"
     t.datetime "created_at",                    null: false
     t.datetime "updated_at",                    null: false
+    t.boolean  "is_confirmed"
   end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
@@ -192,6 +193,7 @@ ActiveRecord::Schema.define(version: 20151218230141) do
     t.integer  "onboarding_step"
     t.datetime "cluster_create_date"
     t.datetime "cluster_update_date"
+    t.string   "title"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree

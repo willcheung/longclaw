@@ -7,7 +7,7 @@ class ProjectsController < ApplicationController
   def index
     @title = "Projects"
     # all projects and their accounts, sorted by account name alphabetically
-    projects = Project.includes(:account).all.where("accounts.organization_id = ?", current_user.organization_id).references(:account)
+    projects = Project.includes(:account).all.where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account)
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
     # new project
@@ -17,7 +17,7 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    @team = @project.contacts.includes(:account)
+    @team = @project.contacts.includes(:account) + @project.users
     @activities = @project.activities
   end
 
@@ -36,6 +36,7 @@ class ProjectsController < ApplicationController
     @project = Project.new(project_params)
     @project = Project.new(project_params.merge(status: 'Active', 
                                                 owner_id: current_user.id,
+                                                is_confirmed: true,
                                                 created_by: current_user.id,
                                                 updated_by: current_user.id))
 

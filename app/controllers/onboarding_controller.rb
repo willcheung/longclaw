@@ -28,6 +28,8 @@ class OnboardingController < ApplicationController
         begin
           uniq_external_members, uniq_internal_members = get_all_members(data)
 
+          ######### Create Accounts, referred Users, and unconfirmed Projects ##########
+
 	        # Create Accounts and Contacts
 	       	Account.create_from_clusters(uniq_external_members, user.id, user.organization.id)
 
@@ -35,11 +37,21 @@ class OnboardingController < ApplicationController
 	       	User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
 
 	       	# Create Projects
-	       	Project.create_from_clusters()
+	       	Project.create_from_clusters(data, user.id, user.organization.id)
+
+	       	################################################################################
+
+	       	# Update flag indicating cluster creation is complete
+	       	if user.cluster_create_date.nil?
+	       		user.update_attributes(cluster_create_date: Time.now, cluster_update_date: Time.now)
+	       	else
+	       		user.update_attributes(cluster_update_date: Time.now)
+	       	end
 
         rescue => e
-          format.json { render json: 'Something went wrong while sending emails ' + e.to_s, status: 500}
-          logger.error "ERROR: Something went wrong: " + e.to_s
+          format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
+          logger.error "ERROR: Something went wrong: " + e.message
+          logger.error e.backtrace.join("\n")
         else
           format.json { render json: 'Clusters created for user ' + user.email, status: 200}
         end
@@ -59,5 +71,9 @@ class OnboardingController < ApplicationController
 	  		end
   		end
   	end
+	end
+
+	def confirm_projects
+
 	end
 end

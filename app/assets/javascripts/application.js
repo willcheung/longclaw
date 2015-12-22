@@ -14,8 +14,10 @@
 //= require toastr/toastr.min.js
 //= require contextsmith.js
 
-// ahoy analytics
-ahoy.trackAll();
+<% if ENV["RAILS_ENV"] == 'production' %>
+  // ahoy analytics
+  ahoy.trackAll();
+<% end %>
 
 $(document).ready(function() {
   /****************

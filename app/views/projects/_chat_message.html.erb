@@ -1,4 +1,4 @@
-<div class="chat-message <%= is_internal_user?(m.from[0].address) ? "left" : "right" %>">
+<div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
     
     <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
     

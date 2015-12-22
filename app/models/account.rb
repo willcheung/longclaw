@@ -20,10 +20,11 @@
 #
 
 include Utils
+include ContextSmithParser
 
 class Account < ActiveRecord::Base	
 	has_many 	:contacts
-	has_many	:projects
+	has_many	:projects, -> { where is_confirmed: true }
 	belongs_to	:organization
 	belongs_to	:user, foreign_key: "owner_id"
 
@@ -31,7 +32,7 @@ class Account < ActiveRecord::Base
 
 	STATUS = %w(Active Inactive Dead)
 
-	# http://192.168.1.130:8888/newsfeed/cluster?email=indifferenzetester@gmail.com&token=ya29.TwKLjkfsH0pF3PMUbK6JdsuWcVxpMdoMAbWr_nHptgYY-ny3kvhsRCgTqXparZ2-XJNDvEI&max=300&in_domain=comprehend.com&callback=http://192.168.1.50:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
+	# http://192.168.1.130:8888/newsfeed/cluster?email=indifferenzetester@gmail.com&token=ya29.TwKLjkfsH0pF3PMUbK6JdsuWcVxpMdoMAbWr_nHptgYY-ny3kvhsRCgTqXparZ2-XJNDvEI&max=300&before=1408695712&in_domain=comprehend.com&callback=http://192.168.1.50:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
 
 	def self.create_from_clusters(external_members, owner_id, organization_id)
 		grouped_external_members = external_members.group_by{ |x| get_domain(x.address) }
