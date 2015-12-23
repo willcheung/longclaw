@@ -20,6 +20,7 @@
 #  is_confirmed   :boolean
 #
 
+include Utils
 include ContextSmithParser
 
 class Project < ActiveRecord::Base
@@ -48,26 +49,28 @@ class Project < ActiveRecord::Base
 		
 		project_domains.each do |p|
 			external_members, internal_members = get_project_members(data, p)
-			project = Project.create(name: p + " Project",
-															 status: "Active",
-															 created_by: user_id,
-															 updated_by: user_id,
-															 owner_id: user_id,
-															 account_id: (accounts.find {|a| a.domain == p}).id,
-															 is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
-															)
+			project = Project.new(name: p + " Project",
+													 status: "Active",
+													 created_by: user_id,
+													 updated_by: user_id,
+													 owner_id: user_id,
+													 account_id: (accounts.find {|a| a.domain == p}).id,
+													 is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
+													)
 			
-			# assuming contacts and users have already been inserted
-			contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
-			users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
-			
-			external_members.each do |m|
-				puts (contacts.find {|c| c.email == m.address}).id
-				project.project_members.create(contact_id: (contacts.find {|c| c.email == m.address}).id)
-			end
+			if project.save
+				# assuming contacts and users have already been inserted
+				contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
+				users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
+				
+				external_members.each do |m|
+					puts (contacts.find {|c| c.email == m.address}).id
+					project.project_members.create(contact_id: (contacts.find {|c| c.email == m.address}).id)
+				end
 
-			internal_members.each do |m|
-				project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
+				internal_members.each do |m|
+					project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
+				end
 			end
 		end
 	end

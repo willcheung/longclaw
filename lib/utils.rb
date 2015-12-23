@@ -1,4 +1,8 @@
 module Utils
+  ONBOARDING = { "onboarded": -1, "create_organization": 0, "intro_overall": 1, "intro_accounts": 2,
+               	 "intro_projects": 3, "intro_activities": 4, "intro_pinned": 5, "confirm_projects": 6 }
+
+
 	def get_full_name(user)
 		[user.first_name, user.last_name].join(" ")
 	end

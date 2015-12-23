@@ -14,4 +14,6 @@ class ProjectMember < ActiveRecord::Base
 	belongs_to :project
 	belongs_to :contact
 	belongs_to :user
+
+	validates :project_id, uniqueness: {:scope => [:contact_id, :user_id]}
 end

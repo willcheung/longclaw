@@ -48,5 +48,7 @@ module Longclaw
 
     config.assets.precompile += [ 'accounts.js', 'application.js', 'contacts.js', 'contextsmith.js', 'organizations.js', 'projects.js' ]
 
+    require 'contextsmith_parser'
+    require 'utils'
   end
 end

@@ -2,8 +2,8 @@ require 'utils'
 require 'contextsmith_parser'
 
 class ApplicationController < ActionController::Base
-  include ContextSmithParser
   include Utils
+  include ContextSmithParser
 
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
@@ -13,19 +13,21 @@ class ApplicationController < ActionController::Base
 
   def after_sign_in_path_for(user)
     case user.onboarding_step
-    when -1 # Fully onboarded
+    when Utils::ONBOARDING["onboarded"] # Fully onboarded
       root_path 
-    when 0 # Create Organization
+    when Utils::ONBOARDING["create_organization"] # Create Organization
       new_organization_path 
-    when 1 # Step 1 - Intro
+    when Utils::ONBOARDING["intro_overall"] # Step 1 - Intro
       onboarding_one_path
-    when 2 # Step 2 - Project CRM
+    when Utils::ONBOARDING["intro_accounts"] # Step 2 - Accounts & Contacts
       
-    when 3 # Step 3 - Activity news feed
+    when Utils::ONBOARDING["intro_projects"] # Step 3 - Project CRM
       
-    when 4 # Step 4 - Bulletin board. Pin important emails or notes
+    when Utils::ONBOARDING["intro_activities"] # Step 4 - Activities & News Feed
       
-    when 5 # Confirm projects
+    when Utils::ONBOARDING["intro_pinned"] # Step 5 - Bulletin board. Pin important emails or notes
+
+    when Utils::ONBOARDING["confirm_projects"]
       if user.cluster_create_date.nil?
         # Clusters not ready yet
       else

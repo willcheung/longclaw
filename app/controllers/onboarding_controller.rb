@@ -17,7 +17,18 @@ class OnboardingController < ApplicationController
 
 	end
 
-	# curl -H "Content-Type: application/json" --data @/Users/willcheung/Downloads/contextsmith-json-3.txt http://localhost:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
+	def confirm_projects
+
+	end
+
+	#########################################################################
+	# Callback method from backend to create clusters for a particular user 
+	#
+	# Example: 	 curl -H "Content-Type: application/json" --data @/Users/willcheung/Downloads/contextsmith-json-3.txt http://localhost:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
+	# Example 2: http://192.168.1.130:8888/newsfeed/cluster?email=indifferenzetester@gmail.com&token=test&max=300&before=1408695712&in_domain=comprehend.com&callback=http://192.168.1.50:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
+	#
+	#########################################################################
+
 	def create_clusters
 		user = User.find_by_id(params[:user_id])
 		data = params["_json"]
@@ -28,7 +39,7 @@ class OnboardingController < ApplicationController
         begin
           uniq_external_members, uniq_internal_members = get_all_members(data)
 
-          ######### Create Accounts, referred Users, and unconfirmed Projects ##########
+          ############## Needs to be called in order -> Account (Contacts), User, Project ##########
 
 	        # Create Accounts and Contacts
 	       	Account.create_from_clusters(uniq_external_members, user.id, user.organization.id)
@@ -39,7 +50,7 @@ class OnboardingController < ApplicationController
 	       	# Create Projects
 	       	Project.create_from_clusters(data, user.id, user.organization.id)
 
-	       	################################################################################
+	       	########################################################
 
 	       	# Update flag indicating cluster creation is complete
 	       	if user.cluster_create_date.nil?
@@ -71,9 +82,5 @@ class OnboardingController < ApplicationController
 	  		end
   		end
   	end
-	end
-
-	def confirm_projects
-
 	end
 end

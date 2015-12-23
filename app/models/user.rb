@@ -42,6 +42,7 @@
 require 'net/http'
 require 'json'
 include Utils
+include ContextSmithParser
 
 class User < ActiveRecord::Base
 	belongs_to 	:organization
@@ -77,7 +78,7 @@ class User < ActiveRecord::Base
         referred_user.update_attributes(
           first_name: info["first_name"],
           last_name: info["last_name"],
-          oauth_provider:auth.provider,
+          oauth_provider: auth.provider,
           email: info["email"],
           image_url: info["image"],
           oauth_provider_uid: auth.uid,
@@ -85,7 +86,7 @@ class User < ActiveRecord::Base
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: 0
+          onboarding_step: Utils::ONBOARDING[:create_organization]
         )
 
         return referred_user
@@ -93,7 +94,7 @@ class User < ActiveRecord::Base
         user = User.create(
           first_name: info["first_name"],
         	last_name: info["last_name"],
-          oauth_provider:auth.provider,
+          oauth_provider: auth.provider,
           email: info["email"],
           image_url: info["image"],
           oauth_provider_uid: auth.uid,
@@ -101,7 +102,7 @@ class User < ActiveRecord::Base
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: 0
+          onboarding_step: Utils::ONBOARDING[:create_organization]
         )
       end
     end
@@ -116,7 +117,6 @@ class User < ActiveRecord::Base
     # Create users who are not in the system
     internal_members.each do |m|
       if missing_emails.include?(m.address)
-        puts "Emails missing!!! " + m.personal
         u = User.new(
           first_name: get_first_name(m.personal),
           last_name: get_last_name(m.personal),

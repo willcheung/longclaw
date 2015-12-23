@@ -18,8 +18,8 @@ class Organization < ActiveRecord::Base
 	# Returns new_org if there's no existing one.  If there is, return existing one.
 	def create_user_organization(domain, user)
 		new_org = Organization.new(name: "Test Org",
-										 domain: domain,
-										 owner_id: user.id)
+														 	 domain: domain,
+														 	 owner_id: user.id)
     
     existing_org = Organization.find_by_domain(domain)
 
