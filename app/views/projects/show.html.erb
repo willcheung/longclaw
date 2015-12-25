@@ -84,63 +84,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Activities -->
-                                    <div class="row m-t-md">
-                                        <div class="col-lg-12">
-                                            <div id="vertical-timeline" class="vertical-container dark-timeline">
-
-                                                <% @activities.each do |a| %>
-                                                    <div class="vertical-timeline-block">
-                                                        <div class="vertical-timeline-icon white-bg">
-                                                            <i class="fa fa-envelope"></i>
-                                                        </div>
-                                                        <div class="vertical-timeline-button">
-                                                            <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
-                                                        </div>
-                                                        <span class="vertical-date left"><%= a.last_sent_date.strftime("%b %d") %><br />
-                                                            <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
-                                                        </span>
-
-                                                        <div class="vertical-timeline-content">
-                                                            <h3><%= a.title %>
-                                                                <small class="pull-right"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
-                                                            </h3>
-                                                            
-                                                            <div class="chat-discussion">
-                                                                <% if a.email_messages.size > 1 %>
-                                                                    <div class="more-messages">
-                                                                        <a id="show-more-<%= a.backend_id %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
-                                                                    </div>
-                                                                <% end %>
-
-                                                                <% a.email_messages.each do |m| %>
-                                                                    <% if a.email_messages.last != m %>
-                                                                        <div class="hidden-chat-message-<%= a.backend_id %>" style="display:none;">
-                                                                            <%= render 'projects/chat_message', :m => m %>
-                                                                        </div>
-                                                                    <% else %>
-                                                                        <%= render 'projects/chat_message', :m => m %>
-                                                                    <% end %>
-
-                                                                <% end %>
-                                                                
-                                                                <script>
-                                                                    $("#show-more-<%= a.backend_id %>").click(function() {
-                                                                        $(".hidden-chat-message-<%= a.backend_id %>").each(function() {
-                                                                            console.log($(this));
-                                                                            $(this).show();
-                                                                        });
-                                                                        $("#show-more-<%= a.backend_id %>").hide();
-                                                                    });
-                                                                </script>
-                                                            </div> <!-- chat discussion -->
-
-                                                        </div>
-                                                    </div>
-                                                <% end %>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    
                                 </div>
 
                                 <div class="tab-pane" id="pinned">
@@ -230,9 +174,67 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
+
+            <!-- Activities -->
+            <div class="row m-t-md">
+                <div class="col-lg-12">
+                    <div id="vertical-timeline" class="vertical-container light-timeline">
+
+                        <% @activities.each do |a| %>
+                            <div class="vertical-timeline-block">
+                                <div class="vertical-timeline-icon white-bg">
+                                    <i class="fa fa-envelope"></i>
+                                </div>
+                                <div class="vertical-timeline-button">
+                                    <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
+                                </div>
+                                <span class="vertical-date left"><%= a.last_sent_date.strftime("%b %d") %><br />
+                                    <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
+                                </span>
+
+                                <div class="vertical-timeline-content">
+                                    <h3><%= a.title %>
+                                        <small class="pull-right"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
+                                    </h3>
+                                    
+                                    <div class="chat-discussion">
+                                        <% if a.email_messages.size > 1 %>
+                                            <div class="more-messages">
+                                                <a id="show-more-<%= a.backend_id %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
+                                            </div>
+                                        <% end %>
+
+                                        <% a.email_messages.each do |m| %>
+                                            <% if a.email_messages.last != m %>
+                                                <div class="hidden-chat-message-<%= a.backend_id %>" style="display:none;">
+                                                    <%= render 'projects/chat_message', :m => m %>
+                                                </div>
+                                            <% else %>
+                                                <%= render 'projects/chat_message', :m => m %>
+                                            <% end %>
+
+                                        <% end %>
+                                        
+                                        <script>
+                                            $("#show-more-<%= a.backend_id %>").click(function() {
+                                                $(".hidden-chat-message-<%= a.backend_id %>").each(function() {
+                                                    console.log($(this));
+                                                    $(this).show();
+                                                });
+                                                $("#show-more-<%= a.backend_id %>").hide();
+                                            });
+                                        </script>
+                                    </div> <!-- chat discussion -->
+
+                                </div>
+                            </div>
+                        <% end %>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
     <div class="col-lg-3">

@@ -1720,7 +1720,7 @@ a.forum-item-title:hover {
   left: 13px;
   height: 100%;
   width: 4px;
-  background: #fafafa;
+  background: #e7eaec;
 }
 
 .vertical-timeline-content .btn {
@@ -1832,11 +1832,11 @@ a.forum-item-title:hover {
 .vertical-timeline-content {
   position: relative;
   margin-left: 50px;
-  background: white;
-  border-radius: 0.15em;
-  padding: .5em 1em;
-  background: #fafafa;
-  border: 1px solid #f4f5f6;
+  padding: .8em 1em;
+  border: 1px solid;
+  border-color: #ecedef #e8e9ec #dedee1;
+  border-radius: 3px;
+  background-color: #fff;
 }
 
 .vertical-timeline-content h3 {
