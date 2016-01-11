@@ -1,31 +1,122 @@
 class OnboardingController < ApplicationController
 	layout 'empty'
 
-	def one
+	def intro_overall
 
 	end
 
-	def two
+	def intro_accounts
 
 	end
 
-	def three
+	def intro_projects
 
 	end
 
-	def four
+	def intro_activities
+
+	end
+
+	def intro_pinned
 
 	end
 
 	def confirm_projects
+		@overlapping_projects = []
+		@new_projects = []
+		@same_projects = []
 
+		new_user_projects = Project.where(created_by: current_user.id, is_confirmed: false).includes(:users, :contacts, :account)
+		all_accounts = current_user.organization.accounts.includes(projects: [:users, :contacts])
+
+		new_user_projects.each do |new_project|
+			new_project_members = new_project.contacts.map(&:email).map(&:downcase).map(&:strip)
+			
+			all_accounts.each do |account |
+				if account == new_project.account
+					overlapping_p = []
+					new_p = []
+					same_p = []
+
+					#puts "---Account is " + account.name + "---"
+
+					account.projects.each do |existing_project|
+						existing_project_members = existing_project.contacts.map(&:email).map(&:downcase).map(&:strip)
+						
+						# puts existing_project_members
+						# puts "----"
+						# puts new_project_members
+
+						dc = dice_coefficient(existing_project_members, new_project_members)
+						intersect = intersect(existing_project_members, new_project_members)
+						logger.info("Dice Coefficient #{dc}, Intersect #{intersect}")
+						ahoy.track("Project Confirmation", dice_coefficient: dc, intersect: intersect, existing_project_members: existing_project_members, new_project_members: new_project_members)
+
+						# puts "\n\n\n\n"
+
+						if dc == 1.0
+							# 100% match. Do not display these projects.
+							same_p << existing_project
+						elsif dc < 1.0 and dc >= 0.25
+							# Considered same project. 
+							overlapping_p << existing_project
+						elsif dc < 0.25 and dc > 0.0 and intersect > 1
+							# Considered existing projects because there are more than 1 shared members.
+							overlapping_p << existing_project
+						elsif dc < 0.25 and dc > 0.0 and intersect == 1
+							# This is likely a one-time communication or a typo by email sender.
+							if existing_project.users.map(&:email).include?(current_user.email)
+								overlapping_p << existing_project
+							else
+								new_p << new_project if !new_p.include?(new_project)
+							end
+						else dc == 0.0 
+							# Definitely new project.  Modify new project into confirmed project.
+							new_p << new_project if !new_p.include?(new_project)
+						end
+					end
+
+					# Take action on the unconfirmed projects
+					if account.projects.size == 0
+						# Add project into account.  Modify new project into confirmed project
+						new_project.update_attributes(is_confirmed: true)
+					elsif overlapping_p.size > 0
+						overlapping_p.each do |p|
+							p.project_members.create(user_id: current_user.id)
+							
+							new_project.contacts.each do |c|
+								p.project_members.create(contact_id: c.id)
+							end
+
+							new_project.users.each do |u|
+								p.project_members.create(user_id: u.id)
+							end
+						end
+						new_project.destroy # Delete unconfirmed project
+					else # No overlapping projects
+						if same_p.size > 0
+							same_p.each do |p|
+								p.project_members.create(user_id: current_user.id)
+							end
+							new_project.destroy # Delete unconfirmed project
+						elsif new_p.size > 0
+							new_project.update_attributes(is_confirmed: true)
+						end
+					end
+
+					overlapping_p.each { |p| @overlapping_projects << p }
+					new_p.each { |p| @new_projects << p }
+					same_p.each { |p| @same_projects << p }
+				end
+			end
+		end
 	end
 
 	#########################################################################
 	# Callback method from backend to create clusters for a particular user 
 	#
 	# Example: 	 curl -H "Content-Type: application/json" --data @/Users/willcheung/Downloads/contextsmith-json-3.txt http://localhost:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
-	# Example 2: http://192.168.1.130:8888/newsfeed/cluster?email=indifferenzetester@gmail.com&token=test&max=300&before=1408695712&in_domain=comprehend.com&callback=http://24.130.10.244:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
+	# Example 2: http://64.201.248.178/:8888/newsfeed/cluster?email=indifferenzetester@gmail.com&token=test&max=300&before=1408695712&in_domain=comprehend.com&callback=http://24.130.10.244:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
 	#
 	#########################################################################
 

@@ -146,11 +146,20 @@ ActiveRecord::Schema.define(version: 20151218230141) do
     t.uuid     "user_id"
   end
 
+  create_table "project_members_bak", id: false, force: :cascade do |t|
+    t.uuid     "id",         default: "uuid_generate_v4()", null: false
+    t.uuid     "project_id"
+    t.uuid     "contact_id"
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
+    t.uuid     "user_id"
+  end
+
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",           default: "",   null: false
     t.uuid     "account_id"
     t.string   "project_code"
-    t.boolean  "is_billable",    default: true
+    t.boolean  "is_public",      default: true
     t.string   "status"
     t.text     "description"
     t.date     "start_date"
@@ -161,6 +170,25 @@ ActiveRecord::Schema.define(version: 20151218230141) do
     t.uuid     "owner_id"
     t.datetime "created_at",                    null: false
     t.datetime "updated_at",                    null: false
+    t.boolean  "is_confirmed"
+  end
+
+  create_table "projects_bak", id: false, force: :cascade do |t|
+    t.uuid     "id",             default: "uuid_generate_v4()", null: false
+    t.string   "name",           default: "",                   null: false
+    t.uuid     "account_id"
+    t.string   "project_code"
+    t.boolean  "is_public",      default: true
+    t.string   "status"
+    t.text     "description"
+    t.date     "start_date"
+    t.date     "end_date"
+    t.integer  "budgeted_hours"
+    t.uuid     "created_by"
+    t.uuid     "updated_by"
+    t.uuid     "owner_id"
+    t.datetime "created_at",                                    null: false
+    t.datetime "updated_at",                                    null: false
     t.boolean  "is_confirmed"
   end
 
@@ -196,7 +224,7 @@ ActiveRecord::Schema.define(version: 20151218230141) do
     t.string   "title"
   end
 
-  add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
+  add_index "users", ["email"], name: "index_users_on_email", using: :btree
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
 
   create_table "visits", id: :uuid, default: nil, force: :cascade do |t|

@@ -76,7 +76,9 @@ module ApplicationHelper
   end
 
   def get_rounded_initials_from_name(name, css_class="")
-    if name.include?(', ') # first and last name reverse because of comma
+    if name.nil? or name.empty? or name == " "
+      s = '<i class="fa fa-user"></i>' 
+    elsif name.include?(', ') # first and last name reverse because of comma
       s = name.split(', ').last[0,1] + name.split(', ').first[0,1]
     else
       s = name.split(' ').first[0,1] + name.split(' ').last[0,1]

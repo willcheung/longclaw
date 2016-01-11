@@ -6,7 +6,6 @@ Longclaw::Application.routes.draw do
   authenticate :user do
     # Rails 4 users must specify the 'as' option to give it a unique name
     root :to => "home#index", :as => "authenticated_root"
-    #root :to => "home#thank_you", :as => "authenticated_root"
 
     resources :accounts 
     resources :contacts
@@ -14,8 +13,9 @@ Longclaw::Application.routes.draw do
     resources :organizations
 
     get "search/results"
-    get "activities/load"
-    get "onboarding/one", "onboarding/two", "onboarding/three", "onboarding/four"
+    #get "activities/load" # Loading test data
+    get "onboarding/intro_overall", "onboarding/intro_accounts", "onboarding/intro_projects", 
+        "onboarding/intro_activites", "onboarding/intro_pinned", "onboarding/confirm_projects"
   end
 
   devise_scope :user do
@@ -24,8 +24,5 @@ Longclaw::Application.routes.draw do
 
   # Cluster callback
   post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'
-
-  # Beta Email Teaser
-  post 'users/:id/send_beta_teaser_email/' => 'users#send_beta_teaser_email'
 
 end

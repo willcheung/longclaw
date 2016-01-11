@@ -1,0 +1,71 @@
+<div class="wrapper wrapper-content animated fadeInRight text-center">
+
+<% if !@same_projects.empty? or !@overlapping_projects.empty? %>
+<div style="margin-bottom:50px">
+    <h1>You've been added to <%= pluralize((@same_projects+@overlapping_projects).size, 'project') %></h1>
+    <% (@same_projects+@overlapping_projects).each do |p| %>
+        <div class="row">
+            <div class="col-lg-6 col-lg-offset-3">
+                <div class="ibox-content" style="padding-bottom:5px;">
+                    <div class="row">
+                        <div class="col-lg-5 text-left">
+                            <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
+                            <p class="small">Account: <%= p.account.name %></p>
+                        </div>
+                        <div class="col-sm-3">
+                            <p class="text-center">Last Activity<br/> <strong><%= time_ago_in_words(p.created_at) %> ago</strong></p>
+                        </div>
+                        <div class="col-md-4     team-members">
+                            <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a1.jpg') %>"></a>
+                            <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
+                            <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a3.jpg') %>"></a>
+                            <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% end %>
+</div>
+<% end %>
+
+<% if !@new_projects.empty? %>
+<div>
+    <h1>We found <%= pluralize(@new_projects.size, 'project') %> not in our system</h1>
+    <p>Feel free to modify project name and privacy setting. You can also change it later in projects settings.</p>
+	<% @new_projects.each do |p| %>
+        <div class="row">
+            <div class="col-lg-6 col-lg-offset-3">
+                <div class="ibox">
+                    <div class="ibox-title">
+                         <h3><%= p.name %> project members</h3>
+                         <p class="small">Account: <%= p.account.name %></p>
+                    </div>
+                    <div class="ibox-content" style="overflow: auto;">
+                        <ul class="agile-list text-left">
+
+                            <% (p.contacts + p.users).each do |m| %>
+                                <span class="col-lg-6">
+                                <li class="success-element" style="overflow: auto;">
+                                    <div class="col-sm-2" style="padding: 0;">
+                                        <%= get_profile_pic(get_full_name(m), m.email, "message-avatar") %>
+                                    </div>
+                                    <div class="col-sm-10 project-team-title">
+                                        <span><%= get_full_name(m) %></span><br>
+                                        <span><small><%= m.email %></small></span>
+                                    </div>
+                                </li>
+                                </span>
+                            <% end %>
+
+                        </ul>
+                    
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% end %>
+</div>
+<% end %>
+
+</div>

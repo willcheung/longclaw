@@ -55,14 +55,18 @@ module Utils
 	  end
 	end
 
-	def dice_coefficient(team_a, team_b)
-    a_set = team_a.to_set
-    b_set = team_b.to_set
+	def dice_coefficient(a, b)
+    a_set = a.to_set
+    b_set = b.to_set
 
     intersect = (a_set & b_set).size.to_f
     union = (a_set | b_set).size.to_f
     dice  = intersect / union
 
     return dice
+	end
+
+	def intersect(a, b)
+		(a & b).size
 	end
 end

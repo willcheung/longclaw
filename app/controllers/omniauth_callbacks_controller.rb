@@ -6,6 +6,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     	session["devise.google_data"] = request.env["omniauth.auth"]
       @user.refresh_token! if @user.token_expired?
       logger.info "Google devise.omniauth_callbacks.success for user " + @user.email
+      flash[:notice] = "Welcome, #{@user.first_name}!"
 
       if @user.cluster_create_date.nil?
         # Kick off cluster analysis to backend

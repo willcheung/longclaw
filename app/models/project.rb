@@ -6,7 +6,7 @@
 #  name           :string           default(""), not null
 #  account_id     :uuid
 #  project_code   :string
-#  is_billable    :boolean          default(TRUE)
+#  is_public      :boolean          default(TRUE)
 #  status         :string
 #  description    :text
 #  start_date     :date

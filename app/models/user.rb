@@ -51,14 +51,12 @@ class User < ActiveRecord::Base
   has_many    :projects, through: "project_members"
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id"
 
-  # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, :validatable, 
-         :omniauthable, :omniauth_providers => [:google_oauth2]
+         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2]
+
+  validates :email, uniqueness: true
 
   #after_create :send_welcome_email_to_user
-  #after_create :send_beta_teaser_email_to_user
   #after_create :create_user_organization
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
@@ -71,7 +69,7 @@ class User < ActiveRecord::Base
     if user
       return user
     else
-      # Considered referred user if email exists but never signed in before
+      # Considered referred user if email exists but not oauth elements
       referred_user = User.where(:email => auth.info.email).first
 
       if referred_user
@@ -110,14 +108,14 @@ class User < ActiveRecord::Base
 
   def self.create_from_clusters(internal_members, invited_by_id, organization_id)
     internal_emails = internal_members.map(&:address)
-    existing_emails = User.where(email: internal_emails, organization_id: organization_id).map(&:email)
+    #existing_emails = User.where(email: internal_emails, organization_id: organization_id).map(&:email)
     
-    missing_emails = internal_emails - existing_emails
+    #missing_emails = internal_emails - existing_emails
 
     # Create users who are not in the system
     internal_members.each do |m|
-      if missing_emails.include?(m.address)
-        u = User.new(
+      #if missing_emails.include?(m.address)
+        u = User.create(
           first_name: get_first_name(m.personal),
           last_name: get_last_name(m.personal),
           email: m.address,
@@ -125,8 +123,7 @@ class User < ActiveRecord::Base
           invited_by_id: invited_by_id,
           invitation_created_at: Time.now
         )
-        u.save(validate: false)
-      end
+      #end
     end
   end
 
@@ -134,7 +131,7 @@ class User < ActiveRecord::Base
     true
   end
 
-  # Helper methods
+  # Oauth Helper Methods
   # https://www.twilio.com/blog/2014/09/gmail-api-oauth-rails.html
   def to_params    
     {'refresh_token' => oauth_refresh_token,
