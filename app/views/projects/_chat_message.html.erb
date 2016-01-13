@@ -3,7 +3,7 @@
     <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
     
     <div class="message">
-        <span class="message-author" href="#"> <%= m.from[0].personal %> </span> to All
+        <span class="message-author" href="#"> <%= m.from[0].personal %> </span> to <%= get_conversation_member_names([], m.to, m.cc, "All") %>
         <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
         <hr class="message-divider"/>
             <span class="message-content">

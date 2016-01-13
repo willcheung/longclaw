@@ -16,15 +16,17 @@ module ApplicationHelper
   def get_first_names(from, to, cc)
       a = []
 
-      a << get_first_name(from[0]["personal"])
+      a << get_first_name(from[0]["personal"]) if !from.empty?
 
-      to.each do |n| 
-        if n["personal"].nil?
-          a << n["address"]
-        else 
-          a << get_first_name(n["personal"])
+      unless to.nil? or to.empty?
+        to.each do |n| 
+          if n["personal"].nil?
+            a << n["address"]
+          else 
+            a << get_first_name(n["personal"])
+          end
         end
-      end
+      end 
 
       unless cc.nil? or cc.empty?
         cc.each do |n| 
@@ -39,7 +41,7 @@ module ApplicationHelper
       return a.join(', ')
   end
 
-  def get_conversation_member_names(from, to, cc, size_limit=4)
+  def get_conversation_member_names(from, to, cc, trailing_text="other", size_limit=4)
     cc_size = (cc.nil? ? 0 : cc.size)
     total_size = from.size + to.size + cc_size
     
@@ -48,17 +50,29 @@ module ApplicationHelper
     elsif to.size <= size_limit and cc_size > 0
       remaining = size_limit - to.size 
       if remaining == 0
-        return get_first_names(from, to, nil) + " and " + pluralize(total_size - size_limit, 'other')
+        if trailing_text=="other"
+          return get_first_names(from, to, nil) + " and " + pluralize(total_size - size_limit, 'other')
+        else
+          return "All"
+        end
       else # ramaining > 0
         if cc_size > remaining
-          return get_first_names(from, to, cc[0..(remaining-1)]) + " and " + pluralize(cc_size - remaining, 'other')
-        else # cc_size <= reamining
+          if trailing_text=="other"
+            return get_first_names(from, to, cc[0..(remaining-1)]) + " and " + pluralize(cc_size - remaining, 'other')
+          else
+            return "All"
+          end
+        else # cc_size <= remaining
           return get_first_names(from, to, cc)
         end
       end
     elsif to.size >= size_limit
       remaining = 0
-      return get_first_names(from, to[0..size_limit], nil) + " and " + pluralize(total_size - size_limit, 'other')
+      if trailing_text=="other"
+        return get_first_names(from, to[0..size_limit], nil) + " and " + pluralize(total_size - size_limit, 'other')
+      else
+        return "All"
+      end
     end
   end
 
