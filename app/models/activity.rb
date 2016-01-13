@@ -21,6 +21,7 @@
 #
 # Indexes
 #
+#  index_activities_on_backend_id      (backend_id) UNIQUE
 #  index_activities_on_email_messages  (email_messages)
 #
 

@@ -43,23 +43,36 @@ class ProjectsController < ApplicationController
     
     data = JSON.parse(res.body.to_s).map { |hash| Hashie::Mash.new(hash) }
 
-    data.each do |d|
-      d.conversations.each do |c|
-        @activities << Activity.new(
-                        posted_by: u.id,
-                        project_id: @project.id,
-                        category: "Conversation",
-                        title: c.subject,
-                        note: '',
-                        is_public: true,
-                        backend_id: c.id,
-                        last_sent_date: Time.zone.at(c.lastSentDate),
-                        last_sent_date_epoch: c.lastSentDate,
-                        from: c.contextMessages[0].from, # take from first message
-                        to: c.contextMessages[0].to,     # take from first message
-                        cc: c.contextMessages[0].cc,     # take from first message
-                        email_messages: c.contextMessages
-                        )
+    Activity.transaction do
+      data.each do |d|
+        d.conversations.each do |c|
+
+          insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
+          values = "('#{u.id}', '#{@project.id}', 'Conversations', '#{c.subject}', true, '#{c.id}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}', 
+                     #{Activity.sanitize(c.contextMessages[0].from.to_json)}, 
+                     #{Activity.sanitize(c.contextMessages[0].to.to_json)}, 
+                     #{Activity.sanitize(c.contextMessages[0].cc.to_json)}, 
+                     #{Activity.sanitize(c.contextMessages.to_json)}, 
+                     '#{Time.now}', '#{Time.now}')"
+          on_conflict = "ON CONFLICT (backend_id) DO UPDATE SET email_messages = " + Activity.sanitize(c.contextMessages.to_json)
+          Activity.connection.execute([insert,values,on_conflict].join(' '))
+
+          @activities << Activity.new(
+                          posted_by: u.id,
+                          project_id: @project.id,
+                          category: "Conversation",
+                          title: c.subject,
+                          note: '',
+                          is_public: true,
+                          backend_id: c.id,
+                          last_sent_date: Time.zone.at(c.lastSentDate),
+                          last_sent_date_epoch: c.lastSentDate,
+                          from: c.contextMessages[0].from, # take from first message
+                          to: c.contextMessages[0].to,     # take from first message
+                          cc: c.contextMessages[0].cc,     # take from first message
+                          email_messages: c.contextMessages
+                          )
+        end
       end
     end
     
