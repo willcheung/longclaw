@@ -1,3 +1,5 @@
+require 'whois'
+
 module Utils
   ONBOARDING = { "onboarded": -1, "create_organization": 0, "intro_overall": 1, "intro_accounts": 2,
                	 "intro_projects": 3, "intro_activities": 4, "intro_pinned": 5, "confirm_projects": 6 }
@@ -53,6 +55,21 @@ module Utils
 	  else
 	    val
 	  end
+	end
+
+	def get_org_name(domain)
+		r = Whois.whois(domain)
+		p = r.parser
+
+		begin
+			org_name = p.registrant_contacts[0].organization
+		rescue => e
+			logger.error "ERROR: Can't get whois org name for domain #{domain}: " + e.message
+      logger.error e.backtrace.join("\n")
+      return domain
+    else
+    	return org_name
+    end
 	end
 
 	def dice_coefficient(a, b)

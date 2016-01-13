@@ -40,7 +40,7 @@ class Account < ActiveRecord::Base
 		# Create missing accounts
 		(grouped_external_members.keys - existing_domains).each do |a|
      	account = Account.new(domain: a, 
-     								 				name: a, 
+     								 				name: get_org_name(a), 
      								 				owner_id: owner_id, 
      								 				organization_id: organization_id,
      								 				created_by: owner_id)

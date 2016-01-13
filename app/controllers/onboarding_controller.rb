@@ -21,6 +21,7 @@ class OnboardingController < ApplicationController
 
 	end
 
+	# Callback method
 	def confirm_projects
 		@overlapping_projects = []
 		@new_projects = []
@@ -43,6 +44,7 @@ class OnboardingController < ApplicationController
 					account.projects.each do |existing_project|
 						existing_project_members = existing_project.contacts.map(&:email).map(&:downcase).map(&:strip)
 						
+						# DEBUG MSG
 						# puts existing_project_members
 						# puts "----"
 						# puts new_project_members

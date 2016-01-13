@@ -18,7 +18,7 @@ module Longclaw
         api_keys_config = YAML.load_file(api_keys_config_file)[Rails.env].symbolize_keys
 
         api_keys_config.each do |key, value|
-        ENV[key.to_s] = value
+            ENV[key.to_s] = value
         end # end YAML.load_file
     end
 
