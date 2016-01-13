@@ -46,8 +46,6 @@ module Longclaw
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     # config.i18n.default_locale = :de
 
-    config.assets.precompile += [ 'accounts.js', 'application.js', 'contacts.js', 'contextsmith.js', 'organizations.js', 'projects.js' ]
-
     require 'contextsmith_parser'
     require 'utils'
   end
