@@ -52,7 +52,7 @@ ActiveRecord::Schema.define(version: 20160113194556) do
     t.datetime "updated_at",                          null: false
   end
 
-  add_index "activities", ["backend_id"], name: "index_activities_on_backend_id", unique: true, using: :btree
+  add_index "activities", ["backend_id", "project_id"], name: "index_activities_on_backend_id_and_project_id", unique: true, using: :btree
   add_index "activities", ["email_messages"], name: "index_activities_on_email_messages", using: :gin
 
   create_table "ahoy_events", id: :uuid, default: nil, force: :cascade do |t|

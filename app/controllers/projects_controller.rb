@@ -30,20 +30,22 @@ class ProjectsController < ApplicationController
   # GET /projects/1.json
   def show
     @team = @project.contacts.includes(:account) + @project.users
-    #@activities = @project.activities
-    @activities = []
 
     max=50
     base_url = ENV["csback_base_url"] + "/newsfeed/search"
-    #current_user.refresh_token! if current_user.token_expired?
-    #token = current_user.oauth_access_token
-    #email = current_user.email
-    # DEBUG MSG
-    u = User.find_by_email('indifferenzetester@gmail.com')
-    u.refresh_token! if u.token_expired?
-    token = u.oauth_access_token
-    email = u.email
-    ###
+
+    if ENV["RAILS_ENV"] == 'production'
+      current_user.refresh_token! if current_user.token_expired?
+      token = current_user.oauth_access_token
+      email = current_user.email
+    else
+      # DEBUG
+      u = User.find_by_email('indifferenzetester@gmail.com')
+      u.refresh_token! if u.token_expired?
+      token = u.oauth_access_token
+      email = u.email
+    end
+
     ex_clusters = [@project.contacts.map(&:email)]
     
     final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + "&in_domain=comprehend.com"
@@ -52,42 +54,8 @@ class ProjectsController < ApplicationController
     url = URI.parse(final_url)
     req = Net::HTTP::Get.new(url.to_s)
     res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
-    
-    data = JSON.parse(res.body.to_s).map { |hash| Hashie::Mash.new(hash) }
 
-    Activity.transaction do
-      data.each do |d|
-        d.conversations.each do |c|
-
-          insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
-          values = "('#{u.id}', '#{@project.id}', 'Conversations', '#{c.subject}', true, '#{c.id}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}', 
-                     #{Activity.sanitize(c.contextMessages[0].from.to_json)}, 
-                     #{Activity.sanitize(c.contextMessages[0].to.to_json)}, 
-                     #{Activity.sanitize(c.contextMessages[0].cc.to_json)}, 
-                     #{Activity.sanitize(c.contextMessages.to_json)}, 
-                     '#{Time.now}', '#{Time.now}')"
-          on_conflict = "ON CONFLICT (backend_id) DO UPDATE SET email_messages = " + Activity.sanitize(c.contextMessages.to_json)
-          Activity.connection.execute([insert,values,on_conflict].join(' '))
-
-          @activities << Activity.new(
-                          posted_by: u.id,
-                          project_id: @project.id,
-                          category: "Conversation",
-                          title: c.subject,
-                          note: '',
-                          is_public: true,
-                          backend_id: c.id,
-                          last_sent_date: Time.zone.at(c.lastSentDate),
-                          last_sent_date_epoch: c.lastSentDate,
-                          from: c.contextMessages[0].from, # take from first message
-                          to: c.contextMessages[0].to,     # take from first message
-                          cc: c.contextMessages[0].cc,     # take from first message
-                          email_messages: c.contextMessages
-                          )
-        end
-      end
-    end
-    
+    @activities = Activity.load(res.body, @project, current_user)
   end
 
   # GET /projects/new
