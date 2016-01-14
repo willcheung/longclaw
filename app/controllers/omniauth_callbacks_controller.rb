@@ -15,7 +15,8 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
       sign_in_and_redirect @user, :event => :authentication
     else
       reset_session
-  		logger.error "Can't verify Google!"
+  		logger.error "Can't persist user!"
+      ahoy.track("Error logging in", message: "Can't persist user!")
   		redirect_to new_user_registration_path
     end
   end
@@ -23,6 +24,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def failure
   	reset_session
   	logger.error "Can't verify Google!"
+    ahoy.track("Error logging in", message: "Can't verify Google!")
   	redirect_to new_user_registration_path
   end
 end

@@ -156,21 +156,26 @@ class OnboardingController < ApplicationController
           format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
           logger.error "ERROR: Something went wrong: " + e.message
           logger.error e.backtrace.join("\n")
+          ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
         else
           format.json { render json: 'Clusters created for user ' + user.email, status: 200}
         end
   		elsif user.nil?
   			format.json { render json: 'User not found.', status: 500}
   			logger.error "ERROR: User not found: " + params[:user_id]
+  			ahoy.track("Error Create Cluster", message: "User not found: #{params[:user_id]}")
   		elsif data.nil?
   			format.json { render json: 'No data.', status: 200}
 
   			if params["errors"].nil? # no errors
 	  			logger.error "No data return for user: " + params[:user_id]
+	  			ahoy.track("Error Create Cluster", message: "No data return for user: #{params[:user_id]}")
 	  		else # returns error
 	  			logger.error "ERROR: Code: " + params[:code].to_s + " Error: " + params["message"]
+	  			ahoy.track("Error Create Cluster", message: "#{params[:code].to_s} #{params[:message]}")
 	  			if params["message"] == "Invalid Credentials"
 	  				logger.error "Token might have expired."
+	  				ahoy.track("Error Create Cluster", message: "Invalid Credentials. Token might have expired.")
 	  			end
 	  		end
   		end
