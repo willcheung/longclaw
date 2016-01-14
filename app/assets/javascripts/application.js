@@ -13,11 +13,15 @@
 //= require slimscroll/jquery.slimscroll.min.js
 //= require toastr/toastr.min.js
 //= require contextsmith.js
+//= require best_in_place
+//= require switchery/switchery.js
 
-<% if ENV["RAILS_ENV"] == 'production' %>
-  // ahoy analytics
-  ahoy.trackAll();
-<% end %>
+ahoy.trackAll();
+
+$(document).ready(function() {
+  /* Activating Best In Place */
+  jQuery(".best_in_place").best_in_place();
+});
 
 $(document).ready(function() {
   /****************
@@ -33,7 +37,7 @@ $(document).ready(function() {
     $(event.data).render_form_errors( $.parseJSON(jqxhr.responseText) );
   });
 
-    /****************
+  /****************
    Account Modal remote form
    ****************/
   $(document).bind('ajaxError', 'form.new_account', function(event, jqxhr, settings, exception){

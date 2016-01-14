@@ -9,7 +9,7 @@
                 <div class="ibox-content" style="padding-bottom:5px;">
                     <div class="row">
                         <div class="col-lg-5 text-left">
-                            <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
+                            <h3><%= p.name %></h3>
                             <p class="small">Account: <%= p.account.name %></p>
                         </div>
                         <div class="col-sm-3">
@@ -38,8 +38,12 @@
             <div class="col-lg-6 col-lg-offset-3">
                 <div class="ibox">
                     <div class="ibox-title">
-                         <h3><%= p.name %> project members</h3>
-                         <p class="small">Account: <%= p.account.name %></p>
+                         <h3 style="font-weight:500;"><%= best_in_place p, :name, :as => 'input' %> project members </h3>
+                         <div class="small"></div>
+                         <h4>Account: <%= p.account.name %></h4>
+                         <div data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can collaborate." class="small col-sm-3 col-sm-offset-8 text-right" style="line-height:2em;clear:both;padding-right:0">Open collaboration:</div>
+                         <div class="col-sm-1"><%= best_in_place p, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch' %></div>
+                        <div style="clear:both"></div>
                     </div>
                     <div class="ibox-content" style="overflow: auto;">
                         <ul class="agile-list text-left">
@@ -69,3 +73,14 @@
 <% end %>
 
 </div>
+
+<%= javascript_tag do %>
+   $('[data-toggle="tooltip"]').tooltip();
+
+   /* Switchery */
+  var elems = Array.prototype.slice.call(document.querySelectorAll('.is_public-switch'));
+  elems.forEach(function(html) {
+    new Switchery(html, { size: 'small' });
+  });
+  $('.best_in_place').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { size: 'small' }); });
+<% end %>

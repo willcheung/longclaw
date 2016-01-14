@@ -6,11 +6,23 @@ class ProjectsController < ApplicationController
   # GET /projects.json
   def index
     @title = "Projects"
+    projects = []
+
     # all projects and their accounts, sorted by account name alphabetically
-    projects = Project.includes(:account).all.where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account)
+    all_projects = Project.includes(:account).all.where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account)
+    
+    # Remove private projects
+    all_projects.each do |p|
+      if p.is_public 
+        projects << p
+      elsif p.owner_id == current_user.id
+        projects << p
+      end
+    end
+
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
-    # new project
+    # new project modal
     @project = Project.new
   end
 
@@ -117,11 +129,11 @@ class ProjectsController < ApplicationController
       if @project.update(project_params)
         format.html { redirect_to @project, notice: 'Project was successfully updated.' }
         format.js { render action: 'show', status: :created, location: @project }
-        #format.json { head :no_content }
+        format.json { head :no_content }
       else
         format.html { render action: 'edit' }
         format.js { render json: @project.errors, status: :unprocessable_entity }
-        #format.json { render json: @project.errors, status: :unprocessable_entity }
+        format.json { render json: @project.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -148,6 +160,6 @@ class ProjectsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def project_params
-      params.require(:project).permit(:name, :start_date, :project_code, :account_id, :budgeted_hours, :owner_id)
+      params.require(:project).permit(:name, :is_public, :project_code, :account_id, :budgeted_hours, :owner_id)
     end
 end

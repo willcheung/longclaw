@@ -239,3 +239,12 @@ h1.onboarding {
     font-weight: 500;
     margin-bottom: 30px;
 }
+
+span.best_in_place {
+  cursor:pointer;
+  border-bottom: 1px dashed #888;
+  text-decoration: none;
+}
+span.best_in_place.switch {
+  border: none;
+}
