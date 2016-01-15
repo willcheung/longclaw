@@ -68,7 +68,11 @@ module Utils
       logger.error e.backtrace.join("\n")
       return domain
     else
-    	return org_name
+    	if org_name.nil? or org_name == ""
+    		return domain
+    	else
+    		return org_name
+    	end
     end
 	end
 

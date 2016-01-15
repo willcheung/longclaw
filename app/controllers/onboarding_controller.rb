@@ -82,6 +82,7 @@ class OnboardingController < ApplicationController
 						overlapping_p.each do |p|
 							p.project_members.create(user_id: current_user.id)
 							
+							# Copy new_project contacts and users
 							new_project.contacts.each do |c|
 								p.project_members.create(contact_id: c.id)
 							end
@@ -90,13 +91,21 @@ class OnboardingController < ApplicationController
 								p.project_members.create(user_id: u.id)
 							end
 						end
+
+						# Copy new_project activities
+						Activity.copy(new_project, p)
 						new_project.destroy # Delete unconfirmed project
+
 					else # No overlapping projects
 						if same_p.size > 0
 							same_p.each do |p|
 								p.project_members.create(user_id: current_user.id)
 							end
+							
+							# Copy new_project activities
+							Activity.copy(new_project, p)
 							new_project.destroy # Delete unconfirmed project
+							
 						elsif new_p.size > 0
 							new_project.update_attributes(is_confirmed: true)
 						end
