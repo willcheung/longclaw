@@ -30,17 +30,17 @@ class Activity < ActiveRecord::Base
 
 	CATEGORY = %w(Conversation Note Status)
 
-	def self.load(data, project, user)
+	def self.load(data, project, user_id)
 		activities = []
 
-		data_hash = JSON.parse(data.to_s).map { |hash| Hashie::Mash.new(hash) }
+		data_hash = data.map { |hash| Hashie::Mash.new(hash) }
 
 		Activity.transaction do
       data_hash.each do |d|
         d.conversations.each do |c|
 
           insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
-          values = "('#{user.id}', '#{project.id}', 'Conversations', '#{c.subject}', true, '#{c.id}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}', 
+          values = "('#{user_id}', '#{project.id}', 'Conversations', '#{c.subject}', true, '#{c.id}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}', 
                      #{Activity.sanitize(c.contextMessages[0].from.to_json)}, 
                      #{Activity.sanitize(c.contextMessages[0].to.to_json)}, 
                      #{Activity.sanitize(c.contextMessages[0].cc.to_json)}, 
@@ -53,7 +53,7 @@ class Activity < ActiveRecord::Base
 
           # Create activities object
           activities << Activity.new(
-                          posted_by: user.id,
+                          posted_by: user_id,
                           project_id: project.id,
                           category: "Conversation",
                           title: c.subject,

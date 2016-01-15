@@ -5,11 +5,7 @@ class OnboardingController < ApplicationController
 
 	end
 
-	def intro_accounts
-
-	end
-
-	def intro_projects
+	def intro_accounts_projects
 
 	end
 
@@ -127,7 +123,7 @@ class OnboardingController < ApplicationController
 		data = params["_json"]
 
 		respond_to do |format|
-      puts format.to_s
+      
   		if user and data
         begin
           uniq_external_members, uniq_internal_members = get_all_members(data)
@@ -140,7 +136,7 @@ class OnboardingController < ApplicationController
 	       	# Create internal users
 	       	User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
 
-	       	# Create Projects
+	       	# Create Projects, project members, and activities
 	       	Project.create_from_clusters(data, user.id, user.organization.id)
 
 	       	########################################################

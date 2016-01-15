@@ -54,8 +54,9 @@ class ProjectsController < ApplicationController
     url = URI.parse(final_url)
     req = Net::HTTP::Get.new(url.to_s)
     res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
+    data = JSON.parse(res.body.to_s)
 
-    @activities = Activity.load(res.body, @project, current_user)
+    @activities = Activity.load(data, @project, current_user.id)
   end
 
   # GET /projects/new

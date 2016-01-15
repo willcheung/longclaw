@@ -27,9 +27,9 @@ class Project < ActiveRecord::Base
 	belongs_to 	:account
 	belongs_to	:project_owner, class_name: "User", foreign_key: "owner_id"
 	has_many	:project_members, dependent: :destroy
+	has_many	:activities, dependent: :destroy
 	has_many	:contacts, through: "project_members"
 	has_many	:users, through: "project_members"
-	has_many	:activities, dependent: :destroy
 
 	validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
 	validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
@@ -59,7 +59,8 @@ class Project < ActiveRecord::Base
 													)
 			
 			if project.save
-				# assuming contacts and users have already been inserted
+				# Project members
+				# assuming contacts and users have already been inserted, we just need to link them
 				contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
 				users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
 				
@@ -71,6 +72,9 @@ class Project < ActiveRecord::Base
 				internal_members.each do |m|
 					project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
 				end
+
+				# Project activities
+				Activity.load(data, project, user_id)
 			end
 		end
 	end

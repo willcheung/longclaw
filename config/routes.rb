@@ -14,7 +14,7 @@ Longclaw::Application.routes.draw do
 
     get "search/results"
     #get "activities/load" # Loading test data
-    get "onboarding/intro_overall", "onboarding/intro_accounts", "onboarding/intro_projects", 
+    get "onboarding/intro_overall", "onboarding/intro_accounts_projects",
         "onboarding/intro_activites", "onboarding/intro_pinned", "onboarding/confirm_projects"
   end
 
