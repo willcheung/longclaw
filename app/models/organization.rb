@@ -15,18 +15,16 @@ class Organization < ActiveRecord::Base
 	has_many :users
 	has_many :accounts
 
+  validates :domain, uniqueness: true
+
 	# Returns new_org if there's no existing one.  If there is, return existing one.
-	def create_user_organization(domain, user)
-		new_org = Organization.new(name: "Test Org",
-														 	 domain: domain,
-														 	 owner_id: user.id)
-    
+	def self.create_or_update_user_organization(domain, user)
     existing_org = Organization.find_by_domain(domain)
 
     if existing_org
     	return existing_org
     else
-    	new_org.save
+      new_org = Organization.create(name: get_org_name(domain), domain: domain, owner_id: user.id)
     	return new_org
     end
   end

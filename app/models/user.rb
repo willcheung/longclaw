@@ -57,7 +57,6 @@ class User < ActiveRecord::Base
   validates :email, uniqueness: true
 
   #after_create :send_welcome_email_to_user
-  #after_create :create_user_organization
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
 
@@ -73,6 +72,7 @@ class User < ActiveRecord::Base
       referred_user = User.where(:email => auth.info.email).first
 
       if referred_user
+        # Change referred_user into real user
         referred_user.update_attributes(
           first_name: info["first_name"],
           last_name: info["last_name"],
@@ -102,6 +102,11 @@ class User < ActiveRecord::Base
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:create_organization]
         )
+        
+        org = Organization.create_or_update_user_organization(get_domain(info["email"]), user)
+        user.update_attributes(organization_id: org.id)
+
+        return user
       end
     end
   end
