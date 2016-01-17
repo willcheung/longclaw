@@ -37,10 +37,14 @@ class Account < ActiveRecord::Base
 		existing_accounts = Account.where(domain: grouped_external_members.keys, organization_id: organization_id).includes(:contacts)
 		existing_domains = existing_accounts.map(&:domain)
 
+    org_info = get_org_info(a)
+
 		# Create missing accounts
 		(grouped_external_members.keys - existing_domains).each do |a|
      	account = Account.new(domain: a, 
-     								 				name: get_org_name(a), 
+     								 				name: org_info[0], 
+                            address: org_info[1],
+                            website: "http://www.#{a}",
      								 				owner_id: owner_id, 
      								 				organization_id: organization_id,
      								 				created_by: owner_id)

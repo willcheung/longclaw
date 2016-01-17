@@ -31,7 +31,6 @@
                                 <tr>
                                     <th>Account Name</th>
                                     <th>Address</th>
-                                    <th>Phone</th>
                                     <th>Website</th>
                                     <th>Projects</th>
                                     <th>Last Activity</th>
@@ -42,7 +41,6 @@
                                 <tr>
                                     <td><a href="<%= account_path(a.id) %>"><%= a.name %></a><a class="pull-right edit" href="<%= edit_account_path(a) %>" style="display: none;"><i class="fa fa-pencil"></i></a></td>
                                     <td><%= a.address %></td>
-                                    <td><%= a.phone %></td>
                                     <td><%= a.website %></td>
                                     <td><%= a.projects.size %></td>
                                     <td><%= time_ago_in_words(a.created_at) + ' ago' %></td>

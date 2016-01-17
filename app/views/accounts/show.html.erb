@@ -28,16 +28,14 @@
 							<div class="vdivide">
 								<div class="row vdivide">
 									<div class="col-sm-4 text-center">
-										<span>Last Activity</span>
-										<strong><%= time_ago_in_words(@account.created_at) + ' ago' %></strong>
+										<span><%= pluralize(@account.projects.size, 'Project') %></span>
 									</div>
 									<div class="col-sm-4 text-center">
-										<strong>123</strong>
-										<span>Conversations</span>
+										<span><%= pluralize(@account_contacts.size, 'Contact') %></span>
 									</div>
 									<div class="col-sm-4 text-center">
-										<strong>Inactive</strong>
-										<span>State</span>
+										<strong>Last Activity</strong>
+										<span>10 days ago</span>
 									</div>
 								</div>
 							</div>
@@ -94,13 +92,13 @@
 															<th>Title</th>
 															<th></th>
 															<th>Email</th>
-															<th>Last Communication</th>
+															<th>Last Activity</th>
 														</tr>
 													</thead>
 													<tbody>
 														<% @account_contacts.each do |contact| %>
 														<tr>
-															<td><a href="<%= contact_path(contact) %>" class="client-link"><%= get_full_name(contact) %></a></td>
+															<td><%= get_full_name(contact) %></a></td>
 															<td><%= contact.title %></td>
 															<td class="contact-type"><i class="fa fa-envelope"> </i></td>
 															<td><%= contact.email %></td>
@@ -127,11 +125,8 @@
 		<div class="wrapper wrapper-content project-manager">
 
 			<div class="m-t-md"><strong>Account Description:</strong></div>
-			<% if @account.description.nil? or @account.description.empty? %>
-			<small><a href="">(Add description)</a></small>
-			<% else %>
-			<%= @account.description %>
-			<% end %>
+			<small><%= best_in_place @account, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, 
+								:cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small>
 
 			<ul class="list-group clear-list m-t-sm">
 				<li class="list-group-item first-item">
@@ -143,24 +138,24 @@
 					<span class="pull-right"><%= get_full_name(@account.user) %></span>
 				</li>
 				<li class="list-group-item">
-					<strong>Company Phone:</strong>
-					<span class="pull-right"><%= @account.phone %></span>
+					<strong>Phone:</strong>
+					<span class="pull-right"><%= best_in_place @account, :phone, :as => 'input', :place_holder => '(add)' %></span>
 				</li>
 				<li class="list-group-item">
 					<strong>Website:</strong>
-					<span class="pull-right"> <a href="#" class="text-navy"><%= @account.website %></a> </span>
+					<span class="pull-right"><%= best_in_place @account, :website, :as => 'input', :place_holder => '(add)' %></span>
 				</li>
 				<li class="list-group-item m-b-sm">
 					<strong>Address:</strong>
-					<span class="pull-right"> <%= @account.address %> </span>
+					<span class="pull-right"><%= best_in_place @account, :address, :as => 'textarea', :place_holder => '(add)', :display_with => :simple_format %> </span>
 				</li>
-				<a href=""><img alt="image" src="https://maps.googleapis.com/maps/api/staticmap?center=World+Trade+Center,New+York,NY&zoom=13&size=260x150&maptype=roadmap&markers=color:green%7Clabel:G%7C40.711614,-74.012318"></a>
+				<!-- <a href=""><img alt="image" src="https://maps.googleapis.com/maps/api/staticmap?center=World+Trade+Center,New+York,NY&zoom=13&size=260x150&maptype=roadmap&markers=color:green%7Clabel:G%7C40.711614,-74.012318"></a> -->
 					<li class="list-group-item small m-t-md first-item">
-						<span class="pull-right"><%= @account.updated_at.to_formatted_s(:long) %></span>
+						<span class="pull-right"><%= @account.updated_at.to_date.to_formatted_s(:long) %></span>
 						Last Updated:
 					</li>
 					<li class="list-group-item small">
-						<span class="pull-right"><%= @account.created_at.to_formatted_s(:long) %></span>
+						<span class="pull-right"><%= @account.created_at.to_date.to_formatted_s(:long) %></span>
 						Created:
 					</li>
 				</ul>

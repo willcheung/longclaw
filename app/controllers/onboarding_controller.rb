@@ -17,6 +17,10 @@ class OnboardingController < ApplicationController
 
 	end
 
+	def creating_clusters
+
+	end
+
 	# Callback method
 	def confirm_projects
 		@overlapping_projects = []

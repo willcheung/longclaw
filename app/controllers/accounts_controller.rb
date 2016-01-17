@@ -53,11 +53,11 @@ class AccountsController < ApplicationController
     respond_to do |format|
       if @account.update(account_params.merge(updated_by: current_user.id))
         format.html { redirect_to @account, notice: 'Account was successfully updated.' }
-        #format.json { head :no_content }
+        format.json { head :no_content }
         format.js { render action: 'show', status: :created, location: @account }
       else
         format.html { render action: 'edit' }
-        #format.json { render json: @account.errors, status: :unprocessable_entity }
+        format.json { render json: @account.errors, status: :unprocessable_entity }
         format.js { render json: @account.errors, status: :unprocessable_entity }
       end
     end

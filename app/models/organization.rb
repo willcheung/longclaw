@@ -24,7 +24,8 @@ class Organization < ActiveRecord::Base
     if existing_org
     	return existing_org
     else
-      new_org = Organization.create(name: get_org_name(domain), domain: domain, owner_id: user.id)
+      org_info = get_org_info(domain)
+      new_org = Organization.create(name: org_info[0], domain: domain, owner_id: user.id)
     	return new_org
     end
   end

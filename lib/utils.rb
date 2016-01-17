@@ -1,8 +1,8 @@
 require 'whois'
 
 module Utils
-  ONBOARDING = { "onboarded": -1, "create_organization": 0, "intro_overall": 1, "intro_accounts": 2,
-               	 "intro_projects": 3, "intro_activities": 4, "intro_pinned": 5, "confirm_projects": 6 }
+  ONBOARDING = { "onboarded": -1, "create_organization": 0, "intro_overall": 1, "intro_accounts_projects": 2,
+               	 "intro_activities": 3, "intro_pinned": 4, "confirm_projects": 5 }
 
 
 	def get_full_name(user)
@@ -57,22 +57,22 @@ module Utils
 	  end
 	end
 
-	def get_org_name(domain)
+	def get_org_info(domain)
 		r = Whois.whois(domain)
-		p = r.parser
 
-		begin
-			org_name = p.registrant_contacts[0].organization
-		rescue => e
-			logger.error "ERROR: Can't get whois org name for domain #{domain}: " + e.message
-      logger.error e.backtrace.join("\n")
-      return domain
-    else
-    	if org_name.nil? or org_name == ""
-    		return domain
-    	else
-    		return org_name
-    	end
+		if !r.registrant_contacts.nil?
+			if r.registrant_contacts[0].organization.nil? or r.registrant_contacts[0].organization == ""
+				org_name = domain
+			else
+				org_name = r.registrant_contacts[0].organization
+			end
+
+			address = ([r.registrant_contacts[0].address, r.registrant_contacts[0].city, r.registrant_contacts[0].state, 
+								 r.registrant_contacts[0].country, r.registrant_contacts[0].country_code]).join(' ')
+
+			return org_name, address
+		else
+      return domain, ""
     end
 	end
 

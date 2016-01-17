@@ -1842,6 +1842,8 @@ a.forum-item-title:hover {
 .vertical-timeline-content h3 {
   font-weight: 500;
   margin-top: 4px;
+  border-bottom: 1px solid $border-color;
+  padding-bottom: 8px;
 }
 
 .vertical-timeline-content p {
