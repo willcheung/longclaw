@@ -18,7 +18,9 @@ class OnboardingController < ApplicationController
 	end
 
 	def creating_clusters
-
+		if current_user.onboarding_step == Utils::ONBOARDING[:confirm_projects] and !current_user.cluster_create_date.nil?
+			onboarding_confirm_projects_path
+		end
 	end
 
 	# Callback method

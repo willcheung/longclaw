@@ -84,7 +84,7 @@ class User < ActiveRecord::Base
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: Utils::ONBOARDING[:intro_overall]
+          onboarding_step: Utils::ONBOARDING[:confirm_projects]
         )
 
         return referred_user
@@ -100,7 +100,7 @@ class User < ActiveRecord::Base
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: Utils::ONBOARDING[:intro_overall]
+          onboarding_step: Utils::ONBOARDING[:confirm_projects]
         )
         
         org = Organization.create_or_update_user_organization(get_domain(info["email"]), user)
