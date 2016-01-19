@@ -223,16 +223,10 @@
                                                 </div>
                                             </div>
                                         <% end %>
-                                        
-                                        <script>
-                                            $("#show-more-<%= a.backend_id %>").click(function() {
-                                                $(".hidden-chat-message-<%= a.backend_id %>").each(function() {
-                                                    console.log($(this));
-                                                    $(this).show();
-                                                });
-                                                $("#show-more-<%= a.backend_id %>").hide();
-                                            });
-                                        </script>
+
+                                        <div class="col-4-lg action-links">
+                                            <a href="#"><i class="fa fa-thumb-tack"></i> Pin it</a> &sdot; <a id="comment-link-<%= a.id %>">Comment</a> 
+                                        </div>
                                     </div> <!-- chat discussion -->
                                     
                                     <div class="content-footer footer-<%= a.id %>">
@@ -241,7 +235,7 @@
                                             <%= render "comments/comment", :c => c %>
                                         <% end %>
 
-                                        <div class="social-comment form-<%= a.id %> row">
+                                        <div class="social-comment form-<%= a.id %> row" style="display:none;">
                                             <div class="col-sm-1">
                                                 <%= get_profile_pic(get_full_name(current_user), current_user.email, "") %>
                                             </div>
@@ -250,6 +244,21 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <script>
+                                    $(document).ready(function() {
+                                        $("#show-more-<%= a.backend_id %>").click(function() {
+                                            $(".hidden-chat-message-<%= a.backend_id %>").each(function() {
+                                                $(this).show();
+                                            });
+                                            $("#show-more-<%= a.backend_id %>").hide();
+                                        });
+
+                                        $("#comment-link-<%= a.id %>").click(function() {
+                                            $(".form-<%= a.id %>").show();
+                                        });
+                                    });
+                                    </script>
 
                                 </div>
                             </div>
