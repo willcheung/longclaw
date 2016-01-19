@@ -74,7 +74,7 @@ class Project < ActiveRecord::Base
 				end
 
 				# Project activities
-				Activity.load(data, project, user_id)
+				Activity.load(get_project_conversations(data, p), project, user_id)
 			end
 		end
 	end

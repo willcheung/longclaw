@@ -39,6 +39,13 @@ module ContextSmithParser
 	end
 
 	def get_project_conversations(data, project_domain)
+		single_project = [] # Needs to be in an array because this is how backend data is being processed in Activity.load
 
+		data.each do |p|
+			if p["topExternalMemberDomain"] == project_domain
+				single_project[0] = p
+			end
+		end
+		return single_project
 	end
 end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160117193255) do
+ActiveRecord::Schema.define(version: 20160119223140) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -35,21 +35,23 @@ ActiveRecord::Schema.define(version: 20160117193255) do
   end
 
   create_table "activities", force: :cascade do |t|
-    t.string   "category",                            null: false
-    t.string   "title",                               null: false
-    t.text     "note",                 default: "",   null: false
-    t.boolean  "is_public",            default: true, null: false
+    t.string   "category",                             null: false
+    t.string   "title",                                null: false
+    t.text     "note",                 default: "",    null: false
+    t.boolean  "is_public",            default: true,  null: false
     t.string   "backend_id"
     t.datetime "last_sent_date"
     t.string   "last_sent_date_epoch"
-    t.jsonb    "from",                 default: {},   null: false
-    t.jsonb    "to",                   default: {},   null: false
-    t.jsonb    "cc",                   default: {},   null: false
-    t.jsonb    "email_messages",       default: {},   null: false
-    t.uuid     "project_id",                          null: false
-    t.uuid     "posted_by",                           null: false
-    t.datetime "created_at",                          null: false
-    t.datetime "updated_at",                          null: false
+    t.jsonb    "from",                 default: {},    null: false
+    t.jsonb    "to",                   default: {},    null: false
+    t.jsonb    "cc",                   default: {},    null: false
+    t.jsonb    "email_messages",       default: {},    null: false
+    t.uuid     "project_id",                           null: false
+    t.uuid     "posted_by",                            null: false
+    t.datetime "created_at",                           null: false
+    t.datetime "updated_at",                           null: false
+    t.boolean  "is_pinned",            default: false
+    t.uuid     "pinned_by"
   end
 
   add_index "activities", ["backend_id", "project_id"], name: "index_activities_on_backend_id_and_project_id", unique: true, using: :btree

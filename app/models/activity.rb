@@ -18,6 +18,8 @@
 #  posted_by            :uuid             not null
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
+#  is_pinned            :boolean          default(FALSE)
+#  pinned_by            :uuid
 #
 # Indexes
 #
