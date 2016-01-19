@@ -56,7 +56,8 @@ class ProjectsController < ApplicationController
     res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
     data = JSON.parse(res.body.to_s)
 
-    @activities = Activity.load(data, @project, current_user.id)
+    Activity.load(data, @project, current_user.id)
+    @activities = @project.activities.includes(:comments)
   end
 
   # GET /projects/new

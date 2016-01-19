@@ -10,10 +10,12 @@ Longclaw::Application.routes.draw do
     resources :accounts 
     resources :contacts
     resources :projects
+    resources :activities do
+      resources :comments, only: [:create, :update, :delete]
+    end
     #resources :organizations  # not using yet
 
     get "search/results"
-    #get "activities/load" # Loading test data
     get "onboarding/intro_overall", "onboarding/intro_accounts_projects",
         "onboarding/intro_activites", "onboarding/intro_pinned", "onboarding/creating_clusters", "onboarding/confirm_projects"
   end

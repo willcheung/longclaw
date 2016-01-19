@@ -27,7 +27,7 @@ class Project < ActiveRecord::Base
 	belongs_to 	:account
 	belongs_to	:project_owner, class_name: "User", foreign_key: "owner_id"
 	has_many	:project_members, dependent: :destroy
-	has_many	:activities, dependent: :destroy
+	has_many	:activities, -> { order "last_sent_date DESC" }, dependent: :destroy
 	has_many	:contacts, through: "project_members"
 	has_many	:users, through: "project_members"
 

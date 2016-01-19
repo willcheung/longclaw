@@ -207,14 +207,21 @@
                                         <% end %>
 
                                         <% a.email_messages.each do |m| %>
-                                            <% if a.email_messages.last != m %>
-                                                <div class="hidden-chat-message-<%= a.backend_id %>" style="display:none;">
-                                                    <%= render 'projects/chat_message', :m => m %>
+                                            <div class="hidden-chat-message-<%= a.backend_id %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
+                                                <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
+                                                    <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
+                                                    <div class="message">
+                                                        <span class="message-author" href="#"> <%= m.from[0].personal %> </span> to <%= get_conversation_member_names([], m.to, m.cc, "All") %>
+                                                        <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
+                                                        <hr class="message-divider"/>
+                                                            <span class="message-content">
+                                                                 <p>
+                                                                    <%= truncate(m.previewContent, length: 200, separator: ' ') %>
+                                                                </p>
+                                                            </span>
+                                                    </div>
                                                 </div>
-                                            <% else %>
-                                                <%= render 'projects/chat_message', :m => m %>
-                                            <% end %>
-
+                                            </div>
                                         <% end %>
                                         
                                         <script>
@@ -227,6 +234,22 @@
                                             });
                                         </script>
                                     </div> <!-- chat discussion -->
+                                    
+                                    <div class="content-footer footer-<%= a.id %>">
+                                       
+                                        <% a.comments.each do |c| %>
+                                            <%= render "comments/comment", :c => c %>
+                                        <% end %>
+
+                                        <div class="social-comment form-<%= a.id %> row">
+                                            <div class="col-sm-1">
+                                                <%= get_profile_pic(get_full_name(current_user), current_user.email, "") %>
+                                            </div>
+                                            <div class="col-sm-11">
+                                                <%= render 'comments/form', :activity => a %>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                 </div>
                             </div>
@@ -234,7 +257,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
     <div class="col-lg-3">
@@ -278,11 +300,11 @@
                     <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
                 </li>
                 <li class="list-group-item small m-t-md first-item">
-                    <span class="pull-right"><%= @project.updated_at.to_formatted_s(:long) %></span>
+                    <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
                     Last Updated:
                 </li>
                 <li class="list-group-item small">
-                    <span class="pull-right"><%= @project.created_at.to_formatted_s(:long) %></span>
+                    <span class="pull-right"><%= @project.created_at.to_date.to_formatted_s(:long) %></span>
                     Created:
                 </li>
             </ul>

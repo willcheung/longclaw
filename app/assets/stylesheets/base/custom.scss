@@ -233,6 +233,15 @@ hr.message-divider {
   cursor:default;
   background: #000;
 }
+.social-comment .rounded-initials {
+  width:26px;
+  height:26px;
+  font-size:11px;
+  padding: 0;
+}
+.social-comment textarea {
+  font-size: 12px;
+}
 
 h1.onboarding {
     font-size: 35px;

@@ -1,0 +1,2 @@
+$('.form-<%= @activity.id %>').before('<%= escape_javascript(render "comments/comment", :c => @comment) %>');
+$('.form-<%= @activity.id %> textarea').val("");

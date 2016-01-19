@@ -1,0 +1,10 @@
+<div class="social-comment row">
+	<div class="col-sm-1">
+		<%= get_profile_pic(get_full_name(c.user), c.user.email, "pull-left m-r-sm") %>
+	</div>
+	<div class="col-sm-11">
+		<%= simple_format(c.comment).gsub("\n\n", "<br />").html_safe %>
+		<div class="m-t-xs"><small class="text-muted"><%= time_ago_in_words(c.created_at) %> ago</small></div>
+	</div>
+</div>
+

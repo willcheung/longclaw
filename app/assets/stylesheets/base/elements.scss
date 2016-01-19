@@ -1851,6 +1851,23 @@ a.forum-item-title:hover {
   line-height: 1.4;
 }
 
+.vertical-timeline-content .content-footer {
+  border-top: 1px solid #f6f7f8;
+  padding: 0 15px;
+  background: #f9f9f9;
+  margin: 0 -13px -13px -13px;
+}
+
+.vertical-timeline-content .content-footer p {
+  font-size: 12px;
+  margin: 0;
+}
+
+.vertical-timeline-content .content-footer .social-comment {
+  padding: 8px 0;
+  border-top: 1px solid #dddedf;
+}
+
 .vertical-timeline-block .vertical-date {
   float: left;
   font-weight: 300;
