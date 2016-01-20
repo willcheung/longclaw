@@ -1797,17 +1797,22 @@ a.forum-item-title:hover {
   color: #aaa;
 }
 
-.vertical-timeline-block:hover .vertical-timeline-button{
+.vertical-timeline-block:hover .vertical-timeline-button button{
   display: block;
 }
 .vertical-timeline-button {
   position: absolute;
   top: 40px;
-  left: -14px;
-  display: none;
+  left: -12px;
 }
 .vertical-timeline-button .btn {
   font-size: 11px;
+}
+.vertical-timeline-button button {
+  display: none;
+}
+.vertical-timeline-button button.pinned {
+  display: block;
 }
 
 @media only screen and (min-width: 1170px) {

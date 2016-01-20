@@ -187,9 +187,9 @@
                                 <div class="vertical-timeline-icon white-bg">
                                     <i class="fa fa-envelope"></i>
                                 </div>
-                                <div class="vertical-timeline-button">
-                                    <button class="btn btn-primary btn-xs" type="button"><i class="fa fa-thumb-tack"></i> &nbsp;&nbsp;Pin it</button>
-                                </div>
+                                <!-- <div class="vertical-timeline-button">
+                                    <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<button class=\"btn btn-primary btn-xs\" style=\"type=\"button\">&nbsp;&nbsp;Pin it&nbsp;&nbsp;</button>"), true: raw("<button class=\"btn btn-primary btn-xs pinned\" type=\"button\"><i class=\"fa fa-thumb-tack\"></i>&nbsp;Pinned</button>")}, :class => 'pin' %>
+                                </div> -->
                                 <span class="vertical-date left"><%= a.last_sent_date.strftime("%b %d") %><br />
                                     <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
                                 </span>
@@ -225,7 +225,8 @@
                                         <% end %>
 
                                         <div class="col-4-lg action-links">
-                                            <a href="#"><i class="fa fa-thumb-tack"></i> Pin it</a> &sdot; <a id="comment-link-<%= a.id %>">Comment</a> 
+                                            <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a>")}, :class => 'pin' %>
+                                             &sdot; <a id="comment-link-<%= a.id %>">Comment</a> 
                                         </div>
                                     </div> <!-- chat discussion -->
                                     

@@ -51,12 +51,12 @@ class ProjectsController < ApplicationController
     final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + "&in_domain=comprehend.com"
     logger.info "Calling remote service: " + final_url
 
-    # url = URI.parse(final_url)
-    # req = Net::HTTP::Get.new(url.to_s)
-    # res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
-    # data = JSON.parse(res.body.to_s)
+    url = URI.parse(final_url)
+    req = Net::HTTP::Get.new(url.to_s)
+    res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
+    data = JSON.parse(res.body.to_s)
 
-    # Activity.load(data, @project, current_user.id)
+    Activity.load(data, @project, current_user.id)
     @activities = @project.activities.includes(:comments)
   end
 

@@ -29,6 +29,8 @@
 
 class Activity < ActiveRecord::Base
 	belongs_to :project
+  has_many :comments, dependent: :destroy
+
   acts_as_commentable
 
 	CATEGORY = %w(Conversation Note Status)
