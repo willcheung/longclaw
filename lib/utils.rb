@@ -58,7 +58,11 @@ module Utils
 	end
 
 	def get_org_info(domain)
-		r = Whois.whois(domain)
+		begin
+			r = Whois.whois(domain)
+		rescue => e
+			return domain, ""
+		end
 
 		if !r.registrant_contacts.nil?
 			if r.registrant_contacts[0].organization.nil? or r.registrant_contacts[0].organization == ""
