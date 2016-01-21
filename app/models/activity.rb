@@ -31,6 +31,8 @@ class Activity < ActiveRecord::Base
 	belongs_to :project
   has_many :comments, dependent: :destroy
 
+  scope :pinned, -> { where is_pinned: true }
+
   acts_as_commentable
 
 	CATEGORY = %w(Conversation Note Status)
@@ -77,9 +79,11 @@ class Activity < ActiveRecord::Base
     on_conflict = "ON CONFLICT (backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages"
     values = val.join(', ')
 
-    Activity.transaction do
-    	# Insert activities into database
-      Activity.connection.execute([insert,values,on_conflict].join(' '))
+    if !val.empty?
+      Activity.transaction do
+      	# Insert activities into database
+        Activity.connection.execute([insert,values,on_conflict].join(' '))
+      end
     end
 
     return activities

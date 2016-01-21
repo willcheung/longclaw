@@ -1,0 +1,14 @@
+<script>
+$(document).ready(function() {
+    $(".show-more-<%= a.backend_id %>").click(function() {
+        $(".hidden-chat-message-<%= a.backend_id %>").each(function() {
+            $(this).show();
+        });
+        $(".show-more-<%= a.backend_id %>").hide();
+    });
+
+    $(".comment-link-<%= a.id %>").click(function() {
+        $(".form-<%= a.id %>").show();
+    });
+});
+</script>

@@ -5,14 +5,14 @@ class AccountsController < ApplicationController
   # GET /accounts.json
   def index
     @title = "Accounts"
-    @accounts = Account.includes(:projects).all.where("organization_id = ?", current_user.organization_id).order('LOWER(name)')
+    @accounts = Account.eager_load(:projects).all.where("organization_id = ? and (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))", current_user.organization_id, current_user.id).order('accounts.name')
     @account = Account.new
   end
 
   # GET /accounts/1
   # GET /accounts/1.json
   def show
-    @active_projects = @account.projects.where("projects.status = 'Active'")
+    @active_projects = @account.projects.is_public(current_user.id).where("projects.status = 'Active'")
     @account_contacts = @account.contacts
   end
 

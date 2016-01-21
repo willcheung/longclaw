@@ -1784,6 +1784,9 @@ a.forum-item-title:hover {
   border: 3px solid #f1f1f1;
   text-align: center;
 }
+.vertical-timeline-icon.pinned{
+  position: relative;
+}
 .vertical-timeline-icon i {
   display: block;
   width: 24px;
@@ -1794,7 +1797,7 @@ a.forum-item-title:hover {
   margin-left: -12px;
   margin-top: -7px;
   font-size:13px;
-  color: #aaa;
+  color: #f9f9f9;
 }
 
 .vertical-timeline-block:hover .vertical-timeline-button button{
@@ -1851,24 +1854,24 @@ a.forum-item-title:hover {
   padding-bottom: 8px;
 }
 
-.vertical-timeline-content p {
+.vertical-timeline-content p, .pinned-table p {
   margin: 1em 0;
   line-height: 1.4;
 }
 
-.vertical-timeline-content .content-footer {
+.vertical-timeline-content .content-footer, .pinned-table .content-footer {
   border-top: 1px solid #f6f7f8;
   padding: 0 15px;
   background: #f9f9f9;
   margin: 0 -13px -13px -13px;
 }
 
-.vertical-timeline-content .content-footer p {
+.vertical-timeline-content .content-footer p, .pinned-table .content-footer p {
   font-size: 12px;
   margin: 0;
 }
 
-.vertical-timeline-content .content-footer .social-comment {
+.vertical-timeline-content .content-footer .social-comment, .pinned-table .content-footer .social-comment {
   padding: 8px 0;
   border-top: 1px solid #e7e7e8;
 }

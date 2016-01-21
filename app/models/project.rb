@@ -28,9 +28,10 @@ class Project < ActiveRecord::Base
 	belongs_to	:project_owner, class_name: "User", foreign_key: "owner_id"
 	has_many	:project_members, dependent: :destroy
 	has_many	:activities, -> { order "last_sent_date DESC" }, dependent: :destroy
-	has_many	:pinned_activities, -> { where is_pinned: true }
 	has_many	:contacts, through: "project_members"
 	has_many	:users, through: "project_members"
+
+	scope :is_public, -> (owner_id) { where("projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)", owner_id) }
 
 	validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
 	validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
@@ -57,6 +58,7 @@ class Project < ActiveRecord::Base
 													 updated_by: user_id,
 													 owner_id: user_id,
 													 account_id: (accounts.find {|a| a.domain == p}).id,
+													 is_public: true,
 													 is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
 													)
 			

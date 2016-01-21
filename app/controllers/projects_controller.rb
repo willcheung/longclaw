@@ -9,17 +9,7 @@ class ProjectsController < ApplicationController
     projects = []
 
     # all projects and their accounts, sorted by account name alphabetically
-    all_projects = Project.includes(:account).all.where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account)
-    
-    # Remove private projects
-    all_projects.each do |p|
-      if p.is_public 
-        projects << p
-      elsif p.owner_id == current_user.id
-        projects << p
-      end
-    end
-
+    projects = Project.is_public(current_user.id).includes(:account).all.where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account)
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
     # new project modal
@@ -58,6 +48,7 @@ class ProjectsController < ApplicationController
 
     Activity.load(data, @project, current_user.id)
     @activities = @project.activities.includes(:comments)
+    @pinned_activities = @project.activities.pinned.includes(:comments)
   end
 
   # GET /projects/new
@@ -119,17 +110,23 @@ class ProjectsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_project
-      @project = Project.find(params[:id])
-    end
 
-    def get_account_names
-      @account_names = Account.all.select('name', 'id').where("accounts.organization_id = ?", current_user.organization_id).references(:account).order('LOWER(name)')
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_project
+    @project = Project.find(params[:id])
+  end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def project_params
-      params.require(:project).permit(:name, :is_public, :project_code, :account_id, :budgeted_hours, :owner_id)
-    end
+  def get_account_names
+    @account_names = Account.all.select('name', 'id').where("accounts.organization_id = ?", current_user.organization_id).references(:account).order('LOWER(name)')
+  end
+
+  # Never trust parameters from the scary internet, only allow the white list through.
+  def project_params
+    params.require(:project).permit(:name, :is_public, :project_code, :account_id, :budgeted_hours, :owner_id)
+  end
+
+  # A list of the param names that can be used for filtering the Project list
+  def filtering_params(params)
+    params.slice(:status, :location, :starts_with)
+  end
 end

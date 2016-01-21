@@ -69,6 +69,8 @@ class OnboardingController < ApplicationController
 							overlapping_p << existing_project
 						elsif dc < 0.25 and dc > 0.0 and intersect == 1
 							# This is likely a one-time communication or a typo by email sender.
+
+							# If the existing project already has current user, then likely this conversation is part of that project.
 							if existing_project.users.map(&:email).include?(current_user.email)
 								overlapping_p << existing_project
 							else

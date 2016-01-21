@@ -54,8 +54,8 @@
                         <div class="panel-heading">
                             <div class="panel-options">
                                 <ul class="nav nav-tabs">
-                                    <li class="active"><a href="#conversations" data-toggle="tab">Conversations</a></li>
-                                    <li class=""><a href="#pinned" data-toggle="tab"><i class="fa fa-thumb-tack"></i> Pinned Items (5)</a></li>
+                                    <li class="active"><a id="newsfeed-link" href="#conversations" data-toggle="tab">Conversations</a></li>
+                                    <li class=""><a id="pinned-link" href="#pinned" data-toggle="tab"><i class="fa fa-thumb-tack"></i> Pinned Items (<%= @pinned_activities.size %>)</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -88,88 +88,7 @@
                                 </div>
 
                                 <div class="tab-pane" id="pinned">
-                                    <table class="table table-striped">
-                                        <tbody>
-                                            <tr>
-                                                <td style="vertical-align:middle;">
-                                                    <span class="btn btn-warning btn-circle"><i class="fa fa-check"></i></span>
-                                                </td>
-                                                <td>
-                                                    <h3>Create project for mobile phones <small class="pull-right">Ewald, Jonathan, Kelton, me (8)</small></h3>
-                                                    <p class="text-muted">
-                                                        Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable.
-                                                    </p>
-                                                </td>
-                                                <td style="vertical-align:middle;">9/15</td>
-
-                                            </tr>
-                                            <tr>
-                                                <td style="vertical-align:middle;">
-                                                    <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
-                                                </td>
-                                                <td>
-                                                    <h3>Remember to add Richard to call</h3>
-                                                    <p class="text-muted">
-                                                        Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
-                                                    </p>
-                                                </td>
-                                                <td style="vertical-align:middle;">9/10</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="vertical-align:middle;">
-                                                    <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
-                                                </td>
-
-                                                <td>
-                                                    <h3>Proposed Project Timeline <small class="pull-right">me, Brandon</small></h3>
-                                                    <p class="text-muted">
-                                                        There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which
-                                                    </p>
-                                                </td>
-                                                <td style="vertical-align:middle;">9/10</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="vertical-align:middle;">
-                                                    <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
-                                                </td>
-
-                                                <td>
-                                                    <p>The project is going well with no significant issues.  Here is what happened last week. </p>
-                                                        <ul>
-                                                            <li>Upgraded customer to version 2.0.</li>
-                                                            <li>Thanks to Jessica for providing a full dinner for the everyone who helped to stay after hours to complete the upgrade.</li>
-                                                            <li>On track to hit next project milestone.</li>
-                                                        </ul>
-                                                </td>
-                                                <td style="vertical-align:middle;">9/9</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="vertical-align:middle;">
-                                                    <span class="label label-default"><i class="fa fa-lock"></i> Private</span>
-                                                </td>
-                                                <td>
-                                                    <h3>Weekly Project Status</h3>
-                                                    <p class="text-muted">
-                                                        The generated Lorem Ipsum is therefore always free from repetition, injected humour, or non-characteristic words etc.
-                                                    </p>
-                                                </td>
-                                                <td style="vertical-align:middle;">9/9</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="vertical-align:middle;">
-                                                    <span class="label label-warning"><i class="fa fa-check"></i> Public</span>
-                                                </td>
-                                                <td>
-                                                    <h3>Sync up meeting with Exec team</h3>
-                                                    <p class="text-muted">
-                                                        The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
-                                                    </p>
-                                                </td>
-                                                <td style="vertical-align:middle;">9/8</td>
-                                            </tr>
-
-                                        </tbody>
-                                    </table>
+                                    <%= render 'pinned', :pinned_activities => @pinned_activities %>
                                 </div>
                             </div>
                         </div>
@@ -178,94 +97,8 @@
             </div>
 
             <!-- Activities -->
-            <div class="row m-t-md">
-                <div class="col-lg-12">
-                    <div id="vertical-timeline" class="vertical-container light-timeline">
-
-                        <% @activities.each do |a| %>
-                            <div class="vertical-timeline-block">
-                                <div class="vertical-timeline-icon white-bg">
-                                    <i class="fa fa-envelope"></i>
-                                </div>
-                                <!-- <div class="vertical-timeline-button">
-                                    <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<button class=\"btn btn-primary btn-xs\" style=\"type=\"button\">&nbsp;&nbsp;Pin it&nbsp;&nbsp;</button>"), true: raw("<button class=\"btn btn-primary btn-xs pinned\" type=\"button\"><i class=\"fa fa-thumb-tack\"></i>&nbsp;Pinned</button>")}, :class => 'pin' %>
-                                </div> -->
-                                <span class="vertical-date left"><%= a.last_sent_date.strftime("%b %d") %><br />
-                                    <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
-                                </span>
-
-                                <div class="vertical-timeline-content">
-                                    <h3><%= a.title %>
-                                        <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
-                                    </h3>
-                                    
-                                    <div class="chat-discussion">
-                                        <% if a.email_messages.size > 1 %>
-                                            <div class="more-messages">
-                                                <a id="show-more-<%= a.backend_id %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
-                                            </div>
-                                        <% end %>
-
-                                        <% a.email_messages.each do |m| %>
-                                            <div class="hidden-chat-message-<%= a.backend_id %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
-                                                <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
-                                                    <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
-                                                    <div class="message">
-                                                        <span class="message-author" href="#"> <%= m.from[0].personal %> </span> to <%= get_conversation_member_names([], m.to, m.cc, "All") %>
-                                                        <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
-                                                        <hr class="message-divider"/>
-                                                            <span class="message-content">
-                                                                 <p>
-                                                                    <%= truncate(m.previewContent, length: 200, separator: ' ') %>
-                                                                </p>
-                                                            </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <% end %>
-
-                                        <div class="col-4-lg action-links">
-                                            <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a>")}, :class => 'pin' %>
-                                             &sdot; <a id="comment-link-<%= a.id %>">Comment</a> 
-                                        </div>
-                                    </div> <!-- chat discussion -->
-                                    
-                                    <div class="content-footer footer-<%= a.id %>">
-                                       
-                                        <% a.comments.each do |c| %>
-                                            <%= render "comments/comment", :c => c %>
-                                        <% end %>
-
-                                        <div class="social-comment form-<%= a.id %> row" style="display:none;">
-                                            <div class="col-sm-1">
-                                                <%= get_profile_pic(get_full_name(current_user), current_user.email, "") %>
-                                            </div>
-                                            <div class="col-sm-11">
-                                                <%= render 'comments/form', :activity => a %>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <script>
-                                    $(document).ready(function() {
-                                        $("#show-more-<%= a.backend_id %>").click(function() {
-                                            $(".hidden-chat-message-<%= a.backend_id %>").each(function() {
-                                                $(this).show();
-                                            });
-                                            $("#show-more-<%= a.backend_id %>").hide();
-                                        });
-
-                                        $("#comment-link-<%= a.id %>").click(function() {
-                                            $(".form-<%= a.id %>").show();
-                                        });
-                                    });
-                                    </script>
-
-                                </div>
-                            </div>
-                        <% end %>
-                    </div>
-                </div>
+            <div id="newsfeed">
+                <%= render 'newsfeed', :activities => @activities %>
             </div>
         </div>
     </div>
@@ -322,6 +155,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    $('#newsfeed-link').click(function() {
+        $('#newsfeed').show();
+    });
+    
+    $('#pinned-link').click(function() {
+        $('#newsfeed').hide();
+    });
+</script>
 
 <%= render 'modal', modal_id: 'edit_project_modal' %>
 
