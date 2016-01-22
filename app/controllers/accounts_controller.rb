@@ -12,7 +12,7 @@ class AccountsController < ApplicationController
   # GET /accounts/1
   # GET /accounts/1.json
   def show
-    @active_projects = @account.projects.is_public(current_user.id).where("projects.status = 'Active'")
+    @active_projects = @account.projects.visible_to(current_user.id).where("projects.status = 'Active'")
     @account_contacts = @account.contacts
   end
 

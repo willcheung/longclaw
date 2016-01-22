@@ -31,7 +31,9 @@ class Project < ActiveRecord::Base
 	has_many	:contacts, through: "project_members"
 	has_many	:users, through: "project_members"
 
-	scope :is_public, -> (owner_id) { where("projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)", owner_id) }
+	scope :visible_to, -> (user_id) {
+		joins(:project_members).where("projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?", user_id, user_id).group("projects.id")
+	}
 
 	validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
 	validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }

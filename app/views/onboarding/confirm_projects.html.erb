@@ -74,7 +74,7 @@
 
 </div>
 
-<%= javascript_tag do %>
+<script>
    $('[data-toggle="tooltip"]').tooltip();
 
    /* Switchery */
@@ -83,4 +83,4 @@
     new Switchery(html, { size: 'small' });
   });
   $('.best_in_place').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { size: 'small' }); });
-<% end %>
+</script>

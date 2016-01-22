@@ -9,7 +9,7 @@ class ProjectsController < ApplicationController
     projects = []
 
     # all projects and their accounts, sorted by account name alphabetically
-    projects = Project.is_public(current_user.id).includes(:account).all.where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account)
+    projects = Project.visible_to(current_user.id).includes(:account).where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account).group("accounts.id")
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
     # new project modal
@@ -115,7 +115,11 @@ class ProjectsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_project
-    @project = Project.find(params[:id])
+    begin
+      @project = Project.visible_to(current_user.id).find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      redirect_to root_url, :flash => { :error => "Project not found or is private." }
+    end
   end
 
   def get_account_names

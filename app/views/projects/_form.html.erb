@@ -8,9 +8,12 @@
       <span class="help-block" style="color:red"></span>
     </div>
   
-    <%= f.input :account_id, wrapper_html: { class: 'col-xs-10'}, collection: @account_names, selected: @project.account.nil? ? @account_names[0] : @project.account.id %>
-    <%= best_in_place @project, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch col-xs-2' %>
+    <%= f.input :account_id, wrapper_html: { class: 'col-xs-9'}, collection: @account_names, selected: @project.account.nil? ? @account_names[0] : @project.account.id %>
 
+    <label data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can collaborate." class="select optional control-label" for="project_account_id">Open Collaboration</label>
+    <%= best_in_place @project, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch col-xs-3' %>
+
+    <div style="clear:both"></div>
   <%# Added Bootstrap classes %>
   <div class="actions pull-right">
     <%= f.button :submit, class: 'btn-primary' %>
