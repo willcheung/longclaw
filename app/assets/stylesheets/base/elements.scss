@@ -1840,7 +1840,7 @@ a.forum-item-title:hover {
 .vertical-timeline-content {
   position: relative;
   margin-left: 50px;
-  padding: .8em 1em;
+  padding: .8em 1em 0 1em;
   border: 1px solid;
   border-color: #ecedef #e8e9ec #dedee1;
   border-radius: 3px;
@@ -1863,7 +1863,7 @@ a.forum-item-title:hover {
   border-top: 1px solid #f6f7f8;
   padding: 0 15px;
   background: #f9f9f9;
-  margin: 0 -13px -13px -13px;
+  margin: 0 -13px 0 -13px;
 }
 
 .vertical-timeline-content .content-footer p, .pinned-table .content-footer p {
@@ -1872,7 +1872,7 @@ a.forum-item-title:hover {
 }
 
 .vertical-timeline-content .content-footer .social-comment, .pinned-table .content-footer .social-comment {
-  padding: 8px 0;
+  padding: 6px 0;
   border-top: 1px solid #e7e7e8;
 }
 

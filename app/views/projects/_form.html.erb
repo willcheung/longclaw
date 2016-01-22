@@ -8,9 +8,9 @@
       <span class="help-block" style="color:red"></span>
     </div>
   
-    <%= f.input :account_id, wrapper_html: { class: 'col-xs-8'}, collection: @account_names, selected: @project.account.nil? ? @account_names[0] : @project.account.id %>
-    <%= f.input :start_date, wrapper_html: { class: 'col-xs-4'}, as: 'string', input_html: { class: 'start_date_datepicker' } %>
-    
+    <%= f.input :account_id, wrapper_html: { class: 'col-xs-10'}, collection: @account_names, selected: @project.account.nil? ? @account_names[0] : @project.account.id %>
+    <%= best_in_place @project, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch col-xs-2' %>
+
   <%# Added Bootstrap classes %>
   <div class="actions pull-right">
     <%= f.button :submit, class: 'btn-primary' %>

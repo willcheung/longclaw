@@ -28,17 +28,19 @@ class ProjectsController < ApplicationController
       current_user.refresh_token! if current_user.token_expired?
       token = current_user.oauth_access_token
       email = current_user.email
+      in_domain = ""
     else
       # DEBUG
       u = User.find_by_email('indifferenzetester@gmail.com')
       u.refresh_token! if u.token_expired?
       token = u.oauth_access_token
       email = u.email
+      in_domain = "&in_domain=comprehend.com"
     end
 
     ex_clusters = [@project.contacts.map(&:email)]
     
-    final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + "&in_domain=comprehend.com"
+    final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + in_domain
     logger.info "Calling remote service: " + final_url
 
     url = URI.parse(final_url)
