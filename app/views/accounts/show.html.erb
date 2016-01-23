@@ -52,7 +52,7 @@
 							        	<% @active_projects.each do |p| %>
 							              	<li>
 							              		<div class="col-lg-4"><h4><a href="<%= project_path(p) %>"><%= p.name %></a></h4></div>
-							              		<div class="col-lg-2"><small><p class="text-center">Inactive<p> <p class="text-center"><strong><%= time_ago_in_words(@project_last_activity_date[p.id]) %></strong></p></small></div>
+							              		<div class="col-lg-2"><small><p class="text-center">Inactive</p> <p class="text-center"><strong><%= @project_last_activity_date[p.id].nil? ? "N/A" : time_ago_in_words(@project_last_activity_date[p.id]) %></strong></p></small></div>
 							              		<div class="col-lg-2"><small><p class="text-center">Last 7d</p><p class="text-center"> <strong><%= @project_activities_count_last_7d[p.id] ? @project_activities_count_last_7d[p.id].to_s : "0" %></strong> activities</p></small></div>
 							              		<div class="col-lg-1"><small><p class="text-center">Pinned</p> <p class="text-center"><strong><%= @project_pinned[p.id] ? @project_pinned[p.id] : "0" %></strong></p></small></div>
 							              		<div class="col-lg-3" style="padding-left:30px;"> 
