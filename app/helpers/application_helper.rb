@@ -98,7 +98,7 @@ module ApplicationHelper
       s = name.split(' ').first[0,1] + name.split(' ').last[0,1]
     end
 
-    return ('<div class="rounded-initials ' + css_class + '" style="background:' + User::PROFILE_COLOR[(name.length)%9] + '">' + s + '</div>').html_safe
+    return ('<div class="rounded-initials ' + css_class + '" title="' + name + '" style="background:' + User::PROFILE_COLOR[(name.length)%9] + '">' + s + '</div>').html_safe
   end
 
   def custom_toastr_flash

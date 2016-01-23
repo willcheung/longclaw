@@ -1,9 +1,17 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController   
 	def google_oauth2
-    @user = User.find_for_google_oauth2(request.env["omniauth.auth"], current_user)
+    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com)
+    auth = request.env["omniauth.auth"]
+
+    if auth.info.email.include?('gmail.com') and !allowed_emails.include?(auth.info.email)
+      redirect_to home_access_denied_path
+      return
+    end
+
+    @user = User.find_for_google_oauth2(auth, current_user)
  
     if @user.persisted?
-    	session["devise.google_data"] = request.env["omniauth.auth"]
+    	session["devise.google_data"] = auth
       @user.refresh_token! if @user.token_expired?
       logger.info "Google devise.omniauth_callbacks.success for user " + @user.email
       flash[:notice] = "Welcome, #{@user.first_name}!"

@@ -9,8 +9,13 @@ class ProjectsController < ApplicationController
     projects = []
 
     # all projects and their accounts, sorted by account name alphabetically
-    projects = Project.visible_to(current_user.id).includes(:account).where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account).group("accounts.id")
+    projects = Project.visible_to(current_user.id).includes(:account).where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account).group("accounts.id").preload(:users)
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
+
+    @project_last_email_date = Project.visible_to(current_user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")
+    @project_last_activity_date = Project.visible_to(current_user.id).includes(:activities).maximum("activities.last_sent_date")
+    @project_activities_count_last_7d = Project.visible_to(current_user.id).includes(:activities).where("activities.last_sent_date > (current_date - interval '7 days')").references(:activities).count(:activities)
+    @project_pinned = Project.visible_to(current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
 
     # new project modal
     @project = Project.new
@@ -21,7 +26,7 @@ class ProjectsController < ApplicationController
   def show
     @team = @project.contacts.includes(:account) + @project.users
 
-    max=50
+    max=100
     base_url = ENV["csback_base_url"] + "/newsfeed/search"
 
     if ENV["RAILS_ENV"] == 'production'

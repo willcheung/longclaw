@@ -26,5 +26,6 @@ Longclaw::Application.routes.draw do
 
   # Cluster callback
   post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'
+  get 'home/access_denied'
 
 end

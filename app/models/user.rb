@@ -113,22 +113,16 @@ class User < ActiveRecord::Base
 
   def self.create_from_clusters(internal_members, invited_by_id, organization_id)
     internal_emails = internal_members.map(&:address)
-    #existing_emails = User.where(email: internal_emails, organization_id: organization_id).map(&:email)
-    
-    #missing_emails = internal_emails - existing_emails
 
-    # Create users who are not in the system
     internal_members.each do |m|
-      #if missing_emails.include?(m.address)
-        u = User.create(
-          first_name: get_first_name(m.personal),
-          last_name: get_last_name(m.personal),
-          email: m.address,
-          organization_id: organization_id,
-          invited_by_id: invited_by_id,
-          invitation_created_at: Time.now
-        )
-      #end
+      u = User.create(
+        first_name: get_first_name(m.personal),
+        last_name: get_last_name(m.personal),
+        email: m.address,
+        organization_id: organization_id,
+        invited_by_id: invited_by_id,
+        invitation_created_at: Time.now
+      )
     end
   end
 

@@ -1,11 +1,14 @@
 class HomeController < ApplicationController
-  layout 'empty', only: 'thank_you'
+  layout 'empty', only: 'access_denied'
 
   def index
-  	@title = "Welcome Will Cheung!"
   end
 
-  def thank_you
+  def access_denied
+    # Nothing here
+  end
+
+  def thank_you_bak
   	@title = "Welcome to ContextSmith"
 
   	base_url = "http://64.201.248.178:8888/newsfeed/create"
