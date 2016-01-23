@@ -25,6 +25,8 @@ class ProjectsController < ApplicationController
   # GET /projects/1.json
   def show
     @team = @project.contacts.includes(:account) + @project.users
+    @project_last_activity_date = Project.visible_to(current_user.id).find(params[:id]).activities.maximum("activities.last_sent_date")
+    @project_activities_count_last_7d = Project.visible_to(current_user.id).find(params[:id]).activities.where("activities.last_sent_date > (current_date - interval '7 days')").count(:activities)
 
     max=100
     base_url = ENV["csback_base_url"] + "/newsfeed/search"
