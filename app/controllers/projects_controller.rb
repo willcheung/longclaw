@@ -9,7 +9,7 @@ class ProjectsController < ApplicationController
     projects = []
 
     # all projects and their accounts, sorted by account name alphabetically
-    projects = Project.visible_to(current_user.id).includes(:account).where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account).group("accounts.id").preload(:users)
+    projects = Project.visible_to(current_user.id).includes(:account).where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account).group("accounts.id").preload([:users,:contacts])
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
     @project_last_email_date = Project.visible_to(current_user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")

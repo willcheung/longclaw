@@ -51,9 +51,9 @@
                                                     <p class="text-center">Pinned</p> <p class="text-center"><strong><%= @project_pinned[p.id] ? @project_pinned[p.id] : "0" %></strong></p>
                                                 </div>
                                                 <div class="col-md-2 team-members">
-                                                    <p class="text-center">Collaborators (<%= p.users.size %>)</p>
+                                                    <p class="text-center">Collaborators (<%= (p.users.size + p.contacts.size) %>)</p>
                                                     <div style="margin:-6px 0 0 12px;">
-                                                        <% p.users.each_with_index do |u,i| %>
+                                                        <% (p.users+p.contacts).each_with_index do |u,i| %>
                                                             <% if i <= 2 %>
                                                                 <div style="padding-right:3px;float:left;"><%= get_profile_pic(get_full_name(u), u.email, "") %></div>
                                                             <% end %>
