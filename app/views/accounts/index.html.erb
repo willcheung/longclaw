@@ -30,20 +30,20 @@
                             <thead>
                                 <tr>
                                     <th>Account Name</th>
-                                    <th>Address</th>
-                                    <th>Website</th>
                                     <th>Projects</th>
-                                    <th>Last Activity</th>
+                                    <th>Inactive (days)</th>
+                                    <th>Website</th>
+                                    <th>Address</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <% @accounts.each do |a| %>
                                 <tr>
                                     <td><a href="<%= account_path(a.id) %>"><%= a.name %></a><a class="pull-right edit" href="<%= edit_account_path(a) %>" style="display: none;"><i class="fa fa-pencil"></i></a></td>
-                                    <td><%= a.address %></td>
-                                    <td><%= a.website %></td>
                                     <td><%= a.projects.size %></td>
-                                    <td><%= time_ago_in_words(a.created_at) + ' ago' %></td>
+                                    <td><%= @account_last_activity[a.id].nil? ? "N/A" : ((Time.now - @account_last_activity[a.id])/86400).to_i %></td>
+                                    <td><%= a.website %></td>
+                                    <td><%= a.address %></td>
                                 </tr>
                                 <% end %>
                         </table>

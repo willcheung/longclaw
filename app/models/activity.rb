@@ -20,6 +20,7 @@
 #  updated_at           :datetime         not null
 #  is_pinned            :boolean          default(FALSE)
 #  pinned_by            :uuid
+#  pinned_at            :datetime
 #
 # Indexes
 #

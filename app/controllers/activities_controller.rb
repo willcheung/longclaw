@@ -1,9 +1,20 @@
 class ActivitiesController < ApplicationController
- before_action :set_comment, only: [:update]
+ before_action :set_activity, only: [:update]
+
+ 	def create
+
+ 	end
 
   def update
     respond_to do |format|
-      if @activity.update_attributes(activity_params)
+				
+    	if activity_params[:is_pinned] == "true"
+    		params = activity_params.merge(pinned_at: Time.now, pinned_by: current_user.id)
+    	else
+    		params = activity_params
+    	end
+
+      if @activity.update_attributes(params)
         #format.html { redirect_to @activity, notice: 'Activity was successfully updated.' }
         format.json { head :no_content }
         format.js
@@ -48,12 +59,12 @@ class ActivitiesController < ApplicationController
 
   private
     # Use callbacks to share common setup or constraints between actions.
-    def set_comment
+    def set_activity
       @activity = Activity.find(params[:id])
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def activity_params
-      params.require(:activity).permit(:is_pinned, :pinned_by, :is_public, :title, :note)
+      params.require(:activity).permit(:is_pinned, :pinned_by, :pinned_at, :is_public, :title, :note)
     end
 end

@@ -10,7 +10,7 @@ Longclaw::Application.routes.draw do
     resources :accounts 
     resources :contacts
     resources :projects
-    resources :activities, only: [:update] do
+    resources :activities, only: [:update, :create] do
       resources :comments, only: [:create, :update, :delete]
     end
     #resources :organizations  # not using yet

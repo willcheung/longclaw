@@ -72,13 +72,10 @@
                                                     <button type="button" class="btn btn-w-m btn-link btn-sm active">ADD NOTES</button>
                                                     <!-- <button type="button" class="btn btn-w-m btn-link btn-sm">ADD PROJECT STATUS</button> -->
                                                 </span>
-                                                <div class="col-lg-10" style="padding-top:7px;">
-                                                    <div class="form-group arrow_box">
-                                                      <textarea class="form-control" rows="3" id="comment" style="resize:none;border:none;" placeholder="Add a note or meeting minutes..."></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="m-t-lg">
-                                                    <%= link_to 'Add Note', '#', 'class' => 'btn btn-primary btn-sm' %>
+                                                <div class="col-lg-12" style="padding-top:7px;">
+                                                    
+                                                    <%= render 'activities/form' %>  
+                                                    
                                                 </div>
                                             </div>
                                         </div>
@@ -181,5 +178,5 @@
     /* Switchery */
     var elem = document.querySelector('.is_public-switch');
     new Switchery(elem);
-    $('.best_in_place').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { }); });
+    $('.best_in_place.switch').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { }); });
 </script>

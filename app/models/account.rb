@@ -25,6 +25,7 @@ include ContextSmithParser
 class Account < ActiveRecord::Base	
 	has_many 	:contacts
 	has_many	:projects, -> { where is_confirmed: true }
+  has_many  :activities, :through => :projects
 	belongs_to	:organization
 	belongs_to	:user, foreign_key: "owner_id"
 
@@ -40,7 +41,7 @@ class Account < ActiveRecord::Base
 		# Create missing accounts
 		(grouped_external_members.keys - existing_domains).each do |a|
       org_info = get_org_info(a)
-      
+
      	account = Account.new(domain: a, 
      								 				name: org_info[0], 
                             address: org_info[1],

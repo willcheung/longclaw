@@ -1,0 +1,9 @@
+<%= simple_form_for(Activity.new, remote: true) do |f| %>
+	<div class="form-group arrow_box">
+		<%= f.input :note, label: false, as: 'text', input_html: { style: 'resize:none;border:none;overflow:hidden;min-height:80px;', :data => "autoresize" }, placeholder: "Add a note, status, or meeting minutes..." %>
+	</div>
+
+	<div class="form-actions pull-right" style="margin-bottom: 15px;">
+	    <%= f.button :submit, "Add note", class: "btn btn-primary btn-sm" %>
+  	</div>
+<% end %>

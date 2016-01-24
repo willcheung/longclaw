@@ -52,6 +52,7 @@ ActiveRecord::Schema.define(version: 20160119223140) do
     t.datetime "updated_at",                           null: false
     t.boolean  "is_pinned",            default: false
     t.uuid     "pinned_by"
+    t.datetime "pinned_at"
   end
 
   add_index "activities", ["backend_id", "project_id"], name: "index_activities_on_backend_id_and_project_id", unique: true, using: :btree

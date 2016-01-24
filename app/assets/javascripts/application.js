@@ -21,6 +21,16 @@ ahoy.trackAll();
 $(document).ready(function() {
   /* Activating Best In Place */
   jQuery(".best_in_place").best_in_place();
+
+  /* Auto resizing textarea */
+  jQuery.each(jQuery('textarea[data="autoresize"]'), function() {
+    var offset = this.offsetHeight - this.clientHeight;
+ 
+    var resizeTextarea = function(el) {
+        jQuery(el).css('height', 'auto').css('height', el.scrollHeight + offset);
+    };
+    jQuery(this).on('keyup input', function() { resizeTextarea(this); }).removeAttr('data-autoresize');
+  });
 });
 
 $(document).ready(function() {
