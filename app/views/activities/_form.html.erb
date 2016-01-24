@@ -1,6 +1,7 @@
 <%= simple_form_for(Activity.new, remote: true) do |f| %>
 	<div class="form-group arrow_box">
 		<%= f.input :note, label: false, as: 'text', input_html: { style: 'resize:none;border:none;overflow:hidden;min-height:80px;', :data => "autoresize" }, placeholder: "Add a note, status, or meeting minutes..." %>
+		<input value="<%= project_id %>" class="hidden form-control" type="hidden" name="project_id" id="project_id">
 	</div>
 
 	<div class="form-actions pull-right" style="margin-bottom: 15px;">

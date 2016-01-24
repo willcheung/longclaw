@@ -7,7 +7,7 @@
 
     <!-- Include style per-controller - vendor plugins -->
     <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" %>
-    <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" %>
+    <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" %>
     <%= stylesheet_link_tag "https://cdn.datatables.net/1.10.10/css/dataTables.bootstrap.min.css" %>
     <%= stylesheet_link_tag params[:controller] if ::Rails.application.assets.find_asset("#{params[:controller]}.css") %>
 
@@ -17,7 +17,7 @@
     <!-- Main javascript files -->
     <%= javascript_include_tag 'application' %>
     <%= javascript_include_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js" %>
-    
+    <%= javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js" %>
     <%= csrf_meta_tags %>
 
 

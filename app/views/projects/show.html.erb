@@ -74,7 +74,7 @@
                                                 </span>
                                                 <div class="col-lg-12" style="padding-top:7px;">
                                                     
-                                                    <%= render 'activities/form' %>  
+                                                    <%= render 'activities/form', :project_id => @project.id %>  
                                                     
                                                 </div>
                                             </div>
@@ -99,7 +99,17 @@
 
             <!-- Activities -->
             <div id="newsfeed">
-                <%= render 'newsfeed', :activities => @activities %>
+                <div class="row m-t-md">
+                    <div class="col-lg-12">
+                        <div id="vertical-timeline" class="vertical-container light-timeline">
+
+                            <% @activities.each do |a| %>
+                                <%= render 'activities/timeline_block', a: a %>
+                            <% end %>
+
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

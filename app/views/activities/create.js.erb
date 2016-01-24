@@ -1,0 +1,3 @@
+$('#vertical-timeline').prepend('<%= escape_javascript(render "activities/timeline_block", a: @activity) %>');
+$('.vertical-timeline-block').first().hide().show("blind", {direction: "up"}, 1000);
+$('#activity_note').val("");

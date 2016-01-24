@@ -1,7 +1,6 @@
 <%= simple_form_for([activity, activity.comments.new], remote: true) do |f| %>
   <div class="form-inputs">
 	  <%= f.input :comment, as: 'text', label: false, input_html: {style: 'resize:none;border:none;overflow:hidden;', :rows => 3, :data => "autoresize"}, wrapper_html: { style: 'margin-bottom:5px;' }, :placeholder => 'Write a comment...' %>
-	  <input value="<%= current_user.email %>" class="hidden form-control" type="hidden" name="email" id="email">
   </div>
 
   <div class="form-actions">

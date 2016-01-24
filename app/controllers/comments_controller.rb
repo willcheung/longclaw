@@ -24,11 +24,9 @@ class CommentsController < ApplicationController
   # POST /comments
   # POST /comments.json
   def create
-  	u = User.find_by_email(params[:email])
-
   	if params[:activity_id]
   		@activity = Activity.find_by_id(params[:activity_id])
-  		@comment = @activity.comments.new(comment_params.merge(:user_id => u.id))
+  		@comment = @activity.comments.new(comment_params.merge(:user_id => current_user.id))
   	end
 
     respond_to do |format|

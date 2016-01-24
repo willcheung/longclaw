@@ -3,11 +3,18 @@
     <% pinned_activities.each do |a| %>
         <tr>
             <td>
-                <div class="vertical-timeline-icon primary-bg pinned">
-                    <i class="fa fa-envelope"></i>
-                </div>
+                <% if a.category == "Conversations" %>
+                    <div class="vertical-timeline-icon primary-bg pinned">
+                        <i class="fa fa-envelope"></i>
+                    </div>
+                <% elsif a.category == "Note" %>
+                    <div class="vertical-timeline-icon sticky-bg pinned">
+                        <i class="fa fa-sticky-note"></i>
+                    </div>
+                <% end %>
             </td>
             <td>
+                <% if a.category == "Conversations" %>
                 <h3><%= a.title %>
                     <small class="pull-right"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
                 </h3>
@@ -41,26 +48,35 @@
                         <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                          &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
                     </div>
+                </div> 
 
-                    <div class="content-footer footer-<%= a.id %>">
-                           
-                        <% a.comments.each do |c| %>
-                            <%= render "comments/comment", :c => c %>
-                        <% end %>
+                <% elsif a.category == "Note" %>
+                    <%= simple_format(a.note) %>
 
-                        <div class="social-comment form-<%= a.id %> row" style="display:none;">
-                            <div class="col-sm-1">
-                                <%= get_profile_pic(get_full_name(current_user), current_user.email, "") %>
-                            </div>
-                            <div class="col-sm-11">
-                                <%= render 'comments/form', :activity => a %>
-                            </div>
+                    <div class="col-4-lg action-links">
+                        <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                         &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
+                    </div>
+                <% end %>
+
+                <div class="content-footer footer-<%= a.id %>">
+                       
+                    <% a.comments.each do |c| %>
+                        <%= render "comments/comment", :c => c %>
+                    <% end %>
+
+                    <div class="social-comment form-<%= a.id %> row" style="display:none;">
+                        <div class="col-sm-1">
+                            <%= get_profile_pic(get_full_name(current_user), current_user.email, "") %>
+                        </div>
+                        <div class="col-sm-11">
+                            <%= render 'comments/form', :activity => a %>
                         </div>
                     </div>
+                </div>                
 
-                    <%= render 'activities_js', :a => a %>
+                <%= render 'activities_js', :a => a %>
 
-                </div> 
             </td>
             <td style="vertical-align:middle;font-size:11px;">
                 <%= a.last_sent_date.strftime("%_m/%d") %>

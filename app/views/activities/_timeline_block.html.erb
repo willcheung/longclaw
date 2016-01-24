@@ -1,0 +1,89 @@
+<div class="vertical-timeline-block">
+    
+    <% if a.category == "Conversations" %>
+        <div class="vertical-timeline-icon primary-bg">
+            <i class="fa fa-envelope"></i>
+        </div>
+    <% elsif a.category == "Note" %>
+        <div class="vertical-timeline-icon sticky-bg">
+            <i class="fa fa-sticky-note"></i>
+        </div>
+    <% end %>
+    
+    <!-- <div class="vertical-timeline-button">
+        <button class="btn btn-primary btn-xs pinned" type="button"><i class="fa fa-thumb-tack"></i>&nbsp;Pinned</button>
+    </div> -->
+    <span class="vertical-date left"><%= a.last_sent_date.strftime("%b %d") %><br />
+        <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
+    </span>
+
+    <div class="vertical-timeline-content">
+        <% if a.category == "Conversations" %>
+            <h3><%= a.title %>
+                <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
+            </h3>
+
+            <div class="chat-discussion">
+                <% if a.email_messages.size > 1 %>
+                    <div class="more-messages">
+                        <a class="show-more-<%= a.backend_id %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
+                    </div>
+                <% end %>
+
+                <% a.email_messages.each do |m| %>
+                    <div class="hidden-chat-message-<%= a.backend_id %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
+                        <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
+                            <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
+                            <div class="message">
+                                <span class="message-author" href="#"> <%= m.from[0].personal %> </span> to <%= get_conversation_member_names([], m.to, m.cc, "All") %>
+                                <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
+                                <hr class="message-divider"/>
+                                    <span class="message-content">
+                                         <p>
+                                            <%= truncate(m.previewContent, length: 200, separator: ' ') %>
+                                        </p>
+                                    </span>
+                            </div>
+                        </div>
+                    </div>
+                <% end %>
+
+                <div class="col-4-lg action-links">
+                    <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                     &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
+                </div>
+            </div> <!-- chat discussion -->
+        
+        <% elsif a.category == "Note" %>
+            <div class="chat-discussion">
+                <%= simple_format(a.note) %>
+
+                <div class="col-4-lg action-links">
+                    <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                     &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
+                </div>
+            </div>
+        <% end %>
+        
+        <div class="content-footer footer-<%= a.id %>">
+            
+            <% a.comments.each do |c| %>
+                <% if !(c.nil? or c.user.nil?) %>
+                    <%= render "comments/comment", :c => c %>
+                <% end %>
+            <% end %>
+
+            <div class="social-comment form-<%= a.id %> row" style="display:none;">
+                <div class="col-sm-1">
+                    <%= get_profile_pic(get_full_name(current_user), current_user.email, "") %>
+                </div>
+                <div class="col-sm-11">
+                    <%= render 'comments/form', :activity => a %>
+                </div>
+            </div>
+        </div>
+
+        <%= render 'projects/activities_js', :a => a %>
+
+    </div>
+</div>
