@@ -27,32 +27,7 @@ class ProjectsController < ApplicationController
     @project_last_activity_date = Project.visible_to(current_user.id).find(params[:id]).activities.maximum("activities.last_sent_date")
     @project_activities_count_last_7d = Project.visible_to(current_user.id).find(params[:id]).activities.where("activities.last_sent_date > (current_date - interval '7 days')").count(:activities)
 
-    max=100
-    base_url = ENV["csback_base_url"] + "/newsfeed/search"
-
-    if ENV["RAILS_ENV"] == 'production'
-      current_user.refresh_token! if current_user.token_expired?
-      token = current_user.oauth_access_token
-      email = current_user.email
-      in_domain = ""
-    else
-      # DEBUG
-      u = User.find_by_email('indifferenzetester@gmail.com')
-      u.refresh_token! if u.token_expired?
-      token = u.oauth_access_token
-      email = u.email
-      in_domain = "&in_domain=comprehend.com"
-    end
-
-    ex_clusters = [@project.contacts.map(&:email)]
-    
-    final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + in_domain
-    logger.info "Calling remote service: " + final_url
-
-    url = URI.parse(final_url)
-    req = Net::HTTP::Get.new(url.to_s)
-    res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
-    data = JSON.parse(res.body.to_s)
+    data = get_emails_from_backend
 
     Activity.load(data, @project, current_user.id)
     @activities = @project.activities.includes(:comments)
@@ -140,5 +115,37 @@ class ProjectsController < ApplicationController
   # A list of the param names that can be used for filtering the Project list
   def filtering_params(params)
     params.slice(:status, :location, :starts_with)
+  end
+
+  def get_emails_from_backend
+    max=100
+    base_url = ENV["csback_base_url"] + "/newsfeed/search"
+
+    if ENV["RAILS_ENV"] == 'production'
+      current_user.refresh_token! if current_user.token_expired?
+      token = current_user.oauth_access_token
+      email = current_user.email
+      in_domain = ""
+    else
+      # DEBUG
+      u = User.find_by_email('indifferenzetester@gmail.com')
+      u.refresh_token! if u.token_expired?
+      token = u.oauth_access_token
+      email = u.email
+      in_domain = "&in_domain=comprehend.com"
+    end
+
+    ex_clusters = [@project.contacts.map(&:email)]
+    
+    final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + in_domain
+    logger.info "Calling backend service: " + final_url
+    ahoy.track("Calling backend service", service: "newsfeed/search", final_url: final_url)
+
+    url = URI.parse(final_url)
+    req = Net::HTTP::Get.new(url.to_s)
+    res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
+    data = JSON.parse(res.body.to_s)
+
+    return data
   end
 end

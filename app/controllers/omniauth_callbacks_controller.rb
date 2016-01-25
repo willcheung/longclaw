@@ -18,6 +18,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
       if @user.cluster_create_date.nil?
         # Kick off cluster analysis to backend
+        get_emails_from_backend_with_callback
       end
 
       sign_in_and_redirect @user, :event => :authentication
@@ -34,5 +35,39 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   	logger.error "Can't verify Google!"
     ahoy.track("Error logging in", message: "Can't verify Google!")
   	redirect_to new_user_registration_path
+  end
+
+  private
+
+  def get_emails_from_backend_with_callback
+    max=10000
+    base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
+
+    http://64.201.248.178:8889/newsfeed/cluster?email=indifferenzetester@gmail.com&token=ya29.cAJYK_xITMxatn7mFSUYPYmm-nyTgJrOuKW6MiDzwA0BInVFVeV4dZcZOVSFwL2_cXTcPsQ&max=10000&in_domain=comprehend.com&callback=http://24.130.10.244:3000/onboarding/a2c66a4c-261e-4e20-9f6a-21ed677e35c5/create_clusters.json&show_preview=true
+
+    if ENV["RAILS_ENV"] == 'production'
+      callback_url = "http://app.contextsmith.com/onboarding/#{current_user.id}/create_clusters.json"
+      current_user.refresh_token! if current_user.token_expired?
+      token = current_user.oauth_access_token
+      email = current_user.email
+      in_domain = ""
+    else
+      # DEBUG
+      if ENV["RAILS_ENV"] == 'test'
+        callback_url = "https://guarded-refuge-6063.herokuapp.com/onboarding/#{current_user.id}/create_clusters.json"
+      else
+        callback_url = "http://24.130.10.244:3000/onboarding/#{current_user.id}/create_clusters.json"
+      end
+
+      u = User.find_by_email('indifferenzetester@gmail.com')
+      u.refresh_token! if u.token_expired?
+      token = u.oauth_access_token
+      email = u.email
+      in_domain = "&in_domain=comprehend.com"
+    end
+    
+    final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&callback=" + callback_url + in_domain
+    logger.info "Calling backend service: " + final_url
+    ahoy.track("Calling backend service", service: "newsfeed/cluster", final_url: final_url)
   end
 end

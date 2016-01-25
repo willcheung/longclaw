@@ -119,6 +119,10 @@ class OnboardingController < ApplicationController
 						end
 					end
 
+					# Change user onboarding flag
+					current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
+
+					# Prepare projects for View
 					overlapping_p.each { |p| @overlapping_projects << p }
 					new_p.each { |p| @new_projects << p }
 					same_p.each { |p| @same_projects << p }
