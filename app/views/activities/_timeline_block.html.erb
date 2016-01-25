@@ -1,6 +1,6 @@
 <div class="vertical-timeline-block">
     
-    <% if a.category == "Conversations" %>
+    <% if a.category == "Conversation" %>
         <div class="vertical-timeline-icon primary-bg">
             <i class="fa fa-envelope"></i>
         </div>
@@ -18,7 +18,7 @@
     </span>
 
     <div class="vertical-timeline-content">
-        <% if a.category == "Conversations" %>
+        <% if a.category == "Conversation" %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
             </h3>

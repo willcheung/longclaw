@@ -3,7 +3,7 @@
     <% pinned_activities.each do |a| %>
         <tr>
             <td>
-                <% if a.category == "Conversations" %>
+                <% if a.category == "Conversation" %>
                     <div class="vertical-timeline-icon primary-bg pinned">
                         <i class="fa fa-envelope"></i>
                     </div>
@@ -14,7 +14,7 @@
                 <% end %>
             </td>
             <td>
-                <% if a.category == "Conversations" %>
+                <% if a.category == "Conversation" %>
                 <h3><%= a.title %>
                     <small class="pull-right"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
                 </h3>

@@ -48,7 +48,7 @@ class Activity < ActiveRecord::Base
       d.conversations.each do |c|
 
         
-        val << "('#{user_id}', '#{project.id}', 'Conversations', '#{(c.subject).gsub("'","''")}', true, '#{c.id}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}', 
+        val << "('#{user_id}', '#{project.id}', 'Conversation', '#{(c.subject).gsub("'","''")}', true, '#{c.id}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}', 
                    #{Activity.sanitize(c.contextMessages[0].from.to_json)}, 
                    #{Activity.sanitize(c.contextMessages[0].to.to_json)}, 
                    #{Activity.sanitize(c.contextMessages[0].cc.to_json)}, 

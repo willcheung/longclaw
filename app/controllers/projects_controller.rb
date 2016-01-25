@@ -12,7 +12,7 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.id).includes(:account).where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account).group("accounts.id").preload([:users,:contacts])
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
-    @project_last_email_date = Project.visible_to(current_user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")
+    @project_last_activity_date = Project.visible_to(current_user.id).includes(:activities).maximum("activities.last_sent_date")
     @project_activities_count_last_7d = Project.visible_to(current_user.id).includes(:activities).where("activities.last_sent_date > (current_date - interval '7 days')").references(:activities).count(:activities)
     @project_pinned = Project.visible_to(current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
 
@@ -29,7 +29,7 @@ class ProjectsController < ApplicationController
 
     data = get_emails_from_backend
 
-    Activity.load(data, @project, current_user.id)
+    Activity.load(data, @project, current_user.id) if data
     @activities = @project.activities.includes(:comments)
     @pinned_activities = @project.activities.pinned.includes(:comments)
   end
@@ -143,10 +143,16 @@ class ProjectsController < ApplicationController
     logger.info "Calling backend service: " + final_url
     ahoy.track("Calling backend service", service: "newsfeed/search", final_url: final_url)
 
-    url = URI.parse(final_url)
-    req = Net::HTTP::Get.new(url.to_s)
-    res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
-    data = JSON.parse(res.body.to_s)
+    begin
+      url = URI.parse(final_url)
+      req = Net::HTTP::Get.new(url.to_s)
+      res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
+      data = JSON.parse(res.body.to_s)
+    rescue => e
+      logger.error "ERROR: Something went wrong: " + e.message
+      logger.error e.backtrace.join("\n")
+      ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
+    end
 
     return data
   end
