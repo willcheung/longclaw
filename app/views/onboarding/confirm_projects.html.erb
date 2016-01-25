@@ -13,13 +13,17 @@
                             <p class="small">Account: <%= p.account.name %></p>
                         </div>
                         <div class="col-sm-3">
-                            <p class="text-center">Last Activity<br/> <strong><%= time_ago_in_words(p.created_at) %> ago</strong></p>
+                            <p class="text-center">Last Activity</p><p> <strong><%= @project_last_email_date[p.id].nil? ? "N/A" : time_ago_in_words(@project_last_email_date[p.id]) %> ago</strong></p>
                         </div>
-                        <div class="col-md-4     team-members">
-                            <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a1.jpg') %>"></a>
-                            <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
-                            <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a3.jpg') %>"></a>
-                            <a href="#"><img alt="member" class="img-circle" src="<%= image_path('a2.jpg') %>"></a>
+                        <div class="col-md-4">
+                            <p><%= (p.users+p.contacts).size %> Collaborators</p>
+                            <div style="margin:-6px 0 0 12px;">
+                                <% (p.users+p.contacts).each_with_index do |u,i| %>
+                                    <% if i <= 3 %>
+                                        <div style="padding-right:3px;float:left;"><%= get_profile_pic(get_full_name(u), u.email, "") %></div>
+                                    <% end %>
+                                <% end %>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,7 +36,7 @@
 <% if !@new_projects.empty? %>
 <div>
     <h1>We found <%= pluralize(@new_projects.size, 'project') %> not in our system</h1>
-    <p>Feel free to modify project name and privacy setting. You can also change it later in projects settings.</p>
+    <p>Please confirm project name and privacy setting. You can also change it later in projects settings.</p>
 	<% @new_projects.each do |p| %>
         <div class="row">
             <div class="col-lg-6 col-lg-offset-3">
@@ -41,7 +45,7 @@
                          <h3 style="font-weight:500;"><%= best_in_place p, :name, :as => 'input' %> project members </h3>
                          <div class="small"></div>
                          <h4>Account <%= p.account.name %></h4>
-                         <div class="small col-sm-3 col-sm-offset-8 text-right" style="line-height:2em;clear:both;padding-right:0">Open collaboration &nbsp;&nbsp;<i data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can view and collaborate." class="fa fa-question-circle"></i></div>
+                         <div class="col-sm-3 col-sm-offset-8 text-right" style="line-height:2em;clear:both;padding-right:0">Open collaboration &nbsp;<small><i data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can view and collaborate." class="fa fa-question-circle"></i></small></div>
                          <div class="col-sm-1"><%= best_in_place p, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch' %></div>
                         <div style="clear:both"></div>
                     </div>
@@ -71,6 +75,11 @@
     <% end %>
 </div>
 <% end %>
+
+<div class="m-t-xl">
+    <h1>All done.</h1>
+    <a href="<%= root_path %>"><button type="button" class="btn btn-primary btn-lg">Let's get started &rarr;</button></a>
+</div>
 
 </div>
 
