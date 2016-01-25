@@ -160,7 +160,7 @@ class OnboardingController < ApplicationController
 	       	# Create Projects, project members, and activities
 	       	Project.create_from_clusters(data, user.id, user.organization.id)
 
-	       	########################################################
+	       	##########################################################################################
 
 	       	# Update flag indicating cluster creation is complete
 	       	if user.cluster_create_date.nil?
@@ -168,6 +168,10 @@ class OnboardingController < ApplicationController
 	       	else
 	       		user.update_attributes(cluster_update_date: Time.now)
 	       	end
+
+	       	# Send welcome email with confirm_projects link
+          UserMailer.welcome_email(user, num_of_projects, "http://app.contextsmith.com/onboarding/confirm_projects").deliver_later
+          format.json { render json: 'Email sent to ' + @user.email, status: 200 }
 
         rescue => e
           format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
@@ -177,10 +181,12 @@ class OnboardingController < ApplicationController
         else
           format.json { render json: 'Clusters created for user ' + user.email, status: 200}
         end
+  		
   		elsif user.nil?
   			format.json { render json: 'User not found.', status: 500}
   			logger.error "ERROR: User not found: " + params[:user_id]
   			ahoy.track("Error Create Cluster", message: "User not found: #{params[:user_id]}")
+  		
   		elsif data.nil?
   			format.json { render json: 'No data.', status: 200}
 
@@ -195,7 +201,9 @@ class OnboardingController < ApplicationController
 	  				ahoy.track("Error Create Cluster", message: "Invalid Credentials. Token might have expired.")
 	  			end
 	  		end
-  		end
-  	end
+
+  		end # if user and data
+
+  	end # respond_to do |format|
 	end
 end

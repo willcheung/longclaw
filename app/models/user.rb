@@ -56,8 +56,6 @@ class User < ActiveRecord::Base
 
   validates :email, uniqueness: true
 
-  #after_create :send_welcome_email_to_user
-
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
 
   def self.find_for_google_oauth2(auth, signed_in_resource=nil)
@@ -159,18 +157,6 @@ class User < ActiveRecord::Base
   def fresh_token
     refresh_token! if token_expired?
     oauth_access_token
-  end
-
-  #################################
-
-  private
-
-  def send_welcome_email_to_user
-    UserMailer.welcome_email(self).deliver_later
-  end
-
-  def send_beta_teaser_email_to_user
-    UserMailer.beta_teaser_email(self, "").deliver_later
   end
 
 end

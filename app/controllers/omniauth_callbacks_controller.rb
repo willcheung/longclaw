@@ -67,5 +67,9 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&callback=" + callback_url + in_domain
     logger.info "Calling backend service: " + final_url
     ahoy.track("Calling backend service", service: "newsfeed/cluster", final_url: final_url)
+
+    url = URI.parse(final_url)
+    req = Net::HTTP::Get.new(url.to_s)
+    res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
   end
 end
