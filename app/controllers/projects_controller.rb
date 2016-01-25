@@ -119,25 +119,27 @@ class ProjectsController < ApplicationController
 
   def get_emails_from_backend
     max=100
+    token_emails = []
     base_url = ENV["csback_base_url"] + "/newsfeed/search"
 
     if ENV["RAILS_ENV"] == 'production'
-      current_user.refresh_token! if current_user.token_expired?
-      token = current_user.oauth_access_token
-      email = current_user.email
       in_domain = ""
+      @project.users.registered.each do |u|
+        u.refresh_token! if u.token_expired?
+        token_emails << { token: u.oauth_access_token, email: u.email }
+      end
+      return [] if token_emails.empty?
     else
       # DEBUG
       u = User.find_by_email('indifferenzetester@gmail.com')
       u.refresh_token! if u.token_expired?
-      token = u.oauth_access_token
-      email = u.email
+      token_emails << { token: u.oauth_access_token, email: u.email }
       in_domain = "&in_domain=comprehend.com"
     end
 
     ex_clusters = [@project.contacts.map(&:email)]
     
-    final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + in_domain
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + in_domain
     logger.info "Calling backend service: " + final_url
     ahoy.track("Calling backend service", service: "newsfeed/search", final_url: final_url)
 

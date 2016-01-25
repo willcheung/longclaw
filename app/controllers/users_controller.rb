@@ -1,34 +1,11 @@
 class UsersController < ApplicationController
-  before_filter :authenticate_user!, :except => [:send_beta_teaser_email]
+  before_filter :authenticate_user!
 
   def show
     @user = User.find(params[:id])
     unless @user == current_user
       redirect_to :back, :alert => "Access denied."
     end
-  end
-
-  def send_beta_teaser_email
-  	@user = User.find_by_id(params[:id])
-
-    start_date = Time.at(params["startDate"].to_i).strftime('%B %e')
-    end_date = Time.at(params["endDate"].to_i).strftime('%B %e')
-    data = params["_json"]
-
-  	respond_to do |format|
-      puts format.to_s
-  		if @user
-        begin
-          UserMailer.beta_teaser_email(@user, data, start_date, end_date).deliver_later
-        rescue => e
-          format.json { render json: 'Something went wrong while sending emails ' + e.to_s, status: 500}
-        else
-          format.json { render json: 'Email sent to ' + @user.email, status: 200}
-        end
-  		else
-  			format.json { render json: 'User not found.', status: 500}
-  		end
-  	end
   end
 
 end

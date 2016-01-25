@@ -39,9 +39,9 @@
                                 <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
                                 <hr class="message-divider"/>
                                     <span class="message-content">
-                                         <p>
-                                            <%= truncate(m.previewContent, length: 200, separator: ' ') %>
-                                        </p>
+                                         <div>
+                                            <%= simple_format(m.previewContent) %>
+                                        </div>
                                     </span>
                             </div>
                         </div>

@@ -51,6 +51,8 @@ class User < ActiveRecord::Base
   has_many    :projects, through: "project_members"
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id"
 
+  scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
+
   devise :database_authenticatable, :registerable,
          :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2]
 
