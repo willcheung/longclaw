@@ -43,8 +43,6 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     max=10000
     base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
 
-    http://64.201.248.178:8889/newsfeed/cluster?email=indifferenzetester@gmail.com&token=ya29.cAJYK_xITMxatn7mFSUYPYmm-nyTgJrOuKW6MiDzwA0BInVFVeV4dZcZOVSFwL2_cXTcPsQ&max=10000&in_domain=comprehend.com&callback=http://24.130.10.244:3000/onboarding/a2c66a4c-261e-4e20-9f6a-21ed677e35c5/create_clusters.json&show_preview=true
-
     if ENV["RAILS_ENV"] == 'production'
       callback_url = "http://app.contextsmith.com/onboarding/#{current_user.id}/create_clusters.json"
       current_user.refresh_token! if current_user.token_expired?
