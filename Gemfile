@@ -41,6 +41,10 @@ group :development do
   gem "letter_opener"							# email preview
 end
 
+group :production do
+  gem 'exception_notification'
+end
+
 group :production, :test do
   gem 'rails_12factor'
 end
