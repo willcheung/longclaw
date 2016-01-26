@@ -48,10 +48,10 @@ module ApplicationHelper
 
     total_size = from_size + to_size + cc_size
     
-    if to.size <= size_limit and cc_size == 0
+    if to_size <= size_limit and cc_size == 0
       return get_first_names(from, to, cc)
-    elsif to.size <= size_limit and cc_size > 0
-      remaining = size_limit - to.size 
+    elsif to_size <= size_limit and cc_size > 0
+      remaining = size_limit - to_size 
       if remaining == 0
         if trailing_text=="other"
           return get_first_names(from, to, nil) + " and " + pluralize(total_size - size_limit, 'other')
@@ -69,7 +69,7 @@ module ApplicationHelper
           return get_first_names(from, to, cc)
         end
       end
-    elsif to.size >= size_limit
+    elsif to_size >= size_limit
       remaining = 0
       if trailing_text=="other"
         return get_first_names(from, to[0..size_limit], nil) + " and " + pluralize(total_size - size_limit, 'other')
