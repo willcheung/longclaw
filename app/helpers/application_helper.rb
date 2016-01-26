@@ -43,7 +43,7 @@ module ApplicationHelper
 
   def get_conversation_member_names(from, to, cc, trailing_text="other", size_limit=4)
     cc_size = (cc.nil? ? 0 : cc.size)
-    to_size = (tp.nil? ? 0 : to.size)
+    to_size = (to.nil? ? 0 : to.size)
     from_size = (from.nil? ? 0 : from.size)
 
     total_size = from_size + to_size + cc_size
