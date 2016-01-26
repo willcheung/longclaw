@@ -18,7 +18,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
       if @user.cluster_create_date.nil?
         # Kick off cluster analysis to backend
-        get_emails_from_backend_with_callback
+        get_emails_from_backend_with_callback(@user)
       end
 
       sign_in_and_redirect @user, :event => :authentication
@@ -39,22 +39,22 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   private
 
-  def get_emails_from_backend_with_callback
+  def get_emails_from_backend_with_callback(user)
     max=10000
     base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
 
     if ENV["RAILS_ENV"] == 'production'
-      callback_url = "http://app.contextsmith.com/onboarding/#{current_user.id}/create_clusters.json"
-      current_user.refresh_token! if current_user.token_expired?
-      token = current_user.oauth_access_token
-      email = current_user.email
+      callback_url = "http://app.contextsmith.com/onboarding/#{user.id}/create_clusters.json"
+      user.refresh_token! if user.token_expired?
+      token = user.oauth_access_token
+      email = user.email
       in_domain = ""
     else
       # DEBUG
       if ENV["RAILS_ENV"] == 'test'
-        callback_url = "https://guarded-refuge-6063.herokuapp.com/onboarding/#{current_user.id}/create_clusters.json"
+        callback_url = "https://guarded-refuge-6063.herokuapp.com/onboarding/#{user.id}/create_clusters.json"
       else
-        callback_url = "http://24.130.10.244:3000/onboarding/#{current_user.id}/create_clusters.json"
+        callback_url = "http://24.130.10.244:3000/onboarding/#{user.id}/create_clusters.json"
       end
 
       u = User.find_by_email('indifferenzetester@gmail.com')

@@ -31,8 +31,8 @@ class Project < ActiveRecord::Base
 	has_many	:contacts, through: "project_members"
 	has_many	:users, through: "project_members"
 
-	scope :visible_to, -> (user_id) {
-		joins(:project_members).where("projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?", user_id, user_id).group("projects.id")
+	scope :visible_to, -> (organization_id, user_id) {
+		select("DISTINCT(projects.*)").joins([:project_members,:account]).where("accounts.organization_id = ? AND is_confirmed = true AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)", organization_id, user_id, user_id).group("projects.id")
 	}
 	scope :is_active, -> {where("projects.status = 'Active'")}
 

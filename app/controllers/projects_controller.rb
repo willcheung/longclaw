@@ -9,12 +9,12 @@ class ProjectsController < ApplicationController
     projects = []
 
     # all projects and their accounts, sorted by account name alphabetically
-    projects = Project.visible_to(current_user.id).includes(:account).where("accounts.organization_id = ? AND is_confirmed = true", current_user.organization_id).references(:account).group("accounts.id").preload([:users,:contacts])
+    projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").preload([:users,:contacts])
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
-    @project_last_activity_date = Project.visible_to(current_user.id).includes(:activities).maximum("activities.last_sent_date")
-    @project_activities_count_last_7d = Project.visible_to(current_user.id).includes(:activities).where("activities.last_sent_date > (current_date - interval '7 days')").references(:activities).count(:activities)
-    @project_pinned = Project.visible_to(current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
+    @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
+    @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.last_sent_date > (current_date - interval '7 days')").references(:activities).count(:activities)
+    @project_pinned = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
 
     # new project modal
     @project = Project.new
@@ -24,8 +24,8 @@ class ProjectsController < ApplicationController
   # GET /projects/1.json
   def show
     @team = @project.contacts.includes(:account) + @project.users
-    @project_last_activity_date = Project.visible_to(current_user.id).find(params[:id]).activities.maximum("activities.last_sent_date")
-    @project_activities_count_last_7d = Project.visible_to(current_user.id).find(params[:id]).activities.where("activities.last_sent_date > (current_date - interval '7 days')").count(:activities)
+    @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id]).activities.maximum("activities.last_sent_date")
+    @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id]).activities.where("activities.last_sent_date > (current_date - interval '7 days')").count(:activities)
 
     data = get_emails_from_backend
 
@@ -97,7 +97,7 @@ class ProjectsController < ApplicationController
   # Use callbacks to share common setup or constraints between actions.
   def set_project
     begin
-      @project = Project.visible_to(current_user.id).find(params[:id])
+      @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
     rescue ActiveRecord::RecordNotFound
       redirect_to root_url, :flash => { :error => "Project not found or is private." }
     end

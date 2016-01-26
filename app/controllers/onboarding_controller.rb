@@ -127,7 +127,7 @@ class OnboardingController < ApplicationController
 					new_p.each { |p| @new_projects << p }
 					same_p.each { |p| @same_projects << p }
 
-					@project_last_email_date = Project.visible_to(current_user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")
+					@project_last_email_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")
 				end
 			end
 		end
