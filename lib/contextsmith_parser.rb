@@ -24,8 +24,8 @@ module ContextSmithParser
 
 		d.each do |project|
 			if project.topExternalMemberDomain == project_domain
-				project.externalMembers.each { |m| external_members << m }
-    		project.internalMembers.each { |m| internal_members << m }
+				project.externalMembers.each { |m| external_members << m } if !project.externalMembers.nil?
+    		project.internalMembers.each { |m| internal_members << m } if !project.internalMembers.nil?
 			end
 		end
 
