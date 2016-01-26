@@ -85,7 +85,7 @@ module ApplicationHelper
       if u.nil? or u.image_url.nil? or u.image_url.empty?
         get_rounded_initials_from_name(name, css_class)
       else
-        return ('<div class="' + css_class + '"><img alt="image" class="img-circle" style="width:30px;height:30px;" src="' + u.image_url + '"/></div>').html_safe
+        return ('<div class="' + css_class + '"><img alt="image" class="img-circle" style="width:32px;height:32px;" src="' + u.image_url + '"/></div>').html_safe
       end
     else
       get_rounded_initials_from_name(name, css_class)
