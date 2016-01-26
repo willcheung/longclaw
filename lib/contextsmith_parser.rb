@@ -6,8 +6,8 @@ module ContextSmithParser
 		d = data.map { |hash| Hashie::Mash.new(hash) }
 
     d.each do |project|
-    	project.externalMembers.each { |m| external_members << m }
-    	project.internalMembers.each { |m| internal_members << m }
+    	project.externalMembers.each { |m| external_members << m } if !project.externalMembers.nil?
+    	project.internalMembers.each { |m| internal_members << m } if !project.internalMembers.nil?
     end
 
     uniq_external_members = external_members.uniq{ |m| m.address }
