@@ -82,7 +82,7 @@ module ApplicationHelper
       if u.nil? or u.image_url.nil? or u.image_url.empty?
         get_rounded_initials_from_name(name, css_class)
       else
-        return ('<div class="' + css_class + '"><img alt="image" class="img-circle" style="width:30px;" src="' + u.image_url + '"/></div>').html_safe
+        return ('<div class="' + css_class + '"><img alt="image" class="img-circle" style="width:30px;height:30px;" src="' + u.image_url + '"/></div>').html_safe
       end
     else
       get_rounded_initials_from_name(name, css_class)
@@ -92,6 +92,7 @@ module ApplicationHelper
   def get_rounded_initials_from_name(name, css_class="")
     if name.nil? or name.empty? or name == " "
       s = '<i class="fa fa-user"></i>' 
+      name = ""
     elsif name.include?(', ') # first and last name reverse because of comma
       s = name.split(', ').last[0,1] + name.split(', ').first[0,1]
     else
