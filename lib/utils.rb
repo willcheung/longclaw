@@ -66,20 +66,24 @@ module Utils
 			return domain, ""
 		end
 
-		if !r.registrant_contacts.nil?
-			if r.registrant_contacts[0].organization.nil? or r.registrant_contacts[0].organization == ""
-				org_name = domain
+		begin
+			if !r.registrant_contacts.nil?
+				if r.registrant_contacts[0].organization.nil? or r.registrant_contacts[0].organization == ""
+					org_name = domain
+				else
+					org_name = r.registrant_contacts[0].organization
+				end
+
+				address = ([r.registrant_contacts[0].address, r.registrant_contacts[0].city, r.registrant_contacts[0].state, 
+									 r.registrant_contacts[0].country, r.registrant_contacts[0].country_code]).join(' ')
+
+				return org_name, address
 			else
-				org_name = r.registrant_contacts[0].organization
-			end
-
-			address = ([r.registrant_contacts[0].address, r.registrant_contacts[0].city, r.registrant_contacts[0].state, 
-								 r.registrant_contacts[0].country, r.registrant_contacts[0].country_code]).join(' ')
-
-			return org_name, address
-		else
-      return domain, ""
-    end
+	      return domain, ""
+	    end
+	  rescue => e
+	  	return domain, ""
+	  end
 	end
 
 	def dice_coefficient(a, b)

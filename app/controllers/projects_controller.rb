@@ -122,7 +122,7 @@ class ProjectsController < ApplicationController
     token_emails = []
     base_url = ENV["csback_base_url"] + "/newsfeed/search"
 
-    if ENV["RAILS_ENV"] == 'production'
+    if ENV["RAILS_ENV"] == 'production' or ENV["RAILS_ENV"] == 'test'
       in_domain = ""
       @project.users.registered.each do |u|
         u.refresh_token! if u.token_expired?
