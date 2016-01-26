@@ -115,11 +115,19 @@ class Activity < ActiveRecord::Base
 	end
 
 	def from
-		from = JSON.parse(read_attribute(:from).to_json).map { |hash| Hashie::Mash.new(hash) }
+    if read_attribute(:from).nil?
+      nil
+    else
+		  from = JSON.parse(read_attribute(:from).to_json).map { |hash| Hashie::Mash.new(hash) }
+    end
 	end
 
 	def to
-		to = JSON.parse(read_attribute(:to).to_json).map { |hash| Hashie::Mash.new(hash) }
+    if read_attribute(:to).nil?
+      nil
+    else
+		  to = JSON.parse(read_attribute(:to).to_json).map { |hash| Hashie::Mash.new(hash) }
+    end
 	end
 
 	def cc
