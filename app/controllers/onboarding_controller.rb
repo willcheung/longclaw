@@ -172,8 +172,10 @@ class OnboardingController < ApplicationController
 	       	end
 
 	       	# Send welcome email with confirm_projects link
+	       	num_of_projects = Project.where(created_by: user.id, is_confirmed: false).includes(:users, :contacts, :account).count(:projects)
           UserMailer.welcome_email(user, num_of_projects, "http://app.contextsmith.com/onboarding/confirm_projects").deliver_later
-          format.json { render json: 'Email sent to ' + @user.email, status: 200 }
+          
+          format.json { render json: 'Email sent to ' + user.email, status: 200 }
 
         rescue => e
           format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}

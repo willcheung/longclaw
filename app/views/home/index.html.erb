@@ -12,20 +12,38 @@
                 <h2 class="text-center">At a Glance</h2>
             </div>
             <div class="ibox-content">
+            <div class="alert alert-info">
+                <p><strong><i class="fa fa-lightbulb-o"></i> Tip: </strong>Invite your colleagues to get a complete picture of all the projects! </p>
+            </div>
                 <div>
                     <h2>Most Active Projects <small>(last 7 days)</small></h2>
                     <% @most_active_projects.each_with_index do |p,i| %>
                         <% if i <= 4 %>
                             <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
-                            <p><%= p.count_activities %> activities</p>
+                            <p><%= pluralize(p.count_activities, 'activity') %></p>
                         <% end %>
                     <% end %>
                 </div>
                 
                 <div class="m-t-lg">
                     <h2>Projects with no activities <small>(last 7 days)</small></h2>
+                    <div class="row">
+                            <div class="col-md-6">
+                                
+                            </div>
+                            <div class="col-md-6 m-b-sm">
+                                <span><strong>Last active</strong></span>
+                            </div>
+                        </div>
                     <% @projects_no_activities.each do |p| %>
-                        <h3><%= p.name %></h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3><a href="<%= project_path(p) %>"><%= p.name %></a> </h3>
+                            </div>
+                            <div class="col-md-6">
+                                <small><%= time_ago_in_words(p.activities.last_active_on) %> ago</small>
+                            </div>
+                        </div>
                     <% end %>
                 </div>
             </div>

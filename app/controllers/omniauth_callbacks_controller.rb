@@ -46,8 +46,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     if ENV["RAILS_ENV"] == 'production'
       callback_url = "http://app.contextsmith.com/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
-      token = user.oauth_access_token
-      email = user.email
+      token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = ""
     else
       # DEBUG
@@ -59,12 +58,11 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
       u = User.find_by_email('indifferenzetester@gmail.com')
       u.refresh_token! if u.token_expired?
-      token = u.oauth_access_token
-      email = u.email
+      token_emails = [{ token: u.oauth_access_token, email: u.email }]
       in_domain = "&in_domain=comprehend.com"
     end
     
-    final_url = base_url + "?token=" + token + "&email=" + email + "&max=" + max.to_s + "&callback=" + callback_url + in_domain
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&callback=" + callback_url + in_domain
     logger.info "Calling backend service: " + final_url
     ahoy.track("Calling backend service", service: "newsfeed/cluster", final_url: final_url)
 

@@ -33,6 +33,7 @@ class Activity < ActiveRecord::Base
   has_many :comments, dependent: :destroy
 
   scope :pinned, -> { where is_pinned: true }
+  scope :last_active_on, -> { maximum "last_sent_date" }
 
   acts_as_commentable
 
