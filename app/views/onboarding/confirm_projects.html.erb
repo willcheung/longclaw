@@ -1,8 +1,22 @@
 <div class="wrapper wrapper-content animated fadeInRight text-center">
 
+<div class="row">
+    <div class="alert alert-info col-lg-6 col-lg-offset-3">
+        <h2>Configure your projects and their privacy settings</h2>
+        <p class="text-left m-l-xl m-t-md">We applied 3 simple rules to <strong>all your emails</strong>, no exceptions.</p>
+        <ul class="text-left m-r-lg m-l-xl">
+            <li>Internal emails are completely filtered out. Only external communications show up in here.</li>
+            <li>One-on-one emails are considered private, and we filter them out.</li>
+            <li>External members (e.g. your customers) are not able to access any information, unless you explicitly share with them.</li>
+        </ul>
+        <p class="text-left m-l-xl m-r-lg m-t-md">Like to set additional rules yourself? The feature is coming! Please email <a href="mailto:support@contextsmith.com">support@contextsmith.com</a> for more information.</p>
+    </div>
+</div>
+
 <% if !@same_projects.empty? or !@overlapping_projects.empty? %>
 <div style="margin-bottom:50px">
     <h1>You've been added to <%= pluralize((@same_projects+@overlapping_projects).size, 'project') %></h1>
+    <p>These projects were created by your colleagues.</p>
     <% (@same_projects+@overlapping_projects).each do |p| %>
         <div class="row">
             <div class="col-lg-6 col-lg-offset-3">

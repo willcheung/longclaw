@@ -37,52 +37,58 @@ class OnboardingController < ApplicationController
 		new_user_projects.each do |new_project|
 			new_project_members = new_project.contacts.map(&:email).map(&:downcase).map(&:strip)
 			
-			all_accounts.each do |account |
-				if account == new_project.account
+			all_accounts.each do | account |
+				if account.id == new_project.account.id
 					overlapping_p = []
 					new_p = []
 					same_p = []
 
-					#puts "---Account is " + account.name + "---"
+					puts "---Account is " + account.name + "---\n"
+					puts "Projects in this account: " + account.projects.size.to_s
 
-					account.projects.each do |existing_project|
-						existing_project_members = existing_project.contacts.map(&:email).map(&:downcase).map(&:strip)
-						
-						# DEBUG MSG
-						# puts existing_project_members
-						# puts "----"
-						# puts new_project_members
+					if account.projects.empty?
+						# This account has no project, so new_project is considered first project.
+						new_p << new_project if !new_p.include?(new_project)
+					else
+						account.projects.each do |existing_project|
+							existing_project_members = existing_project.contacts.map(&:email).map(&:downcase).map(&:strip)
+							
+							# DEBUG MSG
+							# puts existing_project_members
+							# puts "----"
+							# puts new_project_members
 
-						dc = dice_coefficient(existing_project_members, new_project_members)
-						intersect = intersect(existing_project_members, new_project_members)
-						logger.info("Dice Coefficient #{dc}, Intersect #{intersect}")
-						ahoy.track("Project Confirmation", dice_coefficient: dc, intersect: intersect, existing_project_members: existing_project_members, new_project_members: new_project_members)
+							dc = dice_coefficient(existing_project_members, new_project_members)
+							intersect = intersect(existing_project_members, new_project_members)
+							logger.info("Dice Coefficient #{dc}, Intersect #{intersect}")
+							ahoy.track("Project Confirmation", dice_coefficient: dc, intersect: intersect, existing_project_members: existing_project_members, new_project_members: new_project_members)
 
-						# puts "\n\n\n\n"
+							# puts "\n\n\n\n"
 
-						if dc == 1.0
-							# 100% match. Do not display these projects.
-							same_p << existing_project
-						elsif dc < 1.0 and dc >= 0.35
-							# Considered same project. 
-							overlapping_p << existing_project
-						elsif dc < 0.35 and dc > 0.0 and intersect > 1
-							# Considered existing projects because there are more than 1 shared members.
-							overlapping_p << existing_project
-						elsif dc < 0.35 and dc > 0.0 and intersect == 1
-							# This is likely a one-time communication or a typo by email sender.
-
-							# If the existing project already has current user, then likely this conversation is part of that project.
-							if existing_project.users.map(&:email).include?(current_user.email)
+							if dc == 1.0
+								# 100% match. Do not display these projects.
+								same_p << existing_project
+							elsif dc < 1.0 and dc >= 0.35
+								# Considered same project. 
 								overlapping_p << existing_project
-							else
+							elsif dc < 0.35 and dc > 0.0 and intersect > 1
+								# Considered existing projects because there are more than 1 shared members.
+								overlapping_p << existing_project
+							elsif dc < 0.35 and dc > 0.0 and intersect == 1
+								# This is likely a one-time communication or a typo by email sender.
+
+								# If the existing project already has current user, then likely this conversation is part of that project.
+								if existing_project.users.map(&:email).include?(current_user.email)
+									overlapping_p << existing_project
+								else
+									new_p << new_project if !new_p.include?(new_project)
+								end
+							else dc == 0.0 
+								# Definitely new project.  Modify new project into confirmed project.
 								new_p << new_project if !new_p.include?(new_project)
 							end
-						else dc == 0.0 
-							# Definitely new project.  Modify new project into confirmed project.
-							new_p << new_project if !new_p.include?(new_project)
-						end
-					end
+						end #if account.projects.empty?
+					end #if account == new_project.account
 
 					# Take action on the unconfirmed projects
 					if account.projects.size == 0
