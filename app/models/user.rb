@@ -66,6 +66,7 @@ class User < ActiveRecord::Base
     user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
     
     if user
+      user.update_attributes(oauth_access_token: credentials["token"])
       return user
     else
       # Considered referred user if email exists but not oauth elements
@@ -147,6 +148,9 @@ class User < ActiveRecord::Base
   def refresh_token!
     response = request_token_from_google
     data = JSON.parse(response.body)
+
+    return nil if data['access_token'].nil?
+
     update_attributes(
       oauth_access_token: data['access_token'],
       oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
