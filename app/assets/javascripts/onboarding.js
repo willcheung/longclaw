@@ -2,7 +2,7 @@ jQuery(document).ready(function($) {
   
   function timer() {
     
-    setTimeout(endAnim, 600000);  
+    //setTimeout(endAnim, 600000);  
     $('.again').hide();
    
   }

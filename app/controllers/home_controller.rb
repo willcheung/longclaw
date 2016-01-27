@@ -20,16 +20,16 @@ class HomeController < ApplicationController
       last_7d_activities.each_with_index do |p,i|
         if previous.nil?
           arr << p.count_activities
-          previous = p.id
+          previous = p.project_id
         else
-          if previous == p.id
+          if previous == p.project_id
             arr << p.count_activities
           else
             @metrics[previous] = arr
             arr = []
             arr << p.count_activities
           end
-          previous = p.id
+          previous = p.project_id
         end
 
         if last_7d_activities[i+1].nil?
