@@ -16,11 +16,32 @@
                 <p><strong><i class="fa fa-lightbulb-o"></i> Tip: &nbsp;</strong>Invite your colleagues to get a complete picture of all the projects! </p>
             </div>
                 <div>
-                    <h2>Most Active Projects <small>(last 7 days)</small></h2>
+                    <h2>Top Active Projects <small>(last 7 days)</small></h2>
                     <% @most_active_projects.each_with_index do |p,i| %>
-                        <% if i <= 4 %>
-                            <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
-                            <p><%= pluralize(p.count_activities, 'activity') %></p>
+                        <% if i <= 3 %>
+                            <% if i == 0 or i == 2 %><div class="row"><% end %>
+                                <div class="col-lg-6">
+                                    <div class="widget">
+                                        <div class="p-m">
+                                            <h2><a href="<%= project_path(p) %>"><%= p.name %></a></h2>
+                                            <h3><%= pluralize(p.count_activities, 'activity') %> &nbsp;&middot;&nbsp; <%= (p.users.size + p.contacts.size) %> collaborators </h3>
+                                        </div>
+                                        <div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:60%;">
+                                           
+                                        </div>
+                                    </div>
+                                </div>
+                            <% if i == 1 or i == 3 %></div><% end %>
+
+                            <script>
+                            $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {
+                                type: 'bar',
+                                height: '35',
+                                barWidth: 15,
+                                barSpacing: 2,
+                                barColor: '#5DA5DA',
+                                zeroAxis: false});
+                            </script>
                         <% end %>
                     <% end %>
                 </div>
@@ -40,7 +61,7 @@
                                     <h3><a href="<%= project_path(p) %>"><%= p.name %></a> </h3>
                                 </div>
                                 <div class="col-md-6">
-                                    <small><%= p.activities.last_active_on ? "N/A" : time_ago_in_words(p.activities.last_active_on) + "ago" %></small>
+                                    <small><%= p.activities.last_active_on ? time_ago_in_words(p.activities.last_active_on) + "ago" : "N/A" %></small>
                                 </div>
                             </div>
                         <% end %>

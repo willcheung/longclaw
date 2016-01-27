@@ -48,6 +48,28 @@ class Project < ActiveRecord::Base
 		# Everything lives in OnboardingController#confirm_projects right now
 	end
 
+	def self.count_activities_by_day(days_ago, array_of_project_ids)
+		query = <<-SQL
+      WITH time_series as (
+        SELECT * 
+          from (SELECT generate_series(date #{days_ago}, CURRENT_DATE, INTERVAL '1 day') as days) t1 
+                CROSS JOIN 
+               (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2)
+      SELECT time_series.project_id, time_series.days, count(activities.*) as count_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date::date, project_id 
+                    FROM activities 
+                    WHERE activities.last_sent_date > #{days_ago}) as activities
+        ON activities.project_id = time_series.project_id and activities.last_sent_date = time_series.days
+      GROUP BY time_series.project_id, days 
+      ORDER BY time_series.project_id, days ASC
+    SQL
+
+    last_7d_activities = Project.find_by_sql(query)
+    return last_7d_activities
+   end
+
+
 	# This method should be called *after* all accounts, contacts, and users are processed & inserted.
 	def self.create_from_clusters(data, user_id, organization_id)
 		project_domains = get_project_top_domain(data)

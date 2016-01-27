@@ -21,7 +21,7 @@ class OnboardingController < ApplicationController
 		if current_user.onboarding_step == Utils::ONBOARDING[:confirm_projects] and !current_user.cluster_create_date.nil?
 			redirect_to onboarding_confirm_projects_path
 		elsif current_user.onboarding_step == Utils::ONBOARDING[:onboarded]
-			redirect_to onboarding_confirm_projects_path
+			redirect_to root_path
 		end
 	end
 
@@ -127,9 +127,6 @@ class OnboardingController < ApplicationController
 						end
 					end
 
-					# Change user onboarding flag
-					current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
-
 					# Prepare projects for View
 					overlapping_p.each { |p| @overlapping_projects << p }
 					new_p.each { |p| @new_projects << p }
@@ -139,6 +136,9 @@ class OnboardingController < ApplicationController
 		end
 
 		@project_last_email_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")
+		
+		# Change user onboarding flag
+		current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
 	end
 
 	#########################################################################
