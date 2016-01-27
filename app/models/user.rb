@@ -66,7 +66,8 @@ class User < ActiveRecord::Base
     user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
     
     if user
-      user.update_attributes(oauth_access_token: credentials["token"])
+      user.update_attributes(oauth_access_token: credentials["token"], 
+                             oauth_expires_at: Time.at(credentials["expires_at"]))
       return user
     else
       # Considered referred user if email exists but not oauth elements

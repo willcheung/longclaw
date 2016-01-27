@@ -236,6 +236,7 @@ Devise.setup do |config|
   
   google_oauth2_options = {
     access_type: "offline", 
+    prompt: "consent",
     scope: ['https://www.googleapis.com/auth/gmail.readonly',
             'email',
             'profile']

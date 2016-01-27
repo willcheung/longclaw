@@ -12,7 +12,6 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
  
     if @user.persisted?
     	session["devise.google_data"] = auth
-      @user.refresh_token! if @user.token_expired?
       logger.info "Google devise.omniauth_callbacks.success for user " + @user.email
       flash[:notice] = "Welcome, #{@user.first_name}!"
 
