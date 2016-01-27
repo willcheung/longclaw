@@ -18,11 +18,11 @@ class OnboardingController < ApplicationController
 	end
 
 	def creating_clusters
-		# if current_user.onboarding_step == Utils::ONBOARDING[:confirm_projects] and !current_user.cluster_create_date.nil?
-		# 	redirect_to onboarding_confirm_projects_path
-		# elsif current_user.onboarding_step == Utils::ONBOARDING[:onboarded]
-		# 	redirect_to root_path
-		# end
+		if current_user.onboarding_step == Utils::ONBOARDING[:confirm_projects] and !current_user.cluster_create_date.nil?
+			redirect_to onboarding_confirm_projects_path
+		elsif current_user.onboarding_step == Utils::ONBOARDING[:onboarded]
+			redirect_to root_path
+		end
 	end
 
 	# Callback method
