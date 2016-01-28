@@ -17,7 +17,7 @@
         <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
     </span>
 
-    <div class="vertical-timeline-content">
+    <div class="vertical-timeline-content" <% if !a.email_messages.map{|m| m.sourceInboxes }.flatten.include?(current_user.email) %>style="border-color: #FFA154"<% end %>>
         <% if a.category == "Conversation" %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>

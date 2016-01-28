@@ -43,8 +43,8 @@ class OnboardingController < ApplicationController
 					new_p = []
 					same_p = []
 
-					puts "---Account is " + account.name + "---\n"
-					puts "Projects in this account: " + account.projects.size.to_s
+					# puts "---Account is " + account.name + "---\n"
+					# puts "Projects in this account: " + account.projects.size.to_s
 
 					if account.projects.empty?
 						# This account has no project, so new_project is considered first project.
