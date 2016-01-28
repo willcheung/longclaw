@@ -5,11 +5,11 @@
         <h2>Configure your projects and their privacy settings</h2>
         <p class="text-left m-l-xl m-t-md">We applied 3 simple rules to <strong>all your emails</strong>, no exceptions.</p>
         <ul class="text-left m-r-lg m-l-xl">
-            <li>Internal emails are completely filtered out. Only external communications show up in here.</li>
+            <li>Internal emails are completely filtered out. Only external communications show up.</li>
             <li>One-on-one emails are considered private, and we filter them out.</li>
             <li>External members (e.g. your customers) are not able to access any information, unless you explicitly share with them.</li>
         </ul>
-        <p class="text-left m-l-xl m-r-lg m-t-md">Like to set additional rules yourself? The feature is coming! Please email <a href="mailto:support@contextsmith.com">support@contextsmith.com</a> for more information.</p>
+        <p class="text-left m-l-xl m-r-lg m-t-md">Like to set custom rules yourself? We're working on it!</p>
     </div>
 </div>
 
@@ -105,5 +105,5 @@
   elems.forEach(function(html) {
     new Switchery(html, { size: 'small' });
   });
-  $('.best_in_place').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { size: 'small' }); });
+  $('.best_in_place.switch').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { size: 'small' }); });
 </script>

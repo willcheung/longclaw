@@ -63,7 +63,7 @@
                                     <h3><a href="<%= project_path(p) %>"><%= p.name %></a> </h3>
                                 </div>
                                 <div class="col-md-6">
-                                    <small><%= p.activities.last_active_on ? time_ago_in_words(p.activities.last_active_on) + "ago" : "N/A" %></small>
+                                    <small><%= p.activities.last_active_on.is_a?(DateTime) ? time_ago_in_words(p.activities.last_active_on) + "ago" : "N/A" %></small>
                                 </div>
                             </div>
                         <% end %>

@@ -9,7 +9,6 @@ class HomeController < ApplicationController
     last_7d = "(CURRENT_DATE - INTERVAL '6 days')"
 
     @most_active_projects = Project.visible_to(current_user.organization_id, current_user.id).select("projects.*, count(distinct activities.id) as count_activities").joins(:activities).where("activities.last_sent_date > #{last_7d}").order("count_activities desc")
-    #@most_active_projects = Project.visible_to(current_user.organization_id, current_user.id).select("projects.*, count(distinct activities.id) as count_activities").joins(:activities).where("activities.last_sent_date > (current_date - interval '2 years') and activities.last_sent_date < (current_date - interval '1 year')").order("count_activities desc")
     @projects_no_activities = Project.visible_to(current_user.organization_id, current_user.id) - @most_active_projects
 
     if !@most_active_projects.empty?
