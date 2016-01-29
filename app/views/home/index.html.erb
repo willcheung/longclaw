@@ -12,32 +12,43 @@
                 <h2 class="text-center">At a Glance</h2>
             </div>
             <div class="ibox-content">
-            <div class="alert alert-info">
-                <p><strong><i class="fa fa-lightbulb-o"></i> Tip: &nbsp;</strong>Invite your colleagues to get a complete picture of all the projects! </p>
-            </div>
+                <div class="alert alert-info">
+                    <p><strong><i class="fa fa-lightbulb-o"></i> Tip: &nbsp;</strong>Invite your colleagues to get a complete picture of all the projects! </p>
+                </div>
                 <div>
                     <h2>Top Active Projects <small>(last 7 days)</small></h2>
                     <% @most_active_projects.each_with_index do |p,i| %>
                         <% if i <= 3 %>
-                            <% if i == 0 or i == 2 %><div class="row"><% end %>
-                                <div class="col-lg-6">
+                            <div class="row">
+                                <div class="col-lg-12">
                                     <div class="widget">
-                                        <div class="p-m">
+                                        <div class="col-lg-5">
                                             <h2><a href="<%= project_path(p) %>"><%= p.name %></a></h2>
-                                            <h3><%= pluralize(p.count_activities, 'activity') %> &nbsp;&middot;&nbsp; <%= (p.users.size + p.contacts.size) %> collaborators </h3>
+                                            <h4><%= pluralize(p.count_activities, 'activity') %> &nbsp;&middot;&nbsp; <%= (p.users.size + p.contacts.size) %> collaborators </h4>
                                         </div>
-                                        <div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:60%;">
-                                           
+                                        <div class="col-lg-3">
+                                            <h4 class="text-center">7d Activities</h4>
+                                           <div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:60%;"></div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <p class="text-center">Collaborators (<%= (p.users.size + p.contacts.size) %>)</p>
+                                            <div style="margin:-6px 0 0 12px;">
+                                                <% (p.users+p.contacts).each_with_index do |u,i| %>
+                                                    <% if i <= 4 %>
+                                                        <div style="padding-right:3px;float:left;"><%= get_profile_pic(get_full_name(u), u.email, "") %></div>
+                                                    <% end %>
+                                                <% end %>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            <% if i == 1 or i == 3 %></div><% end %>
+                            </div>
 
                             <script>
                             $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {
                                 type: 'bar',
-                                height: '35',
-                                barWidth: 15,
+                                height: '20',
+                                barWidth: 12,
                                 barSpacing: 2,
                                 barColor: '#5DA5DA',
                                 zeroAxis: false,
@@ -57,8 +68,8 @@
                                 <span><strong>Last active</strong></span>
                             </div>
                         </div>
-                        <% @projects_no_activities.each do |p| %>
-                            <div class="row">
+                        <% @projects_no_activities.each_with_index do |p,i| %>                            
+                            <div class="row no-activities-projects" <% if i > 4 %>style="display:none;"<% end %>>
                                 <div class="col-md-6">
                                     <h3><a href="<%= project_path(p) %>"><%= p.name %></a> </h3>
                                 </div>
@@ -67,11 +78,20 @@
                                 </div>
                             </div>
                         <% end %>
+
+                        <% if @projects_no_activities.size > 5 %><a id="show-more" style="color:#888">(show more)</a><% end %>
                     <% end %>
                 </div>
             </div>
         </div>
     </div>
+    <script>
+        $(document).ready(function() {
+            $("#show-more").click(function() {
+                $(".no-activities-projects").show();
+            });
+        });
+    </script>
 <!--
     <div class="col-lg-9 col-lg-offset-1">
         <div class="ibox float-e-margins catchup">
