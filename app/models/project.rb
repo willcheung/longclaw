@@ -49,24 +49,50 @@ class Project < ActiveRecord::Base
 	end
 
 	def self.count_activities_by_day(days_ago, array_of_project_ids)
+		metrics = {}
+    previous = nil
+    arr = []
+		days_ago_sql = "(CURRENT_DATE - INTERVAL '#{days_ago-1} days')"
+
 		query = <<-SQL
       WITH time_series as (
         SELECT * 
-          from (SELECT generate_series(date #{days_ago}, CURRENT_DATE, INTERVAL '1 day') as days) t1 
+          from (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1 
                 CROSS JOIN 
                (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2)
       SELECT time_series.project_id, time_series.days, count(activities.*) as count_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date::date, project_id 
                     FROM activities 
-                    WHERE activities.last_sent_date > #{days_ago}) as activities
+                    WHERE activities.last_sent_date > #{days_ago_sql}) as activities
         ON activities.project_id = time_series.project_id and activities.last_sent_date = time_series.days
       GROUP BY time_series.project_id, days 
       ORDER BY time_series.project_id, days ASC
     SQL
 
     last_7d_activities = Project.find_by_sql(query)
-    return last_7d_activities
+
+		last_7d_activities.each_with_index do |p,i|
+      if previous.nil?
+        arr << p.count_activities
+        previous = p.project_id
+      else
+        if previous == p.project_id
+          arr << p.count_activities
+        else
+          metrics[previous] = arr
+          arr = []
+          arr << p.count_activities
+        end
+        previous = p.project_id
+      end
+
+      if last_7d_activities[i+1].nil?
+        metrics[previous] = arr
+      end
+    end
+
+    return metrics
    end
 
 
