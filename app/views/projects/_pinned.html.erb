@@ -1,4 +1,4 @@
-<table class="table pinned-table">
+<table class="table pinned-table table-condensed table-hover">
     <tbody>
     <% pinned_activities.each do |a| %>
         <tr>
@@ -22,12 +22,12 @@
                 <div class="chat-discussion">
                     <% if a.email_messages.size > 1 %>
                         <div class="more-messages">
-                            <a class="show-more-<%= a.backend_id %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
+                            <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
                         </div>
                     <% end %>
 
                     <% a.email_messages.each do |m| %>
-                        <div class="hidden-chat-message-<%= a.backend_id %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
+                        <div class="hidden-chat-message-<%= a.id.to_s %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
                             <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
                                 <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
                                 <div class="message">
@@ -75,13 +75,13 @@
                     </div>
                 </div>                
 
-                <%= render 'activities_js', :a => a %>
-
             </td>
             <td style="vertical-align:middle;font-size:11px;">
                 <%= a.last_sent_date.strftime("%_m/%d") %>
             </td>
         </tr>
+
+        <%= render 'activities/show_more_js', :a => a %>
     <% end %>
     </tbody>
 </table>

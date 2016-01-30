@@ -50,9 +50,9 @@ class Activity < ActiveRecord::Base
 
         
         val << "('#{user_id}', '#{project.id}', 'Conversation', '#{(c.subject).gsub("'","''")}', true, '#{c.id}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}', 
-                   #{Activity.sanitize(c.contextMessages[0].from.to_json)}, 
-                   #{Activity.sanitize(c.contextMessages[0].to.to_json)}, 
-                   #{Activity.sanitize(c.contextMessages[0].cc.to_json)}, 
+                   #{Activity.sanitize(c.contextMessages.last.from.to_json)}, 
+                   #{Activity.sanitize(c.contextMessages.last.to.to_json)}, 
+                   #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.to_json)}, 
                    '#{Time.now}', '#{Time.now}')"
         
@@ -69,9 +69,9 @@ class Activity < ActiveRecord::Base
                         backend_id: c.id,
                         last_sent_date: Time.zone.at(c.lastSentDate),
                         last_sent_date_epoch: c.lastSentDate,
-                        from: c.contextMessages[0].from, # take from first message
-                        to: c.contextMessages[0].to,     # take from first message
-                        cc: c.contextMessages[0].cc,     # take from first message
+                        from: c.contextMessages.last.from, # take from last message
+                        to: c.contextMessages.last.to,     # take from last message
+                        cc: c.contextMessages.last.cc,     # take from last message
                         email_messages: c.contextMessages
                         )
       end

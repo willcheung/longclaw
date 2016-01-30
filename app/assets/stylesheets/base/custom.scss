@@ -132,7 +132,7 @@ hr.catchup {
 h2.catchup-project {
   position: relative;
   text-align: left;
-  font-weight: 500;
+  font-weight: 400;
   margin-top: 30px;
 }
 h2.catchup-project span {
@@ -192,6 +192,15 @@ a.oauth.logo {
   background-size: 150px;
   display:block;
 }
+.vertical-timeline-content.highlight {
+  border-color: #777;
+}
+ul.daily-summary {
+  list-style-type: none;
+}
+ul.daily-summary li {
+  margin: 20px 0;
+}
 
 .initials-circle {
   border-radius: 50%;
@@ -248,9 +257,6 @@ hr.message-divider {
 }
 span.best_in_place.pin {
   border:0;
-}
-.pinned-table > tbody > tr > td {
-  padding-bottom: 25px;
 }
 .tooltip {min-width:180px;}
 

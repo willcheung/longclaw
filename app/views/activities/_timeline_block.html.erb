@@ -17,7 +17,7 @@
         <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
     </span>
 
-    <div class="vertical-timeline-content" <% if not_in_current_user_inbox(a) %>style="border-color: #FFA154"<% end %>>
+    <div class="vertical-timeline-content <% if not_in_current_user_inbox(a) %>highlight<% end %>">
         <% if a.category == "Conversation" %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
@@ -26,12 +26,12 @@
             <div class="chat-discussion">
                 <% if a.email_messages.size > 1 %>
                     <div class="more-messages">
-                        <a class="show-more-<%= a.backend_id %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
+                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
                     </div>
                 <% end %>
 
                 <% a.email_messages.each do |m| %>
-                    <div class="hidden-chat-message-<%= a.backend_id %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
+                    <div class="hidden-chat-message-<%= a.id.to_s %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
                         <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
                             <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
                             <div class="message">
@@ -83,7 +83,7 @@
             </div>
         </div>
 
-        <%= render 'projects/activities_js', :a => a %>
-
     </div>
 </div>
+
+<%= render 'activities/show_more_js', :a => a %>

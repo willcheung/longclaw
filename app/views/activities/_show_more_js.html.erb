@@ -1,10 +1,10 @@
 <script>
 $(document).ready(function() {
-    $(".show-more-<%= a.backend_id %>").click(function() {
-        $(".hidden-chat-message-<%= a.backend_id %>").each(function() {
+    $(".show-more-<%= a.id.to_s %>").click(function() {
+        $(".hidden-chat-message-<%= a.id.to_s %>").each(function() {
             $(this).show();
         });
-        $(".show-more-<%= a.backend_id %>").hide();
+        $(".show-more-<%= a.id.to_s %>").hide();
     });
 
     $(".comment-link-<%= a.id %>").click(function() {
