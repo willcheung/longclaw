@@ -10,9 +10,9 @@
     <div class="col-lg-9 col-lg-offset-1">
         <div class="ibox float-e-margins catchup">
             <div class="ibox-title catchup-title">
-                <a class="pull-left text-left"><i class="fa fa-arrow-circle-left m-r-xs" style="font-size:20px"></i>Tuesday, September 20</a>
-                <a class="pull-right text-right">Wednesday, September 22<i class="fa fa-arrow-circle-right m-l-xs" style="font-size:20px"></i></a>
-                <h2 class="text-center">Daily Summary<br/>Monday, September 21</h2>
+                <a class="pull-left text-left" href="?date=<%= (@date_now - 1.day).strftime('%F') %>"><i class="fa fa-arrow-circle-left m-r-xs" style="font-size:20px"></i><%= (@date_now - 1.day).strftime('%A, %B %d') %></a>
+                <a class="pull-right text-right" href="?date=<%= (@date_now + 1.day).strftime('%F') %>"><%= (@date_now + 1.day).strftime('%A, %B %d') %><i class="fa fa-arrow-circle-right m-l-xs" style="font-size:20px"></i></a>
+                <h2 class="text-center">Daily Summary<br/><%= @date_now.strftime('%A, %B %d') %></h2>
             </div>
             <div class="ibox-content catchup">
                 <div class="m-b-lg projects">
