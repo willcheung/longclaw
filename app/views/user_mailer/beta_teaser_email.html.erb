@@ -225,7 +225,7 @@
                                 <span style="font-weight:200;font-size:12px;color:#888;float:right;margin-right:20px;"><%= DateTime.strptime(m["sentDate"].to_s, '%s').strftime('%b %e') %></span>
                                 <br>
                                 <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
-                                    <%= truncate(m["previewContent"], length: 140, separator: ' ') %> <a style="color:#337ab7" target="_blank" href="https://mail.google.com/mail/u/?authuser=<%= @user.email %>#inbox/<%= m["gmailMessageId"] %>">(more)</a>
+                                    <%= truncate(m["content"], length: 140, separator: ' ') %> <a style="color:#337ab7" target="_blank" href="https://mail.google.com/mail/u/?authuser=<%= @user.email %>#inbox/<%= m["gmailMessageId"] %>">(more)</a>
                                 </span> 
                               </div>             
                           </td> 

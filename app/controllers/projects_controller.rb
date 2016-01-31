@@ -120,7 +120,7 @@ class ProjectsController < ApplicationController
   end
 
   def get_emails_from_backend
-    max=120
+    max=100
     token_emails = []
     base_url = ENV["csback_base_url"] + "/newsfeed/search"
 
