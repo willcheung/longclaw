@@ -39,7 +39,7 @@ class Activity < ActiveRecord::Base
 
 	CATEGORY = %w(Conversation Note Status)
 
-	def self.load(data, project, user_id)
+	def self.load(data, project, user_id='00000000-0000-0000-0000-000000000000')
 		activities = []
 		val = []
 

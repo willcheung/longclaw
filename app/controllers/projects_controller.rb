@@ -29,9 +29,8 @@ class ProjectsController < ApplicationController
     @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id]).activities.maximum("activities.last_sent_date")
     @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id]).activities.where("activities.last_sent_date > (current_date - interval '7 days')").count(:activities)
 
-    data = get_emails_from_backend
+    data = ContextsmithService.load_emails_from_backend(@project, logger)
 
-    Activity.load(data, @project, current_user.id) if data
     @activities = @project.activities.includes(:comments)
     @pinned_activities = @project.activities.pinned.includes(:comments)
   end
@@ -119,43 +118,4 @@ class ProjectsController < ApplicationController
     params.slice(:status, :location, :starts_with)
   end
 
-  def get_emails_from_backend
-    max=100
-    token_emails = []
-    base_url = ENV["csback_base_url"] + "/newsfeed/search"
-
-    if ENV["RAILS_ENV"] == 'production' or ENV["RAILS_ENV"] == 'test'
-      in_domain = ""
-      @project.users.registered.each do |u|
-        u.refresh_token! if u.token_expired?
-        token_emails << { token: u.oauth_access_token, email: u.email }
-      end
-      return [] if token_emails.empty?
-    else
-      # DEBUG
-      u = User.find_by_email('indifferenzetester@gmail.com')
-      u.refresh_token! if u.token_expired?
-      token_emails << { token: u.oauth_access_token, email: u.email }
-      in_domain = "&in_domain=comprehend.com"
-    end
-
-    ex_clusters = [@project.contacts.map(&:email)]
-    
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + in_domain
-    logger.info "Calling backend service: " + final_url
-    ahoy.track("Calling backend service", service: "newsfeed/search", final_url: final_url)
-
-    begin
-      url = URI.parse(final_url)
-      req = Net::HTTP::Get.new(url.to_s)
-      res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
-      data = JSON.parse(res.body.to_s)
-    rescue => e
-      logger.error "ERROR: Something went wrong: " + e.message
-      logger.error e.backtrace.join("\n")
-      ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
-    end
-
-    return data
-  end
 end
