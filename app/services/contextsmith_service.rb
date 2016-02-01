@@ -1,8 +1,6 @@
-require 'logger'
-
 class ContextsmithService
 
-  def self.load_emails_from_backend(project, logger, after=nil, max=100)
+  def self.load_emails_from_backend(project, after=nil, max=100)
     token_emails = []
     base_url = ENV["csback_base_url"] + "/newsfeed/search"
 
@@ -25,7 +23,7 @@ class ContextsmithService
     after = after.nil? ? "" : ("&after=" + after.to_s)
     
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + in_domain + after
-    logger.info "Calling backend service: " + final_url
+    puts "Calling backend service: " + final_url
 
     begin
       url = URI.parse(final_url)
@@ -33,14 +31,14 @@ class ContextsmithService
       res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
       data = JSON.parse(res.body.to_s)
     rescue => e
-      logger.error "ERROR: Something went wrong: " + e.message
-      logger.error e.backtrace.join("\n")
+      puts "ERROR: Something went wrong: " + e.message
+      puts e.backtrace.join("\n")
     end
 
     if data.nil? or data.empty?
-      logger.error "No data returned!\n"
+      puts "No data returned!\n"
     else
-      logger.info "Found #{data[0]['conversations'].size} conversations!\n"
+      puts "Found #{data[0]['conversations'].size} conversations!\n"
       Activity.load(data, project)
     end
     
