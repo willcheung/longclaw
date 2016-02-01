@@ -29,8 +29,6 @@ class ProjectsController < ApplicationController
     @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id]).activities.maximum("activities.last_sent_date")
     @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id]).activities.where("activities.last_sent_date > (current_date - interval '7 days')").count(:activities)
 
-    data = ContextsmithService.load_emails_from_backend(@project, logger)
-
     @activities = @project.activities.includes(:comments)
     @pinned_activities = @project.activities.pinned.includes(:comments)
   end
