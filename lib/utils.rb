@@ -71,8 +71,8 @@ module Utils
 				return domain, ""
 			end
 
-			if r.registrant_contacts[0].organization.nil? or r.registrant_contacts[0].organization == ""
-				org_name = domain
+			if r.registrant_contacts[0].organization.nil? or r.registrant_contacts[0].organization == "" or r.registrant_contacts[0].organization.downcase.include?("proxy") or r.registrant_contacts[0].organization.downcase.include?("domain")
+				return domain, ""
 			else
 				org_name = r.registrant_contacts[0].organization
 			end
