@@ -27,7 +27,7 @@ ahoy.trackAll();
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-73156433-1', 'auto');
+  ga('create', 'UA-68686500-2', 'auto');
   ga('send', 'pageview');
 <% end %>
 
