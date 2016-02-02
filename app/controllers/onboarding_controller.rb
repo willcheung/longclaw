@@ -170,7 +170,7 @@ class OnboardingController < ApplicationController
        	Project.create_from_clusters(data, user.id, user.organization.id)
 
        	##########################################################################################
-       	
+
 	      begin
 	       	# Update flag indicating cluster creation is complete
 	       	if user.cluster_create_date.nil?
