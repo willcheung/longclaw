@@ -19,6 +19,10 @@
 #  updated_at     :datetime         not null
 #  is_confirmed   :boolean
 #
+# Indexes
+#
+#  index_projects_on_account_id  (account_id)
+#
 
 include Utils
 include ContextSmithParser

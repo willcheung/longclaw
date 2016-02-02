@@ -26,6 +26,7 @@
 #
 #  index_activities_on_backend_id_and_project_id  (backend_id,project_id) UNIQUE
 #  index_activities_on_email_messages             (email_messages)
+#  index_activities_on_project_id                 (project_id)
 #
 
 class Activity < ActiveRecord::Base
@@ -55,7 +56,6 @@ class Activity < ActiveRecord::Base
                    #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.to_json)}, 
                    '#{Time.now}', '#{Time.now}')"
-        
         
         
         # Create activities object

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160119223140) do
+ActiveRecord::Schema.define(version: 20160202010647) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -57,6 +57,7 @@ ActiveRecord::Schema.define(version: 20160119223140) do
 
   add_index "activities", ["backend_id", "project_id"], name: "index_activities_on_backend_id_and_project_id", unique: true, using: :btree
   add_index "activities", ["email_messages"], name: "index_activities_on_email_messages", using: :gin
+  add_index "activities", ["project_id"], name: "index_activities_on_project_id", using: :btree
 
   create_table "ahoy_events", id: :uuid, default: nil, force: :cascade do |t|
     t.uuid     "visit_id"
@@ -118,16 +119,18 @@ ActiveRecord::Schema.define(version: 20160119223140) do
     t.uuid     "account_id"
     t.string   "first_name",                 default: "", null: false
     t.string   "last_name",                  default: "", null: false
-    t.string   "email",           limit: 64, default: "", null: false
+    t.string   "email",                      default: "", null: false
     t.string   "phone",           limit: 32, default: "", null: false
     t.string   "title",                      default: "", null: false
     t.datetime "created_at",                              null: false
     t.datetime "updated_at",                              null: false
-    t.string   "alt_email",       limit: 64
+    t.string   "alt_email"
     t.string   "mobile",          limit: 32
     t.text     "background_info"
     t.string   "department"
   end
+
+  add_index "contacts", ["account_id"], name: "index_contacts_on_account_id", using: :btree
 
   create_table "harvest_csv_import", id: false, force: :cascade do |t|
     t.date    "Date"
@@ -165,6 +168,10 @@ ActiveRecord::Schema.define(version: 20160119223140) do
     t.uuid     "user_id"
   end
 
+  add_index "project_members", ["contact_id"], name: "index_project_members_on_contact_id", using: :btree
+  add_index "project_members", ["project_id"], name: "index_project_members_on_project_id", using: :btree
+  add_index "project_members", ["user_id"], name: "index_project_members_on_user_id", using: :btree
+
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",           default: "",   null: false
     t.uuid     "account_id"
@@ -182,6 +189,8 @@ ActiveRecord::Schema.define(version: 20160119223140) do
     t.datetime "updated_at",                    null: false
     t.boolean  "is_confirmed"
   end
+
+  add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "first_name",             default: "", null: false

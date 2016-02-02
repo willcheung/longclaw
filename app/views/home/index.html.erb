@@ -24,26 +24,30 @@
             </div>
             <div class="ibox-content catchup">
                 <div class="m-b-lg projects">
-                    <h1><%= pluralize(@projects_with_activities_today.size, 'project') %> updated</h1>
-                    <ul class="daily-summary">
-                        <% @projects_with_activities_today.each do |p| %>
-                        <li class="row">
-                            <h3><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small class="m-l-sm"><a class="text-muted"><%= p[1][0].account.name %></a></small></h3>
-                             <div class="team-members" >
-                                <div class="col-sm-3">
-                                <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed:
-                                </div>
-                                <div class="col-sm-9">
-                                <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
-                                    <% if !a.from[0].nil? %>
-                                        <div style="padding-right:3px;float:left;"><%= get_profile_pic(a.from[0].personal, a.from[0].address, "message-avatar") %></div>
+                    <% if @projects_with_activities_today.size == 0 %>
+                        <h1 class="text-center">No updates</h1>
+                    <% else %>
+                        <h1><%= pluralize(@projects_with_activities_today.size, 'project') %> updated</h1>
+                        <ul class="daily-summary">
+                            <% @projects_with_activities_today.each do |p| %>
+                            <li class="row">
+                                <h3><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small class="m-l-sm"><a class="text-muted"><%= p[1][0].account.name %></a></small></h3>
+                                 <div class="team-members" >
+                                    <div class="col-sm-3">
+                                    <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed:
+                                    </div>
+                                    <div class="col-sm-9">
+                                    <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
+                                        <% if !a.from[0].nil? %>
+                                            <div style="padding-right:3px;float:left;"><%= get_profile_pic(a.from[0].personal, a.from[0].address, "message-avatar") %></div>
+                                        <% end %>
                                     <% end %>
-                                <% end %>
+                                    </div>
                                 </div>
-                            </div>
-                        </li>
-                        <% end %>
-                    </ul>
+                            </li>
+                            <% end %>
+                        </ul>
+                    <% end %>
                 </div>
 
 

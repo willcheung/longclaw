@@ -155,23 +155,23 @@ class OnboardingController < ApplicationController
 
 		respond_to do |format|
       
-  		if user and data
-        begin
-          uniq_external_members, uniq_internal_members = get_all_members(data)
+  		if user and data        
+        uniq_external_members, uniq_internal_members = get_all_members(data)
 
-          ############## Needs to be called in order -> Account (Contacts), User, Project ##########
+        ############## Needs to be called in order -> Account (Contacts), User, Project ##########
 
-	        # Create Accounts and Contacts
-	       	Account.create_from_clusters(uniq_external_members, user.id, user.organization.id)
+        # Create Accounts and Contacts
+       	Account.create_from_clusters(uniq_external_members, user.id, user.organization.id)
 
-	       	# Create internal users
-	       	User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
+       	# Create internal users
+       	User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
 
-	       	# Create Projects, project members, and activities
-	       	Project.create_from_clusters(data, user.id, user.organization.id)
+       	# Create Projects, project members, and activities
+       	Project.create_from_clusters(data, user.id, user.organization.id)
 
-	       	##########################################################################################
-
+       	##########################################################################################
+       	
+	      begin
 	       	# Update flag indicating cluster creation is complete
 	       	if user.cluster_create_date.nil?
 	       		user.update_attributes(cluster_create_date: Time.now, cluster_update_date: Time.now)

@@ -9,6 +9,12 @@
 #  updated_at :datetime         not null
 #  user_id    :uuid
 #
+# Indexes
+#
+#  index_project_members_on_contact_id  (contact_id)
+#  index_project_members_on_project_id  (project_id)
+#  index_project_members_on_user_id     (user_id)
+#
 
 class ProjectMember < ActiveRecord::Base
 	belongs_to :project
