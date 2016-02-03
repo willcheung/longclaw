@@ -12,8 +12,7 @@ class UserMailer < ApplicationMailer
 
   def daily_summary_email(user)
     @user = user
-    #date_filter = Time.now.strftime('%F')
-    date_filter = '2014-11-18'
+    date_filter = Time.now.strftime('%F')
 
     activities_today = Project.visible_to(user.organization_id, user.id).eager_load([:activities, :account]).where("activities.last_sent_date::date = ?", date_filter).group("activities.id, accounts.id")
     @projects_with_activities_today = activities_today.group_by{|e| e.activities}

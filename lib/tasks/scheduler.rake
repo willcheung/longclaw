@@ -10,6 +10,7 @@ namespace :projects do
 	    	acc.projects.each do |proj|
 	    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
 	    		ContextsmithService.load_emails_from_backend(proj)
+	    		sleep(1)
 	    	end
 	    end
     end
@@ -26,6 +27,7 @@ namespace :projects do
 	    	acc.projects.each do |proj|
 	    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
 	    		ContextsmithService.load_emails_from_backend(proj, after)
+	    		sleep(0.5)
 	    	end
 	    end
     end
@@ -39,6 +41,7 @@ namespace :projects do
 			org.users.registered.each do |usr|
 				puts "Emailing #{usr.email}..."
 				UserMailer.daily_summary_email(usr).deliver_later
+				sleep(0.5)
 			end
 		end
 	end
