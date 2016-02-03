@@ -17,7 +17,7 @@
         <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
     </span>
 
-    <div class="vertical-timeline-content <% if not_in_current_user_inbox(a) %>highlight<% end %>">
+    <div class="vertical-timeline-content <% if not_in_current_user_inbox(a) %>highlight<% end %>" <% if a.category == "Note" %> style="background-color: #fff7db" <% end %>>
         <% if a.category == "Conversation" %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>

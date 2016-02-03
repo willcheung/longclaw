@@ -23,8 +23,8 @@ include Utils
 include ContextSmithParser
 
 class Account < ActiveRecord::Base	
-	has_many 	:contacts
-	has_many	:projects, -> { where is_confirmed: true }
+	has_many	:projects, -> { where is_confirmed: true }, dependent: :destroy
+  has_many  :contacts, dependent: :destroy
   has_many  :activities, :through => :projects
 	belongs_to	:organization
 	belongs_to	:user, foreign_key: "owner_id"

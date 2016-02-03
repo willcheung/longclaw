@@ -1,0 +1,258 @@
+
+<table class="row callout" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px; margin-bottom: 20px;">
+  <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
+     <td class="wrapper last" align="left" valign="top">
+        <table class="twelve columns">
+           <tr align="left">
+              <td class="panel" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; line-height: 19px; font-size: 14px; background: #ECF8FF; margin: 0; padding: 10px; border: 1px solid #b9e5ff;" align="left" bgcolor="#ECF8FF" valign="top">
+                 <p style="color: #222222;font-weight: normal; text-align: left; line-height: 19px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="left">
+                  We'd love to hear your feedback!  Please email us at <a style="color: #2ba6cb; text-decoration: none;" href="mailto:support@contextsmith.com?subject=Feedback!">support@contextsmith.com</a> or follow us on <a style="color: #2ba6cb; text-decoration: none;" href="https://twitter.com/ContextSmith" target="_blank">Twitter</a> for updates.
+                  If you love what you see, tell a colleague or friend about us!
+                </p>
+              </td>
+              <td class="expander"></td>
+           </tr>
+        </table>
+     </td>
+  </tr>
+</table>
+
+  <!-- Header -->
+<table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
+  <tr>
+  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
+    <th class="center" style="width:2%;padding:0 10px;white-space:nowrap;vertical-align:middle">
+      <center>
+        <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">
+          Daily Summary<br>
+          <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= Time.now.strftime('%A, %B %d') %></span>
+        </h1>
+      <center>
+    </th>
+    <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
+  </tr>
+</table>
+<div style="width:100%;padding-bottom:20px"></div>
+
+
+<!-- Summary -->
+<div style="margin-bottom:0;margin-bottom:30px">
+<% if @projects_with_activities_today.size == 0 %>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">No updates today</h2>
+<% else %>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333"><%= pluralize(@projects_with_activities_today.size, 'project') %> updated:</h2>
+
+  <ul style="margin:0 0 10px;list-style:none;padding:0">
+    <% @projects_with_activities_today.each do |p| %>
+
+       <li style="margin:10px 0 0 20px;padding:0;list-style-type:none;clear:both;">
+         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;"><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small style="margin-left:10px;"><span style="color: #888888;"><%= p[1][0].account.name %></span></small></h3>
+
+         <!-- metrics -->
+          <table class="row">
+             <tbody>
+                <tr>
+                   <td class="wrapper" style="margin-top:-10px">
+                      <table class="two columns" style="width:160px">
+                         <tbody>
+                            <tr>
+                              <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
+                                <span style="font-size:14px;margin-top:-20px;">
+                                  <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed<br/>
+                                  <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
+                                      <% if !a.from[0].nil? %>
+                                          <div style="float:left;"><%= rounded_initials_for_email(a.from[0].personal, a.from[0].address) %></div>
+                                      <% end %>
+                                  <% end %>
+                                </span>
+                              </td>
+                            </tr>
+                         </tbody>
+                      </table>
+                   </td>
+                   <td class="wrapper" style="padding-top:20px;">
+                      <table class="two columns" style="width:150px">
+                         <tbody>
+                            <tr>
+                              <td style="color:#e58646;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
+                                <%= p[0].size %><br>
+                                <span style="font-size:14px">conversations</span>
+                              </td>
+                            </tr>
+                         </tbody>
+                      </table>
+                   </td>
+                   <td class="expander"></td>
+                   <td class="wrapper">
+                      <table class="three columns">
+                         <tbody>
+                            <tr>
+                              <td style="color:#A1C436;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
+                                
+                              </td>
+                            </tr>
+                         </tbody>
+                      </table>
+                   </td>
+                   
+                </tr>
+             </tbody>
+          </table>
+
+       </li>
+       
+    <% end %>
+   </ul>
+<% end %>
+</div>
+
+<!-- Project Details -->
+<% unless @projects_with_activities_today.size == 0 %>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">Project Details:</h2>
+<% @projects_with_activities_today.each do |p| %>
+
+  <div style="padding:0;margin:0;">
+    
+    <!-- Project Header -->
+    <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
+       <tbody>
+          <tr>
+             <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
+                <h2 style="line-height:24px;font-weight:bold;display:inline;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= p[1][0].name %> Updates</span></h2>
+             </th>
+             <td style="text-align:left;font-size:15px;line-height:19px;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
+          </tr>
+       </tbody>
+    </table>
+
+    <div style="margin-bottom:15px;margin-top:5px;padding:0">
+      
+    </div>
+
+    <!-- Conversations -->
+    <% p[0].each do |c| %>
+      
+      <div style="font-size:14px;margin-left:20px;margin-bottom:20px;padding:0 0 6px 0;">
+          <% if c.category == "Conversation" %>
+              <h4 style="font-size:14px;line-height:19px;font-weight:bold;margin:0 0 5px!important;padding:3px 0!important;border-bottom:solid 1px #bbb">
+               <%= c.title %>
+              </h4>
+              <div style="padding:0;margin:0 0 10px 0">
+              <% c.email_messages.each_with_index do |m,i| %>
+                 <div style="margin:0">
+                    <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
+                       <tbody>
+                          <tr style="padding:3px 0 3px 0;">
+                            <th style="padding:2px 5px 2px 0;vertical-align:top;width:8%;font-weight:200;text-align:left;font-size:12px;color:#888">
+                              <% if is_internal_user?(m.from[0].address) %>
+                                  <%= rounded_initials_for_email(m.from[0].personal, m.from[0].address) %>
+                              <% else %>
+                                  &nbsp;
+                              <% end %>
+                            </th>
+
+                            <% if is_internal_user?(m.from[0].address) %>
+                              <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;color:#333;margin:0;">
+                                 <div style="min-height:0;width:0;border-top:8px solid transparent;border-right:8px solid #f4f4f4;border-left:0;border-bottom:8px solid transparent;margin:10px 0"> </div>
+                              </td>
+                            <% end %>
+
+                            <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;">
+                                <div style="<%= is_internal_user?(m.from[0].address) ? "background:#f4f4f4;" : "background:#e2eef7" %>;border-radius:8px;padding:8px 4px 10px 8px;">
+                                  <span style="font-weight:normal;font-size:14px;line-height:15px;color:#444"><b><%= m.from[0].personal %> </b> to <%= get_conversation_member_names([], m.to, m.cc, "All") %></span>
+                                  <span style="font-weight:200;font-size:12px;color:#888;float:right;margin-right:20px;"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
+                                  <br>
+                                  <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
+                                      <% if c.email_messages.size == i+1 %>
+                                        <%= simple_format(m.content) %>
+                                      <% else %>
+                                        <%= truncate(m.content, length: 200, separator: ' ') %>
+                                      <% end %>
+                                  </span> 
+                                </div>             
+                            </td> 
+
+                            <% unless is_internal_user?(m.from[0].address) %>
+                              <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;color:#333;margin:0;">
+                                 <div style="min-height:0;width:0;border-top:8px solid transparent;border-left:8px solid #e2eef7;border-right:0;border-bottom:8px solid transparent;margin:10px 0"> </div>
+                              </td>
+                             <% end %> 
+                             
+                            <th style="padding:2px 5px 2px 0;vertical-align:top;width:8%;font-weight:200;font-size:12px;color:#888;">
+                              <% if is_internal_user?(m.from[0].address) %>
+                                  &nbsp;
+                              <% else %>
+                                  <%= rounded_initials_for_email(m["from"][0].personal, m.from[0].address) %>
+                              <% end %>
+                            </th>
+                          </tr>
+                        </tbody>
+                    </table>
+                  </div>
+                <% end %>
+              </div>
+            
+            <% elsif c.category == "Note" %>
+                <h4 style="font-size:14px;line-height:19px;font-weight:bold;margin:0 0 5px!important;padding:3px 0!important;border-bottom:solid 1px #bbb">
+                  Note
+                </h4>
+                <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
+                   <tbody>
+                      <tr style="padding:3px 0 3px 0;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;">
+                            <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
+                              <%= simple_format(c.note) %>
+                            </span>          
+                        </td> 
+                      </tr>
+                    </tbody>
+                </table>
+            <% end %>
+      </div>
+
+    <% end %>
+
+  </div>
+
+  <table class="row" style="margin-top:-40px;margin-bottom:25px;">
+    <tbody>
+      <tr>
+         <td class="wrapper">
+            <table class="four columns tiny-button">
+               <tbody>
+                  <tr>
+                     <td style="padding: 6px; margin: 15px;">
+                        <a href="<%= project_path(p[1]) %>">Go to project</a>
+                     </td>
+                     <td class="expander"></td>
+                  </tr>
+               </tbody>
+            </table>
+         </td>
+         <td class="wrapper">
+            <table class="four columns">
+               <tbody>
+                  <tr>
+                     <td></td>
+                     <td class="expander"></td>
+                  </tr>
+               </tbody>
+            </table>
+         </td>
+         <td class="wrapper last">
+            <table class="four columns">
+               <tbody>
+                  <tr>
+                     <td></td>
+                     <td class="expander"></td>
+                  </tr>
+               </tbody>
+            </table>
+         </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <% end %>
+
+<% end %>

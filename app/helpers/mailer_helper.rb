@@ -1,15 +1,13 @@
 module MailerHelper
-	
-    def rounded_initials_single(name)
-    	if name["personal"].nil?
-          member = name["address"]
-      else
-          member = name["personal"]
-      end
+	include ApplicationHelper
 
-    	css_style = "border-radius:50%;width:24px;height:24px;margin:0 3px;padding:5px;border:1px solid #666;color:#fff;text-align:center;font-size:14px;float:left;line-height:25px;cursor:default;"
-    	css_style += 'background:' + User::PROFILE_COLOR[(member.length)%9]
-    	
+  def rounded_initials_for_email(name, email)
+  	member = name || email
+    css_style = "border-radius:50%;width:24px;height:24px;margin:0 2px;padding:5px;border:1px solid #666;color:#fff;text-align:center;font-size:14px;float:left;line-height:25px;cursor:default;"
+    css_style += 'background:' + User::PROFILE_COLOR[(member.length)%9]
+
+    u = User.find_by_email(email)
+    if u.nil? or u.image_url.nil? or u.image_url.empty?
     	s = '<div title="' + member + '" style="' + css_style + '">'
 
     	if member.include?(', ') # first and last name reverse because of comma
@@ -21,42 +19,17 @@ module MailerHelper
       s += "</div>"
 
       return s.html_safe
+    else
+      return ('<div><img alt="image" style="border-radius:50%;width:32px;height:32px;" src="' + u.image_url + '"/></div>').html_safe
     end
+  end
 
-    def member_of_group?(group, member)
-    	group.include?(member)
+  def is_internal_user?(email)
+    u = User.find_by_email(email)
+    if u.nil?
+      return false
+    else
+      return true
     end
-
-    def activities_by_projects(data)
-        projects = Hash.new
-        total_messages = 0
-        project_messages = 0
-        total_conversations = 0
-
-        data.each do |p|
-          name = get_account_name(p["topExternalMemberName"], p["topExternalMemberDomain"])
-          total_conversations += p["conversations"].size
-          project_messages = 0
-          p["conversations"].each do |c|
-            total_messages += c["contextMessages"].size
-            project_messages += c["contextMessages"].size
-          end
-
-          projects["#{name}"] = project_messages
-        end
-
-        projects.each do |project,value|
-          projects["#{project}"] = '%.1f' % ((value / total_messages.to_f) * 100.0)
-        end
-
-        return projects.sort_by { |name, value| value.to_i }
-    end
-
-    def get_account_name(name, domain)
-      if name.nil? or name.downcase.include?("domain") or name.downcase.include?("registrar") or name.downcase.include?("registrant")
-        domain.gsub('.com','').capitalize
-      else 
-        name
-      end
-    end
+  end
 end

@@ -3,8 +3,7 @@ namespace :projects do
 	
 	desc 'Retrieve latest 100 emails for all projects in all organization'
 	task load_activities: :environment do
-    start_time = Time.now
-    puts "\n\n=====Task started at #{start_time}====="
+    puts "\n\n=====Task (load_activities) started at #{Time.now}====="
 
     Organization.all.each do |org|
     	org.accounts.each do |acc| 
@@ -18,8 +17,7 @@ namespace :projects do
 
 	desc 'Retrieve latest emails since yesterday for all projects in all organization'
 	task load_activities_since_yesterday: :environment do
-    start_time = Time.now
-    puts "\n\n=====Task started at #{start_time}====="
+    puts "\n\n=====Task (load_activites_since_yesterday) started at #{Time.now}====="
 
     after = Time.now.to_i - 86400
 
@@ -31,5 +29,17 @@ namespace :projects do
 	    	end
 	    end
     end
+	end
+
+	desc 'Email daily project updates'
+	task email_daily_summary: :environment do
+		puts "\n\n=====Task (email_daily_summary) started at #{Time.now}====="
+
+		Organization.all.each do |org|
+			org.users.registered.each do |usr|
+				puts "Emailing #{usr.email}..."
+				UserMailer.daily_summary_email(usr).deliver_later
+			end
+		end
 	end
 end
