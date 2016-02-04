@@ -46,7 +46,7 @@
     <% @projects_with_activities_today.each do |p| %>
 
        <li style="margin:10px 0 0 20px;padding:0;list-style-type:none;clear:both;">
-         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;"><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small style="margin-left:10px;"><span style="color: #888888;"><%= p[1][0].account.name %></span></small></h3>
+         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;"><a href="<%= project_url(p[1]) %>"><%= p[1][0].name %></a> <small style="margin-left:10px;"><span style="color: #888888;"><%= p[1][0].account.name %></span></small></h3>
 
          <!-- metrics -->
           <table class="row">
@@ -222,7 +222,7 @@
                <tbody>
                   <tr>
                      <td style="padding: 6px; margin: 15px;">
-                        <a href="<%= project_path(p[1]) %>">Go to project</a>
+                        <a href="<%= project_url(p[1]) %>">Go to project</a>
                      </td>
                      <td class="expander"></td>
                   </tr>
