@@ -38,7 +38,7 @@ namespace :projects do
 		puts "\n\n=====Task (email_daily_summary) started at #{Time.now}====="
 
 		Organization.all.each do |org|
-			org.users.registered.each do |usr|
+			org.users.registered.onboarded.each do |usr|
 				puts "Emailing #{usr.email}..."
 				UserMailer.daily_summary_email(usr).deliver_later
 				sleep(0.5)
