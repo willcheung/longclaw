@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160202010647) do
+ActiveRecord::Schema.define(version: 20160203202721) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -42,10 +42,10 @@ ActiveRecord::Schema.define(version: 20160202010647) do
     t.string   "backend_id"
     t.datetime "last_sent_date"
     t.string   "last_sent_date_epoch"
-    t.jsonb    "from",                 default: {},    null: false
-    t.jsonb    "to",                   default: {},    null: false
-    t.jsonb    "cc",                   default: {},    null: false
-    t.jsonb    "email_messages",       default: {},    null: false
+    t.jsonb    "from",                 default: [],    null: false
+    t.jsonb    "to",                   default: [],    null: false
+    t.jsonb    "cc",                   default: [],    null: false
+    t.jsonb    "email_messages",       default: [],    null: false
     t.uuid     "project_id",                           null: false
     t.uuid     "posted_by",                            null: false
     t.datetime "created_at",                           null: false

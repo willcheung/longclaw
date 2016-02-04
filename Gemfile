@@ -18,6 +18,7 @@ gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankan
 gem 'puma'                        # Web server
 gem 'whois'
 gem 'acts_as_commentable'
+gem 'pg_search'
 #gem 'attr_encrypted'             # Encrypting private data!
 
 # Gems used only for assets and not required

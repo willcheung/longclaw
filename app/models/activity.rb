@@ -10,10 +10,10 @@
 #  backend_id           :string
 #  last_sent_date       :datetime
 #  last_sent_date_epoch :string
-#  from                 :jsonb            default({}), not null
-#  to                   :jsonb            default({}), not null
-#  cc                   :jsonb            default({}), not null
-#  email_messages       :jsonb            default({}), not null
+#  from                 :jsonb            default([]), not null
+#  to                   :jsonb            default([]), not null
+#  cc                   :jsonb            default([]), not null
+#  email_messages       :jsonb            default([]), not null
 #  project_id           :uuid             not null
 #  posted_by            :uuid             not null
 #  created_at           :datetime         not null
@@ -30,6 +30,8 @@
 #
 
 class Activity < ActiveRecord::Base
+  include PgSearch
+
 	belongs_to :project
   has_many :comments, dependent: :destroy
 
@@ -37,6 +39,12 @@ class Activity < ActiveRecord::Base
   scope :last_active_on, -> { maximum "last_sent_date" }
 
   acts_as_commentable
+
+  pg_search_scope :search_by_message, 
+                  :against => [:note, :title, :email_messages],
+                  :using => {
+                    :tsearch => {:dictionary => "english"}
+                  }
 
 	CATEGORY = %w(Conversation Note Status)
 
@@ -97,7 +105,7 @@ class Activity < ActiveRecord::Base
 		val = []
 
 		source_project.activities.each do |c|
-	    val << "('#{c.posted_by}', '#{c.project_id}', '#{c.category}', '#{c.title}', #{c.is_public}, '#{c.backend_id}', '#{c.last_sent_date}', '#{c.last_sent_date_epoch}', '#{c.from.to_json}', '#{c.to.to_json}', '#{c.cc.to_json}', '#{c.email_messages.to_json}', '#{c.created_at}', '#{c.updated_at}')"
+	    val << "('#{c.posted_by}', '#{c.project_id}', '#{c.category}', '#{(c.title).gsub("'","''")}', #{c.is_public}, '#{c.backend_id}', '#{c.last_sent_date}', '#{c.last_sent_date_epoch}', '#{c.from.to_json}', '#{c.to.to_json}', '#{c.cc.to_json}', '#{c.email_messages.to_json}', '#{c.created_at}', '#{c.updated_at}')"
 	  end
 	    
 	  insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
