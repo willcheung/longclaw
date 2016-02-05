@@ -49,7 +49,7 @@
                 <% end %>
 
                 <div class="col-4-lg action-links">
-                    <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                      &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
                 </div>
             </div> <!-- chat discussion -->
@@ -59,7 +59,7 @@
                 <%= simple_format(a.note) %>
 
                 <div class="col-4-lg action-links">
-                    <%= best_in_place a, :is_pinned, :as => 'checkbox', collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                      &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
                 </div>
             </div>

@@ -28,7 +28,7 @@ class ActivitiesController < ApplicationController
 
       if @activity.update_attributes(params)
         #format.html { redirect_to @activity, notice: 'Activity was successfully updated.' }
-        format.json { head :no_content }
+        format.json { respond_with_bip(@activity)  }
         format.js
       else
         #format.html { render action: 'edit' }

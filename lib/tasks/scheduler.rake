@@ -1,7 +1,7 @@
 desc "Heroku scheduler tasks for periodically retrieving latest emails"
 namespace :projects do
 	
-	desc 'Retrieve latest 100 emails for all projects in all organization'
+	desc 'Retrieve latest 300 emails for all projects in all organization'
 	task load_activities: :environment do
     puts "\n\n=====Task (load_activities) started at #{Time.now}====="
 
@@ -9,7 +9,7 @@ namespace :projects do
     	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
 	    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_emails_from_backend(proj)
+	    		ContextsmithService.load_emails_from_backend(proj, nil, 300)
 	    		sleep(1)
 	    	end
 	    end

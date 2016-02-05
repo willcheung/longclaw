@@ -72,7 +72,7 @@ class ProjectsController < ApplicationController
       if @project.update(project_params)
         format.html { redirect_to @project, notice: 'Project was successfully updated.' }
         format.js { render action: 'show', status: :created, location: @project }
-        format.json { head :no_content }
+        format.json { respond_with_bip(@project) }
       else
         format.html { render action: 'edit' }
         format.js { render json: @project.errors, status: :unprocessable_entity }
