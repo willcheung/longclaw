@@ -25,7 +25,7 @@
             <div class="ibox-content catchup">
                 <div class="m-b-lg projects">
                     <% if @projects_with_activities_today.size == 0 %>
-                        <h1 class="text-center">No updates</h1>
+                        <h1 class="text-center">No project updates</h1>
                     <% else %>
                         <h1><%= pluralize(@projects_with_activities_today.size, 'project') %> updated</h1>
                         <ul class="daily-summary">
@@ -56,7 +56,13 @@
                     <div style="margin-left: 40px;">
                     <% @pinned_activities_today.each do |p| %>
                         <h4><a href="<%= project_path(p) %>"><%= p.name %></a></h4>
-                        <%= render 'projects/pinned', :pinned_activities => p.activities %>
+                        <table class="table pinned-table table-condensed table-hover">
+                            <tbody>
+                                <% p.activities.each do |a| %>
+                                    <%= render 'activities/pinned', a: a %>
+                                <% end %>
+                            </tbody>
+                        </table>
                     <% end %>
                     </div>
                 <% end %>

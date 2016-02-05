@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_action :set_project, only: [:show, :edit, :update, :destroy]
+  before_action :set_project, only: [:show, :edit, :update, :destroy, :render_pinned_tab]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
 
   # GET /projects
@@ -31,6 +31,11 @@ class ProjectsController < ApplicationController
 
     @activities = @project.activities.includes(:comments)
     @pinned_activities = @project.activities.pinned.includes(:comments)
+  end
+
+  def render_pinned_tab
+    @pinned_activities = @project.activities.pinned.includes(:comments)
+    respond_to :js
   end
 
   # GET /projects/new

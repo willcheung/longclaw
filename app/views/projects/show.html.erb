@@ -85,17 +85,7 @@
                                 </div>
 
                                 <div class="tab-pane" id="pinned">
-                                    <% if @pinned_activities.empty? %>
-                                        <h4 class="m-t-lg text-center">This is where your important emails and notes will show up. <br/><br/> Click on the <span class="label label-primary">Pin it</span> button at the bottom of each conversation to pin something here.</h4>
-                                    <% else %>
-                                        <table class="table pinned-table table-condensed table-hover">
-                                            <tbody>
-                                                <% @pinned_activities.each do |a| %>
-                                                    <%= render 'pinned', a: a %>
-                                                <% end %>
-                                            </tbody>
-                                        </table>
-                                    <% end %>
+                                    <%= render 'pinned_tab', pinned_activities: @pinned_activities %>
                                 </div>
                             </div>
                         </div>
@@ -203,13 +193,14 @@
     $('.best_in_place.pin').on("ajax:success", function(){ 
         if ($(this).data('activity').is_pinned) {
             // remove from pinned tab
-            $(this).data('activity').is_pinned = false;
-            var id = $(this).data('activity').id
+            //$(this).data('activity').is_pinned = false;
+            var id = $(this).data('activity').id;
             $("tr#pin-"+id).fadeOut(400, function() {$("tr#pin-"+id).remove();});   
         }
         else {
             // add to pinned tab
             $(this).data('activity').is_pinned = true;
+            $.ajax({url:'/projects/<%=@project.id%>/render_pinned_tab'});
         }
     });
 
