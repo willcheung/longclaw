@@ -1,3 +1,6 @@
+require "erb"
+include ERB::Util
+
 class ContextsmithService
 
   def self.load_emails_from_backend(project, after=nil, max=100)
@@ -22,7 +25,7 @@ class ContextsmithService
     ex_clusters = [project.contacts.map(&:email)]
     after = after.nil? ? "" : ("&after=" + after.to_s)
     
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + ex_clusters.to_s + in_domain + after
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode(ex_clusters.to_s) + in_domain + after
     puts "Calling backend service: " + final_url
 
     begin
