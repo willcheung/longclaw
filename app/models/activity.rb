@@ -32,7 +32,7 @@
 class Activity < ActiveRecord::Base
   include PgSearch
 
-	belongs_to :project
+  belongs_to :project
   has_many :comments, dependent: :destroy
 
   scope :pinned, -> { where is_pinned: true }
@@ -40,109 +40,121 @@ class Activity < ActiveRecord::Base
 
   acts_as_commentable
 
-  pg_search_scope :search_by_message, 
+  pg_search_scope :search_by_message,
                   :against => [:note, :title, :email_messages],
                   :using => {
-                    :tsearch => {:dictionary => "english"}
+                      :tsearch => {:dictionary => "english"}
                   }
 
-	CATEGORY = %w(Conversation Note Status)
+  CATEGORY = %w(Conversation Note Status)
 
-	def self.load(data, project, user_id='00000000-0000-0000-0000-000000000000')
-		activities = []
-		val = []
+  def self.load(data, project, user_id='00000000-0000-0000-0000-000000000000')
+    activities = []
+    val = []
 
-		data_hash = data.map { |hash| Hashie::Mash.new(hash) }
-		
+    data_hash = data.map { |hash| Hashie::Mash.new(hash) }
+
     data_hash.each do |d|
       d.conversations.each do |c|
 
-        
-        val << "('#{user_id}', '#{project.id}', 'Conversation', '#{(c.subject).gsub("'","''")}', true, '#{c.conversationId}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}', 
+
+        val << "('#{user_id}', '#{project.id}', 'Conversation', '#{(c.subject).gsub("'","''")}', true, '#{c.conversationId}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}',
                    #{Activity.sanitize(c.contextMessages.last.from.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.last.to.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.to_json)}, 
                    '#{Time.now}', '#{Time.now}')"
-        
-        
+
+
         # Create activities object
         activities << Activity.new(
-                        posted_by: user_id,
-                        project_id: project.id,
-                        category: "Conversation",
-                        title: c.subject,
-                        note: '',
-                        is_public: true,
-                        backend_id: c.id,
-                        last_sent_date: Time.zone.at(c.lastSentDate),
-                        last_sent_date_epoch: c.lastSentDate,
-                        from: c.contextMessages.last.from, # take from last message
-                        to: c.contextMessages.last.to,     # take from last message
-                        cc: c.contextMessages.last.cc,     # take from last message
-                        email_messages: c.contextMessages
-                        )
+            posted_by: user_id,
+            project_id: project.id,
+            category: "Conversation",
+            title: c.subject,
+            note: '',
+            is_public: true,
+            backend_id: c.id,
+            last_sent_date: Time.zone.at(c.lastSentDate),
+            last_sent_date_epoch: c.lastSentDate,
+            from: c.contextMessages.last.from, # take from last message
+            to: c.contextMessages.last.to,     # take from last message
+            cc: c.contextMessages.last.cc,     # take from last message
+            email_messages: c.contextMessages
+        )
       end
     end
-    
+
     insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
-    on_conflict = "ON CONFLICT (backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages"
+    on_conflict = 'ON CONFLICT (backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages'
     values = val.join(', ')
 
     if !val.empty?
       Activity.transaction do
-      	# Insert activities into database
+        # Insert activities into database
         Activity.connection.execute([insert,values,on_conflict].join(' '))
       end
     end
 
     return activities
-	end
+  end
 
-	def self.copy(source_project, target_project)
-		return if source_project.activities.empty?
+  def self.copy(source_project, target_project)
+    return if source_project.activities.empty?
 
-		val = []
+    val = []
 
-		source_project.activities.each do |c|
-	    val << "('#{c.posted_by}', '#{c.project_id}', '#{c.category}', '#{(c.title).gsub("'","''")}', #{c.is_public}, '#{c.backend_id}', '#{c.last_sent_date}', '#{c.last_sent_date_epoch}', '#{c.from.to_json}', '#{c.to.to_json}', '#{c.cc.to_json}', '#{c.email_messages.to_json}', '#{c.created_at}', '#{c.updated_at}')"
-	  end
-	    
-	  insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
-		on_conflict = "ON CONFLICT (backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages"  
-	  values = val.join(', ')
+    source_project.activities.each do |c|
+      val << "('#{c.posted_by}', '#{c.project_id}', '#{c.category}', '#{(c.title).gsub("'","''")}', #{c.is_public}, '#{c.backend_id}', '#{c.last_sent_date}', '#{c.last_sent_date_epoch}', '#{c.from.to_json}', '#{c.to.to_json}', '#{c.cc.to_json}', '#{c.email_messages.to_json}', '#{c.created_at}', '#{c.updated_at}')"
+    end
 
-	  Activity.transaction do
-    	# Insert activities into database
+    insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
+    on_conflict = "ON CONFLICT (backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages"
+    values = val.join(', ')
+
+    Activity.transaction do
+      # Insert activities into database
       Activity.connection.execute([insert,values,on_conflict].join(' '))
     end
-	end
+  end
 
-	def email_messages
-		messages = JSON.parse(read_attribute(:email_messages).to_json).map { |hash| Hashie::Mash.new(hash) }
-	end
+  def email_messages
+    messages = JSON.parse(read_attribute(:email_messages).to_json).map { |hash| Hashie::Mash.new(hash) }
+  end
 
-	def from
+  def from
     if read_attribute(:from).nil?
       nil
     else
-		  from = JSON.parse(read_attribute(:from).to_json).map { |hash| Hashie::Mash.new(hash) }
+      from = JSON.parse(read_attribute(:from).to_json).map { |hash| Hashie::Mash.new(hash) }
     end
-	end
+  end
 
-	def to
+  def to
     if read_attribute(:to).nil?
       nil
     else
-		  to = JSON.parse(read_attribute(:to).to_json).map { |hash| Hashie::Mash.new(hash) }
+      to = JSON.parse(read_attribute(:to).to_json).map { |hash| Hashie::Mash.new(hash) }
     end
-	end
+  end
 
-	def cc
-		if read_attribute(:cc).nil?
-			nil
-		else
-			cc = JSON.parse(read_attribute(:cc).to_json).map { |hash| Hashie::Mash.new(hash) }
-		end
-	end
+  def cc
+    if read_attribute(:cc).nil?
+      nil
+    else
+      cc = JSON.parse(read_attribute(:cc).to_json).map { |hash| Hashie::Mash.new(hash) }
+    end
+  end
+
+  def email_addresses
+    emails = Set.new
+    from.each { |entry| emails.add(entry.address) }
+    to.each { |entry| emails.add(entry.address) }
+    cc.each { |entry| emails.add(entry.address) }
+    emails
+  end
+
+  def is_visible_to(user)
+    is_public || email_addresses.include?(user.email)
+  end
 end

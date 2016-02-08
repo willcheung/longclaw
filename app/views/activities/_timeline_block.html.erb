@@ -17,7 +17,11 @@
         <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
     </span>
 
-    <div class="vertical-timeline-content <% if not_in_current_user_inbox(a) %>highlight<% end %>" <% if a.category == "Note" %> style="background-color: #fff7db" <% end %>>
+    <div class="vertical-timeline-content
+                <% if not_in_current_user_inbox(a) %>highlight<% end %>
+                <% if !a.is_public %>private<% end %>"
+        <% if a.category == "Note" %> style="background-color: #fff7db" <% end %>
+    >
         <% if a.category == "Conversation" %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
@@ -49,8 +53,13 @@
                 <% end %>
 
                 <div class="col-4-lg action-links">
-                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
-                     &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comment</a>
+                  &sdot;
+                    <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
+                      false: raw('<a>Mark Public</a>'),
+                      true: raw('<a>Mark Private</a>')
+                    }  %>
                 </div>
             </div> <!-- chat discussion -->
         
