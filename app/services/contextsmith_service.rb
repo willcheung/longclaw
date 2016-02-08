@@ -40,17 +40,15 @@ class ContextsmithService
 
     if data.nil? or data.empty?
       puts "Nil or no data returned!\n"
-    elsif data.has_key?('code')
-      if data['code'] == 401
-        puts "Error: #{data['errors'][0]['message']}\n"
-      elsif data['code'] == 404
-        puts "#{data['message']}\n"
-      else
-        puts "Unhandled code."
-      end
-    else
+    elsif data.kind_of?(Array)
       puts "Found #{data[0]['conversations'].size} conversations!\n"
       Activity.load(data, project)
+    elsif data['code'] == 401
+      puts "Error: #{data['errors'][0]['message']}\n"
+    elsif data['code'] == 404
+      puts "#{data['message']}\n"
+    else
+      puts "Unhandled backend response."
     end
     
     return data
