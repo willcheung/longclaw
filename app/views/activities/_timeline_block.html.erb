@@ -13,8 +13,8 @@
     <!-- <div class="vertical-timeline-button">
         <button class="btn btn-primary btn-xs pinned" type="button"><i class="fa fa-thumb-tack"></i>&nbsp;Pinned</button>
     </div> -->
-    <span class="vertical-date left"><%= a.last_sent_date.strftime("%b %d") %><br />
-        <small><%= a.last_sent_date.strftime("%l:%M%P") %></small>
+    <span class="vertical-date left"><%= Time.zone.at(a.last_sent_date).strftime("%b %d") %><br />
+        <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span>
 
     <div class="vertical-timeline-content <% if not_in_current_user_inbox(a) %>highlight<% end %>" <% if a.category == "Note" %> style="background-color: #fff7db" <% end %>>

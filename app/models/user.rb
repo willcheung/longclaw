@@ -32,6 +32,7 @@
 #  cluster_create_date    :datetime
 #  cluster_update_date    :datetime
 #  title                  :string
+#  time_zone              :string           default("UTC")
 #
 # Indexes
 #

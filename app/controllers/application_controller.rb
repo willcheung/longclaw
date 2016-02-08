@@ -10,8 +10,11 @@ class ApplicationController < ActionController::Base
 
   protect_from_forgery with: :null_session, only: Proc.new { |c| c.request.format.json? }
   layout :layout_by_resource
+  around_action :set_time_zone, if: :current_user
 
   def after_sign_in_path_for(resource)
+    current_user.update_attributes(time_zone: cookies[:timezone])
+
     if resource.is_a?(User)
       case resource.onboarding_step
       when Utils::ONBOARDING[:onboarded] # Fully onboarded
@@ -49,5 +52,11 @@ class ApplicationController < ActionController::Base
     else
       "application"
     end
+  end
+
+  private
+
+  def set_time_zone(&block)
+    Time.use_zone(current_user.time_zone, &block)
   end
 end

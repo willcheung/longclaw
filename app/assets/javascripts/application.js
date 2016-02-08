@@ -16,12 +16,18 @@
 //= require best_in_place
 //= require switchery/switchery.js
 //= require sparkline/jquery.sparkline.min.js
+//= require jstz/jstz.min.js
 
 /* Ahoy analytics */
 ahoy.trackAll();
 
-
 $(document).ready(function() {
+  /* Timezone */
+  jQuery(function() {
+    var tz = jstz.determine();
+    $.cookie('timezone', tz.name(), { path: '/' });
+  });
+
   /* Activating Best In Place */
   jQuery(".best_in_place").best_in_place();
 
