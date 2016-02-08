@@ -6,19 +6,18 @@
 
 <div class="row wrapper wrapper-content animated fadeInRight">
 
-
     <div class="col-lg-9 col-lg-offset-1">
         <div class="ibox float-e-margins catchup">
             <div class="ibox-title catchup-title">
                 <div class="row">
                     <div class="col-sm-3">
-                        <a class="pull-left text-left" href="?date=<%= (@date_now - 1.day).strftime('%F') %>"><i class="fa fa-arrow-circle-left m-r-xs" style="font-size:20px"></i><%= (@date_now - 1.day).strftime('%A, %b %d') %></a>
+                        <a class="pull-left text-left" href="?date=<%= (@date_with_timezone - 1.day).strftime('%F') %>"><i class="fa fa-arrow-circle-left m-r-xs" style="font-size:20px"></i><%= (@date_with_timezone - 1.day).strftime('%A, %b %d') %></a>
                     </div>
                     <div class="col-sm-6">
-                        <h2 class="text-center">Daily Summary<br/><%= @date_now.strftime('%A, %B %d') %></h2>
+                        <h2 class="text-center">Daily Summary<br/><%= @date_with_timezone.strftime('%A, %B %d') %></h2>
                     </div>
                     <div class="col-sm-3">
-                        <% if DateTime.now.to_date > @date_now %><a class="pull-right text-right" href="?date=<%= (@date_now + 1.day).strftime('%F') %>"><%= (@date_now + 1.day).strftime('%A, %b %d') %><i class="fa fa-arrow-circle-right m-l-xs" style="font-size:20px"></i></a><% end %>
+                        <% if Date.current > @date_with_timezone %><a class="pull-right text-right" href="?date=<%= (@date_with_timezone + 1.day).strftime('%F') %>"><%= (@date_with_timezone + 1.day).strftime('%A, %b %d') %><i class="fa fa-arrow-circle-right m-l-xs" style="font-size:20px"></i></a><% end %>
                     </div>
                 </div>
             </div>

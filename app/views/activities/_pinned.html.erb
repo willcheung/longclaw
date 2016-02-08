@@ -75,7 +75,7 @@
 
     </td>
     <td style="vertical-align:middle;font-size:11px;">
-        <%= a.last_sent_date.strftime("%_m/%d") %>
+        <%= Time.zone.at(a.last_sent_date).strftime("%_m/%d") %>
     </td>
 </tr>
 

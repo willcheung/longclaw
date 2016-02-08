@@ -59,7 +59,7 @@ class Activity < ActiveRecord::Base
 
 
         val << "('#{user_id}', '#{project.id}', 'Conversation', '#{(c.subject).gsub("'","''")}', true, '#{c.conversationId}', '#{Time.zone.at(c.lastSentDate)}', '#{c.lastSentDate}',
-                   #{Activity.sanitize(c.contextMessages.last.from.to_json)}, 
+                   #{Activity.sanitize(c.contextMessages.last.from.to_json)},
                    #{Activity.sanitize(c.contextMessages.last.to.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.to_json)}, 

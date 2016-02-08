@@ -20,7 +20,7 @@ class UserMailer < ApplicationMailer
     @pinned_activities_today = Project.visible_to(user.organization_id, user.id).eager_load([:activities]).where("activities.is_pinned = true and activities.pinned_at::date = ?", date_filter).group("activities.id")
 
     track user: user # ahoy_email tracker
-    mail(to: user.email, subject: "Daily Summary for #{Time.now.strftime('%A, %B %d')}")
+    mail(to: user.email, subject: "Daily Summary for #{Time.current.strftime('%A, %B %d')}")
   end
 
 end
