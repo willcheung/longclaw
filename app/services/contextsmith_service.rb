@@ -39,7 +39,11 @@ class ContextsmithService
     end
 
     if data.nil? or data.empty?
-      puts "No data returned!\n"
+      puts "Nil or no data returned!\n"
+    elsif data['code'] == 401
+      puts "Error: #{data['errors'][0]['message']}\n"
+    elsif data['code'] == 404
+      puts "#{data['message']}\n"
     else
       puts "Found #{data[0]['conversations'].size} conversations!\n"
       Activity.load(data, project)
