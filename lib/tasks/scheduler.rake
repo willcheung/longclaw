@@ -39,9 +39,14 @@ namespace :projects do
 
 		Organization.all.each do |org|
 			org.users.registered.onboarded.each do |usr|
-				puts "Emailing #{usr.email}..."
-				UserMailer.daily_summary_email(usr).deliver_later
-				sleep(0.5)
+				Time.use_zone(usr.time_zone) do
+					puts "User #{usr.email} time now is #{Time.current}"
+					if Time.current.hour == 5 # In the hour of 5am
+						puts "Emailing #{usr.email}..."
+						UserMailer.daily_summary_email(usr).deliver_later
+						sleep(0.5)
+					end
+				end
 			end
 		end
 	end
