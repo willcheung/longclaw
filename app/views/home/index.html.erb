@@ -85,5 +85,18 @@
         </div>
     </div>
 
-
 </div>
+
+<script>
+    /* Toggle Private */
+    $('.best_in_place.toggle-private').on('ajax:success', function() {
+        if ($(this).data('activity').is_public) {
+            $(this).data('activity').is_public = false;
+            $(this).parents('.vertical-timeline-content').addClass('private');
+        }
+        else {
+            $(this).data('activity').is_public = true;
+            $(this).parents('.vertical-timeline-content').removeClass('private');
+        }
+    });
+</scipt>
