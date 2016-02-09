@@ -65,20 +65,13 @@ module Utils
 		rescue => e
 			return domain, ""
 		end
-		
+
 		if !r.registrant_contacts.nil?
 			if r.registrant_contacts[0].nil?
 				return domain, ""
 			end
 
-			if r.registrant_contacts[0].organization.nil? or r.registrant_contacts[0].organization == "" 
-					or r.registrant_contacts[0].organization.downcase.include?("proxy") 
-					or r.registrant_contacts[0].organization.downcase.include?("domain")
-					or r.registrant_contacts[0].organization.downcase.include?("dreamhost")
-					or r.registrant_contacts[0].organization.downcase.include?("hover")
-					or r.registrant_contacts[0].organization.downcase.include?("namecheap")
-					or r.registrant_contacts[0].organization.downcase.include?("names.com")
-					or r.registrant_contacts[0].organization.downcase.include?("godaddy")
+			if r.registrant_contacts[0].organization.nil? or r.registrant_contacts[0].organization == "" or r.registrant_contacts[0].organization.downcase.include?("proxy") or r.registrant_contacts[0].organization.downcase.include?("domain") or r.registrant_contacts[0].organization.downcase.include?("dreamhost") or r.registrant_contacts[0].organization.downcase.include?("hover") or r.registrant_contacts[0].organization.downcase.include?("namecheap") or r.registrant_contacts[0].organization.downcase.include?("names.com") or r.registrant_contacts[0].organization.downcase.include?("godaddy")
 				return domain, ""
 			else
 				org_name = r.registrant_contacts[0].organization
