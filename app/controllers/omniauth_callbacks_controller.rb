@@ -8,7 +8,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
       return
     end
 
-    @user = User.find_for_google_oauth2(auth, current_user)
+    @user = User.find_for_google_oauth2(auth, cookies[:timezone])
  
     if @user.persisted?
     	session["devise.google_data"] = auth

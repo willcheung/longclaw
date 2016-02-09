@@ -62,14 +62,15 @@ class User < ActiveRecord::Base
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
 
-  def self.find_for_google_oauth2(auth, signed_in_resource=nil)
+  def self.find_for_google_oauth2(auth, time_zone=nil)
     info = auth.info
     credentials = auth.credentials
     user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
     
     if user
       user.update_attributes(oauth_access_token: credentials["token"], 
-                             oauth_expires_at: Time.at(credentials["expires_at"]))
+                             oauth_expires_at: Time.at(credentials["expires_at"]),
+                             time_zone: time_zone)
       return user
     else
       # Considered referred user if email exists but not oauth elements
@@ -88,7 +89,8 @@ class User < ActiveRecord::Base
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: Utils::ONBOARDING[:confirm_projects]
+          onboarding_step: Utils::ONBOARDING[:confirm_projects],
+          time_zone: time_zone
         )
 
         return referred_user
@@ -104,7 +106,8 @@ class User < ActiveRecord::Base
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: Utils::ONBOARDING[:confirm_projects]
+          onboarding_step: Utils::ONBOARDING[:confirm_projects],
+          time_zone: time_zone
         )
         
         org = Organization.create_or_update_user_organization(get_domain(info["email"]), user)

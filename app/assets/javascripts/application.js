@@ -21,12 +21,13 @@
 /* Ahoy analytics */
 ahoy.trackAll();
 
+/* Timezone */
+jQuery(function() {
+  var tz = jstz.determine();
+  $.cookie('timezone', tz.name(), { path: '/' });
+});
+
 $(document).ready(function() {
-  /* Timezone */
-  jQuery(function() {
-    var tz = jstz.determine();
-    $.cookie('timezone', tz.name(), { path: '/' });
-  });
 
   /* Activating Best In Place */
   jQuery(".best_in_place").best_in_place();
