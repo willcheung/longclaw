@@ -60,7 +60,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
       in_domain = "&in_domain=comprehend.com"
     end
     
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&showPreview=true&max=" + max.to_s + "&callback=" + callback_url + in_domain
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&preview=true&max=" + max.to_s + "&callback=" + callback_url + in_domain
     logger.info "Calling backend service: " + final_url
     ahoy.track("Calling backend service", service: "newsfeed/cluster", final_url: final_url)
 
