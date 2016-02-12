@@ -20,17 +20,20 @@ namespace :projects do
 	task load_activities_since_yesterday: :environment do
     puts "\n\n=====Task (load_activites_since_yesterday) started at #{Time.now}====="
 
-    after = Time.now.to_i - 86400
+    if Time.now.hour.even? # Runs once every 2 hours
+	    after = Time.now.to_i - 86400
 
-    Organization.all.each do |org|
-    	org.accounts.each do |acc| 
-	    	acc.projects.each do |proj|
-	    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_emails_from_backend(proj, after)
-	    		sleep(0.5)
-	    	end
+	    Organization.all.each do |org|
+	    	org.accounts.each do |acc| 
+		    	acc.projects.each do |proj|
+		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
+		    		ContextsmithService.load_emails_from_backend(proj, after)
+		    		sleep(1)
+		    	end
+		    end
 	    end
-    end
+
+	  end
 	end
 
 	desc 'Email daily project updates'
