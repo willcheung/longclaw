@@ -5,7 +5,7 @@ class ContextsmithService
 
   def self.load_emails_from_backend(project, after=nil, max=100)
     token_emails = []
-    base_url = ENV["csback_base_url"] + "/newsfeed/search"
+    base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
 
     if ENV["RAILS_ENV"] == 'production' or ENV["RAILS_ENV"] == 'test'
       in_domain = ""
