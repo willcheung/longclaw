@@ -15,8 +15,9 @@
 #  updated_at      :datetime         not null
 #  organization_id :uuid
 #  notes           :text
-#  status          :string
+#  status          :string           default("Active")
 #  domain          :string(64)       default(""), not null
+#  cateogry        :string           default("Customer")
 #
 
 include Utils

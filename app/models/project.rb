@@ -7,7 +7,7 @@
 #  account_id     :uuid
 #  project_code   :string
 #  is_public      :boolean          default(TRUE)
-#  status         :string
+#  status         :string           default("Active")
 #  description    :text
 #  start_date     :date
 #  end_date       :date
@@ -18,6 +18,7 @@
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
 #  is_confirmed   :boolean
+#  category       :string           default("Project")
 #
 # Indexes
 #

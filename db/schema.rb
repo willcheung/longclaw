@@ -11,14 +11,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160206005143) do
+ActiveRecord::Schema.define(version: 20160212030422) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",                       default: "", null: false
+    t.string   "name",                       default: "",         null: false
     t.text     "description",                default: ""
     t.string   "website"
     t.uuid     "owner_id"
@@ -26,12 +26,13 @@ ActiveRecord::Schema.define(version: 20160206005143) do
     t.text     "address"
     t.uuid     "created_by"
     t.uuid     "updated_by"
-    t.datetime "created_at",                              null: false
-    t.datetime "updated_at",                              null: false
+    t.datetime "created_at",                                      null: false
+    t.datetime "updated_at",                                      null: false
     t.uuid     "organization_id"
     t.text     "notes"
-    t.string   "status"
-    t.string   "domain",          limit: 64, default: "", null: false
+    t.string   "status",                     default: "Active"
+    t.string   "domain",          limit: 64, default: "",         null: false
+    t.string   "cateogry",                   default: "Customer"
   end
 
   create_table "activities", force: :cascade do |t|
@@ -173,11 +174,11 @@ ActiveRecord::Schema.define(version: 20160206005143) do
   add_index "project_members", ["user_id"], name: "index_project_members_on_user_id", using: :btree
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",           default: "",   null: false
+    t.string   "name",           default: "",        null: false
     t.uuid     "account_id"
     t.string   "project_code"
     t.boolean  "is_public",      default: true
-    t.string   "status"
+    t.string   "status",         default: "Active"
     t.text     "description"
     t.date     "start_date"
     t.date     "end_date"
@@ -185,9 +186,10 @@ ActiveRecord::Schema.define(version: 20160206005143) do
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
-    t.datetime "created_at",                    null: false
-    t.datetime "updated_at",                    null: false
+    t.datetime "created_at",                         null: false
+    t.datetime "updated_at",                         null: false
     t.boolean  "is_confirmed"
+    t.string   "category",       default: "Project"
   end
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
