@@ -58,7 +58,7 @@ class Activity < ActiveRecord::Base
       d.conversations.each do |c|
 
 
-        val << "('#{user_id}', '#{project.id}', 'Conversation', '#{(c.subject).gsub("'","''")}', true, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
+        val << "('#{user_id}', '#{project.id}', 'Conversation', '#{Activity.sanitize(c.subject)}', true, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
                    #{Activity.sanitize(c.contextMessages.last.from.to_json)},
                    #{Activity.sanitize(c.contextMessages.last.to.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
@@ -105,7 +105,12 @@ class Activity < ActiveRecord::Base
     val = []
 
     source_project.activities.each do |c|
-      val << "('#{c.posted_by}', '#{c.project_id}', '#{c.category}', '#{(c.title).gsub("'","''")}', #{c.is_public}, '#{c.backend_id}', '#{c.last_sent_date}', '#{c.last_sent_date_epoch}', '#{c.from.to_json}', '#{c.to.to_json}', '#{c.cc.to_json}', '#{c.email_messages.to_json}', '#{c.created_at}', '#{c.updated_at}')"
+      val << "('#{c.posted_by}', '#{c.project_id}', '#{c.category}', '#{Activity.sanitize(c.title)}', #{c.is_public}, '#{c.backend_id}', '#{c.last_sent_date}', '#{c.last_sent_date_epoch}', 
+                '#{Activity.sanitize(c.from.to_json)}', 
+                '#{Activity.sanitize(c.to.to_json)}', 
+                '#{Activity.sanitize(c.cc.to_json)}', 
+                '#{Activity.sanitize(c.email_messages.to_json)}', 
+                '#{c.created_at}', '#{c.updated_at}')"
     end
 
     insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
