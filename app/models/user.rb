@@ -62,7 +62,7 @@ class User < ActiveRecord::Base
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
 
-  def self.find_for_google_oauth2(auth, time_zone=nil)
+  def self.find_for_google_oauth2(auth, time_zone='UTC')
     info = auth.info
     credentials = auth.credentials
     user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
