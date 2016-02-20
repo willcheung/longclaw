@@ -109,7 +109,7 @@ class OnboardingController < ApplicationController
 						end
 
 						# Copy new_project activities
-						Activity.copy(new_project, p)
+						Activity.copy_email_activities(new_project, p)
 						new_project.destroy # Delete unconfirmed project
 
 					else # No overlapping projects
@@ -119,7 +119,7 @@ class OnboardingController < ApplicationController
 							end
 							
 							# Copy new_project activities
-							Activity.copy(new_project, p)
+							Activity.copy_email_activities(new_project, p)
 							new_project.destroy # Delete unconfirmed project
 							
 						elsif new_p.size > 0
