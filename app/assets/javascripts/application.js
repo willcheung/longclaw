@@ -17,6 +17,7 @@
 //= require switchery/switchery.js
 //= require sparkline/jquery.sparkline.min.js
 //= require jstz/jstz.min.js
+//= require chosen/chosen.jquery.min.js
 
 /* Ahoy analytics */
 ahoy.trackAll();
