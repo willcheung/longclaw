@@ -2,12 +2,13 @@
 #
 # Table name: project_members
 #
-#  id         :uuid             not null, primary key
-#  project_id :uuid
-#  contact_id :uuid
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  user_id    :uuid
+#  id          :uuid             not null, primary key
+#  project_id  :uuid
+#  contact_id  :uuid
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  user_id     :uuid
+#  member_type :integer          default(0)
 #
 # Indexes
 #

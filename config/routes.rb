@@ -10,6 +10,7 @@ Longclaw::Application.routes.draw do
     resources :accounts 
     resources :contacts
     resources :projects
+    resources :project_members
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     
     resources :activities, only: [:update, :create] do

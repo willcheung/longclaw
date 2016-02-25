@@ -5,6 +5,14 @@ module Utils
                	 "intro_activities": 3, "intro_pinned": 4, "confirm_projects": 5 }
 
 
+	def get_user_or_contact_from_pm(project_member)
+		if !project_member.user.nil?
+			project_member.user
+		else
+			project_member.contact
+		end
+	end
+
 	def get_full_name(user)
 		return "" if user.nil?
 

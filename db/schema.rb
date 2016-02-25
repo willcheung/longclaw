@@ -88,19 +88,6 @@ ActiveRecord::Schema.define(version: 20160225015422) do
   add_index "ahoy_messages", ["token"], name: "index_ahoy_messages_on_token", using: :btree
   add_index "ahoy_messages", ["user_id", "user_type"], name: "index_ahoy_messages_on_user_id_and_user_type", using: :btree
 
-  create_table "clarizen_csv_import", id: false, force: :cascade do |t|
-    t.date  "Reported Date"
-    t.text  "Customers"
-    t.text  "Name"
-    t.text  "Project"
-    t.text  "Work Item"
-    t.float "Duration"
-    t.text  "Comment"
-    t.text  "Created By"
-    t.text  "First Name"
-    t.text  "Last Name"
-  end
-
   create_table "comments", force: :cascade do |t|
     t.string   "title",            limit: 50, default: ""
     t.text     "comment"
@@ -133,25 +120,6 @@ ActiveRecord::Schema.define(version: 20160225015422) do
 
   add_index "contacts", ["account_id"], name: "index_contacts_on_account_id", using: :btree
 
-  create_table "harvest_csv_import", id: false, force: :cascade do |t|
-    t.date    "Date"
-    t.string  "Client",          limit: 150
-    t.string  "Project",         limit: 150
-    t.string  "Project Code",    limit: 150
-    t.string  "Task",            limit: 150
-    t.string  "Notes",           limit: 150
-    t.float   "Hours"
-    t.string  "Billable?",       limit: 150
-    t.string  "Invoiced?",       limit: 150
-    t.string  "First Name",      limit: 150
-    t.string  "Last Name",       limit: 150
-    t.string  "Department",      limit: 150
-    t.string  "Employee?",       limit: 150
-    t.integer "Hourly Rate"
-    t.integer "Billable Amount"
-    t.string  "Currency",        limit: 150
-  end
-
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name"
     t.string   "domain"
@@ -164,9 +132,10 @@ ActiveRecord::Schema.define(version: 20160225015422) do
   create_table "project_members", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.uuid     "project_id"
     t.uuid     "contact_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
     t.uuid     "user_id"
+    t.integer  "member_type", default: 0
   end
 
   add_index "project_members", ["contact_id"], name: "index_project_members_on_contact_id", using: :btree
@@ -236,7 +205,7 @@ ActiveRecord::Schema.define(version: 20160225015422) do
     t.text     "user_agent"
     t.text     "referrer"
     t.text     "landing_page"
-    t.integer  "user_id"
+    t.uuid     "user_id"
     t.string   "referring_domain"
     t.string   "search_keyword"
     t.string   "browser"

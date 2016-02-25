@@ -39,7 +39,7 @@
                                             <span>Activities (last 7 days) </span>
                                         </div>
                                     <div class="col-sm-4 text-center">
-                                        <strong><%= @team.size %></strong>
+                                        <strong><%= @project_members.size %></strong>
                                             <span>Collaborators</span>
                                         </div>
                                   </div>
@@ -157,14 +157,18 @@
             <div class="m-t-md"><strong>Project Collaborators</strong></div>
             <dl>
                 <dd class="project-people">
-                    <% @team.each do |m| %>
+                    <% @project_members.each do |pm| %>
+                      <% m = get_user_or_contact_from_pm(pm) %>
                         <div class="row m-b-sm">
                             <div class="col-sm-2">
                                 <%= get_profile_pic(get_full_name(m), m.email, "message-avatar") %>
                             </div>
-                            <div class="col-sm-10 project-team-title">
+                            <div class="col-sm-7 project-team-title">
                                 <span><%= get_full_name(m) %></span><br>
                                 <span><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
+                            </div>
+                            <div class="col-sm-3">
+                                <%= link_to "Remove", pm, method: :delete, data: {confirm: "Are you sure you want to remove this member from the project?"} %>
                             </div>
                         </div>
                     <% end %>

@@ -8,7 +8,7 @@
 #  user_agent       :text
 #  referrer         :text
 #  landing_page     :text
-#  user_id          :integer
+#  user_id          :uuid
 #  referring_domain :string
 #  search_keyword   :string
 #  browser          :string
