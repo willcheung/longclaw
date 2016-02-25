@@ -17,7 +17,7 @@
 #  notes           :text
 #  status          :string           default("Active")
 #  domain          :string(64)       default(""), not null
-#  cateogry        :string           default("Customer")
+#  category        :string           default("Customer")
 #
 
 include Utils
