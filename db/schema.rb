@@ -132,10 +132,9 @@ ActiveRecord::Schema.define(version: 20160225015422) do
   create_table "project_members", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.uuid     "project_id"
     t.uuid     "contact_id"
-    t.datetime "created_at",              null: false
-    t.datetime "updated_at",              null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.uuid     "user_id"
-    t.integer  "member_type", default: 0
   end
 
   add_index "project_members", ["contact_id"], name: "index_project_members_on_contact_id", using: :btree
