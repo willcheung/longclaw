@@ -66,7 +66,7 @@ class OnboardingController < ApplicationController
 							# puts "\n\n\n\n"
 
 							if dc == 1.0
-								# 100% match. Do not display these projects.
+								# 100% match in external members. Do not display these projects.
 								same_p << existing_project
 							elsif dc < 1.0 and dc >= 0.35
 								# Considered same project. 
@@ -87,8 +87,8 @@ class OnboardingController < ApplicationController
 								# Definitely new project.  Modify new project into confirmed project.
 								new_p << new_project if !new_p.include?(new_project)
 							end
-						end #if account.projects.empty?
-					end #if account == new_project.account
+						end #account.projects.each do |existing_project|
+					end #if account.projects.empty?
 
 					# Take action on the unconfirmed projects
 					if account.projects.size == 0
@@ -106,20 +106,22 @@ class OnboardingController < ApplicationController
 							new_project.users.each do |u|
 								p.project_members.create(user_id: u.id)
 							end
+
+							# Copy new_project activities
+							Activity.copy_email_activities(new_project, p)
 						end
 
-						# Copy new_project activities
-						Activity.copy_email_activities(new_project, p)
 						new_project.destroy # Delete unconfirmed project
 
 					else # No overlapping projects
 						if same_p.size > 0
 							same_p.each do |p|
 								p.project_members.create(user_id: current_user.id)
+
+								# Copy new_project activities
+								Activity.copy_email_activities(new_project, p)
 							end
 							
-							# Copy new_project activities
-							Activity.copy_email_activities(new_project, p)
 							new_project.destroy # Delete unconfirmed project
 							
 						elsif new_p.size > 0
@@ -131,7 +133,7 @@ class OnboardingController < ApplicationController
 					overlapping_p.each { |p| @overlapping_projects << p }
 					new_p.each { |p| @new_projects << p }
 					same_p.each { |p| @same_projects << p }
-				end
+				end #if account.id == new_project.account.id
 			end
 		end
 
