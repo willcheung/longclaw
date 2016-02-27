@@ -33,6 +33,9 @@ $(document).ready(function() {
   /* Activating Best In Place */
   jQuery(".best_in_place").best_in_place();
 
+  /* Chosen Select */
+  jQuery(".chosen-select").chosen();
+
   /* Auto resizing textarea */
   jQuery.each(jQuery('textarea[data="autoresize"]'), function() {
     var offset = this.offsetHeight - this.clientHeight;
