@@ -23,7 +23,7 @@
 
 class Contact < ActiveRecord::Base
 	belongs_to :account
-	has_many :project_members
+	has_many :project_members, dependent: :destroy
 	has_many :projects, through: "project_members"
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
