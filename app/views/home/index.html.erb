@@ -92,11 +92,13 @@
     $('.best_in_place.toggle-private').on('ajax:success', function() {
         if ($(this).data('activity').is_public) {
             $(this).data('activity').is_public = false;
-            $(this).parents('.vertical-timeline-content').addClass('private');
+            $(this).parents('.vertical-timeline-content').children('h3').children('#private').show();
+            $(this).parents('.pinned-content').children('h3').children('#private').show();
         }
         else {
             $(this).data('activity').is_public = true;
-            $(this).parents('.vertical-timeline-content').removeClass('private');
+            $(this).parents('.vertical-timeline-content').children('h3').children('#private').hide();
+            $(this).parents('.pinned-content').children('h3').children('#private').hide();
         }
     });
 </script>
