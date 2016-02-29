@@ -10,7 +10,12 @@ class ProjectsController < ApplicationController
     projects = []
 
     # all projects and their accounts, sorted by account name alphabetically
-    projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").preload([:users,:contacts])
+    if params[:type]
+      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").where(category: params[:type]).preload([:users,:contacts])
+    else
+      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").preload([:users,:contacts])
+    end
+
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
     @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
@@ -99,6 +104,7 @@ class ProjectsController < ApplicationController
     @project.destroy
     respond_to do |format|
       format.html { redirect_to projects_url }
+      format.js
       format.json { head :no_content }
     end
   end

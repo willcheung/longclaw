@@ -5,7 +5,13 @@ class AccountsController < ApplicationController
   # GET /accounts.json
   def index
     @title = 'Accounts'
-    @accounts = Account.eager_load(:projects).where('organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order('accounts.name')
+
+    if params[:type]
+      @accounts = Account.eager_load(:projects).where('accounts.category = ? and organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', params[:type], current_user.organization_id, current_user.id).order('accounts.name')
+    else
+      @accounts = Account.eager_load(:projects).where('organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order('accounts.name')
+    end
+    
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? and (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
   end

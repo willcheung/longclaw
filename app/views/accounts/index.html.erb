@@ -17,11 +17,20 @@
 
 <div class="wrapper wrapper-content animated fadeInUp">
     <div class="row">
-        <div class="col-sm-12">
+        <div class="col-lg-12">
+            <div class="btn-group">
+                <div class="font-bold m-b-xs">Account Type:</div>
+                <a href="<%= accounts_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
+                <a href="<%= accounts_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Customer</a>
+                <a href="<%= accounts_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Partner&nbsp;</a>
+                <a href="<%= accounts_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Vendor&nbsp;</a>
+            </div>
+        </div>
+
+        <div class="col-sm-12 m-t-md">
             <% if @accounts.empty? %>
                 <div class="text-center">
-                    <h3>This is where your customer accounts will show up once you add them.</h3>
-                    <%= link_to 'Create New Account', '#new_account_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary' %>
+                    <h3>No accounts found.  Did you filter them out?</h3>
                 </div>
             <% else %>
                 <div class="ibox float-e-margins">
