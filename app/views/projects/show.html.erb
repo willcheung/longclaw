@@ -125,15 +125,17 @@
 
             <ul class="list-group clear-list m-t-sm">
                 <li class="list-group-item first-item">
-                    <strong>Status:</strong>
-                    <span class="label label-default pull-right">Active</span>
+                    <strong>Type:</strong>
+                    <span class="pull-right">
+                        <%= best_in_place @project, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-sm fa fa-caret-down' %>
+                    </span>
                 </li>
                 <li class="list-group-item first-item">
                     <strong>Open Collaboration:</strong>
                     <% if @project.is_public %>
-                        <span class="label label-default pull-right">Public</span>
+                        <span class="label label-default pull-right" style="font-size:12px">Public</span>
                     <% else %>
-                        <span class="label label-warning pull-right">Private</span>
+                        <span class="label label-warning pull-right" style="font-size:12px">Private</span>
                     <% end %>
                 </li>
                 <li class="list-group-item">

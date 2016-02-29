@@ -280,3 +280,10 @@ span.best_in_place.switch {
 .best_in_place.toggle-private {
   border: none;
 }
+span.best_in_place.btn {
+  border: none;
+}
+.best_in_place.fa-caret-down:before {
+  float:right;
+  margin-left:3px;
+}
