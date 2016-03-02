@@ -40,8 +40,8 @@ class Activity < ActiveRecord::Base
 
   acts_as_commentable
 
-  pg_search_scope :search_by_message,
-                  :against => [:note, :title, :email_messages],
+  pg_search_scope :search_note,
+                  :against => [:note, :title],
                   :using => {
                       :tsearch => {:dictionary => "english"}
                   }

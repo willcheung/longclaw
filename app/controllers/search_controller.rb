@@ -1,7 +1,7 @@
 class SearchController < ApplicationController
 	def results
   	@title = "Results"
-		@activities = Activity.search_by_message("project").where("is_public = true")
+		@activities = Activity.search_note("project").where("is_public = true and category='Note'")
 
   end
 end
