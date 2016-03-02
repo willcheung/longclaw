@@ -123,8 +123,8 @@ $(document).ready(function () {
 
     // Full height of sidebar
     function fix_height() {
-        var heightWithoutNavbar = $("body > #wrapper").height() - 61;
-        $(".sidebard-panel").css("min-height", heightWithoutNavbar + "px");
+        // var heightWithoutNavbar = $('.sidebar-panel').height() - 140;
+        // $(".sidebar-panel").css("min-height", heightWithoutNavbar + "px");
 
         var navbarHeigh = $('nav.navbar-default').height();
         var wrapperHeigh = $('#page-wrapper').height();

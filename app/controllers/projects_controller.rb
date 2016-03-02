@@ -6,8 +6,6 @@ class ProjectsController < ApplicationController
   # GET /projects.json
   def index
     @title = "Projects"
-    @metrics = {}
-    projects = []
 
     # all projects and their accounts, sorted by account name alphabetically
     if params[:type]
@@ -17,11 +15,7 @@ class ProjectsController < ApplicationController
     end
 
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
-
     @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
-    @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.last_sent_date > (current_date - interval '7 days')").references(:activities).count(:activities)
-    @project_pinned = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
-
     @metrics = Project.count_activities_by_day(7, projects.map(&:id)) if !projects.empty?
     # new project modal
     @project = Project.new

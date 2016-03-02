@@ -13,6 +13,14 @@ module ApplicationHelper
     current_user.organization.domain.downcase == get_domain(email).downcase
   end
 
+  def green_or_red(num)
+    num > 0 ? "text-success" : "text-danger"
+  end
+
+  def up_or_down(num)
+    num > 0 ? "<i class=\"fa fa-level-up\"></i>".html_safe : "<i class=\"fa fa-level-down\"></i>".html_safe
+  end
+
   def get_first_names(from, to, cc)
       a = []
 

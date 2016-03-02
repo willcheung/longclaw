@@ -69,13 +69,16 @@ class Project < ActiveRecord::Base
         SELECT * 
           from (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1 
                 CROSS JOIN 
-               (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2)
+               (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
+       )
       SELECT time_series.project_id, time_series.days, count(activities.*) as count_activities
       FROM time_series
-      LEFT JOIN (SELECT last_sent_date::date, project_id 
-                    FROM activities 
-                    WHERE activities.last_sent_date > #{days_ago_sql}) as activities
-        ON activities.project_id = time_series.project_id and activities.last_sent_date = time_series.days
+      LEFT JOIN (SELECT sent_date, project_id from 
+      							(SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id 
+                    	FROM activities where project_id in ('#{array_of_project_ids.join("','")}')
+                		) t
+                 WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})) as activities
+        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
       GROUP BY time_series.project_id, days 
       ORDER BY time_series.project_id, days ASC
     SQL
@@ -102,8 +105,48 @@ class Project < ActiveRecord::Base
       end
     end
 
-    return metrics
-   end
+  	return metrics
+  end
+
+  def self.count_num_activities(hours_ago, array_of_project_ids)
+  	hours_ago_sql = "INTERVAL '#{hours_ago} hours'"
+
+  	query = <<-SQL
+  		SELECT projects.*, count(*) as num_activities from (
+				SELECT id, 
+							 backend_id, 
+							 last_sent_date, 
+							 project_id, 
+							 jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date 
+					from activities where project_id in ('#{array_of_project_ids.join("','")}')
+				) t 
+			JOIN projects ON projects.id = t.project_id
+			WHERE sent_date::integer between EXTRACT(EPOCH FROM CURRENT_DATE - #{hours_ago_sql})::integer and EXTRACT(EPOCH FROM clock_timestamp())::integer 
+			GROUP BY projects.id
+			ORDER BY num_activities DESC
+		SQL
+
+		return Project.find_by_sql(query)
+  end
+
+  def self.count_activities_last_24h(array_of_project_ids)
+  	Project.count_num_activities(24, array_of_project_ids)
+  end
+
+  def daily_avg_last_7d
+  	num_activities / 7.0
+  end
+
+  def percent_change_from_daily_avg
+  	if daily_avg_last_7d == 0
+  		100
+  	else
+  		p = Project.count_activities_last_24h([self.id]).first
+  		p.nil? ? p_last_24h_num_activities = 0 : p_last_24h_num_activities = p.num_activities
+
+  		(((p_last_24h_num_activities - daily_avg_last_7d) / daily_avg_last_7d) * 100).round(1)
+  	end
+  end
 
 
 	# This method should be called *after* all accounts, contacts, and users are processed & inserted.

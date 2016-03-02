@@ -4,87 +4,236 @@
     </div>
 </div>
 
-<div class="row wrapper wrapper-content animated fadeInRight">
+<div class="sidebar-panel" style="height:80%">
+    <div>
+        <h3><i class="fa fa-bell-o"></i> Notifications</h3>
+        <div class="feed-element">
+            <div class="media-body">
+                There are many variations of passages of Lorem Ipsum available.
+                <br>
+                <small class="text-muted">Today 4:21 pm</small>
+            </div>
+        </div>
+        <div class="feed-element">
+            <div class="media-body">
+                TIt is a long established fact that.
+                <br>
+                <small class="text-muted">Yesterday 2:45 pm</small>
+            </div>
+        </div>
+        <div class="feed-element">
+            <div class="media-body">
+                Many desktop publishing packages.
+                <br>
+                <small class="text-muted">Yesterday 1:10 pm</small>
+            </div>
+        </div>
+        <div class="feed-element">
+            <div class="media-body">
+                The generated Lorem Ipsum is therefore always free.
+                <br>
+                <small class="text-muted">Monday 8:37 pm</small>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <div class="col-lg-9 col-lg-offset-1">
-        <div class="ibox float-e-margins catchup">
-            <div class="ibox-title catchup-title">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <a class="pull-left text-left" href="?date=<%= (@date_with_timezone - 1.day).strftime('%F') %>"><i class="fa fa-arrow-circle-left m-r-xs" style="font-size:20px"></i><%= (@date_with_timezone - 1.day).strftime('%A, %b %d') %></a>
-                    </div>
-                    <div class="col-sm-6">
-                        <h2 class="text-center">Daily Summary<br/><%= @date_with_timezone.strftime('%A, %B %d') %></h2>
-                    </div>
-                    <div class="col-sm-3">
-                        <% if Date.current > @date_with_timezone %><a class="pull-right text-right" href="?date=<%= (@date_with_timezone + 1.day).strftime('%F') %>"><%= (@date_with_timezone + 1.day).strftime('%A, %b %d') %><i class="fa fa-arrow-circle-right m-l-xs" style="font-size:20px"></i></a><% end %>
+<div class="wrapper wrapper-content animated fadeInRight" style="padding-right:230px !important">
+
+    <!-- Metrics -->
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Most Active </h5>
+                </div>
+                <div class="ibox-content">
+                    <h4 class="no-margins">
+                        <% if @project_most_activities %>
+                            <a href="<%= project_path(@project_most_activities) %>"><%= @project_most_activities.name %></a>
+                        <% else %>
+                            N/A
+                        <% end %>
+                    </h4>
+                    <div class="m-t-sm">
+                        <% if @project_most_activities %>
+                            <span class="stat-percent font-bold <%= green_or_red(@project_most_activities.percent_change_from_daily_avg) %>"><%= @project_most_activities.percent_change_from_daily_avg %>% <%= up_or_down(@project_most_activities.percent_change_from_daily_avg) %></span> <small>from 7 day avg</small>
+                        <% end %>
                     </div>
                 </div>
             </div>
-            <div class="ibox-content catchup">
-                <div class="m-b-lg projects">
-                    <% if @projects_with_activities_today.size == 0 %>
-                        <h1 class="text-center">No project updates</h1>
-                    <% else %>
-                        <h1><%= pluralize(@projects_with_activities_today.size, 'project') %> updated</h1>
-                        <ul class="daily-summary">
-                            <% @projects_with_activities_today.each do |p| %>
-                            <li class="row">
-                                <h3><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small class="m-l-sm"><a class="text-muted"><%= p[1][0].account.name %></a></small></h3>
-                                 <div class="team-members" >
-                                    <div class="col-sm-3">
-                                    <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed:
-                                    </div>
-                                    <div class="col-sm-9">
-                                    <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
-                                        <% if !a.from[0].nil? %>
-                                            <div style="padding-right:3px;float:left;"><%= get_profile_pic(a.from[0].personal, a.from[0].address, "message-avatar") %></div>
-                                        <% end %>
-                                    <% end %>
-                                    </div>
-                                </div>
-                            </li>
-                            <% end %>
-                        </ul>
-                    <% end %>
+        </div>
+        <div class="col-lg-4">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Least Active</h5>
                 </div>
-
-
-                <% unless @pinned_activities_today.empty? %>
-                    <h1><%= @pinned_activities_today.inject(0) { |sum, n| sum + n.activities.size } %> new pinned items</h1>
-                    <div style="margin-left: 40px;">
-                    <% @pinned_activities_today.each do |p| %>
-                        <h4><a href="<%= project_path(p) %>"><%= p.name %></a></h4>
-                        <table class="table pinned-table table-condensed table-hover">
-                            <tbody>
-                                <% p.activities.each do |a| %>
-                                    <%= render 'activities/pinned', a: a %>
-                                <% end %>
-                            </tbody>
-                        </table>
-                    <% end %>
+                <div class="ibox-content">
+                    <h4 class="no-margins">
+                        <% if @project_least_activities %>
+                            <a href="<%= project_path(@project_least_activities) %>"><%= @project_least_activities.name %></a>
+                        <% else %>
+                            N/A
+                        <% end %>
+                    </h4>
+                    <div class="m-t-sm">
+                        <% if @project_least_activities %>
+                            <span class="stat-percent font-bold <%= green_or_red(@project_least_activities.percent_change_from_daily_avg) %>"><%= @project_least_activities.percent_change_from_daily_avg %>% <%= up_or_down(@project_least_activities.percent_change_from_daily_avg) %></span> <small>from 7 day avg</small>
+                        <% end %>
                     </div>
-                <% end %>
-                 
-
-                <% @projects_with_activities_today.each do |p| %>
-                    <h2 class="catchup-project"><span><%= p[1][0].name %> Updates</span></h2>
-                    <div class="row m-t-md m-l-sm">
-                        <div class="col-lg-12">
-                            <div id="vertical-timeline" class="vertical-container light-timeline">
-                                <% p[0].each do |a| %>
-                                    <%= render 'activities/timeline_block', a: a %>
-                                <% end %>
-                            </div>
-                            <div class="text-center"><a href="<%= project_path(p[1]) %>" type="button" class="btn btn-default btn-outline btn-sm">Go to project</a></div>
-                        </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">vs 7 day avg</span>
+                    <h5>Biggest Change</h5>
+                </div>
+                <div class="ibox-content">
+                    <h4 class="no-margins">
+                        <% if @project_biggest_change %>
+                            <a href="<%= project_path(@project_biggest_change) %>"><%= @project_biggest_change.name %></a>
+                        <% else %>
+                            N/A
+                        <% end %>
+                    </h4>
+                    <div class="m-t-sm">
+                        <% if @project_biggest_change %>
+                            <span class="stat-percent font-bold <%= green_or_red(@project_biggest_change.percent_change_from_daily_avg) %>"><%= @project_biggest_change.percent_change_from_daily_avg %>% <%= up_or_down(@project_biggest_change.percent_change_from_daily_avg) %></span> <small>from 7 day avg</small>
+                        <% end %>
                     </div>
-                    
-                <% end %>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Zero Activity</h5>
+                </div>
+                <div class="ibox-content">
+                    <h4 class="no-margins">Customer Success Partnership</h4>
+                    <h4 class="no-margins">Some Random Project</h4>
+                    <div class="m-t-sm"><span class="stat-percent font-bold text-info">40% <i class="fa fa-level-up"></i></span> <small>from last week</small></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Top Channels</h5>
+                    <div class="pull-right">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-xs btn-white active">Today</button>
+                            <button type="button" class="btn btn-xs btn-white">Monthly</button>
+                            <button type="button" class="btn btn-xs btn-white">Annual</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-lg-9">
+                            <div class="flot-chart">
+                                
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Updates -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins catchup">
+                <div class="ibox-title catchup-title">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <a class="pull-left text-left" href="?date=<%= (@date_with_timezone - 1.day).strftime('%F') %>"><i class="fa fa-arrow-circle-left m-r-xs" style="font-size:20px"></i><%= (@date_with_timezone - 1.day).strftime('%A, %b %d') %></a>
+                        </div>
+                        <div class="col-sm-6">
+                            <h2 class="text-center">Daily Summary<br/><%= @date_with_timezone.strftime('%A, %B %d') %></h2>
+                        </div>
+                        <div class="col-sm-3">
+                            <% if Date.current > @date_with_timezone %><a class="pull-right text-right" href="?date=<%= (@date_with_timezone + 1.day).strftime('%F') %>"><%= (@date_with_timezone + 1.day).strftime('%A, %b %d') %><i class="fa fa-arrow-circle-right m-l-xs" style="font-size:20px"></i></a><% end %>
+                        </div>
+                    </div>
+                </div>
+                <div class="ibox-content catchup">
+                    <div class="m-b-lg projects">
+                        <% if @projects_with_activities_today.size == 0 and @pinned_activities_today.empty? %>
+                            <h1 class="text-center">No updates</h1>
+                        <% else %>
+                            <h1><%= pluralize(@projects_with_activities_today.size, 'project') %> with new activities</h1>
+                            <ul class="daily-summary">
+                                <% @projects_with_activities_today.each do |p| %>
+                                <li class="row">
+                                    <h3><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small class="m-l-sm"><a class="text-muted"><%= p[1][0].account.name %></a></small></h3>
+                                     <div class="team-members" >
+                                        <div class="col-sm-3">
+                                        <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed:
+                                        </div>
+                                        <div class="col-sm-9">
+                                        <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
+                                            <% if !a.from[0].nil? %>
+                                                <div style="padding-right:3px;float:left;"><%= get_profile_pic(a.from[0].personal, a.from[0].address, "message-avatar") %></div>
+                                            <% end %>
+                                        <% end %>
+                                        </div>
+                                    </div>
+                                </li>
+                                <% end %>
+                            </ul>
+                        <% end %>
+                    </div>
+
+
+                    <% unless @pinned_activities_today.empty? %>
+                        <h1><%= @pinned_activities_today.inject(0) { |sum, n| sum + n.activities.size } %> new pinned items</h1>
+                        <div style="margin-left: 40px;">
+                        <% @pinned_activities_today.each do |p| %>
+                            <h4><a href="<%= project_path(p) %>"><%= p.name %></a></h4>
+                            <table class="table pinned-table table-condensed table-hover">
+                                <tbody>
+                                    <% p.activities.each do |a| %>
+                                        <%= render 'activities/pinned', a: a %>
+                                    <% end %>
+                                </tbody>
+                            </table>
+                        <% end %>
+                        </div>
+                    <% end %>
+                     
+
+                    <% @projects_with_activities_today.each do |p| %>
+                        <h2 class="catchup-project"><span><%= p[1][0].name %> Updates</span></h2>
+                        <div class="row m-t-md m-l-sm">
+                            <div class="col-lg-12">
+                                <div id="vertical-timeline" class="vertical-container light-timeline">
+                                    <% p[0].each do |a| %>
+                                        <%= render 'activities/timeline_block', a: a %>
+                                    <% end %>
+                                </div>
+                                <div class="text-center"><a href="<%= project_path(p[1]) %>" type="button" class="btn btn-default btn-outline btn-sm">Go to project</a></div>
+                            </div>
+                        </div>
+                        
+                    <% end %>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
