@@ -161,7 +161,7 @@
                 <dd class="project-people">
                     <% @project_members.each do |pm| %>
                       <% m = get_user_or_contact_from_pm(pm) %>
-                        <div class="row m-b-sm">
+                        <div class="row m-b-sm member">
                             <div class="col-sm-2">
                                 <%= get_profile_pic(get_full_name(m), m.email, "message-avatar") %>
                             </div>
@@ -169,8 +169,8 @@
                                 <span><%= get_full_name(m) %></span><br>
                                 <span><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
                             </div>
-                            <div class="col-sm-3">
-                                <%= link_to "Remove", pm, method: :delete, data: {confirm: "Are you sure you want to remove this member from the project?"} %>
+                            <div class="col-sm-3 m-t-xs delete-member">
+                                <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this member from the project?"} %>
                             </div>
                         </div>
                     <% end %>

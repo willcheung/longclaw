@@ -5,37 +5,16 @@
 </div>
 
 <div class="sidebar-panel" style="height:80%">
-    <div>
-        <h3><i class="fa fa-bell-o"></i> Notifications</h3>
+    <h3><i class="fa fa-bell-o"></i> Notifications</h3>
+    <% @users_in_org.each do |u| %>
         <div class="feed-element">
             <div class="media-body">
-                There are many variations of passages of Lorem Ipsum available.
+                <%= get_full_name(u) %> signed up, and added <%= u.accounts.size %> accounts and <%= u.projects_owner_of.size %> channels.
                 <br>
-                <small class="text-muted">Today 4:21 pm</small>
+                <small class="text-muted"><%= time_ago_in_words(u.created_at) %> ago</small>
             </div>
         </div>
-        <div class="feed-element">
-            <div class="media-body">
-                TIt is a long established fact that.
-                <br>
-                <small class="text-muted">Yesterday 2:45 pm</small>
-            </div>
-        </div>
-        <div class="feed-element">
-            <div class="media-body">
-                Many desktop publishing packages.
-                <br>
-                <small class="text-muted">Yesterday 1:10 pm</small>
-            </div>
-        </div>
-        <div class="feed-element">
-            <div class="media-body">
-                The generated Lorem Ipsum is therefore always free.
-                <br>
-                <small class="text-muted">Monday 8:37 pm</small>
-            </div>
-        </div>
-    </div>
+    <% end %>
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight" style="padding-right:230px !important">

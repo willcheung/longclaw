@@ -28,6 +28,8 @@ class HomeController < ApplicationController
     @project_most_activities = projects_with_activities_count_7d.max_by(&:num_activities)
     @project_least_activities = projects_with_activities_count_7d.min_by(&:num_activities)
     @project_biggest_change = projects_with_activities_count_7d.max_by {|x| x.percent_change_from_daily_avg.abs}
+
+    @users_in_org = current_user.organization.users.registered.order(created_at: :desc).limit(10)
   end
 
   def access_denied
