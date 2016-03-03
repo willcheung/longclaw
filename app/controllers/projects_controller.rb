@@ -1,5 +1,6 @@
 class ProjectsController < ApplicationController
-  before_action :set_project, only: [:show, :edit, :update, :destroy, :render_pinned_tab]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab]
+  before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
 
   # GET /projects
@@ -106,12 +107,20 @@ class ProjectsController < ApplicationController
   private
 
   # Use callbacks to share common setup or constraints between actions.
-  def set_project
+  def set_visible_project
     begin
       @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
     rescue ActiveRecord::RecordNotFound
       redirect_to root_url, :flash => { :error => "Project not found or is private." }
     end
+  end
+
+  def set_editable_project
+    @project = Project.joins(:account)
+                      .where('accounts.organization_id = ? 
+                              AND (projects.is_public=true 
+                                    OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
+                      .find(params[:id])
   end
 
   def get_account_names
