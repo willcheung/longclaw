@@ -9,7 +9,7 @@
     <% @users_in_org.each do |u| %>
         <div class="feed-element">
             <div class="media-body">
-                <%= get_full_name(u) %> signed up, and added <%= u.accounts.size %> accounts and <%= u.projects_owner_of.size %> channels.
+                <%= get_full_name(u) %> signed up, and added <%= u.accounts.size %> accounts and <%= u.projects_owner_of.size %> projects.
                 <br>
                 <small class="text-muted"><%= time_ago_in_words(u.created_at) %> ago</small>
             </div>

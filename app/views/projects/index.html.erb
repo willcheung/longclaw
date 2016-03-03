@@ -21,12 +21,12 @@
             <div class="row">
                 <div class="col-lg-5">
                     <div class="btn-group">
-                        <div class="font-bold m-b-xs">Channels:</div>
+                        <div class="font-bold m-b-xs">Project Type:</div>
                         <a href="<%= projects_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
-                        <a href="<%= projects_path %>?type=Project" class="btn btn-sm <% if params[:type] == "Project" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;&nbsp;&nbsp;Project&nbsp;&nbsp;&nbsp;</a>
+                        <a href="<%= projects_path %>?type=Implementation" class="btn btn-sm <% if params[:type] == "Implementation" %>btn-default<% else %>btn-white<% end %>" type="button">Implementation</a>
+                        <a href="<%= projects_path %>?type=Pilot" class="btn btn-sm <% if params[:type] == "Pilot" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;&nbsp;&nbsp;Pilot&nbsp;&nbsp;&nbsp;</a>
                         <a href="<%= projects_path %>?type=Support" class="btn btn-sm <% if params[:type] == "Support" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;&nbsp;&nbsp;Support&nbsp;&nbsp;&nbsp;</a>
-                        <a href="<%= projects_path %>?type=Opportunity" class="btn btn-sm <% if params[:type] == "Opportunity" %>btn-default<% else %>btn-white<% end %>" type="button">Opportunity</a>
-                        <a href="<%= projects_path %>?type=General" class="btn btn-sm <% if params[:type] == "General" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;&nbsp;&nbsp;General&nbsp;&nbsp;&nbsp;</a>
+                        <a href="<%= projects_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;&nbsp;&nbsp;Other&nbsp;&nbsp;&nbsp;</a>
                     </div>
                 </div>
             </div>
