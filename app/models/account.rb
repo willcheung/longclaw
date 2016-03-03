@@ -46,6 +46,7 @@ class Account < ActiveRecord::Base
 
      	account = Account.new(domain: a, 
      								 				name: org_info[0], 
+                            category: "Customer",
                             address: org_info[1],
                             website: "http://www.#{a}",
      								 				owner_id: owner_id, 
