@@ -40,8 +40,8 @@
                     <div class="col-lg-12 projects">
                         <!-- account, projects -->
                         <% @projects.each do |account,projects| %>
-                            <div class="clear">
-                                <h2><%= account.name %></h2>
+                            <h2><%= account.name %></h2>
+                            <div class="row m-l-xs">
                                 <!-- projects -->
                                 <% projects.each do |p| %>
                                     <div class="col-lg-12 <%= p.id %>">
@@ -50,22 +50,15 @@
                                                 <div class="col-lg-4">
                                                     <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
                                                 </div>
+                                                <div class="col-sm-1">
+                                                    <span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span>
+                                                </div>
                                                 <div class="col-sm-2">
                                                     <p class="text-center">Last Activity</p> <p class="text-center"><strong><%= @project_last_activity_date[p.id].nil? ? "N/A" : time_ago_in_words(@project_last_activity_date[p.id]) %></strong></p>
                                                 </div>
                                                 <div class="col-sm-2">
-                                                    <p class="text-center">Activities (last 7d)</p>
+                                                    <p class="text-center">Emails (last 7d)</p>
                                                     <div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;"></div>
-                                                </div>
-                                                <div class="col-md-2 team-members">
-                                                    <p class="text-center">Collaborators (<%= (p.users.size + p.contacts.size) %>)</p>
-                                                    <div style="margin:-6px 0 0 12px;">
-                                                        <% (p.users+p.contacts).each_with_index do |u,i| %>
-                                                            <% if i <= 2 %>
-                                                                <div style="padding-right:3px;float:left;"><%= get_profile_pic(get_full_name(u), u.email, "") %></div>
-                                                            <% end %>
-                                                        <% end %>
-                                                    </div>
                                                 </div>
                                                 <div class="col-md-2">
                                                     <%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-xs fa fa-caret-down pull-right', :style => 'font-size:12px;' %>
@@ -75,7 +68,8 @@
                                                     <% else %>
                                                         <span class="label label-default pull-right">Public</span>
                                                     <% end %>
-                                                    <br/>
+                                                </div>
+                                                <div class="col-sm-1">
                                                     <span class="pull-right m-t-xs">
                                                         <%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, p, method: :delete, remote: true, data: {confirm: "All conversations and notes in this project will be deleted! Are you sure?"} %>
                                                     </span>
@@ -107,3 +101,7 @@
 </div>
 
 <%= render 'projects/modal', modal_id: 'new_project_modal' %>
+
+<script>
+$('[data-toggle="tooltip"]').tooltip();
+</script>
