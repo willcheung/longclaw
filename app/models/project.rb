@@ -49,7 +49,7 @@ class Project < ActiveRecord::Base
 	validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
 	STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
-	CATEGORY = { Implementation: 'Implementation', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+	CATEGORY = { Implementation: 'Implementation', Onboarding: 'Onboarding', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
 
 	# http://192.168.1.130:8888/newsfeed/search?email=indifferenzetester@gmail.com&token=ya29.UAJP6r81Qf9YXosd8S2a61JlTyL6WmqpZ9zAtThBs5z8sEfIMwwNKPxfVNmqWgyustfcy7g&max=10&ex_clusters=[[patrick.smith@clarizen.com]]
 
