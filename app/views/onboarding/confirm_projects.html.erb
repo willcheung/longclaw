@@ -5,8 +5,8 @@
         <h2>Configure your projects and their privacy settings</h2>
         <p class="text-left m-l-xl m-t-md">We applied 3 privacy rules to <strong>all your emails</strong>, no exceptions.</p>
         <ul class="text-left m-r-lg m-l-xl">
-            <li>Internal emails are completely filtered out. Only external communications show up.</li>
-            <li>One-on-one emails are considered private, and we filter them out.</li>
+            <li>Only external communications show up. Internal emails are completely filtered out.</li>
+            <li>One-on-one emails are also filtered out.</li>
             <li>External members (e.g. your customers) are not able to access any information, unless you explicitly share with them.</li>
         </ul>
     </div>
@@ -14,7 +14,7 @@
 
 <% if !@same_projects.empty? or !@overlapping_projects.empty? %>
 <div style="margin-bottom:50px">
-    <h1>You've been added to <%= pluralize((@same_projects+@overlapping_projects).size, 'project') %></h1>
+    <h3>You've been added to <%= pluralize((@same_projects+@overlapping_projects).size, 'project') %></h3>
     <p>These projects were created by your colleagues.</p>
     <% (@same_projects+@overlapping_projects).each do |p| %>
         <div class="row">
@@ -48,21 +48,25 @@
 
 <% if !@new_projects.empty? %>
 <div>
-    <h1>We found <%= pluralize(@new_projects.size, 'project') %> not in our system</h1>
-    <p>Please confirm project name and privacy setting. You can also change it later in projects settings.</p>
+    <h3>We found <strong><%= pluralize(@new_projects.size, 'project') %></strong> not in our system</h3>
+    <h2>Please take a minute to review your new accounts and projects. <br><small>(You can also modify them later in projects settings.)</small></h2>
 	<% @new_projects.each do |p| %>
         <div class="row <%= p.id %>">
             <div class="col-lg-6 col-lg-offset-3">
                 <div class="ibox">
                     <div class="ibox-title">
-                        <h3 style="font-weight:500;"><%= best_in_place p, :name, :as => 'input' %></h3>
+                        <h3 style="font-weight:500;"><%= best_in_place p, :name, :as => 'input', :class => 'fa fa-pencil' %></h3>
                         <div class="small"></div>
-                        <h4>Account: <%= p.account.name %></h4>
+                        <div class="row">
+                            <p>Account: <%= best_in_place p.account, :name, :as => 'input', :class => 'fa fa-pencil' %>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Type: <%= best_in_place p.account, :category, :as => :select, :collection => Account::CATEGORY, :class => 'btn btn-sm btn-default fa fa-caret-down' %></p>
+                        </div>
+                        
                         <div class="row m-t-md">
-                            <div class="col-sm-5">Project Type: <%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-sm fa fa-caret-down' %></div>
+                            
                             <div class="col-sm-3 text-right" style="padding-right:0">Open collaboration &nbsp;<small><i data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can view and collaborate." class="fa fa-question-circle"></i></small></div>
                             <div class="col-sm-1"><%= best_in_place p, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch' %></div>
-                            <div class="col-sm-3">Don't want this? <span style="font-size:15px" title="Delete"><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, p, method: :delete, remote: true %></span></div>
+                            <div class="col-sm-offset-5 col-sm-3">Don't want this? <span style="font-size:15px" title="Delete"><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, p, method: :delete, remote: true %></span></div>
                         </div>
                         
                     </div>
