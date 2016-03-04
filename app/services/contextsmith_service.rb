@@ -26,7 +26,7 @@ class ContextsmithService
     after = after.nil? ? "" : ("&after=" + after.to_s)
     
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode(ex_clusters.to_s) + in_domain + after
-    puts "Calling backend service: " + final_url
+    puts "Calling backend service..."
 
     begin
       url = URI.parse(final_url)
@@ -39,7 +39,7 @@ class ContextsmithService
     end
 
     if data.nil? or data.empty?
-      puts "Nil or no data returned!\n"
+      puts "No data or nil returned!\n"
     elsif data.kind_of?(Array)
       puts "Found #{data[0]['conversations'].size} conversations!\n"
       Activity.load(data, project)

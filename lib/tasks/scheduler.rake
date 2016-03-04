@@ -8,7 +8,7 @@ namespace :projects do
     Organization.all.each do |org|
     	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
-	    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
+	    		puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
 	    		ContextsmithService.load_emails_from_backend(proj, nil, 300)
 	    		sleep(1)
 	    	end
@@ -18,15 +18,14 @@ namespace :projects do
 
 	desc 'Retrieve latest emails since yesterday for all projects in all organization'
 	task load_activities_since_yesterday: :environment do
-    puts "\n\n=====Task (load_activites_since_yesterday) started at #{Time.now}====="
-
     if Time.now.hour.even? # Runs once every 2 hours
+    	puts "\n\n=====Task (load_activites_since_yesterday) started at #{Time.now}====="
 	    after = Time.now.to_i - 86400
 
 	    Organization.all.each do |org|
 	    	org.accounts.each do |acc| 
 		    	acc.projects.each do |proj|
-		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
+		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
 		    		ContextsmithService.load_emails_from_backend(proj, after)
 		    		sleep(1)
 		    	end
@@ -43,7 +42,6 @@ namespace :projects do
 		Organization.all.each do |org|
 			org.users.registered.onboarded.each do |usr|
 				Time.use_zone(usr.time_zone) do
-					puts "User #{usr.email} time now is #{Time.current}"
 					if Time.current.hour == 5 # In the hour of 5am
 						puts "Emailing #{usr.email}..."
 						UserMailer.daily_summary_email(usr).deliver_later
