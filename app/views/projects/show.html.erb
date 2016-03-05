@@ -25,29 +25,6 @@
     <div class="col-lg-9">
         <div class="wrapper wrapper-content animated fadeInUp">
             <div class="ibox">
-                <div class="ibox-title">
-                    <div class="row">
-                        <div class="col-md-12">
-                                <div class="vdivide">
-                                    <div class="row vdivide">
-                                    <div class="col-sm-4 text-center">
-                                            <span>Last Activity</span>
-                                            <strong><%= @project_last_activity_date ? (time_ago_in_words(@project_last_activity_date) + ' ago') : "N/A" %></strong>
-                                        </div>
-                                    <div class="col-sm-4 text-center">
-                                        <strong><%= @project_activities_count_last_7d ? @project_activities_count_last_7d : "0" %></strong>
-                                            <span>Email Activities (last 7 days) </span>
-                                        </div>
-                                    <div class="col-sm-4 text-center">
-                                        <strong><%= @project_members.size %></strong>
-                                            <span>Collaborators</span>
-                                        </div>
-                                  </div>
-                                </div>
-                        </div>
-                    </div>  
-                </div>
-            
                 <div class="ibox-content">
 
                     <div class="panel blank-panel">
