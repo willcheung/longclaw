@@ -239,7 +239,8 @@ Devise.setup do |config|
     prompt: "consent",
     scope: ['https://www.googleapis.com/auth/gmail.readonly',
             'email',
-            'profile']
+            'profile'],
+    skip_jwt: true
   }
   config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
 
