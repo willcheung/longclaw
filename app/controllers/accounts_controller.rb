@@ -7,9 +7,9 @@ class AccountsController < ApplicationController
     @title = 'Accounts'
 
     if params[:type]
-      @accounts = Account.eager_load(:projects).where('accounts.category = ? and organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', params[:type], current_user.organization_id, current_user.id).order('accounts.name')
+      @accounts = Account.eager_load(:projects, :user).where('accounts.category = ? and accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', params[:type], current_user.organization_id, current_user.id).order('accounts.name')
     else
-      @accounts = Account.eager_load(:projects).where('organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order('accounts.name')
+      @accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order('accounts.name')
     end
     
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? and (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")

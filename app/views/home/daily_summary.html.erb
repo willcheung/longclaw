@@ -1,0 +1,114 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Home</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li class="active">
+                <strong>Daily Summary</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+
+    <!-- Daily Updates -->
+    <div class="row">
+        <div class="col-lg-offset-1 col-lg-10">
+            <div class="ibox float-e-margins catchup">
+                <div class="ibox-title catchup-title">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <a class="pull-left text-left" href="?date=<%= (@date_with_timezone - 1.day).strftime('%F') %>"><i class="fa fa-arrow-circle-left m-r-xs" style="font-size:20px"></i><%= (@date_with_timezone - 1.day).strftime('%A, %b %d') %></a>
+                        </div>
+                        <div class="col-sm-6">
+                            <h2 class="text-center">Daily Summary<br/><%= @date_with_timezone.strftime('%A, %B %d') %></h2>
+                        </div>
+                        <div class="col-sm-3">
+                            <% if Date.current > @date_with_timezone %><a class="pull-right text-right" href="?date=<%= (@date_with_timezone + 1.day).strftime('%F') %>"><%= (@date_with_timezone + 1.day).strftime('%A, %b %d') %><i class="fa fa-arrow-circle-right m-l-xs" style="font-size:20px"></i></a><% end %>
+                        </div>
+                    </div>
+                </div>
+                <div class="ibox-content catchup">
+                    <div class="m-b-lg projects">
+                        <% if @projects_with_activities_today.size == 0 and @pinned_activities_today.empty? %>
+                            <h1 class="text-center">No updates</h1>
+                        <% else %>
+                            <h1><%= pluralize(@projects_with_activities_today.size, 'project') %> with new activities</h1>
+                            <ul class="daily-summary">
+                                <% @projects_with_activities_today.each do |p| %>
+                                <li class="row">
+                                    <h3><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small class="m-l-sm"><a class="text-muted"><%= p[1][0].account.name %></a></small></h3>
+                                     <div class="team-members" >
+                                        <div class="col-sm-3">
+                                        <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed:
+                                        </div>
+                                        <div class="col-sm-9">
+                                        <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
+                                            <% if !a.from[0].nil? %>
+                                                <div style="padding-right:3px;float:left;"><%= get_profile_pic(a.from[0].personal, a.from[0].address, "message-avatar") %></div>
+                                            <% end %>
+                                        <% end %>
+                                        </div>
+                                    </div>
+                                </li>
+                                <% end %>
+                            </ul>
+                        <% end %>
+                    </div>
+
+
+                    <% unless @pinned_activities_today.empty? %>
+                        <h1><%= @pinned_activities_today.inject(0) { |sum, n| sum + n.activities.size } %> new pinned items</h1>
+                        <div style="margin-left: 40px;">
+                        <% @pinned_activities_today.each do |p| %>
+                            <h4><a href="<%= project_path(p) %>"><%= p.name %></a></h4>
+                            <table class="table pinned-table table-condensed table-hover">
+                                <tbody>
+                                    <% p.activities.each do |a| %>
+                                        <%= render 'activities/pinned', a: a %>
+                                    <% end %>
+                                </tbody>
+                            </table>
+                        <% end %>
+                        </div>
+                    <% end %>
+                     
+
+                    <% @projects_with_activities_today.each do |p| %>
+                        <h2 class="catchup-project"><span><%= p[1][0].name %> Updates</span></h2>
+                        <div class="row m-t-md m-l-sm">
+                            <div class="col-lg-12">
+                                <div id="vertical-timeline" class="vertical-container light-timeline">
+                                    <% p[0].each do |a| %>
+                                        <%= render 'activities/timeline_block', a: a %>
+                                    <% end %>
+                                </div>
+                                <div class="text-center"><a href="<%= project_path(p[1]) %>" type="button" class="btn btn-default btn-outline btn-sm">Go to project</a></div>
+                            </div>
+                        </div>
+                        
+                    <% end %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* Toggle Private */
+    $('.best_in_place.toggle-private').on('ajax:success', function() {
+        if ($(this).data('activity').is_public) {
+            $(this).data('activity').is_public = false;
+            $(this).parents('.vertical-timeline-content').children('h3').children('#private').show();
+            $(this).parents('.pinned-content').children('h3').children('#private').show();
+        }
+        else {
+            $(this).data('activity').is_public = true;
+            $(this).parents('.vertical-timeline-content').children('h3').children('#private').hide();
+            $(this).parents('.pinned-content').children('h3').children('#private').hide();
+        }
+    });
+</script>
