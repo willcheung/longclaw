@@ -4,7 +4,7 @@ $(document).ready(function(){
   $('#accounts-table').DataTable( {
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [2,3,6]},
+      { searchable: false, targets: [3,4,6]},
       { orderable: false, targets: 6 }
     ],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
