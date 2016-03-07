@@ -1,2 +1,2 @@
- Rails.application.config.assets.precompile += [ 'accounts.js', 'application.js', 'contacts.js', 'contextsmith.js', 'organizations.js', 'projects.js', 'onboarding.js' ]
+ Rails.application.config.assets.precompile += [ 'accounts.js', 'application.js', 'contacts.js', 'contextsmith.js', 'organizations.js', 'projects.js', 'onboarding.js', 'settings.js' ]
  Rails.application.config.assets.precompile += [ 'accounts.css', 'application.css', 'organizations.css', 'projects.css', 'style.css', 'onboarding.css' ]

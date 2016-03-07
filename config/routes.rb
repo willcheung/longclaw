@@ -11,7 +11,9 @@ Longclaw::Application.routes.draw do
     resources :contacts
     resources :projects
     resources :project_members
+    resources :users
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
+    get "settings/" => 'settings#index'
     
     resources :activities, only: [:update, :create] do
       resources :comments, only: [:create, :update, :delete]
@@ -23,7 +25,7 @@ Longclaw::Application.routes.draw do
         "onboarding/intro_activites", "onboarding/intro_pinned", "onboarding/creating_clusters", "onboarding/confirm_projects"
   end
 
-  devise_scope :user do
+  devise_scope :user do # Unauthenticated user
   	root to: "sessions#new"
 	end
 
