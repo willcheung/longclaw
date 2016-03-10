@@ -35,13 +35,14 @@
                 <div class="ibox-title">
                     <span class="label pull-right">Last 7 days</span>
                     <h5>Touches </h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
                     <div class="btn-group m-l-sm">
                         <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
                         <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
                     </div>
                 </div>
                 <div class="ibox-content">
-                    <div id="touches-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"></div>
+                    <div id="touches-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
         </div>
@@ -50,13 +51,14 @@
                 <div class="ibox-title">
                     <span class="label pull-right">Last 7 days vs Prev 7 days</span>
                     <h5>Biggest Movers</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days. (Top 5)"></i>
                     <div class="btn-group m-l-sm">
                         <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
                         <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
                     </div>
                 </div>
                 <div class="ibox-content">
-                    <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"></div>
+                    <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
         </div>
@@ -70,6 +72,7 @@
                 <div class="ibox-title">
                     <span class="label pull-right">14 day trend</span>
                     <h5><%= params[:type] %> Activities Over Time</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by project, trending over Last 14 Days."></i>
                 </div>
                 <div class="ibox-content">
                     <div class="m-b-md">
@@ -80,7 +83,7 @@
                             <% end %>
                         </select>
                     </div>
-                    <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"></div>
+                    <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
         </div>
@@ -88,13 +91,18 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h5>Overdue for Follow Up</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 5 stale projects."></i>
                 </div>
                 <div class="ibox-content">
-                    <% @project_follow_up.each do |p| %>
-                        <div class="m-t-sm m-b-sm">
-                            <h3 style="margin-bottom:0;"><a href="<%= project_path(p) %>"><%= p.name %></a> &nbsp;<span class="label"><%= p.category %></span></h3>
-                            <small class="text-muted">Last activity <strong><%= time_ago_in_words(Time.at(p.last_sent_date.to_i)) %> ago</strong> by <strong><%= p.from[0]['personal'] %></strong></small>
-                        </div>
+                    <% if !@project_follow_up.nil? %>
+                        <% @project_follow_up.each do |p| %>
+                            <div class="m-t-sm m-b-sm">
+                                <h3 style="margin-bottom:0;"><a href="<%= project_path(p) %>"><%= p.name %></a> &nbsp;<span class="label"><%= p.category %></span></h3>
+                                <small class="text-muted">Last activity <strong><%= time_ago_in_words(Time.at(p.last_sent_date.to_i)) %> ago</strong> by <strong><%= p.from[0]['personal'] %></strong></small>
+                            </div>
+                        <% end %>
+                    <% else %>
+                        <h2 class="text-center" style="padding-top:10px;">No data</h2>
                     <% end %>
                 </div>
             </div>
@@ -105,6 +113,9 @@
 </div>
 
 <script>
+    /* Tooltip */
+    $('[data-toggle="tooltip"]').tooltip();
+
     /* Toggle Private */
     $('.best_in_place.toggle-private').on('ajax:success', function() {
         if ($(this).data('activity').is_public) {
@@ -120,7 +131,7 @@
     });
 
 
-    <% if !@project_trend.nil? %>
+    <% if !@projets.nil? %>
 
     /* Highcharts support functions */
     function redraw_activities_trend_chart(chart, project_ids) {
