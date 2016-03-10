@@ -6,6 +6,7 @@ Longclaw::Application.routes.draw do
   authenticate :user do
     # Rails 4 users must specify the 'as' option to give it a unique name
     root :to => "home#index", :as => "authenticated_root"
+    get "home/daily_summary"
 
     resources :accounts 
     resources :contacts

@@ -48,7 +48,7 @@
                                     <div class="col-lg-12 <%= p.id %>">
                                         <div class="ibox-content" style="padding-bottom: 15px;">
                                             <div class="row">
-                                                <div class="col-lg-4">
+                                                <div class="col-md-4">
                                                     <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
                                                 </div>
                                                 <div class="col-sm-1">
@@ -61,7 +61,7 @@
                                                     <p class="text-center">Emails (last 7d)</p>
                                                     <div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;"></div>
                                                 </div>
-                                                <div class="col-md-2">
+                                                <div class="col-sm-2">
                                                     <%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-xs fa fa-caret-down pull-right', :style => 'font-size:12px;' %>
                                                     <br/>
                                                     <% if !p.is_public %>

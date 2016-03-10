@@ -18,7 +18,7 @@
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
 #  is_confirmed   :boolean
-#  category       :string           default("Project")
+#  category       :string           default("Implementation")
 #
 # Indexes
 #
@@ -39,7 +39,7 @@ class Project < ActiveRecord::Base
 	scope :visible_to, -> (organization_id, user_id) {
 		select('DISTINCT(projects.*)')
 				.joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
-				.where('accounts.organization_id = ? AND is_confirmed = true AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
+				.where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
 							 organization_id, user_id, user_id)
 				.group('projects.id')
 	}
@@ -51,12 +51,37 @@ class Project < ActiveRecord::Base
 	STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
 	CATEGORY = { Implementation: 'Implementation', Onboarding: 'Onboarding', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
 
-	# http://192.168.1.130:8888/newsfeed/search?email=indifferenzetester@gmail.com&token=ya29.UAJP6r81Qf9YXosd8S2a61JlTyL6WmqpZ9zAtThBs5z8sEfIMwwNKPxfVNmqWgyustfcy7g&max=10&ex_clusters=[[patrick.smith@clarizen.com]]
+	attr_accessor :num_activities_prev, :pct_from_prev
 
 	def self.check_existing_from_clusters(data, user_id, organization_id)
 		# Use Dice Coefficient
 		# Everything lives in OnboardingController#confirm_projects right now
 	end
+
+	def self.find_include_count_activities_by_day(array_of_project_ids)
+		metrics = {}
+    previous = nil
+    arr = []
+
+		query = <<-SQL
+      WITH time_series as (
+        SELECT * 
+          from (SELECT generate_series(date (CURRENT_DATE - INTERVAL '14 days'), CURRENT_DATE, INTERVAL '1 day') as days) t1 
+                CROSS JOIN 
+               (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
+       )
+      SELECT time_series.project_id as id, date(time_series.days) as date, count(activities.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT sent_date, project_id 
+      					 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}')
+                 ) as activities
+        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
+      GROUP BY time_series.project_id, days 
+      ORDER BY time_series.project_id, days ASC
+    SQL
+
+    Project.find_by_sql(query)
+  end
 
 	def self.count_activities_by_day(days_ago, array_of_project_ids)
 		metrics = {}
@@ -77,15 +102,16 @@ class Project < ActiveRecord::Base
       							(SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id 
                     	FROM activities where project_id in ('#{array_of_project_ids.join("','")}')
                 		) t
-                 WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})) as activities
+                 WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})
+                 ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
       GROUP BY time_series.project_id, days 
       ORDER BY time_series.project_id, days ASC
     SQL
 
-    last_7d_activities = Project.find_by_sql(query)
+    activities = Project.find_by_sql(query)
 
-		last_7d_activities.each_with_index do |p,i|
+		activities.each_with_index do |p,i|
       if previous.nil?
         arr << p.count_activities
         previous = p.project_id
@@ -100,7 +126,7 @@ class Project < ActiveRecord::Base
         previous = p.project_id
       end
 
-      if last_7d_activities[i+1].nil?
+      if activities[i+1].nil?
         metrics[previous] = arr
       end
     end
@@ -108,8 +134,9 @@ class Project < ActiveRecord::Base
   	return metrics
   end
 
-  def self.count_num_activities(hours_ago, array_of_project_ids)
-  	hours_ago_sql = "INTERVAL '#{hours_ago} hours'"
+  def self.find_include_sum_activities(hours_ago_end=Date.current, hours_ago_start, array_of_project_ids)
+		hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
+  	hours_ago_start_sql = "INTERVAL '#{hours_ago_start} hours'"
 
   	query = <<-SQL
   		SELECT projects.*, count(*) as num_activities from (
@@ -121,33 +148,13 @@ class Project < ActiveRecord::Base
 					from activities where project_id in ('#{array_of_project_ids.join("','")}')
 				) t 
 			JOIN projects ON projects.id = t.project_id
-			WHERE sent_date::integer between EXTRACT(EPOCH FROM CURRENT_DATE - #{hours_ago_sql})::integer and EXTRACT(EPOCH FROM clock_timestamp())::integer 
+			WHERE sent_date::integer between EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - #{hours_ago_start_sql})::integer and EXTRACT(EPOCH FROM #{hours_ago_end_sql})::integer 
 			GROUP BY projects.id
 			ORDER BY num_activities DESC
 		SQL
 
 		return Project.find_by_sql(query)
   end
-
-  def self.count_activities_last_24h(array_of_project_ids)
-  	Project.count_num_activities(24, array_of_project_ids)
-  end
-
-  def daily_avg_last_7d
-  	num_activities / 7.0
-  end
-
-  def percent_change_from_daily_avg
-  	if daily_avg_last_7d == 0
-  		100
-  	else
-  		p = Project.count_activities_last_24h([self.id]).first
-  		p.nil? ? p_last_24h_num_activities = 0 : p_last_24h_num_activities = p.num_activities
-
-  		(((p_last_24h_num_activities - daily_avg_last_7d) / daily_avg_last_7d) * 100).round(1)
-  	end
-  end
-
 
 	# This method should be called *after* all accounts, contacts, and users are processed & inserted.
 	def self.create_from_clusters(data, user_id, organization_id)
@@ -174,7 +181,6 @@ class Project < ActiveRecord::Base
 				users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
 				
 				external_members.each do |m|
-					puts (contacts.find {|c| c.email == m.address}).id
 					project.project_members.create(contact_id: (contacts.find {|c| c.email == m.address}).id)
 				end
 
@@ -187,4 +193,20 @@ class Project < ActiveRecord::Base
 			end
 		end
 	end
+
+	def self.calculate_pct_from_prev(project, project_prev)
+		project_chg_activities = []
+
+		project.each do |p|
+      project_prev.each do |p_prev|
+        if p.id == p_prev.id
+          p.num_activities_prev = p_prev.num_activities
+          p.pct_from_prev = (((p.num_activities - p_prev.num_activities) / p_prev.num_activities.to_f) * 100).round(1)
+          project_chg_activities << p
+        end
+      end
+    end
+    return project_chg_activities
+	end
+
 end

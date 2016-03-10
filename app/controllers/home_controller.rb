@@ -2,6 +2,42 @@ class HomeController < ApplicationController
   layout 'empty', only: 'access_denied'
 
   def index
+    # Load all projects visible to user
+    if params[:type]
+      # Filter
+      account_type_filter = "accounts.category = '#{params[:type]}'"
+    else
+      account_type_filter = ""
+    end
+
+    @projects = Project.visible_to(current_user.organization_id, current_user.id).where(account_type_filter)
+
+    ###### Dashboard Metrics ######
+    if !@projects.empty?
+      @project_trend = Project.find_include_count_activities_by_day(@projects.map(&:id))
+      
+      project_sum_activities = Project.find_include_sum_activities(560*24, @projects.map(&:id))
+      @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
+      @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
+
+      project_prev_sum_activities = Project.find_include_sum_activities(550*24, 564*24, @projects.map(&:id))
+      project_chg_activities = Project.calculate_pct_from_prev(project_sum_activities, project_prev_sum_activities)
+      @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
+      @project_min_chg = project_chg_activities.min_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev <= 0 }
+
+      project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id)
+                                    .joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities group by project_id) AS t 
+                                                          ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
+                                    .select("projects.name, projects.id, projects.category, t.last_sent_date_epoch as last_sent_date, activities.from")
+                                    .where("activities.category = 'Conversation'")
+                                    .where(account_type_filter)
+                                    .group("t.last_sent_date_epoch, activities.from")
+      @project_follow_up = project_last_activity_date.min_by(5) { |x| x.last_sent_date }
+    end
+
+  end
+
+  def daily_summary
     d_tz =  params[:date] || Time.current.strftime('%F')
     @date_with_timezone = Date.parse(d_tz)
     date_filter_offset = Time.current.seconds_since_midnight
@@ -16,20 +52,6 @@ class HomeController < ApplicationController
     @projects_with_activities_today = activities_today.group_by{|e| e.activities}
 
     @pinned_activities_today = Project.visible_to(current_user.organization_id, current_user.id).eager_load([:activities]).where("activities.is_pinned = true and activities.pinned_at" + where).group("activities.id")
-    
-    ###### Dashboard Metrics ######
-    # Load all projects visible to user
-
-    projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
-    if !projects.empty?
-      projects_with_activities_count_7d = Project.count_num_activities(7*24, projects.map(&:id))
-      
-      @project_most_activities = projects_with_activities_count_7d.max_by(&:num_activities)
-      @project_least_activities = projects_with_activities_count_7d.min_by(&:num_activities)
-      @project_biggest_change = projects_with_activities_count_7d.max_by {|x| x.percent_change_from_daily_avg.abs}
-    end
-
-    @users_in_org = current_user.organization.users.registered.order(created_at: :desc).limit(10)
   end
 
   def access_denied

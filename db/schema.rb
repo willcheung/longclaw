@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160225015422) do
+ActiveRecord::Schema.define(version: 20160307223225) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -142,7 +142,7 @@ ActiveRecord::Schema.define(version: 20160225015422) do
   add_index "project_members", ["user_id"], name: "index_project_members_on_user_id", using: :btree
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",           default: "",        null: false
+    t.string   "name",           default: "",               null: false
     t.uuid     "account_id"
     t.string   "project_code"
     t.boolean  "is_public",      default: true
@@ -154,10 +154,10 @@ ActiveRecord::Schema.define(version: 20160225015422) do
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
-    t.datetime "created_at",                         null: false
-    t.datetime "updated_at",                         null: false
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
     t.boolean  "is_confirmed"
-    t.string   "category",       default: "Project"
+    t.string   "category",       default: "Implementation"
   end
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree

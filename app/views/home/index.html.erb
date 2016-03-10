@@ -1,175 +1,107 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
         <h2>Home</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li class="active">
+                <strong>Dashboard</strong>
+            </li>
+        </ol>
     </div>
 </div>
 
-<div class="sidebar-panel" style="height:80%">
-    <h3><i class="fa fa-bell-o"></i> Notifications</h3>
-    <% @users_in_org.each do |u| %>
-        <div class="feed-element">
-            <div class="media-body">
-                <%= get_full_name(u) %> signed up, and added <%= u.accounts.size %> accounts and <%= u.projects_owner_of.size %> projects.
-                <br>
-                <small class="text-muted"><%= time_ago_in_words(u.created_at) %> ago</small>
-            </div>
-        </div>
-    <% end %>
-</div>
+<div class="wrapper wrapper-content animated fadeInRight">
 
-<div class="wrapper wrapper-content animated fadeInRight" style="padding-right:230px !important">
-
-    <!-- Metrics -->
-    <div class="row">
-        <div class="col-lg-4">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <span class="label pull-right">Last 7 days</span>
-                    <h5>Most Active </h5>
-                </div>
-                <div class="ibox-content">
-                    <h4 class="no-margins">
-                        <% if @project_most_activities %>
-                            <a href="<%= project_path(@project_most_activities) %>"><%= @project_most_activities.name %></a>
-                        <% else %>
-                            N/A
-                        <% end %>
-                    </h4>
-                    <div class="m-t-sm">
-                        <% if @project_most_activities %>
-                            <span class="stat-percent font-bold <%= green_or_red(@project_most_activities.percent_change_from_daily_avg) %>"><%= @project_most_activities.percent_change_from_daily_avg %>% <%= up_or_down(@project_most_activities.percent_change_from_daily_avg) %></span> <small>from 7 day avg</small>
-                        <% end %>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <span class="label pull-right">Last 7 days</span>
-                    <h5>Least Active</h5>
-                </div>
-                <div class="ibox-content">
-                    <h4 class="no-margins">
-                        <% if @project_least_activities %>
-                            <a href="<%= project_path(@project_least_activities) %>"><%= @project_least_activities.name %></a>
-                        <% else %>
-                            N/A
-                        <% end %>
-                    </h4>
-                    <div class="m-t-sm">
-                        <% if @project_least_activities %>
-                            <span class="stat-percent font-bold <%= green_or_red(@project_least_activities.percent_change_from_daily_avg) %>"><%= @project_least_activities.percent_change_from_daily_avg %>% <%= up_or_down(@project_least_activities.percent_change_from_daily_avg) %></span> <small>from 7 day avg</small>
-                        <% end %>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <span class="label pull-right">vs 7 day avg</span>
-                    <h5>Biggest Change</h5>
-                </div>
-                <div class="ibox-content">
-                    <h4 class="no-margins">
-                        <% if @project_biggest_change %>
-                            <a href="<%= project_path(@project_biggest_change) %>"><%= @project_biggest_change.name %></a>
-                        <% else %>
-                            N/A
-                        <% end %>
-                    </h4>
-                    <div class="m-t-sm">
-                        <% if @project_biggest_change %>
-                            <span class="stat-percent font-bold <%= green_or_red(@project_biggest_change.percent_change_from_daily_avg) %>"><%= @project_biggest_change.percent_change_from_daily_avg %>% <%= up_or_down(@project_biggest_change.percent_change_from_daily_avg) %></span> <small>from 7 day avg</small>
-                        <% end %>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Daily Updates -->
     <div class="row">
         <div class="col-lg-12">
-            <div class="ibox float-e-margins catchup">
-                <div class="ibox-title catchup-title">
-                    <div class="row">
-                        <div class="col-sm-3">
-                            <a class="pull-left text-left" href="?date=<%= (@date_with_timezone - 1.day).strftime('%F') %>"><i class="fa fa-arrow-circle-left m-r-xs" style="font-size:20px"></i><%= (@date_with_timezone - 1.day).strftime('%A, %b %d') %></a>
-                        </div>
-                        <div class="col-sm-6">
-                            <h2 class="text-center">Daily Summary<br/><%= @date_with_timezone.strftime('%A, %B %d') %></h2>
-                        </div>
-                        <div class="col-sm-3">
-                            <% if Date.current > @date_with_timezone %><a class="pull-right text-right" href="?date=<%= (@date_with_timezone + 1.day).strftime('%F') %>"><%= (@date_with_timezone + 1.day).strftime('%A, %b %d') %><i class="fa fa-arrow-circle-right m-l-xs" style="font-size:20px"></i></a><% end %>
-                        </div>
+            <div class="btn-group">
+                <div class="font-bold m-b-xs">Account Type:</div>
+                <a href="<%= root_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
+                <a href="<%= root_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Customer</a>
+                <a href="<%= root_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Partner&nbsp;</a>
+                <a href="<%= root_path %>?type=Prospect" class="btn btn-sm <% if params[:type] == "Prospect" %>btn-default<% else %>btn-white<% end %>" type="button">Prospect</a>
+                <a href="<%= root_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Vendor&nbsp;</a>
+                <a href="<%= root_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="row m-t-lg">
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Touches </h5>
+                    <div class="btn-group m-l-sm">
+                        <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
+                        <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
                     </div>
                 </div>
-                <div class="ibox-content catchup">
-                    <div class="m-b-lg projects">
-                        <% if @projects_with_activities_today.size == 0 and @pinned_activities_today.empty? %>
-                            <h1 class="text-center">No updates</h1>
-                        <% else %>
-                            <h1><%= pluralize(@projects_with_activities_today.size, 'project') %> with new activities</h1>
-                            <ul class="daily-summary">
-                                <% @projects_with_activities_today.each do |p| %>
-                                <li class="row">
-                                    <h3><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small class="m-l-sm"><a class="text-muted"><%= p[1][0].account.name %></a></small></h3>
-                                     <div class="team-members" >
-                                        <div class="col-sm-3">
-                                        <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed:
-                                        </div>
-                                        <div class="col-sm-9">
-                                        <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
-                                            <% if !a.from[0].nil? %>
-                                                <div style="padding-right:3px;float:left;"><%= get_profile_pic(a.from[0].personal, a.from[0].address, "message-avatar") %></div>
-                                            <% end %>
-                                        <% end %>
-                                        </div>
-                                    </div>
-                                </li>
-                                <% end %>
-                            </ul>
-                        <% end %>
+                <div class="ibox-content">
+                    <div id="touches-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days vs Prev 7 days</span>
+                    <h5>Biggest Movers</h5>
+                    <div class="btn-group m-l-sm">
+                        <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
+                        <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
                     </div>
+                </div>
+                <div class="ibox-content">
+                    <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"></div>
+                </div>
+            </div>
+        </div>
 
+    </div>
 
-                    <% unless @pinned_activities_today.empty? %>
-                        <h1><%= @pinned_activities_today.inject(0) { |sum, n| sum + n.activities.size } %> new pinned items</h1>
-                        <div style="margin-left: 40px;">
-                        <% @pinned_activities_today.each do |p| %>
-                            <h4><a href="<%= project_path(p) %>"><%= p.name %></a></h4>
-                            <table class="table pinned-table table-condensed table-hover">
-                                <tbody>
-                                    <% p.activities.each do |a| %>
-                                        <%= render 'activities/pinned', a: a %>
-                                    <% end %>
-                                </tbody>
-                            </table>
-                        <% end %>
+    <div class="row">
+
+        <div class="col-lg-7">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">14 day trend</span>
+                    <h5><%= params[:type] %> Activities Over Time</h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="m-b-md">
+                        <select data-placeholder="Choose a Project..." style="width:97%;" class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
+                            <option value=""></option>
+                            <% @projects.each do |p| %>
+                                <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                            <% end %>
+                        </select>
+                    </div>
+                    <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Overdue for Follow Up</h5>
+                </div>
+                <div class="ibox-content">
+                    <% @project_follow_up.each do |p| %>
+                        <div class="m-t-sm m-b-sm">
+                            <h3 style="margin-bottom:0;"><a href="<%= project_path(p) %>"><%= p.name %></a> &nbsp;<span class="label"><%= p.category %></span></h3>
+                            <small class="text-muted">Last activity <strong><%= time_ago_in_words(Time.at(p.last_sent_date.to_i)) %> ago</strong> by <strong><%= p.from[0]['personal'] %></strong></small>
                         </div>
-                    <% end %>
-                     
-
-                    <% @projects_with_activities_today.each do |p| %>
-                        <h2 class="catchup-project"><span><%= p[1][0].name %> Updates</span></h2>
-                        <div class="row m-t-md m-l-sm">
-                            <div class="col-lg-12">
-                                <div id="vertical-timeline" class="vertical-container light-timeline">
-                                    <% p[0].each do |a| %>
-                                        <%= render 'activities/timeline_block', a: a %>
-                                    <% end %>
-                                </div>
-                                <div class="text-center"><a href="<%= project_path(p[1]) %>" type="button" class="btn btn-default btn-outline btn-sm">Go to project</a></div>
-                            </div>
-                        </div>
-                        
                     <% end %>
                 </div>
             </div>
         </div>
+
     </div>
+
 </div>
 
 <script>
@@ -186,4 +118,241 @@
             $(this).parents('.pinned-content').children('h3').children('#private').hide();
         }
     });
+
+
+    <% if !@project_trend.nil? %>
+
+    /* Highcharts support functions */
+    function redraw_activities_trend_chart(chart, project_ids) {
+        // Delete all the series.
+        while (chart.series.length > 0) {
+          chart.series[0].remove(false);
+        }
+        
+        if (project_ids != null) {
+            // Add the new series.
+            <% @projects.each do |p| %>
+                if (project_ids.indexOf("<%= p.id %>") > -1) {
+                    chart.addSeries({
+                            name: '<%= p.name %>',
+                            pointInterval: <%= 1.day * 1000 %>,
+                            pointStart: <%= 13.days.ago.at_midnight.to_i * 1000 %>,
+                            data: <%= get_num_activities(13.days.ago.to_date..Date.current, @project_trend, p.id) %>
+                        });
+                }
+            <% end %>
+        }
+        
+        chart.redraw();
+    }
+
+    function redraw_touches_chart(chart, max) {
+        // Delete all the series.
+        while (chart.series.length > 0) {
+          chart.series[0].remove(false);
+        }
+
+        if(max) {
+            chart.xAxis[0].setCategories(<%= @project_max.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Touches',
+                    data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
+                    color: '#7cb5ec'
+                });
+            
+        } else {
+            chart.xAxis[0].setCategories(<%= @project_min.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Touches',
+                    data: <%= @project_min.map(&:num_activities).to_json.html_safe %>,
+                    color: '#7cb5ec'
+                });
+        }
+
+        chart.redraw();
+    }
+
+    function redraw_changes_chart(chart, max) {
+        // Delete all the series.
+        while (chart.series.length > 0) {
+          chart.series[0].remove(false);
+        }
+
+        if(max) {
+            chart.xAxis[0].setCategories(<%= @project_max_chg.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Gain',
+                    data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                    color: '#32B232'
+                });
+            
+        } else {
+            chart.xAxis[0].setCategories(<%= @project_min_chg.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Decline',
+                    data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                    color: '#FF5050'
+                });
+        }
+
+        chart.redraw();
+    }
+
+    /* Highcharts */
+    $(function () {
+        $('#touches-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @project_max.map(&:name).to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Touches',
+                data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
+                color: '#7cb5ec'
+            }]
+        });
+    });
+
+    $(function () {
+        $('#percent-change-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @project_max_chg.map(&:name).to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                labels: {
+                    format: '{value}%'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            tooltip: {
+                valueSuffix: '%'
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Gain',
+                data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                color: '#32B232'
+            }]
+        });
+    });
+
+    $(function () {
+        $('#activities-trend-chart').highcharts({
+            title: {
+                text: ''
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }],
+                min: 0
+            },
+            tooltip: {
+                valueSuffix: ''
+            },
+            legend: {
+                layout: 'horizontal',
+                align: 'center',
+                y: 20,
+                itemStyle: {
+                 fontSize:'10px'
+                },
+                itemDistance: 10
+            },
+            series: [
+            <% @project_max.each_with_index do |p,i| %>
+                {
+                name: '<%= p.name %>',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 13.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= get_num_activities(13.days.ago.to_date..Date.current, @project_trend, p.id) %>
+                }<% if i != @project_max.size - 1 %>,<% end %>
+            <% end %>
+            ]
+
+        });
+    });
+
+    /* Event Handlers */
+    var projects_chosen;
+
+    $('#project-chosen-select').on('change', function(evt) {
+        projects_chosen = $(evt.target).val();
+        chart = $('#activities-trend-chart').highcharts();
+        redraw_activities_trend_chart(chart, projects_chosen);
+    });
+
+    $('#most-touches').click(function() {
+        chart = $('#touches-chart').highcharts();
+        $(this).addClass("active");
+        $('#least-touches').removeClass("active");
+        redraw_touches_chart(chart, true);
+    });
+
+    $('#least-touches').click(function() {
+        chart = $('#touches-chart').highcharts();
+        $(this).addClass("active");
+        $('#most-touches').removeClass("active");
+        redraw_touches_chart(chart, false);
+    });
+
+    $('#most-change').click(function() {
+        chart = $('#percent-change-chart').highcharts();
+        $(this).addClass("active");
+        $('#least-change').removeClass("active");
+        redraw_changes_chart(chart, true);
+    });
+
+    $('#least-change').click(function() {
+        chart = $('#percent-change-chart').highcharts();
+        $(this).addClass("active");
+        $('#most-change').removeClass("active");
+        redraw_changes_chart(chart, false);
+    });
+
+    <% end %>
 </script>
+

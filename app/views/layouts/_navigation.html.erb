@@ -1,6 +1,6 @@
 <nav class="navbar-default navbar-static-side" role="navigation">
     <div class="sidebar-collapse">
-        <ul class="nav" id="side-menu">
+        <ul class="nav metismenu" id="side-menu">
             <li class="nav-header">
                 <div class="dropdown profile-element">
                     <a href="#">
@@ -14,10 +14,18 @@
                 </div>
             </li>
             <li class="<%= is_active_controller('home') %>">
-                <a href="<%= root_path %>"><i class="fa fa-home"></i> <span class="nav-label">Home</span></a>
+                <a aria-expanded="true" href="#"><i class="fa fa-home"></i> <span class="nav-label">Home</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level <%= is_active_controller('home') %>">
+                    <li class="<%= is_active_controller('home') and is_active_action('index') %>">
+                        <a href="<%= root_path %>"><i class="fa fa-dashboard"></i> <span class="nav-label">Dashboard</span></a>
+                    </li>
+                    <li class="<%= is_active_action('daily_summary') %>">
+                        <a href="<%= home_daily_summary_path %>"><i class="fa fa-file-text-o"></i> <span class="nav-label">Daily Summary</span></a>
+                    </li>
+                </ul>
             </li>
             <li class="<%= is_active_controller('accounts') %>">
-                <a href="<%= accounts_path %>"><i class="fa fa-th-large"></i> <span class="nav-label">Accounts</span></a>
+                <a href="<%= accounts_path %>"><i class="fa fa-users"></i> <span class="nav-label">Accounts</span></a>
             </li>
             <li class="<%= is_active_controller('projects') %>">
                 <a href="<%= projects_path %>"><i class="fa fa-briefcase"></i> <span class="nav-label">Projects</span></a>

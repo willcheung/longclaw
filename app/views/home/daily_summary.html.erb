@@ -40,10 +40,14 @@
                             <ul class="daily-summary">
                                 <% @projects_with_activities_today.each do |p| %>
                                 <li class="row">
-                                    <h3><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small class="m-l-sm"><a class="text-muted"><%= p[1][0].account.name %></a></small></h3>
-                                     <div class="team-members" >
+                                    <div class="col-lg-4">
+                                        <h3><a href="<%= project_path(p[1]) %>"><%= p[1][0].name %></a> <small class="m-l-sm"><a class="text-muted">
+                                        <br><%= p[1][0].account.name %></a></small>
+                                        </h3>
+                                    </div>
+                                    <div class="col-lg-8 team-members" >
                                         <div class="col-sm-3">
-                                        <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed:
+                                        <%= p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?} %> contributed:
                                         </div>
                                         <div class="col-sm-9">
                                         <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>

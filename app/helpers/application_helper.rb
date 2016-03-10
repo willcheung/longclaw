@@ -113,6 +113,12 @@ module ApplicationHelper
     return ('<div class="rounded-initials ' + css_class + '" title="' + name + '" style="background:' + User::PROFILE_COLOR[(name.length)%9] + '">' + s + '</div>').html_safe
   end
 
+  # Highcharts helper
+  def get_num_activities(date_range, trend_data, project_id)
+    date_range.map { |date| trend_data.find_all { |p| p.id == project_id }.find { |d| d.date == date }.num_activities }.inspect
+  end
+
+  # Alert Notification helper
   def custom_toastr_flash
   	flash_messages = []
   	flash.each do |type, message|
