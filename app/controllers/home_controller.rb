@@ -14,7 +14,7 @@ class HomeController < ApplicationController
 
     ###### Dashboard Metrics ######
     if !@projects.empty?
-      @project_trend = Project.find_include_count_activities_by_day(@projects.map(&:id))
+      @project_trend = Project.find_include_count_activities_by_day(@projects.map(&:id), current_user.time_zone)
       
       project_sum_activities = Project.find_include_sum_activities(7*24, @projects.map(&:id))
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }

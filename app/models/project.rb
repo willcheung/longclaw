@@ -58,7 +58,7 @@ class Project < ActiveRecord::Base
 		# Everything lives in OnboardingController#confirm_projects right now
 	end
 
-	def self.find_include_count_activities_by_day(array_of_project_ids)
+	def self.find_include_count_activities_by_day(array_of_project_ids, time_zone)
 		metrics = {}
     previous = nil
     arr = []
@@ -75,7 +75,7 @@ class Project < ActiveRecord::Base
       LEFT JOIN (SELECT sent_date, project_id 
       					 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}')
                  ) as activities
-        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
+        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days 
       ORDER BY time_series.project_id, days ASC
     SQL
