@@ -16,17 +16,17 @@ class HomeController < ApplicationController
     if !@projects.empty?
       @project_trend = Project.find_include_count_activities_by_day(@projects.map(&:id))
       
-      project_sum_activities = Project.find_include_sum_activities(560*24, @projects.map(&:id))
+      project_sum_activities = Project.find_include_sum_activities(7*24, @projects.map(&:id))
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
       @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
 
-      project_prev_sum_activities = Project.find_include_sum_activities(550*24, 564*24, @projects.map(&:id))
+      project_prev_sum_activities = Project.find_include_sum_activities(7*24, 14*24, @projects.map(&:id))
       project_chg_activities = Project.calculate_pct_from_prev(project_sum_activities, project_prev_sum_activities)
       @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
       @project_min_chg = project_chg_activities.min_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev <= 0 }
 
       project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id)
-                                    .joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities group by project_id) AS t 
+                                    .joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t 
                                                           ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
                                     .select("projects.name, projects.id, projects.category, t.last_sent_date_epoch as last_sent_date, activities.from")
                                     .where("activities.category = 'Conversation'")
