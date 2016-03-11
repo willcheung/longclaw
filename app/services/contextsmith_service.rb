@@ -26,7 +26,7 @@ class ContextsmithService
     after = after.nil? ? "" : ("&after=" + after.to_s)
     
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode(ex_clusters.to_s) + in_domain + after
-    puts "Calling backend service for #{token_emails.map{|x| x[:email]}}..."
+    puts "Calling backend service: " + final_url
 
     begin
       url = URI.parse(final_url)
