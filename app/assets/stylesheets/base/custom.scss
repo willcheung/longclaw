@@ -110,10 +110,10 @@ a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn
   border-width: 8px;
   margin-left: -8px;
 }
-.catchup-title a {
+.catchup-title a, a.link-muted {
   color: #999;
 }
-.catchup-title a:hover {
+.catchup-title a:hover, a.link-muted:hover {
   color: #555;
 }
 .catchup-title h2 {
@@ -298,4 +298,11 @@ span.best_in_place.btn {
 }
 .project-people .member:hover .delete-member {
   display: block;
+}
+#projects-table th, #accounts-table th {
+  padding-top:20px;
+  padding-bottom:20px;
+}
+#projects-table thead, #accounts-table thead {
+  background:#f5f5f9;
 }

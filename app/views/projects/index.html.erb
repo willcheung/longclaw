@@ -32,71 +32,56 @@
                 </div>
             </div>
 
-            <% if @projects.empty? %>
-                <div class="text-center m-t-lg">
-                    <h3>No projects found. Did you filter them out?</h3>
-                </div>
-            <% else %>
-                <div class="row">
-                    <div class="col-lg-12 projects">
-                        <!-- account, projects -->
-                        <% @projects.each do |account,projects| %>
-                            <h2><%= account.name %></h2>
-                            <div class="row m-l-xs">
-                                <!-- projects -->
-                                <% projects.each do |p| %>
-                                    <div class="col-lg-12 <%= p.id %>">
-                                        <div class="ibox-content" style="padding-bottom: 15px;">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <h3><a href="<%= project_path(p) %>"><%= p.name %></a></h3>
-                                                </div>
-                                                <div class="col-sm-1">
-                                                    <span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span>
-                                                </div>
-                                                <div class="col-sm-2">
-                                                    <p class="text-center">Last Activity</p> <p class="text-center"><strong><%= @project_last_activity_date[p.id].nil? ? "N/A" : time_ago_in_words(@project_last_activity_date[p.id]) %></strong></p>
-                                                </div>
-                                                <div class="col-sm-2">
-                                                    <p class="text-center">Emails (last 7d)</p>
-                                                    <div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;"></div>
-                                                </div>
-                                                <div class="col-sm-2">
-                                                    <%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-xs fa fa-caret-down pull-right', :style => 'font-size:12px;' %>
-                                                    <br/>
-                                                    <% if !p.is_public %>
+            <div class="col-sm-12 m-t-md">
+                <% if @projects.empty? %>
+                    <div class="text-center m-t-lg">
+                        <h3>No projects found. Did you filter them out?</h3>
+                    </div>
+                <% else %>
+                    <div class="ibox float-e-margins">
+                        <div class="ibox-content">
+                            <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>Project Stream</th>
+                                        <th>Type</th>
+                                        <th>Owner</th>
+                                        <th>Emails (last 7d)</th>
+                                        <th style="text-align:center">Inactive Days</th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% @projects.each do |account,projects| %>
+                                        <% projects.each do |p| %>
+                                            <tr style="height:70px;">
+                                                <td>
+                                                    <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
+                                                    <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(account) %>"><%= account.name %></a><small></div>
+                                                </td>
+                                                <td><%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-outline btn-xs fa fa-caret-down', :style => 'font-size:12px;' %></td>
+                                                <td><%= get_full_name(p.project_owner) %></td>
+                                                <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;"></div></td>
+                                                <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : ((Time.current - @project_last_activity_date[p.id])/86400).to_i %></td>
+                                                <td><% if !p.is_public %>
                                                         <span class="label label-warning pull-right">Private</span>
                                                     <% else %>
                                                         <span class="label label-default pull-right">Public</span>
                                                     <% end %>
-                                                </div>
-                                                <div class="col-sm-1">
-                                                    <span class="pull-right m-t-xs">
-                                                        <%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, p, method: :delete, remote: true, data: {confirm: "All conversations and notes in this project will be deleted! Are you sure?"} %>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <script>
-                                    $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {
-                                        type: 'bar',
-                                        height: '20',
-                                        barWidth: 12,
-                                        barSpacing: 2,
-                                        barColor: '#5DA5DA',
-                                        zeroAxis: false,
-                                        zeroColor: '#ed5565'
-                                    });
-                                    </script>
-                                <% end %>
-                                <!-- projects -->
-                            </div>
-                        <% end %>
-                        <!-- end account, projects -->
+                                                </td>
+                                                <td><a><i class="fa fa-bell"></i> Follow </a></td>
+                                                <td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, p, method: :delete, remote: true, data: {confirm: "All conversations and notes in this project will be deleted! Are you sure?"} %></td>
+                                            </tr>
+                                        <% end %>
+                                    <% end %>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-            <% end %>
+                <% end %>
+            </div>
         </div>
     </div>
 </div>

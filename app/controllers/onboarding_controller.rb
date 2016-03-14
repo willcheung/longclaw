@@ -157,7 +157,7 @@ class OnboardingController < ApplicationController
 
 		respond_to do |format|
       
-  		if user and data        
+  		if user and data and !data.empty?       
         uniq_external_members, uniq_internal_members = get_all_members(data)
 
         ############## Needs to be called in order -> Account (Contacts), User, Project ##########
@@ -173,35 +173,12 @@ class OnboardingController < ApplicationController
 
        	##########################################################################################
 
-	      begin
-	       	# Update flag indicating cluster creation is complete
-	       	if user.cluster_create_date.nil?
-	       		user.update_attributes(cluster_create_date: Time.now, cluster_update_date: Time.now)
-	       	else
-	       		user.update_attributes(cluster_update_date: Time.now)
-	       	end
-
-	       	# Send welcome email with confirm_projects link
-	       	num_of_projects = Project.where(created_by: user.id, is_confirmed: false).includes(:users, :contacts, :account).count(:projects)
-          UserMailer.welcome_email(user, num_of_projects, "#{ENV['csback_callback_base_url']}/onboarding/confirm_projects").deliver_later
-          
-          format.json { render json: 'Email sent to ' + user.email, status: 200 }
-
-        rescue => e
-          format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
-          logger.error "ERROR: Something went wrong: " + e.message
-          logger.error e.backtrace.join("\n")
-          ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
-        else
-          format.json { render json: 'Clusters created for user ' + user.email, status: 200}
-        end
-  		
-  		elsif user.nil?
+      elsif user.nil?
   			format.json { render json: 'User not found.', status: 500}
   			logger.error "ERROR: User not found: " + params[:user_id]
   			ahoy.track("Error Create Cluster", message: "User not found: #{params[:user_id]}")
-  		
-  		elsif data.nil?
+  			raise "ERROR: User not found during callback: " + params[:user_id]
+  		elsif data.empty? or data.nil?
   			format.json { render json: 'No data.', status: 200}
 
   			if params["errors"].nil? # no errors
@@ -217,6 +194,29 @@ class OnboardingController < ApplicationController
 	  		end
 
   		end # if user and data
+
+      begin
+       	# Update flag indicating cluster creation is complete
+       	if user.cluster_create_date.nil?
+       		user.update_attributes(cluster_create_date: Time.now, cluster_update_date: Time.now)
+       	else
+       		user.update_attributes(cluster_update_date: Time.now)
+       	end
+
+       	# Send welcome email with confirm_projects link
+       	num_of_projects = Project.where(created_by: user.id, is_confirmed: false).includes(:users, :contacts, :account).count(:projects)
+        UserMailer.welcome_email(user, num_of_projects, "#{ENV['csback_callback_base_url']}/onboarding/confirm_projects").deliver_later
+        
+        format.json { render json: 'Email sent to ' + user.email, status: 200 }
+
+      rescue => e
+        format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
+        logger.error "ERROR: Something went wrong: " + e.message
+        logger.error e.backtrace.join("\n")
+        ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
+      else
+        format.json { render json: 'Clusters created for user ' + user.email, status: 200}
+      end
 
   	end # respond_to do |format|
 	end
