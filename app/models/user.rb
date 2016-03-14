@@ -51,7 +51,7 @@ class User < ActiveRecord::Base
   has_many    :project_members
   has_many    :projects, through: "project_members"
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :destroy
-  has_many    :subscription, class_name: "ProjectSubscriber", foreign_key: "email", dependent: :destroy
+  has_many    :subscription, class_name: "ProjectSubscriber", dependent: :destroy
 
   scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
   scope :onboarded, -> {where("onboarding_step = #{Utils::ONBOARDING[:onboarded]}")}

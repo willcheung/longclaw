@@ -10,14 +10,16 @@ Longclaw::Application.routes.draw do
 
     resources :accounts 
     resources :contacts
-    resources :projects
+    resources :projects do
+      resources :project_subscribers, param: :user_id, only: [:destroy, :create]
+    end
     resources :project_members
     resources :users
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "settings/" => 'settings#index'
     
     resources :activities, only: [:update, :create] do
-      resources :comments, only: [:create, :update, :delete]
+      resources :comments, only: [:create, :update, :destroy]
     end
     #resources :organizations  # not using yet
 
