@@ -195,7 +195,7 @@ class Project < ActiveRecord::Base
 				end
 
 				# Automatically subscribe to projects created
-				project.subscribers.create(user_id: current_user.id)
+				project.subscribers.create(user_id: user_id)
 
 				# Project activities
 				Activity.load(get_project_conversations(data, p), project, user_id)
