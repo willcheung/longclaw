@@ -16,13 +16,17 @@ class UserMailer < ApplicationMailer
 
     where = " between to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) and (to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) + interval '24 hours')"
     
-    activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
-    @projects_with_activities_today = activities_today.group_by{|e| e.activities}
+    sub = user.subscriptions.first
 
-    @pinned_activities_today = Project.visible_to(user.organization_id, user.id).eager_load([:activities]).where("activities.is_pinned = true and activities.pinned_at" + where).group("activities.id")
+    if !sub.nil? or !sub.empty?
+      activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
+      @projects_with_activities_today = activities_today.group_by{|e| e.activities}
 
-    track user: user # ahoy_email tracker
-    mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
+      @pinned_activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities]).where("activities.is_pinned = true and activities.pinned_at" + where).group("activities.id")
+
+      track user: user # ahoy_email tracker
+      mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
+    end
   end
 
 end
