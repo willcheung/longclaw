@@ -18,14 +18,13 @@ Longclaw::Application.routes.draw do
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "settings/" => 'settings#index'
     
-    resources :activities, only: [:update, :create] do
+    resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy]
     end
     #resources :organizations  # not using yet
 
     get "search/results"
-    get "onboarding/intro_overall", "onboarding/intro_accounts_projects",
-        "onboarding/intro_activites", "onboarding/intro_pinned", "onboarding/creating_clusters", "onboarding/confirm_projects"
+    get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
   end
 
   devise_scope :user do # Unauthenticated user

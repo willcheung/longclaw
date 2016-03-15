@@ -1,5 +1,6 @@
 class HomeController < ApplicationController
   layout 'empty', only: 'access_denied'
+  before_action :check_user_onboarding, only: :index
 
   def index
     # Load all projects visible to user
@@ -56,5 +57,15 @@ class HomeController < ApplicationController
 
   def access_denied
     # Nothing here
+  end
+
+  private
+
+  def check_user_onboarding
+    if current_user.onboarding_step == Utils::ONBOARDING[:confirm_projects] and !current_user.cluster_create_date.nil?
+      redirect_to onboarding_confirm_projects_path
+    elsif current_user.onboarding_step == Utils::ONBOARDING[:confirm_projects] and current_user.cluster_create_date.nil?
+      redirect_to onboarding_creating_clusters_path
+    end
   end
 end

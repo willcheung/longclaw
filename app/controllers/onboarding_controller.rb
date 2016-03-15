@@ -1,19 +1,7 @@
 class OnboardingController < ApplicationController
 	layout 'empty'
 
-	def intro_overall
-
-	end
-
-	def intro_accounts_projects
-
-	end
-
-	def intro_activities
-
-	end
-
-	def intro_pinned
+	def tutorial
 
 	end
 
