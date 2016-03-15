@@ -163,7 +163,7 @@ class OnboardingController < ApplicationController
 
 		respond_to do |format|
       
-  		if user and data and !data.empty?       
+  		if user and data.kind_of?(Array)    
         uniq_external_members, uniq_internal_members = get_all_members(data)
 
         ############## Needs to be called in order -> Account (Contacts), User, Project ##########
@@ -184,20 +184,26 @@ class OnboardingController < ApplicationController
   			logger.error "ERROR: User not found: " + params[:user_id]
   			ahoy.track("Error Create Cluster", message: "User not found: #{params[:user_id]}")
   			raise "ERROR: User not found during callback: " + params[:user_id]
-  		elsif data.empty? or data.nil?
-  			format.json { render json: 'No data.', status: 200}
 
-  			if params["errors"].nil? # no errors
-	  			logger.error "No data return for user: " + params[:user_id]
-	  			ahoy.track("Error Create Cluster", message: "No data return for user: #{params[:user_id]}")
-	  		else # returns error
-	  			logger.error "ERROR: Code: " + params[:code].to_s + " Error: " + params["message"]
-	  			ahoy.track("Error Create Cluster", message: "#{params[:code].to_s} #{params[:message]}")
-	  			if params["message"] == "Invalid Credentials"
-	  				logger.error "Token might have expired."
-	  				ahoy.track("Error Create Cluster", message: "Invalid Credentials. Token might have expired.")
-	  			end
-	  		end
+  		elsif data.empty? or data.nil?
+  			format.json { render json: 'No data.', status: 500}
+  			logger.error "ERROR : data nil or empty during callback: " + params[:user_id]
+  			ahoy.track("Error Create Cluster for " + params[:user_id], message: "Data nil or empty during callback")
+
+	    elsif data['code'] == 401 # Invalid credentials
+	      puts "Error: #{data['errors'][0]['message']}\n"
+	      logger.error "ERROR: #{data['errors'][0]['message']}\n"
+  			ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{data['errors'][0]['message']}")
+
+	    elsif data['code'] == 404 # No external cluster found
+	      puts "#{data['message']}\n"
+	      logger.error "ERROR: #{data['message']}"
+	      ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{data['message']}")
+
+	    else
+	      puts "Unhandled backend response."
+	      logger.error("Unhandled backend response #{data['message']}")
+				ahoy.track("Error Create Cluster for " + params[:user_id], message: "Unhandled backend response #{data['message']}.")
 
   		end # if user and data
 
