@@ -44,6 +44,11 @@ class Project < ActiveRecord::Base
 							 organization_id, user_id, user_id)
 				.group('projects.id')
 	}
+	# Only using this for Daily Summaries
+	scope :following, -> (user_id) {
+		joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
+		.where("project_subscribers.user_id = ?", user_id)
+	}
 	scope :is_active, -> {where("projects.status = 'Active'")}
 
 	validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
@@ -188,6 +193,9 @@ class Project < ActiveRecord::Base
 				internal_members.each do |m|
 					project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
 				end
+
+				# Automatically subscribe to projects created
+				project.subscribers.create(user_id: current_user.id)
 
 				# Project activities
 				Activity.load(get_project_conversations(data, p), project, user_id)

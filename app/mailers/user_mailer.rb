@@ -16,7 +16,7 @@ class UserMailer < ApplicationMailer
 
     where = " between to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) and (to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) + interval '24 hours')"
     
-    activities_today = Project.visible_to(user.organization_id, user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
+    activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
     @projects_with_activities_today = activities_today.group_by{|e| e.activities}
 
     @pinned_activities_today = Project.visible_to(user.organization_id, user.id).eager_load([:activities]).where("activities.is_pinned = true and activities.pinned_at" + where).group("activities.id")

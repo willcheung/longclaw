@@ -109,6 +109,9 @@ class OnboardingController < ApplicationController
 
 							# Copy new_project activities
 							Activity.copy_email_activities(new_project, p)
+
+							# Subscribe to existing project
+							p.subscribers.create(user_id: current_user.id)
 						end
 
 						new_project.destroy # Delete unconfirmed project
@@ -120,6 +123,9 @@ class OnboardingController < ApplicationController
 
 								# Copy new_project activities
 								Activity.copy_email_activities(new_project, p)
+
+								# Subscribe to existing project
+								p.subscribers.create(user_id: current_user.id)
 							end
 							
 							new_project.destroy # Delete unconfirmed project

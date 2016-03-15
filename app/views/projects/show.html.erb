@@ -16,8 +16,14 @@
             </li>
         </ol>
     </div>
-    <div class="col-lg-2">
-        
+    <div class="col-lg-2 m-t-md">
+        <span class="btn btn-white btn-sm btn-outline">
+        <% if @project.subscribers.map(&:user_id).include?(current_user.id) %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}" %>
+        <% else %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}" %>
+        <% end %>
+        </span>
     </div>
 </div>
 
