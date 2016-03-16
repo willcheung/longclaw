@@ -52,10 +52,17 @@
                                         <div class="row comment-header-box">
                                             <div class="col-lg-12">
                                                 <span class="row">
-                                                    <button type="button" class="btn btn-w-m btn-link btn-sm active">ADD NOTES</button>
+                                                    <a id="add-note" type="button" class="btn btn-w-m btn-primary btn-sm active">ADD NOTE</a>
                                                     <!-- <button type="button" class="btn btn-w-m btn-link btn-sm">ADD PROJECT STATUS</button> -->
+                                                    <script>
+                                                        $('#add-note').click(function(){
+                                                            $('#add-note-form').toggle();
+                                                            $('#add-note').toggleClass('btn-primary');
+                                                            $('#add-note').toggleClass('btn-link');
+                                                        });
+                                                    </script>
                                                 </span>
-                                                <div class="col-lg-12" style="padding-top:7px;">
+                                                <div id="add-note-form" class="col-lg-12" style="padding-top:7px;display:none;">
                                                     
                                                     <%= render 'activities/form', :project_id => @project.id %>  
                                                     
