@@ -173,7 +173,7 @@ class OnboardingController < ApplicationController
   			ahoy.track("Error Create Cluster", message: "User not found: #{params[:user_id]}")
   			raise "ERROR: User not found during callback: " + params[:user_id]
 
-  		elsif data.empty? or data.nil?
+  		elsif data.nil? or data.empty?
   			format.json { render json: 'No data.', status: 500}
   			logger.error "ERROR : data nil or empty during callback: " + params[:user_id]
   			ahoy.track("Error Create Cluster for " + params[:user_id], message: "Data nil or empty during callback")
