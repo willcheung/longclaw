@@ -172,16 +172,21 @@ class OnboardingController < ApplicationController
   			logger.error "ERROR: User not found: " + params[:user_id]
   			ahoy.track("Error Create Cluster", message: "User not found: #{params[:user_id]}")
   			raise "ERROR: User not found during callback: " + params[:user_id]
+  			return nil
 
   		elsif data.nil? or data.empty?
   			format.json { render json: 'No data.', status: 500}
   			logger.error "ERROR : data nil or empty during callback: " + params[:user_id]
   			ahoy.track("Error Create Cluster for " + params[:user_id], message: "Data nil or empty during callback")
+  			raise "ERROR: data nil or empty during callback: " + params[:user_id]
+  			return nil
 
 	    elsif data['code'] == 401 # Invalid credentials
 	      puts "Error: #{data['errors'][0]['message']}\n"
 	      logger.error "ERROR: #{data['errors'][0]['message']}\n"
   			ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{data['errors'][0]['message']}")
+  			raise "ERROR: Invalid credential during callback: " + params[:user_id]
+  			return nil
 
 	    elsif data['code'] == 404 # No external cluster found
 	      puts "#{data['message']}\n"
@@ -192,6 +197,8 @@ class OnboardingController < ApplicationController
 	      puts "Unhandled backend response."
 	      logger.error("Unhandled backend response #{data['message']}")
 				ahoy.track("Error Create Cluster for " + params[:user_id], message: "Unhandled backend response #{data['message']}.")
+				raise "ERROR: Unhandled backend response during callback: " + params[:user_id]
+  			return nil
 
   		end # if user and data
 
