@@ -16,15 +16,12 @@
 <div class="row">
     <div class="col-lg-12">
         <div class="ibox float-e-margins">
+            
             <div class="ibox-content">
-                <h2>
-                    23 results found for: <span class="text-navy">“@Stark: Status Report after:2014/04/16”</span>
-                </h2>
-
                 <div class="search-form">
                     <form action="#" method="get">
                     <div class="input-group">
-                        <input type="text" placeholder="@Stark: Status Report after:2014/04/16" name="search" class="form-control input-lg">
+                        <input type="text" value="@Stark: <%= params[:query] %>" name="search" class="form-control input-lg">
                         <div class="input-group-btn">
                             <button class="btn btn-lg btn-primary" type="submit">
                                 Search
@@ -33,57 +30,51 @@
                     </div>
 
                 </form>
+
+                <h2>
+                    <%= @activities.size %> results found for: <span class="text-navy">“@Stark: <%= params[:query] %>”</span>
+                </h2>
             </div>
             
+            <% if @activities.size > 0 %>
+                <h2 class="catchup-project"><span><%= @project.name %></span></h2>
+                <% @activities.each do |a| %>
+                    <div class="search-result">
+                        <h3><a href="#"><%= a.title %></a> <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small></h3>
+                        
+                        <% a.email_messages.each do |m| %>
+                            <div class="hidden-chat-message-<%= a.id.to_s %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
+                                <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
+                                    <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
+                                    <div class="message">
+                                        <span class="message-author" href="#"> <%= m.from[0].personal %> </span> to <%= get_conversation_member_names([], m.to, m.cc, "All") %>
+                                        <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
+                                        <hr class="message-divider"/>
+                                            <span class="message-content">
+                                                 <div>
+                                                    <%= simple_format(m.content) %>
+                                                </div>
+                                            </span>
+                                    </div>
+                                </div>
+                            </div>
+                        <% end %>
 
-            <h2 class="catchup-project"><span>2015 Q4 Deal</span></h2>
-            <div class="search-result">
-                <h3><a href="#">Weekly Status Report</a> <small class="m-l-md">Ewald, Jonathan, me (3)</small></h3>
-                <p>
-                    Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites
-                    still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
-                </p>
-            </div>
-            <div class="hr-line-dashed"></div>
-            <div class="search-result">
-                <h3><a href="#">Status Report for Data Integration</a> <small class="m-l-md">Ewald, Jonathan, Kelton, me (8)</small></h3>
-                <p>
-                    WrapBootstrap is a marketplace for premium Bootstrap themes and templates. Impress your clients and visitors while using a single, rock-solid foundation.
-                </p>
-            </div>
-            <div class="hr-line-dashed"></div>
-            <div class="search-result">
-                <h3><a href="#">Fw: Quick status update</a> <small class="m-l-md">Jonathan, Kelton (2)</small></h3>
-                <p>
-                    WrapBootstrap. 13672 likes · 508 talking about this. Marketplace for premium Bootstrap themes and templates. https://wrapbootstrap.com/
-                </p>
-            </div>
-            <h2 class="catchup-project"><span>Customer Onboarding Project</span></h2>
-            <div class="search-result">
-                <h3><a href="#">Re: Status 10/1</a> <small class="m-l-md">Jonathan, Kelton (2)</small></h3>
-                <p>
-                    If you are familiar with using any other HTML/CSS themes or WordPress themes then you shouldn't have any problems. If you have some experience using the ...
-                </p>
-            </div>
-            <div class="hr-line-dashed"></div>
-            <div class="search-result">
-                <h3><a href="#">Executive Status Update</a></h3>
-                <small>Jonathan, Kelton, Ewald, Maurice (5)</small>
-                <p>
-                    What's black, white and red all over? The answer is Newspaper. A stylish magazine/news style theme inspired by black and white newsprint. The theme is.
-                </p>
-            </div>
-            <div class="hr-line-dashed"></div>
-            <div class="text-center">
-                <div class="btn-group">
-                    <button class="btn btn-white" type="button"><i class="fa fa-chevron-left"></i></button>
-                    <button class="btn btn-white">1</button>
-                    <button class="btn btn-white  active">2</button>
-                    <button class="btn btn-white">3</button>
-                    <button class="btn btn-white">4</button>
-                    <button class="btn btn-white" type="button"><i class="fa fa-chevron-right"></i> </button>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                <% end %>
+                
+                <div class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-white" type="button"><i class="fa fa-chevron-left"></i></button>
+                        <button class="btn btn-white">1</button>
+                        <button class="btn btn-white  active">2</button>
+                        <button class="btn btn-white">3</button>
+                        <button class="btn btn-white">4</button>
+                        <button class="btn btn-white" type="button"><i class="fa fa-chevron-right"></i> </button>
+                    </div>
                 </div>
-            </div>
+            <% end %>
         </div>
     </div>
 </div>

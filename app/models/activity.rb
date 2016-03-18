@@ -48,7 +48,7 @@ class Activity < ActiveRecord::Base
 
   CATEGORY = %w(Conversation Note Status)
 
-  def self.load(data, project, user_id='00000000-0000-0000-0000-000000000000')
+  def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
     val = []
 
@@ -89,7 +89,7 @@ class Activity < ActiveRecord::Base
     on_conflict = 'ON CONFLICT (backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages'
     values = val.join(', ')
 
-    if !val.empty?
+    if !val.empty? and save_in_db
       Activity.transaction do
         # Insert activities into database
         Activity.connection.execute([insert,values,on_conflict].join(' '))

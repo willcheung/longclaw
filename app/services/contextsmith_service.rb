@@ -3,7 +3,7 @@ include ERB::Util
 
 class ContextsmithService
 
-  def self.load_emails_from_backend(project, after=nil, max=100)
+  def self.load_emails_from_backend(project, after=nil, max=100, query=nil, save_in_db=true)
     token_emails = []
     base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
 
@@ -18,14 +18,15 @@ class ContextsmithService
       # DEBUG
       u = User.find_by_email('indifferenzetester@gmail.com')
       u.refresh_token! if u.token_expired?
-      token_emails << { token: u.oauth_access_token, email: u.email }
+      token_emails << { token: "test", email: u.email }
       in_domain = "&in_domain=comprehend.com"
     end
 
     ex_clusters = [project.contacts.map(&:email)]
     after = after.nil? ? "" : ("&after=" + after.to_s)
+    query = query.nil? ? "" : ("&query=" + query.to_s)
     
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode(ex_clusters.to_s) + in_domain + after
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode(ex_clusters.to_s) + in_domain + after + query
     puts "Calling backend service: " + final_url
 
     begin
@@ -40,18 +41,20 @@ class ContextsmithService
 
     if data.nil? or data.empty?
       puts "No data or nil returned!\n"
+      return []
     elsif data.kind_of?(Array)
       puts "Found #{data[0]['conversations'].size} conversations!\n"
-      Activity.load(data, project)
+      return Activity.load(data, project, save_in_db)
     elsif data['code'] == 401
       puts "Error: #{data['errors'][0]['message']}\n"
+      return []
     elsif data['code'] == 404
       puts "#{data['message']}\n"
+      return []
     else
       puts "Unhandled backend response."
+      return []
     end
-    
-    return data
   end
 
 end

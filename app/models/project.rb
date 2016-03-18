@@ -198,7 +198,7 @@ class Project < ActiveRecord::Base
 				project.subscribers.create(user_id: user_id)
 
 				# Project activities
-				Activity.load(get_project_conversations(data, p), project, user_id)
+				Activity.load(get_project_conversations(data, p), project, true, user_id)
 			end
 		end
 	end

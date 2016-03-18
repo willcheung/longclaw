@@ -2,11 +2,12 @@
     <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
         <div class="navbar-header">
             <a class="navbar-minimalize minimalize-style-2 btn btn-primary btn-outline" href="#"><i class="fa fa-bars"></i> </a>
-<!--             <form role="search" class="navbar-form-custom" method="post" action="">
-                <div class="form-group">
-                    <span class="fa fa-search"></span><input type="text" placeholder="Search" class="form-control" name="top-search" id="top-search" style="border: 1px;"/>
-                </div>
-            </form> -->
+            
+            <%= form_tag(projects_path, :method => "get", id: "search-form", class: "navbar-form-custom", style: "display:none;") do %>
+                <span class="fa fa-search"></span> <input type="search" name="search" id="search" class="form-control ui-autocomplete-input ui-autocomplete-loading" placeholder="#project-stream search something..." data-autocomplete="/search/autocomplete_project_name" autocomplete="off">
+                <%= submit_tag "Search", style: 'display:none;' %>
+            <%end%>
+        
         </div>
         <ul class="nav navbar-top-links navbar-right">
             <li class="dropdown">
