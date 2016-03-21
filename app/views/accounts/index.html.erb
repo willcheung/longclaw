@@ -28,7 +28,9 @@
                 <a href="<%= accounts_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
             </div>
         </div>
+    </div>
 
+    <div class="row">
         <div class="col-sm-12 m-t-md">
             <% if @accounts.empty? %>
                 <div class="text-center">

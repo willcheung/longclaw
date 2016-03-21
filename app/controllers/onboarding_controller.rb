@@ -1,8 +1,9 @@
 class OnboardingController < ApplicationController
-	layout 'empty'
+	layout 'empty', except: ['tutorial']
 
 	def tutorial
-
+		render layout: false
+		current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:confirm_projects]) if current_user.onboarding_step == Utils::ONBOARDING[:tutorial]
 	end
 
 	def creating_clusters
@@ -15,6 +16,8 @@ class OnboardingController < ApplicationController
 
 	# Callback method
 	def confirm_projects
+		redirect_to root_path if current_user.onboarding_step == Utils::ONBOARDING[:onboarded]
+
 		@overlapping_projects = []
 		@new_projects = []
 		@same_projects = []
