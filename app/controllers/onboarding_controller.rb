@@ -188,7 +188,7 @@ class OnboardingController < ApplicationController
 
 		    elsif params['code'] == 404 # No external cluster found
 		      puts "#{params['message']}\n"
-		      logger.error "ERROR: #{data['message']}"
+		      logger.error "ERROR: #{params['message']}"
 		      ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{params['message']}")
 
 		    end
