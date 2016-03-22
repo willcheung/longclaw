@@ -34,7 +34,6 @@ jQuery(document).ready(function($) {
     }
   } );
 
-  $('#projects-table_filter').prepend($('input[type=search]'));
   $('input[type=search]').attr('size', '50');
 
 
