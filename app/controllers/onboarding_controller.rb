@@ -1,8 +1,9 @@
 class OnboardingController < ApplicationController
-	layout 'empty'
+	layout 'empty', except: ['tutorial']
 
 	def tutorial
-
+		render layout: false
+		current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:confirm_projects]) if current_user.onboarding_step == Utils::ONBOARDING[:tutorial]
 	end
 
 	def creating_clusters
@@ -15,6 +16,8 @@ class OnboardingController < ApplicationController
 
 	# Callback method
 	def confirm_projects
+		redirect_to root_path if current_user.onboarding_step == Utils::ONBOARDING[:onboarded]
+
 		@overlapping_projects = []
 		@new_projects = []
 		@same_projects = []
@@ -175,28 +178,25 @@ class OnboardingController < ApplicationController
   			return nil
 
   		elsif data.nil? or data.empty?
-  			format.json { render json: 'No data.', status: 500}
-  			logger.error "ERROR : data nil or empty during callback: " + params[:user_id]
-  			ahoy.track("Error Create Cluster for " + params[:user_id], message: "Data nil or empty during callback")
-  			raise "ERROR: data nil or empty during callback: " + params[:user_id]
-  			return nil
 
-	    elsif data['code'] == 401 # Invalid credentials
-	      puts "Error: #{data['errors'][0]['message']}\n"
-	      logger.error "ERROR: #{data['errors'][0]['message']}\n"
-  			ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{data['errors'][0]['message']}")
-  			raise "ERROR: Invalid credential during callback: " + params[:user_id]
-  			return nil
+		    if params['code'] == 401 # Invalid credentials
+		      puts "Error: #{params['message']}\n"
+		      logger.error "ERROR: #{params['message']}\n"
+	  			ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{params['message']}")
+	  			raise "ERROR: Invalid credential during callback: " + params[:user_id]
+	  			return nil
 
-	    elsif data['code'] == 404 # No external cluster found
-	      puts "#{data['message']}\n"
-	      logger.error "ERROR: #{data['message']}"
-	      ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{data['message']}")
+		    elsif params['code'] == 404 # No external cluster found
+		      puts "#{params['message']}\n"
+		      logger.error "ERROR: #{params['message']}"
+		      ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{params['message']}")
+
+		    end
 
 	    else
 	      puts "Unhandled backend response."
-	      logger.error("Unhandled backend response #{data['message']}")
-				ahoy.track("Error Create Cluster for " + params[:user_id], message: "Unhandled backend response #{data['message']}.")
+	      logger.error("Unhandled backend response #{params['message']}")
+				ahoy.track("Error Create Cluster for " + params[:user_id], message: "Unhandled backend response #{params['message']}.")
 				raise "ERROR: Unhandled backend response during callback: " + params[:user_id]
   			return nil
 

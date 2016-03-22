@@ -24,6 +24,8 @@ class ApplicationController < ActionController::Base
         else
           onboarding_confirm_projects_path
         end
+      when Utils::ONBOARDING[:tutorial]
+        onboarding_tutorial_path
       else
         stored_location_for(resource) || root_path
       end
@@ -45,6 +47,9 @@ class ApplicationController < ActionController::Base
   private
 
   def set_time_zone(&block)
+    if current_user.time_zone == 'UTC'
+      current_user.update_attributes(time_zone: cookies[:timezone])
+    end
     Time.use_zone(current_user.time_zone, &block)
   end
 end
