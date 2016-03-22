@@ -1,6 +1,6 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController   
 	def google_oauth2
-    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com btsai.cs@gmail.com tsaib.cs@gmail.com)
+    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com)
     auth = request.env["omniauth.auth"]
 
     if auth.info.email.include?('gmail.com') and !allowed_emails.include?(auth.info.email)
