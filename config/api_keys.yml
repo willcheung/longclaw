@@ -23,4 +23,4 @@ production:
   mandrill_api_key: wndqLIBQRJbIsA9S3bM-1w
   csback_base_url: http://64.201.248.179:8889
   csback_script_base_url: http://64.201.248.178:8889
-  csback_callback_base_url: http://app.contextsmith.com
+  csback_callback_base_url: https://app.contextsmith.com

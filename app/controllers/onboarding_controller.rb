@@ -154,7 +154,9 @@ class OnboardingController < ApplicationController
 
 		respond_to do |format|
       
-  		if user and data.kind_of?(Array)    
+  		if user and data.kind_of?(Array)   
+  			puts("Creating project streams for #{user.email}")
+
         uniq_external_members, uniq_internal_members = get_all_members(data)
 
         ############## Needs to be called in order -> Account (Contacts), User, Project ##########
@@ -212,6 +214,7 @@ class OnboardingController < ApplicationController
 
        	# Send welcome email with confirm_projects link
        	num_of_projects = Project.where(created_by: user.id, is_confirmed: false).includes(:users, :contacts, :account).count(:projects)
+       	puts("Sending onboarding email to #{user.email}")
         UserMailer.welcome_email(user, num_of_projects, "#{ENV['csback_callback_base_url']}/onboarding/confirm_projects").deliver_later
         
         format.json { render json: 'Email sent to ' + user.email, status: 200 }
