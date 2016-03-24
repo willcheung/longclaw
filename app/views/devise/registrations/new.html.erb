@@ -2,15 +2,22 @@
   <div>
       <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
       <div class="ibox-content middle-box">
-          <h1 class="logo-name oauth">Sign Up</h1>
+          <% if params[:invited_by] %>
+            <h1 class="logo-name oauth"><%= params[:invited_by] %> invited you to join ContextSmith</h1>
+          <% else %>
+            <h1 class="logo-name oauth">Sign Up</h1>
+          <% end %>
       
-      		<p class="oauth">Please sign up using your Google Apps credentials and start collaborating with your team.</p>
+      		<p class="oauth">Sign up now and turn your emails into <br/>customer insights.</p>
 
       		<button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google-plus oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
-
-      		<p class="oauth"><small>No credit card required. No obligations.</small></p>
+          
+          <% unless params[:invited_by] %>
+      		  <p class="oauth"><small>No credit card required. No obligations.</small></p>
+          <% end %>
       </div>
 
       <p class="m-t"><small><a href="http://www.contextsmith.com">ContextSmith.com</a> &nbsp;&nbsp;ContextSmith, Inc. © 2016</small> </p>
+      <p><a href="http://www.contextsmith.com/privacy.html">Privacy</a> | <a href="http://www.contextsmith.com/terms.html">Terms</a></p>
   </div>
 </div>
