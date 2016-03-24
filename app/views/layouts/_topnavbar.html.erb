@@ -9,6 +9,9 @@
             </form> -->
         </div>
         <ul class="nav navbar-top-links navbar-right">
+            
+            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%= settings_path %>">Invite team</a>
+            
             <li class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                     <i class="fa fa-question-circle fa-lg"></i>
@@ -25,7 +28,7 @@
                     <strong class="font-bold"><%= get_full_name(current_user) %></strong><b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="<%= settings_path %>">Invite Colleagues</a></li>
+                    <li><a href="<%= settings_path %>">Invite team</a></li>
                     <li class="divider"></li>
                     <li><a href="<%= destroy_user_session_path %>">Logout</a></li>
                 </ul>

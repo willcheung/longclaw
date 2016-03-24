@@ -45,7 +45,7 @@ class UserMailer < ApplicationMailer
     end
 
     track user: user # ahoy_email tracker
-    mail(to: @user.email, subject: "#{@user.first_name} invited you to join ContextSmith")
+    mail(to: @user.email, subject: "#{invited_by} invited you to join ContextSmith")
   end
 
 end
