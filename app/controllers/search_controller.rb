@@ -12,7 +12,7 @@ class SearchController < ApplicationController
   	@projects = Project.visible_to(current_user.organization_id, current_user.id).where("lower(projects.name) like ?", "%#{params[:term]}%")
   	
   	respond_to do |format|
-  		format.json { render json: @projects.map { |x| x.name + " (Account: #{x.account.name})"}.to_json.html_safe }
+  		format.json { render json: @projects.map { |x| { :label => x.name, :value => "#" + x.name, :account => x.account.name } }.to_json.html_safe }
   	end
   end
 end
