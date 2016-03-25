@@ -9,4 +9,6 @@ $(document).ready(function() {
 		      searchPlaceholder: "Start typing to filter list..."
 		    }
     } );
+    
+    $('input[type=search]').attr('size', '50');
 } );

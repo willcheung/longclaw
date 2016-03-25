@@ -17,6 +17,8 @@ Longclaw::Application.routes.draw do
     resources :users
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "settings/" => 'settings#index'
+    get "settings/super_user" => 'settings#super_user'
+    post "settings/invite_user/:user_id" => 'settings#invite_user'
     
     resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy]

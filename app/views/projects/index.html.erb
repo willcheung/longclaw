@@ -60,7 +60,7 @@
                                                 <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                                 <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(account) %>"><%= account.name %></a><small></div>
                                             </td>
-                                            <td style="width: 130px"><%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-outline btn-xs fa fa-caret-down', :style => 'font-size:12px;' %></td>
+                                            <td style="width: 130px"><%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></td>
                                             <td><%= get_full_name(p.project_owner) %></td>
                                             <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
                                             <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>

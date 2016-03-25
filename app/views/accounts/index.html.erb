@@ -55,7 +55,7 @@
                                 <% @accounts.each do |a| %>
                                 <tr style="height:45px;">
                                     <td><a href="<%= account_path(a.id) %>"><%= a.name %></a><a class="pull-right edit" href="<%= edit_account_path(a) %>" style="display: none;"><i class="fa fa-pencil"></i></a></td>
-                                    <td style="width:65px"><%= best_in_place a, :category, :as => :select, :collection => Account::CATEGORY, :class => 'btn btn-outline btn-xs fa fa-caret-down', :style => 'font-size:12px;' %></td>
+                                    <td style="width:65px"><%= best_in_place a, :category, :as => :select, :collection => Account::CATEGORY, :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></td>
                                     <td><%= get_full_name(a.user) %></td>
                                     <td style="text-align:center"><%= a.projects.size %></td>
                                     <td style="text-align:center"><%= @account_last_activity[a.id].nil? ? "" : ((Time.current - @account_last_activity[a.id])/86400).to_i %></td>
