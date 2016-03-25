@@ -47,7 +47,7 @@ class ApplicationController < ActionController::Base
   private
 
   def set_time_zone(&block)
-    if current_user.time_zone == 'UTC'
+    if current_user.time_zone == 'UTC' and !cookies[:timezone].nil?
       current_user.update_attributes(time_zone: cookies[:timezone])
     end
     Time.use_zone(current_user.time_zone, &block)

@@ -18,7 +18,7 @@ header button{float:right;}
 #Second_section{background:-moz-linear-gradient(45deg, rgba(56,142,199,1) 0%, rgba(13,92,160,1) 100%);background:-webkit-gradient(linear, left bottom, right top, color-stop(0%, rgba(56,142,199,1)), color-stop(100%, rgba(13,92,160,1)));background:-webkit-linear-gradient(45deg, rgba(56,142,199,1) 0%, rgba(13,92,160,1) 100%);background:-o-linear-gradient(45deg, rgba(56,142,199,1) 0%, rgba(13,92,160,1) 100%);background:-ms-linear-gradient(45deg, rgba(56,142,199,1) 0%, rgba(13,92,160,1) 100%);background:linear-gradient(45deg, rgba(56,142,199,1) 0%, rgba(13,92,160,1) 100%);padding:40px 0px;overflow:hidden;min-height:100vh;}
 #Second_section h3{color:#eee;font-size:26px;}
 #Second_section p{color:#eee;padding-top:70px;font-size:20px;padding-right:55px;}
-#Second_section p.p2{padding-top:80px;}
+#Second_section p.p2{padding-top:100px;}
 #Second_section h3{padding-bottom:40px;}
 #Second_section h3 span{font-size:32px;font-weight: 600;color:#fff;}
 #Second_section h3 span img{width:50px;padding:0px 9px 6px 17px;}

@@ -43,7 +43,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
 
     if ENV["RAILS_ENV"] == 'production'
-      callback_url = "http://app.contextsmith.com/onboarding/#{user.id}/create_clusters.json"
+      callback_url = "https://app.contextsmith.com/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = ""

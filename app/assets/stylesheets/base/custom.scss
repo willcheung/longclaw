@@ -285,13 +285,12 @@ span.best_in_place.btn {
 }
 .best_in_place.fa-caret-down:before {
   float:right;
-  content: "\00a0 \f0d7"
-}
-.best_in_place.fa-pencil:before {
-  float:right;
-  content: "\00a0 \00a0 \f040";
-  font-size: 10px;
-  line-height:13px;
+  content: "\00a0 \f0d7";
+  display: inline-block;
+  font: normal normal normal 14px/1 FontAwesome;
+  font-size: inherit;
+  text-rendering: auto;
+  margin-top:3px;
 }
 .project-people .delete-member {
   display: none;

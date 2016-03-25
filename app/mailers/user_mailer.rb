@@ -29,4 +29,23 @@ class UserMailer < ApplicationMailer
     end
   end
 
+  def user_invitation_email(user, invited_by, url)
+    @user = user
+    @invited_by = invited_by
+    @url = url
+
+    if @user.organization.users.registered.size > 3
+      registered_users = @user.organization.users.registered.map(&:first_name)[0..2].join(', ')
+      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} colleagues are already using ContextSmith to track customer activities."
+    elsif @user.organization.users.registered.size == 1
+      @colleagues = invited_by + " is already using ContextSmith to track customer activities."
+    else
+      registered_users = @user.organization.users.registered.map(&:first_name).join(' and ')
+      @colleagues = registered_users + " are already using ContextSmith to track customer activities."
+    end
+
+    track user: user # ahoy_email tracker
+    mail(to: @user.email, subject: "#{invited_by} invited you to join ContextSmith")
+  end
+
 end
