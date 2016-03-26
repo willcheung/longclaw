@@ -242,7 +242,16 @@ Devise.setup do |config|
             'profile'],
     skip_jwt: true
   }
+  google_apps_marketplace_options = {
+    access_type: "online", 
+    prompt: "none",
+    scope: ['https://www.googleapis.com/auth/gmail.readonly',
+            'email',
+            'profile'],
+    skip_jwt: true
+  }
   config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
+  config.omniauth :google_apps_marketplace, ENV['google_client_id'], ENV['google_client_secret'], google_apps_marketplace_options
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or
