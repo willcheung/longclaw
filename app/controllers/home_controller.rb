@@ -51,7 +51,7 @@ class HomeController < ApplicationController
 
     @sub = current_user.subscriptions.includes(:project)
 
-    if !@sub.nil? or !@sub.empty?
+    if !@sub.nil? and !@sub.empty?
       activities_today = Project.visible_to(current_user.organization_id, current_user.id).following(current_user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
       @projects_with_activities_today = activities_today.group_by{|e| e.activities}
 
