@@ -238,6 +238,7 @@ Devise.setup do |config|
     access_type: "offline", 
     #prompt: "consent",
     scope: ['https://www.googleapis.com/auth/gmail.readonly',
+            'https://www.googleapis.com/auth/plus.me',
             'email',
             'profile'],
     skip_jwt: true
@@ -246,6 +247,7 @@ Devise.setup do |config|
     access_type: "online", 
     prompt: "none",
     scope: ['https://www.googleapis.com/auth/gmail.readonly',
+            'https://www.googleapis.com/auth/plus.me',
             'email',
             'profile'],
     skip_jwt: true

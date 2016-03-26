@@ -29,7 +29,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
   end
 
-  def google_apps_marketplace
+  def google_apps_marketplace # Not using this right now!
     auth = request.env["omniauth.auth"]
     puts "google_apps_marketplace!!!"
     puts auth
