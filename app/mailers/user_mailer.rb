@@ -18,7 +18,7 @@ class UserMailer < ApplicationMailer
     
     sub = user.subscriptions.first
 
-    if !sub.nil? or !sub.empty?
+    if !sub.nil? and !sub.empty?
       activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
       @projects_with_activities_today = activities_today.group_by{|e| e.activities}
 
