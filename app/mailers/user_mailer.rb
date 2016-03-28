@@ -16,7 +16,7 @@ class UserMailer < ApplicationMailer
 
     where = " between to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) and (to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) + interval '24 hours')"
     
-    sub = user.subscriptions.first
+    sub = user.subscriptions
 
     if !sub.nil? and !sub.empty?
       activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
