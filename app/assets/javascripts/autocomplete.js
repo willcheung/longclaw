@@ -22,35 +22,67 @@ $(document).ready(function() {
   //   console.log($("#search").val());
   // })
 
-  $("#search").textcomplete([
-    {
-      // RegEx for PROJECT strategy, #project-name
-      match: /(^|\s)#(\w*)$/,
-      search: function (term, callback) {
-        $.getJSON('/search/autocomplete_project_name.json', { term: term })
+  // $("#search").textcomplete([
+  //   {
+  //     // RegEx for PROJECT strategy, #project-name
+  //     match: /(^|\s)#(\w*)$/,
+  //     search: function (term, callback) {
+  //       $.getJSON('/search/autocomplete_project_name.json', { term: term })
+  //         .done( function (data) {
+  //           callback(data);
+  //           console.log(data);
+  //         })
+  //         .fail( function () {
+  //           callback([]);
+  //         })
+  //     },
+  //     replace: function (value) {
+  //       return '$1#' + value.name + ' ';
+  //     },
+  //     template: function (value) {
+  //       return value.name;
+  //     }
+  //   }
+  // ], { zIndex: '1000', debounce: 300 }).overlay([
+  //   {
+  //     match: /\B#\w+/g,
+  //     css: {
+  //       'background-color': '#8CD5B7'
+  //     }
+  //   }
+  // ]);
+
+/* Autocomplete for search bar using Selectize */
+  $("#search").selectize({
+    closeAfterSelect: true,
+    valueField: 'id',
+    labelField: 'name',
+    searchField: ['name'],
+    create: false,
+    score: function(query) {
+      var score = this.getScoreFunction(query.slice(1));
+      return function(item) {
+        return score(item);
+      };
+    },
+    load: function (query, callback) {
+      // console.log('calling load');
+      if (!query.length) return callback();
+      // console.log(query);
+      var self = this;
+      if (query[0] === '#') {
+        $.getJSON( '/search/autocomplete_project_name.json?term=' + encodeURIComponent(query.slice(1)) )
           .done( function (data) {
+            console.log(self);
             callback(data);
-            console.log(data);
+            self.open();
           })
           .fail( function () {
-            callback([]);
+            callback();
           })
-      },
-      replace: function (value) {
-        return '$1#' + value.name + ' ';
-      },
-      template: function (value) {
-        return value.name;
       }
     }
-  ], { zIndex: '1000', debounce: 300 }).overlay([
-    {
-      match: /\B#\w+/g,
-      css: {
-        'background-color': '#8CD5B7'
-      }
-    }
-  ]);
+  })
 
 });
 

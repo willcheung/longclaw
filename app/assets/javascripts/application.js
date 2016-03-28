@@ -22,6 +22,7 @@
 //= require jquery-tokeninput/jquery.tokeninput.js
 //= require jquery-textcomplete/jquery.textcomplete.min.js
 //= require jquery-textcomplete/jquery.overlay.min.js
+//= require selectize/selectize.min.js
 
 /* Ahoy analytics */
 ahoy.trackAll();
