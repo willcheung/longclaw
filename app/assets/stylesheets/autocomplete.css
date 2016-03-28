@@ -1,3 +1,64 @@
+/* CSS classes for autocomplete menu for search bar using jQuery UI*/
+
+/* -- Original CSS for search input bar -- 
+/* PART 1 
+.navbar-form-custom input.form-control {
+  width: 450px;
+  height: 36px;
+  margin-top: 12px;
+  margin-left: 20px;
+  text-indent: 32px;
+  background: #fcfcfc;
+  border: 1px solid #aaa;
+  border-radius: 20px;
+  box-shadow: 0 0 3px #ccc, 0 10px 15px #f3f3f3 inset;
+}
+/* PART 2 
+.navbar-form-custom .form-control {
+  background: none repeat scroll 0 0 transparent;
+  border: medium none;
+  font-size: 15px;
+  margin: 0;
+  z-index: 2000;
+}
+/* PART 3 
+.form-control, .single-line {
+  background-color: white;
+  background-image: none;
+  border: 1px solid #e5e6e7;
+  border-radius: 1px;
+  color: inherit;
+  display: block;
+  padding: 6px 12px;
+  transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+  width: 100%;
+}
+/* -- Original CSS for search input bar -- */
+
+
+/* Duplicated for input bar generated from tokenInput */
+.token-input-list {
+  /* PART 3 */
+  color: inherit;
+  display: block;
+  padding: 6px 12px;
+  transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+  /* PART 2 */
+  font-size: 15px;
+  margin: 0;
+  z-index: 2000;
+  /* PART 1 */
+  width: 450px;
+  height: 36px;
+  margin-top: 12px;
+  margin-left: 20px;
+  text-indent: 32px;
+  background: #fcfcfc;
+  border: 1px solid #aaa;
+  border-radius: 20px;
+  box-shadow: 0 0 3px #ccc, 0 10px 15px #f3f3f3 inset;
+}
+
 .ui-autocomplete {
   position: absolute;
   top: 0;
