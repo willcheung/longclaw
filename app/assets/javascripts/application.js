@@ -19,9 +19,6 @@
 //= require sparkline/jquery.sparkline.min.js
 //= require jstz/jstz.min.js
 //= require chosen/chosen.jquery.min.js
-//= require jquery-tokeninput/jquery.tokeninput.js
-//= require jquery-textcomplete/jquery.textcomplete.min.js
-//= require jquery-textcomplete/jquery.overlay.min.js
 //= require selectize/selectize.min.js
 
 /* Ahoy analytics */
