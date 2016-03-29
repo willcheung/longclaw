@@ -19,7 +19,7 @@
 
 <!-- Summary -->
 <div style="margin-bottom:0;margin-bottom:30px">
-<% if @projects_with_activities_today.size != 0 %>
+<% if @projects_with_activities_today.size == 0 %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">No updates today</h2>
 <% else %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333"><%= pluralize(@projects_with_activities_today.size, 'project') %> updated:</h2>
