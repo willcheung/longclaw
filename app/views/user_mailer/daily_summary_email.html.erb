@@ -19,7 +19,7 @@
 
 <!-- Summary -->
 <div style="margin-bottom:0;margin-bottom:30px">
-<% if @projects_with_activities_today.size == 0 %>
+<% if @projects_with_activities_today.size != 0 %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">No updates today</h2>
 <% else %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333"><%= pluralize(@projects_with_activities_today.size, 'project') %> updated:</h2>
@@ -197,42 +197,12 @@
   </div>
 
   <table class="row" style="margin-top:-40px;margin-bottom:25px;">
-    <tbody>
       <tr>
-         <td class="wrapper">
-            <table class="four columns tiny-button">
-               <tbody>
-                  <tr>
-                     <td style="padding: 6px; margin: 15px;">
-                        <a href="<%= project_url(p[1]) %>" style="background-color:#ffffff;border:1px solid #3C8DC5;border-radius:4px;color:#3C8DC5;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to project stream</a>
-                     </td>
-                     <td class="expander"></td>
-                  </tr>
-               </tbody>
-            </table>
+         <td style="padding: 6px; margin: 15px;">
+            <a href="<%= project_url(p[1]) %>" style="background-color:#ffffff;border:1px solid #3C8DC5;border-radius:4px;color:#3C8DC5;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to project stream</a>
          </td>
-         <td class="wrapper">
-            <table class="four columns">
-               <tbody>
-                  <tr>
-                     <td></td>
-                     <td class="expander"></td>
-                  </tr>
-               </tbody>
-            </table>
-         </td>
-         <td class="wrapper last">
-            <table class="four columns">
-               <tbody>
-                  <tr>
-                     <td></td>
-                     <td class="expander"></td>
-                  </tr>
-               </tbody>
-            </table>
-         </td>
+         <td class="expander"></td>
       </tr>
-    </tbody>
   </table>
 
   <% end %>
