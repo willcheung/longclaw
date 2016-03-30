@@ -4,7 +4,7 @@
             <a class="navbar-minimalize minimalize-style-2 btn btn-primary btn-outline" href="#"><i class="fa fa-bars"></i> </a>
             
             <%= form_tag(projects_path, :method => "get", id: "search-form", class: "navbar-form-custom") do %>
-                <span class="fa fa-search"></span> <input type="search" name="search" id="search" class="form-control" not-class="ui-autocomplete-input ui-autocomplete-loading" placeholder="#project-stream search something..." data-autocomplete="/search/autocomplete_project_name" autocomplete="off">
+                <span class="fa fa-search top"></span> <input type="search" name="search" id="search" class="form-control" placeholder="#project-stream search something...">
                 <%= submit_tag "Search", style: 'display:none;' %>
             <%end%>
         

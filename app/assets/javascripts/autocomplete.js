@@ -34,6 +34,10 @@ $(document).ready(function() {
       if (!this.lastQuery.length || this.lastQuery[0] !== '#') {
         this.close();
       }
+    },
+    onBlur: function () {
+      // Manually prevent input box from being cleared on blur
+      this.setTextboxValue(this.lastQuery);
     }
   })
 
