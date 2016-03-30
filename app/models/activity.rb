@@ -56,9 +56,10 @@ class Activity < ActiveRecord::Base
 
     data_hash.each do |d|
       d.conversations.each do |c|
+        is_public_flag = true
+        c.contextMessages.collect { |m| m.isPrivate ? is_public_flag = false : nil } # check if there's any private emails
 
-
-        val << "('#{user_id}', '#{project.id}', 'Conversation', #{Activity.sanitize(c.subject)}, true, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
+        val << "('#{user_id}', '#{project.id}', 'Conversation', #{Activity.sanitize(c.subject)}, #{is_public_flag}, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
                    #{Activity.sanitize(c.contextMessages.last.from.to_json)},
                    #{Activity.sanitize(c.contextMessages.last.to.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
