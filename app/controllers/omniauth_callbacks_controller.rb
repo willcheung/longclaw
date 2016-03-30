@@ -29,11 +29,27 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
   end
 
+  def google_apps_marketplace # Not using this right now!
+
+    # key = Google::APIClient::PKCS12.load_key(File.join(Rails.root,'config','ContextSmith-3b05307c000d.p12'), 'notasecret')
+    # client = Google::APIClient.new
+
+    # client.authorization = Signet::OAuth2::Client.new(
+    #         :token_credential_uri => 'https://accounts.google.com/o/oauth2/token',
+    #         :audience => 'https://accounts.google.com/o/oauth2/token',
+    #         :scope => 'https://www.googleapis.com/auth/calendar',
+    #         :issuer => 'contextsmith-service-account@contextsmith.iam.gserviceaccount.com',
+    #         :signing_key => key,
+    #         :person => auth.info.email)
+    # client.authorization.fetch_access_token!
+
+  end
+
   def failure
   	reset_session
   	logger.error "Can't verify Google!"
     ahoy.track("Error logging in", message: "Can't verify Google!")
-  	redirect_to new_user_registration_path
+  	redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
   end
 
   private

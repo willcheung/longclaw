@@ -16,9 +16,9 @@ class UserMailer < ApplicationMailer
 
     where = " between to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) and (to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) + interval '24 hours')"
     
-    sub = user.subscriptions.first
+    sub = user.subscriptions
 
-    if !sub.nil? or !sub.empty?
+    if !sub.nil? and !sub.empty?
       activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
       @projects_with_activities_today = activities_today.group_by{|e| e.activities}
 
@@ -36,16 +36,16 @@ class UserMailer < ApplicationMailer
 
     if @user.organization.users.registered.size > 3
       registered_users = @user.organization.users.registered.map(&:first_name)[0..2].join(', ')
-      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} colleagues are already using ContextSmith to track customer activities."
+      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} teammates are already using ContextSmith to track the pulse of your customers."
     elsif @user.organization.users.registered.size == 1
-      @colleagues = invited_by + " is already using ContextSmith to track customer activities."
+      @colleagues = "Join #{invited_by.split(' ').first} and team to track the pulse of your customers."
     else
       registered_users = @user.organization.users.registered.map(&:first_name).join(' and ')
-      @colleagues = registered_users + " are already using ContextSmith to track customer activities."
+      @colleagues = registered_users + " are already using ContextSmith to track the pulse of your customers."
     end
 
     track user: user # ahoy_email tracker
-    mail(to: @user.email, subject: "#{invited_by} invited you to join ContextSmith")
+    mail(to: @user.email, subject: "#{invited_by} invites you to join ContextSmith")
   end
 
 end

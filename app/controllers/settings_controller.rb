@@ -16,7 +16,7 @@ class SettingsController < ApplicationController
 	def invite_user
 		@user = User.find_by_id(params[:user_id])
 
-		UserMailer.user_invitation_email(@user, current_user.first_name, new_user_registration_url(invited_by: current_user.first_name)).deliver_later
+		UserMailer.user_invitation_email(@user, get_full_name(current_user), new_user_registration_url(invited_by: current_user.first_name)).deliver_later
 
 		respond_to do |format|
 			format.js
