@@ -132,7 +132,7 @@ class Activity < ActiveRecord::Base
 
   def from
     if read_attribute(:from).nil?
-      []
+      from = []
     else
       from = JSON.parse(read_attribute(:from).to_json).map { |hash| Hashie::Mash.new(hash) }
     end
@@ -140,7 +140,7 @@ class Activity < ActiveRecord::Base
 
   def to
     if read_attribute(:to).nil?
-      []
+      to = []
     else
       to = JSON.parse(read_attribute(:to).to_json).map { |hash| Hashie::Mash.new(hash) }
     end
@@ -148,7 +148,7 @@ class Activity < ActiveRecord::Base
 
   def cc
     if read_attribute(:cc).nil?
-      []
+      cc = []
     else
       cc = JSON.parse(read_attribute(:cc).to_json).map { |hash| Hashie::Mash.new(hash) }
     end
