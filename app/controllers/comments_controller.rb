@@ -47,11 +47,11 @@ class CommentsController < ApplicationController
     respond_to do |format|
       if @comment.update(comment_params)
         #format.html { redirect_to @comment, notice: 'Comment was successfully updated.' }
-        format.json { head :no_content }
+        format.json { respond_with_bip(@comment) }
         format.js
       else
         #format.html { render action: 'edit' }
-        format.json { render json: @comment.errors, status: :unprocessable_entity }
+        format.json { respond_with_bip(@comment) }
       end
     end
   end
