@@ -155,6 +155,8 @@ class Activity < ActiveRecord::Base
   end
 
   def email_addresses
+    cc ||= []
+    
     emails = Set.new
     from.each { |entry| emails.add(entry.address) }
     to.each { |entry| emails.add(entry.address) }
