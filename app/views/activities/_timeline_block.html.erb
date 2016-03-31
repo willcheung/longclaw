@@ -62,8 +62,14 @@
         
         <% elsif a.category == "Note" %>
             <div class="chat-discussion">
-                <%= simple_format(a.note) %>
-
+                <div class="row">
+                    <div class="col-xs-11"><%= simple_format(a.note) %></div>
+                    <% if a.user == current_user %>
+                        <div class="col-xs-1 m-t-xs">
+                            <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, a, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to delete this note?"} %>
+                        </div>
+                    <% end %>
+                </div>
                 <div class="col-4-lg action-links">
                     <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                      &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 

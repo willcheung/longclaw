@@ -32,6 +32,7 @@
 class Activity < ActiveRecord::Base
   include PgSearch
 
+  belongs_to :user, class_name: "User", foreign_key: "posted_by"
   belongs_to :project
   has_many :comments, dependent: :destroy
 
