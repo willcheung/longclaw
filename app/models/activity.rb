@@ -156,12 +156,12 @@ class Activity < ActiveRecord::Base
   end
 
   def email_addresses
-    cc ||= []
+    carbon_copy =  cc || []
     
     emails = Set.new
     from.each { |entry| emails.add(entry.address) }
     to.each { |entry| emails.add(entry.address) }
-    cc.each { |entry| emails.add(entry.address) }
+    carbon_copy.each { |entry| emails.add(entry.address) }
     emails
   end
 
