@@ -21,11 +21,12 @@ Longclaw::Application.routes.draw do
     post "settings/invite_user/:user_id" => 'settings#invite_user'
     
     resources :activities, only: [:create, :update, :destroy] do
-      resources :comments, only: [:create, :update, :destroy]
+      resources :comments, only: [:create, :update, :destroy], shallow: true
     end
     #resources :organizations  # not using yet
 
     get "search/results"
+    get "search/autocomplete_project_name"
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
   end
 

@@ -13,11 +13,13 @@
 //= require slimscroll/jquery.slimscroll.min.js
 //= require toastr/toastr.min.js
 //= require contextsmith.js
+//= require autocomplete.js
 //= require best_in_place
 //= require switchery/switchery.js
 //= require sparkline/jquery.sparkline.min.js
 //= require jstz/jstz.min.js
 //= require chosen/chosen.jquery.min.js
+//= require selectize/selectize.min.js
 
 /* Ahoy analytics */
 ahoy.trackAll();

@@ -1,5 +1,5 @@
 class ActivitiesController < ApplicationController
- before_action :set_activity, only: [:update]
+ before_action :set_activity, only: [:update, :destroy]
 
  	def create
  		project = Project.find_by_id(params[:project_id])
@@ -34,6 +34,16 @@ class ActivitiesController < ApplicationController
         #format.html { render action: 'edit' }
         format.json { render json: @activity.errors, status: :unprocessable_entity }
       end
+    end
+  end
+
+  def destroy
+    project = @activity.project
+    @activity.destroy
+    respond_to do |format|
+      format.html { redirect_to project_url(project) }
+      format.json { head :no_content }
+      format.js
     end
   end
 

@@ -26,7 +26,7 @@ gem 'pg_search'
 group :assets do
   gem 'coffee-rails', '~> 4.0.1'
   gem 'uglifier', '>= 1.3.0'
-  gem 'therubyracer'
+  # gem 'therubyracer'
 end
 
 group :doc do
@@ -37,9 +37,10 @@ end
 group :development do
   # View schema in models
   gem 'annotate', '~> 2.6.8'
-  gem "rails-erd" 								# run 'brew install graphviz' first, then 'bundle exec erd' to generate erd
-  gem 'ffaker'										# generate fake data
-  gem "letter_opener"							# email preview
+  gem "rails-erd"                 # run 'brew install graphviz' first, then 'bundle exec erd' to generate erd
+  gem 'ffaker'                    # generate fake data
+  gem "letter_opener"             # email preview
+  gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]  # Time zone info required for running app on Windows environment
 end
 
 group :production do

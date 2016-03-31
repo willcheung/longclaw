@@ -15,7 +15,6 @@ $(document).ready(function(){
     }
   } );
 
-  $('#accounts-table_filter').prepend($('input[type=search]'));
   $('input[type=search]').attr('size', '50');
 
 });
