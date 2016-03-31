@@ -56,9 +56,10 @@ class Activity < ActiveRecord::Base
 
     data_hash.each do |d|
       d.conversations.each do |c|
+        is_public_flag = true
+        c.contextMessages.collect { |m| m.isPrivate ? is_public_flag = false : nil } # check if there's any private emails
 
-
-        val << "('#{user_id}', '#{project.id}', 'Conversation', #{Activity.sanitize(c.subject)}, true, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
+        val << "('#{user_id}', '#{project.id}', 'Conversation', #{Activity.sanitize(c.subject)}, #{is_public_flag}, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
                    #{Activity.sanitize(c.contextMessages.last.from.to_json)},
                    #{Activity.sanitize(c.contextMessages.last.to.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
@@ -131,7 +132,7 @@ class Activity < ActiveRecord::Base
 
   def from
     if read_attribute(:from).nil?
-      nil
+      from = []
     else
       from = JSON.parse(read_attribute(:from).to_json).map { |hash| Hashie::Mash.new(hash) }
     end
@@ -139,7 +140,7 @@ class Activity < ActiveRecord::Base
 
   def to
     if read_attribute(:to).nil?
-      nil
+      to = []
     else
       to = JSON.parse(read_attribute(:to).to_json).map { |hash| Hashie::Mash.new(hash) }
     end
@@ -147,13 +148,15 @@ class Activity < ActiveRecord::Base
 
   def cc
     if read_attribute(:cc).nil?
-      nil
+      cc = []
     else
       cc = JSON.parse(read_attribute(:cc).to_json).map { |hash| Hashie::Mash.new(hash) }
     end
   end
 
   def email_addresses
+    cc ||= []
+    
     emails = Set.new
     from.each { |entry| emails.add(entry.address) }
     to.each { |entry| emails.add(entry.address) }
