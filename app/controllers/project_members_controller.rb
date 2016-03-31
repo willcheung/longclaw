@@ -7,6 +7,7 @@ class ProjectMembersController < ApplicationController
     respond_to do |format|
       format.html { redirect_to project_url(project) }
       format.json { head :no_content }
+      format.js
     end
   end
 

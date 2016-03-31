@@ -1,0 +1,32 @@
+/* CSS classes for autocomplete menu for search bar */
+
+/* Used for making sure fa-search is still on top */
+.top {
+  z-index: 2001;
+}
+
+.selectize-control.form-control {
+  padding: 0;
+}
+
+.selectize-control.form-control .selectize-input {
+  color: inherit;
+  display: block;
+  padding: 6px 12px;
+  transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+  z-index: 1000;
+  width: 450px;
+  height: 36px;
+  margin-top: 12px;
+  margin-left: 20px;
+  text-indent: 32px;
+  background: #fcfcfc;
+  border: 1px solid #aaa;
+  border-radius: 20px;
+  box-shadow: 0 0 3px #ccc, 0 10px 15px #f3f3f3 inset;
+}
+
+.selectize-control.form-control .selectize-input input {
+  font-size: 15px;
+  margin: 2px 0 0 0 !important;
+}
