@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block">
+<div class="vertical-timeline-block <%= a.id %>">
     
     <% if a.category == "Conversation" %>
         <div class="vertical-timeline-icon primary-bg">
@@ -72,7 +72,7 @@
                     </div>
                     <% if a.user == current_user %>
                         <div class="col-xs-1 m-t-xs">
-                            <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, a, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to delete this note?"} %>
+                            <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, a, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to delete this note?"}, remote: true %>
                         </div>
                     <% end %>
                 </div>
