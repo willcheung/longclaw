@@ -1,6 +1,6 @@
 <div class="wrapper wrapper-content animated fadeInRight text-center">
 
-<div class="row">
+<!-- <div class="row">
     <div class="alert alert-info col-lg-6 col-lg-offset-3">
         <h3>Your privacy is our highest priority</h3>
         <p class="text-left m-l-xl m-t-md">We applied 3 privacy rules to <strong>all your email communications</strong>, no exceptions.</p>
@@ -10,12 +10,21 @@
             <li>External members (e.g. your customers) are not able to access any information, unless you explicitly share with them.</li>
         </ul>
     </div>
-</div>
+</div> -->
 
 <% if !@new_projects.empty? %>
 <div style="margin-bottom:50px">
-    <h3>We found <strong><%= pluralize(@new_projects.size, 'project stream') %></strong> not in our system</h3>
-    <h2>Please customize your project streams. <br/>We recommend deleting streams that you don't want us to track as projects.<br><small>(You can also modify them in settings.)</small></h2>
+    <div class="row">
+        <div class="alert alert-info col-lg-6 col-lg-offset-3">
+            <h3>We found <strong><%= pluralize(@new_projects.size, 'project stream') %></strong> not in our system</h3>
+            <ol class="text-left " style="font-size: 20px;font-weight:300;">
+                <li>Please give each stream a meaningful name. <br><span style="font-size:15px">Example: Umbrella Corporation Deployment Phase 1</span></li>
+                <li>Each stream can be tagged "Public" or "Private". <br><span style="font-size:15px">Only invited members can access "Private" streams</span></li>
+                <li>We recommend deleting streams that you don't want us to track.<br><span style="font-size:15px">We sometimes pick up noise that can be removed from the system.</span></li>
+            </ol>
+        </div>
+    </div>
+
 	<% @new_projects.each do |p| %>
         <div class="row <%= p.id %>">
             <div class="col-lg-6 col-lg-offset-3">
