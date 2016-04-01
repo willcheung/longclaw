@@ -146,7 +146,10 @@
                 </li>
             </ul>
 
-            <div class="m-t-md"><strong>Project Collaborators</strong></div>
+            <div class="m-t-md">
+                <strong>Project Collaborators</strong>
+                <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
+            </div>
             <dl>
                 <dd class="project-people">
                     <% @project_members.each do |pm| %>
@@ -168,7 +171,10 @@
                 </dd>
             </dl>
         <% if (!@project_subscribers.empty?) %>
-            <div class="m-t-md"><strong>Project Subscribers</strong></div>
+            <div class="m-t-md">
+                <strong>Project Subscribers</strong>
+                <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who will receive updates about this project."></i>
+            </div>
             <dl>
                 <dd class="project-people">
                     <% @project_subscribers.each do |ps| %>
@@ -183,7 +189,7 @@
                                 <span><small><%= s.title %> <%= get_short_name_account_path(s) %></small></span>
                             </div>
                             <div class="col-sm-3 m-t-xs delete-member">
-                                <!-- DELETE LINK BELONGS HERE! TEMPORARILY REMOVED BECAUSE ROUTING IS MESSED UP -->
+                                <!-- DELETE LINK BELONGS HERE! TEMPORARILY REMOVED BECAUSE DESTROY ROUTE IS CURRENTLY USED TO MODIFY THE CURRENT USER'S SUB -->
                             </div>
                         </div>
                     <% end %>
