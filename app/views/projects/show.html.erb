@@ -167,7 +167,30 @@
                     
                 </dd>
             </dl>
-
+        <% if (!@project_subscribers.empty?) %>
+            <div class="m-t-md"><strong>Project Subscribers</strong></div>
+            <dl>
+                <dd class="project-people">
+                    <% @project_subscribers.each do |ps| %>
+                    <!-- FOR NOW, SUBSCRIBERS ARE ONLY INTERNAL USERS AND CANNOT BE CONTACTS. NEED TO FIX HERE IF SUBS CAN BE CONTACTS. SEE PROJECT MEMBERS FOR EXAMPLE -->
+                      <% s = ps.user %>
+                        <div class="row m-b-sm member <%= ps.id %>">
+                            <div class="col-sm-2">
+                                <%= get_profile_pic(get_full_name(s), s.email, "message-avatar") %>
+                            </div>
+                            <div class="col-sm-7 project-team-title">
+                                <span><%= get_full_name(s) %></span><br>
+                                <span><small><%= s.title %> <%= get_short_name_account_path(s) %></small></span>
+                            </div>
+                            <div class="col-sm-3 m-t-xs delete-member">
+                                <!-- DELETE LINK BELONGS HERE! TEMPORARILY REMOVED BECAUSE ROUTING IS MESSED UP -->
+                            </div>
+                        </div>
+                    <% end %>
+                    
+                </dd>
+            </dl>
+        <% end %>
         </div>
     </div>
 </div>
