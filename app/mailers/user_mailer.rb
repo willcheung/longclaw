@@ -22,8 +22,8 @@ class UserMailer < ApplicationMailer
       activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
       @projects_with_activities_today = activities_today.group_by{|e| e.activities.select {|a| a.is_visible_to(user) }}
 
-      @pinned_activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities]).where("activities.is_pinned = true and activities.pinned_at" + where).group("activities.id")
-      @pinned_activities_today = @pinned_activities_today.collect { |x| x.activities.select {|a| a.is_visible_to(current_user) }}.flatten
+      # pinned_activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities]).where("activities.is_pinned = true and activities.pinned_at" + where).group("activities.id")
+      # @pinned_activities_today = pinned_activities_today.collect { |x| x.activities.select {|a| a.is_visible_to(current_user) }}.flatten
 
       track user: user # ahoy_email tracker
       mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
