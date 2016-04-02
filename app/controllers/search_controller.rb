@@ -15,4 +15,12 @@ class SearchController < ApplicationController
   		format.json { render json: @projects.map { |x| { :id => x.id, :name => x.name, :label => "#" + x.name, :account => x.account.name } }.to_json.html_safe }
   	end
   end
+
+  def autocomplete_project_subs
+    @users = current_user.organization.users
+
+    respond_to do |format|
+      format.json { render json: @users.map { |x| { :id => x.id, :name => get_full_name(x), :email => x.email } }.to_json.html_safe }
+    end
+  end
 end

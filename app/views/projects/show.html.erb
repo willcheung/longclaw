@@ -197,6 +197,10 @@
                 </dd>
             </dl>
         <% end %>
+            <%= form_tag(project_project_subscribers_path(project_id: @project.id), :method => "post", id: "search-form", class: "navbar-form-custom") do %>
+                <input type="search" name="user_id" id="search-subs" class="contacts" placeholder="Add subscribers">
+                <%= submit_tag "Add" %>
+            <%end%>
         </div>
     </div>
 </div>
