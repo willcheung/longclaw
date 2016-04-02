@@ -12,6 +12,7 @@ Longclaw::Application.routes.draw do
     resources :contacts
     resources :projects do
       resources :project_subscribers, param: :user_id, only: [:destroy, :create]
+      post "project_subscribers/create_all"
     end
     resources :project_members
     resources :users
