@@ -15,4 +15,33 @@ class SearchController < ApplicationController
   		format.json { render json: @projects.map { |x| { :id => x.id, :name => x.name, :label => "#" + x.name, :account => x.account.name } }.to_json.html_safe }
   	end
   end
+
+  def autocomplete_project_member
+    # current_user.organization.accounts.contacts + current_user.organization.users
+    @search_list = []
+   
+    accounts_result = current_user.organization.accounts.each do |account|
+      account.contacts.each do |contact|
+        new_user = Struct.new(:first_name, :last_name, :email).new
+        new_user.email = contact.email
+        new_user.first_name = contact.first_name
+        new_user.last_name = contact.last_name
+        @search_list.push(new_user)
+      end
+    end
+
+    current_user.organization.users.each do |user|
+      new_user = Struct.new(:first_name, :last_name, :email).new
+      new_user.email = user.email
+      new_user.first_name = user.first_name
+      new_user.last_name = user.last_name
+      @search_list.push(new_user)
+    end
+
+    respond_to do |format|
+      format.json { render json: @search_list.map { |x| { :info => x.first_name + ' ' + x.last_name + ' | '+x.email} }.to_json.html_safe }
+    end
+  end
+
+
 end
