@@ -14,6 +14,7 @@ Longclaw::Application.routes.draw do
       resources :project_subscribers, param: :user_id, only: [:destroy, :create]
       post "project_subscribers/create_all"
     end
+    delete "project_subscribers/destroy_other"
     resources :project_members
     resources :users
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'

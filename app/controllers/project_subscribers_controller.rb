@@ -47,6 +47,15 @@ class ProjectSubscribersController < ApplicationController
     end
 	end
 
+  def destroy_other
+    @project_subscriber = ProjectSubscriber.find(params[:id])
+    @project_subscriber.destroy
+    respond_to do |format|
+      format.html { redirect_to :back }
+      format.js
+    end
+  end
+
 	private
   
 	def set_project_subscriber
