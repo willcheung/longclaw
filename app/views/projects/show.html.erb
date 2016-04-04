@@ -170,17 +170,17 @@
                     
                 </dd>
             </dl>
-        <% if (!@project_subscribers.empty?) %>
             <div class="m-t-md">
                 <strong>Project Subscribers</strong>
                 <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who will receive updates about this project."></i>
             </div>
+        <% if (!@project_subscribers.empty?) %>
             <dl>
                 <dd class="project-people">
                     <% @project_subscribers.each do |ps| %>
                     <!-- FOR NOW, SUBSCRIBERS ARE ONLY INTERNAL USERS AND CANNOT BE CONTACTS. NEED TO FIX HERE IF SUBS CAN BE CONTACTS. SEE PROJECT MEMBERS FOR EXAMPLE -->
                       <% s = ps.user %>
-                        <div class="row m-b-sm member <%= ps.id %>">
+                        <div class="row m-b-sm member <%= ps.id.to_s + ps.user_id %>">
                             <div class="col-sm-2">
                                 <%= get_profile_pic(get_full_name(s), s.email, "message-avatar") %>
                             </div>
@@ -189,8 +189,7 @@
                                 <span><small><%= s.title %> <%= get_short_name_account_path(s) %></small></span>
                             </div>
                             <div class="col-sm-3 m-t-xs delete-member">
-                                <!-- DELETE LINK BELONGS HERE! TEMPORARILY REMOVED BECAUSE DESTROY ROUTE IS CURRENTLY USED TO MODIFY THE CURRENT USER'S SUB -->
-                                <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the project?"} %>
+                                <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the project?"}, remote: true %>
                             </div>
                         </div>
                     <% end %>
@@ -198,7 +197,7 @@
                 </dd>
             </dl>
         <% end %>
-            <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "navbar-form-custom") do %>
+            <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "navbar-form-custom", remote: true) do %>
                 <input type="search" name="user_id" id="search-subs" class="contacts" placeholder="Add subscribers">
                 <%= submit_tag "Add" %>
             <%end%>
