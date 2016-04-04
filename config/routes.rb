@@ -27,6 +27,7 @@ Longclaw::Application.routes.draw do
 
     get "search/results"
     get "search/autocomplete_project_name"
+    get "search/autocomplete_project_member"
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
   end
 

@@ -45,4 +45,30 @@ $(document).ready(function() {
   // selectize.on("dropdown_open", function () {
   // })
 
+  $("#member-search").selectize({
+    closeAfterSelect: true,
+    valueField: 'info',
+    labelField: 'info',
+    searchField: ['info'],
+    
+    load: function (term, callback) {
+      //if (!term.length) return callback()
+      // use # to search for projects by name
+   
+      $.getJSON( '/search/autocomplete_project_member.json?term=' + encodeURIComponent(term) )
+        .done( function (data) {
+          console.log(data);
+          callback(data);
+        })
+        .fail( function () {
+          callback();
+        })
+      
+    },
+    onBlur: function () {
+      // Manually prevent input box from being cleared on blur
+      this.setTextboxValue(this.lastQuery);
+    }
+  })
+
 });
