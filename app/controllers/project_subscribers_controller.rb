@@ -18,18 +18,17 @@ class ProjectSubscribersController < ApplicationController
 
   # for subscribing multiple internal users other than yourself
   def create_all
-    # @subscribers is array of user_id
+    return @project_subscribers = [] if (params[:user_id].empty?)
+    # @project_subscribers is array of user_id
     if (params[:user_id].include? ",")
-      @subscribers = params[:user_id].split(",")
+      @project_subscribers = params[:user_id].split(",")
     else
-      @subscribers = [params[:user_id]]
+      @project_subscribers = [params[:user_id]]
     end
-    puts @subscribers
-    # @subscribers is array of subscribers
-    @subscribers.map! { |s| ProjectSubscriber.new(user_id: s, project_id: params[:project_id]) }
-    puts @subscribers
-    @subscribers.each { |s| s.save }
-    puts @subscribers
+    # @project_subscribers is array of subscribers
+    @project_subscribers.map! { |s| ProjectSubscriber.new(user_id: s, project_id: params[:project_id]) }
+    # @project_subscribers is array of subscribers who are saved successfully
+    @project_subscribers.select! { |s| s.save }
 
     respond_to do |format|
       format.html { redirect_to :back }

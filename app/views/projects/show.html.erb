@@ -147,8 +147,9 @@
             </ul>
 
             <div class="m-t-md">
-                <strong>Project Collaborators</strong>
+                <strong><span id="pm-length"><%= @project_members.length %></span> Project Collaborators</strong>
                 <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
+                <span class="fa fa-plus pull-right toggle-open"></span>
             </div>
             <dl>
                 <dd class="project-people">
@@ -171,10 +172,10 @@
                 </dd>
             </dl>
             <div class="m-t-md">
-                <strong>Project Subscribers</strong>
+                <strong><span id="ps-length"><%= @project_subscribers.length %></span> Project Subscribers</strong>
                 <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who will receive updates about this project."></i>
+                <span class="fa fa-plus pull-right toggle-open"></span>
             </div>
-        <% if (!@project_subscribers.empty?) %>
             <dl>
                 <dd class="project-people">
                     <% @project_subscribers.each do |ps| %>
@@ -196,7 +197,6 @@
                     
                 </dd>
             </dl>
-        <% end %>
             <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "navbar-form-custom", remote: true) do %>
                 <input type="search" name="user_id" id="search-subs" class="contacts" placeholder="Add subscribers">
                 <%= submit_tag "Add" %>
