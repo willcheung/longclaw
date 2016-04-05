@@ -71,15 +71,13 @@
 
 
                     <% if (!@pinned_activities_today.nil? and !@pinned_activities_today.empty?) %>
-                        <h1><%= @pinned_activities_today.inject(0) { |sum, n| sum + n.activities.size } %> new pinned items</h1>
+                        <h1>New pinned items</h1>
                         <div style="margin-left: 40px;">
-                        <% @pinned_activities_today.each do |p| %>
-                            <h4><a href="<%= project_path(p) %>"><%= p.name %></a></h4>
+                        <% @pinned_activities_today.each do |a| %>
+                            <h3><a href="<%= project_path(a.project) %>"><%= a.project.name %></a></h3>
                             <table class="table pinned-table table-condensed table-hover">
                                 <tbody>
-                                    <% p.activities.each do |a| %>
-                                        <%= render 'activities/pinned', a: a %>
-                                    <% end %>
+                                    <%= render 'activities/pinned', a: a %>
                                 </tbody>
                             </table>
                         <% end %>

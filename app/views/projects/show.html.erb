@@ -145,7 +145,6 @@
                     Created:
                 </li>
             </ul>
-
             <div class="m-t-md">
                 <strong><span id="pm-length"><%= @project_members.length %></span> Project Collaborators</strong>
                 <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
@@ -153,6 +152,18 @@
             </div>
             <dl style="display: none">
                 <dd class="project-people members">
+                    <div class="row member">
+                        <div class="col-sm-2">
+                            <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px"></i>
+                        </div>
+                        <div class="col-sm-7 project-team-title">
+                            <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "navbar-form-custom") do %>
+                                 <input type="search" name="email" id="member-search" class="ui-autocomplete-input ui-autocomplete-loading" placeholder="Enter email or name" data-autocomplete="/search/autocomplete_project_member" autocomplete="off">
+                                <%= hidden_field_tag 'project_id', @project.id %>
+                                <%= submit_tag "Add member", :style => "display: none;" %>
+                            <%end%>
+                        </div>
+                    </div>
                     <% @project_members.each do |pm| %>
                       <% m = get_user_or_contact_from_pm(pm) %>
                         <div class="row m-b-sm member <%= pm.id %>">
