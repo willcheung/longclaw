@@ -151,8 +151,8 @@
                 <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
                 <span class="fa fa-plus pull-right toggle-open"></span>
             </div>
-            <dl>
-                <dd class="project-people">
+            <dl style="display: none">
+                <dd class="project-people members">
                     <% @project_members.each do |pm| %>
                       <% m = get_user_or_contact_from_pm(pm) %>
                         <div class="row m-b-sm member <%= pm.id %>">
@@ -176,23 +176,10 @@
                 <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who will receive updates about this project."></i>
                 <span class="fa fa-plus pull-right toggle-open"></span>
             </div>
-            <dl>
-                <dd class="project-people">
+            <dl style="display: none;">
+                <dd class="project-people subs">
                     <% @project_subscribers.each do |ps| %>
-                    <!-- FOR NOW, SUBSCRIBERS ARE ONLY INTERNAL USERS AND CANNOT BE CONTACTS. NEED TO FIX HERE IF SUBS CAN BE CONTACTS. SEE PROJECT MEMBERS FOR EXAMPLE -->
-                      <% s = ps.user %>
-                        <div class="row m-b-sm member <%= ps.id.to_s + ps.user_id %>">
-                            <div class="col-sm-2">
-                                <%= get_profile_pic(get_full_name(s), s.email, "message-avatar") %>
-                            </div>
-                            <div class="col-sm-7 project-team-title">
-                                <span><%= get_full_name(s) %></span><br>
-                                <span><small><%= s.title %> <%= get_short_name_account_path(s) %></small></span>
-                            </div>
-                            <div class="col-sm-3 m-t-xs delete-member">
-                                <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the project?"}, remote: true %>
-                            </div>
-                        </div>
+                        <%= render 'project_subscribers/subscriber', ps: ps %>
                     <% end %>
                     
                 </dd>
@@ -251,4 +238,10 @@
     var elem = document.querySelector('.is_public-switch');
     new Switchery(elem);
     $('.best_in_place.switch').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { }); });
+
+    /* Toggle Show Project Subs */
+    $('.fa.toggle-open').click( function () {
+        $(this).toggleClass("fa-plus fa-minus");
+        $(this).parent().next().toggle(400);
+    })
 </script>
