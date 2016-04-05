@@ -48,7 +48,7 @@ class SearchController < ApplicationController
     end
 
     respond_to do |format|
-      format.json { render json: @search_list.map { |x| { :info => x.first_name + ' ' + x.last_name + ' | '+x.email} }.to_json.html_safe }
+      format.json { render json: @search_list.map { |x| { :name => x.first_name + ' ' + x.last_name, :email => x.email } }.to_json.html_safe }
     end
   end
 

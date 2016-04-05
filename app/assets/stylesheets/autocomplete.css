@@ -48,9 +48,9 @@
   background: linear-gradient(to bottom,  #2183f5 0%,#1d77f3 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2183f5', endColorstr='#1d77f3',GradientType=0 );
   border: 1px solid #0f65d2;
-  -webkit-border-radius: 999px;
-  -moz-border-radius: 999px;
-  border-radius: 999px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
   -webkit-box-shadow: 0 1px 1px rgba(0,0,0,0.15);
   -moz-box-shadow: 0 1px 1px rgba(0,0,0,0.15);
   box-shadow: 0 1px 1px rgba(0,0,0,0.15);
@@ -82,4 +82,20 @@
   font-size: 12px;
   display: block;
   color: #a0a0a0;
+}
+.selectize-control.contacts .selectize-dropdown .label {
+  font-size: 13px;
+  padding: 0;
+  background-color: transparent;
+}
+.hide-submit-button {
+  height: 0;
+  visibility: hidden;
+  width: 0;
+}
+.fix-height {
+  height: 40px;
+}
+.no-display {
+  display: none;
 }

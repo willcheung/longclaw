@@ -12,10 +12,9 @@ class ProjectMembersController < ApplicationController
   end
 
   def create
-    infos = params[:email].split(',')
+    emails = params[:email].split(',')
 
-    infos.each do |info|
-      email = info.split(' | ')[1]
+    emails.each do |email|
       contact_result = Contact.find_by_email(email);
       if contact_result!=nil
         project_member = ProjectMember.new(project_id: params[:project_id], contact_id: contact_result.id)

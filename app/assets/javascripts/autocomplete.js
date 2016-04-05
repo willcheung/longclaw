@@ -51,7 +51,6 @@ $(document).ready(function() {
       if (!term.length) return callback()
       $.getJSON( '/search/autocomplete_project_subs.json', { project_id: window.location.pathname.slice(10) } )
         .done( function (data) {
-          console.log(data);
           callback(data);
         })
         .fail( function () {
@@ -86,23 +85,35 @@ $(document).ready(function() {
 
   $("#member-search").selectize({
     closeAfterSelect: true,
-    valueField: 'info',
-    labelField: 'info',
-    searchField: ['info'],
-    
+    valueField: 'email',
+    labelField: 'name',
+    searchField: ['name', 'email'],
     load: function (term, callback) {
-      //if (!term.length) return callback()
-      // use # to search for projects by name
-   
-      $.getJSON( '/search/autocomplete_project_member.json?term=' + encodeURIComponent(term) )
+      if (!term.length) return callback()   
+      $.getJSON( '/search/autocomplete_project_member.json', { term: encodeURIComponent(term) } )
         .done( function (data) {
-          console.log(data);
           callback(data);
         })
         .fail( function () {
           callback();
         })
       
+    },
+    render: {
+        item: function(item, escape) {
+            return '<div>' +
+                (item.name ? '<span class="name">' + escape(item.name) + '</span>' : '') +
+                (item.email ? '<span class="email">' + escape(item.email) + '</span>' : '') +
+            '</div>';
+        },
+        option: function(item, escape) {
+            var label = item.name || item.email;
+            var caption = item.name ? item.email : null;
+            return '<div>' +
+                '<span class="label">' + escape(label) + '</span>' +
+                (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
+            '</div>';
+        }
     },
     onBlur: function () {
       // Manually prevent input box from being cleared on blur
