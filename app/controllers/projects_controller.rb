@@ -32,6 +32,7 @@ class ProjectsController < ApplicationController
     @activities = @project.activities.includes(:comments)
     @pinned_activities = @project.activities.pinned.includes(:comments)
     @project_members = @project.project_members
+    @project_subscribers = @project.subscribers
 
     # filter out not visible items
     @activities = @activities.select {|a| a.is_visible_to(current_user) }

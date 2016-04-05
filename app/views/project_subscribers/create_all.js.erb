@@ -1,0 +1,5 @@
+$('#ps-length').text(Number($('#ps-length').text()) + Number("<%= @project_subscribers.length %>"));
+$('#search-subs')[0].selectize.clear();
+<% @project_subscribers.each do |ps| %>
+$('.project-people.subs').append('<%= escape_javascript(render "project_subscribers/subscriber", ps: ps) %>')
+<% end %>

@@ -1,0 +1,5 @@
+$('.<%= @project_subscriber.id.to_s + @project_subscriber.user_id %>').fadeOut(400, function(){
+    $('.<%= @project_subscriber.id.to_s + @project_subscriber.user_id %>').remove();
+    // Get current ps-length, transform to number and decrement
+    $('#ps-length').text(Number($('#ps-length').text()) - 1);
+});

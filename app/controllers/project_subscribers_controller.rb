@@ -1,6 +1,7 @@
 class ProjectSubscribersController < ApplicationController
 	before_action :set_project_subscriber, only: [:destroy]
 
+  # for subscribing yourself to a project
 	def create
 		@subscriber = ProjectSubscriber.new(user_id: params[:user_id], project_id: params[:project_id])
 		@project = Project.find(params[:project_id])
@@ -15,6 +16,27 @@ class ProjectSubscribersController < ApplicationController
     end
 	end
 
+  # for subscribing multiple internal users other than yourself
+  def create_all
+    return @project_subscribers = [] if (params[:user_id].empty?)
+    # @project_subscribers is array of user_id
+    if (params[:user_id].include? ",")
+      @project_subscribers = params[:user_id].split(",")
+    else
+      @project_subscribers = [params[:user_id]]
+    end
+    # @project_subscribers is array of subscribers
+    @project_subscribers.map! { |s| ProjectSubscriber.new(user_id: s, project_id: params[:project_id]) }
+    # @project_subscribers is array of subscribers who are saved successfully
+    @project_subscribers.select! { |s| s.save }
+
+    respond_to do |format|
+      format.html { redirect_to :back }
+      format.json { head :no_content }
+      format.js
+    end
+  end
+
 	def destroy
 		@project = Project.find(params[:project_id])
 		@project_subscriber.destroy_all
@@ -23,6 +45,15 @@ class ProjectSubscribersController < ApplicationController
       format.json { head :no_content }
     end
 	end
+
+  def destroy_other
+    @project_subscriber = ProjectSubscriber.find(params[:id])
+    @project_subscriber.destroy
+    respond_to do |format|
+      format.html { redirect_to :back }
+      format.js
+    end
+  end
 
 	private
   

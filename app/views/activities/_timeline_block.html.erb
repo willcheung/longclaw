@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block <%= a.id %>">
+<div class="vertical-timeline-block <%= a.id.to_s + a.category %>">
     
     <% if a.category == "Conversation" %>
         <div class="vertical-timeline-icon primary-bg">

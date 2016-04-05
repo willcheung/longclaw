@@ -12,7 +12,9 @@ Longclaw::Application.routes.draw do
     resources :contacts
     resources :projects do
       resources :project_subscribers, param: :user_id, only: [:destroy, :create]
+      post "project_subscribers/create_all"
     end
+    delete "project_subscribers/destroy_other"
     resources :project_members
     resources :users
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
@@ -27,6 +29,7 @@ Longclaw::Application.routes.draw do
 
     get "search/results"
     get "search/autocomplete_project_name"
+    get "search/autocomplete_project_subs"
     get "search/autocomplete_project_member"
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
   end

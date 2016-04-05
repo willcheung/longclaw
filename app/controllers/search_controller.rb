@@ -16,6 +16,15 @@ class SearchController < ApplicationController
   	end
   end
 
+  def autocomplete_project_subs
+    subs = ProjectSubscriber.all.where(project_id: params[:project_id]).map{ |ps| ps.user_id }
+    @users = current_user.organization.users.where.not(id: current_user.id).where.not(id: subs)
+
+    respond_to do |format|
+      format.json { render json: @users.map { |x| { :id => x.id, :name => get_full_name(x), :email => x.email } }.to_json.html_safe }
+    end
+  end
+
   def autocomplete_project_member
     # current_user.organization.accounts.contacts + current_user.organization.users
     @search_list = []
@@ -39,9 +48,8 @@ class SearchController < ApplicationController
     end
 
     respond_to do |format|
-      format.json { render json: @search_list.map { |x| { :info => x.first_name + ' ' + x.last_name + ' | '+x.email} }.to_json.html_safe }
+      format.json { render json: @search_list.map { |x| { :name => x.first_name + ' ' + x.last_name, :email => x.email } }.to_json.html_safe }
     end
   end
-
 
 end

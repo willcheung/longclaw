@@ -1,4 +1,4 @@
-<div class="social-comment row <%= c.id %>">
+<div class="social-comment row <%= c.id.to_s + c.role %>">
 	<div class="col-sm-1">
 		<%= get_profile_pic(get_full_name(c.user), c.user.email, "pull-left m-r-sm") %>
 	</div>
