@@ -145,6 +145,7 @@
                     Created:
                 </li>
             </ul>
+
             <div class="m-t-md"><strong>Project Collaborators</strong></div>
             <dl>
                 <dd class="project-people">
@@ -156,7 +157,7 @@
                             <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "navbar-form-custom") do %>
                                  <input type="search" name="email" id="member-search" class="ui-autocomplete-input ui-autocomplete-loading" placeholder="Enter email or name" data-autocomplete="/search/autocomplete_project_member" autocomplete="off">
                                 <%= hidden_field_tag 'project_id', @project.id %>
-                                <%= submit_tag "Add member", :style => "display: none;" %>
+                                <%= submit_tag "Add member", class: "hide-submit-button" %>
                             <%end%>
                         </div>
                     </div>
