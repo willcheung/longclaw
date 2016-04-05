@@ -1,0 +1,5 @@
+$('#pm-length').text(Number($('#pm-length').text()) + Number("<%= @project_members.length %>"));
+$('#member-search')[0].selectize.clear();
+<% @project_members.each do |pm| %>
+$('.project-people.members').append('<%= escape_javascript(render "project_members/member", pm: pm) %>')
+<% end %>

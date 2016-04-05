@@ -159,7 +159,7 @@
                     <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px"></i>
                 </div>
                 <div class="col-sm-7 project-team-title">
-                    <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height") do %>
+                    <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
                          <input type="search" name="email" id="member-search" class="contacts" placeholder="Add collaborators (name or email)">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
@@ -169,19 +169,7 @@
             <dl class="no-display">
                 <dd class="project-people members">
                     <% @project_members.each do |pm| %>
-                      <% m = get_user_or_contact_from_pm(pm) %>
-                        <div class="row m-b-sm member <%= pm.id %>">
-                            <div class="col-sm-2">
-                                <%= get_profile_pic(get_full_name(m), m.email, "message-avatar") %>
-                            </div>
-                            <div class="col-sm-7 project-team-title">
-                                <span><%= get_full_name(m) %></span><br>
-                                <span><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
-                            </div>
-                            <div class="col-sm-3 m-t-xs delete-member">
-                                <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this member from the project?"}, remote: true %>
-                            </div>
-                        </div>
+                        <%= render 'project_members/member', pm: pm %>
                     <% end %>
                     
                 </dd>

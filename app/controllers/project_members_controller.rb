@@ -12,6 +12,7 @@ class ProjectMembersController < ApplicationController
   end
 
   def create
+    @project_members = []
     emails = params[:email].split(',')
 
     emails.each do |email|
@@ -25,7 +26,9 @@ class ProjectMembersController < ApplicationController
         project_member = ProjectMember.new(project_id: params[:project_id], user_id: user_result.id) 
       end
 
-      if !project_member.save
+      if project_member.save
+        @project_members.push(project_member)
+      else
         logger.error("Add project member fail!")
         ahoy.track("Error add project member", message: project_member.errors.full_messages)
         # puts project_member.errors.full_messages
@@ -34,7 +37,7 @@ class ProjectMembersController < ApplicationController
 
     respond_to do |format|
         format.html { redirect_to project_path(params[:project_id]) }
-        format.js { render action: 'show', status: :created, location: @project_member }
+        format.js
     end
   end    
 
