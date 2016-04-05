@@ -17,7 +17,8 @@ class SearchController < ApplicationController
   end
 
   def autocomplete_project_subs
-    @users = current_user.organization.users
+    subs = ProjectSubscriber.all.where(project_id: params[:project_id]).map{ |ps| ps.user_id }
+    @users = current_user.organization.users.where.not(id: current_user.id).where.not(id: subs)
 
     respond_to do |format|
       format.json { render json: @users.map { |x| { :id => x.id, :name => get_full_name(x), :email => x.email } }.to_json.html_safe }

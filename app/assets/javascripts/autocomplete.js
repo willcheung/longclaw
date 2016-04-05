@@ -18,7 +18,7 @@ $(document).ready(function() {
       if (!term.length) return callback()
       // use # to search for projects by name
       if (term[0] === '#') {
-        $.getJSON( '/search/autocomplete_project_name.json?term=' + encodeURIComponent(term.slice(1)) )
+        $.getJSON( '/search/autocomplete_project_name.json', { term: encodeURIComponent(term.slice(1)) } )
           .done( function (data) {
             callback(data);
           })
@@ -49,7 +49,7 @@ $(document).ready(function() {
     create: false,
     load: function (term, callback) {
       if (!term.length) return callback()
-      $.getJSON( '/search/autocomplete_project_subs.json' )
+      $.getJSON( '/search/autocomplete_project_subs.json', { project_id: window.location.pathname.slice(10) } )
         .done( function (data) {
           console.log(data);
           callback(data);
