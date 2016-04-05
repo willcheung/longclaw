@@ -158,9 +158,9 @@
                 <div class="col-sm-2">
                     <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px"></i>
                 </div>
-                <div class="col-sm-7 project-team-title">
+                <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                         <input type="search" name="email" id="member-search" class="contacts" placeholder="Add collaborators (name or email)">
+                         <input type="search" name="email" id="member-search" class="contacts top" placeholder="Add collaborators...">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
                     <%end%>
@@ -187,9 +187,9 @@
                 <div class="col-sm-2">
                     <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px"></i>
                 </div>
-                <div class="col-sm-7 project-team-title">
+                <div class="col-sm-9 project-team-title">
                     <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                        <input type="search" name="user_id" id="search-subs" class="contacts" placeholder="Add subscribers (name or email)">
+                        <input type="search" name="user_id" id="search-subs" class="contacts" placeholder="Add subscribers...">
                         <%= submit_tag "Add subscriber", class: "hide-submit-button" %>
                     <%end%>
                 </div>

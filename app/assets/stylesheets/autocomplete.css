@@ -66,11 +66,14 @@
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0059c7', endColorstr='#0051c1',GradientType=0 );
   border-color: #0051c1;
 }
+.selectize-control.contacts .selectize-input > div .name {
+  display: inline-block;
+}
+.selectize-control.contacts .selectize-input > div .name:after {
+  content: '\00A0';
+}
 .selectize-control.contacts .selectize-input > div .email {
   opacity: 0.8;
-}
-.selectize-control.contacts .selectize-input > div .name + .email {
-  margin-left: 5px;
 }
 .selectize-control.contacts .selectize-input > div .email:before {
   content: '<';
