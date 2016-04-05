@@ -21,6 +21,8 @@
                     <tr>
                         <th style="text-align:center">Name</th>
                         <th style="text-align:center">Email</th>
+                        <th style="text-align:center">Title</th>
+                        <th style="text-align:center">Department</th>
                         <th style="text-align:center">Joined ContextSmith</th>
                         <th style="text-align:center">Accounts Owned</th>
                         <th style="text-align:center">Projects Owned</th>
@@ -32,6 +34,10 @@
                     <tr>
                         <td><%= get_full_name(u) %></td>
                         <td><%= u.email %></td>
+                       
+                       <td style="text-align:center"><%= best_in_place u, :title, :as => 'input', :place_holder => '(add)' %></td>
+                        <td style="text-align:center"><%= best_in_place u, :department, :as => 'input', :place_holder => '(add)' %></td>
+
                         <td style="text-align:center">
                             <% if u.onboarding_step == -1 and !u.cluster_create_date.nil?%>
                                 <%= u.cluster_create_date.to_date %>
