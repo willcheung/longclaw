@@ -4,7 +4,8 @@
   <%# Added Bootstrap classes, and help-block container for error messages %>
   
     <div class="col-xs-12">
-      <%= f.input :name %>
+      <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
+      <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: Project::CATEGORY, selected: Project::CATEGORY%>
       <span class="help-block" style="color:red"></span>
     </div>
   
