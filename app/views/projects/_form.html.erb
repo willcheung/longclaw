@@ -12,10 +12,10 @@
     <label class="select optional control-label" for="project_account_id">Open Collaboration &nbsp;&nbsp;<i data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can view and collaborate." class="fa fa-question-circle"></i></label>
     <%= best_in_place @project, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch col-xs-3' %>
 
-    <div style="clear:both"></div>
+  
   <%# Added Bootstrap classes %>
-  <div class="actions pull-right">
-    <%= f.button :submit, class: 'btn-primary' %>
-  </div>
+  
+    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
+ 
 
 <% end %>
