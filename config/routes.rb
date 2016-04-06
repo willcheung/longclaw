@@ -32,6 +32,10 @@ Longclaw::Application.routes.draw do
     get "search/autocomplete_project_subs"
     get "search/autocomplete_project_member"
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
+    
+    get 'reports/customer'
+    get 'reports/team'
+    get 'reports/lifecycle'
   end
 
   devise_scope :user do # Unauthenticated user
