@@ -1,2 +1,238 @@
-<h1>Reports#customer</h1>
-<p>Find me in app/views/reports/customer.html.erb</p>
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Customer Report</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li class="active">
+                <strong>Customer Report</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="btn-group">
+                <div class="font-bold m-b-xs">Account Type:</div>
+                <a href="<%= root_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
+                <a href="<%= root_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Customer</a>
+                <a href="<%= root_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Partner&nbsp;</a>
+                <a href="<%= root_path %>?type=Prospect" class="btn btn-sm <% if params[:type] == "Prospect" %>btn-default<% else %>btn-white<% end %>" type="button">Prospect</a>
+                <a href="<%= root_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Vendor&nbsp;</a>
+                <a href="<%= root_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="row m-t-lg">
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Touches </h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
+                    <div class="btn-group m-l-sm">
+                        <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
+                        <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div id="touches-chart" class="customer-chart"class="customer-chart" style="">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days vs Prev 7 days</span>
+                    <h5>Biggest Movers</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days. (Top 5)"></i>
+                    <div class="btn-group m-l-sm">
+                        <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
+                        <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div id="percent-change-chart" class="customer-chart" style="">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* Tooltip */
+    $('[data-toggle="tooltip"]').tooltip();
+
+    <% if !@projects.empty? %>
+
+    /* Highcharts support functions */
+
+    function redraw_touches_chart(chart, max) {
+        // Delete all the series.
+        while (chart.series.length > 0) {
+          chart.series[0].remove(false);
+        }
+
+        if(max) {
+            chart.xAxis[0].setCategories(<%= @project_max.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Touches',
+                    data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
+                    color: '#7cb5ec'
+                });
+            
+        } else {
+            chart.xAxis[0].setCategories(<%= @project_min.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Touches',
+                    data: <%= @project_min.map(&:num_activities).to_json.html_safe %>,
+                    color: '#7cb5ec'
+                });
+        }
+
+        chart.redraw();
+    }
+
+    function redraw_changes_chart(chart, max) {
+        // Delete all the series.
+        while (chart.series.length > 0) {
+          chart.series[0].remove(false);
+        }
+
+        if(max) {
+            chart.xAxis[0].setCategories(<%= @project_max_chg.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Gain',
+                    data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                    color: '#32B232'
+                });
+            
+        } else {
+            chart.xAxis[0].setCategories(<%= @project_min_chg.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Decline',
+                    data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                    color: '#FF5050'
+                });
+        }
+
+        chart.redraw();
+    }
+
+    /* Highcharts */
+    $(function () {
+        $('#touches-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @project_max.map(&:name).to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Touches',
+                data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
+                color: '#7cb5ec'
+            }]
+        });
+    });
+
+    $(function () {
+        $('#percent-change-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @project_max_chg.map(&:name).to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                labels: {
+                    format: '{value}%'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            tooltip: {
+                valueSuffix: '%'
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Gain',
+                data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                color: '#32B232'
+            }]
+        });
+    });
+
+    /* Event Handlers */
+    var projects_chosen;
+
+    $('#most-touches').click(function() {
+        chart = $('#touches-chart').highcharts();
+        $(this).addClass("active");
+        $('#least-touches').removeClass("active");
+        redraw_touches_chart(chart, true);
+    });
+
+    $('#least-touches').click(function() {
+        chart = $('#touches-chart').highcharts();
+        $(this).addClass("active");
+        $('#most-touches').removeClass("active");
+        redraw_touches_chart(chart, false);
+    });
+
+    $('#most-change').click(function() {
+        chart = $('#percent-change-chart').highcharts();
+        $(this).addClass("active");
+        $('#least-change').removeClass("active");
+        redraw_changes_chart(chart, true);
+    });
+
+    $('#least-change').click(function() {
+        chart = $('#percent-change-chart').highcharts();
+        $(this).addClass("active");
+        $('#most-change').removeClass("active");
+        redraw_changes_chart(chart, false);
+    });
+
+    <% end %>
+</script>
+

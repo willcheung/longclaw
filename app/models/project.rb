@@ -150,11 +150,13 @@ class Project < ActiveRecord::Base
 							 backend_id, 
 							 last_sent_date, 
 							 project_id, 
-							 jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date 
-					from activities where project_id in ('#{array_of_project_ids.join("','")}')
+               sent_date 
+							 --jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date 
+          from email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}')
+					--from activities where project_id in ('#{array_of_project_ids.join("','")}')
 				) t 
 			JOIN projects ON projects.id = t.project_id
-			WHERE sent_date::integer between EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - #{hours_ago_start_sql})::integer and EXTRACT(EPOCH FROM #{hours_ago_end_sql})::integer 
+			WHERE sent_date::integer between EXTRACT(EPOCH FROM '2014-09-05'::date - #{hours_ago_start_sql})::integer and EXTRACT(EPOCH FROM #{hours_ago_end_sql})::integer 
 			GROUP BY projects.id
 			ORDER BY num_activities DESC
 		SQL
