@@ -166,7 +166,7 @@ class Project < ActiveRecord::Base
   end
 
   def self.find_include_sum_activities(static_date=false, hours_ago_end=Date.current, hours_ago_start, array_of_project_ids)
-    my_date = "'2014-09-04'::date"
+    my_date = "'2014-09-03'::date"
     if static_date
       hours_ago_end_sql = (hours_ago_end == Date.current) ? "#{my_date}" : "#{my_date} - INTERVAL '#{hours_ago_end} hours'"
       hours_ago_start_sql = "#{my_date} - INTERVAL '#{hours_ago_start} hours'"
@@ -234,21 +234,6 @@ class Project < ActiveRecord::Base
 		end
 	end
 
-  # def self.calculate_pct_from_prev(project, project_prev)
-  #   project_chg_activities = []
-
-  #   project.each do |p|
-  #     project_prev.each do |p_prev|
-  #       if p.id == p_prev.id
-  #         p.num_activities_prev = p_prev.num_activities
-  #         p.pct_from_prev = (((p.num_activities - p_prev.num_activities) / p_prev.num_activities.to_f) * 100).round(1)
-  #         project_chg_activities << p
-  #       end
-  #     end
-  #   end
-  #   return project_chg_activities
-  # end
-
 
 	def self.calculate_pct_from_prev(projects, projects_prev)
     project_chg_activities = []
@@ -256,18 +241,15 @@ class Project < ActiveRecord::Base
 		projects.each do |proj|
       proj_prev = projects_prev.find { |p| p.id == proj.id }
       if proj_prev
-        puts "found a matching project"
         proj.pct_from_prev = (((proj.num_activities - proj_prev.num_activities) / proj_prev.num_activities.to_f) * 100).round(1)
         project_chg_activities << proj
       else
-        puts "new project"
         proj.pct_from_prev = 100
         project_chg_activities << proj
       end
     end
     projects_prev.each do |prev|
       if !projects.find { |p| p.id == prev.id }
-        puts "old project"
         prev.pct_from_prev = -100
         project_chg_activities << prev
       end

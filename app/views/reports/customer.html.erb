@@ -84,18 +84,18 @@
         }
 
         if(max) {
-            chart.xAxis[0].setCategories(<%= @project_max.map(&:name).to_json.html_safe %>);
+            chart.xAxis[0].setCategories(<%= @project_sum_activities.map(&:name).to_json.html_safe %>);
             chart.addSeries({
                     name: 'Touches',
-                    data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
+                    data: <%= @project_sum_activities.map(&:num_activities).to_json.html_safe %>,
                     color: '#7cb5ec'
                 });
             
         } else {
-            chart.xAxis[0].setCategories(<%= @project_min.map(&:name).to_json.html_safe %>);
+            chart.xAxis[0].setCategories(<%= @project_sum_activities.reverse.map(&:name).to_json.html_safe %>);
             chart.addSeries({
                     name: 'Touches',
-                    data: <%= @project_min.map(&:num_activities).to_json.html_safe %>,
+                    data: <%= @project_sum_activities.reverse.map(&:num_activities).to_json.html_safe %>,
                     color: '#7cb5ec'
                 });
         }
@@ -110,33 +110,61 @@
         }
 
         if(max) {
-            chart.xAxis[0].setCategories(<%= (@project_max_chg.map(&:name) + @project_min_chg.map(&:name)).to_json.html_safe %>);
+            chart.xAxis[0].setCategories(<%= (@project_pos_chg.map(&:name) + @project_no_chg.map(&:name) + @project_neg_chg.map(&:name)).to_json.html_safe %>);
             chart.addSeries({
-                name: 'Gain',
-                data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                color: '#32B232',
-                negativeColor:'#FF5050'
-            });
-            chart.addSeries({
-                name: 'Decline',
-                data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                color: '#32B232',
-                negativeColor:'#FF5050'
+                type: 'bar',
+                data: [
+                <% @project_pos_chg.each do |p| %>
+                {
+                  name: 'Gain',
+                  color: '#32B232',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                <% @project_no_chg.each do |p| %>
+                {
+                  name: 'No Change',
+                  color: 'orange',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                <% @project_neg_chg.each do |p| %>
+                {
+                  name: 'Decline',
+                  color: '#FF5050',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                ]
             });
             
         } else {
-            chart.xAxis[0].setCategories(<%= (@project_max_chg.map(&:name) + @project_min_chg.map(&:name)).reverse.to_json.html_safe %>);
+            chart.xAxis[0].setCategories(<%= (@project_pos_chg.map(&:name) + @project_no_chg.map(&:name) + @project_neg_chg.map(&:name)).reverse.to_json.html_safe %>);
             chart.addSeries({
-                name: 'Decline',
-                data: <%= @project_min_chg.map(&:pct_from_prev).reverse.to_json.html_safe %>,
-                color: '#32B232',
-                negativeColor:'#FF5050'
-            });
-            chart.addSeries({
-                name: 'Gain',
-                data: <%= @project_max_chg.map(&:pct_from_prev).reverse.to_json.html_safe %>,
-                color: '#32B232',
-                negativeColor:'#FF5050'
+                type: 'bar',
+                data: [
+                <% @project_neg_chg.reverse.each do |p| %>
+                {
+                  name: 'Decline',
+                  color: '#FF5050',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                <% @project_no_chg.reverse.each do |p| %>
+                {
+                  name: 'No Change',
+                  color: 'orange',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                <% @project_pos_chg.reverse.each do |p| %>
+                {
+                  name: 'Gain',
+                  color: '#32B232',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                ]
             });
         }
 
@@ -153,7 +181,7 @@
                 text: ''
             },
             xAxis: {
-                categories: <%= @project_max.map(&:name).to_json.html_safe %>
+                categories: <%= @project_sum_activities.map(&:name).to_json.html_safe %>
             },
             yAxis: {
                 min: 0,
@@ -171,7 +199,7 @@
             },
             series: [{
                 name: 'Touches',
-                data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
+                data: <%= @project_sum_activities.map(&:num_activities).to_json.html_safe %>,
                 color: '#7cb5ec'
             }]
         });
@@ -186,7 +214,7 @@
                 text: ''
             },
             xAxis: {
-                categories: <%= (@project_max_chg.map(&:name) + @project_min_chg.map(&:name)).to_json.html_safe %>
+                categories: <%= (@project_pos_chg.map(&:name) + @project_no_chg.map(&:name) + @project_neg_chg.map(&:name)).to_json.html_safe %>
             },
             yAxis: {
                 title: {
@@ -205,21 +233,36 @@
             plotOptions: {
                 series: {
                     stacking: 'normal'
-                }
+                },
+                minPointLength: 1
             },
-            series: [
-              {
-                name: 'Gain',
-                data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                color: '#32B232',
-                negativeColor:'#FF5050'
-              },
-              {
-                name: 'Decline',
-                data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                color: '#32B232',
-                negativeColor:'#FF5050'
+            series: [{
+              type: 'bar',
+              data: [
+                <% @project_pos_chg.each do |p| %>
+                {
+                  name: 'Gain',
+                  color: '#32B232',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                <% @project_no_chg.each do |p| %>
+                {
+                  name: 'No Change',
+                  color: 'orange',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                <% @project_neg_chg.each do |p| %>
+                {
+                  name: 'Decline',
+                  color: '#FF5050',
+                  y: <%= p.pct_from_prev %>,
+                },
+                <% end %>
+                ]
               }]
+
         });
     });
 
