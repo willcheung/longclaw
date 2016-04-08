@@ -15,7 +15,7 @@ class HomeController < ApplicationController
 
     ###### Dashboard Metrics ######
     if !@projects.empty?
-      @project_trend = Project.find_include_count_activities_by_day(@projects.map(&:id), current_user.time_zone)
+      @project_trend = Project.find_and_count_activities_by_day(@projects.map(&:id), current_user.time_zone)
       
       project_sum_activities = Project.find_include_sum_activities(7*24, @projects.map(&:id))
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
@@ -34,6 +34,8 @@ class HomeController < ApplicationController
                                     .where(account_type_filter)
                                     .group("t.last_sent_date_epoch, activities.from")
       @project_follow_up = project_last_activity_date.min_by(5) { |x| x.last_sent_date }
+
+      @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.map(&:id), current_user.time_zone)
     end
 
   end

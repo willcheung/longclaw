@@ -1,19 +1,13 @@
 <% remote ||= false %>
 <%= simple_form_for @account, remote: remote, html: {role: :form, 'data-model' => 'account'} do |f| %>
 
-  <%# Added Bootstrap classes, and help-block container for error messages %>
+  <%# Added Bootstrap classes, and help-block container for error messages %> 
+  <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
+  <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: Account::CATEGORY, selected: Account::CATEGORY%>
+  <%= f.input :website, wrapper_html: { class: 'col-md-12'} %>
+  <span class="help-block" style="color:red"></span>      
   
-    <div class="col-xs-12">
-      <%= f.input :name %>
-      <span class="help-block" style="color:red"></span>
-    </div>
-  
-    <%= f.input :website, wrapper_html: { class: 'col-xs-8'} %>
-    <%= f.input :phone, wrapper_html: { class: 'col-xs-4'} %>
-    <%= f.input :address, wrapper_html: { class: 'col-xs-12'} %>
   <%# Added Bootstrap classes %>
-  <div class="actions pull-right">
-    <%= f.button :submit, class: 'btn-primary' %>
-  </div>
+    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
 
 <% end %>

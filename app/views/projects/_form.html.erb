@@ -3,20 +3,19 @@
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
   
-    <div class="col-xs-12">
-      <%= f.input :name %>
+   
+      <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
+      <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: Project::CATEGORY, selected: Project::CATEGORY%>
+      <%= f.input :account_id, wrapper_html: { class: 'col-xs-8'}, collection: @account_names, selected: @project.account.nil? ? @account_names[0] : @project.account.id %>
       <span class="help-block" style="color:red"></span>
-    </div>
-  
-    <%= f.input :account_id, wrapper_html: { class: 'col-xs-9'}, collection: @account_names, selected: @project.account.nil? ? @account_names[0] : @project.account.id %>
-
+       
     <label class="select optional control-label" for="project_account_id">Open Collaboration &nbsp;&nbsp;<i data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can view and collaborate." class="fa fa-question-circle"></i></label>
     <%= best_in_place @project, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch col-xs-3' %>
 
-    <div style="clear:both"></div>
+  
   <%# Added Bootstrap classes %>
-  <div class="actions pull-right">
-    <%= f.button :submit, class: 'btn-primary' %>
-  </div>
+  
+    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
+ 
 
 <% end %>

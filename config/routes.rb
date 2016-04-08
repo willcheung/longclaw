@@ -9,7 +9,7 @@ Longclaw::Application.routes.draw do
     get "home/daily_summary"
 
     resources :accounts 
-    resources :contacts
+    resources :contacts, only: [:create, :update, :destroy]
     resources :projects do
       resources :project_subscribers, param: :user_id, only: [:destroy, :create]
       post "project_subscribers/create_all"

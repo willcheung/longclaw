@@ -114,8 +114,12 @@ module ApplicationHelper
   end
 
   # Highcharts helper
-  def get_num_activities(date_range, trend_data, project_id)
+  def get_num_activities_by_project(date_range, trend_data, project_id)
     date_range.map { |date| trend_data.find_all { |p| p.id == project_id }.find { |d| d.date == date }.num_activities }.inspect
+  end
+
+  def get_num_activities(date_range, trend_data)
+    date_range.map { |date| trend_data.find { |d| d.date == date }.num_activities }.inspect
   end
 
   # Alert Notification helper
