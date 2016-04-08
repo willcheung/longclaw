@@ -64,7 +64,7 @@ class Project < ActiveRecord::Base
 		# Everything lives in OnboardingController#confirm_projects right now
 	end
 
-	def self.find_include_count_activities_by_day(array_of_project_ids, time_zone)
+	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
 		metrics = {}
     previous = nil
     arr = []
@@ -89,7 +89,32 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
-	def self.count_activities_by_day(days_ago, array_of_project_ids)
+  def self.count_total_activities_by_day(array_of_account_ids, time_zone)
+		metrics = {}
+    previous = nil
+    arr = []
+
+		query = <<-SQL
+      WITH time_series as (
+        SELECT * 
+          from (SELECT generate_series(date (CURRENT_DATE - INTERVAL '14 days'), CURRENT_DATE, INTERVAL '1 day') as days) t1 
+                CROSS JOIN 
+               (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}')) t2
+       )
+      SELECT date(time_series.days) as date, count(activities.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT sent_date, project_id 
+      					 FROM email_activities_last_14d where project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
+                 ) as activities
+        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY days 
+      ORDER BY days ASC
+    SQL
+
+    Project.find_by_sql(query)
+  end
+
+	def self.count_activities_by_day(days_ago, array_of_project_ids) # TO-DO: This needs to be deprecated
 		metrics = {}
     previous = nil
     arr = []
