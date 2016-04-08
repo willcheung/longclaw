@@ -18,12 +18,12 @@
         <div class="col-lg-6">
             <div class="btn-group">
                 <div class="font-bold m-b-xs">Account Type:</div>
-                <a href="<%= root_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
-                <a href="<%= root_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Customer</a>
-                <a href="<%= root_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Partner&nbsp;</a>
-                <a href="<%= root_path %>?type=Prospect" class="btn btn-sm <% if params[:type] == "Prospect" %>btn-default<% else %>btn-white<% end %>" type="button">Prospect</a>
-                <a href="<%= root_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Vendor&nbsp;</a>
-                <a href="<%= root_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
+                <a href="<%= reports_customer_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Customer</a>
+                <a href="<%= reports_customer_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Partner&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Prospect" class="btn btn-sm <% if params[:type] == "Prospect" %>btn-default<% else %>btn-white<% end %>" type="button">Prospect</a>
+                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Vendor&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
             </div>
         </div>
     </div>
@@ -114,7 +114,8 @@
             chart.addSeries({
                     name: 'Gain',
                     data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                    color: '#32B232'
+                    color: '#32B232',
+                    negativeColor:'#FF5050'
                 });
             
         } else {
@@ -122,7 +123,8 @@
             chart.addSeries({
                     name: 'Decline',
                     data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                    color: '#FF5050'
+                    color: '#32B232',
+                    negativeColor:'#FF5050'
                 });
         }
 
@@ -172,10 +174,9 @@
                 text: ''
             },
             xAxis: {
-                categories: <%= @project_max_chg.map(&:name).to_json.html_safe %>
+                categories: <%= (@project_max_chg.map(&:name) + @project_min_chg.map(&:name)).to_json.html_safe %>
             },
             yAxis: {
-                min: 0,
                 title: {
                     text: ''
                 },
@@ -194,11 +195,19 @@
                     stacking: 'normal'
                 }
             },
-            series: [{
+            series: [
+              {
                 name: 'Gain',
                 data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                color: '#32B232'
-            }]
+                color: '#32B232',
+                negativeColor:'#FF5050'
+              },
+              {
+                name: 'Decline',
+                data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                color: '#32B232',
+                negativeColor:'#FF5050'
+              }]
         });
     });
 
