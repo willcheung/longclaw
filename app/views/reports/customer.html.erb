@@ -110,22 +110,34 @@
         }
 
         if(max) {
-            chart.xAxis[0].setCategories(<%= @project_max_chg.map(&:name).to_json.html_safe %>);
+            chart.xAxis[0].setCategories(<%= (@project_max_chg.map(&:name) + @project_min_chg.map(&:name)).to_json.html_safe %>);
             chart.addSeries({
-                    name: 'Gain',
-                    data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                    color: '#32B232',
-                    negativeColor:'#FF5050'
-                });
+                name: 'Gain',
+                data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                color: '#32B232',
+                negativeColor:'#FF5050'
+            });
+            chart.addSeries({
+                name: 'Decline',
+                data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                color: '#32B232',
+                negativeColor:'#FF5050'
+            });
             
         } else {
-            chart.xAxis[0].setCategories(<%= @project_min_chg.map(&:name).to_json.html_safe %>);
+            chart.xAxis[0].setCategories(<%= (@project_max_chg.map(&:name) + @project_min_chg.map(&:name)).reverse.to_json.html_safe %>);
             chart.addSeries({
-                    name: 'Decline',
-                    data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                    color: '#32B232',
-                    negativeColor:'#FF5050'
-                });
+                name: 'Decline',
+                data: <%= @project_min_chg.map(&:pct_from_prev).reverse.to_json.html_safe %>,
+                color: '#32B232',
+                negativeColor:'#FF5050'
+            });
+            chart.addSeries({
+                name: 'Gain',
+                data: <%= @project_max_chg.map(&:pct_from_prev).reverse.to_json.html_safe %>,
+                color: '#32B232',
+                negativeColor:'#FF5050'
+            });
         }
 
         chart.redraw();
