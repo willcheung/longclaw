@@ -138,32 +138,13 @@
             chart.addSeries({
                 type: 'bar',
                 name: 'Percent Change',
-                data: [
-                <% @project_all_chg_touches[:pos].each do |p| %>
-                  {
-                    name: 'Gain',
-                    color: '#32B232',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                <% @project_all_chg_touches[:no].each do |p| %>
-                  {
-                    name: 'No Change',
-                    color: 'orange',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                <% @project_all_chg_touches[:neg].each do |p| %>
-                  {
-                    name: 'Decline',
-                    color: '#FF5050',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                ]
+                data: <%= (@project_all_chg_touches[:pos].map do |p| %>
+                      <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                    <% end + @project_all_chg_touches[:no].map do |p| %>
+                      <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                    <% end + @project_all_chg_touches[:neg].map do |p| %>
+                      <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                    <% end).to_json.html_safe %>
             });
         }
         else if (max && !all) {
@@ -171,32 +152,13 @@
             chart.addSeries({
                 type: 'bar',
                 name: 'Percent Change',
-                data: [
-                <% @project_top_chg_touches[:pos].each do |p| %>
-                  {
-                    name: 'Gain',
-                    color: '#32B232',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                <% @project_top_chg_touches[:no].each do |p| %>
-                  {
-                    name: 'No Change',
-                    color: 'orange',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                <% @project_top_chg_touches[:neg].each do |p| %>
-                  {
-                    name: 'Decline',
-                    color: '#FF5050',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                ]
+                data: <%= (@project_top_chg_touches[:pos].map do |p| %>
+                        <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end + @project_top_chg_touches[:no].map do |p| %>
+                        <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end + @project_top_chg_touches[:neg].map do |p| %>
+                        <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end).to_json.html_safe %>
             });
         }
         else if (!max && all) {
@@ -204,32 +166,13 @@
             chart.addSeries({
                 type: 'bar',
                 name: 'Percent Change',
-                data: [
-                <% @project_all_chg_touches[:neg].reverse.each do |p| %>
-                  {
-                    name: 'Decline',
-                    color: '#FF5050',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                <% @project_all_chg_touches[:no].reverse.each do |p| %>
-                  {
-                    name: 'No Change',
-                    color: 'orange',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                <% @project_all_chg_touches[:pos].reverse.each do |p| %>
-                  {
-                    name: 'Gain',
-                    color: '#32B232',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                ]
+                data: <%= (@project_all_chg_touches[:pos].map do |p| %>
+                        <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end + @project_all_chg_touches[:no].map do |p| %>
+                        <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end + @project_all_chg_touches[:neg].map do |p| %>
+                        <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end).reverse.to_json.html_safe %>
             });
         }
         else {
@@ -237,32 +180,13 @@
             chart.addSeries({
                 type: 'bar',
                 name: 'Percent Change',
-                data: [
-                <% @project_top_chg_touches[:neg].reverse.each do |p| %>
-                  {
-                    name: 'Decline',
-                    color: '#FF5050',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                <% @project_top_chg_touches[:no].reverse.each do |p| %>
-                  {
-                    name: 'No Change',
-                    color: 'orange',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                <% @project_top_chg_touches[:pos].reverse.each do |p| %>
-                  {
-                    name: 'Gain',
-                    color: '#32B232',
-                    y: <%= p.pct_from_prev %>,
-                    path: '/projects/<%= p.id %>'
-                  },
-                <% end %>
-                ]
+                data: <%= (@project_top_chg_touches[:pos].map do |p| %>
+                        <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end + @project_top_chg_touches[:no].map do |p| %>
+                        <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end + @project_top_chg_touches[:neg].map do |p| %>
+                        <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                      <% end).reverse.to_json.html_safe %>
             });
         }
         chart.setSize(chart.chartWidth, 250 + chart.series[0].data.length * 25);
@@ -359,32 +283,13 @@
             series: [{
               type: 'bar',
               name: 'Percent Change',
-              data: [
-                <% @project_top_chg_touches[:pos].each do |p| %>
-                {
-                  name: 'Gain',
-                  color: '#32B232',
-                  y: <%= p.pct_from_prev %>,
-                  path: '/projects/<%= p.id %>'
-                },
-                <% end %>
-                <% @project_top_chg_touches[:no].each do |p| %>
-                {
-                  name: 'No Change',
-                  color: 'orange',
-                  y: <%= p.pct_from_prev %>,
-                  path: '/projects/<%= p.id %>'
-                },
-                <% end %>
-                <% @project_top_chg_touches[:neg].each do |p| %>
-                {
-                  name: 'Decline',
-                  color: '#FF5050',
-                  y: <%= p.pct_from_prev %>,
-                  path: '/projects/<%= p.id %>'
-                },
-                <% end %>
-                ]
+              data: <%= (@project_top_chg_touches[:pos].map do |p| %>
+                      <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                    <% end + @project_top_chg_touches[:no].map do |p| %>
+                      <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                    <% end + @project_top_chg_touches[:neg].map do |p| %>
+                      <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
+                    <% end).to_json.html_safe %>
               }]
 
         });
