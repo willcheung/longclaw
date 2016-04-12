@@ -41,7 +41,7 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <span class="label pull-right">Last 7 days</span>
-                    <h5>Touches </h5>
+                    <h5>Top Customer Touches </h5>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
                     <div class="btn-group m-l-sm">
                         <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
@@ -57,7 +57,7 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <span class="label pull-right">Last 7 days vs Prev 7 days</span>
-                    <h5>Biggest Movers</h5>
+                    <h5>Top Movers</h5>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days. (Top 5)"></i>
                     <div class="btn-group m-l-sm">
                         <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
@@ -73,27 +73,7 @@
     </div>
 
     <div class="row">
-
-        <div class="col-lg-7">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <span class="label pull-right">14 day trend</span>
-                    <h5><%= params[:type] %> Activities Over Time</h5>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by project, trending over Last 14 Days."></i>
-                </div>
-                <div class="ibox-content">
-                    <div class="m-b-md">
-                        <select data-placeholder="Choose a Project..." style="width:97%;" class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
-                            <option value=""></option>
-                            <% @projects.each do |p| %>
-                                <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
-                            <% end %>
-                        </select>
-                    </div>
-                    <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
-                </div>
-            </div>
-        </div>
+        
         <div class="col-lg-5">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
@@ -114,6 +94,26 @@
                 </div>
             </div>
         </div>
+        <div class="col-lg-7">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">14 day trend</span>
+                    <h5><%= params[:type] %> How do projects stack up?</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by project streams, trending over Last 14 Days."></i>
+                </div>
+                <div class="ibox-content">
+                    <div class="m-b-md">
+                        <select data-placeholder="Choose a Project..." style="width:97%;" class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
+                            <option value=""></option>
+                            <% @projects.each do |p| %>
+                                <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                            <% end %>
+                        </select>
+                    </div>
+                    <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
+            </div>
+        </div>
 
     </div>
 
@@ -122,9 +122,9 @@
         <div class="col-lg-7">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <span class="label pull-right">How busy are we?</span>
-                    <h5><%= params[:type] %> Activities Over Time</h5>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by project, trending over Last 14 Days."></i>
+                    <span class="label pull-right">14 day trend</span>
+                    <h5><%= params[:type] %> How busy are we?</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total customer activities, trending over Last 14 Days."></i>
                 </div>
                 <div class="ibox-content">
                     <div id="user-activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
@@ -135,10 +135,11 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h5>Team Leaderboard</h5>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 5 stale projects."></i>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 10 by activities."></i>
+                    <span class="label pull-right">Last 14 days</span>
                 </div>
                 <div class="ibox-content">
-                    
+                    <div id="user-leaderboard-chart" style="min-width: 310px; max-width: 800px; height: 350px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
         </div>
@@ -399,6 +400,41 @@
                 }
             ]
 
+        });
+    });
+
+    $(function () {
+        $('#user-leaderboard-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @team_leaderboard.map(&:email).to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                reversed: true
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Inbound',
+                data: <%= @team_leaderboard.map(&:inbound_count).to_json.html_safe %>
+            }, {
+                name: 'Outbound',
+                data: <%= @team_leaderboard.map(&:outbound_count).to_json.html_safe %>
+            }]
         });
     });
 

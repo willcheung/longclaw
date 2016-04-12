@@ -134,6 +134,31 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.count_activities_by_user(domain)
+    query = <<-SQL
+      select t2.inbound as email,
+             t2.inbound_count, 
+             COALESCE(t1.outbound_count,0) as outbound_count, 
+             COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) as total 
+      from
+        (select "from" as outbound, 
+                count(*) as outbound_count 
+          from user_activities_last_14d 
+          where "from" like '%#{domain}' group by "from" order by outbound_count desc) t1
+      FULL OUTER JOIN 
+        (select inbound, count(*) as inbound_count from 
+          (
+            select "to" as inbound from user_activities_last_14d where "to" like '%#{domain}' UNION ALL select "cc" as inbound from user_activities_last_14d where "cc" like '%#{domain}'
+          ) t
+        group by inbound order by inbound_count desc) t2
+        ON t1.outbound = t2.inbound
+        order by total desc
+        limit 10;
+    SQL
+
+    User.find_by_sql(query)
+  end
+
   def is_internal_user?
     true
   end
