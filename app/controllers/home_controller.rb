@@ -36,7 +36,7 @@ class HomeController < ApplicationController
       @project_follow_up = project_last_activity_date.min_by(5) { |x| x.last_sent_date }
 
       @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.map(&:id), current_user.time_zone)
-      @team_leaderboard = User.count_activities_by_user(current_user.organization.domain)
+      @team_leaderboard = User.count_activities_by_user(current_user.organization.domain, current_user.time_zone)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
     end
 
