@@ -166,9 +166,15 @@ class Project < ActiveRecord::Base
   	return metrics
   end
 
-  def self.find_include_sum_activities(hours_ago_end=Date.current, hours_ago_start, array_of_project_ids)
-		hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
-  	hours_ago_start_sql = "INTERVAL '#{hours_ago_start} hours'"
+  def self.find_include_sum_activities(static_date=false, hours_ago_end=Date.current, hours_ago_start, array_of_project_ids)
+    my_date = "'2014-09-03'::date"
+    if static_date
+      hours_ago_end_sql = (hours_ago_end == Date.current) ? "#{my_date}" : "#{my_date} - INTERVAL '#{hours_ago_end} hours'"
+      hours_ago_start_sql = "#{my_date} - INTERVAL '#{hours_ago_start} hours'"
+		else
+      hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
+  	  hours_ago_start_sql = "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_start} hours'"
+    end
 
   	query = <<-SQL
   		SELECT projects.*, count(*) as num_activities from (
@@ -180,7 +186,7 @@ class Project < ActiveRecord::Base
 					from activities where project_id in ('#{array_of_project_ids.join("','")}')
 				) t 
 			JOIN projects ON projects.id = t.project_id
-			WHERE sent_date::integer between EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - #{hours_ago_start_sql})::integer and EXTRACT(EPOCH FROM #{hours_ago_end_sql})::integer 
+      WHERE sent_date::integer between EXTRACT(EPOCH FROM #{hours_ago_start_sql})::integer and EXTRACT(EPOCH FROM #{hours_ago_end_sql})::integer 
 			GROUP BY projects.id
 			ORDER BY num_activities DESC
 		SQL
@@ -229,16 +235,24 @@ class Project < ActiveRecord::Base
 		end
 	end
 
-	def self.calculate_pct_from_prev(project, project_prev)
-		project_chg_activities = []
 
-		project.each do |p|
-      project_prev.each do |p_prev|
-        if p.id == p_prev.id
-          p.num_activities_prev = p_prev.num_activities
-          p.pct_from_prev = (((p.num_activities - p_prev.num_activities) / p_prev.num_activities.to_f) * 100).round(1)
-          project_chg_activities << p
-        end
+	def self.calculate_pct_from_prev(projects, projects_prev)
+    project_chg_activities = []
+
+		projects.each do |proj|
+      proj_prev = projects_prev.find { |p| p.id == proj.id }
+      if proj_prev
+        proj.pct_from_prev = (((proj.num_activities - proj_prev.num_activities) / proj_prev.num_activities.to_f) * 100).round(1)
+        project_chg_activities << proj
+      else
+        proj.pct_from_prev = 100
+        project_chg_activities << proj
+      end
+    end
+    projects_prev.each do |prev|
+      if !projects.find { |p| p.id == prev.id }
+        prev.pct_from_prev = -100
+        project_chg_activities << prev
       end
     end
     return project_chg_activities
