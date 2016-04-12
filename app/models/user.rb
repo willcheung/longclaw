@@ -142,13 +142,13 @@ class User < ActiveRecord::Base
              COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) as total 
       from
         (select "from" as outbound, 
-                count(*) as outbound_count 
+                count(DISTINCT message_id) as outbound_count 
           from user_activities_last_14d 
           where "from" like '%#{domain}' group by "from" order by outbound_count desc) t1
       FULL OUTER JOIN 
-        (select inbound, count(*) as inbound_count from 
+        (select inbound, count(DISTINCT message_id) as inbound_count from 
           (
-            select "to" as inbound from user_activities_last_14d where "to" like '%#{domain}' UNION ALL select "cc" as inbound from user_activities_last_14d where "cc" like '%#{domain}'
+            select "to" as inbound, message_id from user_activities_last_14d where "to" like '%#{domain}' UNION ALL select "cc" as inbound, message_id from user_activities_last_14d where "cc" like '%#{domain}'
           ) t
         group by inbound order by inbound_count desc) t2
         ON t1.outbound = t2.inbound
