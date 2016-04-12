@@ -183,8 +183,8 @@
                     chart.addSeries({
                             name: '<%= p.name %>',
                             pointInterval: <%= 1.day * 1000 %>,
-                            pointStart: <%= 13.days.ago.at_midnight.to_i * 1000 %>,
-                            data: <%= get_num_activities_by_project(13.days.ago.to_date..Date.current, @project_trend, p.id) %>
+                            pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                            data: <%= get_num_activities_by_project(14.days.ago.to_date..Date.current, @project_trend, p.id) %>
                         });
                 }
             <% end %>
@@ -354,8 +354,8 @@
                 {
                 name: '<%= p.name %>',
                 pointInterval: <%= 1.day * 1000 %>,
-                pointStart: <%= 13.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= get_num_activities_by_project(13.days.ago.to_date..Date.current, @project_trend, p.id) %>
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= get_num_activities_by_project(14.days.ago.to_date..Date.current, @project_trend, p.id) %>
                 }<% if i != @project_max.size - 1 %>,<% end %>
             <% end %>
             ]
@@ -395,8 +395,8 @@
                 {
                 name: 'All activities',
                 pointInterval: <%= 1.day * 1000 %>,
-                pointStart: <%= 13.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= get_num_activities(13.days.ago.to_date..Date.current, @all_activities_trend) %>
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= get_num_activities(14.days.ago.to_date..Date.current, @all_activities_trend) %>
                 }
             ]
 
