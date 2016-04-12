@@ -75,7 +75,7 @@ class Activity < ActiveRecord::Base
             category: "Conversation",
             title: c.subject,
             note: '',
-            is_public: true,
+            is_public: is_public_flag,
             backend_id: c.id,
             last_sent_date: Time.at(c.lastSentDate),
             last_sent_date_epoch: c.lastSentDate,

@@ -41,6 +41,14 @@ $(document).ready(function() {
     }
   });
 
+  // Manually add query text to search parameters
+  $("#search-form").submit(function (event) {
+    var query = $("<input>").attr("type", "hidden")
+                            .attr("name", "query")
+                            .val($("#search")[0].selectize.lastQuery);
+    $(this).append($(query));
+  })
+
   $("#search-subs").selectize({
     closeAfterSelect: true,
     valueField: 'id',
