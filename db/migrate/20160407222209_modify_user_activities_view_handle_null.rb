@@ -32,7 +32,7 @@ class ModifyUserActivitiesViewHandleNull < ActiveRecord::Migration
 						backend_id, 
 						message_id,
 						project_id, 
-						last_sent_date, 
+						sent_date, 
 						jsonb_array_elements("from") ->> 'address' as from,
 						case 
 							when "to" = 'null' then NULL

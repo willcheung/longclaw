@@ -103,8 +103,9 @@ class Project < ActiveRecord::Base
        )
       SELECT date(time_series.days) as date, count(activities.*) as num_activities
       FROM time_series
-      LEFT JOIN (SELECT sent_date, project_id 
-      					 FROM email_activities_last_14d where project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
+      LEFT JOIN (SELECT message_id, sent_date, project_id
+      					 FROM user_activities_last_14d where project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
+                 GROUP BY message_id, sent_date, project_id
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY days 
