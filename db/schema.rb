@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160407222209) do
+ActiveRecord::Schema.define(version: 20160412224813) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -119,6 +119,27 @@ ActiveRecord::Schema.define(version: 20160407222209) do
   end
 
   add_index "contacts", ["account_id"], name: "index_contacts_on_account_id", using: :btree
+
+  create_table "notifications", force: :cascade do |t|
+    t.string   "category",          default: "To-do", null: false
+    t.string   "name"
+    t.text     "description"
+    t.string   "message_id"
+    t.uuid     "project_id"
+    t.string   "conversation_id"
+    t.datetime "sent_date"
+    t.datetime "original_due_date"
+    t.datetime "remind_date"
+    t.boolean  "is_complete",       default: false,   null: false
+    t.boolean  "has_time",          default: false,   null: false
+    t.integer  "content_offset",    default: -1,      null: false
+    t.datetime "complete_date"
+    t.uuid     "assign_to"
+    t.uuid     "completed_by"
+    t.string   "label"
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
+  end
 
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name"
