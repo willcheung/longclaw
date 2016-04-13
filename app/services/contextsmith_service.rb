@@ -3,7 +3,7 @@ include ERB::Util
 
 class ContextsmithService
 
-  def self.load_emails_from_backend(project, after=nil, max=100, query=nil, save_in_db=true)
+  def self.load_emails_from_backend(project, after=nil, max=100, query=nil, save_in_db=true, is_time=true, is_test=false)
     token_emails = []
     base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
 
@@ -25,8 +25,9 @@ class ContextsmithService
     ex_clusters = [project.contacts.map(&:email)]
     after = after.nil? ? "" : ("&after=" + after.to_s)
     query = query.nil? ? "" : ("&query=" + query.to_s)
+    is_time = is_time.nil? ? "": ("&time=" + is_time.to_s)
     
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode(ex_clusters.to_s) + in_domain + after + query
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode(ex_clusters.to_s) + in_domain + after + url_encode(query) + is_time
     puts "Calling backend service: " + final_url
 
     begin
@@ -44,6 +45,7 @@ class ContextsmithService
       return []
     elsif data.kind_of?(Array)
       puts "Found #{data[0]['conversations'].size} conversations!\n"
+      Notification.load(data, project, is_test)
       return Activity.load(data, project, save_in_db)
     elsif data['code'] == 401
       puts "Error: #{data['errors'][0]['message']}\n"
@@ -56,5 +58,5 @@ class ContextsmithService
       return []
     end
   end
-
+  
 end
