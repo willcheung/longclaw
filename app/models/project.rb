@@ -165,7 +165,9 @@ class Project < ActiveRecord::Base
   	return metrics
   end
 
-  def self.find_include_sum_activities(static_date=false, hours_ago_end=Date.current, hours_ago_start, array_of_project_ids)
+  # static_date set to true in development, false otherwise
+  def self.find_include_sum_activities(hours_ago_end=Date.current, static_date=false, hours_ago_start, array_of_project_ids)
+    # my_date used to manually set the date for the interval
     my_date = "'2014-09-03'::date"
     if static_date
       hours_ago_end_sql = (hours_ago_end == Date.current) ? "#{my_date}" : "#{my_date} - INTERVAL '#{hours_ago_end} hours'"
@@ -189,7 +191,6 @@ class Project < ActiveRecord::Base
 			GROUP BY projects.id
 			ORDER BY num_activities DESC
 		SQL
-
 		return Project.find_by_sql(query)
   end
 

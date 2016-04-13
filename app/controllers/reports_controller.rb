@@ -9,10 +9,12 @@ class ReportsController < ApplicationController
     end
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id).where(account_type_filter)
-    static = Rails.env == "development"
+    # set static boolean based on environment and pass to find_include_sum_activities
+    static = Rails.env.development?
     ###### Report Data ######
     if !@projects.empty?      
-      @project_all_touches = Project.find_include_sum_activities(static, 7*24, @projects.map(&:id))
+      # equivalent to Project.find_include_sum_activities(7*24, @projects.map(&:id))
+      @project_all_touches = Project.find_include_sum_activities(0, static, 7*24, @projects.map(&:id))
       # sorted high to low by num_activities
       @project_all_touches.sort! { |x, y| x.num_activities.to_i <=> y.num_activities.to_i }.reverse!
       if @project_all_touches.length > 10
@@ -22,7 +24,7 @@ class ReportsController < ApplicationController
         @project_top_touches = @project_all_touches
       end
 
-      project_prev_all_touches = Project.find_include_sum_activities(static, 7*24, 14*24, @projects.map(&:id))
+      project_prev_all_touches = Project.find_include_sum_activities(7*24, static, 14*24, @projects.map(&:id))
       project_chg_activities = Project.calculate_pct_from_prev(@project_all_touches, project_prev_all_touches)
       # sorted high to low by pct_from_prev
       project_chg_activities.sort! { |x, y| x.pct_from_prev.to_f <=> y.pct_from_prev.to_f }.reverse!

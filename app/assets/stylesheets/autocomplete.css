@@ -12,7 +12,7 @@
   transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
   z-index: 1000;
   width: 450px;
-  height: 36px;
+  min-height: 36px;
   margin-top: 12px;
   margin-left: 20px;
   background: #fcfcfc;
