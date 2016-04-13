@@ -134,6 +134,33 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.count_activities_by_user(array_of_account_ids, domain, time_zone='UTC')
+    query = <<-SQL
+      select t2.inbound as email,
+             t2.inbound_count, 
+             COALESCE(t1.outbound_count,0) as outbound_count, 
+             COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) as total 
+      from
+        (select "from" as outbound, 
+                count(DISTINCT message_id) as outbound_count 
+          from user_activities_last_14d 
+          where "from" like '%#{domain}' and to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}' BETWEEN (CURRENT_DATE - INTERVAL '14 days') and CURRENT_DATE and project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
+          group by "from" order by outbound_count desc) t1
+      FULL OUTER JOIN 
+        (select inbound, count(DISTINCT message_id) as inbound_count from 
+          (
+            select "to" as inbound, message_id from user_activities_last_14d where "to" like '%#{domain}' UNION ALL select "cc" as inbound, message_id from user_activities_last_14d 
+            where "cc" like '%#{domain}' and to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}' BETWEEN (CURRENT_DATE - INTERVAL '14 days') and CURRENT_DATE and project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
+          ) t
+        group by inbound order by inbound_count desc) t2
+        ON t1.outbound = t2.inbound
+        order by total desc
+        limit 10;
+    SQL
+
+    User.find_by_sql(query)
+  end
+
   def is_internal_user?
     true
   end

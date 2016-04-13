@@ -20,6 +20,7 @@
 //= require jstz/jstz.min.js
 //= require chosen/chosen.jquery.min.js
 //= require selectize/selectize.min.js
+//= require iCheck/icheck.min.js
 
 /* Ahoy analytics */
 ahoy.trackAll();
