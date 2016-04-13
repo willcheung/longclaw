@@ -1,17 +1,20 @@
 class SearchController < ApplicationController
 
 	def results
-    return @activities = [] if params[:search].empty?
+    @activities = []
+    return @activities if params[:search].empty?
     if params[:search].include? ","
       project_ids = params[:search].split(",")
     else
       project_ids = [params[:search]]
     end
-
-  	@title = "Results"
 		#@notes = Activity.search_note(params[:query]).where("is_public = true and category='Note'") # TO DO need to filter by project
-		@project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:search])
-		@activities = ContextsmithService.load_emails_from_backend(@project, nil, 100, params[:query], false)
+    @projects = []
+    project_ids.each do |pid|
+		  project = Project.visible_to(current_user.organization_id, current_user.id).find(pid)
+      @projects << project
+		  @activities += ContextsmithService.load_emails_from_backend(project, nil, 100, params[:query], false)
+    end
   end
 
   # Rolling our own autocomplete handler because of visible_to project scope

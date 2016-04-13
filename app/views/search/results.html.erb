@@ -19,27 +19,14 @@
             
             <div class="ibox-content">
                 <div class="search-form">
-                    <form action="#" method="get">
-                    <div class="input-group">
-                        <input type="text" value="@Stark: <%= params[:query] %>" name="search" class="form-control input-lg">
-                        <div class="input-group-btn">
-                            <button class="btn btn-lg btn-primary" type="submit">
-                                Search
-                            </button>
-                        </div>
-                    </div>
-
-                </form>
-
                 <h2>
-                    <%= @activities.size %> results found for: <span class="text-navy">“@Stark: <%= params[:query] %>”</span>
+                    <%= @activities.size %> results found for: <span class="text-navy">“<%= @projects.map(&:name).join(", ") %>: <%= params[:query] %>”</span>
                 </h2>
             </div>
             
             <% if @activities.size > 0 %>
-                <h2 class="catchup-project"><span><%= @project.name %></span></h2>
                 <% @activities.each do |a| %>
-                    <div class="search-result">
+                    <div class="chat-discussion">
                         <h3><a href="#"><%= a.title %></a> <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small></h3>
                         
                         <% a.email_messages.each do |m| %>
@@ -52,7 +39,7 @@
                                         <hr class="message-divider"/>
                                             <span class="message-content">
                                                  <div>
-                                                    <%= simple_format(m.content) %>
+                                                    <%= simple_format(m.content.body) %>
                                                 </div>
                                             </span>
                                     </div>
@@ -64,7 +51,7 @@
                     <div class="hr-line-dashed"></div>
                 <% end %>
                 
-                <div class="text-center">
+                <div class="text-center" style="display: none;">
                     <div class="btn-group">
                         <button class="btn btn-white" type="button"><i class="fa fa-chevron-left"></i></button>
                         <button class="btn btn-white">1</button>
