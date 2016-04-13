@@ -7,6 +7,22 @@ $(document).ready(function() {
     labelField: 'name',
     searchField: ['name'],
     create: false,
+    render: {
+      item: function(item, escape) {
+        return '<div>' +
+            (item.name ? '<span class="name">' + escape(item.name) + '</span>' : '') +
+            (item.account ? '<span class="account">' + escape(item.account) + '</span>' : '') +
+        '</div>';
+      },
+      option: function(item, escape) {
+        var label = item.name || item.account;
+        var caption = item.name ? item.account : null;
+        return '<div>' +
+            '<span class="label">' + escape(label) + '</span>' +
+            (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
+        '</div>';
+      }
+    },
     score: function(term) {
       // remove leading character when filtering and scoring autocomplete options (will be a #)
       var score = this.getScoreFunction(term.slice(1));
