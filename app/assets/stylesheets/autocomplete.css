@@ -5,34 +5,40 @@
   z-index: 2001;
 }
 
-.selectize-control.form-control {
-  padding: 0;
-}
-
-.selectize-control.form-control .selectize-input {
+.selectize-control.main-search .selectize-input {
   color: inherit;
   display: block;
-  padding: 6px 12px;
+  padding: 6px 12px 6px 44px !important;
   transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
   z-index: 1000;
   width: 450px;
-  height: 36px;
+  min-height: 36px;
   margin-top: 12px;
   margin-left: 20px;
-  text-indent: 32px;
   background: #fcfcfc;
   border: 1px solid #aaa;
   border-radius: 20px;
   box-shadow: 0 0 3px #ccc, 0 10px 15px #f3f3f3 inset;
+  overflow: visible;
 }
 
-.selectize-control.form-control .selectize-input input {
+.selectize-control.main-search .selectize-input input {
   font-size: 15px;
   margin: 2px 0 0 0 !important;
 }
 
-/* Autocomplete for Users */
-.selectize-control.contacts .selectize-input > div {
+.selectize-control.main-search .selectize-input > div {
+  text-indent: 0;
+}
+
+.selectize-dropdown.main-search {
+  margin-left: 28px;
+  width: 430px !important;
+}
+
+/* Autocomplete for users and projects */
+.selectize-control.contacts .selectize-input > div,
+.selectize-control.main-search .selectize-input > div {
   padding: 1px 10px;
   font-size: 13px;
   font-weight: normal;
@@ -55,7 +61,8 @@
   -moz-box-shadow: 0 1px 1px rgba(0,0,0,0.15);
   box-shadow: 0 1px 1px rgba(0,0,0,0.15);
 }
-.selectize-control.contacts .selectize-input > div.active {
+.selectize-control.contacts .selectize-input > div.active,
+.selectize-control.main-search .selectize-input > div.active {
   background: #0059c7;
   background: -moz-linear-gradient(top, #0059c7 0%, #0051c1 100%);
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#0059c7), color-stop(100%,#0051c1));
@@ -66,13 +73,16 @@
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0059c7', endColorstr='#0051c1',GradientType=0 );
   border-color: #0051c1;
 }
-.selectize-control.contacts .selectize-input > div .name {
+.selectize-control.contacts .selectize-input > div .name,
+.selectize-control.main-search .selectize-input > div .name {
   display: inline-block;
 }
-.selectize-control.contacts .selectize-input > div .name:after {
+.selectize-control.contacts .selectize-input > div .name:after,
+.selectize-control.main-search .selectize-input > div .name:after {
   content: '\00A0';
 }
-.selectize-control.contacts .selectize-input > div .email {
+.selectize-control.contacts .selectize-input > div .email,
+.selectize-control.main-search .selectize-input > div .account {
   opacity: 0.8;
 }
 .selectize-control.contacts .selectize-input > div .email:before {
@@ -81,12 +91,14 @@
 .selectize-control.contacts .selectize-input > div .email:after {
   content: '>';
 }
-.selectize-control.contacts .selectize-dropdown .caption {
+.selectize-control.contacts .selectize-dropdown .caption,
+.selectize-control.main-search .selectize-dropdown .caption {
   font-size: 12px;
   display: block;
   color: #a0a0a0;
 }
-.selectize-control.contacts .selectize-dropdown .label {
+.selectize-control.contacts .selectize-dropdown .label,
+.selectize-control.main-search .selectize-dropdown .label {
   font-size: 13px;
   padding: 0;
   background-color: transparent;
