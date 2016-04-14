@@ -41,7 +41,12 @@
                                 <hr class="message-divider"/>
                                     <span class="message-content">
                                          <div>
-                                            <%= simple_format(m.content) %>
+                                            <%= if m.content.body.nil? 
+                                                  simple_format(m.content)
+                                                else
+                                                    simple_format(m.content.body)
+                                                end%>
+                                            
                                         </div>
                                     </span>
                             </div>
