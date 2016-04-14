@@ -72,7 +72,7 @@ class Project < ActiveRecord::Base
 		query = <<-SQL
       WITH time_series as (
         SELECT * 
-          from (SELECT generate_series(date (CURRENT_DATE - INTERVAL '14 days'), CURRENT_DATE, INTERVAL '1 day') as days) t1 
+          from (SELECT generate_series(date (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_DATE AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1 
                 CROSS JOIN 
                (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
        )
@@ -97,7 +97,7 @@ class Project < ActiveRecord::Base
 		query = <<-SQL
       WITH time_series as (
         SELECT * 
-          from (SELECT generate_series(date (CURRENT_DATE - INTERVAL '14 days'), CURRENT_DATE, INTERVAL '1 day') as days) t1 
+          from (SELECT generate_series(date (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_DATE AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1 
                 CROSS JOIN 
                (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}')) t2
        )
