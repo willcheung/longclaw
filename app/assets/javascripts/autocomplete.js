@@ -64,7 +64,7 @@ $(document).ready(function() {
     $("#query-term").val(query);
     if ($("#search").val()) {
       $(this).attr("data-remote", "false");
-      $(".fa-search").addClass("fa-spinner fa-spin")
+      $(".fa-search").addClass("fa-spinner fa-pulse")
     }
   })
 

@@ -16,10 +16,10 @@ class ContextsmithService
       return [] if token_emails.empty?
     else
       # DEBUG
-      u = User.find_by_email('klu@contextsmith.com')
+      u = User.find_by_email('indifferenzetester@gmail.com')
       u.refresh_token! if u.token_expired?
       token_emails << { token: "test", email: u.email }
-      in_domain = "&in_domain=contextsmith.com"
+      in_domain = "&in_domain=comprehend.com"
     end
 
     ex_clusters = [project.contacts.map(&:email)]
