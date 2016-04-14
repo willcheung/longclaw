@@ -72,14 +72,14 @@ class Project < ActiveRecord::Base
 		query = <<-SQL
       WITH time_series as (
         SELECT * 
-          from (SELECT generate_series(date (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_DATE AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1 
+          from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1 
                 CROSS JOIN 
                (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
        )
       SELECT time_series.project_id as id, date(time_series.days) as date, count(activities.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id 
-      					 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}')
+      					 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}') and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'))
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days 
@@ -97,7 +97,7 @@ class Project < ActiveRecord::Base
 		query = <<-SQL
       WITH time_series as (
         SELECT * 
-          from (SELECT generate_series(date (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_DATE AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1 
+          from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1 
                 CROSS JOIN 
                (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}')) t2
        )
