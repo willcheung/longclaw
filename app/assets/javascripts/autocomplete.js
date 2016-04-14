@@ -47,7 +47,8 @@ $(document).ready(function() {
       // Manually prevent dropdown from opening when:
       // 1. There is no search term, or
       // 2. The search term does not begin with #
-      if (!this.lastQuery.length || this.lastQuery[0] !== '#') {
+      // 3. At least one project has been selected already
+      if (!this.lastQuery.length || this.lastQuery[0] !== '#' || this.items.length) {
         this.close();
       }
     },
@@ -59,10 +60,12 @@ $(document).ready(function() {
 
   // Manually add query text to search parameters
   $("#search-form").submit(function (event) {
-    var query = $("<input>").attr("type", "hidden")
-                            .attr("name", "query")
-                            .val($("#search")[0].selectize.lastQuery);
-    $(this).append($(query));
+    var query = $("#search")[0].selectize.lastQuery;
+    $("#query-term").val(query);
+    if ($("#search").val()) {
+      $(this).attr("data-remote", "false");
+      $(".fa-search").addClass("fa-spinner fa-spin")
+    }
   })
 
   $("#search-subs").selectize({

@@ -3,10 +3,11 @@
         <div class="navbar-header">
             <a class="navbar-minimalize minimalize-style-2 btn btn-primary btn-outline" href="#"><i class="fa fa-bars"></i> </a>
             
-            <%= form_tag(search_results_path, :method => "get", id: "search-form", class: "navbar-form-custom") do %>
-                <span class="fa fa-search top"></span> <input type="search" name="search" id="search" class="main-search" placeholder="#project-stream search something...">
+            <%= form_tag(search_results_path, :method => "get", id: "search-form", class: "navbar-form-custom", remote: true) do %>
+                <span class="fa fa-search top"></span> <input type="search" name="project_id" id="search" class="main-search" placeholder="#project-stream search something...">
+                <input id="query-term" type="hidden" name="query" value="">
                 <%= submit_tag "Search", style: 'display:none;' %>
-                <p>You must enter at least one project to search!</p>
+                <p id="search-error" style="margin-left: 65px; color: red;"></p>
             <%end%>
         
         </div>

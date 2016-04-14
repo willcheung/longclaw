@@ -1,19 +1,39 @@
 class SearchController < ApplicationController
 
-	def results
-    @activities = []
-    return @activities if params[:search].empty?
-    if params[:search].include? ","
-      project_ids = params[:search].split(",")
-    else
-      project_ids = [params[:search]]
-    end
-		#@notes = Activity.search_note(params[:query]).where("is_public = true and category='Note'") # TO DO need to filter by project
-    @projects = []
-    project_ids.each do |pid|
-		  project = Project.visible_to(current_user.organization_id, current_user.id).find(pid)
-      @projects << project
-		  @activities += ContextsmithService.load_emails_from_backend(project, nil, 100, params[:query], false)
+  # Old SearchController#results for handling multiple projects in search
+	# def results
+ #    @activities = []
+ #    return @activities if params[:search].empty?
+ #    if params[:search].include? ","
+ #      project_ids = params[:search].split(",")
+ #    else
+ #      project_ids = [params[:search]]
+ #    end
+ #    #@notes = Activity.search_note(params[:query]).where("is_public = true and category='Note'") # TO DO need to filter by project
+ #    @projects = []
+ #    project_ids.each do |pid|
+ #      project = Project.visible_to(current_user.organization_id, current_user.id).find(pid)
+ #      @projects << project
+ #      @activities += ContextsmithService.load_emails_from_backend(project, nil, 100, params[:query], false)
+ #    end
+ #  end
+  def results
+    respond_to do |format|
+      if params[:project_id].empty?
+        # respond with invalid message
+        @error = "Please include a project in your search!"
+        format.js { render 'error' }
+      else
+        @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:project_id])
+        if params[:query].nil? || params[:query].empty?
+          # respond with project page
+          format.html { redirect_to @project }
+        else
+          # respond with search result page
+      	  @activities = ContextsmithService.load_emails_from_backend(@project, nil, 100, params[:query], false)
+          format.html
+        end
+      end
     end
   end
 
