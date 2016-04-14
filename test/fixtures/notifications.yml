@@ -1,0 +1,21 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  category: 
+  name: 
+  description: 
+  conversation_id: 
+  original_due_date: 
+  remind_date: 
+  is_complete: 
+  complete_data: 2016-04-08 11:49:09
+
+two:
+  category: 
+  name: 
+  description: 
+  conversation_id: 
+  original_due_date: 
+  remind_date: 
+  is_complete: 
+  complete_data: 2016-04-08 11:49:09
