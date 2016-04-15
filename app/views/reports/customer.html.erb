@@ -15,7 +15,7 @@
 <div class="wrapper wrapper-content animated fadeInRight">
 
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-lg-5 filter-space">
             <div class="btn-group">
                 <div class="font-bold m-b-xs">Account Type:</div>
                 <a href="<%= reports_customer_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
@@ -26,7 +26,36 @@
                 <a href="<%= reports_customer_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
             </div>
         </div>
+        <div class="col-lg-7 filter-space">
+            <div class="btn-group">
+                <div class="font-bold m-b-xs">Project Type:</div>
+                <a href="<%= reports_customer_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Implementation</a>
+                <a href="<%= reports_customer_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">Onboarding</a>
+                <a href="<%= reports_customer_path %>?type=Prospect" class="btn btn-sm <% if params[:type] == "Prospect" %>btn-default<% else %>btn-white<% end %>" type="button">Opportunity</a>
+                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Pilot&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Support&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
+            </div>
+        </div>
     </div>
+    <div class="row">
+        <div class="col-lg-3 filter-space">
+            <div class="font-bold m-b-xs">Date:</div>
+
+            <input type="text" name="daterange" class="form-control daterange">
+        </div>
+        <div class="col-lg-8 filter-space">
+            <div class="font-bold m-b-xs">Projects:</div>
+            <select data-placeholder="Choose a Project..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
+                <option value=""></option>
+                <% @projects.each do |p| %>
+                    <option value="<%= p.id %>" <% if @project_top_touches.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                <% end %>
+            </select>
+        </div>
+    </div>
+    
 
     <!-- Metrics -->
     <div class="row m-t-lg">
@@ -40,10 +69,10 @@
                         <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
                         <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
                     </div>
-                    <div class="btn-group m-l-sm">
+                    <!-- <div class="btn-group m-l-sm">
                         <a id="top-touches" type="button" class="btn btn-xs btn-white active">Top/Bottom 5</a>
                         <a id="all-touches" type="button" class="btn btn-xs btn-white">All</a>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="ibox-content">
                     <div id="touches-chart" class="customer-chart"class="customer-chart" style="">
@@ -62,10 +91,10 @@
                         <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
                         <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
                     </div>
-                    <div class="btn-group m-l-sm">
+                    <!-- <div class="btn-group m-l-sm">
                         <a id="top-change" type="button" class="btn btn-xs btn-white active">Top/Bottom 5</a>
                         <a id="all-change" type="button" class="btn btn-xs btn-white">All</a>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="ibox-content">
                     <div id="percent-change-chart" class="customer-chart" style="">
@@ -80,6 +109,39 @@
 <script>
     /* Tooltip */
     $('[data-toggle="tooltip"]').tooltip();
+
+    $('input[name="daterange"]').daterangepicker({
+        "alwaysShowCalendars": true,
+        "cancelClass": "btn-danger",
+        "startDate": moment().subtract(14, "days").format("l"),
+        "ranges": {
+            "Today": [
+                moment().format("l"),
+                moment().format("l")
+            ],
+            "Last 7 Days": [
+                moment().subtract(7, "days").format("l"),
+                moment().format("l")
+            ],
+            "Last 14 Days": [
+                moment().subtract(14, "days").format("l"),
+                moment().format("l")
+            ],
+            "Last 30 Days": [
+                moment().subtract(30, "days").format("l"),
+                moment().format("l")
+            ],
+            "Last 90 Days": [
+                moment().subtract(90, "days").format("l"),
+                moment().format("l")
+            ],
+            "This Month": [
+                moment().date(1).format("l"),
+                moment().date(moment().daysInMonth()).format("l")
+            ]
+        }
+    });
+
 
     <% if !@projects.empty? %>
 

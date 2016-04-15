@@ -19,7 +19,7 @@ class ReportsController < ApplicationController
       @project_all_touches.sort! { |x, y| x.num_activities.to_i <=> y.num_activities.to_i }.reverse!
       if @project_all_touches.length > 10
         # take first and last 5 from sorted array == most /least
-        @project_top_touches = @project_all_touches[0, 5] + @project_all_touches[-5, 5]
+        @project_top_touches = @project_all_touches[0, 5]
       else
         @project_top_touches = @project_all_touches
       end
@@ -30,7 +30,7 @@ class ReportsController < ApplicationController
       project_chg_activities.sort! { |x, y| x.pct_from_prev.to_f <=> y.pct_from_prev.to_f }.reverse!
       if project_chg_activities.length > 10
         # take first and last 5 from sorted array == most /least
-        project_chg_activities_top = project_chg_activities[0, 5] + project_chg_activities[-5, 5]
+        project_chg_activities_top = project_chg_activities[0, 5]
       else
         project_chg_activities_top = project_chg_activities
       end
