@@ -52,7 +52,11 @@
                                         <hr class="message-divider"/>
                                             <span class="message-content">
                                                  <div>
-                                                    <%= simple_format(m.content) %>
+                                                     <%= if m.content.is_a?(String) 
+                                                  simple_format(m.content)
+                                                else
+                                                    simple_format(m.content.body)
+                                                end%>
                                                 </div>
                                             </span>
                                     </div>
