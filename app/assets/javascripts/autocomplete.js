@@ -7,6 +7,22 @@ $(document).ready(function() {
     labelField: 'name',
     searchField: ['name'],
     create: false,
+    render: {
+      item: function(item, escape) {
+        return '<div>' +
+            (item.name ? '<span class="name">' + escape(item.name) + '</span>' : '') +
+            (item.account ? '<span class="account">' + escape(item.account) + '</span>' : '') +
+        '</div>';
+      },
+      option: function(item, escape) {
+        var label = item.name || item.account;
+        var caption = item.name ? item.account : null;
+        return '<div>' +
+            '<span class="label">' + escape(label) + '</span>' +
+            (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
+        '</div>';
+      }
+    },
     score: function(term) {
       // remove leading character when filtering and scoring autocomplete options (will be a #)
       var score = this.getScoreFunction(term.slice(1));
@@ -31,7 +47,8 @@ $(document).ready(function() {
       // Manually prevent dropdown from opening when:
       // 1. There is no search term, or
       // 2. The search term does not begin with #
-      if (!this.lastQuery.length || this.lastQuery[0] !== '#') {
+      // 3. At least one project has been selected already
+      if (!this.lastQuery.length || this.lastQuery[0] !== '#' || this.items.length) {
         this.close();
       }
     },
@@ -40,6 +57,16 @@ $(document).ready(function() {
       this.setTextboxValue(this.lastQuery);
     }
   });
+
+  // Manually add query text to search parameters
+  $("#search-form").submit(function (event) {
+    var query = $("#search")[0].selectize.lastQuery;
+    $("#query-term").val(query);
+    if ($("#search").val()) {
+      $(this).attr("data-remote", "false");
+      $(".fa-search").addClass("fa-spinner fa-pulse")
+    }
+  })
 
   $("#search-subs").selectize({
     closeAfterSelect: true,
