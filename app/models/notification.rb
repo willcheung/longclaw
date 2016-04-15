@@ -31,6 +31,7 @@ class Notification < ActiveRecord::Base
 
   CATEGORY = { Newproject: 'New project stream notification', Newcontact: 'New contacts notification', Followup: 'Follow ups / action items', Todo: 'To-do', Risks: 'Risks', Opportunities: 'Opportunities' }
 
+
 	def self.load(data, project, test=false)
 		notifications = []
 		data_hash = data.map { |hash| Hashie::Mash.new(hash) }
@@ -68,10 +69,10 @@ class Notification < ActiveRecord::Base
           end
 
           contextMessage.temporalItems.each do |t|
-            context_start = t.contextOffsets[0].to_i
-            context_end = t.contextOffsets[1].to_i
+            context_start = t.taskAnnotation.beginOffset.to_i
+            context_end = t.taskAnnotation.endOffset.to_i
             description = contextMessage.content.body[context_start..context_end]
-            o_due_date = Time.at(t.dates[0]).utc
+            o_due_date = Time.at(t.resolvedDates[0]).utc
             has_time = t.hasTime.to_s
             if has_time == 'false'
               o_due_date = Time.new(o_due_date.year, o_due_date.month, o_due_date.day).utc
