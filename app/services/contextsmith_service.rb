@@ -17,7 +17,7 @@ class ContextsmithService
     else
       # DEBUG
       u = User.find_by_email('indifferenzetester@gmail.com')
-      u.refresh_token! if u.token_expired?
+      # u.refresh_token! if u.token_expired?
       token_emails << { token: "test", email: u.email }
       in_domain = "&in_domain=comprehend.com"
     end

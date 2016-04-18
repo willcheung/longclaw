@@ -146,9 +146,18 @@
                                   <br>
                                   <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
                                       <% if c.email_messages.size == i+1 %>
-                                        <%= simple_format(m.content) %>
+                                       <%= if m.content.is_a?(String) 
+                                                  simple_format(m.content)
+                                                else
+                                                    simple_format(m.content.body)
+                                                end%>
                                       <% else %>
-                                        <%= truncate(m.content, length: 200, separator: ' ') %>
+                                      <%= if m.content.is_a?(String) 
+                                                  truncate(m.content, length: 200, separator: ' ')
+                                                else
+                                                  truncate(m.content.body, length: 200, separator: ' ')
+                                                end%>
+                                       
                                       <% end %>
                                   </span> 
                                 </div>             

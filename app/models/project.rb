@@ -36,6 +36,7 @@ class Project < ActiveRecord::Base
 	has_many	:contacts, through: "project_members"
 	has_many	:users, through: "project_members"
 	has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
+  has_many  :notifications
 
 	scope :visible_to, -> (organization_id, user_id) {
 		select('DISTINCT(projects.*)')

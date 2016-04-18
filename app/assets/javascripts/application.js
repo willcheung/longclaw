@@ -15,6 +15,7 @@
 //= require contextsmith.js
 //= require autocomplete.js
 //= require best_in_place
+//= require best_in_place.jquery-ui
 //= require switchery/switchery.js
 //= require sparkline/jquery.sparkline.min.js
 //= require jstz/jstz.min.js
@@ -31,6 +32,16 @@ ahoy.trackAll();
 jQuery(function() {
   var tz = jstz.determine();
   $.cookie('timezone', tz.name(), { path: '/' });
+});
+
+jQuery(function($){
+    $.datepicker.regional['ca'] = {
+        dateFormat: 'yy-mm-dd',
+        firstDay: 1,
+        isRTL: false,
+        showMonthAfterYear: false,
+        yearSuffix: ''};
+    $.datepicker.setDefaults($.datepicker.regional['ca']);
 });
 
 $(document).ready(function() {

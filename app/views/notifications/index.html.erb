@@ -1,98 +1,116 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>Alerts</h2>
+        <h2>Tasks</h2>
         <ol class="breadcrumb">
             <li>
                 <a href="<%= root_path %>">Home</a>
             </li>
             <li class="active">
-                <strong>Alerts</strong>
+                <strong>Tasks</strong>
+                
             </li>
         </ol>
     </div>
-</div>
-<div class="wrapper wrapper-content  animated fadeInRight">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <h5>Issue list</h5>
-                    <div class="ibox-tools">
-                        <a href="" class="btn btn-primary btn-xs">Add new issue</a>
-                    </div>
-                </div>
-                <div class="ibox-content">
-                    <div class="table-responsive">
-                        <table class="table table-hover issue-tracker">
-                            <tbody>
-                              <tr>
-                                <td>
-                                  complete
-                                </td>
-                                <td>
-                                  category
-                                </td>
-                                <td class="issue-info">
-                                  task
-                                </td>
-                                <td>
-                                  assign to
-                                </td>
-                                <td>
-                                  due date
-                                </td>
-                                <td class="text-center">
-                                  label
-                                </td>
-
-                              </tr>
-                              <% @notifications.each do |n| %>
-                            <tr>
-                                <td><input type="checkbox" class="i-checks"></td>
-                                <td>
-
-                                    <span class="label label-success"><%= best_in_place n, :category, :as => :select, :collection => Notification::CATEGORY, :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></span>
-                                </td>
-                                <td class="issue-info">
-                                 
-                                  <%= link_to n.name, n %>
-                                  <small>
-                                   	<%=n.description %>
-                                  </small>
-                                </td>
-                                <td>
-                                	<%=n.first_name %> 
-                                	<%=n.last_name %>
-                                   
-                                </td>
-                                <td>
-                                    <%=n.original_due_date %>
-                                </td>
-                                <td class="text-right">
-                                    <button class="btn btn-white btn-xs"> Tag</button>
-                                    <button class="btn btn-white btn-xs"> Mag</button>
-                                </td>
-                            </tr>
-                             <% end %>
-                           
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+     <div class="col-lg-2">
+       <%= link_to '+ New Task', '#new_notification_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>
+
 </div>
+<div class="wrapper wrapper-content animated fadeInRight">
+  <div class="row">
+    <div class="col-lg-12">
+      <% if @notifications.empty? %>
+        <div class="text-center m-t-lg">
+          <h3>No notifications found.</h3>
+        </div>
+      <% else %>
+        <div class="ibox float-e-margins">
+          <div class="ibox-content col-lg-12">
+             
+            <table class="table table-hover responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
+              <thead>
+                <tr>
+                  <th class="col-md-1">Complete</th>
+                  <th class="col-md-2">Project</th>
+                  <th class="col-md-1">Category</th>
+                  <th class="col-md-5">Task</th>
+                  <th class="col-md-2">Assign to</th>
+                  <th class="col-md-2">Due date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @notifications.each do |n| %>
+                  <tr style="height:70px;">
+                    <td> 
+                      <input type="checkbox" class="i-checks" id=<%=n.id  %> >
+                    </td>
+                    <td>
+                      <% if !n.project.nil? %>
+                      <%=n.project.name %>
+                      <% end %>
+                    </td>
+                    <td>
+                    <% if n.category== Notification::CATEGORY[:Action] %>
+                      <span class="label label-primary">
+                    <% else %>
+                      <span class="label label-success">
+                    <% end %>
+                      <%= n.category%>
+                      </span>
+                    </td>
+                    <td>
+                      <div><%= best_in_place n, :name, :as => :input, :place_holder => '(Add subject)' %></div>
+                      <div><small>
+                         <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12',
+                :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>
+                    </td>
+                    <td>
+                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add assignee)'%>
+                     
+                    </td>
+                    <td>
+                      <% if n.original_due_date.nil? %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)' %>
+                      <% else %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)', :display_with => Proc.new { n.original_due_date.strftime('%Y-%m-%d')}    %>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% end %>
+    </div>       
+  </div>
+</div>
+
+<%= render 'notifications/modal', modal_id: 'new_notification_modal' %>
+
 <script type="text/javascript">
 
-function handleClick(cb) {
-  cb.parent('tr').remove();
-}
+$(document).ready(function() {
+    $('#notifications-table').DataTable();
+} );
 
 $(function() {
     $('.i-checks').iCheck({
         checkboxClass: 'icheckbox_square-green'
     });
+});
+
+$('input').on('ifChecked', function(event){
+  $(this).parent().parent().parent().attr("bgcolor", "#cccccc");
+  $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+  // var temp = "#best_in_place_notification_" + $(this).attr('id') + "_name"
+  // $(temp).css({'display' : 'inline-block'});
+});
+
+
+$('input').on('ifUnchecked', function(event){
+  $(this).parent().parent().parent().attr("bgcolor", "");
+  $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
 });
 
 
