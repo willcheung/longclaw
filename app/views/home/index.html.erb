@@ -1,47 +1,73 @@
-<div class="row wrapper border-bottom white-bg page-heading">
-    <div class="col-lg-10">
-        <h2>Home</h2>
-        <ol class="breadcrumb">
-            <li>
-                <a href="<%= root_path %>">Home</a>
-            </li>
-            <li class="active">
-                <strong>Dashboard</strong>
-            </li>
-        </ol>
-    </div>
-</div>
+
 
 <div class="wrapper wrapper-content animated fadeInRight">
 
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="btn-group">
-                <div class="font-bold m-b-xs">Account Type:</div>
-                <a href="<%= root_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
-                <a href="<%= root_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Customer</a>
-                <a href="<%= root_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Partner&nbsp;</a>
-                <a href="<%= root_path %>?type=Prospect" class="btn btn-sm <% if params[:type] == "Prospect" %>btn-default<% else %>btn-white<% end %>" type="button">Prospect</a>
-                <a href="<%= root_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Vendor&nbsp;</a>
-                <a href="<%= root_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
-            </div>
-        </div>
-        <div class="col-lg-6">
+    <div class="row m-b-md">
+        <div class="col-lg-12">
             <div class="alert alert-info" style="margin-bottom:0;">
                 <p><strong><i class="fa fa-lightbulb-o"></i> Tip: &nbsp;</strong> 
-                Gain complete insight into all your customer communications and alerts.</p>
-                <p style="text-align:center"><a style="text-align:center" class="btn btn-sm btn-primary" href="<%= settings_path %>">Invite your team to connect their inbox</a></p>
+                Gain complete insight into all your customer communications and alerts.   <a style="text-align:center;text-decoration: underline;" href="<%= settings_path %>">Invite your team to connect their inbox.</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Open Action Items</h5>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @open_action_items %></h1>
+                    <div class="m-t-sm"><a href="<%= notifications_path %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Last 7 Day Activities</h5>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @activities_count_7_days %></h1>
+                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Project Streams</h5>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @projects.size %></h1>
+                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Conversations Tracked</h5>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @projects.reduce(0) { |sum, p| sum + p.activities.length } %></h1>
+                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Metrics -->
-    <div class="row m-t-lg">
-        <div class="col-lg-6">
-            <div class="ibox float-e-margins">
+    <div class="row ibox float-e-margins">
+        <div class="col-lg-12">
+            <div class="ibox-title">
+                <h2>Customer Activities</h2>
+            </div>
+            <div class="col-lg-6 ibox-subcontent">
                 <div class="ibox-title">
                     <span class="label pull-right">Last 7 days</span>
-                    <h5>Top Customer Touches </h5>
+                    <h5>Top Active Projects</h5>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
                     <div class="btn-group m-l-sm">
                         <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
@@ -52,10 +78,8 @@
                     <div id="touches-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
+            <div class="col-lg-6 ibox-subcontent">
+                <div class="ibox-title">                   
                     <span class="label pull-right">Last 7 days vs Prev 7 days</span>
                     <h5>Top Movers</h5>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days. (Top 5)"></i>
@@ -68,79 +92,55 @@
                     <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
-        </div>
 
-    </div>
-
-    <div class="row">
-        
-        <div class="col-lg-5">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Overdue for Follow Up</h5>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 5 stale projects."></i>
-                </div>
-                <div class="ibox-content">
-                    <% if !@project_follow_up.nil? %>
-                        <% @project_follow_up.each do |p| %>
-                            <div class="m-t-sm m-b-sm">
-                                <h3 style="margin-bottom:0;"><a href="<%= project_path(p) %>"><%= p.name %></a> &nbsp;<span class="label"><%= p.category %></span></h3>
-                                <small class="text-muted">Last activity <strong><%= time_ago_in_words(Time.at(p.last_sent_date.to_i)) %> ago</strong> by <strong><%= p.from[0]['personal'] %></strong></small>
-                            </div>
-                        <% end %>
-                    <% else %>
-                        <h2 class="text-center" style="padding-top:10px;">No data</h2>
-                    <% end %>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-7">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
+            <div class="col-lg-12 ibox-subcontent">
+                <div class="ibox-title">                   
                     <span class="label pull-right">14 day trend</span>
-                    <h5><%= params[:type] %> How do projects stack up?</h5>
+                    <h5>Customer Activites Trend</h5>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by project streams, trending over Last 14 Days."></i>
+                    <select data-placeholder="Choose a Project..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
+                        <option value=""></option>
+                        <% @projects.each do |p| %>
+                            <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                        <% end %>
+                    </select>
                 </div>
                 <div class="ibox-content">
-                    <div class="m-b-md">
-                        <select data-placeholder="Choose a Project..." style="width:97%;" class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
-                            <option value=""></option>
-                            <% @projects.each do |p| %>
-                                <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
-                            <% end %>
-                        </select>
-                    </div>
                     <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="row">
 
-        <div class="col-lg-7">
+        <div class="col-lg-12">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <span class="label pull-right">14 day trend</span>
-                    <h5><%= params[:type] %> How busy are we?</h5>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total customer activities, trending over Last 14 Days."></i>
+                    <h2>Team Activities</h2>
                 </div>
-                <div class="ibox-content">
-                    <div id="user-activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                <div class="col-lg-6 ibox-subcontent">
+                    <div class="ibox-title">
+                        <span class="label pull-right">14 day trend</span>
+                        <h5><%= params[:type] %> How busy are we?</h5>
+                        <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total customer activities, trending over Last 14 Days."></i>
+                    </div>
+                    <div class="ibox-content">
+                        <div id="user-activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-lg-5">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Team Leaderboard</h5>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 10 by activities."></i>
-                    <span class="label pull-right">Last 14 days</span>
+                <div class="col-lg-6 ibox-subcontent">
+                    <div class="ibox-title">
+                        <h5>Team Leaderboard</h5>
+                        <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 10 by activities."></i>
+                        <span class="label pull-right">Last 14 days</span>
+                    </div>
+                    <div class="ibox-content">
+                        <div id="user-leaderboard-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                    </div>
                 </div>
-                <div class="ibox-content">
-                    <div id="user-leaderboard-chart" style="min-width: 310px; max-width: 800px; height: 350px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
-                </div>
+
+
             </div>
         </div>
 
@@ -149,23 +149,7 @@
 </div>
 
 <script>
-    /* Tooltip */
     $('[data-toggle="tooltip"]').tooltip();
-
-    /* Toggle Private */
-    $('.best_in_place.toggle-private').on('ajax:success', function() {
-        if ($(this).data('activity').is_public) {
-            $(this).data('activity').is_public = false;
-            $(this).parents('.vertical-timeline-content').children('h3').children('#private').show();
-            $(this).parents('.pinned-content').children('h3').children('#private').show();
-        }
-        else {
-            $(this).data('activity').is_public = true;
-            $(this).parents('.vertical-timeline-content').children('h3').children('#private').hide();
-            $(this).parents('.pinned-content').children('h3').children('#private').hide();
-        }
-    });
-
 
     <% if !@projects.empty? %>
 
@@ -395,13 +379,7 @@
                 enabled: false
             },
             legend: {
-                layout: 'horizontal',
-                align: 'center',
-                y: 20,
-                itemStyle: {
-                 fontSize:'10px'
-                },
-                itemDistance: 10
+                enabled: false
             },
             series: [
                 {
@@ -492,4 +470,3 @@
 
     <% end %>
 </script>
-

@@ -15,18 +15,47 @@
 <div class="wrapper wrapper-content animated fadeInRight">
 
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-lg-5 filter-space">
             <div class="btn-group">
                 <div class="font-bold m-b-xs">Account Type:</div>
-                <a href="<%= reports_customer_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Customer</a>
-                <a href="<%= reports_customer_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Partner&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Prospect" class="btn btn-sm <% if params[:type] == "Prospect" %>btn-default<% else %>btn-white<% end %>" type="button">Prospect</a>
-                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Vendor&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
+                <a href="<%= reports_customer_path %>" class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;All (<%= @projects.size %>)&nbsp;&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Customer" class="btn btn-sm btn-white" type="button">Customer (<%= @projects.select { |p| p.account.category == "Customer" }.size %>)</a>
+                <a href="<%= reports_customer_path %>?type=Partner" class="btn btn-sm btn-white" type="button">&nbsp;Partner (<%= @projects.select { |p| p.account.category == "Partner" }.size %>)&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Prospect" class="btn btn-sm btn-white" type="button">Prospect (<%= @projects.select { |p| p.account.category == "Prospect" }.size %>)</a>
+                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm btn-white" type="button">&nbsp;Vendor (<%= @projects.select { |p| p.account.category == "Vendor" }.size %>)&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Other" class="btn btn-sm btn-white" type="button">&nbsp;Other (<%= @projects.select { |p| p.account.category == "Other" }.size %>)&nbsp;</a>
+            </div>
+        </div>
+        <div class="col-lg-7 filter-space">
+            <div class="btn-group">
+                <div class="font-bold m-b-xs">Project Type:</div>
+                <a href="<%= reports_customer_path %>" class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;All (<%= @projects.size %>)&nbsp;&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Customer" class="btn btn-sm btn-white" type="button">Implementation (<%= @projects.select { |p| p.category == "Implementation" }.size %>)</a>
+                <a href="<%= reports_customer_path %>?type=Partner" class="btn btn-sm btn-white" type="button">Onboarding (<%= @projects.select { |p| p.category == "Onboarding" }.size %>)</a>
+                <a href="<%= reports_customer_path %>?type=Prospect" class="btn btn-sm btn-white" type="button">Opportunity (<%= @projects.select { |p| p.category == "Opportunity" }.size %>)</a>
+                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm btn-white" type="button">&nbsp;Pilot (<%= @projects.select { |p| p.category == "Pilot" }.size %>)&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm btn-white" type="button">&nbsp;Support (<%= @projects.select { |p| p.category == "Support" }.size %>)&nbsp;</a>
+                <a href="<%= reports_customer_path %>?type=Other" class="btn btn-sm btn-white" type="button">&nbsp;Other (<%= @projects.select { |p| p.category == "Other" }.size %>)&nbsp;</a>
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-lg-3 filter-space">
+            <div class="font-bold m-b-xs">Date:</div>
+
+            <input type="text" name="daterange" class="form-control daterange">
+        </div>
+        <div class="col-lg-8 filter-space">
+            <div class="font-bold m-b-xs">Projects:</div>
+            <select data-placeholder="Choose a Project..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
+                <option value=""></option>
+                <% @projects.each do |p| %>
+                    <option value="<%= p.id %>" <% if @project_all_touches[0,5].map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                <% end %>
+            </select>
+        </div>
+    </div>
+    
 
     <!-- Metrics -->
     <div class="row m-t-lg">
@@ -40,10 +69,10 @@
                         <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
                         <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
                     </div>
-                    <div class="btn-group m-l-sm">
+                    <!-- <div class="btn-group m-l-sm">
                         <a id="top-touches" type="button" class="btn btn-xs btn-white active">Top/Bottom 5</a>
                         <a id="all-touches" type="button" class="btn btn-xs btn-white">All</a>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="ibox-content">
                     <div id="touches-chart" class="customer-chart"class="customer-chart" style="">
@@ -62,10 +91,10 @@
                         <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
                         <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
                     </div>
-                    <div class="btn-group m-l-sm">
+                    <!-- <div class="btn-group m-l-sm">
                         <a id="top-change" type="button" class="btn btn-xs btn-white active">Top/Bottom 5</a>
                         <a id="all-change" type="button" class="btn btn-xs btn-white">All</a>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="ibox-content">
                     <div id="percent-change-chart" class="customer-chart" style="">
@@ -78,133 +107,18 @@
 </div>
 
 <script>
-    /* Tooltip */
-    $('[data-toggle="tooltip"]').tooltip();
-
-    <% if !@projects.empty? %>
-
-    /* Highcharts support functions */
-
-    function redraw_touches_chart(chart, max, all) {
-        // Delete all the series.
-        while (chart.series.length > 0) {
-          chart.series[0].remove(false);
-        }
-
-        if (max && all) {
-            chart.xAxis[0].setCategories(<%= @project_all_touches.map(&:name).to_json.html_safe %>);
-            chart.addSeries({
-                    name: 'Touches',
-                    data: <%= @project_all_touches.map{|p| { :y => p.num_activities, :path => "/projects/#{p.id}" } }.to_json.html_safe %>,
-                    color: '#7cb5ec'
-                });
-        } 
-        else if (max && !all) {
-          chart.xAxis[0].setCategories(<%= @project_top_touches.map(&:name).to_json.html_safe %>);
-            chart.addSeries({
-                    name: 'Touches',
-                    data: <%= @project_top_touches.map{|p| { :y => p.num_activities, :path => "/projects/#{p.id}" } }.to_json.html_safe %>,
-                    color: '#7cb5ec'
-                });
-        }
-        else if (!max && all) {
-            chart.xAxis[0].setCategories(<%= @project_all_touches.reverse.map(&:name).to_json.html_safe %>);
-            chart.addSeries({
-                    name: 'Touches',
-                    data: <%= @project_all_touches.reverse.map{|p| { :y => p.num_activities, :path => "/projects/#{p.id}" } }.to_json.html_safe %>,
-                    color: '#7cb5ec'
-                });
-        }
-        else {
-            chart.xAxis[0].setCategories(<%= @project_top_touches.reverse.map(&:name).to_json.html_safe %>);
-            chart.addSeries({
-                    name: 'Touches',
-                    data: <%= @project_top_touches.reverse.map{|p| { :y => p.num_activities, :path => "/projects/#{p.id}" } }.to_json.html_safe %>,
-                    color: '#7cb5ec'
-                });
-        }
-        chart.setSize(chart.chartWidth, 250 + chart.series[0].data.length * 25);
-        chart.redraw();
-    }
-
-    function redraw_changes_chart(chart, max, all) {
-        // Delete all the series.
-        while (chart.series.length > 0) {
-          chart.series[0].remove(false);
-        }
-
-        if (max && all) {
-            chart.xAxis[0].setCategories(<%= (@project_all_chg_touches[:pos].map(&:name) + @project_all_chg_touches[:no].map(&:name) + @project_all_chg_touches[:neg].map(&:name)).to_json.html_safe %>);
-            chart.addSeries({
-                type: 'bar',
-                name: 'Percent Change',
-                data: <%= (@project_all_chg_touches[:pos].map do |p| %>
-                      <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                    <% end + @project_all_chg_touches[:no].map do |p| %>
-                      <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                    <% end + @project_all_chg_touches[:neg].map do |p| %>
-                      <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                    <% end).to_json.html_safe %>
-            });
-        }
-        else if (max && !all) {
-            chart.xAxis[0].setCategories(<%= (@project_top_chg_touches[:pos].map(&:name) + @project_top_chg_touches[:no].map(&:name) + @project_top_chg_touches[:neg].map(&:name)).to_json.html_safe %>);
-            chart.addSeries({
-                type: 'bar',
-                name: 'Percent Change',
-                data: <%= (@project_top_chg_touches[:pos].map do |p| %>
-                        <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end + @project_top_chg_touches[:no].map do |p| %>
-                        <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end + @project_top_chg_touches[:neg].map do |p| %>
-                        <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end).to_json.html_safe %>
-            });
-        }
-        else if (!max && all) {
-            chart.xAxis[0].setCategories(<%= (@project_all_chg_touches[:pos].map(&:name) + @project_all_chg_touches[:no].map(&:name) + @project_all_chg_touches[:neg].map(&:name)).reverse.to_json.html_safe %>);
-            chart.addSeries({
-                type: 'bar',
-                name: 'Percent Change',
-                data: <%= (@project_all_chg_touches[:pos].map do |p| %>
-                        <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end + @project_all_chg_touches[:no].map do |p| %>
-                        <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end + @project_all_chg_touches[:neg].map do |p| %>
-                        <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end).reverse.to_json.html_safe %>
-            });
-        }
-        else {
-            chart.xAxis[0].setCategories(<%= (@project_top_chg_touches[:pos].map(&:name) + @project_top_chg_touches[:no].map(&:name) + @project_top_chg_touches[:neg].map(&:name)).reverse.to_json.html_safe %>);
-            chart.addSeries({
-                type: 'bar',
-                name: 'Percent Change',
-                data: <%= (@project_top_chg_touches[:pos].map do |p| %>
-                        <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end + @project_top_chg_touches[:no].map do |p| %>
-                        <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end + @project_top_chg_touches[:neg].map do |p| %>
-                        <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                      <% end).reverse.to_json.html_safe %>
-            });
-        }
-        chart.setSize(chart.chartWidth, 250 + chart.series[0].data.length * 25);
-        chart.redraw();
-    }
-
-    /* Highcharts */
+   /* Highcharts */
     $(function () {
         $('#touches-chart').highcharts({
             chart: {
                 type: 'bar',
-                height: <%= 250 + @project_top_touches.length * 25 %>
+                height: <%= 250 + 5 * 25 %>
             },
             title: {
                 text: ''
             },
             xAxis: {
-                categories: <%= @project_top_touches.map(&:name).to_json.html_safe %>
+                categories: <%= @project_all_touches[0,5].map(&:name).to_json.html_safe %>
             },
             yAxis: {
                 min: 0,
@@ -232,140 +146,10 @@
             },
             series: [{
                 name: 'Touches',
-                data: <%= @project_top_touches.map {|p| { :y => p.num_activities, :path => "/projects/#{p.id}" } }.to_json.html_safe %>,
+                data: <%= @project_all_touches[0,5].map {|p| { :y => p.num_activities, :path => "/projects/#{p.id}" } }.to_json.html_safe %>,
                 color: '#7cb5ec'
             }]
         });
     });
-
-    $(function () {
-        $('#percent-change-chart').highcharts({
-            chart: {
-                type: 'bar',
-                height: <%= 250 + (@project_top_chg_touches[:pos] + @project_top_chg_touches[:no] + @project_top_chg_touches[:neg]).length * 25 %>
-            },
-            title: {
-                text: ''
-            },
-            xAxis: {
-                categories: <%= (@project_top_chg_touches[:pos].map(&:name) + @project_top_chg_touches[:no].map(&:name) + @project_top_chg_touches[:neg].map(&:name)).to_json.html_safe %>
-            },
-            yAxis: {
-                title: {
-                    text: ''
-                },
-                labels: {
-                    format: '{value}%'
-                }
-            },
-            legend: {
-                enabled: false
-            },
-            credits: {
-              enabled: false
-            },
-            tooltip: {
-                valueSuffix: '%'
-            },
-            plotOptions: {
-              series: {
-                minPointLength: 2,
-                cursor: 'pointer',
-                point: {
-                  events: {
-                    click: function () {
-                      location.pathname = this.options.path;
-                    }
-                  }
-                } 
-              }
-            },
-            series: [{
-              type: 'bar',
-              name: 'Percent Change',
-              data: <%= (@project_top_chg_touches[:pos].map do |p| %>
-                      <% {:name => 'Gain', :color => '#32B232', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                    <% end + @project_top_chg_touches[:no].map do |p| %>
-                      <% {:name => 'No Change', :color => 'orange', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                    <% end + @project_top_chg_touches[:neg].map do |p| %>
-                      <% {:name => 'Decline', :color => '#FF5050', :y => p.pct_from_prev, :path => "/projects/#{p.id}"} %>
-                    <% end).to_json.html_safe %>
-              }]
-
-        });
-    });
-
-    /* Event Handlers */
-    $('#most-touches').click(function() {
-        chart = $('#touches-chart').highcharts();
-        $(this).addClass("active");
-        $('#least-touches').removeClass("active");
-        descendingTouches = true;
-        redraw_touches_chart(chart, descendingTouches, allTouches);
-    });
-
-    $('#least-touches').click(function() {
-        chart = $('#touches-chart').highcharts();
-        $(this).addClass("active");
-        $('#most-touches').removeClass("active");
-        descendingTouches = false;
-        redraw_touches_chart(chart, descendingTouches, allTouches);
-    });
-
-    $('#top-touches').click(function() {
-        chart = $('#touches-chart').highcharts();
-        $(this).addClass("active");
-        $('#all-touches').removeClass("active");
-        allTouches = false;
-        redraw_touches_chart(chart, descendingTouches, allTouches);
-    });
-
-    $('#all-touches').click(function() {
-        chart = $('#touches-chart').highcharts();
-        $(this).addClass("active");
-        $('#top-touches').removeClass("active");
-        allTouches = true;
-        redraw_touches_chart(chart, descendingTouches, allTouches);
-    });
-
-    $('#most-change').click(function() {
-        chart = $('#percent-change-chart').highcharts();
-        $(this).addClass("active");
-        $('#least-change').removeClass("active");
-        descendingChange = true;
-        redraw_changes_chart(chart, descendingChange, allChange);
-    });
-
-    $('#least-change').click(function() {
-        chart = $('#percent-change-chart').highcharts();
-        $(this).addClass("active");
-        $('#most-change').removeClass("active");
-        descendingChange = false;
-        redraw_changes_chart(chart, descendingChange, allChange);
-    });
-
-    $('#top-change').click(function() {
-        chart = $('#percent-change-chart').highcharts();
-        $(this).addClass("active");
-        $('#all-change').removeClass("active");
-        allChange = false;
-        redraw_changes_chart(chart, descendingChange, allChange);
-    });
-
-    $('#all-change').click(function() {
-        chart = $('#percent-change-chart').highcharts();
-        $(this).addClass("active");
-        $('#top-change').removeClass("active");
-        allChange = true;
-        redraw_changes_chart(chart, descendingChange, allChange);
-    });
-
-    /* Flags for redrawing */
-    var allTouches = false,
-        descendingTouches = true,
-        allChange = false,
-        descendingChange = true;
-
-    <% end %>
 </script>
 

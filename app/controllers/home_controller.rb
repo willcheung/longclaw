@@ -12,16 +12,18 @@ class HomeController < ApplicationController
     end
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id).where(account_type_filter)
-
+    @open_action_items = Notification.where(project_id: @projects.map(&:id), is_complete: false).length
     ###### Dashboard Metrics ######
     if !@projects.empty?
       @project_trend = Project.find_and_count_activities_by_day(@projects.map(&:id), current_user.time_zone)
       
-      project_sum_activities = Project.find_include_sum_activities(7*24, @projects.map(&:id))
+      static = Rails.env.development?
+      project_sum_activities = Project.find_include_sum_activities(0, static, 7*24, @projects.map(&:id))
+      @activities_count_7_days = project_sum_activities.reduce(0) { |sum, p| sum + p.num_activities }
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
       @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
 
-      project_prev_sum_activities = Project.find_include_sum_activities(7*24, 14*24, @projects.map(&:id))
+      project_prev_sum_activities = Project.find_include_sum_activities(7*24, static, 14*24, @projects.map(&:id))
       project_chg_activities = Project.calculate_pct_from_prev(project_sum_activities, project_prev_sum_activities)
       @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
       @project_min_chg = project_chg_activities.min_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev <= 0 }

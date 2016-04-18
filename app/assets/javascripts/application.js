@@ -22,6 +22,8 @@
 //= require chosen/chosen.jquery.min.js
 //= require selectize/selectize.min.js
 //= require iCheck/icheck.min.js
+//= require daterangepicker/moment.min.js
+//= require daterangepicker/daterangepicker.js
 //= require datepicker/bootstrap-datepicker.js
 
 /* Ahoy analytics */
