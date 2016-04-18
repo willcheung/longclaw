@@ -6,7 +6,7 @@
       <%= f.input :description, wrapper_html: { class: 'col-md-8'} %>
       <%= f.input :project_id, wrapper_html: { class: 'col-xs-8'}, collection:  @projects ,selected: @projects%>
       <%= f.input :assign_to, wrapper_html: { class: 'col-xs-4'}, collection:  @users,  selected:  @users%>
-      <%= f.input :original_due_date, as: :date, wrapper_html: { class: 'col-xs-8'},  html5: true %>
+      <%= f.input :original_due_date, as: :string, wrapper_html: { class: 'col-xs-8'} %>
   <%# Added Bootstrap classes %>
   
     <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
@@ -24,5 +24,12 @@
 // 		}
 // 	});
 // });
+
+	$('#notification_original_due_date').bootstrapDP({
+		format: 'yyyy-mm-dd',
+	  keyboardNavigation: false,
+	  todayHighlight: true,
+	  autoclose: true
+	});
 
 </script>
