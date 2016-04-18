@@ -12,12 +12,13 @@ class HomeController < ApplicationController
     end
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id).where(account_type_filter)
-
+    @conversations_tracked = @projects.reduce(0) { |sum, p| sum + p.activities.length }
     ###### Dashboard Metrics ######
     if !@projects.empty?
       @project_trend = Project.find_and_count_activities_by_day(@projects.map(&:id), current_user.time_zone)
       
       project_sum_activities = Project.find_include_sum_activities(7*24, @projects.map(&:id))
+      @activities_count_7_days = project_sum_activities.reduce(0) { |sum, p| sum + p.num_activities }
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
       @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
 

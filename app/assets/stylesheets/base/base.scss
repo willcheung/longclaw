@@ -526,7 +526,7 @@ code {
   min-height: 48px;
 }
 
-.ibox-content {
+.ibox-content, .ibox-subcontent {
   background-color: $ibox-content-bg;
   color: inherit;
   padding: 15px 20px 20px 20px;
@@ -535,6 +535,10 @@ code {
   border-image: none;
   border-style: solid solid none;
   border-width: 1px 0px;
+}
+
+.ibox-subcontent .ibox-title {
+  border-width: 0;
 }
 
 table.table-mail tr td {

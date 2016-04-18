@@ -19,7 +19,7 @@
                 </div>
                 <div class="ibox-content">
                     <h1 class="no-margins">24</h1>
-                    <div class="m-t-sm">See details &rarr;</div>
+                    <div class="m-t-sm"><a>See details &rarr;</a></div>
                 </div>
             </div>
         </div>
@@ -29,7 +29,7 @@
                     <h5>Last 7 Day Activities</h5>
                 </div>
                 <div class="ibox-content">
-                    <h1 class="no-margins">53</h1>
+                    <h1 class="no-margins"><%= @activities_count_7_days %></h1>
                     <div class="m-t-sm"><a>See details &rarr;</a></div>
                 </div>
             </div>
@@ -40,8 +40,8 @@
                     <h5>Project Streams</h5>
                 </div>
                 <div class="ibox-content">
-                    <h1 class="no-margins">20</h1>
-                    <div class="m-t-sm">See details &rarr;</div>
+                    <h1 class="no-margins"><%= @projects.size %></h1>
+                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
                 </div>
             </div>
         </div>
@@ -51,68 +51,63 @@
                     <h5>Conversations Tracked</h5>
                 </div>
                 <div class="ibox-content">
-                    <h1 class="no-margins">267</h1>
-                    <div class="m-t-sm">See details &rarr;</div>
+                    <h1 class="no-margins"><%= @projects.reduce(0) { |sum, p| sum + p.activities.length } %></h1>
+                    <div class="m-t-sm"><a>See details &rarr;</a></div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Metrics -->
-    <div class="row">
+    <div class="row ibox float-e-margins">
         <div class="col-lg-12">
-            <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h2>Customer Activities</h2>
+            </div>
+            <div class="col-lg-6 ibox-subcontent">
                 <div class="ibox-title">
-                    <h2>Customer Activities</h2>
-                </div>
-                <div class="col-lg-6 ibox-content">
-                    <div class="ibox-title">
-                        <span class="label pull-right">Last 7 days</span>
-                        <h5>Top Active Projects</h5>
-                        <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
-                        <div class="btn-group m-l-sm">
-                            <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
-                            <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        <div id="touches-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Top Active Projects</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
+                    <div class="btn-group m-l-sm">
+                        <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
+                        <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
                     </div>
                 </div>
-                <div class="col-lg-6 ibox-content">
-                    <div class="ibox-title">                   
-                        <span class="label pull-right">Last 7 days vs Prev 7 days</span>
-                        <h5>Top Movers</h5>
-                        <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days. (Top 5)"></i>
-                        <div class="btn-group m-l-sm">
-                            <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
-                            <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                <div class="ibox-content">
+                    <div id="touches-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
+            </div>
+            <div class="col-lg-6 ibox-subcontent">
+                <div class="ibox-title">                   
+                    <span class="label pull-right">Last 7 days vs Prev 7 days</span>
+                    <h5>Top Movers</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days. (Top 5)"></i>
+                    <div class="btn-group m-l-sm">
+                        <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
+                        <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
                     </div>
                 </div>
+                <div class="ibox-content">
+                    <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
+            </div>
 
-                <div class="col-lg-12 ibox-content">
-                    <div class="ibox-title">                   
-                        <span class="label pull-right">14 day trend</span>
-                        <h3>Customer Activites Trend</h3>
-                        <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by project streams, trending over Last 14 Days."></i>
-                        <div class="m-b-md">
-                            <select data-placeholder="Choose a Project..." style="width:97%;" class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
-                                <option value=""></option>
-                                <% @projects.each do |p| %>
-                                    <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
-                                <% end %>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
-                    </div>
+            <div class="col-lg-12 ibox-subcontent">
+                <div class="ibox-title">                   
+                    <span class="label pull-right">14 day trend</span>
+                    <h5>Customer Activites Trend</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by project streams, trending over Last 14 Days."></i>
+                    <select data-placeholder="Choose a Project..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
+                        <option value=""></option>
+                        <% @projects.each do |p| %>
+                            <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                        <% end %>
+                    </select>
                 </div>
-
+                <div class="ibox-content">
+                    <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
             </div>
         </div>
     </div>
@@ -124,7 +119,7 @@
                 <div class="ibox-title">
                     <h2>Team Activities</h2>
                 </div>
-                <div class="col-lg-6 ibox-content">
+                <div class="col-lg-6 ibox-subcontent">
                     <div class="ibox-title">
                         <span class="label pull-right">14 day trend</span>
                         <h5><%= params[:type] %> How busy are we?</h5>
@@ -134,14 +129,14 @@
                         <div id="user-activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                     </div>
                 </div>
-                <div class="col-lg-6 ibox-content">
+                <div class="col-lg-6 ibox-subcontent">
                     <div class="ibox-title">
                         <h5>Team Leaderboard</h5>
                         <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 10 by activities."></i>
                         <span class="label pull-right">Last 14 days</span>
                     </div>
                     <div class="ibox-content">
-                        <div id="user-leaderboard-chart" style="min-width: 310px; max-width: 800px; height: 350px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                        <div id="user-leaderboard-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                     </div>
                 </div>
 
@@ -154,6 +149,7 @@
 </div>
 
 <script>
+    $('[data-toggle="tooltip"]').tooltip();
 
     <% if !@projects.empty? %>
 
