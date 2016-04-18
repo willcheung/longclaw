@@ -156,7 +156,7 @@
             </div>
             <div class="row member">
                 <div class="col-sm-2">
-                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px"></i>
+                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
@@ -185,7 +185,7 @@
             </div>
             <div class="row">
                 <div class="col-sm-2">
-                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px"></i>
+                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "fix-height", remote: true) do %>

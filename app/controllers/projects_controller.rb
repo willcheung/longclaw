@@ -10,9 +10,9 @@ class ProjectsController < ApplicationController
 
     # all projects and their accounts, sorted by account name alphabetically
     if params[:type]
-      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").where(category: params[:type]).preload([:users,:contacts,:subscribers])
+      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").where(category: params[:type]).preload([:users,:contacts,:subscribers, :account, :activities])
     else
-      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").preload([:users,:contacts,:subscribers])
+      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").preload([:users,:contacts,:subscribers, :account, :activities])
     end
 
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
