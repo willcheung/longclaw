@@ -9,7 +9,7 @@ $(document).ready(function() {
 	      { orderable: false, targets: [0,1,2] }
 	    ],
 	    "bPaginate": false,
-	    "order": [[ 5, "desc" ]],
+	    "order": [[ 6, "desc" ]],
 	    "dom":' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
 	    "language": {
       search: "_INPUT_",
