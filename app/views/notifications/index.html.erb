@@ -35,7 +35,7 @@
                   <th class="col-md-2">Project</th>
                   <th class="col-md-2">Assign</th>
                   <th class="col-md-2">Due </th>
-                  <th class="col-md-2">Create </th>
+                  <th class="col-md-2">Created</th>
                 </tr>
               </thead>
               <tbody>
@@ -73,7 +73,7 @@
                       <% end %>
                     </td>
                     <td>
-                      <div style="font-size:12px"><%=n.created_at.strftime('%Y-%m-%d') %> <span style="display:none"><%=n.created_at.strftime('%H:%M:%S') %></span></div>
+                      <div><%=n.created_at.strftime('%Y-%m-%d') %> <span style="display:none"><%=n.created_at.strftime('%H:%M:%S') %></span></div>
                     </td>
                   </tr>
                 <% end %>
