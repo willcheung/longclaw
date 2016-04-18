@@ -1,0 +1,28 @@
+<% remote ||= false %>
+<%= simple_form_for :notification, remote: remote do |f| %>
+
+  <%# Added Bootstrap classes, and help-block container for error messages %>
+      <%= f.input :name, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :description, wrapper_html: { class: 'col-md-8'} %>
+      <%= f.input :project_id, wrapper_html: { class: 'col-xs-8'}, collection:  @projects ,selected: @projects%>
+      <%= f.input :assign_to, wrapper_html: { class: 'col-xs-4'}, collection:  @users,  selected:  @users%>
+      <%= f.input :original_due_date, as: :date, wrapper_html: { class: 'col-xs-8'},  html5: true %>
+  <%# Added Bootstrap classes %>
+  
+    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
+ 
+
+<% end %>
+
+
+<script type="text/javascript">
+
+// $('#notification_project_id').on('change', function(){
+// 	$.ajax({url:'/notifications/'+$(this).val()+'/woof',
+// 		success: function(newOptions){
+// 			$('#notification_assign_to').html(newOptions);
+// 		}
+// 	});
+// });
+
+</script>
