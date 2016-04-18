@@ -118,9 +118,9 @@ class NotificationsController < ApplicationController
     target = Notification.find_by_id(params[:id])
 
     if(target.is_complete)
-      target.update(is_complete: false, completed_by: nil)
+      target.update(is_complete: false, completed_by: nil, complete_date: nil)
     else
-      target.update(is_complete: true, completed_by: current_user.id)
+      target.update(is_complete: true, completed_by: current_user.id, complete_date: Time.now.utc)
     end
     
     respond_to :js
