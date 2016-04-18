@@ -27,7 +27,7 @@
         <div class="ibox float-e-margins">
           <div class="ibox-content col-lg-12">
              
-            <table class="table table-hover responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
+            <table class="table responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
               <thead>
                 <tr>
                   <th class="col-md-1">Complete</th>
@@ -70,9 +70,9 @@
                     </td>
                     <td>
                       <% if n.original_due_date.nil? %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)' %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)', :inner_class => "due_date_datepicker" %>
                       <% else %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)', :display_with => Proc.new { n.original_due_date.strftime('%Y-%m-%d')}    %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)', :innner_class => "due_date_datepicker", :display_with => Proc.new { n.original_due_date.strftime('%Y-%m-%d')}    %>
                       <% end %>
                     </td>
                   </tr>
@@ -101,7 +101,7 @@ $(function() {
 });
 
 $('input').on('ifChecked', function(event){
-  $(this).parent().parent().parent().attr("bgcolor", "#cccccc");
+  $(this).parent().parent().parent().attr("bgcolor", "#eeeeee");
   $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
   // var temp = "#best_in_place_notification_" + $(this).attr('id') + "_name"
   // $(temp).css({'display' : 'inline-block'});

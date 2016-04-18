@@ -25,8 +25,7 @@
 
 class Notification < ActiveRecord::Base
 	belongs_to  :project, foreign_key: "project_id"
-	# belongs_to  :activities, foreign_key: "conversation_id"
-  # belongs_to   :users, foreign_key: "assign_to"
+	belongs_to  :activity, foreign_key: "conversation_id"
 	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 

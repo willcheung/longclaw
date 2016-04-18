@@ -1,5 +1,3 @@
-//= require datepicker/bootstrap-datepicker.js
-
 jQuery(document).ready(function($) {
 
 	$('.switch').on('click', function(e) {    
