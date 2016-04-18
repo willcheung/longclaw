@@ -29,7 +29,7 @@ class SearchController < ApplicationController
     # current_user.organization.accounts.contacts + current_user.organization.users
     @search_list = []
    
-    accounts_result = current_user.organization.accounts.each do |account|
+    accounts_result = current_user.organization.accounts.includes(:contacts).each do |account|
       account.contacts.each do |contact|
         new_user = Struct.new(:first_name, :last_name, :email).new
         new_user.email = contact.email
