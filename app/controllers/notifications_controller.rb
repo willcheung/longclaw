@@ -15,6 +15,7 @@ class NotificationsController < ApplicationController
           # puts n.projects
           # puts "=================================="
           if(n.is_complete==false)
+            # if true
             if(n.sent_date.nil? || n.sent_date > Date.today-7.days)
             # if(!n.original_due_date.nil?)
             #   puts "=================================="
@@ -117,9 +118,9 @@ class NotificationsController < ApplicationController
     target = Notification.find_by_id(params[:id])
 
     if(target.is_complete)
-      target.update(is_complete: false, completed_by: nil)
+      target.update(is_complete: false, completed_by: nil, complete_date: nil)
     else
-      target.update(is_complete: true, completed_by: current_user.id)
+      target.update(is_complete: true, completed_by: current_user.id, complete_date: Time.now.utc)
     end
     
     respond_to :js
@@ -167,6 +168,7 @@ class NotificationsController < ApplicationController
                                     OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
            
 
+    @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 
     @users = current_user.organization.users.map { |u| [u.first_name+' '+ u.last_name+' '+u.email, u.id] }.to_h
     @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h

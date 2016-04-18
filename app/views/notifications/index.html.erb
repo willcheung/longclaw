@@ -26,7 +26,6 @@
       <% else %>
         <div class="ibox float-e-margins">
           <div class="ibox-content col-lg-12">
-             
             <table class="table responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
               <thead>
                 <tr>
@@ -36,6 +35,7 @@
                   <th class="col-md-2">Project</th>
                   <th class="col-md-2">Assign</th>
                   <th class="col-md-2">Due </th>
+                  <th class="col-md-2">Create </th>
                 </tr>
               </thead>
               <tbody>
@@ -60,13 +60,10 @@
                 :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>
                     </td>
                     <td>
-                      <% if !n.project.nil? %>
-                      <%=n.project.name %>
-                      <% end %>
+                      <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)' %>
                     </td>
                     <td>
-                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add assignee)'%>
-                     
+                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add assignee)'%>     
                     </td>
                     <td>
                       <% if n.original_due_date.nil? %>
@@ -74,6 +71,9 @@
                       <% else %>
                           <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)', :innner_class => "due_date_datepicker", :display_with => Proc.new { n.original_due_date.strftime('%Y-%m-%d')}    %>
                       <% end %>
+                    </td>
+                    <td>
+                      <div style="font-size:12px"><%=n.created_at.strftime('%Y-%m-%d') %> <span style="display:none"><%=n.created_at.strftime('%H:%M:%S') %></span></div>
                     </td>
                   </tr>
                 <% end %>
