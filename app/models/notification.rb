@@ -29,7 +29,7 @@ class Notification < ActiveRecord::Base
 	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
-  CATEGORY = { Notification: 'Notification', Action: 'Action Item', Todo: 'To-do', Risk: 'Risk', Opportunity: 'Opportunity' }
+  CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Risk: 'Risk', Opportunity: 'Opportunity' }
 
 	def self.load(data, project, test=false)
 		notifications = []
@@ -83,7 +83,7 @@ class Notification < ActiveRecord::Base
               next
             end
 
-    	      notification = Notification.new(category: 'Action Item',
+    	      notification = Notification.new(category: 'Smart Action',
       	      	name: contextMessage.subject,
       	      	description: description,
       	        message_id: contextMessage.messageId,

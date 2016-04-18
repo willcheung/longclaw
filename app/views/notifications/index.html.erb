@@ -30,12 +30,12 @@
             <table class="table responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
               <thead>
                 <tr>
-                  <th class="col-md-1">Complete</th>
-                  <th class="col-md-2">Project</th>
-                  <th class="col-md-1">Category</th>
+                  <th class="col-md-1"></th>
+                  <th class="col-md-1"></th>
                   <th class="col-md-5">Task</th>
-                  <th class="col-md-2">Assign to</th>
-                  <th class="col-md-2">Due date</th>
+                  <th class="col-md-2">Project</th>
+                  <th class="col-md-2">Assign</th>
+                  <th class="col-md-2">Due </th>
                 </tr>
               </thead>
               <tbody>
@@ -45,24 +45,24 @@
                       <input type="checkbox" class="i-checks" id=<%=n.id  %> >
                     </td>
                     <td>
-                      <% if !n.project.nil? %>
-                      <%=n.project.name %>
+                      <% if n.category== Notification::CATEGORY[:Action] %>
+                        <span class="label label-primary">
+                      <% else %>
+                        <span class="label label-success">
                       <% end %>
+                        <%= n.category%>
+                        </span>
                     </td>
                     <td>
-                    <% if n.category== Notification::CATEGORY[:Action] %>
-                      <span class="label label-primary">
-                    <% else %>
-                      <span class="label label-success">
-                    <% end %>
-                      <%= n.category%>
-                      </span>
-                    </td>
-                    <td>
-                      <div><%= best_in_place n, :name, :as => :input, :place_holder => '(Add subject)' %></div>
+                      <div style="font-size:14px"><%= best_in_place n, :name, :as => :input, :place_holder => '(Add title)' %></div>
                       <div><small>
                          <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12',
                 :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>
+                    </td>
+                    <td>
+                      <% if !n.project.nil? %>
+                      <%=n.project.name %>
+                      <% end %>
                     </td>
                     <td>
                       <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add assignee)'%>
@@ -87,31 +87,3 @@
 </div>
 
 <%= render 'notifications/modal', modal_id: 'new_notification_modal' %>
-
-<script type="text/javascript">
-
-$(document).ready(function() {
-    $('#notifications-table').DataTable();
-} );
-
-$(function() {
-    $('.i-checks').iCheck({
-        checkboxClass: 'icheckbox_square-green'
-    });
-});
-
-$('input').on('ifChecked', function(event){
-  $(this).parent().parent().parent().attr("bgcolor", "#eeeeee");
-  $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
-  // var temp = "#best_in_place_notification_" + $(this).attr('id') + "_name"
-  // $(temp).css({'display' : 'inline-block'});
-});
-
-
-$('input').on('ifUnchecked', function(event){
-  $(this).parent().parent().parent().attr("bgcolor", "");
-  $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
-});
-
-
-</script>
