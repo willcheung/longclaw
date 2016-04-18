@@ -18,8 +18,8 @@
                     <h5>Open Action Items</h5>
                 </div>
                 <div class="ibox-content">
-                    <h1 class="no-margins">24</h1>
-                    <div class="m-t-sm"><a>See details &rarr;</a></div>
+                    <h1 class="no-margins"><%= @open_action_items %></h1>
+                    <div class="m-t-sm"><a href="<%= notifications_path %>">See details &rarr;</a></div>
                 </div>
             </div>
         </div>
@@ -30,7 +30,7 @@
                 </div>
                 <div class="ibox-content">
                     <h1 class="no-margins"><%= @activities_count_7_days %></h1>
-                    <div class="m-t-sm"><a>See details &rarr;</a></div>
+                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
                 </div>
             </div>
         </div>
@@ -52,7 +52,7 @@
                 </div>
                 <div class="ibox-content">
                     <h1 class="no-margins"><%= @projects.reduce(0) { |sum, p| sum + p.activities.length } %></h1>
-                    <div class="m-t-sm"><a>See details &rarr;</a></div>
+                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
                 </div>
             </div>
         </div>
@@ -379,13 +379,7 @@
                 enabled: false
             },
             legend: {
-                layout: 'horizontal',
-                align: 'center',
-                y: 20,
-                itemStyle: {
-                 fontSize:'10px'
-                },
-                itemDistance: 10
+                enabled: false
             },
             series: [
                 {
