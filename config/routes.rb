@@ -17,10 +17,16 @@ Longclaw::Application.routes.draw do
     delete "project_subscribers/destroy_other"
     resources :project_members
     resources :users
+    resources :notifications, only: [:index, :show, :update, :create]
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "settings/" => 'settings#index'
     get "settings/super_user" => 'settings#super_user'
     post "settings/invite_user/:user_id" => 'settings#invite_user'
+
+    # get "sasuke/" => 'notifications#sasuke'
+    get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
+    # get "notifications/:id/woof" => 'notifications#woof'
+
     
     resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy], shallow: true

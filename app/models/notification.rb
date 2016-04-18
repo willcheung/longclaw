@@ -24,13 +24,13 @@
 #
 
 class Notification < ActiveRecord::Base
-	# belongs_to  :projects, foreign_key: "project_id"
+	belongs_to  :project, foreign_key: "project_id"
 	# belongs_to  :activities, foreign_key: "conversation_id"
-	# belongs_to  :assigned, :class_name => "User", foreign_key: "assign_to"
- #  belongs_to  :complete_user, :class_name => "User", foreign_key: "completed_by"
+  # belongs_to   :users, foreign_key: "assign_to"
+	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
+  belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
-  CATEGORY = { Newproject: 'New project stream notification', Newcontact: 'New contacts notification', Followup: 'Follow ups / action items', Todo: 'To-do', Risks: 'Risks', Opportunities: 'Opportunities' }
-
+  CATEGORY = { Notification: 'Notification', Action: 'Action Item', Todo: 'To-do', Risk: 'Risk', Opportunity: 'Opportunity' }
 
 	def self.load(data, project, test=false)
 		notifications = []
@@ -84,7 +84,7 @@ class Notification < ActiveRecord::Base
               next
             end
 
-    	      notification = Notification.new(category: 'To-do',
+    	      notification = Notification.new(category: 'Action Item',
       	      	name: contextMessage.subject,
       	      	description: description,
       	        message_id: contextMessage.messageId,
@@ -108,7 +108,7 @@ class Notification < ActiveRecord::Base
   def self.find_project_and_user(array_of_project_ids)
 
     query = <<-SQL
-      SELECT notifications.*, users.first_name, users.last_name FROM notifications LEFT JOIN users ON users.id = notifications.assign_to where project_id in ('#{array_of_project_ids.join("','")}') AND notifications.is_complete = false
+      SELECT notifications.*, users.first_name, users.last_name FROM notifications LEFT JOIN users ON users.id = notifications.assign_to where project_id in ('#{array_of_project_ids.join("','")}') AND notifications.is_complete = false ORDER BY original_due_date DESC
     SQL
 
     Notification.find_by_sql(query)
