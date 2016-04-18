@@ -23,7 +23,10 @@
 #  updated_at        :datetime         not null
 #
 
+include ActionView::Helpers::DateHelper
+
 class Notification < ActiveRecord::Base
+
 	belongs_to  :project, foreign_key: "project_id"
 	belongs_to  :activity, foreign_key: "conversation_id"
 	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"

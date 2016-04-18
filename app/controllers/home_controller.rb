@@ -28,15 +28,6 @@ class HomeController < ApplicationController
       @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
       @project_min_chg = project_chg_activities.min_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev <= 0 }
 
-      project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id)
-                                    .joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t 
-                                                          ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
-                                    .select("projects.name, projects.id, projects.category, t.last_sent_date_epoch as last_sent_date, activities.from")
-                                    .where("activities.category = 'Conversation'")
-                                    .where(account_type_filter)
-                                    .group("t.last_sent_date_epoch, activities.from")
-      @project_follow_up = project_last_activity_date.min_by(5) { |x| x.last_sent_date }
-
       @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.map(&:id), current_user.time_zone)
       @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.map(&:id), current_user.organization.domain, current_user.time_zone)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name

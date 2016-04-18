@@ -260,4 +260,12 @@ class Project < ActiveRecord::Base
     return project_chg_activities
 	end
 
+	def self.find_stale_projects_30_days
+      return project_last_activity_date = Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t 
+                                                      ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
+                                .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
+                                .where("activities.category = 'Conversation' and projects.status='Active' and (t.last_sent_date_epoch::integer + 2592000) < EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)")
+                                .group("t.last_sent_date_epoch, activities.from, projects.name, projects.id, projects.account_id")
+  end
+
 end
