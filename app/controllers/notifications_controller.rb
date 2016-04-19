@@ -8,8 +8,7 @@ class NotificationsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").includes(:notifications)
 
  
-    # if !projects.empty?
-    if false
+    if !projects.empty?
       #@notifications = Notification.find_project_and_user(projects.map(&:id))
       projects.each do |p| 
         p.notifications.each do |n|
