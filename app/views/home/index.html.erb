@@ -15,11 +15,11 @@
         <div class="col-lg-3">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Open Action Items</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open action items in notification center."></i>
+                    <h5>Open Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open tasks."></i>
                 </div>
                 <div class="ibox-content">
-                    <h1 class="no-margins"><%= @open_action_items %></h1>
+                    <h1 class="no-margins"><%= @open_tasks %></h1>
                     <div class="m-t-sm"><a href="<%= notifications_path %>">See details &rarr;</a></div>
                 </div>
             </div>
@@ -27,11 +27,11 @@
         <div class="col-lg-3">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Closed Action Items</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of action items that have been closed in the past 7 days."></i>
+                    <h5>Completed Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of tasks that have been completed in the past 7 days."></i>
                 </div>
                 <div class="ibox-content">
-                    <h1 class="no-margins"><%= @closed_action_items %></h1>
+                    <h1 class="no-margins"><%= @closed_tasks %></h1>
                     <div class="m-t-sm"><a href="<%= notifications_path %>">See details &rarr;</a></div>
                 </div>
             </div>
