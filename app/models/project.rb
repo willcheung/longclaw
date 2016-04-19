@@ -231,6 +231,9 @@ class Project < ActiveRecord::Base
 				# Automatically subscribe to projects created
 				project.subscribers.create(user_id: user_id)
 
+				# Load Smart Tasks
+				Notification.load(get_project_conversations(data, p), project, false)
+
 				# Project activities
 				Activity.load(get_project_conversations(data, p), project, true, user_id)
 			end

@@ -4,6 +4,7 @@ class NotificationsController < ApplicationController
   def index
 
     @notifications = []
+
     projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").includes(:notifications)
 
  
@@ -30,8 +31,6 @@ class NotificationsController < ApplicationController
         end
       end
       #@notifications = projects.collect { |p| p.notifications.all.include([:assigned_to, :project, :completed_by]) }
-    else
-      @notifications = nil
     end
 
   end
