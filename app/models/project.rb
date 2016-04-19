@@ -232,7 +232,7 @@ class Project < ActiveRecord::Base
 				project.subscribers.create(user_id: user_id)
 
 				# Load Smart Tasks
-				Notification.load(data, project, false)
+				Notification.load(get_project_conversations(data, p), project, false)
 
 				# Project activities
 				Activity.load(get_project_conversations(data, p), project, true, user_id)
