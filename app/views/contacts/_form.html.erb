@@ -1,17 +1,18 @@
-<%= form_for(@contact) do |f| %>
-  <% if @contact.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(@contact.errors.count, "error") %> prohibited this contact from being saved:</h2>
+<% remote ||= false %>
+<%= simple_form_for :contact, url: :contacts, remote: remote, html: {role: :form, 'data-model' => 'contact'}  do |f| %>
 
-      <ul>
-      <% @contact.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-      </ul>
-    </div>
-  <% end %>
+  <%# Added Bootstrap classes, and help-block container for error messages %>
+      <%= f.input :first_name, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :last_name, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :email, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :phone, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :title, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :account_id, as: :hidden, input_html: { value: params[:id] }, wrapper_html: { class: 'col-md-4'} %>
 
-  <div class="actions">
-    <%= f.submit %>
-  </div>
+      
+  <%# Added Bootstrap classes %>
+  
+    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
+ 
+
 <% end %>
