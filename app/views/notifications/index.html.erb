@@ -21,7 +21,7 @@
     <div class="col-lg-12">
       <% if @notifications.empty? %>
         <div class="text-center m-t-lg">
-          <h3>No notifications found.</h3>
+          <h3>Great, you've completed all your tasks!</h3>
         </div>
       <% else %>
         <div class="ibox float-e-margins">
@@ -45,10 +45,14 @@
                       <input type="checkbox" class="i-checks" id=<%=n.id  %> >
                     </td>
                     <td>
-                      <% if n.category== Notification::CATEGORY[:Action] %>
+                      <% if n.category == Notification::CATEGORY[:Action] %>
                         <span class="label label-primary">
-                      <% else %>
+                      <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
                         <span class="label label-success">
+                      <% elsif n.category == Notification::CATEGORY[:Todo] %>  
+                        <span class="label label-info">
+                      <% else %>
+                        <span class="label label-warning">
                       <% end %>
                         <%= n.category%>
                         </span>
@@ -63,13 +67,13 @@
                       <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)' %>
                     </td>
                     <td>
-                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add assignee)'%>     
+                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add)'%>     
                     </td>
                     <td>
                       <% if n.original_due_date.nil? %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)', :inner_class => "due_date_datepicker" %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :inner_class => "due_date_datepicker" %>
                       <% else %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add date)', :innner_class => "due_date_datepicker", :display_with => Proc.new { n.original_due_date.strftime('%Y-%m-%d')}    %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { n.original_due_date.strftime('%Y-%m-%d')}    %>
                       <% end %>
                     </td>
                     <td>
