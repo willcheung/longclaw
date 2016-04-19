@@ -56,7 +56,7 @@ namespace :projects do
 	task last_touch_weekly: :environment do
 		puts "\n\n=====Task (last_touch_weekly) started at #{Time.now}====="
 
-		if Time.now.sunday?
+		if Time.now.tuesday?
       stale_projects = Project.find_stale_projects_30_days
       stale_projects.each do |p|
         puts p.inspect
