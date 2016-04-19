@@ -61,7 +61,7 @@ class Notification < ActiveRecord::Base
           end
 
           assign_to = User.find_by email: contextMessage.from[0].address
-          if(assign_to.nil?)
+          if(assign_to.nil? and !contextMessage.to.nil? )
             assign_to = User.find_by email: contextMessage.to[0].address
           end
 
