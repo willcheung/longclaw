@@ -541,6 +541,12 @@ code {
   border-width: 0;
 }
 
+.ibox-subcontent:nth-child(2) {
+  @media screen and (min-width: 1200px) {
+    border-right-width: 1px;
+  }
+}
+
 table.table-mail tr td {
   padding: 12px;
 }
@@ -581,12 +587,20 @@ table.table-mail tr td {
   font-size: 24px;
 }
 
-.ibox-title h5 {
+.ibox-title h3, .ibox-title h5 {
   display: inline-block;
-  font-size: 14px;
   padding: 0;
   text-overflow: ellipsis;
   float: left;
+}
+
+.ibox-title h5 {
+  font-size: 14px;
+}
+
+.ibox-title h3 {
+  font-size: 17px;
+  margin-top: 3px;
 }
 
 .ibox-title .label {
