@@ -234,11 +234,11 @@ class Project < ActiveRecord::Base
 				# Load Smart Tasks
 				Notification.load(get_project_conversations(data, p), project, false)
 
-				# Load Opportunities
-				Notification.load_opportunity_for_stale_projects(project)
-
 				# Project activities
 				Activity.load(get_project_conversations(data, p), project, true, user_id)
+
+				# Load Opportunities
+				Notification.load_opportunity_for_stale_projects(project)
 			end
 		end
 	end
