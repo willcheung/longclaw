@@ -111,7 +111,7 @@ class Notification < ActiveRecord::Base
     if project.nil?
       stale_projects = Project.find_stale_projects_30_days
     else
-      stale_projects = p.is_stale_project_30_days
+      stale_projects = project.is_stale_project_30_days
     end
     
     stale_projects.each do |p|

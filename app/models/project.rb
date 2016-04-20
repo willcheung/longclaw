@@ -235,7 +235,7 @@ class Project < ActiveRecord::Base
 				Notification.load(get_project_conversations(data, p), project, false)
 
 				# Load Opportunities
-				Notification.load_opportunity_for_stale_projects(p)
+				Notification.load_opportunity_for_stale_projects(project)
 
 				# Project activities
 				Activity.load(get_project_conversations(data, p), project, true, user_id)
