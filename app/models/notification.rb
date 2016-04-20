@@ -107,6 +107,32 @@ class Notification < ActiveRecord::Base
 	  end
 	end
 
+  def self.load_opportunity_for_stale_projects(project=nil)
+    if project.nil?
+      stale_projects = Project.find_stale_projects_30_days
+    else
+      stale_projects = p.is_stale_project_30_days
+    end
+    
+    stale_projects.each do |p|
+      notification = Notification.new(category: 'Opportunity',
+                                      name: "Check in with #{p.account.name}",
+                                      description: "Last touch #{time_ago_in_words(Time.at(p.last_sent_date.to_i))} ago by #{p.from[0]['personal']}",
+                                      message_id: '',
+                                      project_id: p.id,
+                                      conversation_id: '',
+                                      sent_date: '',
+                                      original_due_date: '',
+                                      remind_date: '',
+                                      is_complete: false,
+                                      assign_to: '',
+                                      content_offset: -1,
+                                      has_time: false)
+
+      notification.save
+    end
+  end
+
   def self.find_project_and_user(array_of_project_ids)
 
     query = <<-SQL

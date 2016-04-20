@@ -57,25 +57,7 @@ namespace :projects do
 		puts "\n\n=====Task (last_touch_weekly) started at #{Time.now}====="
 
 		if Time.now.sunday?
-      stale_projects = Project.find_stale_projects_30_days
-      stale_projects.each do |p|
-        puts p.inspect
-        notification = Notification.new(category: 'Opportunity',
-                  name: "Check in with #{p.account.name}",
-                  description: "Last touch #{time_ago_in_words(Time.at(p.last_sent_date.to_i))} ago by #{p.from[0]['personal']}",
-                  message_id: '',
-                  project_id: p.id,
-                  conversation_id: '',
-                  sent_date: '',
-                  original_due_date: '',
-                  remind_date: '',
-                  is_complete: false,
-                  assign_to: '',
-                  content_offset: -1,
-                  has_time: false)
-
-        notification.save
-      end
+    	Notification.load_opportunity_for_stale_projects
     end
 	end
 end

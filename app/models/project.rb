@@ -36,7 +36,7 @@ class Project < ActiveRecord::Base
 	has_many	:contacts, through: "project_members"
 	has_many	:users, through: "project_members"
 	has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
-  has_many  :notifications
+  has_many  :notifications, dependent: :nullify
 
 	scope :visible_to, -> (organization_id, user_id) {
 		select('DISTINCT(projects.*)')
@@ -234,6 +234,9 @@ class Project < ActiveRecord::Base
 				# Load Smart Tasks
 				Notification.load(get_project_conversations(data, p), project, false)
 
+				# Load Opportunities
+				Notification.load_opportunity_for_stale_projects(p)
+
 				# Project activities
 				Activity.load(get_project_conversations(data, p), project, true, user_id)
 			end
@@ -268,6 +271,14 @@ class Project < ActiveRecord::Base
                                                       ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
                                 .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
                                 .where("activities.category = 'Conversation' and projects.status='Active' and (t.last_sent_date_epoch::integer + 2592000) < EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)")
+                                .group("t.last_sent_date_epoch, activities.from, projects.name, projects.id, projects.account_id")
+  end
+
+  def is_stale_project_30_days
+  	Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t 
+                                                      ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
+                                .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
+                                .where("activities.category = 'Conversation' and projects.status='Active' and projects.id = #{self.id} and (t.last_sent_date_epoch::integer + 2592000) < EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)")
                                 .group("t.last_sent_date_epoch, activities.from, projects.name, projects.id, projects.account_id")
   end
 
