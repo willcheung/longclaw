@@ -39,7 +39,7 @@ class UserMailer < ApplicationMailer
     @subs = user.subscriptions
 
     if !@subs.nil? and !@subs.empty?
-      @projects_with_tasks = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:notifications, :account]).where(open_or_recently_closed).group("notifications.id, accounts.id")
+      @projects_with_tasks = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
       @tasks = @projects_with_tasks.map(&:notifications).flatten
       # # @tasks = Notification.where(project_id: @subs.map(&:project_id)).where(open_or_recently_closed)
       @open_tasks = @tasks.reject { |t| t.is_complete }

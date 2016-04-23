@@ -38,7 +38,7 @@
 
 <!-- Project Details -->
 <% if @projects_with_tasks %>
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">Recently opened tasks:</h2>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">This week's new tasks:</h2>
 <% @projects_with_tasks.each do |p| %>
 
   <div style="padding:0;margin:0;">
@@ -65,24 +65,24 @@
                 <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
                    <tbody>
                       <tr style="padding:3px 0 3px 0;">
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:80%;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:70%;">
                             <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
                               <%= simple_format(n.name) %>
                             </span>          
                         </td> 
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20%;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:30%;">
                             <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
                               <%= simple_format(n.category) %>
                             </span>          
                         </td>
                       </tr>
-                      <tr style="padding:3px 0 3px 0;">                      
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:50%;">
+                      <tr style="padding:3px 0 3px 0;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:70%;">
                             <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
-                              <%= simple_format(n.assign_to) %>
+                              Assigned To: <%= get_full_name(n.assign_to_user) %>
                             </span>          
                         </td> 
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:50%;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:30%;">
                             <span style="font-weight:normal;font-size:12px;line-height:15px;display:block;">
                               Due Date: <%= n.original_due_date.strftime('%B %d, %Y') %>
                             </span>          
@@ -90,8 +90,6 @@
                               Created On: <%= n.created_at.strftime('%B %d, %Y') %>
                             </span>          
                         </td> 
-                        <!-- <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20%;">
-                        </td>  -->
                       </tr>
                     </tbody>
                 </table>
