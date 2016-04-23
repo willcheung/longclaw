@@ -143,8 +143,10 @@ class OnboardingController < ApplicationController
 		# Change user onboarding flag
 		current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
 
-		# Fire hubspot event to add new user to list
-		req = Net::HTTP.get(URI("http://track.hubspot.com/v1/event?_n=000000617114&_a=2189465&email=#{current_user.email}&firstname=#{current_user.first_name}&lastname=#{current_user.last_name}"))
+		if ENV["RAILS_ENV"] == 'production'
+			# Fire hubspot event to add new user to list
+			req = Net::HTTP.get(URI("http://track.hubspot.com/v1/event?_n=000000617114&_a=2189465&email=#{current_user.email}&firstname=#{current_user.first_name}&lastname=#{current_user.last_name}"))
+		end
 	end
 
 	#########################################################################
