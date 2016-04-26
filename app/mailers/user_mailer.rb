@@ -43,10 +43,10 @@ class UserMailer < ApplicationMailer
       @tasks = @projects_with_tasks.map(&:notifications).flatten
       # # @tasks = Notification.where(project_id: @subs.map(&:project_id)).where(open_or_recently_closed)
       @open_tasks = @tasks.reject { |t| t.is_complete }
-      # @closed_tasks_count = @tasks.length - @open_tasks.length
+      @closed_tasks_count = @tasks.length - @open_tasks.length
       # @assigned_tasks = @open_tasks.select { |t| t.assign_to == user.id }
       # @overdue_tasks = @open_tasks.select { |t| t.original_due_date < Time.current }
-      # @recent_tasks = @open_tasks.select { |t| t.created_at > 7.days.ago }
+      @recent_tasks_count = @open_tasks.select { |t| t.created_at > 7.days.ago }.length
 
       track user: user # ahoy_email tracker
       mail(to: user.email, subject: "Weekly Summary for #{1.week.ago.strftime('%A, %B %d')} - #{Time.current.strftime('%A, %B %d')}")

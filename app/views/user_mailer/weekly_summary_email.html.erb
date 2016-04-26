@@ -6,7 +6,7 @@
     <th class="center" style="width:2%;padding:0 10px;white-space:nowrap;vertical-align:middle">
       <center>
         <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">
-          Weekly Summary<br>
+          Weekly Task Summary<br>
           <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= 1.week.ago.strftime('%A, %B %d') + ' - ' + Time.current.strftime('%A, %B %d') %></span>
         </h1>
       <center>
@@ -38,8 +38,11 @@
 
 <!-- Project Details -->
 <% if @projects_with_tasks %>
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">This week's new tasks:</h2>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333"><%= @recent_tasks_count %> new tasks from last week:</h2>
 <% @projects_with_tasks.each do |p| %>
+  <!-- Recent Open Notifications -->
+  <% tasks = p.notifications.select { |n| !n.is_complete && n.created_at > 7.days.ago } %>
+  <% if !tasks.empty? %>
 
   <div style="padding:0;margin:0;">
     
@@ -57,50 +60,62 @@
 
     <div style="margin-bottom:15px;margin-top:5px;padding:0"></div>
 
-    <!-- Recent Open Notifications -->
-    <% p.notifications.select { |n| !n.is_complete && n.created_at > 7.days.ago }.each do |n| %>
+    <% tasks.each do |n| %>
       
-      <div style="font-size:14px;margin-left:20px;margin-bottom:20px;padding:0 0 6px 0;">
+      <div style="font-size:14px;padding:0 0 6px 0;">
             
                 <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
                    <tbody>
-                      <tr style="padding:3px 0 3px 0;">
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:70%;">
-                            <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
-                              <%= simple_format(n.name) %>
+                      <tr style="padding:3px 0 3px 0;border-top:1px solid #e7eaec;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:80%;">
+                            <span style="font-weight:normal;font-size:12px;line-height:15px;">
+                              <%= n.name %>
                             </span>          
                         </td> 
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:30%;">
-                            <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
-                              <%= simple_format(n.category) %>
-                            </span>          
-                        </td>
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20%;">&nbsp;</td> 
                       </tr>
                       <tr style="padding:3px 0 3px 0;">
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:70%;">
-                            <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
-                              Assigned To: <%= get_full_name(n.assign_to_user) %>
-                            </span>          
-                        </td> 
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:30%;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:80%;">
+                            <!-- <span style="font-weight:normal;font-size:12px;line-height:15px;">
+                              <%= n.category %>
+                            </span>-->
+                            <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
+                            <% if n.category == Notification::CATEGORY[:Action] %>
+                              background-color:#3C8DC5">
+                            <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                              background-color:#A1C436">
+                            <% elsif n.category == Notification::CATEGORY[:Todo] %>  
+                              background-color:#3cc5b9">
+                            <% else %>
+                              background-color:#e58646">
+                            <% end %>
+                              <%= n.category%>
+                            </span>
                             <span style="font-weight:normal;font-size:12px;line-height:15px;display:block;">
                               Due Date: <%= n.original_due_date.strftime('%B %d, %Y') %>
                             </span>          
                             <span style="font-weight:normal;font-size:12px;line-height:15px;display:block;">
                               Created On: <%= n.created_at.strftime('%B %d, %Y') %>
                             </span>          
-                        </td> 
+                        </td>
+                        <td>
+                          <% if n.assign_to %>
+                              <%= rounded_initials_for_email(get_full_name(n.assign_to_user), n.assign_to_user.email) %>
+                            <% else %>
+                              <span style="font-weight:normal;font-size:12px;line-height:15px;margin-left:-15px;color:grey">(unassigned)</span>
+                            <% end %>
+                        </td>
                       </tr>
                     </tbody>
                 </table>
 
       </div>
 
-    <% end %>
+      <% end %>
 
   </div>
     
-  <table class="row" style="margin-top:-40px;margin-bottom:25px;">
+  <table class="row" style="margin-top:-10px;margin-bottom:25px;">
       <tr>
          <td style="padding: 6px; margin: 15px;">
             <a href="<%= project_url(p) %>" style="background-color:#ffffff;border:1px solid #3C8DC5;border-radius:4px;color:#3C8DC5;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to project stream</a>
@@ -108,6 +123,7 @@
          <td class="expander"></td>
       </tr>
   </table>
+    <% end %>
 
   <% end %>
 
