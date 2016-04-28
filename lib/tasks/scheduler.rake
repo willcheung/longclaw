@@ -40,12 +40,12 @@ namespace :projects do
 		puts "\n\n=====Task (email_daily_summary) started at #{Time.now}====="
 
 		Organization.all.each do |org|
-			org.users.each do |usr|
+			org.users.onboarded.each do |usr|
 				Time.use_zone(usr.time_zone) do
 					if Time.current.hour == 5 # In the hour of 5am
 						puts "Emailing #{usr.email}..."
 						UserMailer.daily_summary_email(usr).deliver_later
-						sleep(0.5)
+						sleep(1)
 					end
 				end
 			end
