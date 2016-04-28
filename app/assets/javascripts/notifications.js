@@ -5,11 +5,11 @@ $(document).ready(function() {
     $('#notifications-table').DataTable({
     	responsive: true,
 	    columnDefs: [
-	      { searchable: false, targets: [0,1,3,4,5]},
-	      { orderable: false, targets: [0,1,2] }
+	      { searchable: false, targets: [0,1,3,4,5,6,7]},
+	      { orderable: false, targets: [0,1,2,3] }
 	    ],
 	    "bPaginate": false,
-	    "order": [[ 6, "desc" ]],
+	    "order": [[ 7, "desc" ]],
 	    "dom":' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
 	    "language": {
       search: "_INPUT_",
