@@ -65,7 +65,7 @@
                     </td>
                     <td>
                         <% if n.category == Notification::CATEGORY[:Action] %>
-                        <div class="hoverToolTip" data-id="<%=n.id %>" data-conversationid="<%=n.conversation_id %>" data-projectid="<%=n.project_id %>" data-messageid="<%=n.message_id%>">
+                        <div class="hoverToolTip" data-placement="right" data-id="<%=n.id %>" data-conversationid="<%=n.conversation_id %>" data-projectid="<%=n.project_id %>" data-messageid="<%=n.message_id%>">
                           <a href="<%= "projects/" + n.project_id.to_s+'#'+n.conversation_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
                         </div>
                         <% end %>
@@ -80,11 +80,11 @@
                       <% if n.original_due_date.nil? %>
                           <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :inner_class => "due_date_datepicker" %>
                       <% else %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { n.original_due_date.strftime('%Y-%m-%d')}    %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}    %>
                       <% end %>
                     </td>
                     <td>
-                      <div><%=n.created_at.strftime('%Y-%m-%d') %> <span style="display:none"><%=n.created_at.strftime('%H:%M:%S') %></span></div>
+                      <div><%=Time.zone.at(n.created_at).strftime('%Y-%m-%d') %> <span style="display:none"><%=Time.zone.at(n.created_at).strftime('%H:%M:%S') %></span></div>
                     </td>
                   </tr>
                 <% end %>
