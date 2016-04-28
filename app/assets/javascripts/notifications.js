@@ -47,3 +47,47 @@ jQuery(function($){
         yearSuffix: ''};
     $.datepicker.setDefaults($.datepicker.regional['ca']);
 });
+
+
+$('.hoverToolTip').tooltip({
+    title: hoverGetData,
+    html: true,
+    container: 'body',
+});
+
+
+var cachedData = Array();
+
+function hoverGetData(){
+    var element = $(this);
+
+    var id = element.data('id');
+    var conversationID = element.data('conversationid');
+    var projectID = element.data('projectid');
+    var messageID = element.data('messageid');
+
+    // console.log(conversationID);
+    // console.log(projectID);
+    // console.log(messageID);
+
+    if(id in cachedData){
+        return cachedData[id];
+    }
+
+    var localData = "error";
+
+    $.ajax('/notifications/show_email_body/'+id+'?conversation_id='+encodeURIComponent(conversationID)+'&message_id='+encodeURIComponent(messageID)+'&project_id='+ (projectID), {
+        async: false,
+        success: function(data){
+            localData = data;
+        }
+    });
+
+    cachedData[id] = localData;
+
+    return localData;
+}
+
+$('.hoverToolTip').hover(function(){
+     $('.tooltip-inner').css('background-color', 'white');
+});
