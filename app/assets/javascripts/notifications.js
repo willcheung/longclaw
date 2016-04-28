@@ -91,5 +91,19 @@ function hoverGetData(){
 }
 
 $('.hoverToolTip').hover(function(){
-     $('.tooltip-inner').css('background-color', 'white');
+    $('.tooltip-inner').css('background-color', 'white');
+    $('.tooltip-inner').css('opacity', '1');
+    
+    $('.tooltip').css('background-color', 'white');
+    $('.tooltip').css('opacity', '1');
+    $('.tooltip').css('border-style','solid');
+    $('.tooltip').css('border-width', '1px');
+    $('.tooltip').css('border-color', '#eeeeee');
+    $('.tooltip').css('boxShadow', '0px 0px 40px #aaaaaa');
+
+    $('.tooltip-inner-content').css('margin-bottom', '7px');
+    $('.tooltip-arrow').css('opacity', '0');
+
+
+
 });
