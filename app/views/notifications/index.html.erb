@@ -62,6 +62,11 @@
                       <div><small>
                          <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12',
                 :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>
+                <% if n.category == Notification::CATEGORY[:Action] %>
+                <div class="hoverToolTip" data-id="<%=n.id %>" data-conversationid="<%=n.conversation_id %>" data-projectid="<%=n.project_id %>" data-messageid="<%=n.message_id%>">
+                  <%= link_to "show email content", 'projects/'+n.project_id.to_s+'#'+n.conversation_id.to_s%>
+                </div>
+                <% end %>
                     </td>
                     <td>
                       <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)' %>
@@ -91,3 +96,4 @@
 </div>
 
 <%= render 'notifications/modal', modal_id: 'new_notification_modal' %>
+
