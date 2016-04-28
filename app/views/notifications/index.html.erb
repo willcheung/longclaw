@@ -32,6 +32,7 @@
                   <th class="col-md-1"></th>
                   <th class="col-md-1"></th>
                   <th class="col-md-5">Task</th>
+                  <th class="col-md-1"></th>
                   <th class="col-md-2">Project Stream</th>
                   <th class="col-md-2">Assign</th>
                   <th class="col-md-2">Due </th>
@@ -60,13 +61,14 @@
                     <td>
                       <div style="font-size:14px"><%= best_in_place n, :name, :as => :input, :place_holder => '(Add title)' %></div>
                       <div><small>
-                         <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12',
-                :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>
-                <% if n.category == Notification::CATEGORY[:Action] %>
-                <div class="hoverToolTip" data-id="<%=n.id %>" data-conversationid="<%=n.conversation_id %>" data-projectid="<%=n.project_id %>" data-messageid="<%=n.message_id%>">
-                  <%= link_to "show email content", 'projects/'+n.project_id.to_s+'#'+n.conversation_id.to_s%>
-                </div>
-                <% end %>
+                         <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>       
+                    </td>
+                    <td>
+                        <% if n.category == Notification::CATEGORY[:Action] %>
+                        <div class="hoverToolTip" data-id="<%=n.id %>" data-conversationid="<%=n.conversation_id %>" data-projectid="<%=n.project_id %>" data-messageid="<%=n.message_id%>">
+                          <a href="<%= "projects/" + n.project_id.to_s+'#'+n.conversation_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
+                        </div>
+                        <% end %>
                     </td>
                     <td>
                       <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)' %>

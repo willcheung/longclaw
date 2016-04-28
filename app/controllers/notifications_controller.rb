@@ -1,5 +1,6 @@
 class NotificationsController < ApplicationController
   include Utils
+  include ActionView::Helpers::TextHelper
   before_action :set_notification, only: [:update]
   before_action :set_visible_project_user, only: [:index, :show, :create]
   def index
@@ -25,9 +26,9 @@ class NotificationsController < ApplicationController
     result = get_email_and_member
     body = ""
     if !result.nil?
-      body = result[0] + '<br>' + result[1]
+      body = '<b>'+result[0] + '</b>'+result[1]+'<hr>' + result[2]
     end
-    render :text => body
+    render :text => simple_format(body, class: 'tooltip-inner-content')
   end
 
   def new
@@ -197,7 +198,7 @@ class NotificationsController < ApplicationController
 
     total = result[0].to.size + result[0].cc.size
 
-    member = result[0].from[0]['personal'] + ' to '
+    member = ' to '
 
     counter = 0
     result[0].to.each do |t|
@@ -223,9 +224,10 @@ class NotificationsController < ApplicationController
     end
 
 
-    final_result = Array.new(2)
-    final_result[0] = member
-    final_result[1] = body
+    final_result = Array.new(3)
+    final_result[0] = result[0].from[0]['personal']
+    final_result[1] = member
+    final_result[2] = body
 
     return final_result
   end
@@ -234,7 +236,7 @@ class NotificationsController < ApplicationController
     result = get_email_and_member
     @body = ""
     if !result.nil?
-      @body = result[0] + '<br>' + result[1]
+      @body = '<b>'+result[0] + '</b>'+result[1]+'<hr>' + result[2]
     end
   end
 end

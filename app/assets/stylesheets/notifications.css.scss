@@ -3,7 +3,8 @@
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
 .tooltip-inner {
-    max-width: 1024px;
+    max-width: 512px;
     color: black;
+    text-align: left;
+    padding: 20px 20px;
 }
-
