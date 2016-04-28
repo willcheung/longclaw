@@ -1,6 +1,8 @@
 // Place all the behaviors and hooks related to the matching controller here.
 // All this logic will automatically be available in application.js.
 
+//= require datepicker/bootstrap-datepicker.js
+
 $(document).ready(function() {
     $('#notifications-table').DataTable({
     	responsive: true,
