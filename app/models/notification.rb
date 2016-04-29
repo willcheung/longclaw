@@ -77,7 +77,8 @@ class Notification < ActiveRecord::Base
             o_due_date = Time.at(t.resolvedDates[0]).utc
             has_time = t.hasTime.to_s
             if has_time == 'false'
-              o_due_date = Time.new(o_due_date.year, o_due_date.month, o_due_date.day).utc
+              local_due_date = Time.zone.at(o_due_date)
+              o_due_date = Time.new(local_due_date.year, local_due_date.month, local_due_date.day).utc
             end
             remind_date = o_due_date.yesterday.utc
 
