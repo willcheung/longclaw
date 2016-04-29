@@ -2,11 +2,11 @@
 <%= simple_form_for :notification, remote: remote do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
-      <%= f.input :name, wrapper_html: { class: 'col-md-4'} %>
-      <%= f.input :description, wrapper_html: { class: 'col-md-8'} %>
-      <%= f.input :project_id, wrapper_html: { class: 'col-xs-8'}, collection:  @projects ,selected: @projects%>
-      <%= f.input :assign_to, wrapper_html: { class: 'col-xs-4'}, collection:  @users,  selected:  @users%>
-      <%= f.input :original_due_date, as: :string, wrapper_html: { class: 'col-xs-8'} %>
+      <%= f.input :name, wrapper_html: { class: 'col-md-5'}, label: "Task" %>
+      <%= f.input :description, wrapper_html: { class: 'col-md-7'} %>
+      <%= f.input :project_id, wrapper_html: { class: 'col-xs-8'}, collection:  @projects, selected: @projects, label: "Project Stream" %>
+      <%= f.input :assign_to, wrapper_html: { class: 'col-xs-4'}, collection:  @users,  selected:  @users %>
+      
   <%# Added Bootstrap classes %>
   
     <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
