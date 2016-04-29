@@ -44,7 +44,7 @@ class UserMailer < ApplicationMailer
       # # @tasks = Notification.where(project_id: @subs.map(&:project_id)).where(open_or_recently_closed)
       @open_tasks = @tasks.reject { |t| t.is_complete }
       @closed_tasks_count = @tasks.length - @open_tasks.length
-      # @assigned_tasks = @open_tasks.select { |t| t.assign_to == user.id }
+      @assigned_tasks_count = @open_tasks.select { |t| t.assign_to == user.id }.length
       # @overdue_tasks = @open_tasks.select { |t| t.original_due_date < Time.current }
       @recent_tasks_count = @open_tasks.select { |t| t.created_at > 7.days.ago }.length
 

@@ -22,7 +22,19 @@
 <% unless @projects_with_tasks %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">No task activity this week</h2>
 <% else %>
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You have <%= pluralize(@open_tasks.length, 'task') %> open in <%= pluralize(@projects_with_tasks.length, 'project') %>:</h2>
+  <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
+     <tbody>
+        <tr style="border:1px solid #c1c1c1;">
+         <td style="color:#37c597;font-size:48px;font-weight:bold;padding-right:8px;width:100px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= @closed_tasks_count %></td>
+         <td style="color:#37c597;font-size:16px;padding-right:10px;width:80px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;"><%= 'Task'.pluralize(@closed_tasks_count) %> Completed</td>
+         <td style="color:#898e95;font-size:48px;font-weight:bold;padding-right:8px;width:100px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= @open_tasks.length %></td>
+         <td style="color:#898e95;font-size:16px;padding-right:10px;width:50px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;"><%= 'Task'.pluralize(@open_tasks.length) %> Open</td>
+         <td style="color:#ed5565;font-size:48px;font-weight:bold;padding-right:8px;width:100px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= @assigned_tasks_count %></td>
+         <td style="color:#ed5565;font-size:16px;padding-right:10px;width:120px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;">Open <%= 'Task'.pluralize(@assigned_tasks_count) %> Assigned To You</td>
+        </tr>
+     </tbody>
+  </table>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">In <%= pluralize(@projects_with_tasks.length, 'Project') %>:</h2>
 
   <ul style="margin:0 0 10px;list-style:none;padding:0">
     <% @projects_with_tasks.each do |p| %>
@@ -51,9 +63,9 @@
        <tbody>
           <tr>
              <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
-                <h2 style="line-height:24px;font-weight:bold;display:inline;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= p.name %> Tasks</span></h2>
+                <h2 style="line-height:24px;font-weight:bold;display:inline;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= p.name %></span></h2>
              </th>
-             <td style="text-align:left;font-size:15px;line-height:19px;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
+             <td style="text-align:left;font-size:15px;line-height:19px;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"></td>
           </tr>
        </tbody>
     </table>
@@ -66,7 +78,7 @@
             
                 <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
                    <tbody>
-                      <tr style="padding:3px 0 3px 0;border-top:1px solid #e7eaec;">
+                      <tr style="padding:3px 0 3px 0;border-top:1px solid #c1c1c1;">
                         <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:80%;">
                             <span style="font-weight:normal;font-size:12px;line-height:15px;">
                               <%= n.name %>
@@ -76,9 +88,6 @@
                       </tr>
                       <tr style="padding:3px 0 3px 0;">
                         <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:80%;">
-                            <!-- <span style="font-weight:normal;font-size:12px;line-height:15px;">
-                              <%= n.category %>
-                            </span>-->
                             <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
                             <% if n.category == Notification::CATEGORY[:Action] %>
                               background-color:#3C8DC5">
