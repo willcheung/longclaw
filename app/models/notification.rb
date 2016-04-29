@@ -75,11 +75,11 @@ class Notification < ActiveRecord::Base
             context_end = t.taskAnnotation.endOffset.to_i
             description = contextMessage.content.body[context_start..context_end]
             o_due_date = Time.at(t.resolvedDates[0]).utc
+            # rake have no idea about local time zone, Time.zone.at will just return the time zone in application.rb
+            # so can't covert to user local time.
+            # don't deal with has_time = false (previously we change the hour and min to 0)
+            # just use back end garbage time.
             has_time = t.hasTime.to_s
-            if has_time == 'false'
-              local_due_date = Time.zone.at(o_due_date)
-              o_due_date = Time.new(local_due_date.year, local_due_date.month, local_due_date.day).utc
-            end
             remind_date = o_due_date.yesterday.utc
 
             if Notification.find_by project_id: project.id, conversation_id: c.conversationId, message_id: contextMessage.messageId, content_offset: context_start 
