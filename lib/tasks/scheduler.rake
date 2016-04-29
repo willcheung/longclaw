@@ -68,7 +68,7 @@ namespace :projects do
 		Organization.all.each do |org|
 			org.users.each do |usr|
 				Time.use_zone(usr.time_zone) do
-					if Time.current.hour == 17 && Time.current.sunday? # In the hour of 5pm on Sundays
+					if Time.current.sunday? # In the hour of 5pm on Sundays
 						puts "Emailing #{usr.email}..."
 						UserMailer.weekly_summary_email(usr).deliver_later
 						sleep(0.5)
