@@ -13,9 +13,7 @@ class NotificationsController < ApplicationController
       projects.each do |p| 
         p.notifications.each do |n|
           if(n.is_complete==false)
-            if(n.sent_date.nil? || n.sent_date > Date.today-7.days)
-              @notifications.push n
-            end
+            @notifications.push n
           end
         end
       end
