@@ -39,7 +39,8 @@ class NotificationsController < ApplicationController
     result = get_email_and_member
     body = ""
     if !result.nil?
-      body = '<b>'+result[0] + '</b>'+result[1]+'<hr>' + result[2]
+      sent_time = Time.zone.at(result[3]).strftime('%b %e').to_s
+      body = '<b>'+result[0] + '</b>'+result[1]+'<br><font color="gray">'+sent_time+'</font><hr>' + result[2]
     end
     render :text => simple_format(body, class: 'tooltip-inner-content')
   end
@@ -194,10 +195,11 @@ class NotificationsController < ApplicationController
       SELECT messages->>'content' as content,
              messages->'from' as from, 
              messages -> 'to' as to,
-             messages -> 'cc' as cc
+             messages -> 'cc' as cc,
+             messages ->> 'sentDate' as sentdate
       FROM activities, LATERAL jsonb_array_elements(email_messages) messages
       where backend_id='#{params[:conversation_id]}' and messages ->>'messageId' = '#{params[:message_id]}' and project_id = '#{params[:project_id]}'
-      GROUP BY 1,2,3,4;
+      GROUP BY 1,2,3,4,5;
     SQL
 
     result= Activity.find_by_sql(query)
@@ -208,7 +210,7 @@ class NotificationsController < ApplicationController
 
     email = JSON.parse(result[0].content)
     body = email['body']
-
+    sentdate = result[0].sentdate
     total = result[0].to.size + result[0].cc.size
 
     member = ' to '
@@ -237,10 +239,13 @@ class NotificationsController < ApplicationController
     end
 
 
-    final_result = Array.new(3)
+    final_result = Array.new(4)
     final_result[0] = result[0].from[0]['personal']
     final_result[1] = member
     final_result[2] = body
+    final_result[3] = sentdate.to_i
+
+
 
     return final_result
   end
@@ -249,7 +254,8 @@ class NotificationsController < ApplicationController
     result = get_email_and_member
     @body = ""
     if !result.nil?
-      @body = '<b>'+result[0] + '</b>'+result[1]+'<hr>' + result[2]
+      sent_time = Time.zone.at(result[3]).strftime('%b %e').to_s
+      @body = '<b>'+result[0] + '</b>'+result[1]+'<br>'+sent_time+'<hr>' + result[2]
     end
   end
 end
