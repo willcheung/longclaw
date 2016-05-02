@@ -32,6 +32,7 @@
                   <th class="col-md-1"></th>
                   <th class="col-md-1"></th>
                   <th class="col-md-5">Task</th>
+                  <th class="col-md-1"></th>
                   <th class="col-md-2">Project Stream</th>
                   <th class="col-md-2">Assign</th>
                   <th class="col-md-2">Due </th>
@@ -60,8 +61,14 @@
                     <td>
                       <div style="font-size:14px"><%= best_in_place n, :name, :as => :input, :place_holder => '(Add title)' %></div>
                       <div><small>
-                         <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12',
-                :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>
+                         <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>       
+                    </td>
+                    <td>
+                        <% if n.category == Notification::CATEGORY[:Action] %>
+                        <div class="hoverToolTip" data-placement="right" data-id="<%=n.id %>" data-conversationid="<%=n.conversation_id %>" data-projectid="<%=n.project_id %>" data-messageid="<%=n.message_id%>">
+                          <a href="<%= "projects/" + n.project_id.to_s+'#'+n.conversation_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
+                        </div>
+                        <% end %>
                     </td>
                     <td>
                       <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)' %>
@@ -73,11 +80,11 @@
                       <% if n.original_due_date.nil? %>
                           <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :inner_class => "due_date_datepicker" %>
                       <% else %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { n.original_due_date.strftime('%Y-%m-%d')}    %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}    %>
                       <% end %>
                     </td>
                     <td>
-                      <div><%=n.created_at.strftime('%Y-%m-%d') %> <span style="display:none"><%=n.created_at.strftime('%H:%M:%S') %></span></div>
+                      <div><%=Time.zone.at(n.created_at).strftime('%Y-%m-%d') %> <span style="display:none"><%=Time.zone.at(n.created_at).strftime('%H:%M:%S') %></span></div>
                     </td>
                   </tr>
                 <% end %>
@@ -91,3 +98,4 @@
 </div>
 
 <%= render 'notifications/modal', modal_id: 'new_notification_modal' %>
+

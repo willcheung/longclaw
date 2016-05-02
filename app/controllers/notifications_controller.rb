@@ -1,4 +1,6 @@
 class NotificationsController < ApplicationController
+  include Utils
+  include ActionView::Helpers::TextHelper
   before_action :set_notification, only: [:update]
   before_action :set_visible_project_user, only: [:index, :show, :create]
   def index
@@ -7,36 +9,24 @@ class NotificationsController < ApplicationController
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").includes(:notifications)
 
- 
     if !projects.empty?
-      #@notifications = Notification.find_project_and_user(projects.map(&:id))
       projects.each do |p| 
         p.notifications.each do |n|
-          # puts "=================================="
-          # puts n.projects
-          # puts "=================================="
           if(n.is_complete==false)
-            # if true
-            if(n.sent_date.nil? || n.sent_date > Date.today-7.days)
-            # if(!n.original_due_date.nil?)
-            #   puts "=================================="
-            #   puts n.original_due_date
-            #   n.original_due_date = Time.zone.at(n.original_due_date).strftime('%m/%d/%Y') 
-            #   puts n.original_due_date
-            #   puts "=================================="
-            # end
-              @notifications.push n
-            end
+            @notifications.push n
           end
         end
       end
-      #@notifications = projects.collect { |p| p.notifications.all.include([:assigned_to, :project, :completed_by]) }
     end
-
   end
 
-  def show
-    @notification = Notification.find_by_id(params[:id])
+  def show_email_body
+    result = get_email_and_member
+    body = ""
+    if !result.nil?
+      body = '<b>'+result[0] + '</b>'+result[1]+'<hr>' + result[2]
+    end
+    render :text => simple_format(body, class: 'tooltip-inner-content')
   end
 
   def new
@@ -94,7 +84,7 @@ class NotificationsController < ApplicationController
     end  
   end
 
-  def show_mumber_by_org
+  def show_member_by_org
     query = <<-SQL
       SELECT user_id FROM project_members where project_id=('#{params[:id]}') and not user_id is NULL
     SQL
@@ -174,4 +164,77 @@ class NotificationsController < ApplicationController
    
   end
 
+  def get_email_and_member
+    @notification = Notification.find_by_id(params[:id])
+
+    if(params[:conversation_id].nil? || params[:message_id].nil? || params[:project_id].nil?)
+      return nil
+    end
+
+    if(params[:conversation_id].empty? || params[:message_id].empty? || params[:project_id].empty?)
+      return nil
+    end
+
+    query = <<-SQL
+      SELECT messages->>'content' as content,
+             messages->'from' as from, 
+             messages -> 'to' as to,
+             messages -> 'cc' as cc
+      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+      where backend_id='#{params[:conversation_id]}' and messages ->>'messageId' = '#{params[:message_id]}' and project_id = '#{params[:project_id]}'
+      GROUP BY 1,2,3,4;
+    SQL
+
+    result= Activity.find_by_sql(query)
+
+    if(result.nil?)
+      return nil
+    end
+
+    email = JSON.parse(result[0].content)
+    body = email['body']
+
+    total = result[0].to.size + result[0].cc.size
+
+    member = ' to '
+
+    counter = 0
+    result[0].to.each do |t|
+      if counter>=4
+        break
+      end
+      member = member + get_first_name(t['personal']) + ', '
+      counter = counter + 1
+    end
+
+    result[0].cc.each do |c|
+      if counter>=4
+        break
+      end
+      member = member + get_first_name(c['personal']) + ', '
+      counter = counter + 1
+    end
+
+    member.slice!(member.length-2, member.length)
+
+    if counter < total
+      member = member + ' and ' + (total-counter).to_s + ' others'
+    end
+
+
+    final_result = Array.new(3)
+    final_result[0] = result[0].from[0]['personal']
+    final_result[1] = member
+    final_result[2] = body
+
+    return final_result
+  end
+
+  def show
+    result = get_email_and_member
+    @body = ""
+    if !result.nil?
+      @body = '<b>'+result[0] + '</b>'+result[1]+'<hr>' + result[2]
+    end
+  end
 end

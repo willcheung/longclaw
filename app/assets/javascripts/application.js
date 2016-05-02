@@ -21,10 +21,6 @@
 //= require jstz/jstz.min.js
 //= require chosen/chosen.jquery.min.js
 //= require selectize/selectize.min.js
-//= require iCheck/icheck.min.js
-//= require daterangepicker/moment.min.js
-//= require daterangepicker/daterangepicker.js
-//= require datepicker/bootstrap-datepicker.js
 
 /* Ahoy analytics */
 ahoy.trackAll();
@@ -34,11 +30,6 @@ jQuery(function() {
   var tz = jstz.determine();
   $.cookie('timezone', tz.name(), { path: '/' });
 });
-
-if (!$.fn.bootstrapDP && $.fn.datepicker && $.fn.datepicker.noConflict) {
-   var datepicker = $.fn.datepicker.noConflict();
-   $.fn.bootstrapDP = datepicker;
-}
 
 
 $(document).ready(function() {
