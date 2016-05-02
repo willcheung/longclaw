@@ -39,7 +39,7 @@ class UserMailer < ApplicationMailer
 
     if !@subs.nil? and !@subs.empty?
       @projects_with_tasks = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
-      @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
+      @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
       # @tasks = @projects_with_tasks.map(&:notifications).flatten
       # @open_tasks = @tasks.reject { |t| t.is_complete }
       # @closed_tasks_count = @tasks.length - @open_tasks.length
