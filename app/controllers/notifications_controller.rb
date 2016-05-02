@@ -4,18 +4,33 @@ class NotificationsController < ApplicationController
   before_action :set_notification, only: [:update]
   before_action :set_visible_project_user, only: [:index, :show, :create]
   def index
-
+    
+    # only show valid notifications (both project and activities must be visible to user)
+    # for now will only show incomplete tasks
     @notifications = []
 
-    projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").includes(:notifications)
+    projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
+    total_notifications = Notification.find_project_and_user(projects.map(&:id))
+    activities = Notification.show_activity_by_notifications(total_notifications.map(&:conversation_id))
 
-    if !projects.empty?
-      projects.each do |p| 
-        p.notifications.each do |n|
-          if(n.is_complete==false)
-            @notifications.push n
-          end
-        end
+    visible_activities = []
+    activities.each do |a|
+      temp = Array.new(2)
+      temp[0] = a.project_id
+      temp[1] = a.backend_id
+      if a.is_visible_to(current_user)
+        visible_activities.push(temp)
+      end
+    end
+
+    total_notifications.each do |n|
+      temp = Array.new(2)
+      temp[0] = n.project_id
+      temp[1] = n.conversation_id
+      if n.conversation_id.nil?
+        @notifications.push(n)     
+      elsif visible_activities.include?(temp)
+        @notifications.push(n)
       end
     end
   end
