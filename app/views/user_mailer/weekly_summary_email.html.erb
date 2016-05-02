@@ -110,7 +110,7 @@
                               <%= n.category%>
                             </span>
                             <span style="font-weight:normal;font-size:12px;line-height:15px;display:block;">
-                              Due Date: <%= n.original_due_date.nil? "(none)" : n.original_due_date.strftime('%B %d, %Y') %>
+                              Due Date: <%= n.original_due_date.nil? ? "(none)" : n.original_due_date.strftime('%B %d, %Y') %>
                             </span>          
                             <span style="font-weight:normal;font-size:12px;line-height:15px;display:block;">
                               Created On: <%= n.created_at.strftime('%B %d, %Y') %>
