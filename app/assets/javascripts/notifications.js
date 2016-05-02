@@ -30,14 +30,15 @@ $(function() {
 
 $('input').on('ifChecked', function(event){
   $(this).parent().parent().parent().attr("bgcolor", "#eeeeee");
+  $(this).parent().parent().parent().css('opacity', '0.5');
   $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
-  // var temp = "#best_in_place_notification_" + $(this).attr('id') + "_name"
-  // $(temp).css({'display' : 'inline-block'});
+  
 });
 
 
 $('input').on('ifUnchecked', function(event){
   $(this).parent().parent().parent().attr("bgcolor", "");
+  $(this).parent().parent().parent().css('opacity', '1');
   $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
 });
 
@@ -104,7 +105,4 @@ $('.hoverToolTip').hover(function(){
 
     $('.tooltip-inner-content').css('margin-bottom', '7px');
     $('.tooltip-arrow').css('opacity', '0');
-
-
-
 });
