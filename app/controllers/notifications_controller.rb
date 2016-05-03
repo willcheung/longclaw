@@ -40,9 +40,9 @@ class NotificationsController < ApplicationController
     body = ""
     if !result.nil?
       sent_time = Time.zone.at(result[3]).strftime('%b %e').to_s
-      body = '<b>'+result[0] + '</b>'+result[1]+'<br><font color="gray">'+sent_time+'</font><hr>' + result[2]
+      body = '<b>'+result[0] + '</b>'+result[1]+'<br><font color="gray">'+sent_time+'</font><hr>' + simple_format(result[2], class: 'tooltip-inner-content')
     end
-    render :text => simple_format(body, class: 'tooltip-inner-content')
+    render :text => body
   end
 
   def new
