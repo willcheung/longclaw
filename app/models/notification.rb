@@ -137,9 +137,20 @@ class Notification < ActiveRecord::Base
   def self.find_project_and_user(array_of_project_ids)
 
     query = <<-SQL
-      SELECT notifications.*, users.first_name, users.last_name FROM notifications LEFT JOIN users ON users.id = notifications.assign_to where project_id in ('#{array_of_project_ids.join("','")}') AND notifications.is_complete = false ORDER BY original_due_date DESC
+      SELECT notifications.*, users.first_name, users.last_name FROM notifications 
+      LEFT JOIN users ON users.id = notifications.assign_to 
+      WHERE notifications.project_id IN ('#{array_of_project_ids.join("','")}') AND notifications.is_complete = false ORDER BY created_at DESC
     SQL
 
     Notification.find_by_sql(query)
   end
+
+  def self.show_activity_by_notifications(array_of_conversationids)
+     query = <<-SQL
+      SELECT activities.* FROM activities where backend_id in ('#{array_of_conversationids.join("','")}')
+    SQL
+
+    Activity.find_by_sql(query)
+  end
+
 end
