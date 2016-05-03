@@ -62,13 +62,14 @@ namespace :projects do
 	end
 
 	desc 'Email weekly task summary on Sundays'
-	task email_weekly_summary: :environment do
+	task :email_weekly_summary, [:test] => [:environment] do |t, args|
 		puts "\n\n=====Task (email_weekly_summary) started at #{Time.now}====="
 
+		args.with_defaults(:test => false)
 		Organization.all.each do |org|
 			org.users.each do |usr|
 				Time.use_zone(usr.time_zone) do
-					if Time.current.sunday? # In the hour of 5pm on Sundays
+					if Time.current.sunday? || args[:test] # In the hour of 5pm on Sundays
 						puts "Emailing #{usr.email}..."
 						UserMailer.weekly_summary_email(usr).deliver_later
 						sleep(0.5)

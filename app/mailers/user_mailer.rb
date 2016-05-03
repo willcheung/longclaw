@@ -33,20 +33,19 @@ class UserMailer < ApplicationMailer
   def weekly_summary_email(user)
     @user = user
 
-    open = "notifications.is_complete = false"
     open_or_recently_closed = "notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
     
     @subs = user.subscriptions
 
     if !@subs.nil? and !@subs.empty?
       @projects_with_tasks = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
-      @tasks = @projects_with_tasks.map(&:notifications).flatten
-      # # @tasks = Notification.where(project_id: @subs.map(&:project_id)).where(open_or_recently_closed)
-      @open_tasks = @tasks.reject { |t| t.is_complete }
-      @closed_tasks_count = @tasks.length - @open_tasks.length
-      @assigned_tasks_count = @open_tasks.select { |t| t.assign_to == user.id }.length
+      @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
+      # @tasks = @projects_with_tasks.map(&:notifications).flatten
+      # @open_tasks = @tasks.reject { |t| t.is_complete }
+      # @closed_tasks_count = @tasks.length - @open_tasks.length
+      # @assigned_tasks_count = @open_tasks.select { |t| t.assign_to == user.id }.length
       # @overdue_tasks = @open_tasks.select { |t| t.original_due_date < Time.current }
-      @recent_tasks_count = @open_tasks.select { |t| t.created_at > 7.days.ago }.length
+      # @recent_tasks_count = @open_tasks.select { |t| t.created_at > 7.days.ago }.length
 
       track user: user # ahoy_email tracker
       mail(to: user.email, subject: "Weekly Summary for #{1.week.ago.strftime('%A, %B %d')} - #{Time.current.strftime('%A, %B %d')}")
