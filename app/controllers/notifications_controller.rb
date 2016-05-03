@@ -183,24 +183,42 @@ class NotificationsController < ApplicationController
   def get_email_and_member
     @notification = Notification.find_by_id(params[:id])
 
-    if(params[:conversation_id].nil? || params[:message_id].nil? || params[:project_id].nil?)
+    if(@notification.nil?)
       return nil
     end
 
-    if(params[:conversation_id].empty? || params[:message_id].empty? || params[:project_id].empty?)
+    # Opportunity only have project_id
+    # Smart action should have conversation_id, message_id and project_id
+
+    if(@notification.category!=Notification::CATEGORY[:Action] and @notification.category!=Notification::CATEGORY[:Opportunity])
       return nil
     end
 
-    query = <<-SQL
-      SELECT messages->>'content' as content,
-             messages->'from' as from, 
-             messages -> 'to' as to,
-             messages -> 'cc' as cc,
-             messages ->> 'sentDate' as sentdate
-      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-      where backend_id='#{params[:conversation_id]}' and messages ->>'messageId' = '#{params[:message_id]}' and project_id = '#{params[:project_id]}'
-      GROUP BY 1,2,3,4,5;
-    SQL
+    if @notification.category==Notification::CATEGORY[:Action]
+      query = <<-SQL
+        SELECT messages->>'content' as content,
+               messages->'from' as from, 
+               messages -> 'to' as to,
+               messages -> 'cc' as cc,
+               messages ->> 'sentDate' as sentdate
+        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+        WHERE backend_id='#{@notification.conversation_id}' and messages ->>'messageId' = '#{@notification.message_id}' and project_id = '#{@notification.project_id}' 
+        LIMIT 1
+      SQL
+    elsif @notification.category==Notification::CATEGORY[:Opportunity]
+       query = <<-SQL
+        SELECT messages->>'content' as content,
+               messages->'from' as from, 
+               messages -> 'to' as to,
+               messages -> 'cc' as cc,
+               messages ->> 'sentDate' as sentdate
+        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+        WHERE project_id = '#{@notification.project_id}' ORDER BY last_sent_date DESC 
+        LIMIT 1
+      SQL
+    else
+      return nil
+    end
 
     result= Activity.find_by_sql(query)
 
@@ -208,15 +226,17 @@ class NotificationsController < ApplicationController
       return nil
     end
 
-    email = JSON.parse(result[0].content)
+    index = 0
+
+    email = JSON.parse(result[index].content)
     body = email['body']
-    sentdate = result[0].sentdate
-    total = result[0].to.size + result[0].cc.size
+    sentdate = result[index].sentdate
+    total = result[index].to.size + result[index].cc.size
 
     member = ' to '
 
-    counter = 0
-    result[0].to.each do |t|
+    counter = index
+    result[index].to.each do |t|
       if counter>=4
         break
       end
@@ -224,7 +244,7 @@ class NotificationsController < ApplicationController
       counter = counter + 1
     end
 
-    result[0].cc.each do |c|
+    result[index].cc.each do |c|
       if counter>=4
         break
       end
@@ -240,12 +260,10 @@ class NotificationsController < ApplicationController
 
 
     final_result = Array.new(4)
-    final_result[0] = result[0].from[0]['personal']
+    final_result[0] = result[index].from[0]['personal']
     final_result[1] = member
     final_result[2] = body
     final_result[3] = sentdate.to_i
-
-
 
     return final_result
   end
