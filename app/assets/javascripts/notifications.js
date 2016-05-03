@@ -66,21 +66,14 @@ function hoverGetData(){
     var element = $(this);
 
     var id = element.data('id');
-    var conversationID = element.data('conversationid');
-    var projectID = element.data('projectid');
-    var messageID = element.data('messageid');
-
-    // console.log(conversationID);
-    // console.log(projectID);
-    // console.log(messageID);
-
+   
     if(id in cachedData){
         return cachedData[id];
     }
 
     var localData = "error";
 
-    $.ajax('/notifications/show_email_body/'+id+'?conversation_id='+encodeURIComponent(conversationID)+'&message_id='+encodeURIComponent(messageID)+'&project_id='+ (projectID), {
+   $.ajax('/notifications/show_email_body/'+id, {
         async: false,
         success: function(data){
             localData = data;
