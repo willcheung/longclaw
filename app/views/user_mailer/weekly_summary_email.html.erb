@@ -103,12 +103,15 @@
     <% tasks.each do |n| %>
 
                       <tr style="padding:3px 0 3px 0;border-top:1px solid #c1c1c1;">
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;">
-                          <span style="font-weight:normal;font-size:14px;line-height:19px;padding:10px 3px;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                          <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;"></div>
+                        </td>
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                          <span style="font-weight:normal;font-size:14px;line-height:19px;">
                             <%= n.name %>
                           </span>
                         </td>
-                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:70px;max-width:75px;">         
+                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:70px;max-width:75px;padding:3px;">         
                           <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
                           <% if n.category == Notification::CATEGORY[:Action] %>
                             background-color:#3C8DC5">
@@ -122,8 +125,8 @@
                             <%= n.category%>
                           </span>
                         </td>
-                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:170px;max-width:175px;">
-                          <span style="font-weight:normal;font-size:14px;line-height:19px;padding:10px 3px;">
+                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:170px;max-width:175px;padding:3px;">
+                          <span style="font-weight:normal;font-size:14px;line-height:19px;">
                             Due: <%= n.original_due_date.strftime('%B %d, %Y') %>
                           </span>               
                         </td>
