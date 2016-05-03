@@ -18,21 +18,47 @@
 
 
 <!-- Summary -->
-<div style="margin-bottom:0;margin-bottom:30px">
+<div style="margin-bottom:30px">
 <% if @projects_with_tasks.empty? %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">No task activity this week</h2>
 <% else %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You have task activity in <%= pluralize(@projects_with_tasks.length, 'project') %>:</h2>
 
-  <ul style="margin:0 0 10px;list-style:none;padding:0">
-    <% @projects_with_tasks.each do |p| %>
+  <% @projects_with_tasks.each do |p| %>
+    <% open = p.notifications.reject {|n| n.is_complete } %>
+    <% closed = p.notifications.length - open.length %>
+    <% assigned = open.select {|n| n.assign_to == @user.id }.length %>
 
-      <li style="margin:10px 0 0 20px;padding:0;list-style-type:none;clear:both;">
-        <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;"><a href="<%= project_url(p) %>"><%= p.name %></a> <small style="margin-left:10px;"><span style="color: #888888;"><%= p.account.name %></span></small></h3>
-      </li>
-       
-    <% end %>
-  </ul>
+  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px;background-color:#ffffff;vertical-align:top;">
+    <tbody>
+      <tr>
+        <td style="padding-bottom:5px;">
+          <a href="<%= project_url(p) %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
+          <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
+             <tbody>
+                <tr style="border-top:1px solid #c1c1c1;width:100%">
+                 <td style="color:#37c597;font-size:40px;font-weight:bold;padding-right:8px;min-width:70px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= closed %></td>
+                 <td style="color:#37c597;font-size:16px;padding-right:10px;min-width:80px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;"><%= 'Task'.pluralize(closed) %> Completed</td>
+                 <td style="color:#898e95;font-size:40px;font-weight:bold;padding-right:8px;min-width:70px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= open.length %></td>
+                 <td style="color:#898e95;font-size:16px;padding-right:10px;min-width:50px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;"><%= 'Task'.pluralize(open.length) %> Open</td>
+                 <td style="color:#e58646;font-size:40px;font-weight:bold;padding-right:8px;min-width:70px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= assigned %></td>
+                 <td style="color:#e58646;font-size:16px;padding-right:10px;min-width:120px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;">Open <%= 'Task'.pluralize(assigned) %> Assigned To You</td>
+                </tr>
+             </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-bottom:25px;"></div>
+
+  <% end %>
 
   <table class="row" style="margin-top:-10px;margin-bottom:25px;">
       <tr>
@@ -42,28 +68,16 @@
          <td class="expander"></td>
       </tr>
   </table>
-  <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
-     <tbody>
-        <tr style="border:1px solid #c1c1c1;">
-         <td style="color:#37c597;font-size:48px;font-weight:bold;padding-right:8px;width:100px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= @closed_tasks_count %></td>
-         <td style="color:#37c597;font-size:16px;padding-right:10px;width:80px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;"><%= 'Task'.pluralize(@closed_tasks_count) %> Completed</td>
-         <td style="color:#898e95;font-size:48px;font-weight:bold;padding-right:8px;width:100px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= @open_tasks.length %></td>
-         <td style="color:#898e95;font-size:16px;padding-right:10px;width:50px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;"><%= 'Task'.pluralize(@open_tasks.length) %> Open</td>
-         <td style="color:#ed5565;font-size:48px;font-weight:bold;padding-right:8px;width:100px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= @assigned_tasks_count %></td>
-         <td style="color:#ed5565;font-size:16px;padding-right:10px;width:120px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;">Open <%= 'Task'.pluralize(@assigned_tasks_count) %> Assigned To You</td>
-        </tr>
-     </tbody>
-  </table>
 <% end %>
 </div>
 
 <!-- Project Details -->
-<% unless @projects_with_tasks.empty? %>
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333"><%= @recent_tasks_count %> new tasks from last week:</h2>
-<% @projects_with_tasks.each do |p| %>
-  <!-- Recent Open Notifications -->
-  <% tasks = p.notifications.select { |n| !n.is_complete && n.created_at > 7.days.ago } %>
-  <% if !tasks.empty? %>
+<% unless @your_soon_tasks_count.zero? %>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You have <%= pluralize(@your_soon_tasks_count, 'task') %> due this week:</h2>
+  <% @projects_with_tasks.each do |p| %>
+    <!-- Recent Open Notifications -->
+    <% tasks = p.notifications.select { |n| !n.is_complete && !n.original_due_date.nil? && !n.assign_to.nil? && n.original_due_date > Time.current && n.original_due_date < 7.days.from_now && n.assign_to == @user.id } %>
+    <% unless tasks.empty? %>
 
   <div style="padding:0;margin:0;">
     
@@ -79,64 +93,58 @@
        </tbody>
     </table>
 
-    <div style="margin-bottom:15px;margin-top:5px;padding:0"></div>
+    <div style="margin-top:5px;padding:0"></div>
 
-    <% tasks.each do |n| %>
-      
       <div style="font-size:14px;padding:0 0 6px 0;">
             
                 <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
                    <tbody>
+
+    <% tasks.each do |n| %>
+
                       <tr style="padding:3px 0 3px 0;border-top:1px solid #c1c1c1;">
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:80%;">
-                            <span style="font-weight:normal;font-size:12px;line-height:15px;">
-                              <%= n.name %>
-                            </span>          
-                        </td> 
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20%;">&nbsp;</td> 
-                      </tr>
-                      <tr style="padding:3px 0 3px 0;">
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:80%;">
-                            <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
-                            <% if n.category == Notification::CATEGORY[:Action] %>
-                              background-color:#3C8DC5">
-                            <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
-                              background-color:#A1C436">
-                            <% elsif n.category == Notification::CATEGORY[:Todo] %>  
-                              background-color:#3cc5b9">
-                            <% else %>
-                              background-color:#e58646">
-                            <% end %>
-                              <%= n.category%>
-                            </span>
-                            <span style="font-weight:normal;font-size:12px;line-height:15px;display:block;">
-                              Due Date: <%= n.original_due_date.nil? ? "(none)" : n.original_due_date.strftime('%B %d, %Y') %>
-                            </span>          
-                            <span style="font-weight:normal;font-size:12px;line-height:15px;display:block;">
-                              Created On: <%= n.created_at.strftime('%B %d, %Y') %>
-                            </span>          
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                          <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;"></div>
                         </td>
-                        <td>
-                          <% if n.assign_to %>
-                              <%= rounded_initials_for_email(get_full_name(n.assign_to_user), n.assign_to_user.email) %>
-                            <% else %>
-                              <span style="font-weight:normal;font-size:12px;line-height:15px;margin-left:-15px;color:grey">(unassigned)</span>
-                            <% end %>
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                          <span style="font-weight:normal;font-size:14px;line-height:19px;">
+                            <%= n.name %>
+                          </span>
+                        </td>
+                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:70px;max-width:75px;padding:3px;">         
+                          <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
+                          <% if n.category == Notification::CATEGORY[:Action] %>
+                            background-color:#3C8DC5">
+                          <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                            background-color:#A1C436">
+                          <% elsif n.category == Notification::CATEGORY[:Todo] %>  
+                            background-color:#3cc5b9">
+                          <% else %>
+                            background-color:#e58646">
+                          <% end %>
+                            <%= n.category%>
+                          </span>
+                        </td>
+                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:170px;max-width:175px;padding:3px;">
+                          <span style="font-weight:normal;font-size:14px;line-height:19px;">
+                            Due: <%= n.original_due_date.strftime('%B %d, %Y') %>
+                          </span>               
                         </td>
                       </tr>
+
+      <% end %>
+
                     </tbody>
                 </table>
 
       </div>
-
-      <% end %>
 
   </div>
     
   <table class="row" style="margin-top:-10px;margin-bottom:25px;">
       <tr>
          <td style="padding: 6px; margin: 15px;">
-            <a href="<%= project_url(p) %>" style="background-color:#ffffff;border:1px solid #3C8DC5;border-radius:4px;color:#3C8DC5;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to Project Stream</a>
+            <a href="https://app.contextsmith.com/notifications" style="background-color:#ffffff;border:1px solid #5cb85c;border-radius:4px;color:#5cb85c;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks</a>
          </td>
          <td class="expander"></td>
       </tr>
