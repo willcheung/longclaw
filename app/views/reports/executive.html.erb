@@ -1,0 +1,297 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Executive Report</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li class="active">
+                <strong>Executive Report</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+
+    <div class="row">
+        <div class="col-lg-3 filter-space">
+            <div class="font-bold m-b-xs">Date:</div>
+            <input type="text" name="daterange" class="form-control daterange">
+        </div>
+    </div>
+
+    
+
+    <!-- Metrics -->
+    <div class="row m-t-lg">
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Team Touches</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers."></i>
+                </div>
+                <div class="ibox-content">
+                    <div id="team-touches" class="customer-chart"class="customer-chart" style="">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Touches Per Team Per Customer</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days."></i>
+                </div>
+                <div class="ibox-content">
+                    <div id="customer-team-touches" class="customer-chart" style="">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row m-t-lg">
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Touches Per Customer</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers."></i>
+                </div>
+                <div class="ibox-content">
+                    <div id="customer-touches" class="customer-chart"class="customer-chart" style="">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h5>Tasks Over Time</h5>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days."></i>
+                </div>
+                <div class="ibox-content">
+                    <div id="tasks-time" class="customer-chart" style="">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* Highcharts */
+    $(function () {
+        $('#team-touches').highcharts({
+            chart: {
+                type: 'bar',
+                height: 250
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['Team A', 'Team B', 'Team C']
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+                labels: {
+                    formatter: function () {
+                        return Math.abs(this.value);
+                    }
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            credits: {
+              enabled: false
+            },
+            plotOptions: {
+              series: {
+                stacking: 'normal',
+                cursor: 'pointer',
+                point: {
+                  events: {
+                    click: function () {
+                      location.pathname = this.options.path;
+                    }
+                  }
+                }
+              }
+            },
+            tooltip: {
+                formatter: function () {
+                    return '<b>' + this.point.category + '</b><br/>' +
+                        this.series.name + ': ' + Highcharts.numberFormat(Math.abs(this.point.y), 0);
+                }
+            },
+            series: [{
+                name: 'Inbound Touches',
+                data: [-51, -66, -31],
+            }, {
+                name: 'Outbound Touches',
+                data: [45, 44, 32]
+            }]
+        });
+
+        $('#customer-team-touches').highcharts({
+            chart: {
+                type: 'column',
+                height: 250
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['Team A', 'Team B', 'Team C']
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            credits: {
+              enabled: false
+            },
+            plotOptions: {
+              series: {
+                stacking: 'normal',
+                cursor: 'pointer',
+                point: {
+                  events: {
+                    click: function () {
+                      location.pathname = this.options.path;
+                    }
+                  }
+                }
+              }
+            },
+            tooltip: {
+                formatter: function () {
+                    return '<b>' + this.series.name + '</b><br/>' +
+                        'Touches: ' + Highcharts.numberFormat(this.point.y, 0);
+                }
+            },
+            series: [{
+                name: 'Customer 3',
+                data: [6],
+            }, {
+                name: 'Customer 2',
+                data: [12],
+            }, {
+                name: 'Customer 1',
+                data: [20],
+            }, {
+                name: 'Customer 5',
+                data: [0, 8],
+            }, {
+                name: 'Customer 4',
+                data: [0, 26],
+            }, {
+                name: 'Customer 10',
+                data: [0, 0, 2],
+            }, {
+                name: 'Customer 9',
+                data: [0, 0, 5],
+            }, {
+                name: 'Customer 8',
+                data: [0, 0, 5],
+            }, {
+                name: 'Customer 7',
+                data: [0, 0, 7],
+            }, {
+                name: 'Customer 6',
+                data: [0, 0, 11],
+            }]
+        });
+
+        $('#customer-touches').highcharts({
+            chart: {
+                type: 'pie',
+                height: 250
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['Team A', 'Team B', 'Team C']
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            credits: {
+              enabled: false
+            },
+            plotOptions: {
+              series: {
+                stacking: 'normal',
+                cursor: 'pointer',
+                point: {
+                  events: {
+                    click: function () {
+                      location.pathname = this.options.path;
+                    }
+                  }
+                }
+              }
+            },
+            tooltip: {
+                formatter: function () {
+                    return '<b>' + this.series.name + '</b><br/>' +
+                        'Touches: ' + Highcharts.numberFormat(this.point.y, 0);
+                }
+            },
+            series: [{
+                name: 'Customer 3',
+                data: [6],
+            }, {
+                name: 'Customer 2',
+                data: [12],
+            }, {
+                name: 'Customer 1',
+                data: [20],
+            }, {
+                name: 'Customer 5',
+                data: [0, 8],
+            }, {
+                name: 'Customer 4',
+                data: [0, 26],
+            }, {
+                name: 'Customer 10',
+                data: [0, 0, 2],
+            }, {
+                name: 'Customer 9',
+                data: [0, 0, 5],
+            }, {
+                name: 'Customer 8',
+                data: [0, 0, 5],
+            }, {
+                name: 'Customer 7',
+                data: [0, 0, 7],
+            }, {
+                name: 'Customer 6',
+                data: [0, 0, 11],
+            }]
+        });
+    });
+</script>
+
