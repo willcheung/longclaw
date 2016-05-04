@@ -228,6 +228,11 @@ class NotificationsController < ApplicationController
 
     index = 0
 
+    # patch, somehow on production this may return nil
+    if(result[index].nil?)
+      return nil
+    end
+
     # Unfortunately we are storing JSON string in actitivities
     # so content can be nil because backend JSON format may change
     # (Actually anything can be nil, be careful)
