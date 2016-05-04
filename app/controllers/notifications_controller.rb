@@ -228,28 +228,60 @@ class NotificationsController < ApplicationController
 
     index = 0
 
+    # Unfortunately we are storing JSON string in actitivities
+    # so content can be nil because backend JSON format may change
+    # (Actually anything can be nil, be careful)
+    if(result[index].content.nil?)
+      return nil
+    end
     email = JSON.parse(result[index].content)
     body = email['body']
+    if body.nil?
+      return nil
+    end
     sentdate = result[index].sentdate
-    total = result[index].to.size + result[index].cc.size
+    if(sentdate.nil?)
+      return nil
+    end
+
+    total = 0
+    if(result[index].to.nil? and result[index].cc.nil?)
+      return nil
+    elsif result[index].to.nil?
+      total = result[index].cc.size
+    elsif result[index].cc.nil?
+      total = result[index].to.size
+    else
+      total = result[index].to.size + result[index].cc.size
+    end
+
+    if total==0
+      return nil
+    end
 
     member = ' to '
 
-    counter = index
-    result[index].to.each do |t|
-      if counter>=4
-        break
+    counter = 0
+
+    if !result[index].to.nil?
+      result[index].to.each do |t|
+        if counter>=4
+          break
+        end
+        member = member + get_first_name(t['personal']) + ', '
+        counter = counter + 1
       end
-      member = member + get_first_name(t['personal']) + ', '
-      counter = counter + 1
     end
 
-    result[index].cc.each do |c|
-      if counter>=4
-        break
+
+    if !result[index].cc.nil?
+      result[index].cc.each do |c|
+        if counter>=4
+          break
+        end
+        member = member + get_first_name(c['personal']) + ', '
+        counter = counter + 1
       end
-      member = member + get_first_name(c['personal']) + ', '
-      counter = counter + 1
     end
 
     member.slice!(member.length-2, member.length)
@@ -257,7 +289,6 @@ class NotificationsController < ApplicationController
     if counter < total
       member = member + ' and ' + (total-counter).to_s + ' others'
     end
-
 
     final_result = Array.new(4)
     final_result[0] = result[index].from[0]['personal']
