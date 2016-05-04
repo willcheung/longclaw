@@ -2,6 +2,7 @@
 // All this logic will automatically be available in application.js.
 
 //= require daterangepicker/moment.min.js
+//= require daterangepicker/daterangepicker.js
 
 /* Tooltip */
 $('[data-toggle="tooltip"]').tooltip();
