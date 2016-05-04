@@ -9,7 +9,7 @@ $('[data-toggle="tooltip"]').tooltip();
 
 $('input[name="daterange"]').daterangepicker({
     "alwaysShowCalendars": true,
-    "opens": "left",
+    // "opens": "left",
     "cancelClass": "btn-danger",
     "startDate": moment().subtract(7, "days").format("l"),
     "ranges": {

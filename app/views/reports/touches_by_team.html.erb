@@ -15,46 +15,11 @@
 <div class="wrapper wrapper-content animated fadeInRight">
 
     <div class="row">
-        <div class="col-lg-9 filter-space">
-            <div class="font-bold m-b-xs">Projects:</div>
-            <select data-placeholder="Choose a Project..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
-                <option value=""></option>
-                <% @projects.each do |p| %>
-                    <option value="<%= p.id %>" <% if @projects[0,5].map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
-                <% end %>
-            </select>
-        </div>
         <div class="col-lg-3 filter-space">
             <div class="font-bold m-b-xs">Date:</div>
             <input type="text" name="daterange" class="form-control daterange">
         </div>
-    </div>
-    <div class="row">
-        <div class="col-lg-5 filter-space">
-            <div class="btn-group">
-                <div class="font-bold m-b-xs">Account Type:</div>
-                <a href="<%= reports_customer_path %>" class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;All (<%= @projects.size %>)&nbsp;&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Customer" class="btn btn-sm btn-white" type="button">Customer (<%= @projects.select { |p| p.account.category == "Customer" }.size %>)</a>
-                <a href="<%= reports_customer_path %>?type=Partner" class="btn btn-sm btn-white" type="button">&nbsp;Partner (<%= @projects.select { |p| p.account.category == "Partner" }.size %>)&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Prospect" class="btn btn-sm btn-white" type="button">Prospect (<%= @projects.select { |p| p.account.category == "Prospect" }.size %>)</a>
-                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm btn-white" type="button">&nbsp;Vendor (<%= @projects.select { |p| p.account.category == "Vendor" }.size %>)&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Other" class="btn btn-sm btn-white" type="button">&nbsp;Other (<%= @projects.select { |p| p.account.category == "Other" }.size %>)&nbsp;</a>
-            </div>
-        </div>
-        <div class="col-lg-7 filter-space">
-            <div class="btn-group">
-                <div class="font-bold m-b-xs">Project Type:</div>
-                <a href="<%= reports_customer_path %>" class="btn btn-sm btn-default" type="button">&nbsp;&nbsp;All (<%= @projects.size %>)&nbsp;&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Customer" class="btn btn-sm btn-white" type="button">Implementation (<%= @projects.select { |p| p.category == "Implementation" }.size %>)</a>
-                <a href="<%= reports_customer_path %>?type=Partner" class="btn btn-sm btn-white" type="button">Onboarding (<%= @projects.select { |p| p.category == "Onboarding" }.size %>)</a>
-                <a href="<%= reports_customer_path %>?type=Prospect" class="btn btn-sm btn-white" type="button">Opportunity (<%= @projects.select { |p| p.category == "Opportunity" }.size %>)</a>
-                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm btn-white" type="button">&nbsp;Pilot (<%= @projects.select { |p| p.category == "Pilot" }.size %>)&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Vendor" class="btn btn-sm btn-white" type="button">&nbsp;Support (<%= @projects.select { |p| p.category == "Support" }.size %>)&nbsp;</a>
-                <a href="<%= reports_customer_path %>?type=Other" class="btn btn-sm btn-white" type="button">&nbsp;Other (<%= @projects.select { |p| p.category == "Other" }.size %>)&nbsp;</a>
-            </div>
-        </div>
-    </div>
-    
+    </div>    
 
     <!-- Metrics -->
     <div class="row m-t-lg">
@@ -63,15 +28,11 @@
                 <div class="ibox-title">
                     <span class="label pull-right">Last 7 days</span>
                     <h5>Team Touches</h5>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers."></i>
-                    <div class="btn-group m-l-sm">
-                        <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
-                        <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
-                    </div>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of emails sent and received by your team."></i>
                 </div>
                 <div class="ibox-content">
                     <div id="chart" class="report-chart">
-                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                      <h2 class="text-center" style="padding:50px 0;">No data</h2>
                     </div>
                 </div>
             </div>
@@ -136,7 +97,7 @@
                 text: ''
             },
             xAxis: {
-                categories: ['Team A', 'Team B', 'Team C']
+                categories: <%= @team_touches.map { |member| member[:full_name] }.to_json.html_safe %>
             },
             yAxis: {
                 title: {
@@ -175,10 +136,10 @@
             },
             series: [{
                 name: 'Inbound Touches',
-                data: [-51, -66, -31],
+                data: <%= @team_touches.map { |member| -member[:inbound_count] }.to_json.html_safe %>,
             }, {
                 name: 'Outbound Touches',
-                data: [45, 44, 32]
+                data: <%= @team_touches.map { |member| member[:outbound_count] }.to_json.html_safe %>
             }]
         });
     });

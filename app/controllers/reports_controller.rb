@@ -1,6 +1,7 @@
 class ReportsController < ApplicationController
   def touches_by_team
-    @projects = Project.visible_to(current_user.organization_id, current_user.id)
+    @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.map(&:id), current_user.organization.domain, current_user.time_zone)
+    @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 
   def customer
