@@ -91,6 +91,8 @@ class OnboardingController < ApplicationController
 					if account.projects.size == 0
 						# Add project into account.  Modify new project into confirmed project
 						new_project.update_attributes(is_confirmed: true)
+						# Subscribe to existing project
+						new_project.subscribers.create(user_id: current_user.id)
 					elsif overlapping_p.size > 0
 						overlapping_p.each do |p|
 							p.project_members.create(user_id: current_user.id)
@@ -129,6 +131,8 @@ class OnboardingController < ApplicationController
 							
 						elsif new_p.size > 0
 							new_project.update_attributes(is_confirmed: true)
+							# Subscribe to existing project
+							new_project.subscribers.create(user_id: current_user.id)
 						end
 					end
 
