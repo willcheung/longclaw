@@ -162,6 +162,67 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
+  def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day, end_day=Time.current.utc)
+    date_range = "TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'"
+    query = <<-SQL
+      -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
+      WITH email_activities AS 
+        (
+          SELECT messages ->> 'messageId'::text AS message_id,
+                 messages ->> 'sentDate' AS sent_date,
+                 jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+                 CASE
+                   WHEN messages -> 'to' = 'null' THEN NULL
+                   ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+                 END AS to,
+                 CASE
+                   WHEN messages -> 'cc' = 'null' THEN NULL
+                   ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+                 END AS cc
+          FROM activities,
+          LATERAL jsonb_array_elements(email_messages) messages
+          WHERE category = 'Conversation'
+          AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN #{date_range}
+          AND project_id IN 
+          (
+            SELECT id AS project_id 
+            FROM projects 
+            WHERE account_id IN ('#{array_of_account_ids.join("','")}')
+          )
+          GROUP BY 1,2,3,4,5
+        )
+      SELECT t2.inbound AS email,
+             t2.inbound_count, 
+             COALESCE(t1.outbound_count,0) AS outbound_count, 
+             COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) AS total 
+      FROM
+      -- t1 counts all emails sent by each user (specified in "from" field) in the provided domain in the last 14 days across all accounts in the organization
+        (
+          SELECT "from" AS outbound, 
+                count(DISTINCT message_id) AS outbound_count 
+          FROM email_activities 
+          WHERE "from" LIKE '%#{domain}'
+          GROUP BY "from" ORDER BY outbound_count DESC
+        ) t1
+      FULL OUTER JOIN 
+      -- t2 counts all emails received by each user in the provided domain in the last 14 days across all accounts in the organization
+        (
+          SELECT inbound, count(DISTINCT message_id) AS inbound_count FROM 
+          -- t collects all emails received by each user (specified in either "to" or "cc" fields) in the provided domain in the last 14 days across all accounts in the organization
+          (
+            SELECT "to" AS inbound, message_id FROM email_activities WHERE "to" LIKE '%#{domain}'
+            UNION ALL 
+            SELECT "cc" AS inbound, message_id FROM email_activities WHERE "cc" LIKE '%#{domain}'
+          ) t
+          GROUP BY inbound ORDER BY inbound_count DESC
+        ) t2
+      ON t1.outbound = t2.inbound
+      ORDER BY total DESC
+    SQL
+
+    User.find_by_sql(query)
+  end
+
   def is_internal_user?
     true
   end

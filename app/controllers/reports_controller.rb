@@ -1,6 +1,6 @@
 class ReportsController < ApplicationController
   def touches_by_team
-    @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.map(&:id), current_user.organization.domain, current_user.time_zone)
+    @team_leaderboard = User.count_activities_by_user_flex(current_user.organization.accounts.map(&:id), current_user.organization.domain, 7.days.ago.utc)
     @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 

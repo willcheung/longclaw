@@ -77,7 +77,8 @@
 </div>
 
 <script>
-  <% if !@projects.empty? %>
+  console.log(<%= @team_leaderboard.to_json.html_safe %>);
+  <% if !@team_touches.empty? %>
     /* Highcharts support functions */
     function redraw_chart(chart, max) {
         // Delete all the series.
