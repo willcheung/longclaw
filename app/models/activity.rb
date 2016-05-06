@@ -169,4 +169,17 @@ class Activity < ActiveRecord::Base
   def is_visible_to(user)
     is_public || email_addresses.include?(user.email)
   end
+
+  ### method to batch update jsonb columns
+  # updates all sent_date related fields for the activity by some interval
+  def time_jump(ms)
+    self.last_sent_date += ms
+    self.last_sent_date_epoch = (self.last_sent_date_epoch.to_i + ms).to_s
+    em = self.email_messages
+    em.each do |e|
+      e.sentDate += ms
+    end
+    self.email_messages = em
+    self.save
+  end
 end

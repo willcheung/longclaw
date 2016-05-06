@@ -282,4 +282,10 @@ class Project < ActiveRecord::Base
                                 .group("t.last_sent_date_epoch, activities.from, projects.name, projects.id, projects.account_id")
   end
 
+  ### method to batch update activities in a project
+  def time_jump(ms)
+    self.activities.each do |a|
+      a.time_jump(ms)
+    end
+  end
 end
