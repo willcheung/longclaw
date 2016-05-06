@@ -64,7 +64,7 @@ class AccountsController < ApplicationController
     respond_to do |format|
       if @account.update(account_params.merge(updated_by: current_user.id))
         format.html { redirect_to @account, notice: 'Account was successfully updated.' }
-        format.json { head :no_content }
+        format.json { respond_with_bip(@project) }
         format.js { render action: 'show', status: :created, location: @account }
       else
         format.html { render action: 'edit' }
