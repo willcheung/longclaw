@@ -108,10 +108,9 @@ function removeParam(search, keyword){
     var result = "";
 
     for(i=0; i<params.length; i++){
-        // console.log(params[i]);
         var param = params[i].split("=");
-        if(param[0]!==keyword){
-            result = params[i] + "&";
+        if(param[0].length>0 && param[0]!==keyword){
+            result += params[i] + "&";
         }
     }
 
@@ -121,23 +120,28 @@ function removeParam(search, keyword){
 }
 
 function newURL(search,selectType, newParam){
-    
+    // always remove & in the back or it will cause error
     var finalURL = "";
     var newsearch="";
 
-    if(search.length){
-        original = removeParam(search.substring(1), selectType);
-        console.log(original);
+    //always set to type=incomplete when search string is empty
+    if(search.length==0){
+        search = "?type=incomplete";
+    }
+    
+    original = removeParam(search.substring(1), selectType);
 
-        if(original.length==0){   
-            newsearch = newParam;
+    if(original.length==0){   
+        newsearch = newParam;
+    }
+    else{
+        if(newParam.length==0){
+            // when user press X, newParam will be ""
+            newsearch = original;
         }
         else{
             newsearch = original + "&" + newParam;
         }
-    }
-    else{
-        newsearch = newParam
     }
 
     if(newsearch.length==0){
