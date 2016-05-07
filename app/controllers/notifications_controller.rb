@@ -9,8 +9,57 @@ class NotificationsController < ApplicationController
     # for now will only show incomplete tasks
     @notifications = []
 
+    @complete = "incomplete"
+ 
+    filter_statement = Array.new
+    if !params[:type].nil?
+      if params["type"]=="complete"
+        filter_statement.push(" is_complete=true ")
+        @complete = "complete"
+      elsif params["type"]=="incomplete"
+        filter_statement.push(" is_complete=false ")
+        @complete = "incomplete"
+      elsif params["type"]=="all"  
+        # must put something in the where clause, so put TRUE
+        filter_statement.push(" TRUE ")
+        @complete = "all"
+      end
+    end 
+
+    @assignee = ""
+    if !params[:assignee].nil?
+      if params["assignee"]=="me"
+        filter_statement.push(" assign_to='#{current_user.id}' ");
+        @assignee = "me"
+      elsif params["assignee"]=="none"
+        filter_statement.push(" assign_to is NULL ")
+        @assignee = "none"
+      end
+    end 
+
+    @duedate = ""
+    if !params[:duedate].nil?
+      if params["duedate"]=="oneweek"
+        local_current_time = Time.zone.at(Time.now.utc)
+        start_utc_time = Time.new(local_current_time.year, local_current_time.month, local_current_time.day).utc.strftime("%Y-%m-%d %H:%M:%S")
+        local_end_time = local_current_time + 7.day
+        end_utc_time = Time.new(local_end_time.year, local_end_time.month, local_end_time.day,23,59,59).utc.strftime("%Y-%m-%d %H:%M:%S")
+
+        # filter_statement.push(" original_due_date BETWEEN CURRENT_TIMESTAMP + INTERVAL '1 week' and CURRENT_TIMESTAMP ")
+        filter_statement.push(" (original_due_date BETWEEN '"+start_utc_time.to_s+"' AND '"+end_utc_time.to_s + "') ")
+        @duedate = "oneweek"
+      elsif params["duedate"]=="none"
+        filter_statement.push(" original_due_date is NULL ")
+        @duedate = "none"
+      end
+    end 
+
+
+
+    final_filter = filter_statement.join(" AND ")
+
     projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
-    total_notifications = Notification.find_project_and_user(projects.map(&:id))
+    total_notifications = Notification.find_project_and_user(projects.map(&:id), final_filter)
     activities = Notification.show_activity_by_notifications(total_notifications.map(&:conversation_id))
 
     visible_activities = []
