@@ -134,14 +134,19 @@ class Notification < ActiveRecord::Base
     end
   end
 
-  def self.find_project_and_user(array_of_project_ids)
+  def self.find_project_and_user(array_of_project_ids, wherestatement="")
 
-    query = <<-SQL
-      SELECT notifications.*, users.first_name, users.last_name FROM notifications 
-      LEFT JOIN users ON users.id = notifications.assign_to 
-      WHERE notifications.project_id IN ('#{array_of_project_ids.join("','")}') AND notifications.is_complete = false ORDER BY created_at DESC
-    SQL
-
+    query = ""
+    if !wherestatement.empty?
+      query = "SELECT notifications.*, users.first_name, users.last_name FROM notifications 
+      LEFT JOIN users ON users.id = notifications.assign_to  
+      WHERE notifications.project_id IN ('#{array_of_project_ids.join("','")}') AND #{wherestatement} ORDER BY created_at DESC"
+    else
+      query = "SELECT notifications.*, users.first_name, users.last_name FROM notifications 
+      LEFT JOIN users ON users.id = notifications.assign_to  
+      WHERE notifications.project_id IN ('#{array_of_project_ids.join("','")}') AND is_complete = FALSE ORDER BY created_at DESC"
+    end
+  
     Notification.find_by_sql(query)
   end
 

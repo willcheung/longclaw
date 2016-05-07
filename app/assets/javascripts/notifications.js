@@ -99,3 +99,135 @@ $('.hoverToolTip').hover(function(){
     $('.tooltip-inner-content').css('margin-bottom', '7px');
     $('.tooltip-arrow').css('opacity', '0');
 });
+
+
+function removeParam(search, keyword){
+    if(search.length==0) return search;
+
+    var params = search.split("&");
+    var result = "";
+
+    for(i=0; i<params.length; i++){
+        // console.log(params[i]);
+        var param = params[i].split("=");
+        if(param[0]!==keyword){
+            result = params[i] + "&";
+        }
+    }
+
+    if(result[result.length-1]==="&") return result.substring(0,result.length-1);
+    else return result;
+
+}
+
+function newURL(search,selectType, newParam){
+    
+    var finalURL = "";
+    var newsearch="";
+
+    if(search.length){
+        original = removeParam(search.substring(1), selectType);
+        console.log(original);
+
+        if(original.length==0){   
+            newsearch = newParam;
+        }
+        else{
+            newsearch = original + "&" + newParam;
+        }
+    }
+    else{
+        newsearch = newParam
+    }
+
+    if(newsearch.length==0){
+        finalURL = "/notifications";
+    }
+    else{
+        finalURL = "/notifications/?"+newsearch;
+    }
+
+    // console.log(finalURL);
+    window.location.replace(finalURL);
+
+}
+
+$('.is_complete_box').chosen({width: "150px", disable_search: true, allow_single_deselect: true});
+
+$('.filter_section').hover(function(){
+    $('.chosen-container-single').css('cursor', 'pointer');
+    $('.chosen-single').css('cursor', 'pointer'); 
+});
+
+
+$('.is_complete_box').on('change',function(evt,params){
+
+    var taskType="";
+
+    if(params){
+        switch(params["selected"]){
+            case "1":
+                taskType = "type=incomplete";
+                break;
+            case "2":
+                taskType = "type=complete";
+                break;
+            default:
+                break;
+        }
+    }
+    else{
+        taskType = "type=all";
+    }
+
+    newURL(window.location.search,"type", taskType);
+        
+});
+
+$('.assignee_box').chosen({width: "150px", disable_search: true, allow_single_deselect: true});
+
+$('.assignee_box').on('change',function(evt,params){
+
+    var taskType="";
+
+    if(params){
+        switch(params["selected"]){
+            case "1":
+                taskType = "assignee=me";
+                break;
+            case "2":
+                taskType = "assignee=none";
+                break;
+            default:
+                break;
+        }
+    }
+
+    newURL(window.location.search,"assignee", taskType);
+        
+});
+
+
+$('.due_date_box').chosen({width: "150px", disable_search: true, allow_single_deselect: true});
+
+$('.due_date_box').on('change',function(evt,params){
+
+    var taskType="";
+
+    if(params){
+        switch(params["selected"]){
+            case "1":
+                taskType = "duedate=oneweek";
+                break;
+            case "2":
+                taskType = "duedate=none";
+                break;
+            default:
+                break;
+        }
+    }
+
+    newURL(window.location.search,"duedate", taskType);
+      
+});
+
