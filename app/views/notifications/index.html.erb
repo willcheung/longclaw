@@ -90,9 +90,9 @@
                         <% if n.category == Notification::CATEGORY[:Action] or n.category == Notification::CATEGORY[:Opportunity]%>
                         <div class="hoverToolTip" data-placement="right" data-id="<%=n.id %>">
                           <% if n.category == Notification::CATEGORY[:Opportunity] %>
-                          <a href="<%= "projects/" + n.project_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
+                          <a href="<%= "/projects/" + n.project_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
                           <% else %>
-                          <a href="<%= "projects/" + n.project_id.to_s+'#'+n.conversation_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
+                          <a href="<%= "/projects/" + n.project_id.to_s+'#'+n.conversation_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
                           <% end %>
                         </div>
                         <% end %>
