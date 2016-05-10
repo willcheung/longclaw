@@ -15,12 +15,12 @@ class UserMailer < ApplicationMailer
     d_tz = Time.current.yesterday.midnight.utc
 
     activity_from_yesterday = "activities.last_sent_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours'"
-    your_open_notifications = "notifications.is_complete = false AND notifications.assign_to = '#{user.id}'"
+    your_notifications = "((notifications.is_complete = false) OR (notifications.is_complete = true AND notifications.complete_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours')) AND (notifications.assign_to = '#{user.id}')"
 
     sub = user.subscriptions
 
     if !sub.nil? and !sub.empty?
-      activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday).where(your_open_notifications).group("activities.id, accounts.id, notifications.id")
+      activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday).where(your_notifications).group("activities.id, accounts.id, notifications.id").order("notifications.is_complete")
       @projects_with_activities_today = activities_today.group_by{|e| e.activities.select {|a| a.is_visible_to(user) }}
 
       track user: user # ahoy_email tracker
