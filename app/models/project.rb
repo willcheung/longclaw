@@ -229,8 +229,8 @@ class Project < ActiveRecord::Base
 					project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
 				end
 
-				# Automatically subscribe to projects created
-				project.subscribers.create(user_id: user_id)
+				# Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
+				# project.subscribers.create(user_id: user_id)
 
 				# Load Smart Tasks
 				Notification.load(get_project_conversations(data, p), project, false)

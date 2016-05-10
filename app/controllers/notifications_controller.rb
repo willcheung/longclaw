@@ -9,8 +9,71 @@ class NotificationsController < ApplicationController
     # for now will only show incomplete tasks
     @notifications = []
 
-    projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
-    total_notifications = Notification.find_project_and_user(projects.map(&:id))
+    @complete = "incomplete"
+ 
+    filter_statement = Array.new
+    if !params[:type].nil?
+      if params["type"]=="complete"
+        filter_statement.push(" is_complete=true ")
+        @complete = "complete"
+      elsif params["type"]=="incomplete"
+        filter_statement.push(" is_complete=false ")
+        @complete = "incomplete"
+      elsif params["type"]=="all"  
+        # must put something in the where clause, so put TRUE
+        filter_statement.push(" TRUE ")
+        @complete = "all"
+      end
+    end 
+
+    @assignee = ""
+    if !params[:assignee].nil?
+      if params["assignee"]=="me"
+        filter_statement.push(" assign_to='#{current_user.id}' ");
+        @assignee = "me"
+      elsif params["assignee"]=="none"
+        filter_statement.push(" assign_to is NULL ")
+        @assignee = "none"
+      end
+    end 
+
+    @duedate = ""
+    if !params[:duedate].nil?
+      if params["duedate"]=="oneweek"
+        local_current_time = Time.zone.at(Time.now.utc)
+        start_utc_time = Time.new(local_current_time.year, local_current_time.month, local_current_time.day).utc.strftime("%Y-%m-%d %H:%M:%S")
+        local_end_time = local_current_time + 7.day
+        end_utc_time = Time.new(local_end_time.year, local_end_time.month, local_end_time.day,23,59,59).utc.strftime("%Y-%m-%d %H:%M:%S")
+
+        # filter_statement.push(" original_due_date BETWEEN CURRENT_TIMESTAMP + INTERVAL '1 week' and CURRENT_TIMESTAMP ")
+        filter_statement.push(" (original_due_date BETWEEN '"+start_utc_time.to_s+"' AND '"+end_utc_time.to_s + "') ")
+        @duedate = "oneweek"
+      elsif params["duedate"]=="none"
+        filter_statement.push(" original_due_date is NULL ")
+        @duedate = "none"
+      elsif params["duedate"]=="overdue"
+        local_current_time = Time.zone.at(Time.now.utc)
+        end_utc_time = Time.new(local_current_time.year, local_current_time.month, local_current_time.day,0,0,0).utc.strftime("%Y-%m-%d %H:%M:%S")
+        filter_statement.push(" (original_due_date < '"+ end_utc_time.to_s + "') ")
+        @duedate = "overdue"
+      end
+    end 
+
+    final_filter = filter_statement.join(" AND ")
+
+    @projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
+
+    @select_project = 0
+    # always check if projectid is in visiable projects incase someone do evil
+    if !params[:projectid].nil? and !@projects.nil? and @projects.map(&:id).include? params[:projectid]
+      newProject = Array.new(1)
+      newProject[0] = params[:projectid]
+      total_notifications = Notification.find_project_and_user(newProject, final_filter)
+      @select_project = params[:projectid]
+    else
+      total_notifications = Notification.find_project_and_user(@projects.map(&:id), final_filter)
+    end
+    
     activities = Notification.show_activity_by_notifications(total_notifications.map(&:conversation_id))
 
     visible_activities = []
@@ -183,24 +246,42 @@ class NotificationsController < ApplicationController
   def get_email_and_member
     @notification = Notification.find_by_id(params[:id])
 
-    if(params[:conversation_id].nil? || params[:message_id].nil? || params[:project_id].nil?)
+    if(@notification.nil?)
       return nil
     end
 
-    if(params[:conversation_id].empty? || params[:message_id].empty? || params[:project_id].empty?)
+    # Opportunity only have project_id
+    # Smart action should have conversation_id, message_id and project_id
+
+    if(@notification.category!=Notification::CATEGORY[:Action] and @notification.category!=Notification::CATEGORY[:Opportunity])
       return nil
     end
 
-    query = <<-SQL
-      SELECT messages->>'content' as content,
-             messages->'from' as from, 
-             messages -> 'to' as to,
-             messages -> 'cc' as cc,
-             messages ->> 'sentDate' as sentdate
-      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-      where backend_id='#{params[:conversation_id]}' and messages ->>'messageId' = '#{params[:message_id]}' and project_id = '#{params[:project_id]}'
-      GROUP BY 1,2,3,4,5;
-    SQL
+    if @notification.category==Notification::CATEGORY[:Action]
+      query = <<-SQL
+        SELECT messages->>'content' as content,
+               messages->'from' as from, 
+               messages -> 'to' as to,
+               messages -> 'cc' as cc,
+               messages ->> 'sentDate' as sentdate
+        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+        WHERE backend_id='#{@notification.conversation_id}' and messages ->>'messageId' = '#{@notification.message_id}' and project_id = '#{@notification.project_id}' 
+        LIMIT 1
+      SQL
+    elsif @notification.category==Notification::CATEGORY[:Opportunity]
+       query = <<-SQL
+        SELECT messages->>'content' as content,
+               messages->'from' as from, 
+               messages -> 'to' as to,
+               messages -> 'cc' as cc,
+               messages ->> 'sentDate' as sentdate
+        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+        WHERE project_id = '#{@notification.project_id}' ORDER BY last_sent_date DESC 
+        LIMIT 1
+      SQL
+    else
+      return nil
+    end
 
     result= Activity.find_by_sql(query)
 
@@ -208,28 +289,67 @@ class NotificationsController < ApplicationController
       return nil
     end
 
-    email = JSON.parse(result[0].content)
+    index = 0
+
+    # patch, somehow on production this may return nil
+    if(result[index].nil?)
+      return nil
+    end
+
+    # Unfortunately we are storing JSON string in actitivities
+    # so content can be nil because backend JSON format may change
+    # (Actually anything can be nil, be careful)
+    if(result[index].content.nil?)
+      return nil
+    end
+    email = JSON.parse(result[index].content)
     body = email['body']
-    sentdate = result[0].sentdate
-    total = result[0].to.size + result[0].cc.size
+    if body.nil?
+      return nil
+    end
+    sentdate = result[index].sentdate
+    if(sentdate.nil?)
+      return nil
+    end
+
+    total = 0
+    if(result[index].to.nil? and result[index].cc.nil?)
+      return nil
+    elsif result[index].to.nil?
+      total = result[index].cc.size
+    elsif result[index].cc.nil?
+      total = result[index].to.size
+    else
+      total = result[index].to.size + result[index].cc.size
+    end
+
+    if total==0
+      return nil
+    end
 
     member = ' to '
 
     counter = 0
-    result[0].to.each do |t|
-      if counter>=4
-        break
+
+    if !result[index].to.nil?
+      result[index].to.each do |t|
+        if counter>=4
+          break
+        end
+        member = member + get_first_name(t['personal']) + ', '
+        counter = counter + 1
       end
-      member = member + get_first_name(t['personal']) + ', '
-      counter = counter + 1
     end
 
-    result[0].cc.each do |c|
-      if counter>=4
-        break
+
+    if !result[index].cc.nil?
+      result[index].cc.each do |c|
+        if counter>=4
+          break
+        end
+        member = member + get_first_name(c['personal']) + ', '
+        counter = counter + 1
       end
-      member = member + get_first_name(c['personal']) + ', '
-      counter = counter + 1
     end
 
     member.slice!(member.length-2, member.length)
@@ -238,14 +358,11 @@ class NotificationsController < ApplicationController
       member = member + ' and ' + (total-counter).to_s + ' others'
     end
 
-
     final_result = Array.new(4)
-    final_result[0] = result[0].from[0]['personal']
+    final_result[0] = result[index].from[0]['personal']
     final_result[1] = member
     final_result[2] = body
     final_result[3] = sentdate.to_i
-
-
 
     return final_result
   end
