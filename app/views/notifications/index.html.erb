@@ -17,22 +17,32 @@
 </div>
 <div class="wrapper wrapper-content animated fadeInRight">
   <div class="row m-b-md">
-    <div class="filter_section col-lg-12">
-      <select class="is_complete_box" data-placeholder="Complete status">
+    <div class="filter_section">
+      <select class="is_complete_box col-sm-2" data-placeholder="Complete status">
         <option value="0"></option>
         <option value="1" <% if @complete=="incomplete"  %> selected  <% end %> >Open</option>
         <option value="2" <% if @complete=="complete"  %> selected  <% end %> >Completed</option>
       </select>
-      <select class="assignee_box" data-placeholder="Pick assignee">
+      <select class="assignee_box col-sm-2" data-placeholder="Pick assignee">
         <option value="0"></option>
         <option value="1" <% if @assignee=="me"  %> selected  <% end %> >Assigned to me</option>
         <option value="2" <% if @assignee=="none"  %> selected  <% end %> >Unassigned</option>
       </select>
-      <select class="due_date_box" data-placeholder="Due date">
+      <select class="due_date_box col-sm-2" data-placeholder="Due date">
         <option value="0"></option>
         <option value="1" <% if @duedate=="oneweek"  %> selected  <% end %> >Due in 7 days</option>
         <option value="2" <% if @duedate=="none"  %> selected  <% end %>  >No due date</option>
+        <option value="3" <% if @duedate=="overdue"  %> selected  <% end %>  >Overdue</option>
       </select>
+      <select class="project_box col-sm-3" data-placeholder="Select Project">
+        <option value="0"></option>
+        <% if !@projects.nil?  %>
+        <% @projects.each do |p| %>
+          <option value="<%=p.id %>" <% if @select_project==p.id  %> selected  <% end %> ><%=p.name %></option>
+        <% end %>
+        <% end  %>
+      </select>
+
     </div>
   </div>
 
@@ -108,6 +118,9 @@
                           <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :inner_class => "due_date_datepicker" %>
                       <% else %>
                           <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}    %>
+                          <% if !n.is_complete and Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+                              <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="overdue" data-placement="right" data-original-title="Overdue!"></i>
+                          <% end %>
                       <% end %>
                     </td>
                     <td>

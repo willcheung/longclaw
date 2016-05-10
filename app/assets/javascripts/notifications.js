@@ -6,6 +6,7 @@
 
 $(document).ready(function() {
     $('#notifications-table').DataTable({
+        "scrollX": true,
     	responsive: true,
 	    columnDefs: [
 	      { searchable: false, targets: [0,1,3,4,5,6,7]},
@@ -20,7 +21,7 @@ $(document).ready(function() {
     	}
     });
     $('input[type=search]').attr('size', '50');
-} );
+});
 
 $(function() {
     $('.i-checks').iCheck({
@@ -57,8 +58,19 @@ $('.hoverToolTip').tooltip({
     title: hoverGetData,
     html: true,
     container: 'body',
-});
+    });
 
+$('[data-toggle="overdue"]').tooltip();   
+
+$('[data-toggle="overdue"]').hover(function(){
+    $('.tooltip-inner').css('max-width', '64px');
+    $('.tooltip-inner').css('padding', '2px 2px');
+    $('.tooltip-inner').css('opacity', '1');
+    $('.tooltip-inner').css('background-color', 'grey');
+    $('.tooltip-inner').css('color', 'white');
+    
+    $('.tooltip-arrow').css('opacity', '0');
+});
 
 var cachedData = Array();
 
@@ -88,6 +100,9 @@ function hoverGetData(){
 $('.hoverToolTip').hover(function(){
     $('.tooltip-inner').css('background-color', 'white');
     $('.tooltip-inner').css('opacity', '1');
+
+    $('.tooltip-inner').css('padding', '20px 20px');
+    $('.tooltip-inner').css('max-width', '512px');
     
     $('.tooltip').css('background-color', 'white');
     $('.tooltip').css('opacity', '1');
@@ -99,6 +114,8 @@ $('.hoverToolTip').hover(function(){
     $('.tooltip-inner-content').css('margin-bottom', '7px');
     $('.tooltip-arrow').css('opacity', '0');
 });
+
+
 
 
 function removeParam(search, keyword){
@@ -156,7 +173,7 @@ function newURL(search,selectType, newParam){
 
 }
 
-$('.is_complete_box').chosen({width: "150px", disable_search: true, allow_single_deselect: true});
+$('.is_complete_box').chosen({ disable_search: true, allow_single_deselect: true});
 
 $('.filter_section').hover(function(){
     $('.chosen-container-single').css('cursor', 'pointer');
@@ -188,7 +205,7 @@ $('.is_complete_box').on('change',function(evt,params){
         
 });
 
-$('.assignee_box').chosen({width: "150px", disable_search: true, allow_single_deselect: true});
+$('.assignee_box').chosen({disable_search: true, allow_single_deselect: true});
 
 $('.assignee_box').on('change',function(evt,params){
 
@@ -212,7 +229,7 @@ $('.assignee_box').on('change',function(evt,params){
 });
 
 
-$('.due_date_box').chosen({width: "150px", disable_search: true, allow_single_deselect: true});
+$('.due_date_box').chosen({ disable_search: true, allow_single_deselect: true});
 
 $('.due_date_box').on('change',function(evt,params){
 
@@ -226,12 +243,28 @@ $('.due_date_box').on('change',function(evt,params){
             case "2":
                 taskType = "duedate=none";
                 break;
+            case "3":
+                taskType = "duedate=overdue";
             default:
                 break;
         }
     }
 
     newURL(window.location.search,"duedate", taskType);
+      
+});
+
+$('.project_box').chosen({allow_single_deselect: true});
+
+$('.project_box').on('change',function(evt,params){
+
+    var taskType="";
+
+    if(params){
+        taskType = "projectid="+params["selected"];
+    }
+
+    newURL(window.location.search,"projectid", taskType);
       
 });
 

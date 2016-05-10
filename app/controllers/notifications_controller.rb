@@ -51,15 +51,29 @@ class NotificationsController < ApplicationController
       elsif params["duedate"]=="none"
         filter_statement.push(" original_due_date is NULL ")
         @duedate = "none"
+      elsif params["duedate"]=="overdue"
+        local_current_time = Time.zone.at(Time.now.utc)
+        end_utc_time = Time.new(local_current_time.year, local_current_time.month, local_current_time.day,0,0,0).utc.strftime("%Y-%m-%d %H:%M:%S")
+        filter_statement.push(" (original_due_date < '"+ end_utc_time.to_s + "') ")
+        @duedate = "overdue"
       end
     end 
 
-
-
     final_filter = filter_statement.join(" AND ")
 
-    projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
-    total_notifications = Notification.find_project_and_user(projects.map(&:id), final_filter)
+    @projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
+
+    @select_project = 0
+    # always check if projectid is in visiable projects incase someone do evil
+    if !params[:projectid].nil? and !@projects.nil? and @projects.map(&:id).include? params[:projectid]
+      newProject = Array.new(1)
+      newProject[0] = params[:projectid]
+      total_notifications = Notification.find_project_and_user(newProject, final_filter)
+      @select_project = params[:projectid]
+    else
+      total_notifications = Notification.find_project_and_user(@projects.map(&:id), final_filter)
+    end
+    
     activities = Notification.show_activity_by_notifications(total_notifications.map(&:conversation_id))
 
     visible_activities = []
