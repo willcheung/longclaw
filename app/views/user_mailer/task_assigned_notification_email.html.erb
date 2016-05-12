@@ -4,14 +4,12 @@
         <table class="twelve columns" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 580px; margin: 0 auto; padding: 0;">
            <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
               <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px 0px 10px;" align="left" valign="top">
-                  <div style="color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; text-align: left; line-height: 19px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="left">
-                    HOMG, YOU GOT A TASK ASSIGNED TO YOU<br/>
-                    Assigner: <%= get_full_name(@assigner) %><br/>
-                    <%= rounded_initials_for_email(get_full_name(@assigner), @assigner.email) %><br/>
-                    You: <%= get_full_name(@user) %><br/>
-                    <%= rounded_initials_for_email(get_full_name(@user), @user.email) %><br/>
-                    Task: <%= @task.name %>
-                  </div>
+                  HOMG, YOU GOT A TASK ASSIGNED TO YOU<br/>
+                  <%= rounded_initials_for_email(get_full_name(@assigner), @assigner.email) %><br/>
+                  Assigner: <%= get_full_name(@assigner) %><br/>
+                  <%= rounded_initials_for_email(get_full_name(@user), @user.email) %><br/>
+                  You: <%= get_full_name(@user) %><br/>
+                  Task: <%= @task.name %>
               </td>
               <td class="expander" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; visibility: hidden; width: 0px; color: #222222;font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0;" align="left" valign="top"></td>
            </tr>

@@ -152,8 +152,7 @@ class NotificationsController < ApplicationController
 
     if !notification_params[:assign_to].blank? && notification_params[:assign_to] != @notification.assign_to && notification_params[:assign_to] != current_user.id
       # send notification email for the new assign_to user
-      UserMailer.task_assigned_notification_email(notification_params[:assign_to], current_user, @notification.id).deliver_now
-      # puts "============", "send email now!", "=============="
+      # UserMailer.task_assigned_notification_email(notification_params[:assign_to], current_user, @notification.id).deliver_now
     end
 
     respond_to do |format|
