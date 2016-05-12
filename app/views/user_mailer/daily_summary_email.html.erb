@@ -126,7 +126,7 @@
                         </td>
                         <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:170px;max-width:175px;padding:3px;">
                           <span style="font-weight:normal;font-size:14px;line-height:19px;">
-                            Due: <%= n.original_due_date.strftime('%B %d, %Y') %>
+                            Due: <%= n.original_due_date.nil? ? "(no date)" : n.original_due_date.strftime('%B %d, %Y') %>
                           </span>               
                         </td>
                       </tr>
