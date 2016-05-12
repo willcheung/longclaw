@@ -39,6 +39,7 @@ Longclaw::Application.routes.draw do
     get "search/autocomplete_project_member"
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
     
+    get 'reports/touches/team' => 'reports#touches_by_team'
     get 'reports/customer'
     get 'reports/team'
     get 'reports/lifecycle'

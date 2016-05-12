@@ -167,6 +167,7 @@ class Project < ActiveRecord::Base
   	return metrics
   end
 
+  # TODO: refactor to take into account timezone
   # static_date set to true in development, false otherwise
   def self.find_include_sum_activities(hours_ago_end=Date.current, static_date=false, hours_ago_start, array_of_project_ids)
     # my_date used to manually set the date for the interval
@@ -282,4 +283,10 @@ class Project < ActiveRecord::Base
                                 .group("t.last_sent_date_epoch, activities.from, projects.name, projects.id, projects.account_id")
   end
 
+  ### method to batch update activities in a project by time (in seconds)
+  def time_jump(sec)
+    self.activities.each do |a|
+      a.time_jump(sec)
+    end
+  end
 end
