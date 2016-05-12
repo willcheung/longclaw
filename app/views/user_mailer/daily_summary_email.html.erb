@@ -24,74 +24,59 @@
 <% else %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333"><%= pluralize(@projects_with_activities_today.size, 'project') %> updated:</h2>
 
-  <ul style="margin:0 0 10px;list-style:none;padding:0">
     <% @projects_with_activities_today.each do |p| %>
 
-       <li style="margin:10px 0 0 20px;padding:0;list-style-type:none;clear:both;">
-         <h3 style="font-weight:600;font-size:18px;margin-bottom:3px;"><a href="<%= project_url(p[1]) %>"><%= p[1][0].name %></a> <small style="margin-left:10px;"><span style="color: #888888;"><%= p[1][0].account.name %></span></small></h3>
-
-         <!-- metrics -->
-          <table class="row">
+  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px;background-color:#ffffff;vertical-align:top;">
+    <tbody>
+      <tr>
+        <td style="padding-bottom:5px;">
+          <a href="<%= project_url(p[1][0]) %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p[1][0].name %></a>
+          <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p[1][0].account.name %></span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
              <tbody>
-                <tr>
-                   <td class="wrapper" style="margin-top:-10px">
-                      <table class="two columns" style="width:160px">
-                         <tbody>
-                            <tr>
-                              <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
-                                <span style="font-size:14px;margin-top:-20px;">
-                                  <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'person') %> contributed<br/>
-                                  <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
-                                      <% if !a.from[0].nil? %>
-                                          <div style="float:left;"><%= rounded_initials_for_email(a.from[0].personal, a.from[0].address) %></div>
-                                      <% end %>
-                                  <% end %>
-                                </span>
-                              </td>
-                            </tr>
-                         </tbody>
-                      </table>
-                   </td>
-                   <td class="wrapper" style="padding-top:20px;">
-                      <table class="two columns" style="width:150px">
-                         <tbody>
-                            <tr>
-                              <td style="color:#e58646;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
-                                <%= p[0].size %><br>
-                                <span style="font-size:14px">conversations</span>
-                              </td>
-                            </tr>
-                         </tbody>
-                      </table>
-                   </td>
-                   <td class="expander"></td>
-                   <td class="wrapper">
-                      <table class="three columns">
-                         <tbody>
-                            <tr>
-                              <td style="color:#A1C436;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
-                                
-                              </td>
-                            </tr>
-                         </tbody>
-                      </table>
-                   </td>
-                   
+                <tr style="border-top:1px solid #c1c1c1;">
+                 <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
+                    <span style="font-size:14px;display:block;">
+                      <%= pluralize(p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'Person') %> Contributed
+                    </span>
+                      <% p[0].to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
+                          <% if !a.from[0].nil? %>
+                              <%= rounded_initials_for_email(a.from[0].personal, a.from[0].address) %>
+                          <% end %>
+                      <% end %>
+                  </td>
+                  <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                    <span style="display:block;"><%= p[0].size %></span>
+                    <span style="font-size:14px;display:block;"><%= 'Conversation'.pluralize(p[0].size) %></span>
+                  </td>
+                  <td style="color:#e58646;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
+                  <% your_open_notification_count = p[1][0].notifications.reject { |n| n.is_complete }.length %>
+                    <span style="display:block;"><%= your_open_notification_count %></span>
+                    <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(your_open_notification_count) %> Assigned To You</span>
+                  </td>
                 </tr>
              </tbody>
           </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-       </li>
-       
-    <% end %>
-   </ul>
+  <% end %>
 <% end %>
 </div>
 
 <!-- Project Details -->
 <% unless @projects_with_activities_today.size == 0 %>
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">Project Conversations:</h2>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">Project Updates:</h2>
 <% @projects_with_activities_today.each do |p| %>
+
+<!-- Assigned Notifications -->
+<% unless p[1][0].notifications.empty? %>
 
   <div style="padding:0;margin:0;">
     
@@ -100,7 +85,80 @@
        <tbody>
           <tr>
              <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
-                <h2 style="line-height:24px;font-weight:bold;display:inline;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= p[1][0].name %> Updates</span></h2>
+                <h2 style="line-height:24px;font-weight:bold;display:inline;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= p[1][0].name %> Tasks:</span></h2>
+             </th>
+             <td style="text-align:left;font-size:15px;line-height:19px;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"></td>
+          </tr>
+       </tbody>
+    </table>
+
+    <div style="margin-top:5px;padding:0"></div>
+
+      <div style="font-size:14px;padding:0 0 6px 0;">
+            
+                <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
+                   <tbody>
+
+    <% p[1][0].notifications.each do |n| %>
+
+                      <tr style="padding:3px 0 3px 0;border-top:1px solid #c1c1c1;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                          <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;line-height:15px;font-size:18px;"><%= '✔' if n.is_complete %></div>
+                        </td>
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                          <span style="font-weight:normal;font-size:14px;line-height:19px;">
+                            <%= n.name %>
+                          </span>
+                        </td>
+                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:70px;max-width:75px;padding:3px;">         
+                          <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
+                          <% if n.category == Notification::CATEGORY[:Action] %>
+                            background-color:#3C8DC5">
+                          <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                            background-color:#A1C436">
+                          <% elsif n.category == Notification::CATEGORY[:Todo] %>  
+                            background-color:#3cc5b9">
+                          <% else %>
+                            background-color:#e58646">
+                          <% end %>
+                            <%= n.category%>
+                          </span>
+                        </td>
+                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:170px;max-width:175px;padding:3px;">
+                          <span style="font-weight:normal;font-size:14px;line-height:19px;">
+                            Due: <%= n.original_due_date.strftime('%B %d, %Y') %>
+                          </span>               
+                        </td>
+                      </tr>
+
+      <% end %>
+
+                    </tbody>
+                </table>
+
+      </div>
+
+  </div>
+    
+  <table class="row" style="margin-top:-10px;margin-bottom:25px;">
+      <tr>
+         <td style="padding: 6px; margin: 15px;">
+            <a href="<%= notifications_url + '?projectid=' + p[1][0].id %>" style="background-color:#ffffff;border:1px solid #5cb85c;border-radius:4px;color:#5cb85c;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks</a>
+         </td>
+         <td class="expander"></td>
+      </tr>
+  </table>
+    <% end %>
+
+
+  <div style="padding:0;margin:0;">
+    
+    <!-- Project Header -->
+    <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
+       <tbody>
+          <tr>
+             <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
+                <h2 style="line-height:24px;font-weight:bold;display:inline;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= p[1][0].name %> Activities:</span></h2>
              </th>
              <td style="text-align:left;font-size:15px;line-height:19px;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:1px solid #ccc"></td>
           </tr>

@@ -12,18 +12,16 @@ class UserMailer < ApplicationMailer
 
   def daily_summary_email(user)
     @user = user
-    d_tz = Time.current.yesterday.strftime('%F')
+    d_tz = Time.current.yesterday.midnight.utc
 
-    where = " between to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) and (to_timestamp(#{Time.zone.parse(d_tz).utc.to_i}) + interval '24 hours')"
-    
+    activity_from_yesterday = "activities.last_sent_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours'"
+    your_notifications = "((notifications.is_complete = false) OR (notifications.is_complete = true AND notifications.complete_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours')) AND (notifications.assign_to = '#{user.id}')"
+
     sub = user.subscriptions
 
     if !sub.nil? and !sub.empty?
-      activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities, :account]).where("activities.last_sent_date" + where).group("activities.id, accounts.id")
+      activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday).where(your_notifications).group("activities.id, accounts.id, notifications.id").order("notifications.is_complete")
       @projects_with_activities_today = activities_today.group_by{|e| e.activities.select {|a| a.is_visible_to(user) }}
-
-      # pinned_activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).eager_load([:activities]).where("activities.is_pinned = true and activities.pinned_at" + where).group("activities.id")
-      # @pinned_activities_today = pinned_activities_today.collect { |x| x.activities.select {|a| a.is_visible_to(current_user) }}.flatten
 
       track user: user # ahoy_email tracker
       mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
@@ -40,12 +38,6 @@ class UserMailer < ApplicationMailer
     if !@subs.nil? and !@subs.empty?
       @projects_with_tasks = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
       @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
-      # @tasks = @projects_with_tasks.map(&:notifications).flatten
-      # @open_tasks = @tasks.reject { |t| t.is_complete }
-      # @closed_tasks_count = @tasks.length - @open_tasks.length
-      # @assigned_tasks_count = @open_tasks.select { |t| t.assign_to == user.id }.length
-      # @overdue_tasks = @open_tasks.select { |t| t.original_due_date < Time.current }
-      # @recent_tasks_count = @open_tasks.select { |t| t.created_at > 7.days.ago }.length
 
       track user: user # ahoy_email tracker
       mail(to: user.email, subject: "Weekly Summary for #{1.week.ago.strftime('%A, %B %d')} - #{Time.current.strftime('%A, %B %d')}")
