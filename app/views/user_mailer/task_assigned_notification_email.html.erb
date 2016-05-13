@@ -3,7 +3,7 @@
    <td class="wrapper last" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; position: relative; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 10px 0px 0px;" align="left" valign="top">
       <table class="twelve columns" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 580px; margin: 0 auto; padding: 0;">
         <tr>
-          <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 40px; font-size: 36px; margin: 0; padding: 0px 0px 10px;" align="left" valign="top"><a href="<%= project_url(@project) %>" style="color:#179dba;text-overflow:ellipsis;text-decoration:none;"><%= @task.name %></a></td>
+          <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 40px; font-size: 36px; margin: 0; padding: 0px 0px 10px;" align="left" valign="top"><a href="<%= notifications_url + '?projectid=' + @project.id %>" style="color:#179dba;text-overflow:ellipsis;text-decoration:none;"><%= @task.name %></a></td>
         </tr>
       </table>
       <table class="twelve columns" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 580px; margin: 0 auto 30px; padding: 0;">
@@ -31,7 +31,7 @@
               <table>
                 <tr>
                   <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: bold; line-height: 19px; font-size: 14px; margin: 0; padding: 0px; min-width: 80px;" align="left" valign="top">Project:</td>
-                  <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px;min-width: 330px;" align="left" valign="top"><a href="<%= project_url(@project) %>" style="color:#179dba;text-overflow:ellipsis;font-size:18px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= @project.name %></a></td>
+                  <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px;min-width: 330px;" align="left" valign="top"><a href="<%= notifications_url + '?projectid=' + @project.id %>" style="color:#179dba;text-overflow:ellipsis;font-size:18px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= @project.name %></a></td>
                 </tr>
               </table>
             </td>
