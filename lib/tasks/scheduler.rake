@@ -18,7 +18,7 @@ namespace :projects do
 
 	desc 'Retrieve latest emails since yesterday for all projects in all organization'
 	task load_activities_since_yesterday: :environment do
-    if Time.now.hour.even? # Runs once every 2 hours
+    if [0,4,8,12,16,20].include?(Time.now.hour) # Runs once every 4 hours
     	puts "\n\n=====Task (load_activites_since_yesterday) started at #{Time.now}====="
 	    after = Time.now.to_i - 86400
 
