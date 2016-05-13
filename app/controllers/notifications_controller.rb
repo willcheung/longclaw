@@ -237,7 +237,7 @@ class NotificationsController < ApplicationController
     @projects = Project.joins(:account)
                       .where('accounts.organization_id = ? 
                               AND (projects.is_public=true 
-                                    OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
+                                    OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(projects.name)")
            
 
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
