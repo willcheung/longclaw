@@ -16,7 +16,7 @@ class ProjectSubscribersController < ApplicationController
     end
 	end
 
-  # for subscribing multiple internal users other than yourself
+  # for subscribing multiple internal users
   def create_all
     return @project_subscribers = [] if (params[:user_id].empty?)
     # @project_subscribers is array of user_id
@@ -25,10 +25,13 @@ class ProjectSubscribersController < ApplicationController
     else
       @project_subscribers = [params[:user_id]]
     end
+    # check if user subscribed herself
+    @self_subscribe = @project_subscribers.include? current_user.id
     # @project_subscribers is array of subscribers
     @project_subscribers.map! { |s| ProjectSubscriber.new(user_id: s, project_id: params[:project_id]) }
     # @project_subscribers is array of subscribers who are saved successfully
     @project_subscribers.select! { |s| s.save }
+    @project = Project.find(params[:project_id])
 
     respond_to do |format|
       format.html { redirect_to :back }
@@ -48,6 +51,8 @@ class ProjectSubscribersController < ApplicationController
 
   def destroy_other
     @project_subscriber = ProjectSubscriber.find(params[:id])
+    @self_unsubscribe = @project_subscriber.user_id == current_user.id
+    @project = @project_subscriber.project
     @project_subscriber.destroy
     respond_to do |format|
       format.html { redirect_to :back }

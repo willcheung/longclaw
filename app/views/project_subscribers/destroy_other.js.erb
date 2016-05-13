@@ -3,3 +3,6 @@ $('.<%= @project_subscriber.id.to_s + @project_subscriber.user_id %>').fadeOut(4
     // Get current ps-length, transform to number and decrement
     $('#ps-length').text(Number($('#ps-length').text()) - 1);
 });
+<% if @self_unsubscribe %>
+$('#follow-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}" %>');
+<% end %>
