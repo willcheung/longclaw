@@ -63,10 +63,11 @@ class UserMailer < ApplicationMailer
     mail(to: @user.email, subject: "#{invited_by} invites you to join ContextSmith")
   end
 
-  def task_assigned_notification_email(user_id, assigner, task_id)
-    @user = User.find(user_id)
+  def task_assigned_notification_email(task, assigner)
+    @user = task.assign_to_user
+    @project = task.project
     @assigner = assigner
-    @task = Notification.find(task_id)
+    @task = task
 
     track user: @user # ahoy_email tracker
     mail(to: @user.email, subject: "#{get_full_name(assigner)} assigned a task to you: #{@task.name}")
