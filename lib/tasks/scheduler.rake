@@ -79,4 +79,16 @@ namespace :projects do
 		end
 	end
 
+	desc 'Subscribe internal project members who are not already subscribed'
+	task subscribe_project_members: :environment do
+		puts "\n\n=====Task (subscribe_project_members) started at #{Time.now}====="
+
+		Project.all.each do |proj|
+		  subs = proj.subscribers
+		  proj.users.registered.onboarded.each do |member|
+		    ProjectSubscriber.create(user_id: member.id, project_id: proj.id) if !subs.any? {|s| s.user_id == member.id }
+		  end
+		end
+	end
+
 end
