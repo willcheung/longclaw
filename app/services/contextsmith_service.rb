@@ -48,7 +48,7 @@ class ContextsmithService
       Notification.load(data, project, is_test)
       return Activity.load(data, project, save_in_db)
     elsif data['code'] == 401
-      puts "Error: #{data['errors'][0]['message']}\n"
+      puts "Error: #{data['message']}\n"
       return []
     elsif data['code'] == 404
       puts "#{data['message']}\n"
