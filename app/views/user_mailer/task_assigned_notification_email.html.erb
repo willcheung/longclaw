@@ -1,0 +1,54 @@
+<table class="row" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px;">
+  <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
+   <td class="wrapper last" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; position: relative; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 10px 0px 0px;" align="left" valign="top">
+      <table class="twelve columns" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 580px; margin: 0 auto; padding: 0;">
+        <tr>
+          <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 40px; font-size: 36px; margin: 0; padding: 0px 0px 10px;" align="left" valign="top"><a href="<%= project_url(@project) %>" style="color:#179dba;text-overflow:ellipsis;text-decoration:none;"><%= @task.name %></a></td>
+        </tr>
+      </table>
+      <table class="twelve columns" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 580px; margin: 0 auto 30px; padding: 0;">
+        <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
+          <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px 0px 10px; min-width: 40px;" align="left" valign="top">
+            <%= rounded_initials_for_email(get_full_name(@assigner), @assigner.email) %>
+          </td>
+          <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: middle; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px 0px 10px;min-width: 370px;" align="left" valign="middle">
+            <%= get_full_name(@assigner) %> assigned this task to you at <%= @task.updated_at.strftime('%l:%M%p on %B %-d') %>
+          </td>
+          <td class="expander" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; visibility: hidden; width: 0px; color: #222222;font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0;" align="left" valign="top"></td>
+        </tr>
+      </table>
+
+      <table class="twelve columns" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 580px; margin: 0 auto; padding: 0; border-top: 1px solid #898e95;">
+        <tbody>
+          <tr>
+            <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 29px; font-size: 24px; margin: 0; padding: 30px 0px 10px;" align="left" valign="top">Description:</td>
+          </tr>
+          <tr>
+            <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px 0px 10px;" align="left" valign="top"><%= @task.description %></td>
+          </tr>
+          <tr>
+            <td>
+              <table>
+                <tr>
+                  <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: bold; line-height: 19px; font-size: 14px; margin: 0; padding: 0px; min-width: 80px;" align="left" valign="top">Project:</td>
+                  <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px;min-width: 330px;" align="left" valign="top"><a href="<%= project_url(@project) %>" style="color:#179dba;text-overflow:ellipsis;font-size:18px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= @project.name %></a></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <table>
+                <tr>
+                  <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: bold; line-height: 19px; font-size: 14px; margin: 0; padding: 0px; min-width: 80px;" align="left" valign="top">Due Date:</td>
+                  <td style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0px;min-width: 330px;" align="left" valign="top"><%= @task.original_due_date.nil? ? '(none)' : @task.original_due_date.strftime('%A, %B %d, %Y') %></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+   </td>
+  </tr>
+</table>

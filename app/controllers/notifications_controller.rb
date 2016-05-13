@@ -150,8 +150,12 @@ class NotificationsController < ApplicationController
                           original_due_date: notification_params[:original_due_date].to_time.utc)
     end
 
+    # send notification email for the new assign_to user
+    send_email = notification_params[:assign_to].present? && notification_params[:assign_to] != @notification.assign_to && notification_params[:assign_to] != current_user.id
+
     respond_to do |format|
       if @notification.update(new_params)
+        UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email
         format.html { redirect_to @notification, notice: 'Notification was successfully updated.' }
         format.json { head :no_content }
         format.js { render action: 'index', status: :created, location: @notification }
@@ -160,7 +164,7 @@ class NotificationsController < ApplicationController
         format.json { render json: @notification.errors, status: :unprocessable_entity }
         format.js { render json: @notification.errors, status: :unprocessable_entity }
       end
-    end  
+    end
   end
 
   def show_member_by_org
