@@ -151,6 +151,8 @@ GEM
       oauth2 (~> 1.0)
       omniauth (~> 1.2)
     orm_adapter (0.5.0)
+    paranoia (2.1.5)
+      activerecord (~> 4.0)
     pg (0.18.4)
     pg (0.18.4-x86-mingw32)
     pg_search (1.0.5)
@@ -261,6 +263,7 @@ DEPENDENCIES
   jquery-rails
   letter_opener
   omniauth-google-oauth2!
+  paranoia (~> 2.1, >= 2.1.5)
   pg
   pg_search
   puma

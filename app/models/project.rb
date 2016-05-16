@@ -19,16 +19,20 @@
 #  updated_at     :datetime         not null
 #  is_confirmed   :boolean
 #  category       :string           default("Implementation")
+#  deleted_at     :datetime
 #
 # Indexes
 #
 #  index_projects_on_account_id  (account_id)
+#  index_projects_on_deleted_at  (deleted_at)
 #
 
 include Utils
 include ContextSmithParser
 
 class Project < ActiveRecord::Base
+  acts_as_paranoid
+
 	belongs_to 	:account
 	belongs_to	:project_owner, class_name: "User", foreign_key: "owner_id"
 	has_many	:project_members, dependent: :destroy
