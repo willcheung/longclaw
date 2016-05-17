@@ -1,6 +1,21 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2><%= @project.name %> <% if @project.owner_id == current_user.id %> &nbsp;&nbsp;&nbsp;&nbsp;<a href="#edit_project_modal" data-toggle="modal" class="btn btn-white btn-xs">Edit</a> <% end %></h2>
+        <h2 class="in-bl"><%= @project.name %></h2>
+        <% if @project.owner_id == current_user.id %>
+            <a href="#edit_project_modal" data-toggle="modal" class="btn btn-white btn-xs m-l-md">Edit</a>
+            <div class="merge-wrapper in-bl m-l-md">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-btn">
+                        <button class="btn btn-white" type="button">Merge with:</button>
+                    </span>
+                    <select id="search-account-projects" class="form-control" name="other-project">
+                    <% @account_projects.each do |p| %>
+                        <option value="<%= p[0] %>"><%= p[1] %></option>
+                    <% end %>
+                    </select>
+                </div>
+            </div>
+        <% end %>
         <ol class="breadcrumb">
             <li>
                 <a href="<%= root_path %>">Home</a>
