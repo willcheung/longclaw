@@ -14,6 +14,8 @@ class AccountsController < ApplicationController
     
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? and (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
+
+    @owners = User.where(organization_id: current_user.organization_id) 
   end
 
   # GET /accounts/1
@@ -84,7 +86,39 @@ class AccountsController < ApplicationController
     end
   end
 
+  def bulk 
+    newArray = params["selected"].map { |key, value| key }
+
+    if(params["operation"]=="delete")
+      bulk_delete(newArray)
+    elsif params["operation"]=="category"
+      bulk_update_category(newArray, params["value"])
+    elsif params["operation"]=="owner"
+      bulk_update_owner(newArray, params["value"])
+    end
+
+    render :text =>"" 
+  end
+
   private
+    def bulk_update_owner(array_of_id, new_owner)
+      if(!array_of_id.nil?)
+        Account.where("id IN ( '#{array_of_id.join("','")}' )").update_all(owner_id: new_owner)
+      end
+    end
+
+    def bulk_update_category(array_of_id, new_type)
+      if(!array_of_id.nil?)
+        Account.where("id IN ( '#{array_of_id.join("','")}' )").update_all(category: new_type)
+      end
+    end
+
+    def bulk_delete(array_of_id)
+      if(!array_of_id.nil?)
+        Account.where("id IN ( '#{array_of_id.join("','")}' )").destroy_all
+      end
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_account
       @account = Account.find(params[:id])

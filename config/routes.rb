@@ -8,7 +8,9 @@ Longclaw::Application.routes.draw do
     root :to => "home#index", :as => "authenticated_root"
     get "home/daily_summary"
 
-    resources :accounts 
+    resources :accounts
+    post "/account_bulk" => 'accounts#bulk'
+
     resources :contacts, only: [:create, :update, :destroy]
     resources :projects do
       resources :project_subscribers, param: :user_id, only: [:destroy, :create]
