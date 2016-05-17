@@ -18,15 +18,22 @@
 #  status          :string           default("Active")
 #  domain          :string(64)       default(""), not null
 #  category        :string           default("Customer")
+#  deleted_at      :datetime
+#
+# Indexes
+#
+#  index_accounts_on_deleted_at  (deleted_at)
 #
 
 include Utils
 include ContextSmithParser
 
-class Account < ActiveRecord::Base	
+class Account < ActiveRecord::Base
+    acts_as_paranoid
+
 	has_many	:projects, -> { where is_confirmed: true }, dependent: :destroy
-  has_many  :contacts, dependent: :destroy
-  has_many  :activities, :through => :projects
+    has_many  :contacts, dependent: :destroy
+    has_many  :activities, :through => :projects
 	belongs_to	:organization
 	belongs_to	:user, foreign_key: "owner_id"
 
