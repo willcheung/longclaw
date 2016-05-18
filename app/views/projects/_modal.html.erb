@@ -17,7 +17,7 @@
       </div>
       <% if modal_id == 'edit_project_modal' %>
         <div class="modal-footer">
-          <%= link_to "Delete project", @project, method: :delete, data: {confirm: "All conversations and notes in this project will be deleted! Are you sure?"} %>
+          <%= link_to "Disable project", @project, method: :delete, data: {confirm: "All conversations and notes in this project will be disabled! Are you sure?"} %>
         </div>
       <% end %>
     </div>
