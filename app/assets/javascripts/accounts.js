@@ -4,8 +4,8 @@ $(document).ready(function(){
   $('#accounts-table').DataTable( {
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,4,5,7]},
-      { orderable: false, targets: [0,7] }
+      { searchable: false, targets: [0,4,5]},
+      { orderable: false, targets: [0] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],

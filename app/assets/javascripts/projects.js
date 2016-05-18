@@ -21,9 +21,10 @@ jQuery(document).ready(function($) {
   $('#projects-table').DataTable( {
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [4,5,6,7,8]},
-      { orderable: false, targets: [3,4,5,7,8] }
+      { searchable: false, targets: [0,5,6,7,8,9]},
+      { orderable: false, targets: [0,4,5,6,8,9] }
     ],
+    "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
     "dom":' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
     "language": {
@@ -35,4 +36,70 @@ jQuery(document).ready(function($) {
   $('input[type=search]').attr('size', '50');
 
 
+});
+
+
+var checkCounter = 0;
+
+$('.bulk-project').change(function(){
+  if($(this).is(":checked")){
+    checkCounter++;
+  }
+  else{
+    checkCounter--;
+  }
+
+  if(checkCounter>0)
+  {
+    $('.bulk-group').css('visibility','visible');
+  }
+  else
+  {
+    // $('.bulk-group').css('visibility','hidden');
+    $('.bulk-group').prop("disabled",true);
+  }
+  // console.log(checkCounter);
+
+});
+
+function bulkOperation(operation, value, url){
+  var array = [];
+  var i = 0;
+  $('.bulk-project:checked').each(function(){
+    array[i] = $(this).val();
+    i++;
+  }); 
+  
+  var temp = {
+    selected: array,
+    operation: operation,
+    value: value
+  };
+
+  msg= JSON.stringify(temp);
+  // console.log(msg);
+  $.ajax({
+      type: "POST",
+      url: url,
+      contentType: 'application/json',
+      dataType: 'json',
+      data: msg
+  });
+}
+
+$('#bulk-delete').click(function(){
+    bulkOperation("delete",  null, "/project_bulk");
+    window.location.replace("/projects");
+});
+
+$('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
+$('.category_box').on('change',function(evt,params){
+    bulkOperation("category",  params["selected"], "/project_bulk");
+    window.location.replace("/projects");     
+});
+
+$('.owner_box').chosen({ allow_single_deselect: true});
+$('.owner_box').on('change',function(evt,params){
+    bulkOperation("owner",  params["selected"], "/project_bulk");
+    window.location.replace("/projects");     
 });

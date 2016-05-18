@@ -21,6 +21,8 @@ Longclaw::Application.routes.draw do
     resources :users
     resources :notifications, only: [:index, :update, :create]
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
+    post "/project_bulk" => 'projects#bulk'
+
     get "settings/" => 'settings#index'
     get "settings/super_user" => 'settings#super_user'
     post "settings/invite_user/:user_id" => 'settings#invite_user'
