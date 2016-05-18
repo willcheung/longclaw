@@ -41,6 +41,8 @@ class ProjectsController < ApplicationController
     @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }
 
     # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
+
+    @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
   end
 
   def render_pinned_tab

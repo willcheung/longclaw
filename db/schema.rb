@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160412224813) do
+ActiveRecord::Schema.define(version: 20160517204356) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -33,7 +33,10 @@ ActiveRecord::Schema.define(version: 20160412224813) do
     t.string   "status",                     default: "Active"
     t.string   "domain",          limit: 64, default: "",         null: false
     t.string   "category",                   default: "Customer"
+    t.datetime "deleted_at"
   end
+
+  add_index "accounts", ["deleted_at"], name: "index_accounts_on_deleted_at", using: :btree
 
   create_table "activities", force: :cascade do |t|
     t.string   "category",                             null: false
@@ -189,9 +192,11 @@ ActiveRecord::Schema.define(version: 20160412224813) do
     t.datetime "updated_at",                                null: false
     t.boolean  "is_confirmed"
     t.string   "category",       default: "Implementation"
+    t.datetime "deleted_at"
   end
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
+  add_index "projects", ["deleted_at"], name: "index_projects_on_deleted_at", using: :btree
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "first_name",             default: "",    null: false

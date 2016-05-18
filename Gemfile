@@ -20,6 +20,7 @@ gem 'whois'
 gem 'acts_as_commentable'
 gem 'pg_search'
 #gem 'attr_encrypted'             # Encrypting private data!
+gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
 
 # Gems used only for assets and not required
 # in production environments by default.
