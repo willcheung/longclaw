@@ -33,11 +33,15 @@ $('.bulk-account').change(function(){
 
   if(checkCounter>0)
   {
-    $('.bulk-group').css('visibility','visible');
+    $('#bulk-delete').prop("disabled",false);
+    $('#bulk-owner').prop("disabled",false).trigger("chosen:updated");
+    $('#bulk-type').prop("disabled",false).trigger("chosen:updated");
   }
   else
   {
-    $('.bulk-group').css('visibility','hidden');
+    $('#bulk-delete').prop("disabled",true);
+    $('#bulk-owner').prop("disabled",true).trigger("chosen:updated");
+    $('#bulk-type').prop("disabled",true).trigger("chosen:updated");
   }
   // console.log(checkCounter);
 

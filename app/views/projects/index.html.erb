@@ -30,15 +30,15 @@
             </div>
         </div>
         <div class="col-lg-6 bulk-group">
-            <div class="font-bold m-b-xs">Bulk Operation:</div>
-            <button type="button" class="btn btn-sm btn-white" id="bulk-delete"> Delete </button>
-            <select class="category_box col-sm-3" data-placeholder="Change Type">
+            <div class="font-bold m-b-xs" >Bulk Operation:</div>
+            <button type="button" class="btn btn-sm btn-white" id="bulk-delete" disabled> Delete </button>
+            <select class="category_box col-sm-3" data-placeholder="Change Type" id="bulk-type" disabled>
               <option value="0"></option>
               <% Project::CATEGORY.each{|k,v|    %>
               <option value="<%=v %>" ><%=v %></option>
                <% } %> 
             </select>
-            <select class="owner_box col-sm-3" data-placeholder="Change Owner">
+            <select class="owner_box col-sm-3" data-placeholder="Change Owner" id="bulk-owner" disabled>
               <option value="0"></option>
               <% @owners.each do |u|    %>
               <option value="<%=u.id %>" ><%= "#{u.first_name} #{u.last_name}" %></option>
