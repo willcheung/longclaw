@@ -74,7 +74,7 @@ class NotificationsController < ApplicationController
       total_notifications = Notification.find_project_and_user(@projects.map(&:id), final_filter)
     end
     
-    activities = Notification.show_activity_by_notifications(total_notifications.map(&:conversation_id))
+    activities = Activity.where(backend_id: total_notifications.map(&:conversation_id))
 
     visible_activities = []
     activities.each do |a|
