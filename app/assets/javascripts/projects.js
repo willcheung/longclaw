@@ -104,36 +104,66 @@ jQuery(document).ready(function($) {
 
   $("#search-account-projects").chosen()
 
+
+  $('.bulk-project').change(function(){
+    if($(this).is(":checked")){
+      checkCounter++;
+    }
+    else{
+      checkCounter--;
+    }
+
+    if(checkCounter>0)
+    {
+      // $('.bulk-group').css('visibility','visible');
+      $('#bulk-delete').prop("disabled",false);
+      $('#bulk-owner').prop("disabled",false).trigger("chosen:updated");
+      $('#bulk-type').prop("disabled",false).trigger("chosen:updated");
+    }
+    else
+    {
+      // $('.bulk-group').css('visibility','hidden');
+      $('#bulk-delete').prop("disabled",true);
+      $('#bulk-owner').prop("disabled",true).trigger("chosen:updated");
+      $('#bulk-type').prop("disabled",true).trigger("chosen:updated");
+    }
+    // console.log(checkCounter);
+
+  });
+
+  $('#bulk-delete').click(function(){
+    bulkOperation("delete",  null, "/project_bulk");
+    window.location.replace("/projects");
+  });
+
+  $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
+  $('.category_box').on('change',function(evt,params){
+      bulkOperation("category",  params["selected"], "/project_bulk");
+      window.location.replace("/projects");     
+  });
+
+  $('.owner_box').chosen({ allow_single_deselect: true});
+  $('.owner_box').on('change',function(evt,params){
+      bulkOperation("owner",  params["selected"], "/project_bulk");
+      window.location.replace("/projects");     
+  });
+
+
+  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+  $('.category_filter').on('change',function(evt,params){
+    var taskType="";
+    if(params){
+        window.location.replace("/projects?type="+params["selected"]);    
+    }
+    else{
+      window.location.replace("/projects");
+    }
+  });
+
 });
 
 
 var checkCounter = 0;
-
-$('.bulk-project').change(function(){
-  if($(this).is(":checked")){
-    checkCounter++;
-  }
-  else{
-    checkCounter--;
-  }
-
-  if(checkCounter>0)
-  {
-    // $('.bulk-group').css('visibility','visible');
-    $('#bulk-delete').prop("disabled",false);
-    $('#bulk-owner').prop("disabled",false).trigger("chosen:updated");
-    $('#bulk-type').prop("disabled",false).trigger("chosen:updated");
-  }
-  else
-  {
-    // $('.bulk-group').css('visibility','hidden');
-    $('#bulk-delete').prop("disabled",true);
-    $('#bulk-owner').prop("disabled",true).trigger("chosen:updated");
-    $('#bulk-type').prop("disabled",true).trigger("chosen:updated");
-  }
-  // console.log(checkCounter);
-
-});
 
 function bulkOperation(operation, value, url){
   var array = [];
@@ -160,19 +190,4 @@ function bulkOperation(operation, value, url){
   });
 }
 
-$('#bulk-delete').click(function(){
-    bulkOperation("delete",  null, "/project_bulk");
-    window.location.replace("/projects");
-});
 
-$('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
-$('.category_box').on('change',function(evt,params){
-    bulkOperation("category",  params["selected"], "/project_bulk");
-    window.location.replace("/projects");     
-});
-
-$('.owner_box').chosen({ allow_single_deselect: true});
-$('.owner_box').on('change',function(evt,params){
-    bulkOperation("owner",  params["selected"], "/project_bulk");
-    window.location.replace("/projects");     
-});
