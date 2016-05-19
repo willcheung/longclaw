@@ -25,7 +25,7 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    @team = @project.contacts.includes(:account) + @project.users
+    # @team = @project.contacts.includes(:account) + @project.users
     @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id]).activities.maximum("activities.last_sent_date")
     @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id]).activities.where("activities.last_sent_date > (current_date - interval '7 days')").count(:activities)
 
