@@ -28,7 +28,8 @@ include ActionView::Helpers::DateHelper
 class Notification < ActiveRecord::Base
 
 	belongs_to  :project, foreign_key: "project_id"
-	belongs_to  :activity, foreign_key: "conversation_id"
+  # belongs_to  :activity association does NOT work, see activity method below if access needed
+  # belongs_to  :activity, foreign_key: "conversation_id"
 	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
@@ -150,12 +151,14 @@ class Notification < ActiveRecord::Base
     Notification.find_by_sql(query)
   end
 
-  def self.show_activity_by_notifications(array_of_conversationids)
-     query = <<-SQL
-      SELECT activities.* FROM activities where backend_id in ('#{array_of_conversationids.join("','")}')
-    SQL
+  # Accessor method for activity since belongs_to does not work
+  def activity
+    Activity.find_by(backend_id: conversation_id, project_id: project_id)
+  end
 
-    Activity.find_by_sql(query)
+  # Checks whether notification is visible to user based on Activity
+  def is_visible_to(user)
+    activity.blank? || activity.is_visible_to(user)
   end
 
 end

@@ -6,8 +6,9 @@ class HomeController < ApplicationController
     # Load all projects visible to user
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id)
-    @open_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: false).length
-    @closed_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: true, complete_date: (7.days.ago..Time.current)).length
+    visible_activities = Activity.where(project_id: @projects.map(&:id)).select { |a| a.is_visible_to(current_user) }
+    @open_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: false, conversation_id: visible_activities.map(&:backend_id)).length
+    @closed_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: true, complete_date: (7.days.ago..Time.current), conversation_id: visible_activities.map(&:backend_id)).length
     @active_projects = 0
     @conversations_tracked = Activity.where(project_id: @projects.map(&:id), category: 'Conversation').length
     ###### Dashboard Metrics ######
