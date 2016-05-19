@@ -18,9 +18,22 @@
 }
 
 .metric {
-  
+  margin-top: 20px;
+  text-align: left;
 }
 
-.metric-content {
-  text-align: center;
+.metric-content h3, .metric-title h5 {
+  margin: 5px 0 10px;
 }
+.metric-title h5 {
+  font-weight: bold;
+}
+
+.open-task {
+  color: #e58646;
+}
+
+.touch-by {
+  color: #3C8DC5;
+}
+

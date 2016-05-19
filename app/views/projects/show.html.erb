@@ -39,18 +39,38 @@
             </li>
         </ol>
     </div>
-    <div class="col-lg-6 text-right">
-        <div class="metric in-bl">
-            <div class="metric-title">Open Tasks</div>
-            <div class="metric-content">3</div>
-        </div>
-        <div class="metric in-bl">
-            <div class="metric-title">Last Touch By</div>
-            <div class="metric-content">Will Cheung</div>
-        </div>
-        <div class="metric in-bl">
-            <div class="metric-title">Last Activity</div>
-            <div class="metric-content">1 day ago</div>
+    <div class="col-lg-6">
+        <div class="row">
+            <div class="col-xs-4">
+                <div class="metric open-task">
+                    <div class="metric-title">
+                        <h5>Open Tasks</h5>
+                    </div>
+                    <div class="metric-content">
+                        <h3><%= @project_open_tasks %></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-4">
+                <div class="metric touch-by">
+                    <div class="metric-title">
+                        <h5>Last Touch By</h5>
+                    </div>
+                    <div class="metric-content">
+                        <h3><%= @project_last_touch_by %></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-4">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h5>Last Activity</h5>
+                    </div>
+                    <div class="metric-content">
+                        <h3><%= time_ago_in_words(@project_last_activity_date) %> ago</h3>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
