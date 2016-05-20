@@ -160,6 +160,13 @@ jQuery(document).ready(function($) {
     }
   });
 
+
+  $('.filter-group, .bulk-group').hover(function(){
+    $('.chosen-container-single').css('cursor', 'pointer');
+    $('.chosen-single').css('cursor', 'pointer'); 
+  });
+
+
 });
 
 
