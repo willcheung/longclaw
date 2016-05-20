@@ -17,27 +17,25 @@
 
 <div class="wrapper wrapper-content animated fadeInUp">
     <div class="row">
-        <div class="col-lg-6">
-            <div class="btn-group">
-                <div class="font-bold m-b-xs">Account Type:</div>
-                <a href="<%= accounts_path %>" class="btn btn-sm <% if params[:type] %>btn-white<% else %>btn-default<% end %>" type="button">&nbsp;&nbsp;All&nbsp;&nbsp;</a>
-                <a href="<%= accounts_path %>?type=Customer" class="btn btn-sm <% if params[:type] == "Customer" %>btn-default<% else %>btn-white<% end %>" type="button">Customer</a>
-                <a href="<%= accounts_path %>?type=Partner" class="btn btn-sm <% if params[:type] == "Partner" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Partner&nbsp;</a>
-                <a href="<%= accounts_path %>?type=Prospect" class="btn btn-sm <% if params[:type] == "Prospect" %>btn-default<% else %>btn-white<% end %>" type="button">Prospect</a>
-                <a href="<%= accounts_path %>?type=Vendor" class="btn btn-sm <% if params[:type] == "Vendor" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Vendor&nbsp;</a>
-                <a href="<%= accounts_path %>?type=Other" class="btn btn-sm <% if params[:type] == "Other" %>btn-default<% else %>btn-white<% end %>" type="button">&nbsp;Other&nbsp;</a>
-            </div>
+        <div class="col-lg-2 filter-group">
+          <div class="font-bold m-b-xs">Filter:</div>
+          <select class="category_filter col-lg-12" data-placeholder="Select Type">
+            <option value="0"></option>
+            <% Account::CATEGORY.each{|k,v|    %>
+            <option value="<%=v %>"  <% if params[:type] == v  %> selected   <% end %> ><%=v %></option>
+             <% } %> 
+          </select>    
         </div>
-        <div class="col-lg-6 bulk-group" style="visibility: hidden;">
+        <div class="col-lg-6 bulk-group">
             <div class="font-bold m-b-xs">Bulk Operation:</div>
-            <button type="button" class="btn btn-sm btn-white" id="bulk-delete"> Disable </button>
-            <select class="category_box col-sm-3" data-placeholder="Change Type">
+            <button type="button" class="btn btn-sm btn-white" id="bulk-delete" disabled> Archive </button>
+            <select class="category_box col-sm-3" data-placeholder="Change Type" id="bulk-type" disabled>
               <option value="0"></option>
               <% Account::CATEGORY.each{|k,v|    %>
               <option value="<%=v %>" ><%=v %></option>
                <% } %> 
             </select>
-            <select class="owner_box col-sm-3" data-placeholder="Change Owner">
+            <select class="owner_box col-sm-3" data-placeholder="Change Owner" id="bulk-owner" disabled>
               <option value="0"></option>
               <% @owners.each do |u|    %>
               <option value="<%=u.id %>" ><%= "#{u.first_name} #{u.last_name}" %></option>
@@ -65,7 +63,6 @@
                                     <th style="text-align:center">Projects</th>
                                     <th style="text-align:center">Inactive Days</th>
                                     <th>Website</th>
-                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -78,7 +75,6 @@
                                     <td style="text-align:center"><%= a.projects.size %></td>
                                     <td style="text-align:center"><%= @account_last_activity[a.id].nil? ? "" : ((Time.current - @account_last_activity[a.id])/86400).to_i %></td>
                                     <td><%= a.website %></td>
-                                    <td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, a, method: :delete, data: {confirm: "All projects and contacts in this account will be disabled! Are you sure?"} %></td>
                                 </tr>
                                 <% end %>
                             </tbody>
