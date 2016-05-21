@@ -22,11 +22,15 @@
   text-align: left;
 }
 
-.metric-content h3, .metric-title h5 {
-  margin: 5px 0 10px;
-}
 .metric-title h5 {
-  font-weight: bold;
+  margin: 5px 0 10px;
+  font-weight: 500;
+  font-size: 14px;
+}
+.metric-content h3 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 300;
 }
 
 .open-task {
@@ -37,3 +41,29 @@
   color: #3C8DC5;
 }
 
+.blank-panel .panel-body {
+  padding: 15px 0 15px 15px;
+}
+
+.vertical-timeline-icon.note-btn {
+  position: relative;
+  border-color: white;
+}
+.vertical-timeline-icon.note-btn i {
+  top: 8.5px;
+}
+
+.vertical-timeline-icon.note-btn:focus, .vertical-timeline-icon.note-btn:active {
+  outline: none;
+  border-color: #0099ff;
+}
+
+@media only screen and (max-width: 768px) {
+  .vertical-timeline-icon.note-btn {
+    display: inline;
+  }
+
+  .vertical-date {
+    display: none;
+  }
+}
