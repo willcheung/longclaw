@@ -34,7 +34,11 @@ class ContextsmithService
       url = URI.parse(final_url)
       req = Net::HTTP::Get.new(url.to_s)
       res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
-      data = JSON.parse(res.body.to_s)
+      if res.code.to_s == '200'  #HTTP request ok
+        data = JSON.parse(res.body.to_s)
+      else
+        puts "HTTP request error: " + res.code.to_s
+      end
     rescue => e
       puts "ERROR: Something went wrong: " + e.message
       puts e.backtrace.join("\n")
