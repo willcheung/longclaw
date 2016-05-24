@@ -64,6 +64,7 @@
                                     <th></th>
                                     <th>Last 7d Activity</th>
                                     <th>Inactive Days</th>
+                                    <!-- <th>Last Activity</td> -->
                                     <th>Last Touch By</th>
                                     <th></th>
                                     <th></th>
@@ -84,6 +85,7 @@
                                             <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activities.size) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activities.size) %></span></td>
                                             <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
                                             <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : ((Time.current - @project_last_activity_date[p.id])/86400).to_i %></td>
+                                            <!-- <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : time_ago_in_words(@project_last_activity_date[p.id]) + " ago" %></td> -->
                                             <td><%= p.activities[p.activities.size-1].from[0].personal if (!p.activities[p.activities.size-1].nil? and p.activities[p.activities.size-1].category == 'Conversation') %></td>
                                             <td><% if !p.is_public %>
                                                     <span class="label label-warning pull-right">Private</span>
