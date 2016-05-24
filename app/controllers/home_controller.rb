@@ -7,7 +7,7 @@ class HomeController < ApplicationController
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id)
     visible_activities = Activity.where(project_id: @projects.map(&:id)).select { |a| a.is_visible_to(current_user) }
-    @open_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: false, conversation_id: visible_activities.map(&:backend_id)).length
+    @open_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: false, conversation_id: visible_activities.map(&:backend_id) + [nil]).select {|n| n.conversation_id.nil? || visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } }.length
     @closed_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: true, complete_date: (7.days.ago..Time.current), conversation_id: visible_activities.map(&:backend_id)).length
     @active_projects = 0
     @conversations_tracked = Activity.where(project_id: @projects.map(&:id), category: 'Conversation').length
