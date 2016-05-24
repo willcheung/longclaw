@@ -238,9 +238,11 @@
     /* Tabs */
     $('#newsfeed-link').click(function() {
         $('#newsfeed').show();
+        $('.panel-body').removeClass('white-bg');
     });
     $('#pinned-link').click(function() {
         $('#newsfeed').hide();
+        $('.panel-body').addClass('white-bg');
     });
 
     $('[data-toggle="tooltip"]').tooltip();
