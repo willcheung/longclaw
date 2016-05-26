@@ -30,14 +30,14 @@ class ProjectsController < ApplicationController
     # metrics
     @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
     @project_last_touch_by = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date).from[0].personal
-    @project_open_tasks = @project.notifications.where(is_complete: false).length
-    # Inaccurate count of activities, counts number of active conversations, but will not count if multiple emails occurred in same conversation
-    # @project_activities_count_last_7d = @project.activities.where("activities.last_sent_date > (current_date - interval '7 days')").count(:activities)
+    visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
+    @project_open_tasks = @project.notifications.where(is_complete: false).select {|n| n.conversation_id.nil? || visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } } .length
 
     @activities = @project.activities.includes(:comments)
     @pinned_activities = @project.activities.pinned.includes(:comments)
     @project_members = @project.project_members
     @project_subscribers = @project.subscribers
+    @project_notifications = @project.notifications
 
     # filter out not visible items
     @activities = @activities.select {|a| a.is_visible_to(current_user) }

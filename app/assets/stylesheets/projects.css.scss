@@ -49,24 +49,28 @@
   vertical-align: top;
 }
 
-.vertical-timeline-icon.note-btn {
-  position: relative;
-  border-color: white;
-}
-.vertical-timeline-icon.note-btn i {
-  top: 8.5px;
+.note-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 13px;
+  border: 2px solid white;
+  opacity: 1;
 }
 
-.vertical-timeline-icon.note-btn:focus, .vertical-timeline-icon.note-btn:active {
+.note-btn:active:not(:disabled), .note-btn:hover:not(:disabled) {
+  background-color: #CCB155;
+}
+
+.note-btn:focus, .note-btn:active:not(:disabled) {
   outline: none;
   border-color: #0099ff;
 }
+.note-btn:disabled {
+  opacity: 0.5;
+}
 
 @media only screen and (max-width: 768px) {
-  .vertical-timeline-icon.note-btn {
-    display: inline;
-  }
-
   .vertical-date {
     display: none;
   }
