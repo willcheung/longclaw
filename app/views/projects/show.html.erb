@@ -1,6 +1,13 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <div class="col-lg-10">
+    <div class="col-lg-6">
         <h2 class="in-bl"><%= @project.name %></h2>
+        <span class="btn btn-white btn-sm btn-outline m-l-md">
+        <% if @project.subscribers.map(&:user_id).include?(current_user.id) %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}" %>
+        <% else %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}" %>
+        <% end %>
+        </span>
         <% if @project.owner_id == current_user.id %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-white btn-xs m-l-md">Edit</a>
             <!-- UI component for merging projects -->
@@ -32,68 +39,76 @@
             </li>
         </ol>
     </div>
-    <div class="col-lg-2 m-t-md">
-        <span class="btn btn-white btn-sm btn-outline">
-        <% if @project.subscribers.map(&:user_id).include?(current_user.id) %>
-            <%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}" %>
-        <% else %>
-            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}" %>
-        <% end %>
-        </span>
+    <div class="col-lg-6">
+        <div class="row">
+            <div class="col-xs-4">
+                <div class="metric open-task">
+                    <div class="metric-title">
+                        <h5>Open Tasks</h5>
+                    </div>
+                    <div class="metric-content">
+                        <h3><%= @project_open_tasks %></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-4">
+                <div class="metric touch-by">
+                    <div class="metric-title">
+                        <h5>Last Touch By</h5>
+                    </div>
+                    <div class="metric-content">
+                        <h3><%= @project_last_touch_by %></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-4">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h5>Last Activity</h5>
+                    </div>
+                    <div class="metric-content">
+                        <h3><%= time_ago_in_words(@project_last_activity_date) %> ago</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
 <div class="row">
     <div class="col-lg-9">
-        <div class="wrapper wrapper-content animated fadeInUp">
-            <div class="ibox">
-                <div class="ibox-content">
+        <div class="wrapper animated fadeInUp">
+            <div class="panel blank-panel">
+                <div class="panel-heading">
+                    <div class="panel-options">
+                        <ul class="nav nav-tabs">
+                            <li class="active nav-tab"><a id="newsfeed-link" href="#conversations" data-toggle="tab" class="white-bg">Conversations</a></li>
+                            <li class="nav-tab"><a id="pinned-link" href="#pinned" data-toggle="tab" class="white-bg"><i class="fa fa-thumb-tack"></i> Pinned Items (<%= @pinned_activities.size %>)</a></li>
+                        </ul>
+                    </div>
+                </div>
 
-                    <div class="panel blank-panel">
-                        <div class="panel-heading">
-                            <div class="panel-options">
-                                <ul class="nav nav-tabs">
-                                    <li class="active"><a id="newsfeed-link" href="#conversations" data-toggle="tab">Conversations</a></li>
-                                    <li class=""><a id="pinned-link" href="#pinned" data-toggle="tab"><i class="fa fa-thumb-tack"></i> Pinned Items (<%= @pinned_activities.size %>)</a></li>
-                                </ul>
-                            </div>
-                        </div>
+                <div class="panel-body">
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="conversations">
 
-                        <div class="panel-body">
-                            <div class="tab-content">
-                                <div class="tab-pane active" id="conversations">
-
-                                    <!-- Form -->
-                                    <div style="margin-top:-37px;padding-bottom:15px">
-                                        <div class="row comment-header-box">
-                                            <div class="col-lg-12">
-                                                <span class="row">
-                                                    <a id="add-note" type="button" class="btn btn-w-m btn-primary btn-sm active">ADD NOTE</a>
-                                                    <!-- <button type="button" class="btn btn-w-m btn-link btn-sm">ADD PROJECT STATUS</button> -->
-                                                    <script>
-                                                        $('#add-note').click(function(){
-                                                            $('#add-note-form').toggle();
-                                                            $('#add-note').toggleClass('btn-primary');
-                                                            $('#add-note').toggleClass('btn-link');
-                                                        });
-                                                    </script>
-                                                </span>
-                                                <div id="add-note-form" class="col-lg-12" style="padding-top:7px;display:none;">
-                                                    
-                                                    <%= render 'activities/form', :project_id => @project.id %>  
-                                                    
-                                                </div>
-                                            </div>
+                            <!-- Form -->
+                            <div style="margin-top:-37px;padding-bottom:15px">
+                                <div class="row comment-header-box white-bg">
+                                    <div class="col-lg-12">
+                                        <div id="add-note-form" class="col-lg-12" style="padding-top:10px;padding-bottom:10px;">
+                                            
+                                            <%= render 'activities/form', :project_id => @project.id %>  
+                                            
                                         </div>
                                     </div>
-
-                                    
-                                </div>
-
-                                <div class="tab-pane" id="pinned">
-                                    <%= render 'pinned_tab', pinned_activities: @pinned_activities %>
                                 </div>
                             </div>
+
+                            
+                        </div>
+
+                        <div class="tab-pane" id="pinned">
+                            <%= render 'pinned_tab', pinned_activities: @pinned_activities %>
                         </div>
                     </div>
                 </div>
@@ -101,12 +116,7 @@
 
             <!-- Activities -->
             <div id="newsfeed">
-                <div class="alert alert-info">
-                    <p><strong><i class="fa fa-lightbulb-o"></i> Tip: &nbsp;What shows up in the stream?</strong></p>  
-                    <p>Only external communications are being tracked, and internal emails are completely excluded. One-on-one emails are automatically tagged as "Private", which can be toggled to "Public" to share with the team.</p>
-                    <p style="text-align:center"><a style="text-align:center" class="btn btn-xs btn-primary" href="<%= settings_path %>">Invite collaborators</a></p>
-                </div>
-                <div class="row m-t-md">
+                <div class="row">
                     <div class="col-lg-12">
                         <div id="vertical-timeline" class="vertical-container light-timeline">
 
@@ -228,9 +238,11 @@
     /* Tabs */
     $('#newsfeed-link').click(function() {
         $('#newsfeed').show();
+        $('.panel-body').removeClass('white-bg');
     });
     $('#pinned-link').click(function() {
         $('#newsfeed').hide();
+        $('.panel-body').addClass('white-bg');
     });
 
     $('[data-toggle="tooltip"]').tooltip();
