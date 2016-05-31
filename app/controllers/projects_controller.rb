@@ -46,6 +46,7 @@ class ProjectsController < ApplicationController
     # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
 
     @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
+    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
   end
 
   def render_pinned_tab

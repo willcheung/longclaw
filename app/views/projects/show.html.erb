@@ -113,7 +113,77 @@
                         </div>
 
                         <div class="tab-pane" id="tasks">
-                            This is the tasks tab!!!
+                            <table class="table responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
+                              <thead>
+                                <tr>
+                                  <th></th>
+                                  <th></th>
+                                  <th class="col-md-4">Task</th>
+                                  <th></th>
+                                  <th>Assign</th>
+                                  <th>Due </th>
+                                  <th>Created</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% @project_notifications.each do |n| %>
+                                  <% if n.is_complete %>
+                                    <tr style="height:70px; opacity: 0.5;" bgcolor="#eeeeee" >
+                                  <% else %>
+                                    <tr style="height:70px;">
+                                  <% end %>
+                                    <td> 
+                                      <input type="checkbox" class="i-checks" id=<%=n.id  %> <% if n.is_complete %> checked <% end %> >
+                                    </td>
+                                    <td>
+                                      <% if n.category == Notification::CATEGORY[:Action] %>
+                                        <span class="label label-primary">
+                                      <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                                        <span class="label label-success">
+                                      <% elsif n.category == Notification::CATEGORY[:Todo] %>  
+                                        <span class="label label-info">
+                                      <% else %>
+                                        <span class="label label-warning">
+                                      <% end %>
+                                        <%= n.category%>
+                                        </span>
+                                    </td>
+                                    <td>
+                                      <div style="font-size:14px"><%= best_in_place n, :name, :as => :input, :place_holder => '(Add title)' %></div>
+                                      <div><small>
+                                         <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>       
+                                    </td>
+                                    <td>
+                                        <% if n.category == Notification::CATEGORY[:Action] or n.category == Notification::CATEGORY[:Opportunity]%>
+                                        <div class="hoverToolTip" data-placement="right" data-id="<%=n.id %>">
+                                          <% if n.category == Notification::CATEGORY[:Opportunity] %>
+                                          <a href="<%= "/projects/" + n.project_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
+                                          <% else %>
+                                          <a href="<%= "/projects/" + n.project_id.to_s+'#'+n.conversation_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
+                                          <% end %>
+                                        </div>
+                                        <% end %>
+                                    </td>
+                                    <td>
+                                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add)'%>     
+                                    </td>
+                                    <td>
+                                      <% if n.original_due_date.nil? %>
+                                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :inner_class => "due_date_datepicker" %>
+                                      <% else %>
+                                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}    %>
+                                          <% if !n.is_complete and Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+                                              <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="overdue" data-placement="right" data-original-title="Overdue!"></i>
+                                          <% end %>
+                                      <% end %>
+                                    </td>
+                                    <td>
+                                      <div><%=Time.zone.at(n.created_at).strftime('%Y-%m-%d') %> <span style="display:none"><%=Time.zone.at(n.created_at).strftime('%H:%M:%S') %></span></div>
+                                    </td>
+                                  </tr>
+                                <% end %>
+                              </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
