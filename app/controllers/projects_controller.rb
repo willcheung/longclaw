@@ -27,6 +27,7 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
+    @show = "show"
     # metrics
     @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
     @project_last_touch_by = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date).from[0].personal
@@ -34,19 +35,19 @@ class ProjectsController < ApplicationController
     @project_open_tasks = @project.notifications.where(is_complete: false).select {|n| n.conversation_id.nil? || visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } } .length
 
     @activities = @project.activities.includes(:comments)
-    @pinned_activities = @project.activities.pinned.includes(:comments)
+    # @pinned_activities = @project.activities.pinned.includes(:comments)
     @project_members = @project.project_members
     @project_subscribers = @project.subscribers
-    @project_notifications = @project.notifications
+    # @project_notifications = @project.notifications
 
     # filter out not visible items
     @activities = @activities.select {|a| a.is_visible_to(current_user) }
-    @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }
+    # @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }
 
     # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
 
     @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
-    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+    # @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
   end
 
   def render_pinned_tab
