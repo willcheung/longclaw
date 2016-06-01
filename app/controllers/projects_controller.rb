@@ -1,7 +1,8 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_items]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
+  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab]
 
   # GET /projects
   # GET /projects.json
@@ -27,25 +28,25 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    @show = "show"
-    get_show_data
-
+    # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
     @activities = @project.activities.includes(:comments)
     # filter out not visible items
     @activities = @activities.select {|a| a.is_visible_to(current_user) }
-
-    # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
-
-    # @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
   end
 
-  def pinned_items
-    @show = "pinned"
-    get_show_data
-    
+  def pinned_tab    
     @pinned_activities = @project.activities.pinned.includes(:comments)
     # filter out not visible items
     @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }
+
+    render "show"
+  end
+
+  def tasks_tab
+    visible_activities = Activity.where(project_id: @project.id)
+    @notifications = @project.notifications
+
+    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
 
     render "show"
   end

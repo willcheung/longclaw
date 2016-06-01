@@ -22,7 +22,7 @@ Longclaw::Application.routes.draw do
     resources :notifications, only: [:index, :update, :create]
 
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
-    get "projects/:id/pinned" => 'projects#pinned_items'
+    get "projects/:id/pinned" => 'projects#pinned_tab'
     get "projects/:id/tasks" => 'projects#tasks_tab'
     post "/project_bulk" => 'projects#bulk'
 

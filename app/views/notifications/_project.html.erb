@@ -1,4 +1,4 @@
-<table class="table responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
+<table class="table responsive no-wrap white-bg" id="notifications-table" cellspacing="0" width="100%">
   <thead>
     <tr>
       <th></th>
@@ -11,7 +11,7 @@
     </tr>
   </thead>
   <tbody>
-    <% @project_notifications.each do |n| %>
+    <% @notifications.each do |n| %>
       <% if n.is_complete %>
         <tr style="height:70px; opacity: 0.5;" bgcolor="#eeeeee" >
       <% else %>
@@ -69,3 +69,7 @@
     <% end %>
   </tbody>
 </table>
+
+<script type="text/javascript">
+    $("#tasks-link").parent().addClass("active");
+</script>
