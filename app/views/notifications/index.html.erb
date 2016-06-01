@@ -59,7 +59,7 @@
               <thead>
                 <tr>
                   <th></th>
-                  <th></th>
+                  <th>Type  <i class="fa fa-question-circle tool-tip-category" data-placement="right" ></i></th>
                   <th class="col-md-4">Task</th>
                   <th></th>
                   <th>Project Stream</th>
@@ -86,7 +86,7 @@
                       <% elsif n.category == Notification::CATEGORY[:Todo] %>  
                         <span class="label label-info">
                       <% else %>
-                        <span class="label label-warning">
+                        <span class="label label-danger">
                       <% end %>
                         <%= n.category%>
                         </span>
@@ -97,7 +97,7 @@
                          <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>       
                     </td>
                     <td>
-                        <% if n.category == Notification::CATEGORY[:Action] or n.category == Notification::CATEGORY[:Opportunity]%>
+                        <% if n.category == Notification::CATEGORY[:Action] or n.category == Notification::CATEGORY[:Opportunity] or n.category == Notification::CATEGORY[:Risk]%>
                         <div class="hoverToolTip" data-placement="right" data-id="<%=n.id %>">
                           <% if n.category == Notification::CATEGORY[:Opportunity] %>
                           <a href="<%= "/projects/" + n.project_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
