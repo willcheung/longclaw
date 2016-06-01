@@ -80,14 +80,15 @@
             <div class="panel blank-panel">
                 <div class="panel-heading">
                     <ul class="nav nav-tabs">
-                        <li class="nav-tab"><a id="newsfeed-link" href="#conversations" data-toggle="tab" class="white-bg"><i class="fa fa-comments"></i> Conversations</a></li>
-                        <li class="nav-tab"><a id="pinned-link" href="#pinned" data-toggle="tab" class="white-bg"><i class="fa fa-thumb-tack"></i> Pinned Items (#)</a></li>
-                        <li class="nav-tab"><a id="tasks-link" href="#tasks" data-toggle="tab" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks</a></li>
+                        <li class="nav-tab"><a id="newsfeed-link" href="<%= project_path(@project) %>" class="white-bg"><i class="fa fa-comments"></i> Conversations</a></li>
+                        <li class="nav-tab"><a id="pinned-link" href="<%= project_path(@project) %>/pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Pinned Items (#)</a></li>
+                        <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks</a></li>
                     </ul>
                 </div>
             </div>
 
-            <%= render 'activities/timeline' if @show == "show" %>
+            <%= render 'timeline' if @show == "show" %>
+            <%= render 'pinned_tab', pinned_activities: @pinned_activities if @show == "pinned" %>
 
         </div>
     </div>
@@ -196,20 +197,6 @@
 <%= render 'modal', modal_id: 'edit_project_modal' %>
 
 <script>
-    /* Tabs */
-    $('#newsfeed-link').click(function() {
-        $('#newsfeed').show();
-        $('.panel-body').removeClass('white-bg');
-    });
-    $('#pinned-link').click(function() {
-        $('#newsfeed').hide();
-        $('.panel-body').addClass('white-bg');
-    });
-    $('#tasks-link').click(function() {
-        $('#newsfeed').hide();
-        $('.panel-body').addClass('white-bg');
-    });
-
     $('[data-toggle="tooltip"]').tooltip();
 
     /* Pins */

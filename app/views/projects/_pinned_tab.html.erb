@@ -2,7 +2,7 @@
 <% if pinned_activities.empty? %>
     <h4 class="m-t-lg text-center">This is where your important emails and notes will show up. <br/><br/> Click on the <span class="label label-primary">Pin it</span> button at the bottom of each conversation to pin something here.</h4>
 <% else %>
-    <table class="table pinned-table table-condensed table-hover">
+    <table class="table pinned-table table-condensed table-hover white-bg">
         <tbody>
                 <% pinned_activities.each do |a| %>
                     <%= render 'activities/pinned', a: a %>
