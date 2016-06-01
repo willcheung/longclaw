@@ -1,7 +1,7 @@
 /* Main search bar */
 
 /* Used for making sure fa-search is still on top */
-.top {
+.z-top {
   z-index: 2001;
 }
 
