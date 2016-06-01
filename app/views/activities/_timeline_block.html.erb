@@ -69,6 +69,7 @@
             <div class="chat-discussion">
                 <div class="row">
                     <div class="col-xs-11">
+                        <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
                         <% if (a.user == current_user) %>
                             <%= best_in_place a, :note, :as => 'textarea', :place_holder => '(Add text)', :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs' %>
                         <% else %>

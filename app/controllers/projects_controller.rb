@@ -29,12 +29,12 @@ class ProjectsController < ApplicationController
   # GET /projects/1.json
   def show
     # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
-    @activities = @project.activities.includes(:comments)
+    @activities = @project.activities.includes(:comments, :user)
     # filter out not visible items
     @activities = @activities.select {|a| a.is_visible_to(current_user) }
   end
 
-  def pinned_tab    
+  def pinned_tab
     @pinned_activities = @project.activities.pinned.includes(:comments)
     # filter out not visible items
     @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }

@@ -61,7 +61,7 @@
 
         <% elsif a.category == "Note" %>
         <div class="chat-discussion">
-
+            <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
             <%= simple_format(a.note) %>
             
             <div class="col-4-lg action-links">

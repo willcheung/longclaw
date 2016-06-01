@@ -1826,8 +1826,12 @@ a.forum-item-title:hover {
 }
 
 .vertical-timeline-content p, .pinned-table p {
-  margin: 1em 0;
+  margin: 0;
   line-height: 1.4;
+}
+
+.vertical-timeline-content p.note-author, .chat-discussion > p.note-author {
+  margin-bottom: 1em;
 }
 
 .vertical-timeline-content .content-footer, .pinned-table .content-footer {
