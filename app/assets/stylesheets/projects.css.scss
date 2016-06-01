@@ -29,7 +29,7 @@
 }
 .metric-content h3 {
   margin: 0;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 300;
 }
 
@@ -39,6 +39,10 @@
 
 .touch-by {
   color: #3C8DC5;
+}
+
+.panel.blank-panel {
+  margin-bottom: -3px !important;
 }
 
 .blank-panel .panel-body {

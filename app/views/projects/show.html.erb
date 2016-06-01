@@ -79,60 +79,18 @@
         <div class="wrapper animated fadeInUp">
             <div class="panel blank-panel">
                 <div class="panel-heading">
-                    <div class="panel-options">
-                        <ul class="nav nav-tabs">
-                            <li class="active nav-tab"><a id="newsfeed-link" href="#conversations" data-toggle="tab" class="white-bg"><i class="fa fa-comments"></i> Conversations</a></li>
-                            <li class="nav-tab"><a id="pinned-link" href="#pinned" data-toggle="tab" class="white-bg"><i class="fa fa-thumb-tack"></i> Pinned Items (<%= @pinned_activities.size %>)</a></li>
-                            <li class="nav-tab"><a id="tasks-link" href="#tasks" data-toggle="tab" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="panel-body">
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="conversations">
-
-                            <!-- Form -->
-                            <div style="margin-top:-37px;padding-bottom:15px">
-                                <div class="row comment-header-box white-bg">
-                                    <div class="col-lg-12">
-                                        <div id="add-note-form" style="padding-top:10px;padding-bottom:10px;">
-                                            
-                                            <%= render 'activities/form', :project_id => @project.id %>  
-                                            
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            
-                        </div>
-
-                        <div class="tab-pane" id="pinned">
-                            <%= render 'pinned_tab', pinned_activities: @pinned_activities %>
-                        </div>
-
-                        <div class="tab-pane" id="tasks">
-                            This is the tasks tab!!!
-                        </div>
-                    </div>
+                    <ul class="nav nav-tabs">
+                        <li class="nav-tab"><a id="newsfeed-link" href="<%= project_path(@project) %>" class="white-bg"><i class="fa fa-comments"></i> Conversations</a></li>
+                        <li class="nav-tab"><a id="pinned-link" href="<%= project_path(@project) %>/pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Pinned Items</a></li>
+                        <!-- <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks</a></li> -->
+                    </ul>
                 </div>
             </div>
 
-            <!-- Activities -->
-            <div id="newsfeed">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div id="vertical-timeline" class="vertical-container light-timeline">
+            <%= render 'timeline' if params[:action] == "show" %>
+            <%= render 'pinned_tab', pinned_activities: @pinned_activities if params[:action] == "pinned_tab" %>
+            <%= render 'notifications/project' if params[:action] == "tasks_tab" %>
 
-                            <% @activities.each do |a| %>
-                                <%= render 'activities/timeline_block', a: a %>
-                            <% end %>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -240,20 +198,6 @@
 <%= render 'modal', modal_id: 'edit_project_modal' %>
 
 <script>
-    /* Tabs */
-    $('#newsfeed-link').click(function() {
-        $('#newsfeed').show();
-        $('.panel-body').removeClass('white-bg');
-    });
-    $('#pinned-link').click(function() {
-        $('#newsfeed').hide();
-        $('.panel-body').addClass('white-bg');
-    });
-    $('#tasks-link').click(function() {
-        $('#newsfeed').hide();
-        $('.panel-body').addClass('white-bg');
-    });
-
     $('[data-toggle="tooltip"]').tooltip();
 
     /* Pins */

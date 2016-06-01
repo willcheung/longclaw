@@ -1,7 +1,8 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
+  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab]
 
   # GET /projects
   # GET /projects.json
@@ -27,25 +28,27 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    # metrics
-    @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
-    @project_last_touch_by = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date).from[0].personal
-    visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
-    @project_open_tasks = @project.notifications.where(is_complete: false).select {|n| n.conversation_id.nil? || visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } } .length
-
+    # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
     @activities = @project.activities.includes(:comments)
-    @pinned_activities = @project.activities.pinned.includes(:comments)
-    @project_members = @project.project_members
-    @project_subscribers = @project.subscribers
-    @project_notifications = @project.notifications
-
     # filter out not visible items
     @activities = @activities.select {|a| a.is_visible_to(current_user) }
+  end
+
+  def pinned_tab    
+    @pinned_activities = @project.activities.pinned.includes(:comments)
+    # filter out not visible items
     @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }
 
-    # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
+    render "show"
+  end
 
-    @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
+  def tasks_tab
+    visible_activities = Activity.where(project_id: @project.id)
+    @notifications = @project.notifications
+
+    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+
+    render "show"
   end
 
   def render_pinned_tab
@@ -126,6 +129,22 @@ class ProjectsController < ApplicationController
   end
 
   private
+
+  def get_show_data
+    # metrics
+    @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
+    @project_last_touch_by = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date).from[0].personal
+    visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
+    @project_open_tasks = @project.notifications.where(is_complete: false).select {|n| n.conversation_id.nil? || visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } } .length
+
+    # project people
+    @project_members = @project.project_members
+    @project_subscribers = @project.subscribers
+
+    # for merging projects, for future use
+    @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
+
+  end
 
   def bulk_update_owner(array_of_id, new_owner)
     if(!array_of_id.nil?)

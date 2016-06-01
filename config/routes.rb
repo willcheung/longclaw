@@ -20,7 +20,10 @@ Longclaw::Application.routes.draw do
     resources :project_members
     resources :users
     resources :notifications, only: [:index, :update, :create]
+
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
+    get "projects/:id/pinned" => 'projects#pinned_tab'
+    get "projects/:id/tasks" => 'projects#tasks_tab'
     post "/project_bulk" => 'projects#bulk'
 
     get "settings/" => 'settings#index'
@@ -43,10 +46,10 @@ Longclaw::Application.routes.draw do
     get "search/autocomplete_project_member"
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
     
-    get 'reports/touches/team' => 'reports#touches_by_team'
-    get 'reports/customer'
-    get 'reports/team'
-    get 'reports/lifecycle'
+    # get 'reports/touches/team' => 'reports#touches_by_team'
+    # get 'reports/customer'
+    # get 'reports/team'
+    # get 'reports/lifecycle'
   end
 
   devise_scope :user do # Unauthenticated user
