@@ -278,33 +278,28 @@ var cachedData = Array();
 
 function hoverGetData(){
     var element = $(this);
-
     var id = element.data('id');
-   
     if(id in cachedData){
         return cachedData[id];
     }
-
     var localData = "error";
-
-   $.ajax('/notifications/show_email_body/'+id, {
+    $.ajax('/notifications/show_email_body/'+id, {
         async: false,
         success: function(data){
             localData = data;
         }
     });
-
     cachedData[id] = localData;
-
     return localData;
 }
 
 $('.hoverToolTip').hover(function(){
     $('.tooltip-inner').css('background-color', 'white');
+    $('.tooltip-inner').css('color', 'black');
     $('.tooltip-inner').css('opacity', '1');
-
-    $('.tooltip-inner').css('padding', '20px 20px');
+    $('.tooltip-inner').css('padding', '20px');
     $('.tooltip-inner').css('max-width', '512px');
+    $('.tooltip-inner').css('text-align', 'left');
     
     $('.tooltip').css('background-color', 'white');
     $('.tooltip').css('opacity', '1');

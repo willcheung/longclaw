@@ -58,6 +58,8 @@ $(document).ready(function() {
     }
   });
 
+  $("#search-form").show();
+
   // Manually add query text to search parameters
   $("#search-form").submit(function (event) {
     var query = $("#search")[0].selectize.lastQuery;
