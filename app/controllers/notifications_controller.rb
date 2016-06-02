@@ -206,7 +206,7 @@ class NotificationsController < ApplicationController
       org.accounts.each do |acc| 
         acc.projects.each do |proj|
           # puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-          ContextsmithService.load_emails_from_backend(proj, nil, 300, nil, true, true, is_test)
+          ContextsmithService.load_emails_from_backend(proj, nil, 300, nil, true, true, is_test,0)
           sleep(1)
         end
       end
@@ -255,13 +255,13 @@ class NotificationsController < ApplicationController
     end
 
     # Opportunity only have project_id
-    # Smart action should have conversation_id, message_id and project_id
+    # Smart action and risk should have conversation_id, message_id and project_id
 
-    if(@notification.category!=Notification::CATEGORY[:Action] and @notification.category!=Notification::CATEGORY[:Opportunity])
+    if(@notification.category!=Notification::CATEGORY[:Action] and @notification.category!=Notification::CATEGORY[:Opportunity] and @notification.category!=Notification::CATEGORY[:Risk] )
       return nil
     end
 
-    if @notification.category==Notification::CATEGORY[:Action]
+    if @notification.category==Notification::CATEGORY[:Action] or @notification.category==Notification::CATEGORY[:Risk]
       query = <<-SQL
         SELECT messages->>'content' as content,
                messages->'from' as from, 
