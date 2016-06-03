@@ -43,7 +43,7 @@ namespace :projects do
 		Organization.all.each do |org|
 			org.users.each do |usr|
 				Time.use_zone(usr.time_zone) do
-					if Time.current.hour == 5 && Time.current.wday.between?(1, 5) || args[:test] # In the hour of 5am on weekdays
+					if Time.current.hour == 5 && Time.current.wday.between?(1, 5) || (args[:test] && !Rails.env.production?) # In the hour of 5am on weekdays
 						puts "Emailing #{usr.email}..."
 						UserMailer.daily_summary_email(usr).deliver_later
 						sleep(1)
@@ -70,7 +70,7 @@ namespace :projects do
 		Organization.all.each do |org|
 			org.users.each do |usr|
 				Time.use_zone(usr.time_zone) do
-					if Time.current.sunday? || args[:test] # In the hour of 5pm on Sundays
+					if Time.current.sunday? || (args[:test] && !Rails.env.production?) # In the hour of 5pm on Sundays
 						puts "Emailing #{usr.email}..."
 						UserMailer.weekly_summary_email(usr).deliver_later
 						sleep(0.5)
