@@ -67,7 +67,7 @@
                         <h5>Last Activity</h5>
                     </div>
                     <div class="metric-content">
-                        <h3><%= time_ago_in_words(@project_last_activity_date) %> ago</h3>
+                        <h3><%= @project_last_activity_date.nil? ? "--" : time_ago_in_words(@project_last_activity_date) + " ago" %></h3>
                     </div>
                 </div>
             </div>
