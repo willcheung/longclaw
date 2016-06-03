@@ -57,8 +57,30 @@ jQuery(function($){
 $('.hoverToolTip').tooltip({
     title: hoverGetData,
     html: true,
-    container: 'body',
+    container: 'body'
     });
+
+ 
+$('.tool-tip-category').tooltip({   
+    title: "<p style=\"line-height:20px;\"><b>Smart Action:</b> Tasks with due dates that are automatically detected from the email body.<br>"+
+           "<b>Risk:</b> Negative sentiment detected in email body.<br>"+
+           "<b>Opportunity:</b> Projects streams that have been inactive for 30+ days and is an opportunity to follow up.<br>"+
+           "<b>To-do:</b> Manually generated task.<p>",
+    html: true,
+    container: 'body'
+});
+
+$('.tool-tip-category').hover(function(){
+    $('.tooltip-inner').css('max-width', '600px');
+    $('.tooltip-inner').css('padding', '2px 2px');
+    $('.tooltip-inner').css('opacity', '1');
+    $('.tooltip-inner').css('background-color', '#2f4050');
+    $('.tooltip-inner').css('color', 'white');
+    
+    $('.tooltip-arrow').css('opacity', '0');
+
+});
+
 
 $('[data-toggle="overdue"]').tooltip();   
 

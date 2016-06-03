@@ -325,8 +325,6 @@ body.body-small .footer.fixed {
   -moz-border-right-colors: none;
   -moz-border-top-colors: none;
   background: none;
-  border-color: #DDDDDD #DDDDDD rgba(0, 0, 0, 0);
-  border-bottom: $gray;
   border-image: none;
   border-style: solid;
   border-width: 1px;
@@ -343,6 +341,11 @@ body.body-small .footer.fixed {
   color: #A7B1C2;
   font-weight: 600;
   padding: 10px 20px 10px 25px;
+  border-color: #eee #eee #ddd;
+  border-top-color: rgb(238, 238, 238);
+  border-right-color: rgb(238, 238, 238);
+  border-bottom-color: rgb(221, 221, 221);
+  border-left-color: rgb(238, 238, 238);
 }
 
 .nav-tabs > li > a:hover, .nav-tabs > li > a:focus {

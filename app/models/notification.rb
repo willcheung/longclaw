@@ -56,6 +56,11 @@ class Notification < ActiveRecord::Base
               next
             end
 
+          #save risk (message score < 0)  
+          if !contextMessage.sentimentItems.nil?
+            load_risk_for_each_message(project.id, c.conversationId, contextMessage)
+          end
+
           if contextMessage.temporalItems.nil?
             #puts "no task"
             next
@@ -133,6 +138,49 @@ class Notification < ActiveRecord::Base
 
       notification.save
     end
+  end
+
+# add new risk(message score below 0)
+  def self.load_risk_for_each_message(project_id, conversation_id, contextMessage)
+    if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Risk] 
+      # avoid redundant
+      return
+    end
+
+    score = contextMessage.sentimentItems[0].score.to_f
+
+    if score >= -0.8
+      # ignore score larger than -0.8
+      return
+    end
+
+    sent_date = Time.at(contextMessage.sentDate).utc
+   
+    # description = "Risk Level: " + (score*100).to_s[1..2] + "%\n"
+  
+    s = contextMessage.sentimentItems[0]
+    context_start = s.sentence.beginOffset.to_i
+    context_end = s.sentence.endOffset.to_i
+    # description = description + contextMessage.content.body[context_start..context_end] 
+    description = contextMessage.content.body[context_start..context_end] 
+
+    # puts description        
+
+    notification = Notification.new(category: CATEGORY[:Risk],
+        name: contextMessage.subject,
+        description: description,
+        message_id: contextMessage.messageId,
+        project_id: project_id,
+        conversation_id: conversation_id,
+        sent_date: sent_date,
+        original_due_date: '',
+        remind_date: '',
+        is_complete: false,
+        assign_to: '',
+        content_offset: context_start,
+        has_time: false)
+
+    notification.save
   end
 
   def self.find_project_and_user(array_of_project_ids, wherestatement="")

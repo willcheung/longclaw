@@ -134,7 +134,7 @@ class ProjectsController < ApplicationController
     # metrics
     @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
     project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
-    @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "N/A"
+    @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
     visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
     @project_open_tasks = @project.notifications.where(is_complete: false).select {|n| n.conversation_id.nil? || visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } } .length
 
