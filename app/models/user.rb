@@ -250,11 +250,12 @@ class User < ActiveRecord::Base
 
     if data['access_token'].nil?
       puts "Error: access_token nil while refreshing token for user #{email}"
-      return nil
+      return false
     else
       update_attributes(
-      oauth_access_token: data['access_token'],
-      oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
+        oauth_access_token: data['access_token'],
+        oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
+      return true
     end
   end
  
