@@ -63,6 +63,11 @@ class NotificationsController < ApplicationController
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
 
+    if @projects.empty?
+      #no project, no notifications
+      return
+    end
+
     @select_project = 0
     # always check if projectid is in visiable projects incase someone do evil
     if !params[:projectid].nil? and !@projects.nil? and @projects.map(&:id).include? params[:projectid]
