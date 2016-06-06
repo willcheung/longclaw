@@ -23,7 +23,7 @@
 #  oauth_expires_at       :datetime
 #  organization_id        :uuid
 #  department             :string
-#  is_billable            :boolean
+#  is_disabled            :boolean
 #  created_at             :datetime
 #  updated_at             :datetime
 #  invitation_created_at  :datetime
@@ -55,6 +55,7 @@ class User < ActiveRecord::Base
   has_many    :notifications, foreign_key: "assign_to" 
 
   scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
+  scope :not_disabled, -> {where("users.is_disabled = false")}
   scope :onboarded, -> {where("onboarding_step = #{Utils::ONBOARDING[:onboarded]}")}
 
   devise :database_authenticatable, :registerable,
@@ -92,6 +93,7 @@ class User < ActiveRecord::Base
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:tutorial],
+          is_disabled: false,
           time_zone: time_zone
         )
 
@@ -109,6 +111,7 @@ class User < ActiveRecord::Base
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:tutorial],
+          is_disabled: false,
           time_zone: time_zone
         )
         
@@ -245,11 +248,14 @@ class User < ActiveRecord::Base
     response = request_token_from_google
     data = JSON.parse(response.body)
 
-    return nil if data['access_token'].nil?
-
-    update_attributes(
+    if data['access_token'].nil?
+      puts "Error: access_token nil while refreshing token for user #{email}"
+      return nil
+    else
+      update_attributes(
       oauth_access_token: data['access_token'],
       oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
+    end
   end
  
   def token_expired?
