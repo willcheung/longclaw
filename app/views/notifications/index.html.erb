@@ -71,9 +71,9 @@
               <tbody>
                 <% @notifications.each do |n| %>
                   <% if n.is_complete %>
-                    <tr style="height:70px; opacity: 0.5;" bgcolor="#eeeeee" >
+                    <tr style="height:70px; opacity: 0.5;" bgcolor="#eeeeee">
                   <% else %>
-                    <tr style="height:70px;">
+                    <tr style="height:70px;" id=<%="notification_row_"+n.id.to_s  %>>
                   <% end %>
                     <td> 
                       <input type="checkbox" class="i-checks" id=<%=n.id  %> <% if n.is_complete %> checked <% end %> >
