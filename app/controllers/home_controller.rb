@@ -6,6 +6,9 @@ class HomeController < ApplicationController
     # Load all projects visible to user
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id)
+   
+    @projects_min_scores = Hash.new()
+    
     visible_activities = Activity.where(project_id: @projects.map(&:id)).select { |a| a.is_visible_to(current_user) }
     @open_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: false, conversation_id: visible_activities.map(&:backend_id) + [nil]).select {|n| n.conversation_id.nil? || visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } }.length
     @closed_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: true, complete_date: (7.days.ago..Time.current), conversation_id: visible_activities.map(&:backend_id)).length
@@ -31,6 +34,8 @@ class HomeController < ApplicationController
       
       @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.map(&:id), current_user.organization.domain, current_user.time_zone)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
+
+      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.map(&:id), current_user.time_zone)
     end
 
   end
