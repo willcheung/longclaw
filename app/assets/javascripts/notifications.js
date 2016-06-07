@@ -33,6 +33,9 @@ $('input').on('ifChecked', function(event){
   $(this).parent().parent().parent().attr("bgcolor", "#eeeeee");
   $(this).parent().parent().parent().css('opacity', '0.5');
   $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+
+  var target = '#notification_row_'+$(this).attr('id');
+  $(target).fadeOut();
   
 });
 

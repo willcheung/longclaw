@@ -69,6 +69,60 @@ class Project < ActiveRecord::Base
 		# Everything lives in OnboardingController#confirm_projects right now
 	end
 
+  def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, test=false)
+    current_time = Time.zone.at(Time.now.utc)
+    current_time_int = Time.new(current_time.year, current_time.month, current_time.day,23,59,59).utc.to_i
+    if test
+      current_time_int = Time.new(2014,9,26,23,59,59).utc.to_i
+    end
+
+    query = <<-SQL
+        SELECT messages->>'sentimentItems' as sentiment_item,
+               messages ->> 'sentDate' as sentdate,
+               activities.project_id as project_id
+        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+        WHERE messages->>'sentimentItems' is NOT NULL AND project_id IN ('#{array_of_project_ids.join("','")}')         
+      SQL
+    result= Activity.find_by_sql(query)
+
+    project_min_score = Hash.new()
+
+    array_of_project_ids.each do |pid|
+      project_min_score[pid] = Array.new(14,nil) 
+    end
+    
+    if !result.nil?
+      result.each do|r|          
+        sentiment_json = JSON.parse(r.sentiment_item)
+      
+        #reverse
+        temp = 13 - ((current_time_int - r.sentdate.to_i) / (24*60*60))
+
+        if(temp>=0 && temp<=13 )
+          if project_min_score[r.project_id][temp].nil?
+            project_min_score[r.project_id][temp] = sentiment_json[0]['score'].to_f
+          elsif project_min_score[r.project_id][temp] > sentiment_json[0]['score'].to_f
+            project_min_score[r.project_id][temp] = sentiment_json[0]['score'].to_f
+          end         
+        end
+        
+      end
+    end
+
+    # incase that day has no risk score, use the score of the previous day
+    project_min_score.each do |key, value|
+      for i in 1..13
+        if value[i].nil?
+          value[i] = value[i-1]
+          # puts i
+        end
+      end
+    end
+
+    return project_min_score
+    
+  end
+
 	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
 		metrics = {}
     previous = nil

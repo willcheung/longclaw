@@ -114,6 +114,16 @@ module ApplicationHelper
   end
 
   # Highcharts helper
+  def get_risk_score_by_project(trend_data, project_id)
+    if trend_data.has_key?(project_id)
+      return trend_data[project_id]
+    else
+      return []
+    end
+
+  end
+
+
   def get_num_activities_by_project(date_range, trend_data, project_id)
     date_range.map { |date| trend_data.find_all { |p| p.id == project_id }.find { |d| d.date == date }.num_activities }.inspect
   end
