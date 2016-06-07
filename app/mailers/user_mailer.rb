@@ -20,8 +20,11 @@ class UserMailer < ApplicationMailer
     sub = user.subscriptions
 
     if !sub.nil? and !sub.empty?
-      activities_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday).where(your_notifications).group("activities.id, accounts.id, notifications.id").order("notifications.is_complete")
-      @projects_with_activities_today = activities_today.group_by{|e| e.activities.select {|a| a.is_visible_to(user) }}
+      @updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday + " OR " + your_notifications).group("activities.id, accounts.id, notifications.id").order("notifications.is_complete")
+      @updates_today.each do |proj|
+        proj.activities = proj.activities.where(activity_from_yesterday).select { |a| a.is_visible_to(user) }
+        proj.notifications = proj.notifications.where(your_notifications)
+      end
 
       track user: user # ahoy_email tracker
       mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
