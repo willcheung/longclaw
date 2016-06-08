@@ -9,7 +9,7 @@ $(document).ready(function() {
         "scrollX": true,
     	responsive: true,
 	    columnDefs: [
-	      { searchable: false, targets: [0,1,3,4,5,6,7]},
+	      { searchable: false, targets: [0,1,3,4,6,7]},
 	      { orderable: false, targets: [0,1,2,3] }
 	    ],
 	    "bPaginate": false,
