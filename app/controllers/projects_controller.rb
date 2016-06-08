@@ -44,8 +44,12 @@ class ProjectsController < ApplicationController
 
   def tasks_tab
     visible_activities = Activity.where(project_id: @project.id)
-    @notifications = @project.notifications
-
+    # select only open tasks where 1. no conversation id 2. conversation is visible 3. conversation has been deleted
+    @notifications = @project.notifications.select do |n| 
+      n.conversation_id.nil? ||
+      visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } ||
+      !@project.activities.any? {|a| n.conversation_id == a.backend_id }
+    end
     @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
 
     render "show"
@@ -136,7 +140,12 @@ class ProjectsController < ApplicationController
     project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
     @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
     visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
-    @project_open_tasks = @project.notifications.where(is_complete: false).select {|n| n.conversation_id.nil? || visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } } .length
+    # select only open tasks where 1. no conversation id 2. conversation is visible 3. conversation has been deleted
+    @project_open_tasks = @project.notifications.where(is_complete: false).select do |n| 
+      n.conversation_id.nil? ||
+      visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } ||
+      !@project.activities.any? {|a| n.conversation_id == a.backend_id }
+    end.length
 
     # project people
     @project_members = @project.project_members
