@@ -6,6 +6,7 @@ class HomeController < ApplicationController
     # Load all projects visible to user
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id)
+    @projects_min_scores = Hash.new()
     project_activities = Activity.where(project_id: @projects.map(&:id))
     visible_activities = project_activities.select { |a| a.is_visible_to(current_user) }
     @open_tasks = Notification.where(project_id: @projects.map(&:id), is_complete: false).select do |n| 
@@ -36,6 +37,8 @@ class HomeController < ApplicationController
       
       @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.map(&:id), current_user.organization.domain, current_user.time_zone)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
+
+      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.map(&:id), current_user.time_zone)
     end
 
   end

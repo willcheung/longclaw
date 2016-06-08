@@ -149,8 +149,8 @@ class Notification < ActiveRecord::Base
 
     score = contextMessage.sentimentItems[0].score.to_f
 
-    if score >= -0.8
-      # ignore score larger than -0.8
+    if score >= -0.9
+      # ignore score larger than -0.9
       return
     end
 

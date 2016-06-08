@@ -33,6 +33,9 @@ $('input').on('ifChecked', function(event){
   $(this).parent().parent().parent().attr("bgcolor", "#eeeeee");
   $(this).parent().parent().parent().css('opacity', '0.5');
   $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+
+  var target = '#notification_row_'+$(this).attr('id');
+  $(target).fadeOut();
   
 });
 
@@ -131,7 +134,7 @@ $('.hoverToolTip').hover(function(){
     $('.tooltip').css('border-style','solid');
     $('.tooltip').css('border-width', '1px');
     $('.tooltip').css('border-color', '#eeeeee');
-    $('.tooltip').css('boxShadow', '0px 0px 40px #aaaaaa');
+    $('.tooltip').css('boxShadow', '0px 0px 20px #aaaaaa');
 
     $('.tooltip-inner-content').css('margin-bottom', '7px');
     $('.tooltip-arrow').css('opacity', '0');

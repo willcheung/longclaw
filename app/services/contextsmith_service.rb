@@ -9,9 +9,12 @@ class ContextsmithService
 
     if ENV["RAILS_ENV"] == 'production' or ENV["RAILS_ENV"] == 'test'
       in_domain = ""
-      project.users.registered.each do |u|
-        u.refresh_token! if u.token_expired?
-        token_emails << { token: u.oauth_access_token, email: u.email }
+      project.users.registered.not_disabled.each do |u|
+        success = true
+        if u.token_expired?
+          success = u.refresh_token!
+        end
+        token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
       return [] if token_emails.empty?
     else
@@ -38,10 +41,6 @@ class ContextsmithService
     final_cluster = []
     new_ex_clusters.each do |key, value|
       final_cluster.push(value.join('|') + "@"+key.to_s)
-    end
-
-    if ex_clusters.length > 1
-      puts "error: ex_clusters size is " + ex_clusters.length.to_s
     end
 
     after = after.nil? ? "" : ("&after=" + after.to_s)

@@ -63,6 +63,11 @@ class NotificationsController < ApplicationController
 
     @projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
 
+    if @projects.empty?
+      #no project, no notifications
+      return
+    end
+
     @select_project = 0
     # always check if projectid is in visiable projects incase someone do evil
     if !params[:projectid].nil? and !@projects.nil? and @projects.map(&:id).include? params[:projectid]
@@ -86,16 +91,22 @@ class NotificationsController < ApplicationController
       end
     end
 
+    activities_conversation_id = activities.map(&:backend_id)
+
     total_notifications.each do |n|
       temp = Array.new(2)
       temp[0] = n.project_id
       temp[1] = n.conversation_id
       if n.conversation_id.nil?
-        @notifications.push(n)     
+        @notifications.push(n)   
+      # don't show private activities
       elsif visible_activities.include?(temp)
         @notifications.push(n)
+      # show notification even if no such activities exist
+      elsif !activities_conversation_id.include?(n.conversation_id)
+        @notifications.push(n)
       end
-    end
+    end 
   end
 
   def show_email_body
@@ -104,6 +115,8 @@ class NotificationsController < ApplicationController
     if !result.nil?
       sent_time = Time.zone.at(result[3]).strftime('%b %e').to_s
       body = '<b>'+result[0] + '</b>'+result[1]+'<br><font color="gray">'+sent_time+'</font><hr>' + simple_format(result[2], class: 'tooltip-inner-content')
+    else
+      body = 'Email not found!'
     end
     render :text => body
   end
