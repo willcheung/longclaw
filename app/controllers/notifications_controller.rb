@@ -267,7 +267,7 @@ class NotificationsController < ApplicationController
       return nil
     end
 
-    # Opportunity only have project_id
+    # Opportunity only have project_id and conversation_id
     # Smart action and risk should have conversation_id, message_id and project_id
 
     if(@notification.category!=Notification::CATEGORY[:Action] and @notification.category!=Notification::CATEGORY[:Opportunity] and @notification.category!=Notification::CATEGORY[:Risk] )
@@ -293,7 +293,7 @@ class NotificationsController < ApplicationController
                messages -> 'cc' as cc,
                messages ->> 'sentDate' as sentdate
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE project_id = '#{@notification.project_id}' ORDER BY last_sent_date DESC 
+        WHERE backend_id='#{@notification.conversation_id}' AND project_id = '#{@notification.project_id}' ORDER BY messages ->> 'sentDate' DESC 
         LIMIT 1
       SQL
     else

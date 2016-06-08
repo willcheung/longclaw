@@ -122,21 +122,28 @@ class Notification < ActiveRecord::Base
     end
     
     stale_projects.each do |p|
-      notification = Notification.new(category: 'Opportunity',
-                                      name: "Check in with #{p.account.name}",
-                                      description: "Last touch #{time_ago_in_words(Time.at(p.last_sent_date.to_i))} ago by #{p.from[0]['personal']}",
-                                      message_id: '',
-                                      project_id: p.id,
-                                      conversation_id: '',
-                                      sent_date: '',
-                                      original_due_date: '',
-                                      remind_date: '',
-                                      is_complete: false,
-                                      assign_to: '',
-                                      content_offset: -1,
-                                      has_time: false)
+      a = Activity.order(last_sent_date: :desc).limit(1).find_by_project_id(p.id)
 
-      notification.save
+      if !a.nil?
+        n = Notification.where(category: CATEGORY[:Opportunity], is_complete: false, project_id: p.id, conversation_id: a.backend_id)
+        if n.empty?
+          notification = Notification.new(category: 'Opportunity',
+                                          name: "Check in with #{p.account.name}",
+                                          description: "Last touch #{time_ago_in_words(Time.at(p.last_sent_date.to_i))} ago by #{p.from[0]['personal']}",
+                                          message_id: '',
+                                          project_id: p.id,
+                                          conversation_id: a.backend_id,
+                                          sent_date: '',
+                                          original_due_date: '',
+                                          remind_date: '',
+                                          is_complete: false,
+                                          assign_to: '',
+                                          content_offset: -1,
+                                          has_time: false)
+
+          notification.save
+        end
+      end
     end
   end
 
