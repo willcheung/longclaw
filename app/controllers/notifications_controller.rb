@@ -139,9 +139,13 @@ class NotificationsController < ApplicationController
       remind_date: r_date,
       has_time: false
       ))
+
+    # send notification email for the assign_to user
+    send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id
  
     respond_to do |format|
       if @notification.save
+        UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email
         format.html { redirect_to @notification, notice: 'Notification was successfully created.' }
         format.js 
         #format.json { render action: 'show', status: :created, location: @project }
