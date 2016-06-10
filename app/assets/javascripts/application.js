@@ -23,7 +23,7 @@
 //= require selectize/selectize.min.js
 
 /* Ahoy analytics */
-ahoy.trackAll();
+// ahoy.trackAll();
 
 /* Timezone */
 jQuery(function() {

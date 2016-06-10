@@ -5,12 +5,17 @@
           <i class="fa fa-sticky-note"></i>
         </button>
       </span>
-      <%= f.input :note, label: false, as: 'text', input_html: { style: 'resize:none;border:none;overflow:hidden;', data: "autoresize", rows: "1" }, placeholder: "Add a note..." %>
+      <%= f.input :note, label: false, as: 'text', input_html: { style: 'resize:none;border:none;overflow:hidden;', rows: "1" }, placeholder: "Add a note..." %>
     </div>
   <input value="<%= project_id %>" class="hidden form-control" type="hidden" name="project_id" id="project_id">
 <% end %>
 <script type="text/javascript">
-  $("#activity_note").keyup( function () {
+  // Auto resize textarea with enlarging on focus
+  $("#activity_note").on("focus keyup input", function () {
+    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 52));
+  }).blur( function () {
+    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 32));
+  }).keyup( function () {
     if ($(this).val()) {
       $(".note-btn")[0].disabled = false;
     }
