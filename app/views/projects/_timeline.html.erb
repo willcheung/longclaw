@@ -14,9 +14,14 @@
     <div class="row">
         <div class="col-lg-12">
             <div id="vertical-timeline" class="vertical-container light-timeline">
-
-                <% @activities.each do |a| %>
-                    <%= render 'activities/timeline_block', a: a %>
+                <% @activities_by_month.each do |month, activities| %>
+                    <div class="vertical-timeline-month">
+                        <h3 class="m-t-sm m-b-sm"><%= month %></h3>
+                    </div>
+                    
+                    <% activities.each do |a| %>
+                        <%= render 'activities/timeline_block', a: a %>
+                    <% end %>
                 <% end %>
 
             </div>
@@ -24,7 +29,7 @@
     </div>
 </div>
 
-<% if @activities.empty? %>
+<% if @activities_by_month.empty? %>
   <div class="p-m m-l m-t white-bg" style="width:100%;">
     <h4 class="text-center">You don't have any emails or notes for this project!</h4>
     <h4 class="text-center">To add a note for this project, type something into the area above and click on the <button class="sticky-bg note-btn" disabled="true" style="opacity:1;"><i class="fa fa-sticky-note"></i></button> button.</h4>
