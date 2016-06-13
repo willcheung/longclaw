@@ -70,10 +70,11 @@ class Project < ActiveRecord::Base
 	end
 
   def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, test=false)
-    current_time = Time.zone.at(Time.now.utc)
-    current_time_int = Time.new(current_time.year, current_time.month, current_time.day,23,59,59).utc.to_i
+    current_time = Time.zone.now
+    current_time_int = Time.zone.local(current_time.year, current_time.month, current_time.day,23,59,59).utc.to_i
+
     if test
-      current_time_int = Time.new(2014,9,26,23,59,59).utc.to_i
+      current_time_int = Time.zone.local(2014,9,26,23,59,59).utc.to_i
     end
 
     query = <<-SQL
@@ -119,6 +120,20 @@ class Project < ActiveRecord::Base
       end
     end
 
+    # change float to percentage
+    # don't use round because 99.998 will become 100
+    # change anything < 50 to 50
+    project_min_score.each do |key, value|
+      for i in 0..13
+        if !value[i].nil?
+          value[i] = (value[i] * 10000 * -1).floor/100.0
+          if value[i] < 50
+            value[i] = 50.0
+          end
+        end
+      end
+    end
+    
     return project_min_score
     
   end
