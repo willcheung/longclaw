@@ -381,7 +381,39 @@
                     width: 1,
                     color: '#808080'
                 }],
-                min: -1
+                min: 0,
+                max: 100,
+                plotBands: [ { // Low Risk
+                from: 0,
+                to: 70,
+                color: 'rgba(170, 252, 174, 0.1)',
+                label: {
+                    text: 'Low Risk',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }, { // Medium Risk
+                from: 70,
+                to: 95,
+                color: 'rgba(246, 188, 42, 0.1)',
+                label: {
+                    text: 'Medium Risk',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }, { // High Risk
+                from: 95,
+                to: 100,
+                color: 'rgba(246, 42, 46, 0.1)',
+                label: {
+                    text: 'High Risk',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }]
             },
             tooltip: {
                 valueSuffix: ''
