@@ -54,24 +54,18 @@
 }
 
 .note-btn {
+  display: none;
+  margin-bottom: 15px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.note-btn-icon {
   width: 30px;
   height: 30px;
   border-radius: 50%;
   font-size: 13px;
   border: 2px solid white;
-  opacity: 1;
-}
-
-.note-btn:active:not(:disabled), .note-btn:hover:not(:disabled) {
-  background-color: #CCB155;
-}
-
-.note-btn:focus, .note-btn:active:not(:disabled) {
-  outline: none;
-  border-color: #0099ff;
-}
-.note-btn:disabled {
-  opacity: 0.5;
 }
 
 @media only screen and (max-width: 768px) {

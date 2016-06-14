@@ -1,20 +1,26 @@
 <%= simple_form_for(Activity.new, remote: true) do |f| %>
     <div class="input-group">
       <span class="input-group-btn top">
-        <button class="sticky-bg note-btn" disabled="true">
+        <button class="sticky-bg note-btn-icon" disabled="true">
           <i class="fa fa-sticky-note"></i>
         </button>
       </span>
-      <%= f.input :note, label: false, as: 'text', input_html: { style: 'resize:none;border:none;overflow:hidden;', rows: "1" }, placeholder: "Add a note..." %>
+      <%= f.input :note, label: false, as: 'text', input_html: { style: 'resize:none;border:none;overflow:hidden;', rows: "1" }, placeholder: "Post a note..." %>
     </div>
   <input value="<%= project_id %>" class="hidden form-control" type="hidden" name="project_id" id="project_id">
+  <%= f.button :submit, "Post", class: "btn-sm sticky-bg pull-right note-btn", disabled: "true" %>
+
 <% end %>
 <script type="text/javascript">
-  // Auto resize textarea with enlarging on focus
+  // Auto resize textarea with pop out for button
   $("#activity_note").on("focus keyup input", function () {
-    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 52));
-  }).blur( function () {
-    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 32));
+    $(this).css('height', 'auto').css('height', this.scrollHeight);
+  }).focus( function () {
+    $(".note-btn").show();
+  }).blur ( function () {
+    if (!$(this).val()) {
+      $(".note-btn").hide();
+    }
   }).keyup( function () {
     if ($(this).val()) {
       $(".note-btn")[0].disabled = false;
