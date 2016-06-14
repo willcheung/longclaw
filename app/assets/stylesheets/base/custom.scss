@@ -427,3 +427,14 @@ span.best_in_place.btn {
   box-shadow: 0 1px 3px rgba(170,170,170,1);
 }
 
+.input-border {
+  border-width: 0 0 1px 0;
+}
+
+.btn-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 13px;
+  border: 2px solid white;
+}
