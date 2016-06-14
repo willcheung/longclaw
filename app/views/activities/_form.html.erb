@@ -16,10 +16,10 @@
   $("#activity_note").on("focus keyup input", function () {
     $(this).css('height', 'auto').css('height', this.scrollHeight);
   }).focus( function () {
-    $(".note-btn").show();
+    $(".note-btn").first().show();
   }).blur ( function () {
     if (!$(this).val()) {
-      $(".note-btn").hide();
+      $(".note-btn").first().hide();
     }
   }).keyup( function () {
     if ($(this).val()) {

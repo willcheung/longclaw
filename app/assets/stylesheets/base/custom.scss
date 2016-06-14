@@ -73,14 +73,6 @@ a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn
   min-height: 20px;
 }
 
-.comment-header-box {
-  border-radius: 3px;
-  box-shadow: 0 1px 3px rgba(170,170,170,1);
-  margin-bottom: 15px;
-  margin-left: 17px;
-  margin-right: 0;
-}
-
 .arrow_box {
   position: relative;
   background: #ffffff;
@@ -427,5 +419,11 @@ span.best_in_place.btn {
 }
 #notifications-table_wrapper .bottom {
   display: none;
+}
+
+/* Wrapper for user inputs for tasks/notes */
+.header-box {
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(170,170,170,1);
 }
 
