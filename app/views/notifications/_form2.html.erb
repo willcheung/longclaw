@@ -1,0 +1,20 @@
+<% remote ||= false %>
+<%= simple_form_for Notification.new, remote: remote do |f| %>
+  <div class="col-lg-12">
+    <div class="input-group m-b">
+      <span class="input-group-btn top">
+        <button class="info-bg btn-icon" disabled="true">
+          <i class="fa fa-check-square-o"></i>
+        </button>
+      </span>
+      <%= f.input :name, label: false, input_html: { class: "input-border" }, placeholder: "Add a To-Do for this Project..." %>
+    </div>
+  </div>
+  <%= f.input :project_id, label: false, as: :hidden, input_html: { value: @project.id } %>
+<% end %>
+<script type="text/javascript">
+  $("#notification_name").keyup( function (e) {
+    if (e.keyCode == 13 && $(this).val()) { $("#new_notification").submit(); }
+  })
+</script>
+

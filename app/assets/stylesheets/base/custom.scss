@@ -73,14 +73,6 @@ a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn
   min-height: 20px;
 }
 
-.comment-header-box {
-  border-radius: 3px;
-  box-shadow: 0 1px 3px rgba(170,170,170,1);
-  margin-bottom: 15px;
-  margin-left: 17px;
-  margin-right: 0;
-}
-
 .arrow_box {
   position: relative;
   background: #ffffff;
@@ -429,3 +421,20 @@ span.best_in_place.btn {
   display: none;
 }
 
+/* Wrapper for user inputs for tasks/notes */
+.header-box {
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(170,170,170,1);
+}
+
+.input-border {
+  border-width: 0 0 1px 0;
+}
+
+.btn-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 13px;
+  border: 2px solid white;
+}
