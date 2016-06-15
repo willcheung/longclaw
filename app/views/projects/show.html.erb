@@ -84,6 +84,12 @@
     <!-- Right sidebar -->
     <div class="col-lg-3">
         <div class="row wrapper wrapper-content project-manager">
+            <%= simple_form_for @project, url: { action: "refresh" }, html: { class: "m-b-md" } do |f| %>
+                <%= f.button :button, class: "btn-primary", id: "refresh-button" do %>
+                    <i class="fa fa-refresh"></i>&nbsp;&nbsp;Refresh
+                <% end %>
+                <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Load emails from collaborators that were added after this project was created."></i>
+            <% end %>
             <div class="m-t-md"><strong>Project Description:</strong></div>
 
             <small><%= best_in_place @project, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12',
@@ -225,5 +231,10 @@
     $('.fa.toggle-open').click( function () {
         $(this).toggleClass("fa-plus fa-minus");
         $(this).parent().parent().next().next().toggle(400);
+    })
+
+    /* Spin the refresh icon to show that refresh is running */
+    $('#edit_project_<%= @project.id %>').submit( function () {
+        $('.fa.fa-refresh').addClass('fa-spin');
     })
 </script>

@@ -146,11 +146,11 @@ class NotificationsController < ApplicationController
     respond_to do |format|
       if @notification.save
         UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email
-        format.html { redirect_to :back, notice: 'Notification was successfully created.' }
+        format.html { redirect_to :back, notice: 'To-Do was successfully created.' }
         format.js 
         #format.json { render action: 'show', status: :created, location: @project }
       else
-        format.html { render action: 'new' }
+        format.html { redirect_to :back, notice: 'To-Do was not created. Did you assign it to a project?' }
         format.js { render json: @notification.errors, status: :unprocessable_entity }
         #format.json { render json: @project.errors, status: :unprocessable_entity }
       end
