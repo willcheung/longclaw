@@ -784,12 +784,8 @@ table.table-mail tr td {
 
 /* COLORS */
 
-.text-navy {
-  color: $primary;
-}
-
 .text-primary {
-  color: inherit;
+  color: $primary;
 }
 
 .text-success {
