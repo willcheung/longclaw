@@ -1,0 +1,33 @@
+<% remote ||= false %>
+<%= simple_form_for :notification, remote: remote do |f| %>
+
+  <%# Added Bootstrap classes, and help-block container for error messages %>
+  <div class="col-lg-8">
+    <div class="input-group">
+      <span class="input-group-btn top">
+        <button class="info-bg btn-icon" disabled="true">
+          <i class="fa fa-check-square-o"></i>
+        </button>
+      </span>
+      <%= f.input :name, label: false, input_html: { class: "input-border" }, placeholder: "Add a To-Do..." %>
+    </div>
+  </div>
+      <%= f.input :project_id, label: false, wrapper_html: { class: 'col-lg-3'}, input_html: { class: "input-border" }, collection: @projects, prompt: "Choose a Project..." %>
+      
+  <%# Added Bootstrap classes %>
+  <div class="col-lg-1">
+    <%= f.button :submit, "Add", class: 'btn-info pull-right font-bold', disabled: "true" %>
+  </div>
+ 
+
+<% end %>
+<script type="text/javascript">
+  $("#notification_project_id").change( function () {
+    if($(this).val()) {
+      $(".btn-info")[0].disabled = false;
+    }
+    else {
+      $(".btn-info")[0].disabled = true;
+    }
+  })
+</script>

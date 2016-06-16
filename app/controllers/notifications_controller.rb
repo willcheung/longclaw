@@ -61,7 +61,7 @@ class NotificationsController < ApplicationController
 
     final_filter = filter_statement.join(" AND ")
 
-    @projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id")
+    @projects = Project.visible_to(current_user.organization_id, current_user.id).order(:name)
 
     if @projects.empty?
       #no project, no notifications
@@ -69,7 +69,7 @@ class NotificationsController < ApplicationController
     end
 
     @select_project = 0
-    # always check if projectid is in visiable projects incase someone do evil
+    # always check if projectid is in visible projects in case someone do evil
     if !params[:projectid].nil? and !@projects.nil? and @projects.map(&:id).include? params[:projectid]
       newProject = Array.new(1)
       newProject[0] = params[:projectid]
@@ -146,11 +146,11 @@ class NotificationsController < ApplicationController
     respond_to do |format|
       if @notification.save
         UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email
-        format.html { redirect_to @notification, notice: 'Notification was successfully created.' }
+        format.html { redirect_to :back, notice: 'To-Do was successfully created.' }
         format.js 
         #format.json { render action: 'show', status: :created, location: @project }
       else
-        format.html { render action: 'new' }
+        format.html { redirect_to :back, notice: 'To-Do was not created. Did you assign it to a project?' }
         format.js { render json: @notification.errors, status: :unprocessable_entity }
         #format.json { render json: @project.errors, status: :unprocessable_entity }
       end
