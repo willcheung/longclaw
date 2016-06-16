@@ -1,1 +1,1 @@
-$('#follow-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}" %>');
+$('#follow-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>');
