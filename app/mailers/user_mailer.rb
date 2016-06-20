@@ -20,14 +20,14 @@ class UserMailer < ApplicationMailer
     sub = user.subscriptions
 
     if !sub.nil? and !sub.empty?
-      updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday + " OR " + your_notifications).group("activities.id, accounts.id, notifications.id").order("notifications.is_complete")
+      updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday + " OR " + your_notifications).group("activities.id, accounts.id, notifications.id")
       @updates_today = updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
         temp = proj.dup
         # temp = Project.new     # another option
         # assign relations before id
         temp.activities = proj.activities.where(activity_from_yesterday).select { |a| a.is_visible_to(user) }
-        temp.notifications = proj.notifications.where(your_notifications)
+        temp.notifications = proj.notifications.where(your_notifications).order(:is_complete, :original_due_date)
         temp.account = proj.account
         # CAUTION: if id is assigned before the relations, assigned relation will be overwritten in actual record
         temp.id = proj.id
