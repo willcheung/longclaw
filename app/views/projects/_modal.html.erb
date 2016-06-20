@@ -12,7 +12,7 @@
       <div class="modal-body">
         <div class="row">
           <%# Render the new person form (passing modal => true to enable remote => true) %>
-          <%= render 'projects/form', remote: false %>
+          <%= render 'projects/form', remote: true %>
         </div>
       </div>
       <% if modal_id == 'edit_project_modal' %>
