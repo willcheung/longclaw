@@ -81,7 +81,10 @@ class ProjectsController < ApplicationController
                                                 owner_id: current_user.id,
                                                 is_confirmed: true,
                                                 created_by: current_user.id,
-                                                updated_by: current_user.id))
+                                                updated_by: current_user.id
+                                                ))
+    @project.project_members.new(user: current_user)
+    @project.subscribers.new(user: current_user)
 
     respond_to do |format|
       if @project.save

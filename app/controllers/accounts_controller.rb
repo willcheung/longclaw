@@ -27,6 +27,7 @@ class AccountsController < ApplicationController
     @project_pinned = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
 
     @account_contacts = @account.contacts
+    @project = Project.new(account: @account)
   end
 
   # GET /accounts/new
