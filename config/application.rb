@@ -18,7 +18,7 @@ module Longclaw
         api_keys_config = YAML.load_file(api_keys_config_file)[Rails.env].symbolize_keys
 
         api_keys_config.each do |key, value|
-            ENV[key.to_s] = value
+            ENV[key.to_s] = value.to_s
         end # end YAML.load_file
     end
 
@@ -33,6 +33,10 @@ module Longclaw
         enable_starttls_auto: true
         }
     end
+
+    config.action_dispatch.default_headers = {
+      'X-Frame-Options' => 'ALLOWALL'
+    }
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
