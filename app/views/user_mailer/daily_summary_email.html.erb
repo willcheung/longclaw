@@ -45,21 +45,15 @@
           <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
              <tbody>
                 <tr style="border-top:1px solid #c1c1c1;">
-                 <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;">
-                    <span style="font-size:14px;display:block;">
-                      <%= pluralize(p.activities.to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.count{|s| !s.from[0].nil?}, 'Person') %> Contributed
-                    </span>
-                      <% p.activities.to_a.uniq{|s| s.from[0].address if !s.from[0].nil? }.each do |a| %>
-                          <% if !a.from[0].nil? %>
-                              <%= rounded_initials_for_email(a.from[0].personal, a.from[0].address) %>
-                          <% end %>
-                      <% end %>
+                  <td style="color:#ed5565;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                    <span style="display:block;"><%= p.overall_risk_score %>%</span>
+                    <span style="font-size:14px;display:block;">Risk Score</span>
                   </td>
                   <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
                     <span style="display:block;"><%= p.activities.size %></span>
                     <span style="font-size:14px;display:block;"><%= 'Conversation'.pluralize(p.activities.size) %></span>
                   </td>
-                  <td style="color:#e58646;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
+                  <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
                   <% your_open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
                     <span style="display:block;"><%= your_open_notification_count %></span>
                     <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(your_open_notification_count) %> Assigned To You</span>
