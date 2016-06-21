@@ -144,27 +144,29 @@ class Project < ActiveRecord::Base
     
   end
 
-  def overall_risk_score
+  def current_risk_score
     query = <<-SQL
         SELECT messages->>'sentimentItems' as sentiment_item,
                messages ->> 'sentDate' as sent_date
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' is NOT NULL 
+        WHERE messages->>'sentimentItems' is NOT NULL
         AND project_id = '#{self.id}'
+        ORDER BY (messages ->> 'sentDate')::integer DESC
       SQL
     result = Activity.find_by_sql(query)
 
     return 0 if result.blank?
 
-    # calculate weighted average sentiment score
-    score = result.reduce(0.0) do |sum, a|
-      # days since sent_date
-      days = (Time.current.utc.to_i - a.sent_date.to_i)/(60*60*24)
-      sum + (JSON.parse(a.sentiment_item)[0]['score'] * sentiment_decay_factor(days))
+    # get min score from last day that has risk score
+    last_sent_date = Time.at(result.first.sent_date.to_i).midnight
+    result.select! {|a| Time.at(a.sent_date.to_i).between?(last_sent_date, last_sent_date.tomorrow) }
+    score = result.reduce(0.0) do |min_score, a|
+      sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
+      min_score < sentiment_score ? min_score : sentiment_score
     end
-    score /= result.size
+
     # round float to a percentage
-    (score*10000*-1).floor/100.0
+    (score * 10000 * -1).floor / 100.0
   end
 
 	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
