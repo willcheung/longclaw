@@ -19,8 +19,8 @@ class HomeController < ApplicationController
     @conversations_tracked = Activity.where(project_id: @projects.map(&:id), category: 'Conversation').length
     ###### Dashboard Metrics ######
     if !@projects.empty?
-      
       static = Rails.env.development?
+      
       project_sum_activities = Project.find_include_sum_activities(0, static, 7*24, @projects.map(&:id))
       @active_projects = project_sum_activities.length
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
@@ -38,7 +38,7 @@ class HomeController < ApplicationController
       @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.map(&:id), current_user.organization.domain, current_user.time_zone)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
 
-      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.map(&:id), current_user.time_zone)
+      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.map(&:id), current_user.time_zone, static)
     end
 
   end
