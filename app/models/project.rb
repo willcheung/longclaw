@@ -70,11 +70,15 @@ class Project < ActiveRecord::Base
 	end
 
   def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, test=false)
-    current_time = Time.zone.now
-    current_time_int = Time.zone.local(current_time.year, current_time.month, current_time.day,23,59,59).utc.to_i
+    # Calculate time since epoch in seconds for today at 23:59:59 based on current user time zone
+    # current_time = Time.zone.now
+    # current_time_int = Time.zone.local(current_time.year, current_time.month, current_time.day,23,59,59).utc.to_i
+    current_time_int = Time.current.end_of_day.utc.to_i
+    start_time_sec = 13.days.ago.midnight.utc.to_i
 
     if test
       current_time_int = Time.zone.local(2014,9,26,23,59,59).utc.to_i
+      start_time_sec = current_time_int - 60*60*24*-14 + 1
     end
 
     query = <<-SQL
@@ -82,7 +86,9 @@ class Project < ActiveRecord::Base
                messages ->> 'sentDate' as sentdate,
                activities.project_id as project_id
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' is NOT NULL AND project_id IN ('#{array_of_project_ids.join("','")}')         
+        WHERE messages->>'sentimentItems' is NOT NULL 
+        AND project_id IN ('#{array_of_project_ids.join("','")}')
+        AND (messages ->> 'sentDate')::integer > #{start_time_sec}
       SQL
     result= Activity.find_by_sql(query)
 
@@ -97,15 +103,15 @@ class Project < ActiveRecord::Base
         sentiment_json = JSON.parse(r.sentiment_item)
       
         #reverse
+        # current_time - sent_date = seconds since sent_date
+        # 24*60*60 = seconds in a day
+        # (current_time - sent_date)/24/60/60 = days since sent_date
+        # 13 - ( days since sent_date ) = days since sent_date from 13 days ago
         temp = 13 - ((current_time_int - r.sentdate.to_i) / (24*60*60))
 
-        if(temp>=0 && temp<=13 )
-          if project_min_score[r.project_id][temp].nil?
-            project_min_score[r.project_id][temp] = sentiment_json[0]['score'].to_f
-          elsif project_min_score[r.project_id][temp] > sentiment_json[0]['score'].to_f
-            project_min_score[r.project_id][temp] = sentiment_json[0]['score'].to_f
-          end         
-        end
+        if project_min_score[r.project_id][temp].nil? || project_min_score[r.project_id][temp] > sentiment_json[0]['score'].to_f
+          project_min_score[r.project_id][temp] = sentiment_json[0]['score'].to_f
+        end         
         
       end
     end
@@ -136,6 +142,31 @@ class Project < ActiveRecord::Base
     
     return project_min_score
     
+  end
+
+  def current_risk_score
+    query = <<-SQL
+        SELECT messages->>'sentimentItems' as sentiment_item,
+               messages ->> 'sentDate' as sent_date
+        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+        WHERE messages->>'sentimentItems' is NOT NULL
+        AND project_id = '#{self.id}'
+        ORDER BY (messages ->> 'sentDate')::integer DESC
+      SQL
+    result = Activity.find_by_sql(query)
+
+    return 0 if result.blank?
+
+    # get min score from last day that has risk score
+    last_sent_date = Time.at(result.first.sent_date.to_i).midnight
+    result.select! {|a| Time.at(a.sent_date.to_i).between?(last_sent_date, last_sent_date.tomorrow) }
+    score = result.reduce(0.0) do |min_score, a|
+      sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
+      min_score < sentiment_score ? min_score : sentiment_score
+    end
+
+    # round float to a percentage
+    (score * 10000 * -1).floor / 100.0
   end
 
 	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
@@ -361,5 +392,12 @@ class Project < ActiveRecord::Base
     self.activities.each do |a|
       a.time_jump(sec)
     end
+  end
+
+  private
+  # Simple formula for determining the weight of a sentiment. Assume that sentiment decays over time
+  ### Current model: Exponential decay, y = e^(-kt), k chosen so that y = 0.1 at t = 90 days
+  def sentiment_decay_factor(days)
+    Math.exp(-0.0255*days)
   end
 end
