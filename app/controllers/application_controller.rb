@@ -13,6 +13,7 @@ class ApplicationController < ActionController::Base
   around_action :set_time_zone, if: :current_user
 
   def after_sign_in_path_for(resource)
+    response.headers["X-FRAME-OPTIONS"] = "ALLOW-FROM na30.salesforce.com"
     if resource.is_a?(User)
       case resource.onboarding_step
       when Utils::ONBOARDING[:onboarded] # Fully onboarded
