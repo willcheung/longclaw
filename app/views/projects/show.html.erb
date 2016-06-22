@@ -7,9 +7,9 @@
             <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
         <% end %>
         <% if @project.owner_id == current_user.id %>
-            <a href="#edit_project_modal" data-toggle="modal" class="btn btn-warning btn-outline btn-sm m-l-md m-t-n-sm">Edit</a>
-            <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-success btn-outline m-l-md m-t-n-sm", id: "btn-refresh" %>
-            <i class="fa fa-question-circle m-l-xs m-t-n-sm text-success" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails from collaborators."></i>
+            <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
+            <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-primary btn-outline m-t-n-sm", id: "btn-refresh" %>
+            <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails from collaborators."></i>
         <% end %>
         <ol class="breadcrumb">
             <li>

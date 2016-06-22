@@ -71,9 +71,16 @@ class User < ActiveRecord::Base
     user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
     
     if user
-      user.update_attributes(oauth_access_token: credentials["token"], 
-                             oauth_expires_at: Time.at(credentials["expires_at"]),
-                             time_zone: time_zone)
+      if credentials["refresh_token"].nil? or credentials["refresh_token"].empty?
+        user.update_attributes(oauth_access_token: credentials["token"], 
+                               oauth_expires_at: Time.at(credentials["expires_at"]),
+                               time_zone: time_zone)
+      else
+        user.update_attributes(oauth_access_token: credentials["token"], 
+                               oauth_expires_at: Time.at(credentials["expires_at"]),
+                               oauth_refresh_token: credentials["refresh_token"],
+                               time_zone: time_zone)
+      end
       return user
     else
       # Considered referred user if email exists but not oauth elements
@@ -249,7 +256,7 @@ class User < ActiveRecord::Base
     data = JSON.parse(response.body)
 
     if data['access_token'].nil?
-      puts "Error: access_token nil while refreshing token for user #{email}"
+      puts "Warning: access_token nil while refreshing token for user #{email}"
       return false
     else
       update_attributes(
