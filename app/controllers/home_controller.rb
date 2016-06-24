@@ -37,7 +37,8 @@ class HomeController < ApplicationController
       # How Busy Are We? Chart
       @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.pluck(:id), current_user.time_zone)
       
-      @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.pluck(:id), current_user.organization.domain, current_user.time_zone)
+      # @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.pluck(:id), current_user.organization.domain, current_user.time_zone)
+      @team_leaderboard = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain, 13.days.ago.midnight.utc)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
 
       @projects_min_scores = Project.find_min_risk_score_by_day(@projects.pluck(:id), current_user.time_zone, static)

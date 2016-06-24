@@ -172,7 +172,8 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
-  def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day, end_day=Time.current.utc)
+  # Team Leaderboard chart
+  def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day, end_day=Time.current.end_of_day.utc)
     date_range = "TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'"
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
