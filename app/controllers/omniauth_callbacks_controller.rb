@@ -1,16 +1,15 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController   
   def salesforce
-        puts "===================="
-        puts "meow"
-        puts request.env["omniauth.auth"]
-        puts "===================="
+        # puts "===================="
+        # puts "meow"
+        # puts request.env["omniauth.auth"]
+        # puts "===================="
         # @user = User.from_omniauth(request.env["omniauth.auth"])
         sign_in_and_redirect current_user
         # render :show
   end
 
 	def google_oauth2
-    response.headers["X-FRAME-OPTIONS"] = "ALLOW-FROM na30.salesforce.com"
     allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com)
     auth = request.env["omniauth.auth"]
 

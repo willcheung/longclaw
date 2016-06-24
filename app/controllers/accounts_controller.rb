@@ -4,7 +4,6 @@ class AccountsController < ApplicationController
   # GET /accounts
   # GET /accounts.json
   def index
-    response.headers["X-FRAME-OPTIONS"] = "ALLOW-FROM na30.salesforce.com"
     @title = 'Accounts'
 
     if params[:type]

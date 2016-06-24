@@ -20,6 +20,7 @@ Longclaw::Application.routes.draw do
     resources :project_members
     resources :users
     resources :notifications, only: [:index, :update, :create]
+    resources :salesforce
 
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "projects/:id/pinned" => 'projects#pinned_tab'
