@@ -170,9 +170,9 @@ class Activity < ActiveRecord::Base
     is_public || email_addresses.include?(user.email)
   end
 
-  ### method to batch update jsonb columns
+  ### methods to batch change jsonb columns
   # updates all sent_date related fields for the activity by sec (time in seconds)
-  def time_jump(sec)
+  def timejump(sec)
     self.last_sent_date += sec
     self.last_sent_date_epoch = (self.last_sent_date_epoch.to_i + sec).to_s
     em = self.email_messages
@@ -182,4 +182,40 @@ class Activity < ActiveRecord::Base
     self.email_messages = em
     self.save
   end
+
+  # finds all instances of email1 and replaces all with email2 in from/to/cc and email_messages for the activity
+  # emails should be passed in the format <#Hashie::Mash address: a, personal: p>
+  # the email hash can also be created at runtime if either email is just passed as a string
+  # for each email passed as a string, must pass an additional string to work as the personal
+  def email_replace_all(email1, email2, *personal)
+    email1 = Hashie::Mash.new({address: email1, personal: personal.shift}) unless email1.respond_to?(:address) && email1.respond_to?(:personal)
+    email2 = Hashie::Mash.new({address: email2, personal: personal.shift}) unless email2.respond_to?(:address) && email2.respond_to?(:personal)
+    
+    email_replace(self, email1, email2)
+
+    em = self.email_messages
+    em.each_with_index { |e, j| em[j] = email_replace(e, email1, email2) } unless em.blank?
+    self.email_messages = em
+    
+    self.save
+  end
+
+  private
+  # helper method for email_replace_all, used to replace the emails in from/to/cc
+  def email_replace(message, email1, email2)
+    from = message.from
+    from[0] = email2 if from[0] == email1
+    message.from = from
+
+    to = message.to
+    to.each_with_index { |t, i| to[i] = email2 if t == email1 } unless to.blank?
+    message.to = to
+
+    cc = message.cc
+    cc.each_with_index { |t, i| cc[i] = email2 if t == email1 } unless cc.blank?
+    message.cc = cc
+
+    message
+  end
+
 end
