@@ -1,7 +1,7 @@
 class ReportsController < ApplicationController
   def touches_by_team
     # TODO: find way to get number of projects for each user listed here
-    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.map(&:id), current_user.organization.domain, 7.days.ago.utc)
+    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain, 7.days.ago.utc)
     @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 
