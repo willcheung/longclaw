@@ -19,6 +19,7 @@
 #  domain          :string(64)       default(""), not null
 #  category        :string           default("Customer")
 #  deleted_at      :datetime
+#  salesforce_id   :string           default("")
 #
 # Indexes
 #

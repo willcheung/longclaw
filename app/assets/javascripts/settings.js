@@ -12,4 +12,21 @@ $(document).ready(function() {
     } );
     
     $('input[type=search]').attr('size', '50');
+
+    $('.salesforce_account_box').chosen({allow_single_deselect: true});
+
+    $('.salesforce_account_box').on('change',function(evt,params){
+        console.log($(this).attr('id'));
+        console.log(params);   
+
+        // $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+
+    if(params){
+      $.ajax({url:'/update_salesforce/?id='+$(this).attr('id')+'&sid='+params["selected"]});
+    }
+    else{
+      $.ajax({url:'/update_salesforce/?id='+$(this).attr('id')+'&sid= '});
+    }
+
+    })
 } );

@@ -55,6 +55,43 @@
     </div>
 </div>
 
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox float-e-margins">
+        <div class="ibox-content">
+            <h1> Salesforce Account </h1>
+            <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th style="text-align:center">ContextSmith Account</th>
+                        <th><% if @salesforce_user.nil?%> <a href="<%=user_omniauth_authorize_url(:salesforce)%> "> Salesforce login</a> 
+                            <% else %>
+                            <%="Salesforce Account ("+@salesforce_user.first_name+" "+@salesforce_user.last_name + ')' %>
+                            <% end %>
+                          </th>
+                       
+                    </tr>
+                </thead>
+                <tbody>
+                    <% @accounts.each do |a| %>
+                    <tr>
+                        <td><%= a.name %></td>
+                        <td><select class="salesforce_account_box col-sm-6" id="<%=a.id%>" data-placeholder="Select Account">
+        <option value="0"></option>
+        <% if !@salesforce_accounts.nil?  %>
+        <% @salesforce_accounts.each do |s| %>
+          <option value="<%=s.Id %>" <% if a.salesforce_id==s.Id  %> selected  <% end %>><%=s.Name %></option>
+        <% end %>
+        <% end  %>
+      </select>
+      </td>
+                        
+                    </tr>
+                    <% end %>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
 $('[data-toggle="tooltip"]').tooltip();
 </script>

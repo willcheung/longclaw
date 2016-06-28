@@ -12,7 +12,8 @@ class SalesforceController < ApplicationController
   	else
   		# set this salesforce id to contextsmith account id
   		@salesforce_id = params[:id]
-  		account_id = 'e699af1c-2069-44e0-9a2c-80b01cd0fab0'
+      account = Account.find_by(salesforce_id: params[:id])
+  		# account_id = 'e699af1c-2069-44e0-9a2c-80b01cd0fab0'
   	  # account_id = 'fcd55ca2-0627-4097-8e00-29a5b8ca4b8f'
   	end
 
@@ -20,7 +21,7 @@ class SalesforceController < ApplicationController
 
   	# for now, just use test account
 
-  	@projects = Project.includes(:activities).where(account_id: account_id)
+  	@projects = Project.includes(:activities).where(account_id: account.id)
 
     activities = []   
     if !@projects.empty?

@@ -10,6 +10,7 @@ Longclaw::Application.routes.draw do
 
     resources :accounts
     post "/account_bulk" => 'accounts#bulk'
+    get "/update_salesforce" => 'accounts#set_salesforce_account'
 
     resources :contacts, only: [:create, :update, :destroy]
     resources :projects do

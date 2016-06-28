@@ -1,12 +1,7 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController   
   def salesforce
-        # puts "===================="
-        # puts "meow"
-        # puts request.env["omniauth.auth"]
-        # puts "===================="
-        # @user = User.from_omniauth(request.env["omniauth.auth"])
+        User.from_omniauth(request.env["omniauth.auth"], current_user.id)
         sign_in_and_redirect current_user
-        # render :show
   end
 
 	def google_oauth2

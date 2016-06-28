@@ -1,5 +1,5 @@
 class AccountsController < ApplicationController
-  before_action :set_account, only: [:show, :edit, :update, :destroy]
+  before_action :set_account, only: [:show, :edit, :update, :destroy, :set_salesforce_account] 
 
   # GET /accounts
   # GET /accounts.json
@@ -99,6 +99,13 @@ class AccountsController < ApplicationController
     end
 
     render :text =>"" 
+  end
+
+
+  def set_salesforce_account
+    @account.update_attributes(salesforce_id: params[:sid])
+    respond_to :js
+
   end
 
   private

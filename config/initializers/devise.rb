@@ -244,7 +244,10 @@ Devise.setup do |config|
             'profile'],
     skip_jwt: true
   }
-  config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
+  Devise.setup do |config|
+    config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
+    config.omniauth :salesforce, ENV['salesforce_client_id'], ENV['salesforce_client_secret']
+  end
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or
