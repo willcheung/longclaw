@@ -1,6 +1,6 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController   
   def salesforce
-        User.from_omniauth(request.env["omniauth.auth"], current_user.id)
+        User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id)
         sign_in_and_redirect current_user
   end
 

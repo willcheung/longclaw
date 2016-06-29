@@ -65,7 +65,7 @@
                         <th style="text-align:center">ContextSmith Account</th>
                         <th><% if @salesforce_user.nil?%> <a href="<%=user_omniauth_authorize_url(:salesforce)%> "> Salesforce login</a> 
                             <% else %>
-                            <%="Salesforce Account ("+@salesforce_user.first_name+" "+@salesforce_user.last_name + ')' %>
+                            <%="Salesforce Account ("+@salesforce_user.oauth_user_name + ')' %>
                             <% end %>
                           </th>
                        
@@ -74,16 +74,17 @@
                 <tbody>
                     <% @accounts.each do |a| %>
                     <tr>
-                        <td><%= a.name %></td>
-                        <td><select class="salesforce_account_box col-sm-6" id="<%=a.id%>" data-placeholder="Select Account">
-        <option value="0"></option>
-        <% if !@salesforce_accounts.nil?  %>
-        <% @salesforce_accounts.each do |s| %>
-          <option value="<%=s.Id %>" <% if a.salesforce_id==s.Id  %> selected  <% end %>><%=s.Name %></option>
-        <% end %>
-        <% end  %>
-      </select>
-      </td>
+                      <td><%= a.name %></td>
+                      <td>
+                        <% if !@salesforce_accounts.nil?  and @salesforce_accounts.length>0 %>
+                          <select class="salesforce_account_box" id="<%=a.id%>" data-placeholder="Select Account">
+                          <option value="0"></option>
+                          <% @salesforce_accounts.each do |s| %>
+                            <option value="<%=s.Id %>" <% if a.salesforce_id==s.Id  %> selected  <% end %>><%=s.Name %></option>
+                          <% end %>                      
+                          </select>
+                        <% end  %>
+                      </td>
                         
                     </tr>
                     <% end %>

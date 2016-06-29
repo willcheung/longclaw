@@ -151,14 +151,13 @@ ActiveRecord::Schema.define(version: 20160628194408) do
     t.string   "oauth_access_token",               null: false
     t.string   "oauth_refresh_token"
     t.string   "oauth_instance_url",               null: false
-    t.string   "first_name",          default: "", null: false
-    t.string   "last_name",           default: "", null: false
-    t.uuid     "user_id",                          null: false
+    t.string   "oauth_user_name",     default: "", null: false
+    t.uuid     "organization_id",                  null: false
     t.datetime "created_at",                       null: false
     t.datetime "updated_at",                       null: false
   end
 
-  add_index "oauth_users", ["oauth_provider", "oauth_provider_uid", "oauth_instance_url"], name: "oauth_per_user", unique: true, using: :btree
+  add_index "oauth_users", ["oauth_provider", "oauth_user_name", "oauth_instance_url"], name: "oauth_per_user", unique: true, using: :btree
 
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name"

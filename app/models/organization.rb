@@ -14,6 +14,7 @@
 class Organization < ActiveRecord::Base
 	has_many :users
 	has_many :accounts
+  has_many :oauth_users
 
   validates :domain, uniqueness: true
 

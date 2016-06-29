@@ -4,7 +4,7 @@ class SettingsController < ApplicationController
 		@users = current_user.organization.users
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 
-        @salesforce_user = OauthUser.find_by(oauth_instance_url: ENV['salesforce_url_instance'], user_id: current_user.id)
+        @salesforce_user = OauthUser.find_by(oauth_instance_url: ENV['salesforce_url_instance'], organization_id: current_user.organization_id)
         @salesforce_accounts = []
 
         if(!@salesforce_user.nil?)
@@ -15,7 +15,7 @@ class SettingsController < ApplicationController
                                   :client_secret => ENV['salesforce_client_secret'],
   																:authentication_callback => Proc.new {|x| Rails.logger.debug x.to_s}
 
-  				@salesforce_accounts = client.query("select Id, Name from Account")
+  				@salesforce_accounts = client.query("select Id, Name from Account ORDER BY Name")
         end      
 	end
 
