@@ -172,21 +172,21 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
-  def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day, end_day=Time.current.utc)
+  # Team Leaderboard chart
+  def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day, end_day=Time.current.end_of_day.utc)
     date_range = "TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'"
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
       WITH email_activities AS 
         (
           SELECT messages ->> 'messageId'::text AS message_id,
-                 messages ->> 'sentDate' AS sent_date,
                  jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
                  CASE
-                   WHEN messages -> 'to' = 'null' THEN NULL
+                   WHEN messages -> 'to' IS NULL THEN NULL
                    ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
                  END AS to,
                  CASE
-                   WHEN messages -> 'cc' = 'null' THEN NULL
+                   WHEN messages -> 'cc' IS NULL THEN NULL
                    ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
                  END AS cc
           FROM activities,
@@ -199,7 +199,7 @@ class User < ActiveRecord::Base
             FROM projects 
             WHERE account_id IN ('#{array_of_account_ids.join("','")}')
           )
-          GROUP BY 1,2,3,4,5
+          GROUP BY 1,2,3,4
         )
       SELECT t2.inbound AS email,
              t2.inbound_count, 

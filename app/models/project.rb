@@ -170,10 +170,6 @@ class Project < ActiveRecord::Base
   end
 
 	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
-		metrics = {}
-    previous = nil
-    arr = []
-
 		query = <<-SQL
       WITH time_series as (
         SELECT * 
@@ -194,25 +190,36 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
+  # How Busy Are We? Chart on Home#index
   def self.count_total_activities_by_day(array_of_account_ids, time_zone)
-		metrics = {}
-    previous = nil
-    arr = []
-
 		query = <<-SQL
-      WITH time_series as (
-        SELECT * 
-          from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1 
+      WITH time_series AS (
+          SELECT * 
+          FROM (SELECT generate_series(date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') AS days) t1 
                 CROSS JOIN 
-               (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}')) t2
-       )
-      SELECT date(time_series.days) as date, count(activities.*) as num_activities
+               (SELECT id AS project_id 
+                FROM projects 
+                WHERE account_id IN ('#{array_of_account_ids.join("','")}')) t2
+        ), user_activities AS (
+          SELECT messages ->> 'messageId'::text AS message_id,
+                 messages ->> 'sentDate' AS sent_date,
+                 project_id
+          FROM activities,
+          LATERAL jsonb_array_elements(email_messages) messages
+          WHERE category = 'Conversation'
+          AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days') AND (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}')
+          AND project_id IN 
+          (
+            SELECT id AS project_id 
+            FROM projects 
+            WHERE account_id IN ('#{array_of_account_ids.join("','")}')
+          )
+          GROUP BY 1,2,3
+        )
+      SELECT date(time_series.days) AS date, count(activities.*) AS num_activities
       FROM time_series
-      LEFT JOIN (SELECT message_id, sent_date, project_id
-      					 FROM user_activities_last_14d where project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
-                 GROUP BY message_id, sent_date, project_id
-                 ) as activities
-        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+      LEFT JOIN user_activities AS activities
+      ON activities.project_id = time_series.project_id AND date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY days 
       ORDER BY days ASC
     SQL
@@ -229,7 +236,7 @@ class Project < ActiveRecord::Base
 		query = <<-SQL
       WITH time_series as (
         SELECT * 
-          from (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1 
+          FROM (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1 
                 CROSS JOIN 
                (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
        )
@@ -388,16 +395,20 @@ class Project < ActiveRecord::Base
   end
 
   ### method to batch update activities in a project by time (in seconds)
-  def time_jump(sec)
-    self.activities.each do |a|
-      a.time_jump(sec)
-    end
+  def timejump(sec)
+    self.activities.each { |a| a.timejump(sec) }
   end
 
-  private
-  # Simple formula for determining the weight of a sentiment. Assume that sentiment decays over time
-  ### Current model: Exponential decay, y = e^(-kt), k chosen so that y = 0.1 at t = 90 days
-  def sentiment_decay_factor(days)
-    Math.exp(-0.0255*days)
+  ### method to batch update activities in a project by person
+  # finds all instances of email1 and replaces all with email2 in from/to/cc and email_messages for all activities in this project
+  # emails should be passed in the format <#Hashie::Mash address: a, personal: p>
+  # the email hash can also be created at runtime if either email is just passed as a string
+  # for each email passed as a string, must pass an additional string to work as the personal
+  def email_replace_all(email1, email2, *personal)
+    email1 = Hashie::Mash.new({address: email1, personal: personal.shift}) unless email1.respond_to?(:address) && email1.respond_to?(:personal)
+    email2 = Hashie::Mash.new({address: email2, personal: personal.shift}) unless email2.respond_to?(:address) && email2.respond_to?(:personal)
+
+    self.activities.each { |a| a.email_replace_all(email1, email2) }
   end
+
 end
