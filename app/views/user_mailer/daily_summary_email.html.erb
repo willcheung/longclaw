@@ -45,9 +45,10 @@
           <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
              <tbody>
                 <tr style="border-top:1px solid #c1c1c1;">
-                  <td style="color:#ed5565;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
-                    <span style="display:block;"><%= p.current_risk_score %>%</span>
-                    <span style="font-size:14px;display:block;">Risk Score</span>
+                <% risk_score = p.current_risk_score %>
+                  <td style="color:<%= risk_score > 95.0 ? '#ed5565' : '#A1C436' %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                    <span style="display:block;"><%= risk_score %>%</span>
+                    <span style="font-size:14px;display:block;"><%= risk_score > 95.0 ? 'High' : 'Low' %> Risk</span>
                   </td>
                   <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
                     <span style="display:block;"><%= p.activities.size %></span>
@@ -130,12 +131,12 @@
     <!-- Conversations -->
   <% p.activities.each do |c| %>
       
-      <div style="font-size:14px;margin-left:20px;padding:0 0 6px 0;">
+      <div style="font-size:14px;padding:0 0 10px 0;">
           <% if c.category == "Conversation" %>
               <h4 style="font-size:14px;line-height:19px;font-weight:bold;margin:0 0 5px!important;padding:3px 0!important;border-bottom:solid 1px #bbb">
                <%= c.title %>
               </h4>
-              <div style="padding:0;margin:0 0 10px 0">
+              <div style="padding:0;margin:0;">
               <% c.email_messages.each_with_index do |m,i| %>
                  <div style="margin:0">
                     <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
