@@ -39,12 +39,12 @@
                 </div>
             </div>
             <div class="col-xs-3">
-                <div class="metric text-danger">
+                <div class="metric <%= @project_risk_score > 95.0 ? "text-danger" : "text-success" %>">
                     <div class="metric-title">
-                        <h5>Risk Score</h5>
+                        <h5><%= @project_risk_score > 95.0 ? "High" : "Low" %> Risk</h5>
                     </div>
                     <div class="metric-content">
-                        <h3><%= @project.current_risk_score %>%</h3>
+                        <h3><%= @project_risk_score %>%</h3>
                     </div>
                 </div>
             </div>
