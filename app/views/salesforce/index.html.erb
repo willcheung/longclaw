@@ -3,10 +3,14 @@
             <div class="panel blank-panel">
                 <div class="panel-heading">
                     <ul class="nav nav-tabs">
-                    	<% @projects.each do |p| %>
-
-                        <li class="nav-tab <% if p.id==@pid%> active <% end %>"><a id="newsfeed-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> " class="white-bg"><i class="fa fa-comments"></i> <%=p.name %></a></li>
-                       
+                        <% if @projects.empty? %>
+                          <div class="text-center m-t-lg">
+                            <h3>No project stream</h3>
+                          </div>
+                        <% else %>
+                    	    <% @projects.each do |p| %>
+                            <li class="nav-tab <% if p.id==@pid%> active <% end %>"><a id="newsfeed-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> " class="white-bg"><i class="fa fa-comments"></i> <%=p.name %></a></li>
+                          <% end %>
                         <% end %>
                     </ul>
                 </div>
