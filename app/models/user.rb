@@ -205,14 +205,13 @@ class User < ActiveRecord::Base
       WITH email_activities AS 
         (
           SELECT messages ->> 'messageId'::text AS message_id,
-                 messages ->> 'sentDate' AS sent_date,
                  jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
                  CASE
-                   WHEN messages -> 'to' = 'null' THEN NULL
+                   WHEN messages -> 'to' IS NULL THEN NULL
                    ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
                  END AS to,
                  CASE
-                   WHEN messages -> 'cc' = 'null' THEN NULL
+                   WHEN messages -> 'cc' IS NULL THEN NULL
                    ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
                  END AS cc
           FROM activities,
@@ -225,7 +224,7 @@ class User < ActiveRecord::Base
             FROM projects 
             WHERE account_id IN ('#{array_of_account_ids.join("','")}')
           )
-          GROUP BY 1,2,3,4,5
+          GROUP BY 1,2,3,4
         )
       SELECT t2.inbound AS email,
              t2.inbound_count, 

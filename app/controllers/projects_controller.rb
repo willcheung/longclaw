@@ -154,6 +154,7 @@ class ProjectsController < ApplicationController
       visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } ||
       !@project.activities.any? {|a| n.conversation_id == a.backend_id }
     end.length
+    @project_risk_score = @project.current_risk_score
 
     # project people
     @project_members = @project.project_members
