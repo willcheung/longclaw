@@ -146,7 +146,7 @@ class ProjectsController < ApplicationController
     # metrics
     @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
     project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
-    @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
+    # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
     visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
     # select only open tasks where 1. no conversation id 2. conversation is visible 3. conversation has been deleted
     @project_open_tasks = @project.notifications.where(is_complete: false).select do |n| 

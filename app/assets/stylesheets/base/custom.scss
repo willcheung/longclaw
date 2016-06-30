@@ -10,13 +10,13 @@ h3 small {
 }
 
 .vcenter {
-    display: inline-block;
-    vertical-align: middle;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .vbottom {
-    display: inline-block;
-    vertical-align: bottom;
+  display: inline-block;
+  vertical-align: bottom;
 }
 
 
@@ -256,11 +256,8 @@ h1.onboarding {
     font-weight: 500;
     margin-bottom: 30px;
 }
-
-span.best_in_place {
+i.bip_activator {
   cursor:pointer;
-  border-bottom: 1px dashed #ccc;
-  text-decoration: none;
 }
 span.best_in_place.switch {
   border: none;
@@ -287,6 +284,18 @@ span.best_in_place.btn {
   display: none;
 }
 .project-people .member:hover .delete-member {
+  display: block;
+}
+.vertical-timeline-block .delete-note {
+  display: none;
+}
+.vertical-timeline-block:hover .delete-note {
+  display: block;
+}
+.social-comment .delete-comment {
+  display: none;
+}
+.social-comment:hover .delete-comment {
   display: block;
 }
 #projects-table th, #accounts-table th {
@@ -437,4 +446,12 @@ span.best_in_place.btn {
   border-radius: 50%;
   font-size: 13px;
   border: 2px solid white;
+}
+
+.max-w-xl {
+  max-width: 95%;
+}
+
+.max-w-lg {
+  max-width: 90%;
 }
