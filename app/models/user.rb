@@ -81,7 +81,6 @@ class User < ActiveRecord::Base
           oauth_access_token: auth.credentials.token,
           oauth_refresh_token: auth.credentials.refresh_token,
           oauth_instance_url: auth.credentials.instance_url,
-          oauth_provider_uid: auth.uid,
           oauth_user_name: auth.extra.username,
           organization_id: organization_id)
 

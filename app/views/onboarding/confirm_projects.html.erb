@@ -31,11 +31,17 @@
             <div class="col-lg-6 col-lg-offset-3">
                 <div class="ibox">
                     <div class="ibox-title">
-                        <h3 style="font-weight:500;"><%= best_in_place p, :name, :as => 'input' %><i style="margin-left: 3px;" class="fa fa-pencil"></i></h3>
-                        <div class="small"></div>
                         <div class="row">
-                            <p>Account: <%= best_in_place p.account, :name, :as => 'input' %><i style="margin-left: 3px;" class="fa fa-pencil"></i>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Type: <%= best_in_place p.account, :category, :as => :select, :collection => Account::CATEGORY, :class => 'btn btn-sm btn-default fa-caret-down', :style => 'font-size:12px;' %></p>
+                            <div class="col-sm-5">
+                                <h3 style="font-weight:500;"><%= best_in_place p, :name, :as => 'input', :activator => "#proj-#{p.id}-name-activator" %><i id="proj-<%= p.id %>-name-activator" class="fa fa-pencil m-l-xs text-mute-gray"></i></h3>
+                            </div>
+                            <div class="clearfix visible-xs-block"></div>
+                            <div class="col-sm-4 m-t-xs text-left">
+                                <p>Account: <%= best_in_place p.account, :name, :as => 'input', :activator => "#proj-#{p.id}-acc-activator" %><i id="proj-<%= p.id %>-acc-activator" class="fa fa-pencil m-l-xs text-mute-gray"></i></p>
+                            </div>
+                            <div class="col-sm-3 text-left">
+                                <p>Type: <%= best_in_place p.account, :category, :as => :select, :collection => Account::CATEGORY, :class => 'btn btn-sm btn-default fa-caret-down', :style => 'font-size:12px;' %></p>
+                            </div> 
                         </div>
                         
                         <div class="row m-t-md">

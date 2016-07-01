@@ -10,11 +10,11 @@
 </div>
 
 <% if @notifications.empty? %>
-  <div class="p-m m-l white-bg">
+  <div class="p-m m-l white-bg m-t">
     <h4 class="text-center">You don't have any Smart Tasks for this project!</h4>
   </div>
 <% else %>
-  <div class="white-bg p-sm m-l">  
+  <div class="white-bg p-sm m-l m-t">  
     <table class="table responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
       <thead>
         <tr>
@@ -51,9 +51,14 @@
                 </span>
             </td>
             <td>
-              <div style="font-size:14px"><%= best_in_place n, :name, :as => :input, :place_holder => '(Add title)' %></div>
-              <div><small>
-                 <%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small></div>       
+              <div style="font-size:14px">
+                <span class="in-bl max-w-lg"><%= best_in_place n, :name, :as => :input, :place_holder => '(Add title)', :activator => "#task-#{n.id}-name-activator" %></span>
+                <i id="task-<%= n.id %>-name-activator" class="fa fa-pencil fa-lg m-l-xs bip_activator text-mute-gray vtop"></i>
+              </div>
+              <div>
+                <small class="in-bl max-w-xl"><%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => "#task-#{n.id}-description-activator" %></small>
+                <i id="task-<%= n.id %>-description-activator" class="fa fa-pencil m-l-xs bip_activator text-mute-gray vtop"></i>
+              </div>       
             </td>
             <td>
                 <% if n.category == Notification::CATEGORY[:Action] or n.category == Notification::CATEGORY[:Opportunity]%>
@@ -67,17 +72,19 @@
                 <% end %>
             </td>
             <td>
-              <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add)'%>     
+              <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add)', :activator => "#task-#{n.id}-assignee-activator" %>     
+              <i id="task-<%= n.id %>-assignee-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
             </td>
             <td>
               <% if n.original_due_date.nil? %>
-                  <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :inner_class => "due_date_datepicker" %>
+                  <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :inner_class => "due_date_datepicker", :activator => "#task-#{n.id}-due-date-activator" %>
               <% else %>
-                  <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}    %>
+                  <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}, :activator => "#task-#{n.id}-due-date-activator" %>
                   <% if !n.is_complete and Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
                       <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="overdue" data-placement="right" data-original-title="Overdue!"></i>
                   <% end %>
               <% end %>
+              <i id="task-<%= n.id %>-due-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
             </td>
             <td>
               <div><%=Time.zone.at(n.created_at).strftime('%Y-%m-%d') %> <span style="display:none"><%=Time.zone.at(n.created_at).strftime('%H:%M:%S') %></span></div>

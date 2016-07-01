@@ -25,7 +25,6 @@ class SalesforceController < ApplicationController
   	# for now, just use test account
 
   	@projects = Project.includes(:activities).where(account_id: account.id)
-
     activities = []   
     if !@projects.empty?
     	if !params[:pid].nil?
@@ -33,14 +32,19 @@ class SalesforceController < ApplicationController
     			if p.id == params[:pid]
     				activities = p.activities.includes(:comments, :user)
     				@pid = params[:pid]
+            @project_risk_score =p.current_risk_score
+            @project = p
     				break
     			end
     		end
   		else
   	  	activities = @projects[0].activities.includes(:comments, :user)
   	  	@pid = @projects[0].id
+        @project_risk_score = @projects[0].current_risk_score
+        @project = @projects[0]
   		end
 	    @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
+
  		end
   end
 end
