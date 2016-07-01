@@ -10,10 +10,6 @@
             </li>
         </ol>
     </div>
-    <!-- <div class="col-lg-2">
-       <%= link_to '+ New Task', '#new_notification_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
-    </div> -->
-
 </div>
 
 <div class="row wrapper">
@@ -98,15 +94,15 @@
                         <%= n.category%>
                         </span>
                     </td>
-                    <td>
+                    <td class="task-text">
                       <div style="font-size:14px">
-                        <span class="in-bl max-w-lg"><%= best_in_place n, :name, :as => :input, :place_holder => '(Add title)', :activator => "#task-#{n.id}-name-activator" %>
+                        <span class="in-bl max-w-lg"><%= best_in_place n, :name, :as => :input, :place_holder => '(no title)', :activator => "#task-#{n.id}-name-activator" %>
                         </span>
-                        <i id="task-<%= n.id %>-name-activator" class="fa fa-pencil fa-lg m-l-xs bip_activator text-mute-gray vtop"></i>
+                        <i id="task-<%= n.id %>-name-activator" class="fa fa-pencil fa-lg m-l-xs bip_activator text-mute-gray vtop edit-task"></i>
                       </div>
                       <div>
-                        <small class="in-bl max-w-xl"><%= best_in_place n, :description, :as => 'textarea', :place_holder => '(Add description)', :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => "#task-#{n.id}-description-activator" %></small>
-                        <i id="task-<%= n.id %>-description-activator" class="fa fa-pencil m-l-xs bip_activator text-mute-gray vtop"></i>
+                        <small class="in-bl max-w-lg"><%= best_in_place n, :description, :as => 'textarea', :place_holder => '(no description)', :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => "#task-#{n.id}-description-activator" %></small>
+                        <i id="task-<%= n.id %>-description-activator" class="fa fa-pencil m-l-xs bip_activator text-mute-gray vtop edit-task"></i>
                       </div>      
                     </td>
                     <td>
@@ -121,14 +117,14 @@
                       <i id="task-<%= n.id %>-project-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                     </td>
                     <td>
-                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(Add)', :activator => "#task-#{n.id}-assignee-activator" %>       
+                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#task-#{n.id}-assignee-activator" %>       
                       <i id="task-<%= n.id %>-assignee-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                     </td>
                     <td>
                       <% if n.original_due_date.nil? %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :inner_class => "due_date_datepicker", :activator => "#task-#{n.id}-due-date-activator" %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(none)', :inner_class => "due_date_datepicker", :activator => "#task-#{n.id}-due-date-activator" %>
                       <% else %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(Add)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}, :activator => "#task-#{n.id}-due-date-activator" %>
+                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(none)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}, :activator => "#task-#{n.id}-due-date-activator" %>
                           <% if !n.is_complete and Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
                               <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="overdue" data-placement="right" data-original-title="Overdue!"></i>
                           <% end %>
