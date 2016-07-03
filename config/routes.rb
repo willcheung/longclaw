@@ -10,6 +10,7 @@ Longclaw::Application.routes.draw do
 
     resources :accounts
     post "/account_bulk" => 'accounts#bulk'
+    get "/update_salesforce" => 'accounts#set_salesforce_account'
 
     resources :contacts, only: [:create, :update, :destroy]
     resources :projects do
@@ -20,6 +21,7 @@ Longclaw::Application.routes.draw do
     resources :project_members
     resources :users
     resources :notifications, only: [:index, :update, :create]
+    resources :salesforce
 
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "projects/:id/pinned" => 'projects#pinned_tab'

@@ -6,6 +6,9 @@ development:
   csback_base_url: http://64.201.248.179:8888
   csback_script_base_url: http://64.201.248.179:8888
   csback_callback_base_url: http://24.130.10.244:3000
+  salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
+  salesforce_client_secret: 3550523996344810646
+  salesforce_url_instance: https://na30.salesforce.com
 
 test:
   google_client_id: 9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com
@@ -15,6 +18,9 @@ test:
   csback_base_url: http://64.201.248.179:8888
   csback_script_base_url: http://64.201.248.179:8888
   csback_callback_base_url: https://guarded-refuge-6063.herokuapp.com
+  salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
+  salesforce_client_secret: 3550523996344810646
+  salesforce_url_instance: https://na30.salesforce.com
 
 production:
   google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
@@ -24,3 +30,6 @@ production:
   csback_base_url: http://64.201.248.179:8889
   csback_script_base_url: http://64.201.248.179:8889
   csback_callback_base_url: https://app.contextsmith.com
+  salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
+  salesforce_client_secret: 3550523996344810646
+  salesforce_url_instance: https://na30.salesforce.com

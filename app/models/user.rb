@@ -59,11 +59,35 @@ class User < ActiveRecord::Base
   scope :onboarded, -> {where("onboarding_step = #{Utils::ONBOARDING[:onboarded]}")}
 
   devise :database_authenticatable, :registerable,
-         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2]
+         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce]
 
   validates :email, uniqueness: true
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
+
+   def self.from_omniauth(auth, organization_id)
+    where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
+      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider)
+
+      if oauth_user
+        oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
+                                     oauth_refresh_token: auth.credentials.refresh_token,
+                                     oauth_instance_url: auth.credentials.instance_url,
+                                     organization_id: organization_id )
+      else
+        oauth_user = OauthUser.create(
+          oauth_provider: auth.provider,
+          oauth_provider_uid: auth.uid,
+          oauth_access_token: auth.credentials.token,
+          oauth_refresh_token: auth.credentials.refresh_token,
+          oauth_instance_url: auth.credentials.instance_url,
+          oauth_user_name: auth.extra.username,
+          organization_id: organization_id)
+
+        oauth_user.save
+      end
+    end
+  end
 
   def self.find_for_google_oauth2(auth, time_zone='UTC')
     info = auth.info
