@@ -66,6 +66,7 @@
                         <th><% if @salesforce_user.nil?%> <a href="<%=user_omniauth_authorize_url(:salesforce)%> "> Salesforce login</a> 
                             <% else %>
                             <%="Salesforce Account ("+@salesforce_user.oauth_user_name + ')' %>
+                            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/salesforce/disconnect">Disconnect</a>
                             <% end %>
                           </th>
                        

@@ -21,7 +21,8 @@ Longclaw::Application.routes.draw do
     resources :project_members
     resources :users
     resources :notifications, only: [:index, :update, :create]
-    resources :salesforce
+    resources :salesforce, only: [:index]
+    get "salesforce/disconnect" => 'salesforce#disconnect'
 
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "projects/:id/pinned" => 'projects#pinned_tab'
