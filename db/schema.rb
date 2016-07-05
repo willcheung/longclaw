@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160606043439) do
+ActiveRecord::Schema.define(version: 20160628194408) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -34,6 +34,7 @@ ActiveRecord::Schema.define(version: 20160606043439) do
     t.string   "domain",          limit: 64, default: "",         null: false
     t.string   "category",                   default: "Customer"
     t.datetime "deleted_at"
+    t.string   "salesforce_id",              default: ""
   end
 
   add_index "accounts", ["deleted_at"], name: "index_accounts_on_deleted_at", using: :btree
@@ -143,6 +144,20 @@ ActiveRecord::Schema.define(version: 20160606043439) do
     t.datetime "created_at",                          null: false
     t.datetime "updated_at",                          null: false
   end
+
+  create_table "oauth_users", force: :cascade do |t|
+    t.string   "oauth_provider",                   null: false
+    t.string   "oauth_provider_uid",               null: false
+    t.string   "oauth_access_token",               null: false
+    t.string   "oauth_refresh_token"
+    t.string   "oauth_instance_url",               null: false
+    t.string   "oauth_user_name",     default: "", null: false
+    t.uuid     "organization_id",                  null: false
+    t.datetime "created_at",                       null: false
+    t.datetime "updated_at",                       null: false
+  end
+
+  add_index "oauth_users", ["oauth_provider", "oauth_user_name", "oauth_instance_url"], name: "oauth_per_user", unique: true, using: :btree
 
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name"

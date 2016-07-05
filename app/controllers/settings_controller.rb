@@ -2,6 +2,21 @@ class SettingsController < ApplicationController
 	
 	def index
 		@users = current_user.organization.users
+		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
+
+        @salesforce_user = OauthUser.find_by(oauth_instance_url: ENV['salesforce_url_instance'], organization_id: current_user.organization_id)
+        @salesforce_accounts = []
+
+        if(!@salesforce_user.nil?)
+        	client = Restforce.new :oauth_token => @salesforce_user.oauth_access_token,
+                                  :refresh_token => @salesforce_user.oauth_refresh_token,
+                                  :instance_url => @salesforce_user.oauth_instance_url,
+                                  :client_id => ENV['salesforce_client_id'],
+                                  :client_secret => ENV['salesforce_client_secret'],
+  																:authentication_callback => Proc.new {|x| Rails.logger.debug x.to_s}
+
+  				@salesforce_accounts = client.query("select Id, Name from Account ORDER BY Name")
+        end      
 	end
 
 	def super_user

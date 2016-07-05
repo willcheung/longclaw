@@ -1,4 +1,9 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController   
+  def salesforce
+        User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id)
+        sign_in_and_redirect current_user
+  end
+
 	def google_oauth2
     allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com)
     auth = request.env["omniauth.auth"]
