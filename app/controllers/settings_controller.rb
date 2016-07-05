@@ -1,4 +1,10 @@
 class SettingsController < ApplicationController
+
+	def sasuke
+		puts '===='
+		puts request.env["omniauth.auth"]
+		puts '====='
+ 	end
 	
 	def index
 		@users = current_user.organization.users
@@ -12,10 +18,23 @@ class SettingsController < ApplicationController
                                   :refresh_token => @salesforce_user.oauth_refresh_token,
                                   :instance_url => @salesforce_user.oauth_instance_url,
                                   :client_id => ENV['salesforce_client_id'],
-                                  :client_secret => ENV['salesforce_client_secret'],
-  																:authentication_callback => Proc.new {|x| Rails.logger.debug x.to_s}
+                                  :client_secret => ENV['salesforce_client_secret']
 
-  				@salesforce_accounts = client.query("select Id, Name from Account ORDER BY Name")
+
+  							
+
+  								puts '================'
+  								puts client.to_yaml
+  								puts '================'
+          begin
+  					@salesforce_accounts = client.query("select Id, Name from Account ORDER BY Name")
+  			  rescue  
+  			  	# salesforce refresh token expires when different app use it for 5 times
+  			  	@salesforce_user.destroy
+  			  	respond_to do |format|
+      				format.html { redirect_to settings_url }
+    				end
+  			  end
         end      
 	end
 
