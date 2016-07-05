@@ -4,6 +4,7 @@ class SalesforceController < ApplicationController
   	@projects = []
   	@activities_by_month = []
     @project = Project.new
+    @isconnect = true
 
   	if params[:id].nil?
   		return
@@ -12,6 +13,7 @@ class SalesforceController < ApplicationController
   		@salesforce_id = params[:id]
       account = Account.find_by(salesforce_id: params[:id])
       if account.nil?
+        @isconnect = false
         return
       end
   	end
