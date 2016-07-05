@@ -4,6 +4,7 @@ class SalesforceController < ApplicationController
   	@projects = []
   	@activities_by_month = []
     @project = Project.new
+    @isconnect = true
 
   	if params[:id].nil?
   		return
@@ -12,6 +13,7 @@ class SalesforceController < ApplicationController
   		@salesforce_id = params[:id]
       account = Account.find_by(salesforce_id: params[:id])
       if account.nil?
+        @isconnect = false
         return
       end
   	end
@@ -43,5 +45,15 @@ class SalesforceController < ApplicationController
       @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
 
  		end
+  end
+
+
+  def disconnect
+    salesforce_user = OauthUser.find_by(oauth_instance_url: ENV['salesforce_url_instance'], organization_id: current_user.organization_id)
+    salesforce_user.destroy
+
+    respond_to do |format|
+      format.html { redirect_to settings_url }
+    end
   end
 end
