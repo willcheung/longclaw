@@ -77,10 +77,10 @@
                   <tbody>
                       <% @accounts.each do |a| %>
                       <tr>
-                        <td><%= a.name %></td>
-                        <td>
+                        <td class="col-lg-2"><%= a.name %></td>
+                        <td class="col-lg-6">
                           <% if !@salesforce_accounts.nil?  and @salesforce_accounts.length>0 %>
-                            <select class="salesforce_account_box" id="<%=a.id%>" data-placeholder="Select Account">
+                            <select class="salesforce_account_box col-lg-6" id="<%=a.id%>" data-placeholder="Select Account">
                             <option value="0"></option>
                             <% @salesforce_accounts.each do |s| %>
                               <option value="<%=s.Id %>" <% if a.salesforce_id==s.Id  %> selected  <% end %>><%=s.Name %></option>
