@@ -58,92 +58,10 @@
       <% else %>
         <div class="ibox float-e-margins">
           <div class="ibox-content col-lg-12">
-            <table class="table responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>Type  <i class="fa fa-question-circle tool-tip-category" data-placement="right" ></i></th>
-                  <th class="col-md-4">Task</th>
-                  <th></th>
-                  <th>Project Stream</th>
-                  <th>Assign</th>
-                  <th>Due </th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @notifications.each do |n| %>
-                  <% if n.is_complete %>
-                    <tr style="height:70px; opacity: 0.5;" bgcolor="#eeeeee">
-                  <% else %>
-                    <tr style="height:70px;" id=<%="notification_row_"+n.id.to_s  %>>
-                  <% end %>
-                    <td> 
-                      <input type="checkbox" class="i-checks" id=<%=n.id  %> <% if n.is_complete %> checked <% end %> >
-                    </td>
-                    <td>
-                      <% if n.category == Notification::CATEGORY[:Action] %>
-                        <span class="label label-primary">
-                      <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
-                        <span class="label label-success">
-                      <% elsif n.category == Notification::CATEGORY[:Todo] %>  
-                        <span class="label label-info">
-                      <% else %>
-                        <span class="label label-danger">
-                      <% end %>
-                        <%= n.category%>
-                        </span>
-                    </td>
-                    <td class="task-text">
-                      <div style="font-size:14px">
-                        <span class="in-bl max-w-lg"><%= best_in_place n, :name, :as => :input, :place_holder => '(no title)', :activator => "#task-#{n.id}-name-activator" %>
-                        </span>
-                        <i id="task-<%= n.id %>-name-activator" class="fa fa-pencil fa-lg m-l-xs bip_activator text-mute-gray vtop edit-task"></i>
-                      </div>
-                      <div>
-                        <small class="in-bl max-w-lg"><%= best_in_place n, :description, :as => 'textarea', :place_holder => '(no description)', :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => "#task-#{n.id}-description-activator" %></small>
-                        <i id="task-<%= n.id %>-description-activator" class="fa fa-pencil m-l-xs bip_activator text-mute-gray vtop edit-task"></i>
-                      </div>      
-                    </td>
-                    <td>
-                        <% if n.category == Notification::CATEGORY[:Action] or n.category == Notification::CATEGORY[:Opportunity] or n.category == Notification::CATEGORY[:Risk]%>
-                        <div class="hoverToolTip" data-placement="right" data-id="<%=n.id %>">
-                          <a href="<%= "/projects/" + n.project_id.to_s+'#'+n.conversation_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
-                        </div>
-                        <% end %>
-                    </td>
-                    <td>
-                      <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)', :activator => "#task-#{n.id}-project-activator" %>
-                      <i id="task-<%= n.id %>-project-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
-                    </td>
-                    <td>
-                      <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#task-#{n.id}-assignee-activator" %>       
-                      <i id="task-<%= n.id %>-assignee-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
-                    </td>
-                    <td>
-                      <% if n.original_due_date.nil? %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(none)', :inner_class => "due_date_datepicker", :activator => "#task-#{n.id}-due-date-activator" %>
-                      <% else %>
-                          <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(none)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}, :activator => "#task-#{n.id}-due-date-activator" %>
-                          <% if !n.is_complete and Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
-                              <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="overdue" data-placement="right" data-original-title="Overdue!"></i>
-                          <% end %>
-                      <% end %>
-                      <i id="task-<%= n.id %>-due-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
-                    </td>
-                    <td>
-                      <div><%=Time.zone.at(n.created_at).strftime('%Y-%m-%d') %> <span style="display:none"><%=Time.zone.at(n.created_at).strftime('%H:%M:%S') %></span></div>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
+            <%= render "table" %>
           </div>
         </div>
       <% end %>
     </div>       
   </div>
 </div>
-<!-- 
-<%= render 'notifications/modal', modal_id: 'new_notification_modal' %>
- -->
