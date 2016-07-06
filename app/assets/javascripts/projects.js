@@ -262,6 +262,15 @@ $('.hoverToolTip').tooltip({
     container: 'body',
     });
 
+$('.tool-tip-category').tooltip({   
+    title: "<p style=\"line-height:20px;\"><b>Smart Action:</b> Tasks with due dates that are automatically detected from the email body.<br>"+
+           "<b>Risk:</b> Negative sentiment detected in email body.<br>"+
+           "<b>Opportunity:</b> Projects streams that have been inactive for 30+ days and is an opportunity to follow up.<br>"+
+           "<b>To-do:</b> Manually generated task.<p>",
+    html: true,
+    container: 'body'
+});
+
 $('[data-toggle="overdue"]').tooltip();   
 
 $('[data-toggle="overdue"]').hover(function(){

@@ -284,28 +284,20 @@ span.best_in_place.btn {
   text-rendering: auto;
   margin-top:3px;
 }
-.project-people .delete-member {
+.project-people .delete-member,
+.vertical-timeline-block .delete-note,
+.social-comment .delete-comment,
+.task-name .edit-task,
+.task-desc .edit-task {
   display: none;
 }
-.project-people .member:hover .delete-member {
-  display: block;
-}
-.vertical-timeline-block .delete-note {
-  display: none;
-}
-.vertical-timeline-block:hover .delete-note {
-  display: block;
-}
-.social-comment .delete-comment {
-  display: none;
-}
+.project-people .member:hover .delete-member,
+.vertical-timeline-block:hover .delete-note,
 .social-comment:hover .delete-comment {
   display: block;
 }
-.task-text .edit-task {
-  display: none;
-}
-.task-text:hover .edit-task {
+.task-name:hover .edit-task,
+.task-desc:hover .edit-task {
   display: inline-block;
 }
 #projects-table th, #accounts-table th {
