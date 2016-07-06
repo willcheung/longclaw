@@ -1,11 +1,4 @@
 class SettingsController < ApplicationController
-
-	def sasuke
-		puts '===='
-		puts request.env["omniauth.auth"]
-		puts '====='
- 	end
-	
 	def index
 		@users = current_user.organization.users
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
@@ -19,13 +12,6 @@ class SettingsController < ApplicationController
                                   :instance_url => @salesforce_user.oauth_instance_url,
                                   :client_id => ENV['salesforce_client_id'],
                                   :client_secret => ENV['salesforce_client_secret']
-
-
-  							
-
-  								puts '================'
-  								puts client.to_yaml
-  								puts '================'
           begin
   					@salesforce_accounts = client.query("select Id, Name from Account ORDER BY Name")
   			  rescue  
