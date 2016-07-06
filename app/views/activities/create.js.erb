@@ -1,6 +1,5 @@
 $('#activity_note').val("");
 $('#activity_note').height(20);
 $('#vertical-timeline').prepend('<%= escape_javascript(render "activities/timeline_block", a: @activity) %>');
-//bug to be fixed, below two lines will cause errors now
+$('.btn-note')[0].disabled = true;
 $('.vertical-timeline-block').first().hide().show("blind", {direction: "up"}, 1000);
-$('.note-btn')[0].disabled = true;
