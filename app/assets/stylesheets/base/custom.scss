@@ -9,6 +9,10 @@ h3 small {
 	font-size: 75%;
 }
 
+.vtop {
+  vertical-align: top;
+}
+
 .vcenter {
   display: inline-block;
   vertical-align: middle;
@@ -297,6 +301,12 @@ span.best_in_place.btn {
 }
 .social-comment:hover .delete-comment {
   display: block;
+}
+.task-text .edit-task {
+  display: none;
+}
+.task-text:hover .edit-task {
+  display: inline-block;
 }
 #projects-table th, #accounts-table th {
   padding-top:20px;
