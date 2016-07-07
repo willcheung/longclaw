@@ -89,7 +89,7 @@
 
         <% elsif a.category == "Calendar" %>
             <h3>Event: <%= a.title %>
-                <small class="m-l-md"><%= a.last_sent_date.strftime('%b %e %Y, %l:%M %p') %> - <%= Time.at(a.email_messages.last.end).strftime('%b %e %Y, %l:%M %p') %></small>
+                <small class="m-l-md"><%= a.last_sent_date.strftime('%l:%M%P') %> - <%= Time.at(a.email_messages.last.end).strftime('%l:%M%P') %></small>
             </h3>
 
             <div class="chat-discussion">
