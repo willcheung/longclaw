@@ -87,6 +87,20 @@ module ApplicationHelper
     end
   end
 
+  def get_calendar_member_names(to, trailing_text="other", size_limit=4)
+    attendees_size = (to.nil? ? 0 : to.size)
+
+    if attendees_size <= size_limit
+      return get_first_names([], to, nil)
+    else
+      if trailing_text = "other"
+        return get_first_names([], to, nil) + " and " + pluralize(attendees_size - size_limit, 'other')
+      else
+        return "All"
+      end
+    end
+  end
+
   def get_profile_pic(name, email, css_class="")
     if is_internal_domain?(email)
       u = User.find_by_email(email)
