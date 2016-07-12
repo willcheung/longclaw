@@ -89,12 +89,13 @@
 
         <% elsif a.category == "Calendar" %>
             <h3>Event: <%= a.title %>
-                <small class="m-l-md"><%= a.last_sent_date.strftime('%l:%M%P') %> - <%= Time.at(a.email_messages.last.end).strftime('%l:%M%P') %></small>
+                <small class="m-l-md"><%= get_calendar_interval(a) %></small>
+                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" style="color:#ed5565" title="Private"></i></span>
             </h3>
 
             <div class="chat-discussion">
-                <span><strong>Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %></span>
-                <span class="m-l-md"><strong>Attendees:</strong> <%= get_calendar_member_names(a.to) %></span>
+                <strong>Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %>
+                <strong class="m-l-md">Attendees:</strong> <%= get_calendar_member_names(a.to) %>
                 <div class="col-4-lg action-links">
                   <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                   &sdot; <a class="comment-link-<%= a.id %>">Comment</a>
