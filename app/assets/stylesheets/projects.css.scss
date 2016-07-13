@@ -42,6 +42,10 @@
   margin-right: 0;
 }
 
+.toggle-open {
+  cursor: pointer;
+}
+
 @media only screen and (max-width: 768px) {
   .vertical-date {
     display: none;

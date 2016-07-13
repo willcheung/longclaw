@@ -288,7 +288,8 @@ span.best_in_place.btn {
 .vertical-timeline-block .delete-note,
 .social-comment .delete-comment,
 .task-name .edit-task,
-.task-desc .edit-task {
+.task-desc .edit-task,
+.contact-info .edit-contact {
   display: none;
 }
 .project-people .member:hover .delete-member,
@@ -297,7 +298,8 @@ span.best_in_place.btn {
   display: block;
 }
 .task-name:hover .edit-task,
-.task-desc:hover .edit-task {
+.task-desc:hover .edit-task,
+.contact-info:hover .edit-contact {
   display: inline-block;
 }
 #projects-table th, #accounts-table th {

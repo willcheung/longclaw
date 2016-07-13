@@ -76,7 +76,8 @@
 												<table class="table table-striped table-hover">
 													<thead>
 														<tr>
-															<th>Name</th>
+															<th>First Name</th>
+															<th>Last Name</th>
 															<th>Title</th>
 															<th></th>
 															<th>Email</th>
@@ -86,11 +87,11 @@
 													<tbody>
 														<% @account_contacts.each do |contact| %>
 														<tr>
-															<td><%= get_full_name(contact) %></td>
-															<td><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs">
-															</td>
+															<td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+															<td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+															<td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
 															<td class="contact-type"><i class="fa fa-envelope"> </i></td>
-															<td><%= contact.email %></td>
+															<td class="contact-info"><%= best_in_place contact, :email, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-email-activator" %><i id="contact-<%= contact.id %>-email-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
 															<td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, contact, method: :delete, data: {confirm: "About to delete this contact. Are you sure?"} %></td>
 														</tr>
 														<% end %>
