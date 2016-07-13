@@ -86,8 +86,9 @@
 													<tbody>
 														<% @account_contacts.each do |contact| %>
 														<tr>
-															<td><%= get_full_name(contact) %></a></td>
-															<td><%= contact.title %></td>
+															<td><%= get_full_name(contact) %></td>
+															<td><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs">
+															</td>
 															<td class="contact-type"><i class="fa fa-envelope"> </i></td>
 															<td><%= contact.email %></td>
 															<td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, contact, method: :delete, data: {confirm: "About to delete this contact. Are you sure?"} %></td>
