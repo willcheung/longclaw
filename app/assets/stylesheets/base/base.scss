@@ -808,6 +808,10 @@ table.table-mail tr td {
   color: #888888;
 }
 
+.text-mute-gray {
+  color: #999999;
+}
+
 .simple_tag {
   background-color: #f3f3f4;
   border: 1px solid #e7eaec;
@@ -1211,6 +1215,10 @@ a.close-canvas-menu:hover {
 
 .space-30 {
   margin: 30px 0;
+}
+
+.in-bl {
+  display: inline-block;
 }
 
 // Bootstrap issue in 3.3.0 with modal https://github.com/twbs/bootstrap/issues/9855

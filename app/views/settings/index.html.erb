@@ -34,10 +34,10 @@
                     <tr>
                         <td><%= get_full_name(u) %></td>
                         <td><%= u.email %></td>
-                       
-                       <td style="text-align:center"><%= best_in_place u, :title, :as => 'input', :place_holder => '(add)' %></td>
-                        <td style="text-align:center"><%= best_in_place u, :department, :as => 'input', :place_holder => '(add)' %></td>
-
+                        <td style="text-align:center"><%= best_in_place u, :title, :as => 'input', :place_holder => '(none)', :activator => "#user-#{u.id}-title-activator" %><i id="user-<%= u.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i>
+</td>
+                        <td style="text-align:center"><%= best_in_place u, :department, :as => 'input', :place_holder => '(none)', :activator => "#user-#{u.id}-dept-activator" %><i id="user-<%= u.id %>-dept-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i>
+</td>
                         <td style="text-align:center">
                             <% if u.onboarding_step == -1 and !u.cluster_create_date.nil?%>
                                 <%= u.cluster_create_date.to_date %>
@@ -51,6 +51,48 @@
                     </tr>
                     <% end %>
             </table>
+        </div>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox float-e-margins">
+        <div class="ibox-content">
+            <h1> Salesforce Account </h1>
+            <% if @salesforce_user.nil?%> <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%> ">Login to Salesforce</a> <br>
+            Must be a Salesforce admin
+            <% else %>
+              <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
+                  <thead>
+                      <tr>
+                          <th style="text-align:center">ContextSmith Account</th>
+                          <th>
+                              <%="Salesforce Account ("+@salesforce_user.oauth_user_name + ')' %>
+                              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/salesforce/disconnect">Disconnect</a>
+                              
+                            </th>
+                         
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <% @accounts.each do |a| %>
+                      <tr>
+                        <td class="col-lg-2"><%= a.name %></td>
+                        <td class="col-lg-6">
+                          <% if !@salesforce_accounts.nil?  and @salesforce_accounts.length>0 %>
+                            <select class="salesforce_account_box col-lg-6" id="<%=a.id%>" data-placeholder="Select Account">
+                            <option value="0"></option>
+                            <% @salesforce_accounts.each do |s| %>
+                              <option value="<%=s.Id %>" <% if a.salesforce_id==s.Id  %> selected  <% end %>><%=s.Name %></option>
+                            <% end %>                      
+                            </select>
+                          <% end  %>
+                        </td>
+                          
+                      </tr>
+                      <% end %>
+              </table>
+            <%end%>
         </div>
     </div>
 </div>

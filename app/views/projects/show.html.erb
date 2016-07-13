@@ -29,16 +29,6 @@
     <div class="col-lg-6">
         <div class="row">
             <div class="col-xs-3">
-                <div class="metric text-info">
-                    <div class="metric-title">
-                        <h5>Open Tasks</h5>
-                    </div>
-                    <div class="metric-content">
-                        <h3><%= @project_open_tasks %></h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xs-3">
                 <div class="metric <%= @project_risk_score > 95.0 ? "text-danger" : "text-success" %>">
                     <div class="metric-title">
                         <h5><%= @project_risk_score > 95.0 ? "High" : "Low" %> Risk</h5>
@@ -48,7 +38,17 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-6">
+            <div class="col-xs-5">
+                <div class="metric text-primary">
+                    <div class="metric-title">
+                        <h5>Last Touch By</h5>
+                    </div>
+                    <div class="metric-content">
+                        <h3><%= @project_last_touch_by %></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-4">
                 <div class="metric">
                     <div class="metric-title">
                         <h5>Last Activity</h5>
@@ -68,8 +68,8 @@
                 <div class="panel-heading">
                     <ul class="nav nav-tabs">
                         <li class="nav-tab"><a id="newsfeed-link" href="<%= project_path(@project) %>" class="white-bg"><i class="fa fa-comments"></i> Conversations</a></li>
-                        <li class="nav-tab"><a id="pinned-link" href="<%= project_path(@project) %>/pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Pinned Items</a></li>
-                        <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks</a></li>
+                        <li class="nav-tab"><a id="pinned-link" href="<%= project_path(@project) %>/pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Pinned Items (<%= @project_pinned_count %>)</a></li>
+                        <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks (<%= @project_open_tasks_count %>)</a></li>
                     </ul>
                 </div>
             </div>
@@ -84,10 +84,12 @@
     <!-- Right sidebar -->
     <div class="col-lg-3">
         <div class="row wrapper wrapper-content project-manager">
-            <div class="m-t-md"><strong>Project Description:</strong></div>
+            <div class="m-t-md">
+                <strong>Project Description:</strong>
+                <i id="proj-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+            </div>
 
-            <small><%= best_in_place @project, :description, :as => 'textarea', :place_holder => '(Add description)', :display_with => :simple_format, :inner_class => 'col-sm-12',
-                                :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' %></small>
+            <small><%= best_in_place @project, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#proj-desc-activator' %></small>
 
             <ul class="list-group clear-list m-t-sm">
                 <li class="list-group-item first-item">
@@ -136,7 +138,7 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                         <input type="search" name="email" id="member-search" class="contacts top" placeholder="Add collaborators...">
+                         <input type="search" name="email" id="member-search" class="contacts z-top" placeholder="Add collaborators...">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
                     <%end%>

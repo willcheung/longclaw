@@ -1,5 +1,5 @@
-$('#vertical-timeline').prepend('<%= escape_javascript(render "activities/timeline_block", a: @activity) %>');
-$('.vertical-timeline-block').first().hide().show("blind", {direction: "up"}, 1000);
 $('#activity_note').val("");
 $('#activity_note').height(20);
-$('.note-btn')[0].disabled = true;
+$('#vertical-timeline').prepend('<%= escape_javascript(render "activities/timeline_block", a: @activity) %>');
+$('.btn-note')[0].disabled = true;
+$('.vertical-timeline-block').first().hide().show("blind", {direction: "up"}, 1000);

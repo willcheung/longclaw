@@ -9,14 +9,18 @@ h3 small {
 	font-size: 75%;
 }
 
+.vtop {
+  vertical-align: top;
+}
+
 .vcenter {
-    display: inline-block;
-    vertical-align: middle;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .vbottom {
-    display: inline-block;
-    vertical-align: bottom;
+  display: inline-block;
+  vertical-align: bottom;
 }
 
 
@@ -256,11 +260,8 @@ h1.onboarding {
     font-weight: 500;
     margin-bottom: 30px;
 }
-
-span.best_in_place {
+i.bip_activator {
   cursor:pointer;
-  border-bottom: 1px dashed #ccc;
-  text-decoration: none;
 }
 span.best_in_place.switch {
   border: none;
@@ -283,11 +284,21 @@ span.best_in_place.btn {
   text-rendering: auto;
   margin-top:3px;
 }
-.project-people .delete-member {
+.project-people .delete-member,
+.vertical-timeline-block .delete-note,
+.social-comment .delete-comment,
+.task-name .edit-task,
+.task-desc .edit-task {
   display: none;
 }
-.project-people .member:hover .delete-member {
+.project-people .member:hover .delete-member,
+.vertical-timeline-block:hover .delete-note,
+.social-comment:hover .delete-comment {
   display: block;
+}
+.task-name:hover .edit-task,
+.task-desc:hover .edit-task {
+  display: inline-block;
 }
 #projects-table th, #accounts-table th {
   padding-top:20px;
@@ -437,4 +448,12 @@ span.best_in_place.btn {
   border-radius: 50%;
   font-size: 13px;
   border: 2px solid white;
+}
+
+.max-w-xl {
+  max-width: 95%;
+}
+
+.max-w-lg {
+  max-width: 90%;
 }
