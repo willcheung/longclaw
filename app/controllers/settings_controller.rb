@@ -25,7 +25,7 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		@super_admin = %w(willycheung@gmail.com indifferenzetester@gmail.com wcheung@contextsmith.com)
+		@super_admin = %w(wcheung@contextsmith.com rcwang@contextsmith.com)
 		if @super_admin.include?(current_user.email)
 			@users = User.registered.all
 		else

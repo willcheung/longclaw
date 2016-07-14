@@ -47,7 +47,6 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-  # CATEGORY = %w(Conversation Note Status)
   CATEGORY = { Conversation: 'Conversation', Note: 'Note', Calendar: 'Calendar'}
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
