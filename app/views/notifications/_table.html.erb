@@ -19,7 +19,7 @@
         <tr style="height:70px;" id=<%="notification_row_"+n.id.to_s  %>>
       <% end %>
         <td> 
-          <input type="checkbox" class="i-checks" id=<%=n.id  %> <% if n.is_complete %> checked <% end %> >
+          <input type="checkbox" class="i-checks" id=<%= n.id %> <% if n.is_complete %> checked <% end %> >
         </td>
         <td>
           <% if n.category == Notification::CATEGORY[:Action] %>

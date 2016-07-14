@@ -93,7 +93,7 @@ module ApplicationHelper
     if attendees_size <= size_limit
       return get_first_names([], to, nil)
     else
-      if trailing_text = "other"
+      if trailing_text == "other"
         return get_first_names([], to, nil) + " and " + pluralize(attendees_size - size_limit, 'other')
       else
         return "All"
