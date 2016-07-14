@@ -47,7 +47,8 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-  CATEGORY = %w(Conversation Note Status)
+  # CATEGORY = %w(Conversation Note Status)
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Calendar: 'Calendar'}
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -72,7 +73,7 @@ class Activity < ActiveRecord::Base
         activities << Activity.new(
             posted_by: user_id,
             project_id: project.id,
-            category: "Conversation",
+            category: CATEGORY[:Conversation],
             title: c.subject,
             note: '',
             is_public: is_public_flag,

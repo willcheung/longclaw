@@ -9,6 +9,31 @@
     </div>
 </div>
 
+<div class="projects-box" style="padding-top: 10px;">
+    <div class="filter_section">
+      <select class="comment_category col-sm-3" data-placeholder="Filter by categories" multiple="true">
+         <option value="0"></option>
+         <% Activity::CATEGORY.each{|k,v|    %>
+            <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
+             <% } %> 
+      </select>
+      <select class="user_filter col-sm-8" data-placeholder="Filter by people" multiple="true">
+        <option value="0"></option>
+        <% @final_filter_user.each do |u| %>
+          <option value="<%=u.email %>"  <% if @filter_email.include?(u.email)  %> selected   <% end %> >
+            <% if u.first_name.include?('@')%>
+                <%=u.first_name%>
+            <% else %>
+                <%=u.first_name+' '+u.last_name+'(@'+  get_short_name(get_domain(u.email))+')' %>
+            <% end %>
+               
+          </option>
+        <% end %>
+        
+      </select>
+    </div>
+  </div>
+
 <!-- Activities -->
 <div id="newsfeed">
     <div class="row">
