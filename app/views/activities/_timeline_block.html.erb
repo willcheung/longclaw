@@ -67,7 +67,7 @@
                   &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= @notifications.where(conversation_id: a.backend_id).size %>)</a>
                 </div>
             </div> <!-- chat discussion -->
-            <div class="tasks-footer tasks-footer-<%= a.id %>" style="display: none;"><%= render "notifications/table", :multi_table => true, :notifications => @notifications.where(conversation_id: a.backend_id) %></div>
+            <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => true, :notifications => @notifications.where(conversation_id: a.backend_id) %></div>
         
         <% elsif a.category == "Note" %>
             <div class="chat-discussion timeline-note">

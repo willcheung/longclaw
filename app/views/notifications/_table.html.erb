@@ -1,5 +1,6 @@
+<% unless notifications.empty? %>
 <% multi_table ||= "notifications-table" %>
-<table class="table responsive no-wrap" id=<%= multi_table %> cellspacing="0" width="100%">
+<table class="table responsive no-wrap no-margins" id=<%= multi_table %> cellspacing="0" width="100%">
   <thead>
     <tr>
       <th></th>
@@ -79,3 +80,4 @@
     <% end %>
   </tbody>
 </table>
+<% end %>
