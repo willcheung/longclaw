@@ -112,6 +112,8 @@ class ProjectsController < ApplicationController
 
     # filter out not visible items
     @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
+    @notifications = @project.notifications.order(:is_complete, :original_due_date)
+    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
   end
 
   def pinned_tab
@@ -242,7 +244,7 @@ class ProjectsController < ApplicationController
     @project_subscribers = @project.subscribers
 
     # for merging projects, for future use
-    @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
+    # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
   end
 
   def bulk_update_owner(array_of_id, new_owner)
