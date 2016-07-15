@@ -58,17 +58,19 @@
 
                 <div class="col-4-lg action-links">
                   <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comment</a>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
                       true: raw('<a>Mark Private</a>')
                     }  %>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= @notifications.where(conversation_id: a.backend_id).size %>)</a>
                 </div>
             </div> <!-- chat discussion -->
+            <div class="tasks-footer tasks-footer-<%= a.id %>" style="display: none;"><%= render "notifications/table", :multi_table => true, :notifications => @notifications.where(conversation_id: a.backend_id) %></div>
         
         <% elsif a.category == "Note" %>
-            <div class="chat-discussion">
+            <div class="chat-discussion timeline-note">
                 <div class="row">
                     <div class="col-xs-11">
                         <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
@@ -83,7 +85,7 @@
                 </div>
                 <div class="col-4-lg action-links">
                     <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
-                     &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
+                     &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a> 
                 </div>
             </div>
 
@@ -98,17 +100,17 @@
                 <strong class="m-l-md">Attendees:</strong> <%= get_calendar_member_names(a.to) %>
                 <div class="col-4-lg action-links">
                   <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comment</a>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
                       true: raw('<a>Mark Private</a>')
                     }  %>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 </div>
             </div> <!-- chat discussion -->
         <% end %>
         
-        <div class="content-footer footer-<%= a.id %>">
+        <div class="content-footer footer-<%= a.id %>" style="display: none;">
             
             <% a.comments.each do |c| %>
                 <% if !(c.nil? or c.user.nil?) %>
@@ -116,7 +118,7 @@
                 <% end %>
             <% end %>
 
-            <div class="social-comment form-<%= a.id %> row" style="display:none;">
+            <div class="social-comment form-<%= a.id %> row">
                 <div class="col-sm-1">
                     <%= get_profile_pic(get_full_name(current_user), current_user.email, "") %>
                 </div>

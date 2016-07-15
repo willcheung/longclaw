@@ -284,8 +284,13 @@ span.best_in_place.btn {
   text-rendering: auto;
   margin-top:3px;
 }
+/* adjust outside margin to become padding for more intuitive feel on hover */
+.vertical-timeline-block .timeline-note {
+  margin: -.8em -1em 0 -1em;
+  padding: .8em 1em 0 1em;
+}
 .project-people .delete-member,
-.vertical-timeline-block .delete-note,
+.timeline-note .delete-note,
 .social-comment .delete-comment,
 .task-name .edit-task,
 .task-desc .edit-task,
@@ -293,7 +298,7 @@ span.best_in_place.btn {
   display: none;
 }
 .project-people .member:hover .delete-member,
-.vertical-timeline-block:hover .delete-note,
+.timeline-note:hover .delete-note,
 .social-comment:hover .delete-comment {
   display: block;
 }

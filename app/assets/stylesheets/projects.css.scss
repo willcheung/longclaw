@@ -46,6 +46,12 @@
   cursor: pointer;
 }
 
+.vertical-timeline-content .tasks-footer {
+  border-top: 1px solid #e7e7e8;
+  margin: 0 -13px -20px;
+  padding: 0 13px;
+}
+
 @media only screen and (max-width: 768px) {
   .vertical-date {
     display: none;

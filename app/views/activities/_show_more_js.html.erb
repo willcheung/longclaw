@@ -8,7 +8,10 @@ $(document).ready(function() {
     });
 
     $(".comment-link-<%= a.id %>").click(function() {
-        $(".form-<%= a.id %>").show();
+        $(".footer-<%= a.id %>").toggle();
+    });
+    $(".tasks-link-<%= a.id %>").click(function() {
+        $(".tasks-footer-<%= a.id %>").toggle();
     });
 });
 </script>
