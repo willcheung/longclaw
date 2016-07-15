@@ -1,5 +1,4 @@
 class SettingsController < ApplicationController
-	
 	def index
 		@users = current_user.organization.users
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
@@ -12,15 +11,21 @@ class SettingsController < ApplicationController
                                   :refresh_token => @salesforce_user.oauth_refresh_token,
                                   :instance_url => @salesforce_user.oauth_instance_url,
                                   :client_id => ENV['salesforce_client_id'],
-                                  :client_secret => ENV['salesforce_client_secret'],
-  																:authentication_callback => Proc.new {|x| Rails.logger.debug x.to_s}
-
-  				@salesforce_accounts = client.query("select Id, Name from Account ORDER BY Name")
+                                  :client_secret => ENV['salesforce_client_secret']
+          begin
+  					@salesforce_accounts = client.query("select Id, Name from Account ORDER BY Name")
+  			  rescue  
+  			  	# salesforce refresh token expires when different app use it for 5 times
+  			  	@salesforce_user.destroy
+  			  	respond_to do |format|
+      				format.html { redirect_to settings_url }
+    				end
+  			  end
         end      
 	end
 
 	def super_user
-		@super_admin = %w(willycheung@gmail.com indifferenzetester@gmail.com wcheung@contextsmith.com)
+		@super_admin = %w(wcheung@contextsmith.com rcwang@contextsmith.com)
 		if @super_admin.include?(current_user.email)
 			@users = User.registered.all
 		else
