@@ -28,6 +28,28 @@ class Contact < ActiveRecord::Base
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
 
+  def self.load(data, project, save_in_db=true)
+    contacts = []
+    val = []
+
+    data_hash = data.map { |hash| Hashie::Mash.new(hash) }
+
+    data_hash.each do |d|
+      d.newExternalMembers.each do |mem|
+        contact = project.account.contacts.find_or_create_by(
+          first_name: get_first_name(mem.personal),
+          last_name: get_last_name(mem.personal),
+          email: mem.address)
+
+        project.project_members.create(contact_id: contact.id)
+
+        contacts << contact
+      end unless d.newExternalMembers.nil?
+    end
+
+    return contacts
+  end
+
 	def is_internal_user?
  		false
   end

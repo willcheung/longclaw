@@ -1,25 +1,27 @@
-<table class="table responsive no-wrap" id="notifications-table" cellspacing="0" width="100%">
+<% unless notifications.empty? %>
+<% multi_table ||= "notifications-table" %>
+<table class="table responsive no-wrap no-margins" id=<%= multi_table %> cellspacing="0" width="100%">
   <thead>
     <tr>
       <th></th>
       <th>Type  <i class="fa fa-question-circle tool-tip-category" data-placement="right" ></i></th>
       <th class="col-md-4">Task</th>
       <th></th>
-      <% unless params[:action] == "tasks_tab" %><th>Project Stream</th> <% end %>
+      <% if params[:controller] == "notifications" %><th>Project Stream</th> <% end %>
       <th>Assign</th>
       <th>Due </th>
       <th>Created</th>
     </tr>
   </thead>
   <tbody>
-    <% @notifications.each do |n| %>
+    <% notifications.each do |n| %>
       <% if n.is_complete %>
         <tr style="height:70px; opacity: 0.5;" bgcolor="#eeeeee">
       <% else %>
         <tr style="height:70px;" id=<%="notification_row_"+n.id.to_s  %>>
       <% end %>
         <td> 
-          <input type="checkbox" class="i-checks" id=<%=n.id  %> <% if n.is_complete %> checked <% end %> >
+          <input type="checkbox" class="i-checks" id=<%= n.id %> <% if n.is_complete %> checked <% end %> >
         </td>
         <td>
           <% if n.category == Notification::CATEGORY[:Action] %>
@@ -52,7 +54,7 @@
             </div>
             <% end %>
         </td>
-        <% unless params[:action] == "tasks_tab" %><td>
+        <% if params[:controller] == "notifications" %><td>
           <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)', :activator => "#task-#{n.id}-project-activator" %>
           <i id="task-<%= n.id %>-project-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
         </td><% end %>
@@ -78,3 +80,4 @@
     <% end %>
   </tbody>
 </table>
+<% end %>

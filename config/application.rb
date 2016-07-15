@@ -47,7 +47,7 @@ module Longclaw
     # config.i18n.default_locale = :de
 
     # config.action_dispatch.default_headers['X-Frame-Options'] = "ALLOW-FROM na30.salesforce.com"
-    config.action_dispatch.default_headers['X-Frame-Options'] = "ALLOW-FROM" + ENV['salesforce_url_instance'].at(8..-1)
+    config.action_dispatch.default_headers['X-Frame-Options'] = "ALLOWALL"
 
     require 'contextsmith_parser'
     require 'utils'

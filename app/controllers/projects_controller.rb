@@ -28,10 +28,92 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
-    activities = @project.activities.includes(:comments, :user)
+    @category_param = []
+    @filter_email = []
+    @final_filter_user = []
+
+    # get all possbible email options
+    total_activities_email = @project.activities.select('to','from','cc','posted_by','category','is_public').includes(:user).select {|a| a.is_visible_to(current_user) }
+
+    tempSet = Set.new
+    total_activities_email.each do |a|
+      a.email_addresses.each do |e|
+        tempSet.add(e)
+      end
+      #add notes post_by email
+      if !a.user.nil?
+        tempSet.add(a.user.email)
+      end
+    end
+
+    filter_user = User.where('email in (?)',tempSet.to_a)
+    filter_contact = Contact.where('email in (?)',tempSet.to_a)
+     
+    filter_contact.each do |c|
+      u = User.new
+      u.first_name = c.first_name
+      u.last_name = c.last_name
+      u.email = c.email
+      #avoid contacts with same email
+      if tempSet.include?(c.email)
+        @final_filter_user.push(u)
+        tempSet.delete(c.email)
+      end
+    end
+
+    filter_user.each do |u|
+      @final_filter_user.push(u)
+      tempSet.delete(u.email)
+    end
+
+    tempSet.each do |s|
+      u = User.new
+      u.first_name = s
+      u.last_name = ''
+      u.email = s
+      @final_filter_user.push(u)
+    end
+
+    @final_filter_user = @final_filter_user.sort_by {|u| u.first_name.downcase}
+
+    activities = []
+
+    # filter by params category
+    if(!params[:category].nil? and !params[:category].empty?)
+      @category_param = params[:category].split(',')
+      temp_activities = @project.activities.where('category in (?)',@category_param).includes(:comments, :user)
+    else
+      # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
+      temp_activities = @project.activities.includes(:comments, :user)
+    end
+
+    # filter by params email
+    if(!params[:emails].nil? and !params[:emails].empty?)
+      @filter_email = params[:emails].split(',')
+
+      temp_activities.each do |a|
+        @filter_email.each do |e|
+          if a.category==Activity::CATEGORY[:Note]
+            if a.user.email == e
+              activities.push(a)
+              break
+            end
+          else
+            if a.email_addresses.include?(e)
+              activities.push(a)
+              break
+            end
+          end
+        end
+      end
+    else
+      activities = temp_activities
+    end
+
     # filter out not visible items
     @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
+    @notifications = @project.notifications.order(:is_complete, :original_due_date)
+    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
   end
 
   def pinned_tab
@@ -162,7 +244,7 @@ class ProjectsController < ApplicationController
     @project_subscribers = @project.subscribers
 
     # for merging projects, for future use
-    @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
+    # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
   end
 
   def bulk_update_owner(array_of_id, new_owner)

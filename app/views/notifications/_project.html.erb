@@ -15,7 +15,7 @@
   </div>
 <% else %>
   <div class="white-bg p-sm m-l m-t">  
-    <%= render "notifications/table" %>
+    <%= render "notifications/table", :notifications => @notifications %>
   </div>
 <% end %>
 

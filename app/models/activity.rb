@@ -47,7 +47,7 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-  CATEGORY = %w(Conversation Note Status)
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Calendar: 'Calendar'}
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -72,7 +72,7 @@ class Activity < ActiveRecord::Base
         activities << Activity.new(
             posted_by: user_id,
             project_id: project.id,
-            category: "Conversation",
+            category: CATEGORY[:Conversation],
             title: c.subject,
             note: '',
             is_public: is_public_flag,
@@ -99,6 +99,64 @@ class Activity < ActiveRecord::Base
     end
 
     return activities
+  end
+
+  def self.load_calendar(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
+    events = []
+    val = []
+
+    data_hash = data.map { |hash| Hashie::Mash.new(hash) }
+
+    data_hash.each do |d|
+      d.events.each do |c|
+        # is_public_flag = true
+        # privacy for events?
+        # c.contextMessages.collect { |m| m.isPrivate ? is_public_flag = false : nil } # check if there's any private emails
+
+        val << "('#{user_id}',
+                 '#{project.id}',
+                 'Calendar',
+                  #{Activity.sanitize(c.subject)},
+                  true,
+                 '#{c.id}',
+                 '#{Time.at(c.start)}',
+                 '#{c.start}',
+                  #{Activity.sanitize(c.from.to_json)},
+                  #{Activity.sanitize(c.to.to_json)}, 
+                    #{Activity.sanitize(c.created + c.updated + c.end)}, 
+                 '#{Time.now}', '#{Time.now}')"
+
+
+        # Create events object
+        events << Activity.new(
+            posted_by: user_id,
+            project_id: project.id,
+            category: "Calendar",
+            title: c.subject,
+            note: '',
+            is_public: is_public_flag,
+            backend_id: c.id,
+            last_sent_date: Time.at(c.start),
+            last_sent_date_epoch: c.start,
+            from: c.from,
+            to: c.to,
+            email_messages: [c.created, c.updated, c.end]
+        )
+      end
+    end
+
+    insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "email_messages", "created_at", "updated_at") VALUES'
+    on_conflict = 'ON CONFLICT (backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages'
+    values = val.join(', ')
+
+    if !val.empty? and save_in_db
+      Activity.transaction do
+        # Insert events into database
+        Activity.connection.execute([insert,values,on_conflict].join(' '))
+      end
+    end
+
+    return events
   end
 
   def self.copy_email_activities(source_project, target_project)

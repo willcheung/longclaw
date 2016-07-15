@@ -9,14 +9,18 @@
             <div class="vertical-timeline-icon sticky-bg pinned">
                 <i class="fa fa-sticky-note"></i>
             </div>
+        <% elsif a.category == "Calendar" %>
+            <div class="vertical-timeline-icon warning-bg pinned">
+                <i class="fa fa-calendar"></i>
+            </div>
         <% end %>
     </td>
     <td <% if a.category == "Note" %>style="background-color: #fff7db"<% end %> class="pinned-content">
         <% if a.category == "Conversation" %>
-        <h3>
-            <span id="private" <% if a.is_public %>style="display:none"><% end %><i class="fa fa-lock pull-right" style="color:#ed5565;" title="Private"></i></span>
+        <h3 class="font-bold">
             <%= a.title %>
-            <small class="pull-right"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
+            <small class="m-l-md font-normal"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
+            <span id="private" <% if a.is_public %>style="display:none"><% end %><i class="fa fa-lock pull-right" style="color:#ed5565;" title="Private"></i></span>
         </h3>
         
         <div class="chat-discussion">
@@ -69,6 +73,28 @@
                  &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
             </div>
         </div>
+
+        <% elsif a.category == "Calendar" %>
+        <h3 class="font-bold">
+            Event: <%= a.title %>
+            <span class="m-l-md font-normal"><%= get_calendar_interval(a) %></span>
+            <span id="private" <% if a.is_public %>style="display:none"><% end %><i class="fa fa-lock pull-right" style="color:#ed5565;" title="Private"></i></span>
+        </h3>
+        
+        <div class="chat-discussion">
+            <strong>Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %>
+            <strong class="m-l-md">Attendees:</strong> <%= get_calendar_member_names(a.to) %>
+
+            <div class="col-4-lg action-links">
+                <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                 &sdot; <a class="comment-link-<%= a.id %>">Comment</a> 
+                 &sdot;
+                    <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
+                      false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
+                      true: raw('<a>Mark Private</a>')
+                    }  %>
+            </div>
+        </div> 
         <% end %>
 
         <div class="content-footer footer-<%= a.id %>">

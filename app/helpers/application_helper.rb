@@ -93,11 +93,23 @@ module ApplicationHelper
     if attendees_size <= size_limit
       return get_first_names([], to, nil)
     else
-      if trailing_text = "other"
+      if trailing_text == "other"
         return get_first_names([], to, nil) + " and " + pluralize(attendees_size - size_limit, 'other')
       else
         return "All"
       end
+    end
+  end
+
+  def get_calendar_interval(event)
+    start = event.last_sent_date
+    end_t = Time.zone.at(event.email_messages.last.end_epoch)
+    if start.to_date == end_t.to_date
+      return start.strftime("%l:%M%P") + ' - ' + end_t.strftime("%l:%M%P")
+    elsif start == start.midnight && end_t == end_t.midnight # if there is no time, date only
+      return start.strftime("%b %e %Y") + ' - ' + end_t.strftime("%b %e %Y")
+    else
+      return start.strftime("%b %e %Y,%l:%M%P") + ' - ' + end_t.strftime("%b %e %Y,%l:%M%P")
     end
   end
 
