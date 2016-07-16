@@ -17,8 +17,11 @@ class ProjectsController < ApplicationController
     end
 
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
-    @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
-    @metrics = Project.count_activities_by_day(7, projects.map(&:id)) if !projects.empty?
+    unless projects.empty?
+      @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
+      @metrics = Project.count_activities_by_day(7, projects.map(&:id))
+      @risk_scores = Project.current_risk_score(projects.map(&:id))
+    end
     # new project modal
     @project = Project.new
 

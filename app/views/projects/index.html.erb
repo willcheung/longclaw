@@ -62,6 +62,7 @@
                                     <th>Owner</th>
                                     <th></th>
                                     <th></th>
+                                    <th>Risk Score</th>
                                     <th>Last 7d Activity</th>
                                     <th>Inactive Days</th>
                                     <!-- <th>Last Activity</td> -->
@@ -83,6 +84,7 @@
                                             <td><%= get_full_name(p.project_owner) %></td>
                                             <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
                                             <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activities.size) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activities.size) %></span></td>
+                                            <td style="text-align:right;" class="<%= @risk_scores[p.id] > 95 ? 'text-danger' : 'text-success' %>"><%= @risk_scores[p.id] %>%</td>
                                             <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
                                             <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : ((Time.current - @project_last_activity_date[p.id])/86400).to_i %></td>
                                             <!-- <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : time_ago_in_words(@project_last_activity_date[p.id]) + " ago" %></td> -->
