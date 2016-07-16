@@ -144,12 +144,43 @@ class Project < ActiveRecord::Base
     
   end
 
+  def self.current_risk_score(array_of_project_ids)
+    query = <<-SQL
+        SELECT messages->>'sentimentItems' AS sentiment_item,
+               messages ->> 'sentDate' AS sent_date,
+               activities.project_id AS project_id
+        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+        WHERE messages->>'sentimentItems' IS NOT NULL
+        AND project_id IN ('#{array_of_project_ids.join("','")}')
+        ORDER BY (messages ->> 'sentDate')::integer DESC
+      SQL
+    result = Activity.find_by_sql(query)
+    return if result.blank?
+
+    scores_by_pid = result.group_by { |a| a.project_id }
+    project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
+    scores_by_pid.each do |pid, scores|
+      # get min score from last day that has risk score
+      last_sent_date = Time.zone.at(scores.first.sent_date.to_i).to_date
+      scores.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
+      score = scores.reduce(0.0) do |min_score, a|
+        sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
+        min_score < sentiment_score ? min_score : sentiment_score
+      end
+
+      # round float to a percentage
+      project_current_score[pid] = (score * 10000 * -1).floor / 100.0
+    end
+
+    project_current_score
+  end
+
   def current_risk_score
     query = <<-SQL
-        SELECT messages->>'sentimentItems' as sentiment_item,
-               messages ->> 'sentDate' as sent_date
+        SELECT messages->>'sentimentItems' AS sentiment_item,
+               messages ->> 'sentDate' AS sent_date
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' is NOT NULL
+        WHERE messages->>'sentimentItems' IS NOT NULL
         AND project_id = '#{self.id}'
         ORDER BY (messages ->> 'sentDate')::integer DESC
       SQL
@@ -158,8 +189,8 @@ class Project < ActiveRecord::Base
     return 0 if result.blank?
 
     # get min score from last day that has risk score
-    last_sent_date = Time.at(result.first.sent_date.to_i).midnight
-    result.select! {|a| Time.at(a.sent_date.to_i).between?(last_sent_date, last_sent_date.tomorrow) }
+    last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
+    result.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
     score = result.reduce(0.0) do |min_score, a|
       sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
       min_score < sentiment_score ? min_score : sentiment_score
