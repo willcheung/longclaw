@@ -47,7 +47,7 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Calendar: 'Calendar'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting'}
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []

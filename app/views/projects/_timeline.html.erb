@@ -16,7 +16,7 @@
   </div>
   
   <div class="col-lg-4">
-    <select class="comment_category col-lg-12" data-placeholder="  Filter by categories" multiple="true">
+    <select class="comment_category col-lg-12" data-placeholder="  Filter by activity type" multiple="true">
       <option value="0"></option>
       <% Activity::CATEGORY.each{|k,v|    %>
         <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
