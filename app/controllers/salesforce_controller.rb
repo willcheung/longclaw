@@ -1,6 +1,9 @@
 class SalesforceController < ApplicationController
 	layout "empty", only: [:index]
   def index
+    @category_param = []
+    @filter_email = []
+
   	@projects = []
   	@activities_by_month = []
     @project = Project.new
@@ -11,7 +14,9 @@ class SalesforceController < ApplicationController
   	else
   		# set this salesforce id to contextsmith account id
   		@salesforce_id = params[:id]
+
       account = Account.find_by(salesforce_id: params[:id])
+      # account = Account.find_by(id: 'e699af1c-2069-44e0-9a2c-80b01cd0fab0')
       if account.nil?
         @isconnect = false
         return
@@ -28,14 +33,17 @@ class SalesforceController < ApplicationController
     	if !params[:pid].nil?
     		@projects.each do |p|
     			if p.id == params[:pid]
-    				activities = p.activities.includes(:comments, :user)
+            @final_filter_user = Activity.all_involved_user(p, current_user)
+            activities = Activity.get_activity_by_filter(p, params)
             @project_risk_score =p.current_risk_score
             @project = p
     				break
     			end
     		end
   		else
-  	  	activities = @projects[0].activities.includes(:comments, :user)
+        @final_filter_user = Activity.all_involved_user(@projects[0], current_user)
+        activities = Activity.get_activity_by_filter(@projects[0], params)
+        
         @project_risk_score = @projects[0].current_risk_score
         @project = @projects[0]
   		end
@@ -43,8 +51,19 @@ class SalesforceController < ApplicationController
       @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
       project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
       @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
-
+      @notifications = @project.notifications.order(:is_complete, :original_due_date)  
  		end
+
+    if(!params[:category].nil? and !params[:category].empty?)
+      @category_param = params[:category].split(',')
+    end
+
+    if(!params[:emails].nil? and !params[:emails].empty?)
+      @filter_email = params[:emails].split(',')
+    end
+
+
+
   end
 
 
