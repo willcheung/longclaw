@@ -145,6 +145,7 @@ class Project < ActiveRecord::Base
   end
 
   def self.current_risk_score(array_of_project_ids)
+    project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
     query = <<-SQL
         SELECT messages->>'sentimentItems' AS sentiment_item,
                messages ->> 'sentDate' AS sent_date,
@@ -155,10 +156,9 @@ class Project < ActiveRecord::Base
         ORDER BY (messages ->> 'sentDate')::integer DESC
       SQL
     result = Activity.find_by_sql(query)
-    return if result.blank?
+    return project_current_score if result.blank?
 
     scores_by_pid = result.group_by { |a| a.project_id }
-    project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
     scores_by_pid.each do |pid, scores|
       # get min score from last day that has risk score
       last_sent_date = Time.zone.at(scores.first.sent_date.to_i).to_date
