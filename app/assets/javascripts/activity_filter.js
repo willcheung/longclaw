@@ -26,9 +26,9 @@ function getnewURL(search,commentSelected,userSelected){
 
 
 $(document).ready(function(){
-  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
+  // $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
 
-  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});
+  // $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});
 
   var commentSelected = $('.comment_category').val();
   var userSelected = $('.user_filter').val();
