@@ -67,6 +67,14 @@
   </div>
 <% end %>
 
+<script>
+$(document).ready(function(){
+  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
+
+  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});
+});
+</script>
+
 <%= javascript_include_tag 'activity_filter' %>
 <script type="text/javascript">
     $("#newsfeed-link").parent().addClass("active");
