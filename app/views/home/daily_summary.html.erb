@@ -71,7 +71,7 @@
 
 
                     <% if (!@pinned_activities_today.nil? and !@pinned_activities_today.empty?) %>
-                        <h1>New pinned items</h1>
+                        <h1>New Key Activities</h1>
                         <div style="margin-left: 40px;">
                         <% @pinned_activities_today.each do |a| %>
                             <h3><a href="<%= project_path(a.project) %>"><%= a.project.name %></a></h3>

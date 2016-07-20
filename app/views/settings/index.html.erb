@@ -56,9 +56,9 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="ibox float-e-margins">
         <div class="ibox-content">
-            <h1> Salesforce Account </h1>
+            <h1> Salesforce Integration</h1>
             <% if @salesforce_user.nil?%> <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%> ">Login to Salesforce</a> <br>
-            Must be a Salesforce admin
+            Must be a Salesforce admin. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
             <% else %>
               <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
                   <thead>
