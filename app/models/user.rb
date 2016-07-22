@@ -63,6 +63,8 @@ class User < ActiveRecord::Base
 
   validates :email, uniqueness: true
 
+  # attr_encrypted :oauth_access_token
+
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
 
    def self.from_omniauth(auth, organization_id)
