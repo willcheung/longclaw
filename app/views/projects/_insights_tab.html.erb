@@ -1,6 +1,6 @@
 <% unless @data.empty? %>
   <div class="p-m m-l white-bg header-box">
-    <h4 class="text-center">Insights go here!</h4>
+    <div id="force-graph"></div>
   </div>
 <% else %>
   <div class="p-m m-l white-bg header-box">
@@ -9,4 +9,9 @@
 <% end %>
 <script type="text/javascript">
     $("#insights-link").parent().addClass("active");
+
+    //Initialize SVG
+    var graph = d3.select("#force-graph").append("svg")
+      .append("g")
+        .attr("class", "graph")
 </script>

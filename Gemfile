@@ -23,6 +23,7 @@ gem 'pg_search'
 gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
 gem 'omniauth-salesforce'  
 gem 'restforce'  #saleforce REST gem
+gem 'd3-rails'                    # Use D3 for cool data visualizations
 
 # Gems used only for assets and not required
 # in production environments by default.
