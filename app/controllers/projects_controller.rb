@@ -1,8 +1,8 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :refresh]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :refresh]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab]
+  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab]
 
   # GET /projects
   # GET /projects.json
@@ -136,6 +136,12 @@ class ProjectsController < ApplicationController
       !@project.activities.any? {|a| n.conversation_id == a.backend_id }
     end
     @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+
+    render "show"
+  end
+
+  def insights_tab
+    @data = [1]
 
     render "show"
   end

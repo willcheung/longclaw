@@ -1,0 +1,12 @@
+<% unless @data.empty? %>
+  <div class="p-m m-l white-bg header-box">
+    <h4 class="text-center">Insights go here!</h4>
+  </div>
+<% else %>
+  <div class="p-m m-l white-bg header-box">
+    <h4 class="text-center">You don't have any Insights for this project!</h4>
+  </div>
+<% end %>
+<script type="text/javascript">
+    $("#insights-link").parent().addClass("active");
+</script>
