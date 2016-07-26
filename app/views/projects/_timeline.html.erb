@@ -46,7 +46,7 @@
         <div class="col-lg-12">
             <div id="vertical-timeline" class="vertical-container light-timeline m-t">
                 <% @activities_by_month.each do |month, activities| %>
-                    <div class="vertical-timeline-month">
+                    <div class="vertical-timeline-month" data-myvalue='month'>
                         <h3 class="p-xs m-l-n-sm gray-bg"><%= month %></h3>
                     </div>
                     
@@ -71,7 +71,7 @@
 $(document).ready(function(){
   $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
 
-  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});
+  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});  
 });
 </script>
 
