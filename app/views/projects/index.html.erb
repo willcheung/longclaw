@@ -1,17 +1,17 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>Project Streams</h2>
+        <h2>Streams</h2>
         <ol class="breadcrumb">
             <li>
                 <a href="<%= root_path %>">Home</a>
             </li>
             <li class="active">
-                <strong>Project Streams</strong>
+                <strong>Streams</strong>
             </li>
         </ol>
     </div>
     <div class="col-lg-2">
-        <%= link_to '+ New Project', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+        <%= link_to '+ New Stream', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>
 </div>
 
@@ -48,7 +48,7 @@
         <div class="col-sm-12 m-t-md">
             <% if @projects.empty? %>
                 <div class="text-center m-t-lg">
-                    <h3>No projects found. Did you filter them out?</h3>
+                    <h3>No streams found. Did you filter them out?</h3>
                 </div>
             <% else %>
                 <div class="ibox float-e-margins">
@@ -57,7 +57,7 @@
                             <thead>
                                 <tr>
                                     <th></th>
-                                    <th>Project Stream</th>
+                                    <th>Stream</th>
                                     <th>Type</th>
                                     <th>Owner</th>
                                     <th></th>
