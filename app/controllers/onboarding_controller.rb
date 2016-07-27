@@ -172,7 +172,7 @@ class OnboardingController < ApplicationController
 		respond_to do |format|
       
   		if user and data.kind_of?(Array)   
-  			puts("Creating project streams for #{user.email}")
+  			puts("Creating Streams for #{user.email}")
 
         uniq_external_members, uniq_internal_members = get_all_members(data)
 

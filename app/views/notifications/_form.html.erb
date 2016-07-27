@@ -4,7 +4,7 @@
   <%# Added Bootstrap classes, and help-block container for error messages %>
       <%= f.input :name, wrapper_html: { class: 'col-md-5'}, label: "Task" %>
       <%= f.input :description, wrapper_html: { class: 'col-md-7'} %>
-      <%= f.input :project_id, wrapper_html: { class: 'col-xs-8'}, collection:  @projects, selected: @projects, label: "Project Stream" %>
+      <%= f.input :project_id, wrapper_html: { class: 'col-xs-8'}, collection:  @projects, selected: @projects, label: "Stream" %>
       <%= f.input :assign_to, wrapper_html: { class: 'col-xs-4'}, collection:  @users,  selected:  @users %>
       
   <%# Added Bootstrap classes %>
