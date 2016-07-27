@@ -17,7 +17,7 @@
     <div class="row">
         <div class="col-lg-9 filter-space">
             <div class="font-bold m-b-xs">Projects:</div>
-            <select data-placeholder="Choose a Project..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
+            <select data-placeholder="Choose a Stream..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
                 <option value=""></option>
                 <% @projects.each do |p| %>
                     <option value="<%= p.id %>" <% if @project_all_touches[0,5].map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
