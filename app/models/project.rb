@@ -346,9 +346,9 @@ class Project < ActiveRecord::Base
 		
 		project_domains.each do |p|
 			external_members, internal_members = get_project_members(data, p)
-			project = Project.new(name: (accounts.find {|a| a.domain == p}).name + " Project",
+			project = Project.new(name: (accounts.find {|a| a.domain == p}).name,
 													 status: "Active",
-													 category: "Implementation",
+													 category: "Opportunity",
 													 created_by: user_id,
 													 updated_by: user_id,
 													 owner_id: user_id,

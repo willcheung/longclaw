@@ -4,9 +4,9 @@
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <% if modal_id == 'edit_project_modal' %>
-          <h4 class="modal-title">Edit project stream</h4>
+          <h4 class="modal-title">Edit Stream</h4>
         <% else %>
-          <h4 class="modal-title">New project stream</h4>
+          <h4 class="modal-title">New Stream</h4>
         <% end %>
       </div>
       <div class="modal-body">
@@ -17,7 +17,7 @@
       </div>
       <% if modal_id == 'edit_project_modal' %>
         <div class="modal-footer">
-          <%= link_to "Disable project", @project, method: :delete, data: {confirm: "All conversations and notes in this project will be disabled! Are you sure?"} %>
+          <%= link_to "Disable project", @project, method: :delete, data: {confirm: "All conversations and notes in this Stream will be disabled! Are you sure?"} %>
         </div>
       <% end %>
     </div>

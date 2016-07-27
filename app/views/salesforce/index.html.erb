@@ -7,9 +7,9 @@
             <% if @projects.empty? %>
               <div class="text-center m-t-lg">
                 <% if @isconnect %>
-                  <h3>No project stream</h3>
+                  <h3>Cannot find your ContextSmith Stream</h3>
                 <% else %>
-                  <h3>Not connected to any contextsmith account</h3>
+                  <h3>Not connected to any ContextSmith Account</h3>
                 <% end  %>
               </div>
             <% else %>
@@ -83,7 +83,33 @@
             </div>
 
           </div> 
-        </div>          
+        </div>   
+
+        <!-- Filter Section -->
+        <div class="filter_section" style="padding-top: 10px; margin-right:0; margin-left:10px; padding-right:0;">
+            <i class="fa fa-filter text-primary col-lg-1" style="font-size:18px; text-align: right; padding-top:4px" aria-hidden="true"></i>
+
+            <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
+              <option value="0"></option>
+              <% Activity::CATEGORY.each{|k,v|    %>
+                <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
+                 <% } %> 
+            </select>
+      
+            <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
+              <option value="0"></option>
+              <% @final_filter_user.each do |u| %>
+                <option value="<%=u.email %>"  <% if @filter_email.include?(u.email)  %> selected   <% end %> >
+                  <% if u.first_name.include?('@')%>
+                      <%=u.first_name%>
+                  <% else %>
+                      <%=u.first_name+' '+u.last_name+'(@'+  get_short_name(get_domain(u.email))+')' %>
+                  <% end %>         
+                </option>
+              <% end %>
+            </select>
+          
+        </div>       
 
         <div id="newsfeed" class="col-lg-12">
           <div class="row col-lg-1">
@@ -106,6 +132,15 @@
     </div>
   </div>
 </div>
+
+<script>
+$(document).ready(function(){
+  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true, width: '250px'});
+
+  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true, width: '250px'});
+});
+</script>
+<%= javascript_include_tag 'activity_filter' %>
 
 <style>
 .salesforce-comment-post:after {

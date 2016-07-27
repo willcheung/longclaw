@@ -8,7 +8,7 @@
         </div>
     </div>
 </div>
-    
+
 <!-- Filter Section -->
 <div class="filter_section col-lg-12" style="padding-top: 10px; margin-right:0; padding-right:0;">
   <div class="col-lg-1 col-lg-offset-2" style="padding-right:0px;">
@@ -16,7 +16,7 @@
   </div>
   
   <div class="col-lg-4">
-    <select class="comment_category col-lg-12" data-placeholder="  Filter by categories" multiple="true">
+    <select class="comment_category col-lg-12" data-placeholder="  Filter by activity type" multiple="true">
       <option value="0"></option>
       <% Activity::CATEGORY.each{|k,v|    %>
         <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
@@ -39,7 +39,6 @@
     </select>
   </div>
 </div>
- 
 
 <!-- Activities -->
 <div id="newsfeed">
@@ -68,6 +67,15 @@
   </div>
 <% end %>
 
+<script>
+$(document).ready(function(){
+  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
+
+  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});
+});
+</script>
+
+<%= javascript_include_tag 'activity_filter' %>
 <script type="text/javascript">
     $("#newsfeed-link").parent().addClass("active");
 </script>
