@@ -146,6 +146,16 @@ class ProjectsController < ApplicationController
     render "show"
   end
 
+  ### render some static data temporarily
+  def network_map
+    render file: 'app/views/projects/map.txt', layout: false, content_type: 'text/plain'
+  end 
+
+  ### render some static data temporarily
+  def lookup
+    render file: 'app/views/projects/lookup.txt', layout: false, content_type: 'text/plain'
+  end
+
   def refresh
     ContextsmithService.load_emails_from_backend(@project, nil, 300)
     redirect_to :back
