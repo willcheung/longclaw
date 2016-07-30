@@ -87,6 +87,11 @@
 
         <!-- Filter Section -->
         <div class="filter_section" style="padding-top: 10px; margin-right:0; margin-left:10px; padding-right:0;">
+          <div class="col-lg-12"> 
+            <div class="col-lg-1"></div>
+            <div class="col-lg-7" id="container" style="height: 100px; margin-top:10px; margin-bottom:10px; margin-right:0; padding-right:0;"></div>
+          </div>
+
             <i class="fa fa-filter text-primary col-lg-1" style="font-size:18px; text-align: right; padding-top:4px" aria-hidden="true"></i>
 
             <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
@@ -134,13 +139,326 @@
 </div>
 
 <script>
+
+var g_minDate = 0;
+var g_maxDate = 0;
+
+var g_emails = [];
+var g_categories = [];
+
+function activityEmailFilter(value, emails){
+   for (var i = 0; i < value.length; i++) {
+    if(emails.indexOf(value[i])!=-1){
+      return true;
+    }    
+  }
+  return false;
+}
+
+function activityCategoryFilter(value, categories){
+  if(categories.indexOf(value)!=-1)
+    return true;
+
+  return false;
+}
+
+function activityTimeFilter(value, minDate, maxDate){
+  // console.log(value);
+  // console.log(minDate);
+  // console.log(maxDate);
+   if(value>=minDate && value<=maxDate){
+    return true;
+   }
+   return false;
+}
+
+function applyFilter(minDate, maxDate){
+
+  activityTimeFilterReset();
+
+  var monthIndex = 0;
+  var i = 0;
+  var monthShow = false;
+
+  $('#vertical-timeline').children().each(function(){
+    if( $(this).is("div") ){
+      if( $(this).data('myvalue') == 'month'){
+        monthIndex = i;
+        monthShow = false;
+        $(this).hide();
+      }
+      else
+      {
+         
+         $(this).children( ".vertical-timeline-content" ).each(function(){
+          
+          if( $(this).data('mytype')=='Note'){
+            var cur_email = $(this).data('myemail');
+            $(this).children(".chat-discussion").each(function(){
+              var b_timeFilter = false;
+              var b_categoryFilter = false;
+              var b_emailFilter = false;
+
+              // time filter
+              if(g_minDate==0 && g_maxDate==0){
+                b_timeFilter = true;
+              }
+              else{
+                b_timeFilter = activityTimeFilter($(this).data('myvalue'), g_minDate, g_maxDate);
+              }
+
+              // category filter
+              if(g_categories.length==0){
+                b_categoryFilter = true;
+              }
+              else{
+                b_categoryFilter = activityCategoryFilter('Note', g_categories);
+              }
+
+              //email filter
+               if(g_emails.length==0){
+                b_emailFilter = true;
+              }
+              else{
+                b_emailFilter = activityEmailFilter(cur_email.split(','), g_emails);
+              }
+
+
+              // console.log('------------------');
+              // console.log(b_timeFilter);
+              // console.log(b_categoryFilter);
+              // console.log(b_emailFilter);
+              // console.log('------------------');
+
+              if(b_timeFilter && b_categoryFilter & b_emailFilter){
+                if(monthShow==false){
+                  monthShow = true;
+                  $('#vertical-timeline').children().eq(monthIndex).show();
+                }
+              }
+              else{
+                $(this).parent().parent().hide();
+              }
+            });
+
+          }
+          else if( $(this).data('mytype')=='Conversation'){
+            var cur_email = $(this).data('myemail');
+            var breakFlag = false;
+            $(this).children(".chat-discussion").each(function(){
+              breakFlag = false;
+              $(this).children(".hidden-message-filter").each(function(){
+                if(breakFlag!=true){
+                  var b_timeFilter = false;
+                  var b_categoryFilter = false;
+                  var b_emailFilter = false;
+
+                  // time filter
+                  if(g_minDate==0 && g_maxDate==0){
+                    b_timeFilter = true;
+                  }
+                  else{
+                    b_timeFilter = activityTimeFilter($(this).data('myvalue'), g_minDate, g_maxDate);
+                  }
+
+                  // category filter
+                  if(g_categories.length==0){
+                    b_categoryFilter = true;
+                  }
+                  else{
+                    b_categoryFilter = activityCategoryFilter('Conversation', g_categories);
+                  }
+
+                  //email filter
+                  if(g_emails.length==0){
+                    b_emailFilter = true;
+                  }
+                  else{
+                    b_emailFilter = activityEmailFilter(cur_email.split(','), g_emails);
+                  }
+
+
+                  // console.log('------------------');
+                  // console.log(b_timeFilter);
+                  // console.log(b_categoryFilter);
+                  // console.log(b_emailFilter);
+                  // console.log('------------------');
+
+                  if(b_timeFilter && b_categoryFilter & b_emailFilter){
+                    if(monthShow==false){
+                      monthShow = true;
+                      $('#vertical-timeline').children().eq(monthIndex).show();
+                      $(this).parent().parent().parent().show();
+                      breakFlag = true;
+                    }
+                  }
+                  else{
+                    $(this).parent().parent().parent().hide();
+                  }
+                }
+              });
+
+            });
+
+          }
+
+        });
+         
+      }
+    }
+
+    i++;
+
+  });
+}
+
+function activityTimeFilterReset(){
+  $('#vertical-timeline').children().show();
+}
+
+
 $(document).ready(function(){
   $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true, width: '250px'});
 
   $('.user_filter').chosen({disable_search: false, allow_single_deselect: true, width: '250px'});
+
+  $('.comment_category').on('change',function(evt,params){  
+      if(params["selected"]!=null){
+        g_categories.push(params["selected"]);
+      }
+      else{
+        var index = g_categories.indexOf(params["deselected"]);
+        if(index!=-1){
+          g_categories.splice(index, 1);
+        }
+      }
+      console.log(g_categories);
+      applyFilter();
+    });
+
+    $('.user_filter').on('change',function(evt,params){
+      if(params["selected"]!=null){
+        g_emails.push(params["selected"]);
+      }
+      else{
+        var index = g_emails.indexOf(params["deselected"]);
+        if(index!=-1){
+          g_emails.splice(index, 1);
+        }
+      }
+     
+      applyFilter();
+    });
+
+   $(function () {
+        Highcharts.setOptions({                                            
+        // This is for all plots, change Date axis to local timezone
+          global : {
+            // timezoneOffset: -7 * 60,
+            useUTC : false
+          }
+         });
+        $('#container').highcharts({
+            chart: {
+                events:{
+                  selection: function(event){
+                    if(event.xAxis !=null){
+                      // console.log("selection: ", event.xAxis[0].min, event.xAxis[0].max);
+                      g_minDate = event.xAxis[0].min/1000;
+                      g_maxDate = event.xAxis[0].max/1000;
+                      console.log('----------------');
+                      console.log(g_minDate);
+                      console.log(g_maxDate);
+                      console.log('----------------');
+                      applyFilter();
+
+                      // activityTimeFilter(event.xAxis[0].min/1000,event.xAxis[0].max/1000);
+
+                    }
+                    else{
+                      // console.log("selection: reset");
+                      // activityTimeFilterReset();
+                      g_minDate = 0; 
+                      g_maxDate = 0;
+                      applyFilter();
+                    }
+
+                  }
+
+                },
+                zoomType: 'x'
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                // text: 'Activities counts over time'
+                text: ''
+            },
+            // subtitle: {
+            //     text: document.ontouchstart === undefined ?
+            //             'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+            // },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    // text: 'Activities'
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                area: {
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1
+                        },
+                        stops: [
+                            [0, Highcharts.getOptions().colors[0]],
+                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                        ]
+                    },
+                    marker: {
+                        radius: 2
+                    },
+                    lineWidth: 1,
+                    states: {
+                        hover: {
+                            lineWidth: 1
+                        }
+                    },
+                    threshold: null
+                }
+            },
+
+            series: [{
+                type: 'column',
+                name: 'Activity Count',
+                data: [ 
+                        <% counter = 0  %>
+                        <% @activities_by_date.each do |a| %>
+                            <% if (counter < @activities_by_date.length)  %>
+                              <% counter = counter + 1  %>
+                              <%='['+a.utc_milli_timestamp.inspect + ','+ a.count.inspect+'],' %>
+                            <% else  %>
+                              <%='['+ +a.utc_milli_timestamp.inspect + ','+ a.count.inspect+']' %>
+                            <% end %>
+                          
+                        <% end %>
+                      ]                
+            }]
+        });
+    
+  });
 });
 </script>
-<%= javascript_include_tag 'activity_filter' %>
 
 <style>
 .salesforce-comment-post:after {
