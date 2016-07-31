@@ -200,6 +200,14 @@ class Project < ActiveRecord::Base
     (score * 10000 * -1).floor / 100.0
   end
 
+  # TODO: add query to generate network map from DB entries
+  def network_map
+    query = <<-SQL
+
+    SQL
+    result = Activity.find_by_sql(query)
+  end
+
 	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
 		query = <<-SQL
       WITH time_series as (

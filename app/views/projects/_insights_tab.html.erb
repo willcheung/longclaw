@@ -113,7 +113,6 @@
     var legendSizePadding = 10;
     var legendDomainPadding = 5;
 
-
     var height = 0;
     var width = 0;
 
@@ -123,24 +122,15 @@
     // Initialize Ordinal Colour Scale
     var color = d3.scale.ordinal()
     // TODO: redo the scale to make dynamic
-        .domain(["i0", "e1", "e2"/*, "e3", "e4", "e5", "e6", "e7", "e8"*/])
-        .range([
-            "#003366", // NAVY, internal
-            "#009933", // GREEN, external 1
-            "#ff9933", // ORANGE, external 2
-            // "#ff0000", // RED, external 3
-            // "#996633", // TAN, external 4
-            // "#ff66ff", // MAGENTA, external 5
-            // "#0000cc", // BLUE, external 6
-            // "#ffcccc", // PINK, external 7
-            // "#00ccff", // SKY, external 8
-    ]);
+        .domain(<%= @domains.to_json.html_safe %>)
+        .range(<%= %w(#003366 #009933 #ff9933 #ff0000 #996633 #ff66ff #0000cc #ffcccc #00ccff)[0...@domains.length].to_json.html_safe %>);
 
     // Configure force layout
     var force = d3.layout.force();
 
-    d3.tsv("lookup.txt", function (error, lookup) {
+    d3.json("lookup.json", function (error, lookup) {
         if (error) throw error;
+        console.log(lookup)
         d3.tsv("network_map.txt", function (error, links) {
             if (error) throw error;
             ready(lookup, links);
@@ -156,7 +146,7 @@
         lookup.forEach(function(person) {
             lookupTable[person.name] = person.domain;
         });
-
+        
         var allShowing = true;
         var nameSelected = false;
         var nodeHighlighted = false;
@@ -331,16 +321,7 @@
             .shape("circle")
             .shapePadding(legendDomainPadding)
             .scale(color)
-            .labels(["DOMAIN 1",
-                     "DOMAIN 2",
-                     "DOMAIN 3"//,
-                     // "DOMAIN 4",
-                     // "DOMAIN 5",
-                     // "DOMAIN 6",
-                     // "DOMAIN 7",
-                     // "DOMAIN 8",
-                     // "DOMAIN 9",
-                    ]);
+            .labels(<%= @domains.to_json.html_safe %>);
 
         var domainLegend = legendContainer.select(".legendOrdinal")
             .call(legendOrdinal);

@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :refresh]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :lookup, :network_map, :refresh]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab]
@@ -142,18 +142,22 @@ class ProjectsController < ApplicationController
 
   def insights_tab
     @data = [1]
+    @domains = (@project.users + @project.contacts).map { |m| get_domain(m.email) }.uniq
 
     render "show"
   end
 
   ### render some static data temporarily
   def network_map
-    render file: 'app/views/projects/map.txt', layout: false, content_type: 'text/plain'
+    render file: 'app/views/projects/map_astellas.txt', layout: false, content_type: 'text/plain'
+    # render json: @project.network_map
   end 
 
   ### render some static data temporarily
+    # render file: 'app/views/projects/lookup.txt', layout: false, content_type: 'text/plain'
   def lookup
-    render file: 'app/views/projects/lookup.txt', layout: false, content_type: 'text/plain'
+    members = (@project.users + @project.contacts).map { |m| { name: get_full_name(m), domain: get_domain(m.email) } }
+    render json: members
   end
 
   def refresh
