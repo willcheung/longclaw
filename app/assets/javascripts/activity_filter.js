@@ -132,10 +132,8 @@ function applyFilter(minDate, maxDate){
         $(this).hide();
       }
       else
-      {
-         
-         $(this).children( ".vertical-timeline-content" ).each(function(){
-          
+      { 
+        $(this).children( ".vertical-timeline-content" ).each(function(){
           if( $(this).data('mytype')=='Note'){
             var cur_email = $(this).data('myemail');
             $(this).children(".chat-discussion").each(function(){
@@ -245,14 +243,64 @@ function applyFilter(minDate, maxDate){
             });
 
           }
+          else if( $(this).data('mytype')=='Calendar' || $(this).data('mytype')=='Meeting' ){
+            var cur_email = $(this).data('myemail');
+            var breakFlag = false;
+           
+            $(this).children(".chat-discussion").each(function(){     
+              var b_timeFilter = false;
+              var b_categoryFilter = false;
+              var b_emailFilter = false;
+
+              // time filter
+              if(g_minDate==0 && g_maxDate==0){
+                b_timeFilter = true;
+              }
+              else{
+                b_timeFilter = activityTimeFilter($(this).data('myvalue'), g_minDate, g_maxDate);
+              }
+
+              // category filter
+              if(g_categories.length==0){
+                b_categoryFilter = true;
+              }
+              else{
+                b_categoryFilter = activityCategoryFilter('Meeting', g_categories);
+              }
+
+              //email filter
+              if(g_emails.length==0){
+                b_emailFilter = true;
+              }
+              else{
+                b_emailFilter = activityEmailFilter(cur_email.split(','), g_emails);
+              }
+
+
+              // console.log('------------------');
+              // console.log(b_timeFilter);
+              // console.log(b_categoryFilter);
+              // console.log(b_emailFilter);
+              // console.log('------------------');
+
+              if(b_timeFilter && b_categoryFilter & b_emailFilter){
+                if(monthShow==false){
+                  monthShow = true;
+                  $('#vertical-timeline').children().eq(monthIndex).show();
+                  $(this).parent().parent().parent().show();
+                 
+                }
+              }
+              else{
+                $(this).parent().parent().hide();
+              }            
+            });
+          }
 
         });
-         
-      }
+      }   
     }
-
     i++;
-
   });
 }
 
