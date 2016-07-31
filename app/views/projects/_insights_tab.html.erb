@@ -130,7 +130,6 @@
 
     d3.json("lookup.json", function (error, lookup) {
         if (error) throw error;
-        console.log(lookup)
         d3.tsv("network_map.txt", function (error, links) {
             if (error) throw error;
             ready(lookup, links);
@@ -345,15 +344,23 @@
         // Create nodes for each unique source and target.
         var nodesByName = {};
         links.forEach(function(link) {
-            link.source = nodeByName(link.source);
+            link.source = nodeByName(link.source, +link.value);
             link.target = nodeByName(link.target);
         });
-        function nodeByName(name) {
-            return nodesByName[name] || (nodesByName[name] = {name: name});
+        function nodeByName(name, value) {
+            if (!nodesByName[name]) {
+                nodesByName[name] = {name: name, value: 0}
+            }
+            if (value) {
+                nodesByName[name].value += value
+            }   
+            return nodesByName[name];
+
         }
 
         // Extract the array of nodes from the map by name.
         var nodes = d3.values(nodesByName);
+        console.log(nodes);
 
         // Create the link lines.
         var link = vis.selectAll(".link")
@@ -367,13 +374,7 @@
             .enter().append("circle")
               .attr("class", "node")
               .attr("r", function(d) {
-                  if(d.name == "WILL CHEUNG" ||
-                     d.name == "JAMES TAYLOR" ||
-                     d.name == "CAITLIN O'MALLEY"
-                    ){
-                      return largeCircleSize;
-                  }
-                  else{return smallCircleSize}
+                  return smallCircleSize + d.value/10;
               })
               .style("fill", function(d) {return color(lookupTable[d.name]);})
               .classed("activeNode", true)
@@ -401,7 +402,7 @@
         force
               .nodes(nodes)
               .links(links)
-              .linkDistance(40)
+              .linkDistance(20 + nodes.length*5)
         //      .linkStrength(0.08)
               .on("tick", function(){tick();})
               .start();
