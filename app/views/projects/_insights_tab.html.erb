@@ -117,7 +117,7 @@
     var width = 0;
 
     // Linear size scale
-    var linearSize = d3.scale.linear().domain([0,1]).range([smallCircleSize, largeCircleSize]);
+    // var linearSize = d3.scale.linear().domain([0,1]).range([smallCircleSize, largeCircleSize]);
 
     // Initialize Ordinal Colour Scale
     var color = d3.scale.ordinal()
@@ -300,16 +300,16 @@
             .attr("class", "legendSize")
             .attr("transform", "translate("+ (xMargin+10) + ", 70)");
 
-        var legendSize = d3.legend.size()
-            .scale(linearSize)
-            .shape('circle')
-            .shapePadding(legendSizePadding)
-            .labels(["Small Node","Big Node"])
-            .cells(2) // Number of objects (circles)
-            .ascending(true);
+        // var legendSize = d3.legend.size()
+        //     .scale(linearSize)
+        //     .shape('circle')
+        //     .shapePadding(legendSizePadding)
+        //     .labels(["Small Node","Big Node"])
+        //     .cells(2) // Number of objects (circles)
+        //     .ascending(true);
 
-        var sizeLegend = legendContainer.select(".legendSize")
-            .call(legendSize);
+        // var sizeLegend = legendContainer.select(".legendSize")
+        //     .call(legendSize);
 
         // Create a legend for domains
         legendContainer.append("g")
