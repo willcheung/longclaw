@@ -27,6 +27,11 @@ Longclaw::Application.routes.draw do
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "projects/:id/pinned" => 'projects#pinned_tab'
     get "projects/:id/tasks" => 'projects#tasks_tab'
+    get "projects/:id/insights" => 'projects#insights_tab'
+
+    get "projects/:id/network_map" => 'projects#network_map'
+    get "projects/:id/lookup" => 'projects#lookup'
+
     post "projects/:id/refresh" => 'projects#refresh'
     post "/project_bulk" => 'projects#bulk'
 
