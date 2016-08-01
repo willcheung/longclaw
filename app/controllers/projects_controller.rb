@@ -86,7 +86,8 @@ class ProjectsController < ApplicationController
 
   def insights_tab
     @data = [1]
-    @domains = (@project.users + @project.contacts).map { |m| get_domain(m.email) }.uniq
+    # @domains = (@project.users + @project.contacts).map { |m| get_domain(m.email) }.uniq
+    @domains = %w(piedpiper.com hooli.com)
 
     render "show"
   end
@@ -98,10 +99,10 @@ class ProjectsController < ApplicationController
   end 
 
   ### render some static data temporarily
-    # render file: 'app/views/projects/lookup.txt', layout: false, content_type: 'text/plain'
   def lookup
-    members = (@project.users + @project.contacts).map { |m| { name: get_full_name(m), domain: get_domain(m.email) } }
-    render json: members
+    render file: 'app/views/projects/lookup_astellas.txt', layout: false, content_type: 'text/plain'
+    # members = (@project.users + @project.contacts).map { |m| { name: get_full_name(m), domain: get_domain(m.email) } }
+    # render json: members
   end
 
   def refresh
