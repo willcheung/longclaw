@@ -132,15 +132,8 @@ function applyFilter(minDate, maxDate){
         $(this).hide();
       }
       else
-<<<<<<< HEAD
-      { 
-        $(this).children( ".vertical-timeline-content" ).each(function(){
-=======
-      {
-         
+      {         
          $(this).children( ".vertical-timeline-content" ).each(function(){
-          
->>>>>>> upstream/develop
           if( $(this).data('mytype')=='Note'){
             var cur_email = $(this).data('myemail');
             $(this).children(".chat-discussion").each(function(){
@@ -250,7 +243,6 @@ function applyFilter(minDate, maxDate){
             });
 
           }
-<<<<<<< HEAD
           else if( $(this).data('mytype')=='Calendar' || $(this).data('mytype')=='Meeting' ){
             var cur_email = $(this).data('myemail');
             var breakFlag = false;
@@ -309,16 +301,6 @@ function applyFilter(minDate, maxDate){
       }   
     }
     i++;
-=======
-
-        });
-         
-      }
-    }
-
-    i++;
-
->>>>>>> upstream/develop
   });
 }
 
