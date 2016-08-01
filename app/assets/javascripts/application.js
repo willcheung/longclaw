@@ -21,6 +21,7 @@
 //= require jstz/jstz.min.js
 //= require chosen/chosen.jquery.min.js
 //= require selectize/selectize.min.js
+//= require d3
 
 /* Ahoy analytics */
 // ahoy.trackAll();

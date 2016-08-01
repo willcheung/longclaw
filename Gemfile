@@ -19,10 +19,11 @@ gem 'puma'                        # Web server
 gem 'whois'
 gem 'acts_as_commentable'
 gem 'pg_search'
-#gem 'attr_encrypted'             # Encrypting private data!
+# gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
 gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
 gem 'omniauth-salesforce'  
 gem 'restforce'  #saleforce REST gem
+gem 'd3-rails', '~> 3.5'          # Use D3 for cool data visualizations
 
 # Gems used only for assets and not required
 # in production environments by default.
