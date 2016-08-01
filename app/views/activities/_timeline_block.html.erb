@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>">
+<div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>" data-myvalue='block'>
     
     <% if a.category == "Conversation" %>
         <div class="vertical-timeline-icon primary-bg">
@@ -18,8 +18,12 @@
         <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span>
 
-    <div class="vertical-timeline-content" <% if a.category == "Note" %> style="background-color: #fff7db" <% end %>>
-        <% if a.category == "Conversation" %>
+    <div class="vertical-timeline-content" <% if a.category == Activity::CATEGORY[:Note] %> style="background-color: #fff7db" <% end %> data-mytype="<%= a.category %>" data-myemail= "<% if a.category==Activity::CATEGORY[:Note] %>
+        <% if !a.user.nil? %> <%=a.user.email %>  <% end %>
+        <% else %>
+        <% if !a.email_addresses.nil? %> <%=a.email_addresses.to_a.join(',') %>  <% end %>
+        <% end %>  ">
+        <% if a.category == Activity::CATEGORY[:Conversation] %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
                 <% if not_in_current_user_inbox(a) %><span id="not-in-inox"><i class="fa fa-eye pull-right" style="font-size:14px;" data-toggle="tooltip" data-placement="top" data-original-title="This conversation is not in your inbox"></i></span><% end %>
@@ -34,7 +38,7 @@
                 <% end %>
 
                 <% a.email_messages.each do |m| %>
-                    <div class="hidden-chat-message-<%= a.id.to_s %>"  <% if a.email_messages.last != m %> style="display:none;" <% end %>>
+                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" data-myvalue="<%= m.sentDate %>" <% if a.email_messages.last != m %> style="display:none;" <% end %>>
                         <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
                             <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
                             <div class="message">
@@ -57,7 +61,7 @@
                 <% end %>
 
                 <div class="col-4-lg action-links">
-                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
@@ -69,8 +73,8 @@
             </div> <!-- chat discussion -->
             <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => true, :notifications => @notifications.where(conversation_id: a.backend_id) %></div>
         
-        <% elsif a.category == "Note" %>
-            <div class="chat-discussion timeline-note">
+        <% elsif a.category == Activity::CATEGORY[:Note] %>
+            <div class="chat-discussion timeline-note" data-myvalue="<%= a.last_sent_date_epoch %>">
                 <div class="row">
                     <div class="col-xs-11">
                         <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
@@ -84,7 +88,7 @@
                     <% end %>
                 </div>
                 <div class="col-4-lg action-links">
-                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                      &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a> 
                 </div>
             </div>
@@ -95,11 +99,11 @@
                 <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" style="color:#ed5565" title="Private"></i></span>
             </h3>
 
-            <div class="chat-discussion">
+            <div class="chat-discussion" data-myvalue="<%= a.last_sent_date_epoch %>">
                 <strong>Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %>
                 <strong class="m-l-md">Attendees:</strong> <%= get_calendar_member_names(a.to) %>
                 <div class="col-4-lg action-links">
-                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin it</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),

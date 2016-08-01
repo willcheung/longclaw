@@ -16,7 +16,7 @@
 
     <div class="row">
         <div class="col-lg-offset-8 col-lg-4">
-            <h4>You are following <u><span data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="<%= @sub.collect { |s| s.project.name }.join('<br>') %>"><%= pluralize(@sub.size, 'project stream') %></span></u>.</h4>
+            <h4>You are following <u><span data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="<%= @sub.collect { |s| s.project.name }.join('<br>') %>"><%= pluralize(@sub.size, 'Stream') %></span></u>.</h4>
         </div>
     </div>
 
@@ -71,7 +71,7 @@
 
 
                     <% if (!@pinned_activities_today.nil? and !@pinned_activities_today.empty?) %>
-                        <h1>New pinned items</h1>
+                        <h1>New Key Activities</h1>
                         <div style="margin-left: 40px;">
                         <% @pinned_activities_today.each do |a| %>
                             <h3><a href="<%= project_path(a.project) %>"><%= a.project.name %></a></h3>
@@ -94,7 +94,7 @@
                                             <%= render 'activities/timeline_block', a: a %>
                                         <% end %>
                                     </div>
-                                    <div class="text-center"><a href="<%= project_path(p[1]) %>" type="button" class="btn btn-default btn-outline btn-sm">Go to project stream</a></div>
+                                    <div class="text-center"><a href="<%= project_path(p[1]) %>" type="button" class="btn btn-default btn-outline btn-sm">Go to Stream</a></div>
                                 </div>
                             </div>
                             

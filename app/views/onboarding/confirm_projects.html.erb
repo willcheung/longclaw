@@ -16,11 +16,11 @@
 <div style="margin-bottom:50px">
     <div class="row">
         <div class="alert alert-info col-lg-6 col-lg-offset-3">
-            <h3>We found <strong><%= pluralize(@new_projects.size, 'project stream') %></strong> not in our system.</h3>
+            <h3>We found <strong><%= pluralize(@new_projects.size, 'Stream') %></strong> not in our system.</h3>
             <h3>Get the most out of ContextSmith by completing our onboarding!</h3>
             <ol class="text-left m-t-md" style="font-size: 20px;font-weight:300;">
-                <li>We picked the names of your project streams for you. <br><span style="font-size:15px">Feel free to change them to something more meaningful.</span></li>
-                <li>Each stream can be tagged "Public" or "Private". <br><span style="font-size:15px">Note that only invited members can access "Private" streams.</span></li>
+                <li>We suggested the names of your Streams. <br><span style="font-size:15px">Feel free to change them to something more meaningful.</span></li>
+                <li>Each stream can be tagged "Public" or "Private". <br><span style="font-size:15px">Note that only invited members can access "Private" Streams.</span></li>
                 <li>We recommend deleting streams that you don't want us to track.<br><span style="font-size:15px">We sometimes pick up noise from your inbox - those can be deleted.</span></li>
             </ol>
         </div>
@@ -81,8 +81,8 @@
 
 <% if !@same_projects.empty? or !@overlapping_projects.empty? %>
 <div style="margin-bottom:50px">
-    <h3>You've been added to <%= pluralize((@same_projects+@overlapping_projects).size, 'project stream') %></h3>
-    <p>These project streams were created by your colleagues.</p>
+    <h3>You've been added to <%= pluralize((@same_projects+@overlapping_projects).size, 'Stream') %></h3>
+    <p>These Streams were created by your colleagues.</p>
     <% (@same_projects+@overlapping_projects).each do |p| %>
         <div class="row">
             <div class="col-lg-6 col-lg-offset-3">
@@ -114,7 +114,7 @@
 <% end %>
 
 <% if @same_projects.empty? and @overlapping_projects.empty? and @new_projects.empty? %>
-    <h3 style="margin-bottom:50px">No project streams to configure.</h3>
+    <h3 style="margin-bottom:50px">No Streams to configure.</h3>
 <% end %>
 
 <div class="m-t-xl">

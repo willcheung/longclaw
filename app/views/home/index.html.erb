@@ -15,6 +15,30 @@
         <div class="col-lg-3">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
+                    <h5>Recently Active Streams</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of streams that have had email activity in the past 7 days."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @active_projects %></h1>
+                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Conversations Tracked</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of email threads tracked in your Streams."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @conversations_tracked %></h1>
+                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
                     <h5>Open Tasks</h5>
                     <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open tasks."></i>
                 </div>
@@ -36,42 +60,18 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Recently Active Projects</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of projects that have had email activity in the past 7 days."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @active_projects %></h1>
-                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Conversations Tracked</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of email threads tracked in your project streams."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @conversations_tracked %></h1>
-                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Metrics -->
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
             <div class="ibox-title">
-                <h2>Customer Activities</h2>
+                <h2>Account Activities</h2>
             </div>
             <div class="col-lg-6 ibox-subcontent">
                 <div class="ibox-title">
                     <span class="label pull-right">Last 7 days</span>
-                    <h3>Top Active Projects</h3>
+                    <h3>Top Active Streams</h3>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
                     <div class="btn-group m-l-sm">
                         <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
@@ -100,9 +100,9 @@
             <div class="col-lg-12 ibox-subcontent">
                 <div class="ibox-title">                   
                     <span class="label pull-right">14 day trend</span>
-                    <h3>Customer Activites Trend</h3>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by project streams, trending over Last 14 Days."></i>
-                    <select data-placeholder="Choose a Project..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
+                    <h3>Streams Trend</h3>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by Streams, trending over Last 14 Days."></i>
+                    <select data-placeholder="Choose a Stream..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
                         <option value=""></option>
                         <% @projects.each do |p| %>
                             <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
@@ -123,8 +123,8 @@
                 <div class="ibox-title">                   
                     <span class="label pull-right">14 day trend</span>
                     <h3>Risk Score Trend</h3>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Risk score by project streams, trending over Last 14 Days."></i>
-                    <select data-placeholder="Choose a Project..." class="chosen-select" id="risk-project-chosen-select" multiple="" tabindex="-1">
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Risk score by Streams, trending over Last 14 Days."></i>
+                    <select data-placeholder="Choose a Stream..." class="chosen-select" id="risk-project-chosen-select" multiple="" tabindex="-1">
                         <option value=""></option>
                         <% @projects.each do |p| %>
                             <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
@@ -162,8 +162,6 @@
                         <div id="user-leaderboard-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                     </div>
                 </div>
-
-
             </div>
         </div>
 

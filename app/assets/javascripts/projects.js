@@ -28,8 +28,8 @@ jQuery(document).ready(function($) {
   $('#projects-table').DataTable( {
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,5,6,7,8,9]},
-      { orderable: false, targets: [0,4,5,6,8,9] }
+      { searchable: false, targets: [0,4,5,6,7,8,10,11]},
+      { orderable: false, targets: [0,4,5,7,10,11] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
