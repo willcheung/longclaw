@@ -103,7 +103,9 @@ module ApplicationHelper
 
   def get_calendar_interval(event)
     start = event.last_sent_date
-    end_t = Time.zone.at(event.email_messages.last.end_epoch)
+    # end_t = Time.zone.at(event.email_messages.last.end_epoch)
+    # patch, don't know how to fix, fake calendar data don't seem to have end_epoch
+    end_t = Time.zone.at(Time.now.utc)
     if start.to_date == end_t.to_date
       return start.strftime("%l:%M%P") + ' - ' + end_t.strftime("%l:%M%P")
     elsif start == start.midnight && end_t == end_t.midnight # if there is no time, date only
