@@ -175,7 +175,7 @@ function applyFilter(minDate, maxDate){
               if(b_timeFilter && b_categoryFilter & b_emailFilter){
                 if(monthShow==false){
                   monthShow = true;
-                  $('#vertical-timeline').children().eq(monthIndex).show();
+                  $('#vertical-timeline').children().eq(monthIndex).show("slow");
                 }
               }
               else{
@@ -229,7 +229,7 @@ function applyFilter(minDate, maxDate){
                   if(b_timeFilter && b_categoryFilter & b_emailFilter){
                     if(monthShow==false){
                       monthShow = true;
-                      $('#vertical-timeline').children().eq(monthIndex).show();
+                      $('#vertical-timeline').children().eq(monthIndex).show("slow");
                       $(this).parent().parent().parent().show();
                       breakFlag = true;
                     }
@@ -286,7 +286,7 @@ function applyFilter(minDate, maxDate){
               if(b_timeFilter && b_categoryFilter & b_emailFilter){
                 if(monthShow==false){
                   monthShow = true;
-                  $('#vertical-timeline').children().eq(monthIndex).show();
+                  $('#vertical-timeline').children().eq(monthIndex).show("slow");
                   $(this).parent().parent().parent().show();
                  
                 }
