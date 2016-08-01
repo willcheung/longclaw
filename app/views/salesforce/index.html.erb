@@ -160,6 +160,10 @@ $(document).ready(function(){
       $('#container').highcharts({
         chart: {
             events:{
+              load: function(event) {
+                var extremes = this.yAxis[0].getExtremes();
+                this.yAxis[0].setExtremes(0, extremes.dataMax);
+              },
               selection: function(event){
                 if(event.xAxis !=null){
                   // console.log("selection: ", event.xAxis[0].min, event.xAxis[0].max);
