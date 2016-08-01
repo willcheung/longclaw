@@ -48,7 +48,7 @@ include ContextSmithParser
 class User < ActiveRecord::Base
 	belongs_to 	:organization
   has_many    :accounts, foreign_key: "owner_id", dependent: :nullify
-  has_many    :project_members
+  has_many    :project_members, dependent: :destroy
   has_many    :projects, through: "project_members"
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
@@ -62,6 +62,8 @@ class User < ActiveRecord::Base
          :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce]
 
   validates :email, uniqueness: true
+
+  # attr_encrypted :oauth_access_token
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
 

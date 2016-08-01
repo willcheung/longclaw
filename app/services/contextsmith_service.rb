@@ -88,7 +88,7 @@ class ContextsmithService
   def self.load_calendar_from_backend(project, before, after, max=100, save_in_db=true)
     token_emails = []
     # TODO get the url for API calls
-    base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
+    base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
 
     if Rails.env.production? || Rails.env.test?
       in_domain = ""
@@ -124,7 +124,7 @@ class ContextsmithService
     end
        
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + "&before=" + before.to_s + "&after=" + after.to_s
-    puts "Calling backend service: " + final_url    
+    puts "Calling backend service: " + final_url
     
     begin
       url = URI.parse(final_url)
