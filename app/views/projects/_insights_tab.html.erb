@@ -147,7 +147,13 @@
         // Set up user/contact lookup table
         var lookupTable = {};
         lookup.forEach(function(person) {
-            lookupTable[person.name] = { domain: person.domain, email: person.email };
+            lookupTable[person.name] = { 
+                domain: person.domain, 
+                email: person.email,
+                title: person.title,
+                meetings: person.meetings,
+                key_activities: person.key_activities 
+            };
         });
         
         var allShowing = true;
@@ -283,21 +289,6 @@
             .attr("y", yMargin)
             .style("fill", "black")
             .text("Account Relationship Graph")
-          // .append("tspan")
-          //   .attr("x", xMargin)
-          //   .attr("dy", 0)
-          //   .attr("y", yMargin)
-          // .append("tspan")
-          //   .attr("x", xMargin)
-          //   .attr("dy", "30")
-          //   .text("OF INTERACTIONS");
-
-        // // Instructions for clicking on filter
-        // var instructions = legendContainer.append("text")
-        //     .attr("x", xMargin + 25)
-        //     .attr("y", 400)
-        //     .style("fill", "#e8941a")
-        //     .text("CLICK TO FILTER");
 
         // // Create a legend for big/small nodes
         // legendContainer.append("g")
@@ -353,7 +344,15 @@
         });
         function nodeByName(name, outbound=0, inbound=0) {
             if (!nodesByName[name]) {
-                nodesByName[name] = {name: name, inbound: 0, outbound: 0, email: lookupTable[name].email }
+                nodesByName[name] = {
+                    name: name,
+                    inbound: 0,
+                    outbound: 0,
+                    email: lookupTable[name].email,
+                    title: lookupTable[name].title,
+                    meetings: lookupTable[name].meetings,
+                    key_activities: lookupTable[name].key_activities
+                }
             }
             nodesByName[name].inbound += inbound   
             nodesByName[name].outbound += outbound   
@@ -389,8 +388,8 @@
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html(d.name + "<br>" + d.email + "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound + "<br>Meetings: 3<br>Key Activities: 2")
-                        .style("top", (nodeHighlighted?"150px":"70px"));
+                    tooltip.html("<span style=\"font-size:16px;\">" + d.name + "</span><br>" + d.title + "<br>" + d.email + "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
+                        .style("top", (nodeHighlighted?"190px":"70px"));
                   }
               })
               .on("mouseout", function(d){
@@ -427,9 +426,6 @@
                 force.resume();
             });
 
-        /* Configure highlighting of connected nodes */
-        var toggle = 0;
-
         //Create an array logging what is connected to what
         var linkedByIndex = {};
         for (i = 0; i < nodes.length; i++) {
@@ -445,8 +441,7 @@
             return linkedByIndex[a.index + "," + b.index];
         }
 
-        // Change opacity to highlight connected nodes
-        // connectedNodes(d, allShowing || nameSelected, this); // else highlight connected nodes
+        // Change opacity to highlight connected nodes when node is clicked
         function connectedNodes(clickedOn, firstClick, nodeClicked) {
             nodeHighlighted = true;
             d3.selectAll("g.cell").classed("active", false); // Clear filters
@@ -459,7 +454,7 @@
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html(clickedOn.name + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: 3<br>Key Activities: 2") // Pin tooltip with name of clicked on node
+            pinnedTooltip.html("<span style=\"font-size:16px;\">" + clickedOn.name + "</span><br>" + clickedOn.title + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
             });
@@ -484,6 +479,7 @@
             nameSelected = false;
         }
 
+        // Change opacity to highlight nodes when applying filter
         function searchNode(searchVal, gObject) {
             nodeHighlighted = false;
             var searchNode = d3.selectAll(".node");
@@ -582,10 +578,6 @@
             force.size([width, height]).resume();
 
             rect.attr("x", legendWidth);
-
-            // legendContainerHeight = d3.select("g.legendContainer").node().getBoundingClientRect().height;
-
-            // legendContainer.attr("transform", "translate(0," + ((height-legendContainerHeight)/2) + ")");
 
             legendContainer.moveToFront();
             tick();
