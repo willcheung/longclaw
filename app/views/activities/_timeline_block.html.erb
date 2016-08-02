@@ -18,11 +18,11 @@
         <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span>
 
-    <div class="vertical-timeline-content" <% if a.category == Activity::CATEGORY[:Note] %> style="background-color: #fff7db" <% end %> data-mytype="<%= a.category %>" data-myemail= "<% if a.category==Activity::CATEGORY[:Note] %>
-        <% if !a.user.nil? %> <%=a.user.email %>  <% end %>
+    <div class="vertical-timeline-content" <% if a.category == Activity::CATEGORY[:Note] %> style="background-color: #fff7db" <% end %> data-mytype="<%= a.category %>" data-myemail= <% if a.category==Activity::CATEGORY[:Note] %>
+        <% if !a.user.nil? %> "<%=a.user.email %>"  <% end %>
         <% else %>
-        <% if !a.email_addresses.nil? %> <%=a.email_addresses.to_a.join(',') %>  <% end %>
-        <% end %>  ">
+        <% if !a.email_addresses.nil? %> "<%=a.email_addresses.to_a.join(',') %>"  <% end %>
+        <% end %>  >
         <% if a.category == Activity::CATEGORY[:Conversation] %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
