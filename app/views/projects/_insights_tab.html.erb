@@ -389,7 +389,7 @@
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html(d.name + "<br>" + d.email + "<br>Outbound Touches: " + d.outbound + "<br>Inbound Touches: " + d.inbound)
+                    tooltip.html(d.name + "<br>" + d.email + "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound + "<br>Meetings: 3<br>Key Activities: 2")
                         .style("top", (nodeHighlighted?"150px":"70px"));
                   }
               })
@@ -459,7 +459,7 @@
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html(clickedOn.name + "<br>" + clickedOn.email + "<br>Outbound Touches: " + clickedOn.outbound + "<br>Inbound Touches: " + clickedOn.inbound) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html(clickedOn.name + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: 3<br>Key Activities: 2") // Pin tooltip with name of clicked on node
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
             });

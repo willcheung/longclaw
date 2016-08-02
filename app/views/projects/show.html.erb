@@ -237,9 +237,6 @@
     })
 
 
-$(document).ready(function(){
-    var x = document.querySelectorAll(".example");
-
     <% if params[:action] == "show" %>
     
     // $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
@@ -252,14 +249,21 @@ $(document).ready(function(){
         global : {
           // timezoneOffset: -7 * 60,
           useUTC : false
+        },
+        lang: {
+            resetZoom: "Clear date filter"
         }
       });
-      $('#container').highcharts({
+      $('#time-filter-highcharts').highcharts({
         chart: {
             events:{
-              selection: function(event){
+              load: function(event) {
+                var extremes = this.yAxis[0].getExtremes();
+                this.yAxis[0].setExtremes(0, extremes.dataMax);
+            },
+              selection: function(event) {
+
                 if(event.xAxis !=null){
-                  // console.log("selection: ", event.xAxis[0].min, event.xAxis[0].max);
                   g_minDate = event.xAxis[0].min/1000;
                   g_maxDate = event.xAxis[0].max/1000;
                   console.log('----------------');
@@ -282,13 +286,13 @@ $(document).ready(function(){
               }
 
             },
-            zoomType: 'x'
+            zoomType: 'x',
+            backgroundColor: '#f3f3f4'
         },
         credits: {
             enabled: false
         },
         title: {
-            // text: 'Activities counts over time'
             text: ''
         },
         // subtitle: {
@@ -299,10 +303,10 @@ $(document).ready(function(){
             type: 'datetime'
         },
         yAxis: {
-            title: {
-                // text: 'Activities'
-                text: ''
-            }
+            title: { text: '' },
+            labels: { enabled: false },
+            gridLineWidth: 0,
+            minorGridLineWidth: 0
         },
         legend: {
             enabled: false
@@ -353,7 +357,9 @@ $(document).ready(function(){
     });
   });
 
-
     <% end %>
-});
+
+  $(document).ready(function(){
+    $('#timeline-filters').hide();
+  });
 </script>

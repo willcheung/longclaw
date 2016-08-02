@@ -6,6 +6,7 @@ class SalesforceController < ApplicationController
 
   	@projects = []
   	@activities_by_month = []
+    @activities_by_date = []
     @project = Project.new
     @isconnect = true
 
@@ -50,7 +51,6 @@ class SalesforceController < ApplicationController
 	    @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
       activities_by_date_temp = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
 
-      @activities_by_date = []
       activities_by_date_temp.each do |date, activities|
         temp = Struct.new(:utc_milli_timestamp, :count).new
         temp.utc_milli_timestamp = DateTime.strptime(date, '%Y %m %d').to_i * 1000

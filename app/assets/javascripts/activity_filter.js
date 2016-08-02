@@ -91,6 +91,10 @@ var g_emails = [];
 var g_categories = [];
 
 function activityEmailFilter(value, emails){
+  // console.log('-------------meow------------------');
+  // console.log(value);
+  // console.log(emails);
+  // console.log('-----------------------------------');
    for (var i = 0; i < value.length; i++) {
     if(emails.indexOf(value[i])!=-1){
       return true;
@@ -175,7 +179,7 @@ function applyFilter(minDate, maxDate){
               if(b_timeFilter && b_categoryFilter & b_emailFilter){
                 if(monthShow==false){
                   monthShow = true;
-                  $('#vertical-timeline').children().eq(monthIndex).show();
+                  $('#vertical-timeline').children().eq(monthIndex).show("slow");
                 }
               }
               else{
@@ -229,7 +233,7 @@ function applyFilter(minDate, maxDate){
                   if(b_timeFilter && b_categoryFilter & b_emailFilter){
                     if(monthShow==false){
                       monthShow = true;
-                      $('#vertical-timeline').children().eq(monthIndex).show();
+                      $('#vertical-timeline').children().eq(monthIndex).show("slow");
                       $(this).parent().parent().parent().show();
                       breakFlag = true;
                     }
@@ -286,7 +290,7 @@ function applyFilter(minDate, maxDate){
               if(b_timeFilter && b_categoryFilter & b_emailFilter){
                 if(monthShow==false){
                   monthShow = true;
-                  $('#vertical-timeline').children().eq(monthIndex).show();
+                  $('#vertical-timeline').children().eq(monthIndex).show("slow");
                   $(this).parent().parent().parent().show();
                  
                 }
@@ -309,10 +313,16 @@ function activityTimeFilterReset(){
 }
 
 $(document).ready(function(){
+  
   $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
 
   $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});  
 
+  $('#filter-timeline-expand').css( 'cursor', 'pointer' );
+ 
+  $("#filter-timeline-expand").click(function() {
+    $("#timeline-filters").toggle();
+  });
 
   $('.comment_category').on('change',function(evt,params){  
     if(params["selected"]!=null){
@@ -324,7 +334,7 @@ $(document).ready(function(){
         g_categories.splice(index, 1);
       }
     }
-    console.log(g_categories);
+
     applyFilter();
   });
 
