@@ -1,4 +1,4 @@
-target	source	value
+target	source	count
 Will Cheung	Tim Roinas	50
 Charlie Mains	Tim Roinas	9
 Alex Chen	Tim Roinas	17
@@ -9,7 +9,7 @@ Abby Knight	Tim Roinas	5
 Mary Lanckhoff	Tim Roinas	22
 Rick Morrison	Tim Roinas	1
 Ed Kellar	Tim Roinas	5
-Comprehend Support	Tim Roinas	3
+Support	Tim Roinas	3
 Jeff Johnson	Tim Roinas	24
 Jon Allen	Will Cheung	8
 Tim Roinas	Will Cheung	20
@@ -28,7 +28,7 @@ William Chen	Jon Allen	10
 Alex Chen	Jon Allen	6
 Mary Lanckhoff	Jon Allen	5
 Bas Poel	Jon Allen	5
-Comprehend Support	Jon Allen	10
+Support	Jon Allen	10
 Jeff Johnson	Jon Allen	1
 Will Cheung	Bas Poel	4
 William Chen	Bas Poel	4
@@ -37,7 +37,7 @@ Charlie Mains	Bas Poel	1
 Abby Knight	Bas Poel	2
 Mary Lanckhoff	Bas Poel	1
 Jon Allen	Bas Poel	2
-Comprehend Support	Bas Poel	1
+Support	Bas Poel	1
 Jeff Johnson	Bas Poel	1
 Thanh Tran	Bas Poel	1
 Jon Allen	William Chen	13

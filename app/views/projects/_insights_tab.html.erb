@@ -76,6 +76,10 @@
         stroke: #e8941a;
         stroke-width: 3px;
     }
+    .node-name {
+        stroke: none;
+        fill: black;
+    }
     svg {
         fill: white;
     }
@@ -109,7 +113,7 @@
     var legendWidth = 255;
     var xMargin = 20;
 
-    var yMargin = 20;
+    var yMargin = 40;
     var legendSizePadding = 10;
     var legendDomainPadding = 5;
 
@@ -128,7 +132,7 @@
     // Configure force layout
     var force = d3.layout.force();
 
-    d3.json("lookup.json", function (error, lookup) {
+    d3.tsv("lookup.txt", function (error, lookup) {
         if (error) throw error;
         d3.tsv("network_map.txt", function (error, links) {
             if (error) throw error;
@@ -143,7 +147,7 @@
         // Set up user/contact lookup table
         var lookupTable = {};
         lookup.forEach(function(person) {
-            lookupTable[person.name] = person.domain;
+            lookupTable[person.name] = { domain: person.domain, email: person.email };
         });
         
         var allShowing = true;
@@ -155,21 +159,21 @@
         var newMousePos = [0,0];
 
         /*** Configure zoom behaviour ***/
-        var zoomer = d3.behavior.zoom()
-                        .scaleExtent([0.1,10])
-                //allow 10 times zoom in or out
-                        .on("zoom",zoom);
-                //define the event handler function
+        // var zoomer = d3.behavior.zoom()
+        //                 .scaleExtent([0.1,10])
+        //         //allow 10 times zoom in or out
+        //                 .on("zoom",zoom);
+        //         //define the event handler function
 
-        function zoom(d) {
+        // function zoom(d) {
 
-            if (d3.event.sourceEvent && !nodeHighlighted){
-                d3.event.sourceEvent.stopPropagation();
-            }
-            scaleFactor = d3.event.scale;
-            translation = d3.event.translate;
-            tick(); //update positions
-        }
+        //     if (d3.event.sourceEvent && !nodeHighlighted){
+        //         d3.event.sourceEvent.stopPropagation();
+        //     }
+        //     scaleFactor = d3.event.scale;
+        //     translation = d3.event.translate;
+        //     tick(); //update positions
+        // }
 
         /*** Configure drag behaviour ***/
         var isDrag = false;
@@ -230,7 +234,7 @@
                 mousePos = d3.mouse(this);
                 if(mousePos[0] < legendWidth && mousePos[1] < height) d3.event.stopImmediatePropagation(); //Only clicks no drag or pan on menu area
             })
-            .call(zoomer);
+            // .call(zoomer);
         graph.append("rect")
             .attr("width", "100%")
             .attr("height", "100%")
@@ -245,7 +249,7 @@
             .style("margin", "0 auto")
             .style("fill", "none")
             .style("pointer-events", "all")
-            .style("cursor", "move")
+            // .style("cursor", "move")
             .on("click", function(){
                 if (d3.event.defaultPrevented) return;
                 showAllNodes();
@@ -262,7 +266,7 @@
             .style("top", "70px")
             .style("opacity", 0);
 
-        // Tooptip in top left corner
+        // Tooptip in top right corner
         var tooltip = d3.select("#force-graph").append("div")
             .attr("class", "tooltip")
             .style("right", "40px")
@@ -276,29 +280,29 @@
         // Title of visualization
         var vizTitle = legendContainer.append("text")
             .attr("x", xMargin)
-            .attr("y", 0)
-            .style("fill", "black")
-          .append("tspan")
-            .attr("x", xMargin)
-            .attr("dy", 0)
             .attr("y", yMargin)
-            .text("ACCOUNT MAP")
-          .append("tspan")
-            .attr("x", xMargin)
-            .attr("dy", "30")
-            .text("OF INTERACTIONS");
+            .style("fill", "black")
+            .text("Account Relationship Graph")
+          // .append("tspan")
+          //   .attr("x", xMargin)
+          //   .attr("dy", 0)
+          //   .attr("y", yMargin)
+          // .append("tspan")
+          //   .attr("x", xMargin)
+          //   .attr("dy", "30")
+          //   .text("OF INTERACTIONS");
 
-        // Instructions for clicking on filter
-        var instructions = legendContainer.append("text")
-            .attr("x", xMargin + 25)
-            .attr("y", 400)
-            .style("fill", "#e8941a")
-            .text("CLICK TO FILTER");
+        // // Instructions for clicking on filter
+        // var instructions = legendContainer.append("text")
+        //     .attr("x", xMargin + 25)
+        //     .attr("y", 400)
+        //     .style("fill", "#e8941a")
+        //     .text("CLICK TO FILTER");
 
-        // Create a legend for big/small nodes
-        legendContainer.append("g")
-            .attr("class", "legendSize")
-            .attr("transform", "translate("+ (xMargin+10) + ", 70)");
+        // // Create a legend for big/small nodes
+        // legendContainer.append("g")
+        //     .attr("class", "legendSize")
+        //     .attr("transform", "translate("+ (xMargin+10) + ", 70)");
 
         // var legendSize = d3.legend.size()
         //     .scale(linearSize)
@@ -314,13 +318,13 @@
         // Create a legend for domains
         legendContainer.append("g")
             .attr("class", "legendOrdinal")
-            .attr("transform", "translate("+ (xMargin+10) + ", 150)");
+            .attr("transform", "translate("+ (xMargin+10) + ", 70)");
 
         var legendOrdinal = d3.legend.color()
             .shape("circle")
             .shapePadding(legendDomainPadding)
             .scale(color)
-            .labels(<%= @domains.to_json.html_safe %>);
+            // .labels(<%= @domains.to_json.html_safe %>);
 
         var domainLegend = legendContainer.select(".legendOrdinal")
             .call(legendOrdinal);
@@ -344,23 +348,20 @@
         // Create nodes for each unique source and target.
         var nodesByName = {};
         links.forEach(function(link) {
-            link.source = nodeByName(link.source, +link.value);
-            link.target = nodeByName(link.target);
+            link.source = nodeByName(link.source, +link.count);
+            link.target = nodeByName(link.target, 0, +link.count);
         });
-        function nodeByName(name, value) {
+        function nodeByName(name, outbound=0, inbound=0) {
             if (!nodesByName[name]) {
-                nodesByName[name] = {name: name, value: 0}
+                nodesByName[name] = {name: name, inbound: 0, outbound: 0, email: lookupTable[name].email }
             }
-            if (value) {
-                nodesByName[name].value += value
-            }   
+            nodesByName[name].inbound += inbound   
+            nodesByName[name].outbound += outbound   
             return nodesByName[name];
-
         }
 
         // Extract the array of nodes from the map by name.
         var nodes = d3.values(nodesByName);
-        console.log(nodes);
 
         // Create the link lines.
         var link = vis.selectAll(".link")
@@ -369,14 +370,18 @@
               .attr("class", "link");
 
         // Create the node circles.
-        var node = vis.selectAll(".node")
+        var nodeGroup = vis.selectAll(".node-group")
               .data(nodes)
-            .enter().append("circle")
+            .enter().append("g")
+              .attr("class", "node-group")
+              .style("fill", "black");
+
+        var node = nodeGroup.append("circle")
               .attr("class", "node")
               .attr("r", function(d) {
-                  return smallCircleSize + d.value/10;
+                  return smallCircleSize + (d.inbound + d.outbound)/10;
               })
-              .style("fill", function(d) {return color(lookupTable[d.name]);})
+              .style("fill", function(d) {return color(lookupTable[d.name].domain);})
               .classed("activeNode", true)
               .on("mouseover", function(d){
                   if(d3.select(this).classed("activeNode") && !d3.select(this).classed("baseNode")){
@@ -384,8 +389,8 @@
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html(d.name)
-                        .style("top", (nodeHighlighted?"110px":"70px"));
+                    tooltip.html(d.name + "<br>" + d.email + "<br>Outbound Touches: " + d.outbound + "<br>Inbound Touches: " + d.inbound)
+                        .style("top", (nodeHighlighted?"150px":"70px"));
                   }
               })
               .on("mouseout", function(d){
@@ -398,14 +403,29 @@
               })
               .call(drag);
 
+        var nodeName = nodeGroup.append("text")
+            .attr("class", "node-name")
+            .attr("x", function(d) { return d.name.length*-3; })
+            .attr("y", function(d) { return smallCircleSize + (d.inbound + d.outbound)/10 + 10; })
+            .text(function(d) { return d.name; });
+
         // Start the force layout.
         force
-              .nodes(nodes)
-              .links(links)
-              .linkDistance(20 + nodes.length*5)
-        //      .linkStrength(0.08)
-              .on("tick", function(){tick();})
-              .start();
+            .nodes(nodes)
+            .links(links)
+            .charge(-100)
+            .linkDistance(20 + nodes.length*10)
+            .linkStrength(0.08)
+            .on("tick", function(){tick();})
+            .start();
+
+        graph
+            .on("mouseleave", function(){
+                force.stop();
+            })
+            .on("mouseenter", function(){
+                force.resume();
+            });
 
         /* Configure highlighting of connected nodes */
         var toggle = 0;
@@ -426,6 +446,7 @@
         }
 
         // Change opacity to highlight connected nodes
+        // connectedNodes(d, allShowing || nameSelected, this); // else highlight connected nodes
         function connectedNodes(clickedOn, firstClick, nodeClicked) {
             nodeHighlighted = true;
             d3.selectAll("g.cell").classed("active", false); // Clear filters
@@ -438,7 +459,7 @@
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html(clickedOn.name) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html(clickedOn.name + "<br>" + clickedOn.email + "<br>Outbound Touches: " + clickedOn.outbound + "<br>Inbound Touches: " + clickedOn.inbound) // Pin tooltip with name of clicked on node
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
             });
@@ -455,6 +476,9 @@
             link.style("stroke-opacity", function (o) {
                 return clickedOn.index==o.source.index | clickedOn.index==o.target.index ? 0.6 : 0.1;
             });
+            nodeName.style("opacity", function (o) {
+                return (neighboring(clickedOn, o) | neighboring(o, clickedOn)) ? 1 : 0.1;
+            });
             d3.select("activeNode").moveToFront(); // Brings activeNode nodes to front
             allShowing = false;
             nameSelected = false;
@@ -464,28 +488,28 @@
             nodeHighlighted = false;
             var searchNode = d3.selectAll(".node");
             var notSelectedNodes = searchNode.filter(function (d, i){
-                return lookupTable[d.name] != searchVal
+                return lookupTable[d.name].domain != searchVal
             });
 
             var selectedNodes = searchNode.filter(function (d, i){
-                return lookupTable[d.name] == searchVal
+                return lookupTable[d.name].domain == searchVal
             });
 
-            if(searchVal == 1 || searchVal == 0){ // Large Node filter
-                var entryLevel;
-                var other;
-                entryLevel = searchNode.filter(function(d){
-                   return d.name == "WILL CHEUNG" ||
-                        d.name == "JAMES TAYLOR" ||
-                        d.name == "CAITLIN O'MALLEY";
-                });
-                other = searchNode.filter(function(d){
-                   return d.name != "WILL CHEUNG" &&
-                     d.name != "JAMES TAYLOR" &&
-                     d.name != "CAITLIN O'MALLEY";
-                });
-                searchVal == 1? (selectedNodes = entryLevel, notSelectedNodes = other) : (selectedNodes = other, notSelectedNodes = entryLevel);
-            }
+            // if(searchVal == 1 || searchVal == 0){ // Large Node filter
+            //     var entryLevel;
+            //     var other;
+            //     entryLevel = searchNode.filter(function(d){
+            //        return d.name == "WILL CHEUNG" ||
+            //             d.name == "JAMES TAYLOR" ||
+            //             d.name == "CAITLIN O'MALLEY";
+            //     });
+            //     other = searchNode.filter(function(d){
+            //        return d.name != "WILL CHEUNG" &&
+            //          d.name != "JAMES TAYLOR" &&
+            //          d.name != "CAITLIN O'MALLEY";
+            //     });
+            //     searchVal == 1? (selectedNodes = entryLevel, notSelectedNodes = other) : (selectedNodes = other, notSelectedNodes = entryLevel);
+            // }
             var link = d3.selectAll(".link");
             if (!d3.select(gObject).classed("active")){
                 selectedNodes
@@ -496,6 +520,12 @@
                     .style("stroke-opacity", 0.1)
                     .style("fill-opacity", 0.1)
                     .classed("activeNode", false);
+                // selected names
+                d3.selectAll(".node.activeNode + .node-name")
+                    .style("opacity", 1);
+                // not selected names
+                d3.selectAll(".node:not(.activeNode) + .node-name")
+                    .style("opacity", 0.1);
 
                 link.style("stroke-opacity", 0.1);
                 d3.select(gObject).classed("active", true);
@@ -521,6 +551,7 @@
                 .classed("clickedNode", false)
                 .classed("baseNode", false);
             link.style("stroke-opacity", 0.6);
+            nodeName.style("opacity", 1);
             d3.selectAll("g.cell").classed("active", false); // Clear filters
             allShowing = true;
             nameSelected = false;
@@ -535,9 +566,9 @@
                 .attr("x2", function(d) { return translation[0] + scaleFactor*d.target.x; })
                 .attr("y2", function(d) { return translation[1] + scaleFactor*d.target.y; });
 
-            node.attr("cx", function(d) { return translation[0] + scaleFactor*d.x; })
-                .attr("cy", function(d) { return translation[1] + scaleFactor*d.y; });
-
+            // node.attr("cx", function(d) { return translation[0] + scaleFactor*d.x; })
+            //     .attr("cy", function(d) { return translation[1] + scaleFactor*d.y; });
+            nodeGroup.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
         }
 
 
@@ -552,9 +583,9 @@
 
             rect.attr("x", legendWidth);
 
-            legendContainerHeight = d3.select("g.legendContainer").node().getBoundingClientRect().height;
+            // legendContainerHeight = d3.select("g.legendContainer").node().getBoundingClientRect().height;
 
-            legendContainer.attr("transform", "translate(0," + ((height-legendContainerHeight)/2) + ")");
+            // legendContainer.attr("transform", "translate(0," + ((height-legendContainerHeight)/2) + ")");
 
             legendContainer.moveToFront();
             tick();
