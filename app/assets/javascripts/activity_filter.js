@@ -313,10 +313,14 @@ function activityTimeFilterReset(){
 }
 
 $(document).ready(function(){
-  
-  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
+  console.log($( '.comment_category_div' ).width());
+  console.log($( '.user_filter_div' ).width());
 
-  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});  
+
+  
+  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true, width: $('.comment_category_div').width() + 'px'});
+
+  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true, width: $('.user_filter_div').width() + 'px'});  
 
   $('#filter-timeline-expand').css( 'cursor', 'pointer' );
  
