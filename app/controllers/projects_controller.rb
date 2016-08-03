@@ -85,8 +85,8 @@ class ProjectsController < ApplicationController
   end
 
   def insights_tab
-    @data = [1]
-    @domains = (@project.users + @project.contacts).map { |m| get_domain(m.email) }.uniq
+    @data = @project.activities.where(category: %w(Conversation Meeting))
+    # @domains = (@project.users + @project.contacts).map { |m| get_domain(m.email) }.uniq
     # @domains = %w(piedpiper.com hooli.com)
 
     render "show"
@@ -100,7 +100,7 @@ class ProjectsController < ApplicationController
   end 
 
   def lookup
-    # TODO: figure out a way to calculate key_activities and meetings
+    # TODO: figure out a way to calculate key_activities
     pinned = @project.activities.pinned
     meetings = @project.activities.where(category: 'Meeting')
     members = (@project.users + @project.contacts).map do |m| 
@@ -110,7 +110,7 @@ class ProjectsController < ApplicationController
         email: m.email,
         title: m.title,
         key_activities: pinned.length,
-        meetings: meetings.length
+        meetings: meetings.where(posted_by: m.id).length
       }
     end
     respond_to do |format|
