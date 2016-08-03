@@ -86,23 +86,37 @@ class ProjectsController < ApplicationController
 
   def insights_tab
     @data = [1]
-    # @domains = (@project.users + @project.contacts).map { |m| get_domain(m.email) }.uniq
-    @domains = %w(piedpiper.com hooli.com)
+    @domains = (@project.users + @project.contacts).map { |m| get_domain(m.email) }.uniq
+    # @domains = %w(piedpiper.com hooli.com)
 
     render "show"
   end
 
-  ### render some static data temporarily
   def network_map
-    render file: 'app/views/projects/map_astellas.txt', layout: false, content_type: 'text/plain'
-    # render json: @project.network_map
+    respond_to do |format|
+      format.text { render file: 'app/views/projects/map_astellas.txt', layout: false, content_type: 'text/plain' }
+      format.json { render json: @project.network_map}
+    end
   end 
 
-  ### render some static data temporarily
   def lookup
-    render file: 'app/views/projects/lookup_astellas.txt', layout: false, content_type: 'text/plain'
-    # members = (@project.users + @project.contacts).map { |m| { name: get_full_name(m), domain: get_domain(m.email) } }
-    # render json: members
+    # TODO: figure out a way to calculate key_activities and meetings
+    pinned = @project.activities.pinned
+    meetings = @project.activities.where(category: 'Meeting')
+    members = (@project.users + @project.contacts).map do |m| 
+      { 
+        name: get_full_name(m),
+        domain: get_domain(m.email),
+        email: m.email,
+        title: m.title,
+        key_activities: pinned.length,
+        meetings: meetings.length
+      }
+    end
+    respond_to do |format|
+      format.text { render file: 'app/views/projects/lookup_astellas.txt', layout: false, content_type: 'text/plain' }
+      format.json { render json: members }
+    end
   end
 
   def refresh

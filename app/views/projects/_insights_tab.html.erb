@@ -5,7 +5,7 @@
     <h4 class="text-center">You don't have any Insights for this project!</h4>
   </div>
 <% end %>
-<link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
+<!-- <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet"> -->
 <style>
     .link {
         stroke: #999;
@@ -26,13 +26,13 @@
         color: #fff;
         border-radius: 2px;
         pointer-events: none;
-        font-family: 'Roboto Condensed', sans-serif;
+        /*font-family: 'Roboto Condensed', sans-serif;*/
     }
     div.pinned {
         color: #e8941a;
     }
     g {
-        font-family: 'Roboto Condensed', sans-serif;
+        /*font-family: 'Roboto Condensed', sans-serif;*/
     }
     g.cell {
         cursor: pointer;
@@ -132,9 +132,9 @@
     // Configure force layout
     var force = d3.layout.force();
 
-    d3.tsv("lookup.txt", function (error, lookup) {
+    d3.json("lookup.json", function (error, lookup) {
         if (error) throw error;
-        d3.tsv("network_map.txt", function (error, links) {
+        d3.json("network_map.json", function (error, links) {
             if (error) throw error;
             ready(lookup, links);
         })
@@ -147,9 +147,9 @@
         // Set up user/contact lookup table
         var lookupTable = {};
         lookup.forEach(function(person) {
-            lookupTable[person.name] = { 
+            lookupTable[person.email] = { 
+                name: person.name,
                 domain: person.domain, 
-                email: person.email,
                 title: person.title,
                 meetings: person.meetings,
                 key_activities: person.key_activities 
@@ -337,30 +337,42 @@
             });
 
         // Create nodes for each unique source and target.
-        var nodesByName = {};
+        var nodesByEmail = {};
         links.forEach(function(link) {
-            link.source = nodeByName(link.source, +link.count);
-            link.target = nodeByName(link.target, 0, +link.count);
+            link.source = nodeByEmail(link.source, +link.count);
+            link.target = nodeByEmail(link.target, 0, +link.count);
         });
-        function nodeByName(name, outbound=0, inbound=0) {
-            if (!nodesByName[name]) {
-                nodesByName[name] = {
-                    name: name,
+        function nodeByEmail(email, outbound=0, inbound=0) {
+            if (!nodesByEmail[email]) {
+                nodesByEmail[email] = {
+                    email: email,
                     inbound: 0,
-                    outbound: 0,
-                    email: lookupTable[name].email,
-                    title: lookupTable[name].title,
-                    meetings: lookupTable[name].meetings,
-                    key_activities: lookupTable[name].key_activities
+                    outbound: 0
                 }
+            // Dynamically create nodes with dummy info when there are emails from people not added as project members
+                if (!lookupTable[email]) {
+                    lookupTable[email] = {
+                        name: "(none)",
+                        domain: email.split("@")[1],
+                        email: email,
+                        title: "(none)",
+                        key_activities: 0,
+                        meetings: 0
+                    }
+                }
+                nodesByEmail[email].name = lookupTable[email].name || "(none)";
+                nodesByEmail[email].title = lookupTable[email].title || "(none)";
+                nodesByEmail[email].meetings = lookupTable[email].meetings,
+                nodesByEmail[email].key_activities = lookupTable[email].key_activities
+
             }
-            nodesByName[name].inbound += inbound   
-            nodesByName[name].outbound += outbound   
-            return nodesByName[name];
+            nodesByEmail[email].inbound += inbound   
+            nodesByEmail[email].outbound += outbound   
+            return nodesByEmail[email];
         }
 
         // Extract the array of nodes from the map by name.
-        var nodes = d3.values(nodesByName);
+        var nodes = d3.values(nodesByEmail);
 
         // Create the link lines.
         var link = vis.selectAll(".link")
@@ -380,7 +392,7 @@
               .attr("r", function(d) {
                   return smallCircleSize + (d.inbound + d.outbound)/10;
               })
-              .style("fill", function(d) {return color(lookupTable[d.name].domain);})
+              .style("fill", function(d) {return color(lookupTable[d.email].domain);})
               .classed("activeNode", true)
               .on("mouseover", function(d){
                   if(d3.select(this).classed("activeNode") && !d3.select(this).classed("baseNode")){
@@ -388,7 +400,7 @@
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html("<span style=\"font-size:16px;\">" + d.name + "</span><br>" + d.title + "<br>" + d.email + "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
+                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>Title: " + d.title + "<br>" + d.email + "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
                         .style("top", (nodeHighlighted?"190px":"70px"));
                   }
               })
@@ -412,8 +424,9 @@
         force
             .nodes(nodes)
             .links(links)
-            .charge(-100)
-            .linkDistance(20 + nodes.length*10)
+            .charge(-150)
+            // .linkDistance(function(d) { return 20 + nodes.length*10 - (d.source.inbound + d.source.outbound)/20; })
+            .linkDistance(15 + nodes.length*15)
             .linkStrength(0.08)
             .on("tick", function(){tick();})
             .start();
@@ -454,7 +467,7 @@
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html("<span style=\"font-size:16px;\">" + clickedOn.name + "</span><br>" + clickedOn.title + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>Title: " + clickedOn.title + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
             });
@@ -484,11 +497,11 @@
             nodeHighlighted = false;
             var searchNode = d3.selectAll(".node");
             var notSelectedNodes = searchNode.filter(function (d, i){
-                return lookupTable[d.name].domain != searchVal
+                return lookupTable[d.email].domain != searchVal
             });
 
             var selectedNodes = searchNode.filter(function (d, i){
-                return lookupTable[d.name].domain == searchVal
+                return lookupTable[d.email].domain == searchVal
             });
 
             // if(searchVal == 1 || searchVal == 0){ // Large Node filter
