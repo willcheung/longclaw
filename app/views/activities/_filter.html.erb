@@ -6,7 +6,11 @@
   
   <div id="timeline-filters">
     <div class="row">
-      <div class="col-lg-4">
+      <% if type=='salesforce' %>
+       <div class="col-lg-6">
+      <% elsif type=='stream' %>
+       <div class="col-lg-4">
+      <% end %>
         <i class="fa fa-tasks" aria-hidden="true"></i>
         <select class="comment_category col-lg-11" data-placeholder="  Filter by activity type" multiple="true">
           <option value="0"></option>
