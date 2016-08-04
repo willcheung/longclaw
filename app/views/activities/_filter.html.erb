@@ -5,34 +5,66 @@
   </h4>
   
   <div id="timeline-filters">
-    <div class="row">
-      <div class="col-lg-4">
-        <i class="fa fa-tasks" aria-hidden="true"></i>
-        <select class="comment_category col-lg-11" data-placeholder="  Filter by activity type" multiple="true">
-          <option value="0"></option>
-          <% Activity::CATEGORY.each{|k,v|    %>
-            <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
-             <% } %> 
-        </select>
-      </div>
+    <% if type=='stream'  %>
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="col-lg-1" style="margin:0px; padding:0px; padding-top:5px; border:0px;">
+            <i class="fa fa-tasks" aria-hidden="true"></i>
+          </div>
+          <div class="col-lg-11 comment_category_div" style="margin:0px; padding:0px; border:0px;"> 
+            <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
+              <option value="0"></option>
+              <% Activity::CATEGORY.each{|k,v|    %>
+                <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
+                 <% } %> 
+            </select>
+          </div>
+        </div>
 
-      <div class="col-lg-6">
-        <i class="fa fa-users" aria-hidden="true"></i>
-        <select class="user_filter col-lg-11" data-placeholder="  Filter by people" multiple="true">
-          <option value="0"></option>
-          <% @final_filter_user.each do |u| %>
-            <option value="<%=u.email %>"  <% if @filter_email.include?(u.email)  %> selected   <% end %> >
-              <% if u.first_name.include?('@')%>
-                  <%=u.first_name%>
-              <% else %>
-                  <%=u.first_name+' '+u.last_name+'(@'+  get_short_name(get_domain(u.email))+')' %>
-              <% end %>         
-            </option>
-          <% end %>
-        </select>
+        <div class="col-lg-6">
+          <div class="col-lg-1" style="margin:0px; padding:0px; padding-top:5px; border:0px;">
+            <i class="fa fa-users" aria-hidden="true"></i>
+          </div>
+          <div class="col-lg-11 user_filter_div" style="margin:0px; padding:0px; border:0px;">
+            <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
+              <option value="0"></option>
+              <% @final_filter_user.each do |u| %>
+                <option value="<%=u.email %>"  <% if @filter_email.include?(u.email)  %> selected   <% end %> >
+                  <% if u.first_name.include?('@')%>
+                      <%=u.first_name%>
+                  <% else %>
+                      <%=u.first_name+' '+u.last_name+'(@'+  get_short_name(get_domain(u.email))+')' %>
+                  <% end %>         
+                </option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+        <div class="col-lg-2"></div>
       </div>
-      <div class="col-lg-2"></div>
-    </div>
+    <% elsif type='salesforce' %>
+      <i class="fa fa-tasks" aria-hidden="true"></i>
+      <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
+        <option value="0"></option>
+        <% Activity::CATEGORY.each{|k,v|    %>
+          <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
+           <% } %> 
+      </select>
+    
+      <i class="fa fa-users" aria-hidden="true" style="padding-left:15px;"></i>
+      <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
+        <option value="0"></option>
+        <% @final_filter_user.each do |u| %>
+          <option value="<%=u.email %>"  <% if @filter_email.include?(u.email)  %> selected   <% end %> >
+            <% if u.first_name.include?('@')%>
+                <%=u.first_name%>
+            <% else %>
+                <%=u.first_name+' '+u.last_name+'(@'+  get_short_name(get_domain(u.email))+')' %>
+            <% end %>         
+          </option>
+        <% end %>
+      </select>
+    <% end %>
 
     <div class="row" style="margin-left:0">
       <h4 class="m-t-sm"><i class="fa fa-clock-o m-r-xs" aria-hidden="true"></i> Filter by date <small>(Click and drag in graph to filter)</small></h4>
