@@ -101,16 +101,18 @@ class ProjectsController < ApplicationController
 
   def lookup
     # TODO: figure out a way to calculate key_activities
-    pinned = @project.activities.pinned
+    pinned = @project.activities.pinned.where(category: 'Conversation')
     meetings = @project.activities.where(category: 'Meeting')
-    members = (@project.users + @project.contacts).map do |m| 
+    members = (@project.users + @project.contacts).map do |m|
+      pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
+      meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       { 
         name: get_full_name(m),
         domain: get_domain(m.email),
         email: m.email,
         title: m.title,
-        key_activities: pinned.length,
-        meetings: meetings.where(posted_by: m.id).length
+        key_activities: pin.length,
+        meetings: meet.length
       }
     end
     respond_to do |format|
