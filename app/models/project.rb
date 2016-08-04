@@ -200,7 +200,7 @@ class Project < ActiveRecord::Base
     (score * 10000 * -1).floor / 100.0
   end
 
-  # TODO: add query to generate network map from DB entries
+  # query to generate Account Relationship Graph from DB entries
   def network_map
     query = <<-SQL 
       WITH email_activities AS 
