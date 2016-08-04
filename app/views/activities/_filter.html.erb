@@ -14,9 +14,8 @@
         <div class="col-sm-1" style="margin:0px; padding:0px; padding-top:5px; border:0px;">
           <i class="fa fa-tasks" aria-hidden="true"></i>
         </div>
-        <div class="col-sm-10 comment_category_div" style="margin:0px; padding:0px; border:0px;"> 
+        <div class="col-sm-11 comment_category_div" style="margin:0px; padding:0px; border:0px;"> 
           <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
-          
             <option value="0"></option>
             <% Activity::CATEGORY.each{|k,v|    %>
               <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
@@ -33,7 +32,7 @@
         <div class="col-sm-1" style="margin:0px; padding:0px; padding-top:5px; border:0px;">
           <i class="fa fa-users" aria-hidden="true"></i>
         </div>
-        <div class="col-sm-10 user_filter_div" style="margin:0px; padding:0px; border:0px;">
+        <div class="col-sm-11 user_filter_div" style="margin:0px; padding:0px; border:0px;">
           <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
             <option value="0"></option>
             <% @final_filter_user.each do |u| %>

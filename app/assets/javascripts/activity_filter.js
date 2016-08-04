@@ -313,10 +313,8 @@ function activityTimeFilterReset(){
 }
 
 $(document).ready(function(){
-  console.log($( '.comment_category_div' ).width());
-  console.log($( '.user_filter_div' ).width());
-
-
+  // console.log($( '.comment_category_div' ).width());
+  // console.log($( '.user_filter_div' ).width());
   
   $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true, width: $('.comment_category_div').width() + 'px'});
 
