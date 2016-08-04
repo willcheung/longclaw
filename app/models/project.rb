@@ -202,8 +202,36 @@ class Project < ActiveRecord::Base
 
   # TODO: add query to generate network map from DB entries
   def network_map
-    query = <<-SQL
-
+    query = <<-SQL 
+      WITH email_activities AS 
+        (
+          SELECT messages ->> 'messageId'::text AS message_id,
+                 jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+                 CASE
+                   WHEN messages -> 'to' IS NULL THEN NULL
+                   ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+                 END AS to,
+                 CASE
+                   WHEN messages -> 'cc' IS NULL THEN NULL
+                   ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+                 END AS cc
+          FROM activities,
+          LATERAL jsonb_array_elements(email_messages) messages
+          WHERE category IN ('Conversation', 'Meeting')
+          AND project_id = '#{self.id}'
+          GROUP BY 1,2,3,4
+        )
+      SELECT "from" AS source,
+             "to" AS target,
+             COUNT(DISTINCT message_id) AS count
+      FROM 
+        (SELECT "from", "to", message_id
+          FROM email_activities
+          UNION ALL
+          SELECT "from", cc AS "to", message_id
+          FROM email_activities) t
+      WHERE "to" IS NOT NULL
+      GROUP BY 1,2;
     SQL
     result = Activity.find_by_sql(query)
   end
