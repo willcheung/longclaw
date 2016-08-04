@@ -312,14 +312,7 @@ function activityTimeFilterReset(){
   $('#vertical-timeline').children().show();
 }
 
-$(document).ready(function(){
-  // console.log($( '.comment_category_div' ).width());
-  // console.log($( '.user_filter_div' ).width());
-  
-  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true, width: $('.comment_category_div').width() + 'px'});
-
-  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true, width: $('.user_filter_div').width() + 'px'});  
-
+$(document).ready(function(){  
   $('#filter-timeline-expand').css( 'cursor', 'pointer' );
  
   $("#filter-timeline-expand").click(function() {

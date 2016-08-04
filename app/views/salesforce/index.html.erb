@@ -233,6 +233,9 @@ $(function () {
 });
   
 $(document).ready(function(){
+  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true, width: $('#timeline-filters').width()/2-40 + 'px'});
+  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true, width: $('#timeline-filters').width()/2-40 + 'px'});
+
   $('#timeline-filters').hide();
 });
 
