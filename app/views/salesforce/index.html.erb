@@ -87,7 +87,7 @@
 
         <!-- Filter Section -->   
         <div class="col-lg-7 col-lg-offset-1">   
-          <%= render 'activities/filter' %>   
+          <%= render 'activities/filter', type: 'salesforce' %>   
         </div>
 
 
@@ -233,6 +233,9 @@ $(function () {
 });
   
 $(document).ready(function(){
+  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true, width: $('#timeline-filters').width()/2-40 + 'px'});
+  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true, width: $('#timeline-filters').width()/2-40 + 'px'});
+
   $('#timeline-filters').hide();
 });
 

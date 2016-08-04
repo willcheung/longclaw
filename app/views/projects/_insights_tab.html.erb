@@ -1,11 +1,5 @@
 <% unless @data.empty? %>
   <div id="force-graph" class="m-l white-bg header-box"></div>
-<% else %>
-  <div class="p-m m-l white-bg header-box">
-    <h4 class="text-center">You don't have any Insights for this project!</h4>
-  </div>
-<% end %>
-<link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
 <style>
     .link {
         stroke: #999;
@@ -26,13 +20,9 @@
         color: #fff;
         border-radius: 2px;
         pointer-events: none;
-        font-family: 'Roboto Condensed', sans-serif;
     }
     div.pinned {
         color: #e8941a;
-    }
-    g {
-        font-family: 'Roboto Condensed', sans-serif;
     }
     g.cell {
         cursor: pointer;
@@ -55,7 +45,6 @@
         fill: #e8941a;
     }
     .legendSize circle {
-/*        stroke: white;*/
         fill: #999;
         fill-opacity: 0.6;
     }
@@ -85,8 +74,6 @@
     }
 </style>
 <script type="text/javascript">
-    $("#insights-link").parent().addClass("active");
-
     // Function for moving nodes to front
     d3.selection.prototype.moveToFront = function() {
       return this.each(function(){
@@ -95,14 +82,14 @@
     };
 
     // Function for moving to back
-    d3.selection.prototype.moveToBack = function() {
-        return this.each(function() {
-            var firstChild = this.parentNode.firstChild;
-            if (firstChild) {
-                this.parentNode.insertBefore(this, firstChild);
-            }
-        });
-    };
+    // d3.selection.prototype.moveToBack = function() {
+    //     return this.each(function() {
+    //         var firstChild = this.parentNode.firstChild;
+    //         if (firstChild) {
+    //             this.parentNode.insertBefore(this, firstChild);
+    //         }
+    //     });
+    // };
 
     var scaleFactor = 1;
     var translation = [0,0];
@@ -120,21 +107,12 @@
     var height = 0;
     var width = 0;
 
-    // Linear size scale
-    // var linearSize = d3.scale.linear().domain([0,1]).range([smallCircleSize, largeCircleSize]);
-
-    // Initialize Ordinal Colour Scale
-    var color = d3.scale.ordinal()
-    // TODO: redo the scale to make dynamic
-        .domain(<%= @domains.to_json.html_safe %>)
-        .range(<%= %w(#003366 #009933 #ff9933 #ff0000 #996633 #ff66ff #0000cc #ffcccc #00ccff)[0...@domains.length].to_json.html_safe %>);
-
     // Configure force layout
     var force = d3.layout.force();
 
-    d3.tsv("lookup.txt", function (error, lookup) {
+    d3.json("lookup.json", function (error, lookup) {
         if (error) throw error;
-        d3.tsv("network_map.txt", function (error, links) {
+        d3.json("network_map.json", function (error, links) {
             if (error) throw error;
             ready(lookup, links);
         })
@@ -143,18 +121,6 @@
     function ready(lookup, links){
         // The 'lookup' variable refers to data from the lookup.txt file
         // The 'links' variable refers to data from the map.txt file
-
-        // Set up user/contact lookup table
-        var lookupTable = {};
-        lookup.forEach(function(person) {
-            lookupTable[person.name] = { 
-                domain: person.domain, 
-                email: person.email,
-                title: person.title,
-                meetings: person.meetings,
-                key_activities: person.key_activities 
-            };
-        });
         
         var allShowing = true;
         var nameSelected = false;
@@ -192,7 +158,6 @@
         var getMousePos;
 
         function dragstarted(d){
-
             if(d3.select(this).classed("activeNode")){
                 getMousePos = d3.mouse(vis.node());
                 mousePos[0] = getMousePos[0];
@@ -236,10 +201,10 @@
         var graph = d3.select("#force-graph").append("svg")
           .append("g")
             .attr("class", "graph")
-            .on("mousedown", function(){
-                mousePos = d3.mouse(this);
-                if(mousePos[0] < legendWidth && mousePos[1] < height) d3.event.stopImmediatePropagation(); //Only clicks no drag or pan on menu area
-            })
+            // .on("mousedown", function(){
+            //     mousePos = d3.mouse(this);
+            //     if(mousePos[0] < legendWidth && mousePos[1] < height) d3.event.stopImmediatePropagation(); //Only clicks no drag or pan on menu area
+            // })
             // .call(zoomer);
         graph.append("rect")
             .attr("width", "100%")
@@ -306,16 +271,70 @@
         // var sizeLegend = legendContainer.select(".legendSize")
         //     .call(legendSize);
 
+        // Create hash for all node info
+        var nodesByEmail = {};
+        // Add node info for each stream member
+        lookup.forEach(function(person) {
+            nodesByEmail[person.email] = {
+                email: person.email,
+                name: person.name || "(none)",
+                title: person.title || "(none)",
+                domain: person.domain, 
+                meetings: person.meetings,
+                key_activities: person.key_activities,
+                inbound: 0,
+                outbound: 0
+            };
+        });
+        // Add node info for each source and target from email data
+        links.forEach(function(link) {
+            link.source = nodeByEmail(link.source, +link.count);
+            link.target = nodeByEmail(link.target, 0, +link.count);
+        });
+        function nodeByEmail(email, outbound=0, inbound=0) {
+            // Dynamically create nodes with dummy info when email address in email data not added as project member
+            if (!nodesByEmail[email]) {
+                nodesByEmail[email] = {
+                    email: email,
+                    name: email.split("@")[0],
+                    title: "(none)",
+                    domain: email.split("@")[1],
+                    meetings: 0,
+                    key_activities: 0,
+                    inbound: 0,
+                    outbound: 0
+                }
+            }
+            nodesByEmail[email].inbound += inbound   
+            nodesByEmail[email].outbound += outbound   
+            return nodesByEmail[email];
+        }
+
+        // Extract the array of nodes from the hash by email.
+        var nodes = d3.values(nodesByEmail);
+        // Extract all unique domains from the nodes to use for filter
+        var domains = nodes.map(function (obj) { return obj.domain; })
+            .filter(function (domain, i, arr) { return arr.indexOf(domain) === i; });
+
+        // Linear size scale
+        // var linearSize = d3.scale.linear().domain([0,1]).range([smallCircleSize, largeCircleSize]);
+
+
         // Create a legend for domains
         legendContainer.append("g")
             .attr("class", "legendOrdinal")
             .attr("transform", "translate("+ (xMargin+10) + ", 70)");
 
+        // Initialize Ordinal Colour Scale
+        var color = d3.scale.ordinal()
+        // TODO: redo the scale to make dynamic
+            .domain(domains)
+            .range(["#003366", "#009933", "#ff9933", "#ff0000", "#996633", "#ff66ff", "#0000cc", "#ffcccc", "#00ccff"].slice(0, domains.length));
+
         var legendOrdinal = d3.legend.color()
             .shape("circle")
             .shapePadding(legendDomainPadding)
             .scale(color)
-            // .labels(<%= @domains.to_json.html_safe %>);
 
         var domainLegend = legendContainer.select(".legendOrdinal")
             .call(legendOrdinal);
@@ -336,31 +355,6 @@
                 searchNode(d, this);
             });
 
-        // Create nodes for each unique source and target.
-        var nodesByName = {};
-        links.forEach(function(link) {
-            link.source = nodeByName(link.source, +link.count);
-            link.target = nodeByName(link.target, 0, +link.count);
-        });
-        function nodeByName(name, outbound=0, inbound=0) {
-            if (!nodesByName[name]) {
-                nodesByName[name] = {
-                    name: name,
-                    inbound: 0,
-                    outbound: 0,
-                    email: lookupTable[name].email,
-                    title: lookupTable[name].title,
-                    meetings: lookupTable[name].meetings,
-                    key_activities: lookupTable[name].key_activities
-                }
-            }
-            nodesByName[name].inbound += inbound   
-            nodesByName[name].outbound += outbound   
-            return nodesByName[name];
-        }
-
-        // Extract the array of nodes from the map by name.
-        var nodes = d3.values(nodesByName);
 
         // Create the link lines.
         var link = vis.selectAll(".link")
@@ -380,7 +374,7 @@
               .attr("r", function(d) {
                   return smallCircleSize + (d.inbound + d.outbound)/10;
               })
-              .style("fill", function(d) {return color(lookupTable[d.name].domain);})
+              .style("fill", function(d) {return color(nodesByEmail[d.email].domain);})
               .classed("activeNode", true)
               .on("mouseover", function(d){
                   if(d3.select(this).classed("activeNode") && !d3.select(this).classed("baseNode")){
@@ -388,7 +382,7 @@
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html("<span style=\"font-size:16px;\">" + d.name + "</span><br>" + d.title + "<br>" + d.email + "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
+                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>Title: " + d.title + "<br>" + d.email + "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
                         .style("top", (nodeHighlighted?"190px":"70px"));
                   }
               })
@@ -412,8 +406,9 @@
         force
             .nodes(nodes)
             .links(links)
-            .charge(-100)
-            .linkDistance(20 + nodes.length*10)
+            .charge(-150)
+            // .linkDistance(function(d) { return 20 + nodes.length*10 - (d.source.inbound + d.source.outbound)/20; })
+            .linkDistance(15 + nodes.length*15)
             .linkStrength(0.08)
             .on("tick", function(){tick();})
             .start();
@@ -454,7 +449,7 @@
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html("<span style=\"font-size:16px;\">" + clickedOn.name + "</span><br>" + clickedOn.title + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>Title: " + clickedOn.title + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
             });
@@ -481,14 +476,15 @@
 
         // Change opacity to highlight nodes when applying filter
         function searchNode(searchVal, gObject) {
+            console.log('hi');
             nodeHighlighted = false;
             var searchNode = d3.selectAll(".node");
             var notSelectedNodes = searchNode.filter(function (d, i){
-                return lookupTable[d.name].domain != searchVal
+                return nodesByEmail[d.email].domain != searchVal
             });
 
             var selectedNodes = searchNode.filter(function (d, i){
-                return lookupTable[d.name].domain == searchVal
+                return nodesByEmail[d.email].domain == searchVal
             });
 
             // if(searchVal == 1 || searchVal == 0){ // Large Node filter
@@ -583,4 +579,12 @@
             tick();
         }
     }
+</script>
+<% else %>
+  <div class="p-m m-l white-bg header-box">
+    <h4 class="text-center">You don't have any Insights for this project!</h4>
+  </div>
+<% end %>
+<script type="text/javascript">
+    $("#insights-link").parent().addClass("active");
 </script>
