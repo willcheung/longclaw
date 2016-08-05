@@ -60,7 +60,7 @@ class Activity < ActiveRecord::Base
         is_public_flag = true
         c.contextMessages.collect { |m| m.isPrivate ? is_public_flag = false : nil } # check if there's any private emails
 
-        val << "('#{user_id}', '#{project.id}', 'Conversation', #{Activity.sanitize(c.subject)}, #{is_public_flag}, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
+        val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Conversation]}', #{Activity.sanitize(c.subject)}, #{is_public_flag}, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
                    #{Activity.sanitize(c.contextMessages.last.from.to_json)},
                    #{Activity.sanitize(c.contextMessages.last.to.to_json)}, 
                    #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
@@ -108,22 +108,16 @@ class Activity < ActiveRecord::Base
     data_hash = data.map { |hash| Hashie::Mash.new(hash) }
 
     data_hash.each do |d|
-      d.events.each do |c|
-        # is_public_flag = true
-        # privacy for events?
-        # c.contextMessages.collect { |m| m.isPrivate ? is_public_flag = false : nil } # check if there's any private emails
+      d.conversations.each do |c|
+        event = c.messages.first
+        # store miscellaneous data in email_messages column
+        messages_data = [{ created: event.createdTime, updated: event.createdTime, end_epoch: event.endTime }]
 
-        val << "('#{user_id}',
-                 '#{project.id}',
-                 'Calendar',
-                  #{Activity.sanitize(c.subject)},
-                  true,
-                 '#{c.id}',
-                 '#{Time.at(c.start)}',
-                 '#{c.start}',
-                  #{Activity.sanitize(c.from.to_json)},
-                  #{Activity.sanitize(c.to.to_json)}, 
-                    #{Activity.sanitize(c.created + c.updated + c.end)}, 
+        val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Meeting]}', #{Activity.sanitize(c.subject)}, true, 
+                 '#{c.conversationId}', '#{Time.at(c.lastSentDate).utc}', '#{c.lastSentDate}',
+                  #{Activity.sanitize(event.from.to_json)},
+                  #{Activity.sanitize(event.to.to_json)}, 
+                  #{Activity.sanitize(messages_data.to_json)}, 
                  '#{Time.now}', '#{Time.now}')"
 
 
@@ -131,16 +125,16 @@ class Activity < ActiveRecord::Base
         events << Activity.new(
             posted_by: user_id,
             project_id: project.id,
-            category: "Calendar",
+            category: CATEGORY[:Meeting],
             title: c.subject,
             note: '',
-            is_public: is_public_flag,
+            is_public: true,
             backend_id: c.id,
-            last_sent_date: Time.at(c.start),
-            last_sent_date_epoch: c.start,
-            from: c.from,
-            to: c.to,
-            email_messages: [c.created, c.updated, c.end]
+            last_sent_date: Time.at(c.lastSentDate).utc,
+            last_sent_date_epoch: c.lastSentDate,
+            from: event.from,
+            to: event.to,
+            email_messages: messages_data
         )
       end
     end

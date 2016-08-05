@@ -87,9 +87,7 @@ class ContextsmithService
   
   def self.load_calendar_from_backend(project, before, after, max=100, save_in_db=true)
     token_emails = []
-    # TODO get the url for API calls
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
-
     if Rails.env.production? || Rails.env.test?
       in_domain = ""
       project.users.registered.not_disabled.each do |u|
@@ -100,14 +98,26 @@ class ContextsmithService
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
       return [] if token_emails.empty?
+###
+# DEBUGGING USING REAL TOKENS DUE TO PERMISSIONS
+###
     else
       # DEBUG
-      # u = User.find_by_email('indifferenzetester@gmail.com')
-      token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
-      in_domain = "&in_domain=comprehend.com"
+      # token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
+      # in_domain = "&in_domain=comprehend.com"
+      in_domain = ""
+      u = User.find_by_email("indifferenzetester@gmail.com")
+      success = true
+      if u.token_expired?
+        success = u.refresh_token!
+      end
+      token_emails << { token: u.oauth_access_token, email: u.email } if success
+      return [] if token_emails.empty?
     end
 
-    ex_clusters = project.contacts.map(&:email)
+    # TESTING: COMPARE TO TEST ACCOUNT EMAIL FOR EXTERNAL CLUSTER
+    # ex_clusters = project.contacts.map(&:email)
+    ex_clusters = (project.users + project.contacts).select { |c| c.email != 'indifferenzetester@gmail.com' }.map(&:email)
 
     # change ex_clusters to abc|def@domain.com format
     new_ex_clusters = Hash.new()
@@ -144,7 +154,7 @@ class ContextsmithService
       puts "No data or nil returned!\n"
       return []
     elsif data.kind_of?(Array)
-      puts "Found #{data[0]['events'].size} events!\n"
+      puts "Found #{data[0]['conversations'].size} events!\n"
       return Activity.load_calendar(data, project, save_in_db)
     elsif data['code'] == 401
       puts "Error: #{data['message']}\n"
