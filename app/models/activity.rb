@@ -58,13 +58,13 @@ class Activity < ActiveRecord::Base
     data_hash.each do |d|
       d.conversations.each do |c|
         is_public_flag = true
-        c.contextMessages.collect { |m| m.isPrivate ? is_public_flag = false : nil } # check if there's any private emails
+        c.messages.collect { |m| m.isPrivate ? is_public_flag = false : nil } # check if there's any private emails
 
         val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Conversation]}', #{Activity.sanitize(c.subject)}, #{is_public_flag}, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
-                   #{Activity.sanitize(c.contextMessages.last.from.to_json)},
-                   #{Activity.sanitize(c.contextMessages.last.to.to_json)}, 
-                   #{Activity.sanitize(c.contextMessages.last.cc.to_json)}, 
-                   #{Activity.sanitize(c.contextMessages.to_json)}, 
+                   #{Activity.sanitize(c.messages.last.from.to_json)},
+                   #{Activity.sanitize(c.messages.last.to.to_json)}, 
+                   #{Activity.sanitize(c.messages.last.cc.to_json)}, 
+                   #{Activity.sanitize(c.messages.to_json)}, 
                    '#{Time.now}', '#{Time.now}')"
 
 
@@ -79,10 +79,10 @@ class Activity < ActiveRecord::Base
             backend_id: c.id,
             last_sent_date: Time.at(c.lastSentDate),
             last_sent_date_epoch: c.lastSentDate,
-            from: c.contextMessages.last.from, # take from last message
-            to: c.contextMessages.last.to,     # take from last message
-            cc: c.contextMessages.last.cc,     # take from last message
-            email_messages: c.contextMessages
+            from: c.messages.last.from, # take from last message
+            to: c.messages.last.to,     # take from last message
+            cc: c.messages.last.cc,     # take from last message
+            email_messages: c.messages
         )
       end
     end
