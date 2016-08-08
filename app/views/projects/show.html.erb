@@ -30,10 +30,10 @@
         <div class="row">
             <div class="col-xs-2">
                 <div class="metric <%= @project_risk_score > 95.0 ? "text-danger" : "text-success" %>">
-                    <div class="metric-title">
+                    <div class="metric-title" align="center">
                         <h5><%= @project_risk_score > 95.0 ? "High" : "Low" %> Risk</h5>
                     </div>
-                    <div class="metric-content">
+                    <div class="metric-content" align="center">
                         <h3><%= @project_risk_score %>%</h3>
                     </div>
                 </div>
@@ -50,10 +50,10 @@
             </div>
             <div class="col-xs-4">
                 <div class="metric">
-                    <div class="metric-title">
+                    <div class="metric-title" align="center">
                         <h5>Last Activity</h5>
                     </div>
-                    <div class="metric-content">
+                    <div class="metric-content" align="center">
                         <h3><%= @project_last_activity_date ? time_ago_in_words(@project_last_activity_date) + " ago" : "--" %></h3>
                     </div>
                 </div>
