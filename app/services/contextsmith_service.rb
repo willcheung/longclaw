@@ -11,7 +11,8 @@ class ContextsmithService
       in_domain = ""
       project.users.registered.not_disabled.each do |u|
         success = true
-        if u.token_expired?
+        # if u.token_expired?
+        if true
           success = u.refresh_token!
         end
         token_emails << { token: u.oauth_access_token, email: u.email } if success
