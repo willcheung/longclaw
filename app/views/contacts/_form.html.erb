@@ -2,16 +2,14 @@
 <%= simple_form_for :contact, url: :contacts, remote: remote, html: {role: :form, 'data-model' => 'contact'}  do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
-      <%= f.input :first_name, wrapper_html: { class: 'col-md-4'} %>
-      <%= f.input :last_name, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :first_name, wrapper_html: { class: 'col-md-6'} %>
+      <%= f.input :last_name, wrapper_html: { class: 'col-md-6'} %>
       <%= f.input :email, wrapper_html: { class: 'col-md-4'} %>
-      <%= f.input :phone, wrapper_html: { class: 'col-md-4'} %>
       <%= f.input :title, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :phone, wrapper_html: { class: 'col-md-4'} %>
       <%= f.input :account_id, as: :hidden, input_html: { value: params[:id] }, wrapper_html: { class: 'col-md-4'} %>
 
-      
-  <%# Added Bootstrap classes %>
-  
+	<div class="clearfix">&nbsp;</div>  
     <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
  
 

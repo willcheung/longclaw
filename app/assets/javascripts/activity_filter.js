@@ -312,12 +312,7 @@ function activityTimeFilterReset(){
   $('#vertical-timeline').children().show();
 }
 
-$(document).ready(function(){
-  
-  $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true});
-
-  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true});  
-
+$(document).ready(function(){  
   $('#filter-timeline-expand').css( 'cursor', 'pointer' );
  
   $("#filter-timeline-expand").click(function() {

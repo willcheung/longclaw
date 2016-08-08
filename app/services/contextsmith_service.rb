@@ -57,6 +57,7 @@ class ContextsmithService
     request_backend_service(final_url, "events")
   end
 
+  private
   def self.get_token_emails
     token_emails = []
     if Rails.env.production? || Rails.env.test?
