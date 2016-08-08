@@ -6,13 +6,12 @@ class ContextsmithService
   def self.load_emails_from_backend(project, after=nil, max=100, query=nil, save_in_db=true, is_time=true, is_test=false, neg_sentiment=0)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
     
-    in_domain = ""
-    token_emails = []
-    get_token_emails
+    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
+    token_emails = get_token_emails
     return [] if token_emails.empty?
 
     ex_clusters = project.contacts.map(&:email) 
-    final_cluster = format_ex_clusters
+    final_cluster = format_ex_clusters(ex_clusters)
 
     after = after.nil? ? "" : ("&after=" + after.to_s)
     query = query.nil? ? "" : ("&query=" + query.to_s)
@@ -22,16 +21,15 @@ class ContextsmithService
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + url_encode(query) + is_time + neg_sentiment
     puts "Calling backend service: " + final_url
 
-    request_backend_service("conversations")    
+    request_backend_service(final_url, "conversations")    
   end
 
   
   def self.load_calendar_from_backend(project, before, after, max=100, save_in_db=true)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
     
-    in_domain = ""
-    token_emails = []
-    get_token_emails
+    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
+    token_emails = get_token_emails
     return [] if token_emails.empty?
     ###
     # TESTING USING REAL TOKENS DUE TO PERMISSIONS
@@ -51,16 +49,16 @@ class ContextsmithService
     # TESTING: COMPARE TO TEST ACCOUNT EMAIL FOR EXTERNAL CLUSTER
     ex_clusters = project.contacts.map(&:email)
     # ex_clusters = (project.users + project.contacts).select { |c| c.email != 'indifferenzetester@gmail.com' }.map(&:email)
-    final_cluster = format_ex_clusters
+    final_cluster = format_ex_clusters(ex_clusters)
        
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + "&before=" + before.to_s + "&after=" + after.to_s
     puts "Calling backend service: " + final_url
     
-    request_backend_service("events")
+    request_backend_service(final_url, "events")
   end
 
-  private
-  def get_token_emails
+  def self.get_token_emails
+    token_emails = []
     if Rails.env.production? || Rails.env.test?
       project.users.registered.not_disabled.each do |u|
         success = true
@@ -69,16 +67,15 @@ class ContextsmithService
         end
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
-      return [] if token_emails.empty?
     else
-      in_domain = "&in_domain=comprehend.com"
       u = User.find_by_email('indifferenzetester@gmail.com')
       token_emails << { token: "test", email: u.email }
     end
+    token_emails
   end
 
   # change ex_clusters to abc|def@domain.com format
-  def format_ex_clusters
+  def self.format_ex_clusters(ex_clusters)
     new_ex_clusters = Hash.new()
     ex_clusters.each do |e|
       result = e.split('@')
@@ -94,9 +91,9 @@ class ContextsmithService
     final_cluster
   end
 
-  def request_backend_service(type)
+  def self.request_backend_service(url, type)
     begin
-      url = URI.parse(final_url)
+      url = URI.parse(url)
       req = Net::HTTP::Get.new(url.to_s)
       res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
       data = JSON.parse(res.body.to_s)
