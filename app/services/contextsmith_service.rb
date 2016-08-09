@@ -44,11 +44,11 @@ class ContextsmithService
       token_emails << { token: u.oauth_access_token, email: u.email } if success
       return [] if token_emails.empty?
     end
-    ### DELETE WHEN TESTING DONE
-
-    # TESTING: COMPARE TO TEST ACCOUNT EMAIL FOR EXTERNAL CLUSTER
-    ex_clusters = project.contacts.map(&:email)
+    ###
+    # TESTING USING ANY EMAIL OTHER THAN TEST ACCOUNT EMAIL FOR EXTERNAL CLUSTER
+    ###
     # ex_clusters = (project.users + project.contacts).select { |c| c.email != 'indifferenzetester@gmail.com' }.map(&:email)
+    ex_clusters = project.contacts.map(&:email)
     final_cluster = format_ex_clusters(ex_clusters)
        
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + "&before=" + before.to_s + "&after=" + after.to_s
