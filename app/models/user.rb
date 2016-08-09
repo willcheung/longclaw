@@ -291,6 +291,7 @@ class User < ActiveRecord::Base
       update_attributes(
         oauth_access_token: data['access_token'],
         oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
+      puts "------------haha---------------------------------"
       return true
     end
   end
