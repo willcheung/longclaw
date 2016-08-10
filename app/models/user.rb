@@ -34,7 +34,6 @@
 #  time_zone                        :string           default("UTC")
 #  encrypted_oauth_refresh_token    :string           default("")
 #  encrypted_oauth_refresh_token_iv :string           default("")
-#  oauth_refresh_token              :string           default("")
 #
 # Indexes
 #
@@ -48,7 +47,7 @@ include Utils
 include ContextSmithParser
 
 class User < ActiveRecord::Base
-  # attr_encrypted :oauth_refresh_token, :key => ENV['TOKEN_KEY']
+  attr_encrypted :oauth_refresh_token, :key => ENV['TOKEN_KEY']
   
 	belongs_to 	:organization
   has_many    :accounts, foreign_key: "owner_id", dependent: :nullify
@@ -292,6 +291,7 @@ class User < ActiveRecord::Base
       update_attributes(
         oauth_access_token: data['access_token'],
         oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
+      puts "------------haha---------------------------------"
       return true
     end
   end
