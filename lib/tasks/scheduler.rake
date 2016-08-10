@@ -43,7 +43,7 @@ namespace :projects do
     	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
 	    		puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 1.month.ago.to_i, 300)
+	    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 1.month.ago.to_i, 1000)
 	    		sleep(1)
 	    	end
 	    end
