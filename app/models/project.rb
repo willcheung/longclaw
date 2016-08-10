@@ -420,11 +420,15 @@ class Project < ActiveRecord::Base
 				# Load Smart Tasks
 				Notification.load(get_project_conversations(data, p), project, false)
 
-				# Project activities
-				Activity.load(get_project_conversations(data, p), project, true, user_id)
+				# Project conversations
+        Activity.load(get_project_conversations(data, p), project, true, user_id)
 
-				# Load Opportunities
-				Notification.load_opportunity_for_stale_projects(project)
+        # Load Opportunities
+        Notification.load_opportunity_for_stale_projects(project)
+
+        # Project meetings
+				# Activity.load_calendar(get_project_conversations(data, p), project, true, user_id)
+        ContextsmithService.load_calendar_from_backend(project, Time.current.to_i, 1.year.ago.to_i, 1000)
 			end
 		end
 	end

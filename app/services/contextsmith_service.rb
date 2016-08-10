@@ -54,7 +54,7 @@ class ContextsmithService
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + url_encode(query) + is_time + neg_sentiment
     puts "Calling backend service: " + final_url
 
-    request_backend_service(final_url, "conversations")    
+    request_backend_service(final_url, project, save_in_db, "conversations")    
   end
 
   
@@ -87,7 +87,7 @@ class ContextsmithService
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + "&before=" + before.to_s + "&after=" + after.to_s
     puts "Calling backend service: " + final_url
     
-    request_backend_service(final_url, "events")
+    request_backend_service(final_url, project, save_in_db, "events")
   end
 
   private
@@ -125,7 +125,7 @@ class ContextsmithService
     final_cluster
   end
 
-  def self.request_backend_service(url, type)
+  def self.request_backend_service(url, project, save_in_db, type)
     begin
       url = URI.parse(url)
       req = Net::HTTP::Get.new(url.to_s)
@@ -146,7 +146,7 @@ class ContextsmithService
         Notification.load(data, project, is_test)
         return Activity.load(data, project, save_in_db)
       elsif type == "events"
-        return Activity.load_calendar
+        return Activity.load_calendar(data, project, save_in_db)
       end
     elsif data['code'] == 401
       puts "Error: #{data['message']}\n"

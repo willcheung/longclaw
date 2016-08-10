@@ -111,7 +111,7 @@ class Activity < ActiveRecord::Base
       d.conversations.each do |c|
         event = c.messages.first
         # store miscellaneous data in email_messages column
-        messages_data = [{ created: event.createdTime, updated: event.createdTime, end_epoch: event.endTime }]
+        messages_data = [{ created: event.createdTime, updated: event.updatedTime, end_epoch: event.endTime }]
 
         val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Meeting]}', #{Activity.sanitize(c.subject)}, true, 
                  '#{c.conversationId}', '#{Time.at(c.lastSentDate).utc}', '#{c.lastSentDate}',
