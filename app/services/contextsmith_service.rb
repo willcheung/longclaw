@@ -10,19 +10,15 @@ class ContextsmithService
     token_emails = get_token_emails
     return [] if token_emails.empty?
 
-    # if ENV["RAILS_ENV"] == 'production' or ENV["RAILS_ENV"] == 'test' or ENV["RAILS_ENV"] == 'development'
-    if true
+    if ENV["RAILS_ENV"] == 'production' or ENV["RAILS_ENV"] == 'test'
       in_domain = ""
       project.users.registered.not_disabled.each do |u|
-        puts "**********************woof*********************"
         success = true
-        # if u.token_expired?
-        if true
+        if u.token_expired?
           success = u.refresh_token!
         end
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
-      puts "=========meow============"
       return [] if token_emails.empty?
     else
       # DEBUG
