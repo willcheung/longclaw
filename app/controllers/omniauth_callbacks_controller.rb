@@ -64,17 +64,17 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
 
     if ENV["RAILS_ENV"] == 'production'
-      callback_url = "https://app.contextsmith.com/onboarding/#{user.id}/create_clusters.json"
+      callback_url = "https://#{request.host}/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = ""
     elsif ENV["RAILS_ENV"] == 'test' # DEBUG
-      callback_url = "https://guarded-refuge-6063.herokuapp.com/onboarding/#{user.id}/create_clusters.json"
+      callback_url = "https://#{request.host}/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
     else # Dev environment
-      callback_url = "http://24.130.10.244:3000/onboarding/#{user.id}/create_clusters.json"
+      callback_url = "http://#{request.host}:3000/onboarding/#{user.id}/create_clusters.json"
       u = User.find_by_email('indifferenzetester@gmail.com')
       u.refresh_token! if u.token_expired?
       token_emails = [{ token: u.oauth_access_token, email: u.email }]

@@ -2,39 +2,37 @@
 #
 # Table name: users
 #
-#  id                               :uuid             not null, primary key
-#  first_name                       :string           default(""), not null
-#  last_name                        :string           default(""), not null
-#  email                            :string           default(""), not null
-#  encrypted_password               :string           default(""), not null
-#  image_url                        :string
-#  reset_password_token             :string
-#  reset_password_sent_at           :datetime
-#  remember_created_at              :datetime
-#  sign_in_count                    :integer          default(0), not null
-#  current_sign_in_at               :datetime
-#  last_sign_in_at                  :datetime
-#  current_sign_in_ip               :inet
-#  last_sign_in_ip                  :inet
-#  oauth_provider                   :string
-#  oauth_provider_uid               :string
-#  oauth_access_token               :string
-#  oauth_expires_at                 :datetime
-#  organization_id                  :uuid
-#  department                       :string
-#  is_disabled                      :boolean
-#  created_at                       :datetime
-#  updated_at                       :datetime
-#  invitation_created_at            :datetime
-#  invited_by_id                    :uuid
-#  onboarding_step                  :integer
-#  cluster_create_date              :datetime
-#  cluster_update_date              :datetime
-#  title                            :string
-#  time_zone                        :string           default("UTC")
-#  encrypted_oauth_refresh_token    :string           default("")
-#  encrypted_oauth_refresh_token_iv :string           default("")
-#  oauth_refresh_token              :string           default("")
+#  id                     :uuid             not null, primary key
+#  first_name             :string           default(""), not null
+#  last_name              :string           default(""), not null
+#  email                  :string           default(""), not null
+#  encrypted_password     :string           default(""), not null
+#  image_url              :string
+#  reset_password_token   :string
+#  reset_password_sent_at :datetime
+#  remember_created_at    :datetime
+#  sign_in_count          :integer          default(0), not null
+#  current_sign_in_at     :datetime
+#  last_sign_in_at        :datetime
+#  current_sign_in_ip     :inet
+#  last_sign_in_ip        :inet
+#  oauth_provider         :string
+#  oauth_provider_uid     :string
+#  oauth_access_token     :string
+#  oauth_refresh_token    :string
+#  oauth_expires_at       :datetime
+#  organization_id        :uuid
+#  department             :string
+#  is_disabled            :boolean
+#  created_at             :datetime
+#  updated_at             :datetime
+#  invitation_created_at  :datetime
+#  invited_by_id          :uuid
+#  onboarding_step        :integer
+#  cluster_create_date    :datetime
+#  cluster_update_date    :datetime
+#  title                  :string
+#  time_zone              :string           default("UTC")
 #
 # Indexes
 #
@@ -48,8 +46,6 @@ include Utils
 include ContextSmithParser
 
 class User < ActiveRecord::Base
-  # attr_encrypted :oauth_refresh_token, :key => ENV['TOKEN_KEY']
-  
 	belongs_to 	:organization
   has_many    :accounts, foreign_key: "owner_id", dependent: :nullify
   has_many    :project_members, dependent: :destroy
