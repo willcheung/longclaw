@@ -10,7 +10,7 @@ $(document).ready(function() {
     	responsive: true,
 	    columnDefs: [
 	      { searchable: false, targets: [0,1,3,4,6,7]},
-	      { orderable: false, targets: [0,1,2,3] }
+	      { orderable: false, targets: [2,3] }
 	    ],
 	    "bPaginate": false,
 	    "order": [[ 7, "desc" ]],

@@ -9,7 +9,7 @@
             <div class="vertical-timeline-icon sticky-bg pinned">
                 <i class="fa fa-sticky-note"></i>
             </div>
-        <% elsif a.category == "Calendar" %>
+        <% elsif a.category == "Meeting" %>
             <div class="vertical-timeline-icon warning-bg pinned">
                 <i class="fa fa-calendar"></i>
             </div>
@@ -74,7 +74,7 @@
             </div>
         </div>
 
-        <% elsif a.category == "Calendar" %>
+        <% elsif a.category == "Meeting" %>
         <h3 class="font-bold">
             Event: <%= a.title %>
             <span class="m-l-md font-normal"><%= get_calendar_interval(a) %></span>

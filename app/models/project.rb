@@ -86,7 +86,8 @@ class Project < ActiveRecord::Base
                messages ->> 'sentDate' as sentdate,
                activities.project_id as project_id
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' is NOT NULL 
+        WHERE category = 'Conversation'
+        AND messages->>'sentimentItems' is NOT NULL 
         AND project_id IN ('#{array_of_project_ids.join("','")}')
         AND (messages ->> 'sentDate')::integer > #{start_time_sec}
       SQL
@@ -151,7 +152,8 @@ class Project < ActiveRecord::Base
                messages ->> 'sentDate' AS sent_date,
                activities.project_id AS project_id
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' IS NOT NULL
+        WHERE category = 'Conversation' 
+        AND messages->>'sentimentItems' IS NOT NULL
         AND project_id IN ('#{array_of_project_ids.join("','")}')
         ORDER BY (messages ->> 'sentDate')::integer DESC
       SQL
@@ -180,7 +182,8 @@ class Project < ActiveRecord::Base
         SELECT messages->>'sentimentItems' AS sentiment_item,
                messages ->> 'sentDate' AS sent_date
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' IS NOT NULL
+        WHERE category = 'Conversation'
+        AND messages->>'sentimentItems' IS NOT NULL
         AND project_id = '#{self.id}'
         ORDER BY (messages ->> 'sentDate')::integer DESC
       SQL
@@ -200,7 +203,7 @@ class Project < ActiveRecord::Base
     (score * 10000 * -1).floor / 100.0
   end
 
-  # TODO: add query to generate network map from DB entries
+  # query to generate Account Relationship Graph from DB entries
   def network_map
     query = <<-SQL 
       WITH email_activities AS 
@@ -311,7 +314,9 @@ class Project < ActiveRecord::Base
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id from 
       							(SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id 
-                    	FROM activities where project_id in ('#{array_of_project_ids.join("','")}')
+                    	FROM activities 
+                      where project_id in ('#{array_of_project_ids.join("','")}')
+                      AND category = 'Conversation'
                 		) t
                  WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})
                  ) as activities
@@ -365,7 +370,9 @@ class Project < ActiveRecord::Base
 							 last_sent_date, 
 							 project_id, 
 							 jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date 
-					from activities where project_id in ('#{array_of_project_ids.join("','")}')
+					from activities 
+          where project_id in ('#{array_of_project_ids.join("','")}')
+          AND category = 'Conversation'
 				) t 
 			JOIN projects ON projects.id = t.project_id
       WHERE sent_date::integer between EXTRACT(EPOCH FROM #{hours_ago_start_sql})::integer and EXTRACT(EPOCH FROM #{hours_ago_end_sql})::integer 

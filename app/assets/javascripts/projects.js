@@ -212,7 +212,7 @@ $(document).ready(function() {
       responsive: true,
       columnDefs: [
         { searchable: false, targets: [0,1,3,4,5,6]},
-        { orderable: false, targets: [1,2,3] },
+        { orderable: false, targets: [2,3] },
         { orderDataType: "dom-checkbox", targets: 0 }
       ],
       bPaginate: false,
