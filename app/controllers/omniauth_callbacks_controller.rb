@@ -69,7 +69,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = ""
     elsif ENV["RAILS_ENV"] == 'test' # DEBUG
-      callback_url = "https://secure-shelter-6063.herokuapp.com/onboarding/#{user.id}/create_clusters.json"
+      callback_url = "https://#{request.host}/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
