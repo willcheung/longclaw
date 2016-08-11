@@ -178,6 +178,7 @@ class Project < ActiveRecord::Base
   end
 
   def current_risk_score
+    # get every risk score for this project
     query = <<-SQL
         SELECT messages->>'sentimentItems' AS sentiment_item,
                messages ->> 'sentDate' AS sent_date
@@ -200,7 +201,9 @@ class Project < ActiveRecord::Base
     end
 
     # round float to a percentage
-    (score * 10000 * -1).floor / 100.0
+    score = (score * 10000 * -1).floor / 100.0
+    # adjust scale
+    score < 75.0 ? 0 : (score - 75.0) * 4
   end
 
   # query to generate Account Relationship Graph from DB entries
