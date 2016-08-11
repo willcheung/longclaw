@@ -9,7 +9,7 @@
         <% if @project.owner_id == current_user.id %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
             <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-primary btn-outline m-t-n-sm", id: "btn-refresh" %>
-            <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails from collaborators."></i>
+            <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails and meetings from collaborators."></i>
         <% end %>
         <ol class="breadcrumb">
             <li>
