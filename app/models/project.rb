@@ -350,18 +350,9 @@ class Project < ActiveRecord::Base
   	return metrics
   end
 
-  # TODO: refactor to take into account timezone
-  # static_date set to true in development, false otherwise
-  def self.find_include_sum_activities(hours_ago_end=Date.current, static_date=false, hours_ago_start, array_of_project_ids)
-    # my_date used to manually set the date for the interval
-    my_date = "'2014-09-03'::date"
-    if static_date
-      hours_ago_end_sql = (hours_ago_end == Date.current) ? "#{my_date}" : "#{my_date} - INTERVAL '#{hours_ago_end} hours'"
-      hours_ago_start_sql = "#{my_date} - INTERVAL '#{hours_ago_start} hours'"
-		else
-      hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
-  	  hours_ago_start_sql = "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_start} hours'"
-    end
+  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start, hours_ago_end=Date.current)
+    hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
+	  hours_ago_start_sql = "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_start} hours'"
 
   	query = <<-SQL
   		SELECT projects.*, count(*) as num_activities from (

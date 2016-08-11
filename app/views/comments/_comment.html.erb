@@ -4,7 +4,7 @@
 		<%= get_profile_pic(get_full_name(c.user), c.user.email, "pull-left m-r-sm") %>
 		<div style="margin-top:10px"><%=get_full_name(c.user)%></div>
 	</div>
-	<div class="col-sm-10">
+	<div class="col-sm-9">
     <%= best_in_place_if c.user == current_user, c, :comment, :as => 'textarea', :place_holder => '(Add text)', :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#comm-#{c.id}-activator" %>
 		<div class="m-t-xs"><small class="text-muted"><%= time_ago_in_words(c.created_at) %> ago</small></div>
 	</div>
