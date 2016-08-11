@@ -7,44 +7,11 @@ class ContextsmithService
     base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
     
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
-    token_emails = get_token_emails
+    token_emails = get_token_emails(project)
     return [] if token_emails.empty?
 
-    if ENV["RAILS_ENV"] == 'production' or ENV["RAILS_ENV"] == 'test'
-      in_domain = ""
-      project.users.registered.not_disabled.each do |u|
-        success = true
-        if u.token_expired?
-          success = u.refresh_token!
-        end
-        token_emails << { token: u.oauth_access_token, email: u.email } if success
-      end
-      return [] if token_emails.empty?
-    else
-      # DEBUG
-      u = User.find_by_email('indifferenzetester@gmail.com')
-      # u.refresh_token! if u.token_expired?
-      token_emails << { token: "test", email: u.email }
-      in_domain = "&in_domain=comprehend.com"
-    end
-
-    ex_clusters = [project.contacts.map(&:email)]
-
-    # change ex_clusters to abc|def@domain.com format
-    new_ex_clusters = Hash.new()
-    ex_clusters[0].each do |e|
-      result = e.split('@')
-      # avoid ruby 2.2.3 hash bug
-      if !new_ex_clusters.has_key?(result[1])
-        new_ex_clusters[result[1]] = []   
-      end  
-      new_ex_clusters[result[1]] << result[0]
-    end
- 
-    final_cluster = []
-    new_ex_clusters.each do |key, value|
-      final_cluster.push(value.join('|') + "@"+key.to_s)
-    end
+    ex_clusters = project.contacts.map(&:email)
+    final_cluster = format_ex_clusters(ex_clusters)
 
     after = after.nil? ? "" : ("&after=" + after.to_s)
     query = query.nil? ? "" : ("&query=" + query.to_s)
@@ -62,7 +29,7 @@ class ContextsmithService
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
     
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
-    token_emails = get_token_emails
+    token_emails = get_token_emails(project)
     return [] if token_emails.empty?
     ###
     # TESTING USING REAL TOKENS DUE TO PERMISSIONS
@@ -91,7 +58,7 @@ class ContextsmithService
   end
 
   private
-  def self.get_token_emails
+  def self.get_token_emails(project)
     token_emails = []
     if Rails.env.production? || Rails.env.test?
       project.users.registered.not_disabled.each do |u|
