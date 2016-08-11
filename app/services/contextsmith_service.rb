@@ -7,10 +7,10 @@ class ContextsmithService
     base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
     
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
-    token_emails = get_token_emails
+    token_emails = get_token_emails(project)
     return [] if token_emails.empty?
 
-    ex_clusters = project.contacts.map(&:email) 
+    ex_clusters = project.contacts.map(&:email)
     final_cluster = format_ex_clusters(ex_clusters)
 
     after = after.nil? ? "" : ("&after=" + after.to_s)
@@ -21,7 +21,7 @@ class ContextsmithService
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + url_encode(query) + is_time + neg_sentiment
     puts "Calling backend service: " + final_url
 
-    request_backend_service(final_url, "conversations")    
+    request_backend_service(final_url, project, save_in_db, "conversations", is_test)    
   end
 
   
@@ -29,7 +29,7 @@ class ContextsmithService
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
     
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
-    token_emails = get_token_emails
+    token_emails = get_token_emails(project)
     return [] if token_emails.empty?
     ###
     # TESTING USING REAL TOKENS DUE TO PERMISSIONS
@@ -54,11 +54,11 @@ class ContextsmithService
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + "&before=" + before.to_s + "&after=" + after.to_s
     puts "Calling backend service: " + final_url
     
-    request_backend_service(final_url, "events")
+    request_backend_service(final_url, project, save_in_db, "events")
   end
 
   private
-  def self.get_token_emails
+  def self.get_token_emails(project)
     token_emails = []
     if Rails.env.production? || Rails.env.test?
       project.users.registered.not_disabled.each do |u|
@@ -92,7 +92,7 @@ class ContextsmithService
     final_cluster
   end
 
-  def self.request_backend_service(url, type)
+  def self.request_backend_service(url, project, save_in_db, type, is_test=false)
     begin
       url = URI.parse(url)
       req = Net::HTTP::Get.new(url.to_s)
@@ -113,7 +113,7 @@ class ContextsmithService
         Notification.load(data, project, is_test)
         return Activity.load(data, project, save_in_db)
       elsif type == "events"
-        return Activity.load_calendar
+        return Activity.load_calendar(data, project, save_in_db)
       end
     elsif data['code'] == 401
       puts "Error: #{data['message']}\n"
