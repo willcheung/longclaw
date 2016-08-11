@@ -19,25 +19,23 @@ class HomeController < ApplicationController
     @conversations_tracked = Activity.where(project_id: @projects.pluck(:id), category: 'Conversation').length
     ###### Dashboard Metrics ######
     if !@projects.empty?
-      # static = Rails.env.development?
-      static = false
+      static = Rails.env.development?
       
-      project_sum_activities = Project.find_include_sum_activities(0, static, 7*24, @projects.pluck(:id))
+      project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
       @active_projects = project_sum_activities.length
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
       @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
 
-      project_prev_sum_activities = Project.find_include_sum_activities(7*24, static, 14*24, @projects.pluck(:id))
+      project_prev_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 14*24, 7*24)
       project_chg_activities = Project.calculate_pct_from_prev(project_sum_activities, project_prev_sum_activities)
       @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
       @project_min_chg = project_chg_activities.min_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev <= 0 }
 
-      @project_trend = Project.find_and_count_activities_by_day(@projects.pluck(:id), current_user.time_zone)
+      # @project_trend = Project.find_and_count_activities_by_day(@projects.pluck(:id), current_user.time_zone)
 
       # How Busy Are We? Chart
       @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.pluck(:id), current_user.time_zone)
       
-      # @team_leaderboard = User.count_activities_by_user(current_user.organization.accounts.pluck(:id), current_user.organization.domain, current_user.time_zone)
       @team_leaderboard = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain, 13.days.ago.midnight.utc)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
 
