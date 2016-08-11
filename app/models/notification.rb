@@ -53,7 +53,7 @@ class Notification < ActiveRecord::Base
 	    	c.messages.each do |message|
 
           sent_date = Time.at(message.sentDate).utc
-          if(sent_date.utc < (current_time - 7.day).utc)
+          if(sent_date.utc < (current_time - 14.day).utc)
               # puts "skip this one"
               next
             end
