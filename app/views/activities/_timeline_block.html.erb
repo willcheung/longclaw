@@ -1,14 +1,14 @@
 <div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>" data-myvalue='block'>
     
-    <% if a.category == "Conversation" %>
+    <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon primary-bg">
             <i class="fa fa-envelope"></i>
         </div>
-    <% elsif a.category == "Note" %>
+    <% elsif a.category == Activity::CATEGORY[:Note] %>
         <div class="vertical-timeline-icon sticky-bg">
             <i class="fa fa-sticky-note"></i>
         </div>
-    <% elsif a.category == "Meeting" %>
+    <% elsif a.category == Activity::CATEGORY[:Meeting] %>
         <div class="vertical-timeline-icon warning-bg">
             <i class="fa fa-calendar"></i>
         </div>
@@ -60,7 +60,7 @@
                     </div>
                 <% end %>
 
-                <div class="col-4-lg action-links">
+                <div class="action-links">
                   <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
@@ -87,22 +87,24 @@
                         </div>
                     <% end %>
                 </div>
-                <div class="col-4-lg action-links">
+                <div class="action-links">
                     <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                      &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a> 
                 </div>
             </div>
 
-        <% elsif a.category == "Meeting" %>
-            <h3>Event: <%= a.title %>
+        <% elsif a.category == Activity::CATEGORY[:Meeting] %>
+            <h3><%= a.title %>
                 <small class="m-l-md"><%= get_calendar_interval(a) %></small>
                 <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" style="color:#ed5565" title="Private"></i></span>
             </h3>
 
             <div class="chat-discussion" data-myvalue="<%= a.last_sent_date_epoch %>">
-                <strong>Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %>
-                <strong class="m-l-md">Attendees:</strong> <%= get_calendar_member_names(a.to) %>
-                <div class="col-4-lg action-links">
+                <div class="row">
+                    <div class="col-lg-3"><strong>Meeting Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %></div>
+                    <div class="col-lg-9"><strong>Attendees:</strong> <%= get_calendar_member_names(a.to) %></div>
+                </div>
+                <div class="action-links">
                   <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
