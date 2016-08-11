@@ -21,7 +21,7 @@ class ContextsmithService
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + url_encode(query) + is_time + neg_sentiment
     puts "Calling backend service: " + final_url
 
-    request_backend_service(final_url, project, save_in_db, "conversations")    
+    request_backend_service(final_url, project, save_in_db, "conversations", is_test)    
   end
 
   
@@ -92,7 +92,7 @@ class ContextsmithService
     final_cluster
   end
 
-  def self.request_backend_service(url, project, save_in_db, type)
+  def self.request_backend_service(url, project, save_in_db, type, is_test=false)
     begin
       url = URI.parse(url)
       req = Net::HTTP::Get.new(url.to_s)
