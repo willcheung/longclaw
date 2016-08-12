@@ -196,9 +196,9 @@ class Project < ActiveRecord::Base
     ### FOR DEMO PURPOSES 2016/08/12
     if Rails.env.development? || Rails.env.test?
       # project_current_score["96d0b4eb-24be-4f3f-8af3-515ca27ba7c8"] = 99.99 # Canaan Partners on local
-      project_current_score["60ba2140-9428-4f17-8f23-9f670bcf21ca"] = 99.9 # Canaan Partners on guarded
+      project_current_score["60ba2140-9428-4f17-8f23-9f670bcf21ca"] = 99.99 # Canaan Partners on guarded
       # project_current_score["75bbeff9-3379-4b3a-a32a-658416cb38cf"] = 99.95 # SendGrid on local
-      project_current_score["80c2b5ca-5684-4571-9986-0bf7b56e3d3d"] = 99.8 # SendGrid on guarded
+      project_current_score["80c2b5ca-5684-4571-9986-0bf7b56e3d3d"] = 99.95 # SendGrid on guarded
     end
       
     project_current_score
