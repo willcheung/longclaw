@@ -188,10 +188,9 @@ class Project < ActiveRecord::Base
         min_score < sentiment_score ? min_score : sentiment_score
       end
 
-      # round float to a percentage
-      score = (score * 10000 * -1).floor / 100.0
-      # adjust scale and save to hash
-      project_current_score[pid] = score < 75.0 ? 0 : (score - 75.0) * 4
+      # adjust scale and round float to a percentage
+      score = (((-score - 0.75) * 4) * 10000).floor / 100.0
+      project_current_score[pid] = score < 0.0 ? 0 : score
     end
 
     project_current_score
@@ -220,10 +219,9 @@ class Project < ActiveRecord::Base
       min_score < sentiment_score ? min_score : sentiment_score
     end
 
-    # round float to a percentage
-    score = (score * 10000 * -1).floor / 100.0
-    # adjust scale
-    score < 75.0 ? 0 : (score - 75.0) * 4
+    # adjust scale and round float to a percentage
+    score = (((-score - 0.75) * 4) * 10000).floor / 100.0
+    score < 0.0 ? 0 : score
   end
 
   # query to generate Account Relationship Graph from DB entries
