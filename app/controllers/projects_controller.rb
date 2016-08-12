@@ -21,6 +21,7 @@ class ProjectsController < ApplicationController
       @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
       @risk_scores = Project.current_risk_score(projects.map(&:id))
+      @open_risk_count = Project.open_risk_count(projects.map(&:id), current_user)
     end
     # new project modal
     @project = Project.new
@@ -220,8 +221,8 @@ class ProjectsController < ApplicationController
 
     @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).select do |n| 
       n.conversation_id.nil? ||
-      visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } ||
-      !@project.activities.any? {|a| n.conversation_id == a.backend_id }
+      visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } 
+      # ||!@project.activities.any? {|a| n.conversation_id == a.backend_id }
     end.length
 
     # select only open tasks where 1. no conversation id 2. conversation is visible 3. conversation has been deleted

@@ -145,6 +145,22 @@ class Project < ActiveRecord::Base
     
   end
 
+  def self.open_risk_count(array_of_project_ids, current_user)
+    project_open_risk_count = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
+
+    array_of_project_ids.each do |id|
+      visible_activities = Project.find(id).activities.select { |a| a.is_visible_to(current_user) }
+
+      project_open_risk_count[id] = Notification.where(is_complete: false, category: Notification::CATEGORY[:Risk], project_id: id).select do |n| 
+        n.conversation_id.nil? ||
+        visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } 
+      end.length
+    end
+
+    return project_open_risk_count
+
+  end
+
   def self.current_risk_score(array_of_project_ids)
     # results hash, initialize with 0 for every project
     project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
