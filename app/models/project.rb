@@ -162,7 +162,9 @@ class Project < ActiveRecord::Base
   end
 
   def self.current_risk_score(array_of_project_ids)
+    # results hash, initialize with 0 for every project
     project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
+    # get every risk score for all projects in array of project ids
     query = <<-SQL
         SELECT messages->>'sentimentItems' AS sentiment_item,
                messages ->> 'sentDate' AS sent_date,
@@ -187,13 +189,16 @@ class Project < ActiveRecord::Base
       end
 
       # round float to a percentage
-      project_current_score[pid] = (score * 10000 * -1).floor / 100.0
+      score = (score * 10000 * -1).floor / 100.0
+      # adjust scale and save to hash
+      project_current_score[pid] = score < 75.0 ? 0 : (score - 75.0) * 4
     end
 
     project_current_score
   end
 
   def current_risk_score
+    # get every risk score for this project
     query = <<-SQL
         SELECT messages->>'sentimentItems' AS sentiment_item,
                messages ->> 'sentDate' AS sent_date
@@ -216,7 +221,9 @@ class Project < ActiveRecord::Base
     end
 
     # round float to a percentage
-    (score * 10000 * -1).floor / 100.0
+    score = (score * 10000 * -1).floor / 100.0
+    # adjust scale
+    score < 75.0 ? 0 : (score - 75.0) * 4
   end
 
   # query to generate Account Relationship Graph from DB entries
