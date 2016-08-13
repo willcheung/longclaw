@@ -175,6 +175,7 @@ class Project < ActiveRecord::Base
         AND project_id IN ('#{array_of_project_ids.join("','")}')
         ORDER BY (messages ->> 'sentDate')::integer DESC
       SQL
+        #--WHERE backend_id IN ('#{@notification.conversation_id}' and messages ->>'messageId' = '#{@notification.message_id}' and project_id = '#{@notification.project_id}' 
     result = Activity.find_by_sql(query)
     return project_current_score if result.blank?
 
@@ -216,8 +217,37 @@ class Project < ActiveRecord::Base
       end
     end
 
-    # get every risk score for this project
-    query = <<-SQL
+    risks = self.notifications.where(category: Notification::CATEGORY[:Risk], is_complete: false)
+    if risks.present?
+      # get every risk score from open risks
+      backend_ids = risks.pluck(:conversation_id)
+      message_ids = risks.pluck(:message_id)
+      # project_ids = risks.pluck(:project_id)
+      query = <<-SQL
+        SELECT messages->>'sentimentItems' AS sentiment_item,
+               messages ->> 'sentDate' AS sent_date
+        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+        WHERE category = 'Conversation'
+        AND messages ->>'sentimentItems' IS NOT NULL
+        AND project_id = '#{self.id}'
+        AND backend_id IN ('#{backend_ids.join("','")}')
+        AND messages ->> 'messageId' IN ('#{message_ids.join("','")}')
+      SQL
+      result = Activity.find_by_sql(query)
+      # Risk notification may refer to emails that are not found in db for some reason, result may return nothing
+      if result.present?
+        # get min score of all open risk scores
+        score = result.reduce(0.0) do |min_score, a|
+          sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
+          min_score < sentiment_score ? min_score : sentiment_score
+        end
+      end
+    end
+
+    # if no score calculated from open risks
+    if score.nil?
+      # get every risk score for this project
+      query = <<-SQL
         SELECT messages->>'sentimentItems' AS sentiment_item,
                messages ->> 'sentDate' AS sent_date
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
@@ -226,16 +256,19 @@ class Project < ActiveRecord::Base
         AND project_id = '#{self.id}'
         ORDER BY (messages ->> 'sentDate')::integer DESC
       SQL
-    result = Activity.find_by_sql(query)
-
-    return 0 if result.blank?
-
-    # get min score from last day that has risk score
-    last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
-    result.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
-    score = result.reduce(0.0) do |min_score, a|
-      sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
-      min_score < sentiment_score ? min_score : sentiment_score
+      result = Activity.find_by_sql(query)
+      # if no risk scores found, return score of 0
+      if result.blank?
+        return 0
+      else
+        # get min score from last day that has risk score
+        last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
+        result.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
+        score = result.reduce(0.0) do |min_score, a|
+          sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
+          min_score < sentiment_score ? min_score : sentiment_score
+        end
+      end
     end
 
     # adjust scale and round float to a percentage
