@@ -184,14 +184,8 @@ class Project < ActiveRecord::Base
       # get min score from last day that has risk score
       last_sent_date = Time.zone.at(scores.first.sent_date.to_i).to_date
       scores.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
-      score = scores.reduce(0.0) do |min_score, a|
-        sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
-        min_score < sentiment_score ? min_score : sentiment_score
-      end
-
-      # adjust scale and round float to a percentage
-      score = (((-score - 0.75) * 4) * 10000).floor / 100.0
-      project_current_score[pid] = score < 0.0 ? 0 : score
+      score = min_risk_score(scores)
+      project_current_score[pid] = round_and_scale_score(score)
     end
 
     ### FOR DEMO PURPOSES 2016/08/12
@@ -208,72 +202,56 @@ class Project < ActiveRecord::Base
   def current_risk_score
     ### FOR DEMO PURPOSES 2016/08/12
     if Rails.env.development? || Rails.env.test?
-      # if self.id == "75bbeff9-3379-4b3a-a32a-658416cb38cf" # SendGrid id on local
-      if self.id == "80c2b5ca-5684-4571-9986-0bf7b56e3d3d" # SendGrid id on guarded
+      # if id == "75bbeff9-3379-4b3a-a32a-658416cb38cf" # SendGrid id on local
+      if id == "80c2b5ca-5684-4571-9986-0bf7b56e3d3d" # SendGrid id on guarded
         return 99.95
-      # elsif self.id == "96d0b4eb-24be-4f3f-8af3-515ca27ba7c8" # Canaan Partners id on local
-      elsif self.id == "60ba2140-9428-4f17-8f23-9f670bcf21ca" # Canaan Partners id on guarded
+      # elsif id == "96d0b4eb-24be-4f3f-8af3-515ca27ba7c8" # Canaan Partners id on local
+      elsif id == "60ba2140-9428-4f17-8f23-9f670bcf21ca" # Canaan Partners id on guarded
         return 99.99
       end
     end
 
-    risks = self.notifications.where(category: Notification::CATEGORY[:Risk], is_complete: false)
-    if risks.present?
+    query = <<-SQL
+      SELECT messages->>'sentimentItems' AS sentiment_item,
+             messages ->> 'sentDate' AS sent_date,
+             messages ->> 'messageId' AS message_id,
+             backend_id
+      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+      WHERE category = 'Conversation'
+      AND messages->>'sentimentItems' IS NOT NULL
+      AND project_id = '#{self.id}'
+      ORDER BY (messages ->> 'sentDate')::integer DESC
+    SQL
+    result = Activity.find_by_sql(query)
+    # if no risk scores found, return score of 0
+    return 0 if result.blank?
+
+    open_risks = notifications.where(category: Notification::CATEGORY[:Risk], is_complete: false)
+    if open_risks.present?
       # get every risk score from open risks
-      backend_ids = risks.pluck(:conversation_id)
-      message_ids = risks.pluck(:message_id)
-      # project_ids = risks.pluck(:project_id)
-      query = <<-SQL
-        SELECT messages->>'sentimentItems' AS sentiment_item,
-               messages ->> 'sentDate' AS sent_date
-        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE category = 'Conversation'
-        AND messages ->>'sentimentItems' IS NOT NULL
-        AND project_id = '#{self.id}'
-        AND backend_id IN ('#{backend_ids.join("','")}')
-        AND messages ->> 'messageId' IN ('#{message_ids.join("','")}')
-      SQL
-      result = Activity.find_by_sql(query)
-      # Risk notification may refer to emails that are not found in db for some reason, result may return nothing
-      if result.present?
+      open_risk_scores = result.select do |a|
+        open_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+      end
+      # Risk notification may refer to emails that are not found in db for some reason, open_risk_scores may be empty
+      if open_risk_scores.present?
         # get min score of all open risk scores
-        score = result.reduce(0.0) do |min_score, a|
-          sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
-          min_score < sentiment_score ? min_score : sentiment_score
-        end
+        score = min_risk_score(open_risk_scores)
       end
     end
 
     # if no score calculated from open risks
     if score.nil?
-      # get every risk score for this project
-      query = <<-SQL
-        SELECT messages->>'sentimentItems' AS sentiment_item,
-               messages ->> 'sentDate' AS sent_date
-        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE category = 'Conversation'
-        AND messages->>'sentimentItems' IS NOT NULL
-        AND project_id = '#{self.id}'
-        ORDER BY (messages ->> 'sentDate')::integer DESC
-      SQL
-      result = Activity.find_by_sql(query)
-      # if no risk scores found, return score of 0
-      if result.blank?
-        return 0
-      else
-        # get min score from last day that has risk score
-        last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
-        result.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
-        score = result.reduce(0.0) do |min_score, a|
-          sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
-          min_score < sentiment_score ? min_score : sentiment_score
-        end
+      # get min score from last day that has risk score, excluding completed risks
+      completed_risks = notifications.where(category: Notification::CATEGORY[:Risk], is_complete: true)
+      last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
+      result.select!  do |a|
+        Time.zone.at(a.sent_date.to_i).to_date == last_sent_date &&
+        !completed_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
       end
+      score = min_risk_score(result)
     end
 
-    # adjust scale and round float to a percentage
-    score = (((-score - 0.75) * 4) * 10000).floor / 100.0
-    score < 0.0 ? 0 : score
+    round_and_scale_score(score)
   end
 
   # query to generate Account Relationship Graph from DB entries
