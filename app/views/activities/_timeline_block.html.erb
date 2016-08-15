@@ -47,7 +47,8 @@
                                 <hr class="message-divider"/>
                                     <span class="message-content">
                                          <div>
-                                            <%= if m.content.is_a?(String) 
+                                          <!-- some emails don't even have content -->
+                                            <%= if m.content.nil? or m.content.is_a?(String) 
                                                   simple_format(m.content)
                                                 else
                                                     simple_format(m.content.body)
