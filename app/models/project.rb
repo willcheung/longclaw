@@ -166,51 +166,60 @@ class Project < ActiveRecord::Base
     project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
     # get every risk score for all projects in array of project ids
     query = <<-SQL
-        SELECT messages->>'sentimentItems' AS sentiment_item,
-               messages ->> 'sentDate' AS sent_date,
-               activities.project_id AS project_id
-        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE category = 'Conversation' 
-        AND messages->>'sentimentItems' IS NOT NULL
-        AND project_id IN ('#{array_of_project_ids.join("','")}')
-        ORDER BY (messages ->> 'sentDate')::integer DESC
-      SQL
-        #--WHERE backend_id IN ('#{@notification.conversation_id}' and messages ->>'messageId' = '#{@notification.message_id}' and project_id = '#{@notification.project_id}' 
+      SELECT messages->>'sentimentItems' AS sentiment_item,
+             messages ->> 'sentDate' AS sent_date,
+             activities.project_id AS project_id,
+             messages ->> 'messageId' AS message_id,
+             activities.backend_id AS backend_id
+      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+      WHERE category = 'Conversation' 
+      AND messages->>'sentimentItems' IS NOT NULL
+      AND project_id IN ('#{array_of_project_ids.join("','")}')
+      ORDER BY (messages ->> 'sentDate')::integer DESC
+    SQL
     result = Activity.find_by_sql(query)
     return project_current_score if result.blank?
 
+    open_risks = Notification.where(category: Notification::CATEGORY[:Risk], is_complete: false)
+    completed_risks = Notification.where(category: Notification::CATEGORY[:Risk], is_complete: true)
+
     scores_by_pid = result.group_by { |a| a.project_id }
     scores_by_pid.each do |pid, scores|
-      # get min score from last day that has risk score
-      last_sent_date = Time.zone.at(scores.first.sent_date.to_i).to_date
-      scores.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
-      score = min_risk_score(scores)
-      project_current_score[pid] = round_and_scale_score(score)
-    end
+      score = 0
+      pid_open_risks = open_risks.where(project_id: pid)
+      if pid_open_risks.present?
+        # get every risk score from open risks
+        open_risk_scores = scores.select do |a|
+          pid_open_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+        end
+        # Risk notification may refer to emails that are not found in db for some reason, open_risk_scores may be empty
+        if open_risk_scores.present?
+          # get min score of all open risk scores
+          score = min_risk_score(open_risk_scores)
+        end
+      end
 
-    ### FOR DEMO PURPOSES 2016/08/12
-    if Rails.env.development? || Rails.env.test?
-      # project_current_score["96d0b4eb-24be-4f3f-8af3-515ca27ba7c8"] = 99.99 # Canaan Partners on local
-      project_current_score["60ba2140-9428-4f17-8f23-9f670bcf21ca"] = 99.99 # Canaan Partners on guarded
-      # project_current_score["75bbeff9-3379-4b3a-a32a-658416cb38cf"] = 99.95 # SendGrid on local
-      project_current_score["80c2b5ca-5684-4571-9986-0bf7b56e3d3d"] = 99.95 # SendGrid on guarded
+      # if score for this pid is still 0 after calculation from open risks
+      if score == 0
+        # get min score from last day that has risk score, excluding completed risks
+        pid_completed_risks = completed_risks.where(project_id: pid)
+        scores.reject! do |a|
+          pid_completed_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+        end
+        last_sent_date = Time.zone.at(scores.first.sent_date.to_i).to_date
+        scores.select! do |a|
+          Time.zone.at(a.sent_date.to_i).to_date == last_sent_date
+        end
+        score = min_risk_score(scores)
+      end
+      project_current_score[pid] = round_and_scale_score(score)
     end
       
     project_current_score
   end
 
   def current_risk_score
-    ### FOR DEMO PURPOSES 2016/08/12
-    if Rails.env.development? || Rails.env.test?
-      # if id == "75bbeff9-3379-4b3a-a32a-658416cb38cf" # SendGrid id on local
-      if id == "80c2b5ca-5684-4571-9986-0bf7b56e3d3d" # SendGrid id on guarded
-        return 99.95
-      # elsif id == "96d0b4eb-24be-4f3f-8af3-515ca27ba7c8" # Canaan Partners id on local
-      elsif id == "60ba2140-9428-4f17-8f23-9f670bcf21ca" # Canaan Partners id on guarded
-        return 99.99
-      end
-    end
-
+    # get every risk score for this project
     query = <<-SQL
       SELECT messages->>'sentimentItems' AS sentiment_item,
              messages ->> 'sentDate' AS sent_date,
@@ -243,10 +252,12 @@ class Project < ActiveRecord::Base
     if score.nil?
       # get min score from last day that has risk score, excluding completed risks
       completed_risks = notifications.where(category: Notification::CATEGORY[:Risk], is_complete: true)
+      result.reject! do |a|
+        completed_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+      end
       last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
-      result.select!  do |a|
-        Time.zone.at(a.sent_date.to_i).to_date == last_sent_date &&
-        !completed_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+      result.select! do |a|
+        Time.zone.at(a.sent_date.to_i).to_date == last_sent_date
       end
       score = min_risk_score(result)
     end
