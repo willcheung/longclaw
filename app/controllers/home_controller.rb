@@ -8,13 +8,8 @@ class HomeController < ApplicationController
     @projects = Project.visible_to(current_user.organization_id, current_user.id)
     @projects_min_scores = Hash.new()
     project_activities = Activity.where(project_id: @projects.pluck(:id))
-    visible_activities = project_activities.select { |a| a.is_visible_to(current_user) }
-    @open_tasks = Notification.where(project_id: @projects.pluck(:id), is_complete: false).select do |n| 
-      n.conversation_id.nil? || 
-      visible_activities.any? {|a| n.project_id == a.project_id && n.conversation_id == a.backend_id } ||
-      !project_activities.any? {|a| n.conversation_id == a.backend_id }
-    end.length
-    @closed_tasks = Notification.where(project_id: @projects.pluck(:id), is_complete: true, complete_date: (7.days.ago..Time.current), conversation_id: visible_activities.map(&:backend_id)).length
+    @open_tasks = Notification.where(project_id: @projects.pluck(:id), is_complete: false).length
+    @closed_tasks = Notification.where(project_id: @projects.pluck(:id), is_complete: true, complete_date: (7.days.ago..Time.current)).length
     @active_projects = 0
     @conversations_tracked = Activity.where(project_id: @projects.pluck(:id), category: 'Conversation').length
     ###### Dashboard Metrics ######
