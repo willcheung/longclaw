@@ -11,10 +11,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160628194408) do
+ActiveRecord::Schema.define(version: 20160816000101) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+  enable_extension "pg_stat_statements"
   enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
@@ -60,7 +61,7 @@ ActiveRecord::Schema.define(version: 20160628194408) do
     t.datetime "pinned_at"
   end
 
-  add_index "activities", ["backend_id", "project_id"], name: "index_activities_on_backend_id_and_project_id", unique: true, using: :btree
+  add_index "activities", ["category", "backend_id", "project_id"], name: "index_activities_on_category_and_backend_id_and_project_id", unique: true, using: :btree
   add_index "activities", ["email_messages"], name: "index_activities_on_email_messages", using: :gin
   add_index "activities", ["project_id"], name: "index_activities_on_project_id", using: :btree
 
