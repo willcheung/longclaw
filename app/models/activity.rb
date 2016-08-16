@@ -24,9 +24,9 @@
 #
 # Indexes
 #
-#  index_activities_on_backend_id_and_project_id  (backend_id,project_id) UNIQUE
-#  index_activities_on_email_messages             (email_messages)
-#  index_activities_on_project_id                 (project_id)
+#  index_activities_on_category_and_backend_id_and_project_id  (category,backend_id,project_id) UNIQUE
+#  index_activities_on_email_messages                          (email_messages)
+#  index_activities_on_project_id                              (project_id)
 #
 
 class Activity < ActiveRecord::Base
