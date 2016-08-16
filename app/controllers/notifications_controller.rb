@@ -78,35 +78,10 @@ class NotificationsController < ApplicationController
     else
       total_notifications = Notification.find_project_and_user(@projects.map(&:id), final_filter)
     end
-    
-    activities = Activity.where(backend_id: total_notifications.map(&:conversation_id))
 
-    visible_activities = []
-    activities.each do |a|
-      temp = Array.new(2)
-      temp[0] = a.project_id
-      temp[1] = a.backend_id
-      if a.is_visible_to(current_user)
-        visible_activities.push(temp)
-      end
-    end
+    #show every risk, smart action, opportunity regardless of private conversation
+    @notifications = total_notifications
 
-    activities_conversation_id = activities.map(&:backend_id)
-
-    total_notifications.each do |n|
-      temp = Array.new(2)
-      temp[0] = n.project_id
-      temp[1] = n.conversation_id
-      if n.conversation_id.nil?
-        @notifications.push(n)   
-      # don't show private activities
-      elsif visible_activities.include?(temp)
-        @notifications.push(n)
-      # show notification even if no such activities exist
-      elsif !activities_conversation_id.include?(n.conversation_id)
-        @notifications.push(n)
-      end
-    end 
   end
 
   def show_email_body
@@ -382,7 +357,14 @@ class NotificationsController < ApplicationController
     final_result = Array.new(4)
     final_result[0] = result[index].from[0]['personal']
     final_result[1] = member
-    final_result[2] = body
+
+    #check if this notification is visible to current user
+    if Activity.find_by(backend_id: @notification.conversation_id, project_id: @notification.project_id).is_visible_to(current_user) 
+      final_result[2] = body
+    else
+      final_result[2] = 'This is private conversation'
+    end
+
     final_result[3] = sentdate.to_i
 
     return final_result
