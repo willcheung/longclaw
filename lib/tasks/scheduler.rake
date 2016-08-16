@@ -18,7 +18,7 @@ namespace :projects do
 
 	desc 'Retrieve latest emails since yesterday for all projects in all organization'
 	task load_emails_since_yesterday: :environment do
-    if [0,4,8,12,16,20].include?(Time.now.hour) # Runs once every 4 hours
+    if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
     	puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 	    after = Time.now.to_i - 86400
 
@@ -26,7 +26,7 @@ namespace :projects do
 	    	org.accounts.each do |acc| 
 		    	acc.projects.each do |proj|
 		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-		    		ContextsmithService.load_emails_from_backend(proj, after)
+		    		ContextsmithService.load_emails_from_backend(proj, nil, 60)
 		    		sleep(1)
 		    	end
 		    end
@@ -35,7 +35,7 @@ namespace :projects do
 	  end
 	end
 
-	desc 'Retrieve latest 300 calendar events for all projects in all organization'
+	desc 'Retrieve latest 1000 calendar events for all projects in all organization'
 	task load_events: :environment do
     puts "\n\n=====Task (load_events) started at #{Time.now}====="
 
@@ -52,7 +52,7 @@ namespace :projects do
 
 	desc 'Retrieve latest calendar events since yesterday for all projects in all organization'
 	task load_events_since_yesterday: :environment do
-    if [2,6,10,14,18,22].include?(Time.now.hour) # Runs once every 4 hours
+    if [3,9,15,21].include?(Time.now.hour) # Runs once every 6 hours
     	puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 	    after = Time.now.to_i - 86400
 
