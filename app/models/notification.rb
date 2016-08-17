@@ -21,6 +21,7 @@
 #  label             :string
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
+#  score             :float            default(0.0)
 #
 
 include ActionView::Helpers::DateHelper
@@ -156,10 +157,10 @@ class Notification < ActiveRecord::Base
       return
     end
 
-    score = contextMessage.sentimentItems[0].score.to_f
+    score = contextMessage.sentimentItems[0].score.to_s[0,7].to_f
 
-    if score >= -0.9
-      # ignore score larger than -0.9
+    if score >= -0.95
+      # ignore score larger than -0.95
       return
     end
 
@@ -187,7 +188,8 @@ class Notification < ActiveRecord::Base
         is_complete: false,
         assign_to: '',
         content_offset: context_start,
-        has_time: false)
+        has_time: false,
+        score: score)
 
     notification.save
   end
