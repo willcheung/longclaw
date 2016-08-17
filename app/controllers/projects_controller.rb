@@ -21,7 +21,7 @@ class ProjectsController < ApplicationController
       @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
       @risk_scores = Project.current_risk_score(projects.map(&:id))
-      @open_risk_count = Project.open_risk_count(projects.map(&:id), current_user)
+      @open_risk_count = Project.open_risk_count(projects.map(&:id))
     end
     # new project modal
     @project = Project.new
@@ -72,14 +72,9 @@ class ProjectsController < ApplicationController
     render "show"
   end
 
-  def tasks_tab
-    visible_activities = Activity.where(project_id: @project.id)
-    # select only open tasks where 1. no conversation id 2. conversation is visible 3. conversation has been deleted
-    @notifications = @project.notifications.select do |n| 
-      n.conversation_id.nil? ||
-      visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } ||
-      !@project.activities.any? {|a| n.conversation_id == a.backend_id }
-    end
+  def tasks_tab   
+    # show every risk regardless of private conversation 
+    @notifications = @project.notifications
     @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
 
     render "show"
@@ -219,18 +214,11 @@ class ProjectsController < ApplicationController
     @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
     visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
 
-    @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).select do |n| 
-      n.conversation_id.nil? ||
-      visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } 
-      # ||!@project.activities.any? {|a| n.conversation_id == a.backend_id }
-    end.length
+    # for risk counts, show every risk regardless of private conversation
+    @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).length
 
-    # select only open tasks where 1. no conversation id 2. conversation is visible 3. conversation has been deleted
-    @project_open_tasks_count = @project.notifications.where(is_complete: false).select do |n| 
-      n.conversation_id.nil? ||
-      visible_activities.any? { |a| n.project_id == a.project_id && n.conversation_id == a.backend_id } ||
-      !@project.activities.any? {|a| n.conversation_id == a.backend_id }
-    end.length
+    # select all open tasks regardless of private conversation
+    @project_open_tasks_count = @project.notifications.where(is_complete: false).length
     @project_pinned_count = @project.activities.pinned.length
     @project_risk_score = @project.current_risk_score
 
