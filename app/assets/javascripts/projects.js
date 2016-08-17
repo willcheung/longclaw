@@ -28,8 +28,8 @@ jQuery(document).ready(function($) {
   $('#projects-table').DataTable( {
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,4,5,6,7,8,9,10]},
-      { orderable: false, targets: [0,4,5,7,9,10] }
+      { searchable: false, targets: [0,4,5,6,7,8,9,10,11]},
+      { orderable: false, targets: [0,4,5,8,10,11] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -212,7 +212,7 @@ $(document).ready(function() {
       responsive: true,
       columnDefs: [
         { searchable: false, targets: [0,1,3,4,5,6]},
-        { orderable: false, targets: [1,2,3] },
+        { orderable: false, targets: [2,3] },
         { orderDataType: "dom-checkbox", targets: 0 }
       ],
       bPaginate: false,

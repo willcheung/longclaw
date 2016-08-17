@@ -113,7 +113,7 @@ class OnboardingController < ApplicationController
 							p.subscribers.create(user_id: current_user.id)
 						end
 
-						new_project.destroy # Delete unconfirmed project
+						new_project.really_destroy! # Delete unconfirmed project
 
 					else # No overlapping projects
 						if same_p.size > 0
@@ -127,7 +127,7 @@ class OnboardingController < ApplicationController
 								p.subscribers.create(user_id: current_user.id)
 							end
 							
-							new_project.destroy # Delete unconfirmed project
+							new_project.really_destroy! # Delete unconfirmed project
 							
 						elsif new_p.size > 0
 							new_project.update_attributes(is_confirmed: true)

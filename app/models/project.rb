@@ -86,7 +86,8 @@ class Project < ActiveRecord::Base
                messages ->> 'sentDate' as sentdate,
                activities.project_id as project_id
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' is NOT NULL 
+        WHERE category = 'Conversation'
+        AND messages->>'sentimentItems' is NOT NULL 
         AND project_id IN ('#{array_of_project_ids.join("','")}')
         AND (messages ->> 'sentDate')::integer > #{start_time_sec}
       SQL
@@ -144,63 +145,123 @@ class Project < ActiveRecord::Base
     
   end
 
+  # for risk counts, show every risk regardless of private conversation
+  def self.open_risk_count(array_of_project_ids)
+    project_open_risk_count = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
+
+    array_of_project_ids.each do |id|
+      project_open_risk_count[id] = Notification.where(is_complete: false, category: Notification::CATEGORY[:Risk], project_id: id).length
+    end
+
+    return project_open_risk_count
+
+  end
+
   def self.current_risk_score(array_of_project_ids)
+    # results hash, initialize with 0 for every project
     project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
+    # get every risk score for all projects in array of project ids
     query = <<-SQL
-        SELECT messages->>'sentimentItems' AS sentiment_item,
-               messages ->> 'sentDate' AS sent_date,
-               activities.project_id AS project_id
-        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' IS NOT NULL
-        AND project_id IN ('#{array_of_project_ids.join("','")}')
-        ORDER BY (messages ->> 'sentDate')::integer DESC
-      SQL
+      SELECT messages->>'sentimentItems' AS sentiment_item,
+             messages ->> 'sentDate' AS sent_date,
+             activities.project_id AS project_id,
+             messages ->> 'messageId' AS message_id,
+             activities.backend_id AS backend_id
+      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+      WHERE category = 'Conversation' 
+      AND messages->>'sentimentItems' IS NOT NULL
+      AND project_id IN ('#{array_of_project_ids.join("','")}')
+      ORDER BY (messages ->> 'sentDate')::integer DESC
+    SQL
     result = Activity.find_by_sql(query)
     return project_current_score if result.blank?
 
+    open_risks = Notification.where(category: Notification::CATEGORY[:Risk], is_complete: false)
+    completed_risks = Notification.where(category: Notification::CATEGORY[:Risk], is_complete: true)
+
     scores_by_pid = result.group_by { |a| a.project_id }
     scores_by_pid.each do |pid, scores|
-      # get min score from last day that has risk score
-      last_sent_date = Time.zone.at(scores.first.sent_date.to_i).to_date
-      scores.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
-      score = scores.reduce(0.0) do |min_score, a|
-        sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
-        min_score < sentiment_score ? min_score : sentiment_score
+      score = 0
+      pid_open_risks = open_risks.where(project_id: pid)
+      if pid_open_risks.present?
+        # get every risk score from open risks
+        open_risk_scores = scores.select do |a|
+          pid_open_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+        end
+        # Risk notification may refer to emails that are not found in db for some reason, open_risk_scores may be empty
+        if open_risk_scores.present?
+          # get min score of all open risk scores
+          score = min_risk_score(open_risk_scores)
+        end
       end
 
-      # round float to a percentage
-      project_current_score[pid] = (score * 10000 * -1).floor / 100.0
+      # if score for this pid is still 0 after calculation from open risks
+      if score == 0
+        # get min score from last day that has risk score, excluding completed risks
+        pid_completed_risks = completed_risks.where(project_id: pid)
+        scores.reject! do |a|
+          pid_completed_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+        end
+        last_sent_date = Time.zone.at(scores.first.sent_date.to_i).to_date
+        scores.select! do |a|
+          Time.zone.at(a.sent_date.to_i).to_date == last_sent_date
+        end
+        score = min_risk_score(scores)
+      end
+      project_current_score[pid] = round_and_scale_score(score)
     end
-
+      
     project_current_score
   end
 
   def current_risk_score
+    # get every risk score for this project
     query = <<-SQL
-        SELECT messages->>'sentimentItems' AS sentiment_item,
-               messages ->> 'sentDate' AS sent_date
-        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE messages->>'sentimentItems' IS NOT NULL
-        AND project_id = '#{self.id}'
-        ORDER BY (messages ->> 'sentDate')::integer DESC
-      SQL
+      SELECT messages->>'sentimentItems' AS sentiment_item,
+             messages ->> 'sentDate' AS sent_date,
+             messages ->> 'messageId' AS message_id,
+             backend_id
+      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
+      WHERE category = 'Conversation'
+      AND messages->>'sentimentItems' IS NOT NULL
+      AND project_id = '#{self.id}'
+      ORDER BY (messages ->> 'sentDate')::integer DESC
+    SQL
     result = Activity.find_by_sql(query)
-
+    # if no risk scores found, return score of 0
     return 0 if result.blank?
 
-    # get min score from last day that has risk score
-    last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
-    result.select! {|a| Time.zone.at(a.sent_date.to_i).to_date == last_sent_date }
-    score = result.reduce(0.0) do |min_score, a|
-      sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
-      min_score < sentiment_score ? min_score : sentiment_score
+    open_risks = notifications.where(category: Notification::CATEGORY[:Risk], is_complete: false)
+    if open_risks.present?
+      # get every risk score from open risks
+      open_risk_scores = result.select do |a|
+        open_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+      end
+      # Risk notification may refer to emails that are not found in db for some reason, open_risk_scores may be empty
+      if open_risk_scores.present?
+        # get min score of all open risk scores
+        score = min_risk_score(open_risk_scores)
+      end
     end
 
-    # round float to a percentage
-    (score * 10000 * -1).floor / 100.0
+    # if no score calculated from open risks
+    if score.nil?
+      # get min score from last day that has risk score, excluding completed risks
+      completed_risks = notifications.where(category: Notification::CATEGORY[:Risk], is_complete: true)
+      result.reject! do |a|
+        completed_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
+      end
+      last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
+      result.select! do |a|
+        Time.zone.at(a.sent_date.to_i).to_date == last_sent_date
+      end
+      score = min_risk_score(result)
+    end
+
+    round_and_scale_score(score)
   end
 
-  # TODO: add query to generate network map from DB entries
+  # query to generate Account Relationship Graph from DB entries
   def network_map
     query = <<-SQL 
       WITH email_activities AS 
@@ -311,7 +372,9 @@ class Project < ActiveRecord::Base
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id from 
       							(SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id 
-                    	FROM activities where project_id in ('#{array_of_project_ids.join("','")}')
+                    	FROM activities 
+                      where project_id in ('#{array_of_project_ids.join("','")}')
+                      AND category = 'Conversation'
                 		) t
                  WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})
                  ) as activities
@@ -345,18 +408,9 @@ class Project < ActiveRecord::Base
   	return metrics
   end
 
-  # TODO: refactor to take into account timezone
-  # static_date set to true in development, false otherwise
-  def self.find_include_sum_activities(hours_ago_end=Date.current, static_date=false, hours_ago_start, array_of_project_ids)
-    # my_date used to manually set the date for the interval
-    my_date = "'2014-09-03'::date"
-    if static_date
-      hours_ago_end_sql = (hours_ago_end == Date.current) ? "#{my_date}" : "#{my_date} - INTERVAL '#{hours_ago_end} hours'"
-      hours_ago_start_sql = "#{my_date} - INTERVAL '#{hours_ago_start} hours'"
-		else
-      hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
-  	  hours_ago_start_sql = "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_start} hours'"
-    end
+  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start, hours_ago_end=Date.current)
+    hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
+	  hours_ago_start_sql = "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_start} hours'"
 
   	query = <<-SQL
   		SELECT projects.*, count(*) as num_activities from (
@@ -365,7 +419,9 @@ class Project < ActiveRecord::Base
 							 last_sent_date, 
 							 project_id, 
 							 jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date 
-					from activities where project_id in ('#{array_of_project_ids.join("','")}')
+					from activities 
+          where project_id in ('#{array_of_project_ids.join("','")}')
+          AND category = 'Conversation'
 				) t 
 			JOIN projects ON projects.id = t.project_id
       WHERE sent_date::integer between EXTRACT(EPOCH FROM #{hours_ago_start_sql})::integer and EXTRACT(EPOCH FROM #{hours_ago_end_sql})::integer 
@@ -413,11 +469,15 @@ class Project < ActiveRecord::Base
 				# Load Smart Tasks
 				Notification.load(get_project_conversations(data, p), project, false)
 
-				# Project activities
-				Activity.load(get_project_conversations(data, p), project, true, user_id)
+				# Project conversations
+        Activity.load(get_project_conversations(data, p), project, true, user_id)
 
-				# Load Opportunities
-				Notification.load_opportunity_for_stale_projects(project)
+        # Load Opportunities
+        Notification.load_opportunity_for_stale_projects(project)
+
+        # Project meetings
+				# Activity.load_calendar(get_project_conversations(data, p), project, true, user_id)
+        ContextsmithService.load_calendar_from_backend(project, Time.current.to_i, 1.year.ago.to_i, 1000)
 			end
 		end
 	end

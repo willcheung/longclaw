@@ -21,6 +21,7 @@
 #  label             :string
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
+#  score             :float            default(0.0)
 #
 
 include ActionView::Helpers::DateHelper
@@ -50,27 +51,27 @@ class Notification < ActiveRecord::Base
 
     data_hash.each do |d|
 	    d.conversations.each do |c|
-	    	c.contextMessages.each do |contextMessage|
+	    	c.messages.each do |message|
 
-          sent_date = Time.at(contextMessage.sentDate).utc
-          if(sent_date.utc < (current_time - 7.day).utc)
+          sent_date = Time.at(message.sentDate).utc
+          if(sent_date.utc < (current_time - 14.day).utc)
               # puts "skip this one"
               next
             end
 
           #save risk (message score < 0)  
-          if !contextMessage.sentimentItems.nil?
-            load_risk_for_each_message(project.id, c.conversationId, contextMessage)
+          if !message.sentimentItems.nil?
+            load_risk_for_each_message(project.id, c.conversationId, message)
           end
 
-          if contextMessage.temporalItems.nil?
+          if message.temporalItems.nil?
             #puts "no task"
             next
           end
 
-          assign_to = User.find_by email: contextMessage.from[0].address
-          if(assign_to.nil? and !contextMessage.to.nil? )
-            assign_to = User.find_by email: contextMessage.to[0].address
+          assign_to = User.find_by email: message.from[0].address
+          if(assign_to.nil? and !message.to.nil? )
+            assign_to = User.find_by email: message.to[0].address
           end
 
           assign_id = 0
@@ -78,10 +79,10 @@ class Notification < ActiveRecord::Base
               assign_id = assign_to.id
           end
 
-          contextMessage.temporalItems.each do |t|
+          message.temporalItems.each do |t|
             context_start = t.taskAnnotation.beginOffset.to_i
             context_end = t.taskAnnotation.endOffset.to_i
-            description = contextMessage.content.body[context_start..context_end]
+            description = message.content.body[context_start..context_end]
             o_due_date = Time.at(t.resolvedDates[0]).utc
             # rake have no idea about local time zone, Time.zone.at will just return the time zone in application.rb
             # so can't covert to user local time.
@@ -90,15 +91,15 @@ class Notification < ActiveRecord::Base
             has_time = t.hasTime.to_s
             remind_date = o_due_date.yesterday.utc
 
-            if Notification.find_by project_id: project.id, conversation_id: c.conversationId, message_id: contextMessage.messageId, content_offset: context_start 
+            if Notification.find_by project_id: project.id, conversation_id: c.conversationId, message_id: message.messageId, content_offset: context_start 
               # avoid redundant
               next
             end
 
     	      notification = Notification.new(category: 'Smart Action',
-      	      	name: contextMessage.subject,
+      	      	name: message.subject,
       	      	description: description,
-      	        message_id: contextMessage.messageId,
+      	        message_id: message.messageId,
       	        project_id: project.id,
       	        conversation_id: c.conversationId,
                 sent_date: sent_date,
@@ -156,10 +157,10 @@ class Notification < ActiveRecord::Base
       return
     end
 
-    score = contextMessage.sentimentItems[0].score.to_f
+    score = contextMessage.sentimentItems[0].score.to_s[0,7].to_f
 
-    if score >= -0.9
-      # ignore score larger than -0.9
+    if score >= -0.95
+      # ignore score larger than -0.95
       return
     end
 
@@ -187,7 +188,8 @@ class Notification < ActiveRecord::Base
         is_complete: false,
         assign_to: '',
         content_offset: context_start,
-        has_time: false)
+        has_time: false,
+        score: score)
 
     notification.save
   end

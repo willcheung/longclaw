@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160628194408) do
+ActiveRecord::Schema.define(version: 20160817000158) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -60,7 +60,7 @@ ActiveRecord::Schema.define(version: 20160628194408) do
     t.datetime "pinned_at"
   end
 
-  add_index "activities", ["backend_id", "project_id"], name: "index_activities_on_backend_id_and_project_id", unique: true, using: :btree
+  add_index "activities", ["category", "backend_id", "project_id"], name: "index_activities_on_category_and_backend_id_and_project_id", unique: true, using: :btree
   add_index "activities", ["email_messages"], name: "index_activities_on_email_messages", using: :gin
   add_index "activities", ["project_id"], name: "index_activities_on_project_id", using: :btree
 
@@ -143,6 +143,7 @@ ActiveRecord::Schema.define(version: 20160628194408) do
     t.string   "label"
     t.datetime "created_at",                          null: false
     t.datetime "updated_at",                          null: false
+    t.float    "score",             default: 0.0
   end
 
   create_table "oauth_users", force: :cascade do |t|
