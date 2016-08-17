@@ -11,11 +11,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160816000101) do
+ActiveRecord::Schema.define(version: 20160817000158) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "pg_stat_statements"
   enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
@@ -144,21 +143,25 @@ ActiveRecord::Schema.define(version: 20160816000101) do
     t.string   "label"
     t.datetime "created_at",                          null: false
     t.datetime "updated_at",                          null: false
+    t.float    "score",             default: 0.0
   end
 
   create_table "oauth_users", force: :cascade do |t|
-    t.string   "oauth_provider",                   null: false
-    t.string   "oauth_provider_uid",               null: false
-    t.string   "oauth_access_token",               null: false
-    t.string   "oauth_refresh_token"
-    t.string   "oauth_instance_url",               null: false
-    t.string   "oauth_user_name",     default: "", null: false
     t.uuid     "organization_id",                  null: false
     t.datetime "created_at",                       null: false
     t.datetime "updated_at",                       null: false
+    t.string   "oauth_key",           default: ""
+    t.string   "oauth_id",            default: ""
+    t.string   "oauth_provider_uid",  default: ""
+    t.string   "oauth_user_name",     default: ""
+    t.string   "oauth_provider",      default: ""
+    t.string   "oauth_access_token",  default: ""
+    t.string   "oauth_instance_url",  default: ""
+    t.string   "oauth_refresh_token", default: ""
   end
 
   add_index "oauth_users", ["oauth_provider", "oauth_user_name", "oauth_instance_url"], name: "oauth_per_user", unique: true, using: :btree
+  add_index "oauth_users", ["organization_id"], name: "index_oauth_users_on_organization_id", using: :btree
 
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name"
@@ -215,15 +218,15 @@ ActiveRecord::Schema.define(version: 20160816000101) do
   add_index "projects", ["deleted_at"], name: "index_projects_on_deleted_at", using: :btree
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "first_name",             default: "",    null: false
-    t.string   "last_name",              default: "",    null: false
-    t.string   "email",                  default: "",    null: false
-    t.string   "encrypted_password",     default: "",    null: false
+    t.string   "first_name",                       default: "",    null: false
+    t.string   "last_name",                        default: "",    null: false
+    t.string   "email",                            default: "",    null: false
+    t.string   "encrypted_password",               default: "",    null: false
     t.string   "image_url"
     t.string   "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
-    t.integer  "sign_in_count",          default: 0,     null: false
+    t.integer  "sign_in_count",                    default: 0,     null: false
     t.datetime "current_sign_in_at"
     t.datetime "last_sign_in_at"
     t.inet     "current_sign_in_ip"
@@ -231,7 +234,6 @@ ActiveRecord::Schema.define(version: 20160816000101) do
     t.string   "oauth_provider"
     t.string   "oauth_provider_uid"
     t.string   "oauth_access_token"
-    t.string   "oauth_refresh_token"
     t.datetime "oauth_expires_at"
     t.uuid     "organization_id"
     t.string   "department"
@@ -244,7 +246,10 @@ ActiveRecord::Schema.define(version: 20160816000101) do
     t.datetime "cluster_create_date"
     t.datetime "cluster_update_date"
     t.string   "title"
-    t.string   "time_zone",              default: "UTC"
+    t.string   "time_zone",                        default: "UTC"
+    t.string   "encrypted_oauth_refresh_token",    default: ""
+    t.string   "encrypted_oauth_refresh_token_iv", default: ""
+    t.string   "oauth_refresh_token",              default: ""
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
