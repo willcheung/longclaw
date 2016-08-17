@@ -3,7 +3,7 @@ include ERB::Util
 
 class ContextsmithService
 
-  def self.load_emails_from_backend(project, after=nil, max=100, query=nil, save_in_db=true, is_time=true, is_test=false, neg_sentiment=0)
+  def self.load_emails_from_backend(project, after=nil, max=100, query=nil, save_in_db=true, is_time=true, is_test=false, neg_sentiment=0, request=true)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
     
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
@@ -15,10 +15,12 @@ class ContextsmithService
 
     after = after.nil? ? "" : ("&after=" + after.to_s)
     query = query.nil? ? "" : ("&query=" + query.to_s)
-    is_time = is_time.nil? ? "": ("&time=" + is_time.to_s)
+    is_time = is_time.nil? ? "" : ("&time=" + is_time.to_s)
+    request = request.nil? ? "": ("&request=" + request.to_s)
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
        
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + url_encode(query) + is_time + neg_sentiment
+    ### TODO: Add "&request=true" to final_url
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + url_encode(query) + is_time + neg_sentiment #+ request
     puts "Calling backend service: " + final_url
 
     request_backend_service(final_url, project, save_in_db, "conversations", is_test)    
