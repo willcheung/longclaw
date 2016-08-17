@@ -13,7 +13,6 @@
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #
-
 # Indexes
 #
 #  oauth_per_user  (oauth_provider,oauth_user_name,oauth_instance_url) UNIQUE
