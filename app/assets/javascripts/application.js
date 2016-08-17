@@ -24,7 +24,7 @@
 //= require d3
 
 /* Ahoy analytics */
-// ahoy.trackAll();
+ahoy.trackAll();
 
 /* Timezone */
 jQuery(function() {
