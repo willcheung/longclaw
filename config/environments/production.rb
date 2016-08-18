@@ -74,7 +74,7 @@ Longclaw::Application.configure do
   # Use default logging formatter so that PID and timestamp are not suppressed.
   config.log_formatter = ::Logger::Formatter.new
 
-  config.action_mailer.default_url_options = { :host => "#{request.host}" }
+  config.action_mailer.default_url_options = { :host => "app.contextsmith.com" }
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.perform_deliveries = true
   # Ignore bad email addresses and do not raise email delivery errors.
