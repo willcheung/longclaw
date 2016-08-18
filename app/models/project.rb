@@ -149,16 +149,11 @@ class Project < ActiveRecord::Base
       end
     end     
 
-    # change float to percentage
-    # don't use round because 99.998 will become 100
-    # change anything < 50 to 50
+    # scale score
     project_min_score.each do |key, value|
       for i in 0..day_range-1
         if !value[i].nil?
-          value[i] = (value[i] * 10000 * -1).floor/100.0
-          if value[i] < 50
-            value[i] = 50.0
-          end
+          value[i] = round_and_scale_score(value[i])
         end
       end
     end
