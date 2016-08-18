@@ -63,12 +63,12 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     max=10000
     base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
 
-    if ENV["RAILS_ENV"] == 'production'
+    if Rails.env.production?
       callback_url = "https://#{request.host}/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = ""
-    elsif ENV["RAILS_ENV"] == 'test' # DEBUG
+    elsif Rails.env.test? # DEBUG
       callback_url = "https://#{request.host}/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]

@@ -16,7 +16,7 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h5>Recently Active Streams</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of streams that have had email activity in the past 7 days."></i>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of streams that have had email activity in the past 7 days."></i>
                 </div>
                 <div class="ibox-content">
                     <h1 class="no-margins"><%= @active_projects %></h1>
@@ -27,11 +27,11 @@
         <div class="col-lg-3">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Conversations Tracked</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of email threads tracked in your Streams."></i>
+                    <h5>Open Risks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open risks across all accounts."></i>
                 </div>
                 <div class="ibox-content">
-                    <h1 class="no-margins"><%= @conversations_tracked %></h1>
+                    <h1 class="no-margins"><%= @open_risks %></h1>
                     <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
                 </div>
             </div>
@@ -40,7 +40,7 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h5>Open Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open tasks."></i>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open tasks across all accounts."></i>
                 </div>
                 <div class="ibox-content">
                     <h1 class="no-margins"><%= @open_tasks %></h1>

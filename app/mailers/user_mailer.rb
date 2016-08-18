@@ -7,6 +7,7 @@ class UserMailer < ApplicationMailer
     @url = url
 
     track user: user # ahoy_email tracker
+    track click: false # disable ahoy_email click tracker for links in email
     mail(to: @user.email, subject: "Your Account Streams are ready at ContextSmith")
   end
 
@@ -35,6 +36,7 @@ class UserMailer < ApplicationMailer
       end
 
       track user: user # ahoy_email tracker
+      track click: false # disable ahoy_email click tracker for links in email
       mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
     end
   end
@@ -51,6 +53,7 @@ class UserMailer < ApplicationMailer
       @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
 
       track user: user # ahoy_email tracker
+      track click: false # disable ahoy_email click tracker for links in email
       mail(to: user.email, subject: "Weekly Summary for #{1.week.ago.strftime('%A, %B %d')} - #{Time.current.strftime('%A, %B %d')}")
     end
   end
@@ -71,6 +74,7 @@ class UserMailer < ApplicationMailer
     end
 
     track user: user # ahoy_email tracker
+    track click: false # disable ahoy_email click tracker for links in email
     mail(to: @user.email, subject: "#{invited_by} invites you to join ContextSmith")
   end
 
@@ -81,6 +85,7 @@ class UserMailer < ApplicationMailer
     @task = task
 
     track user: @user # ahoy_email tracker
+    track click: false # disable ahoy_email click tracker for links in email
     mail(to: @user.email, subject: "#{get_full_name(assigner)} assigned a task to you: #{@task.name}")
   end
 
