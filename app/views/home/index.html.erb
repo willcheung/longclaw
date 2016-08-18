@@ -185,7 +185,6 @@
             // Add the new series.
             <% @projects.each do |p| %>
                 if (project_ids.indexOf("<%= p.id %>") > -1) {
-                    console.log("cat");
                     // var nil = NULL;
                     var test = <%= get_risk_score_by_project(@projects_min_scores, p.id) %>;
                     // var nil = NULL;
@@ -371,6 +370,9 @@
                 title: {
                     text: ''
                 },
+                labels: { enabled: false },
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
                 plotLines: [{
                     value: 0,
                     width: 1,
@@ -380,7 +382,7 @@
                 max: 100,
                 plotBands: [ { // Low Risk
                 from: 0,
-                to: 70,
+                to: 60,
                 color: 'rgba(170, 252, 174, 0.1)',
                 label: {
                     text: 'Low Risk',
@@ -389,8 +391,8 @@
                     }
                 }
             }, { // Medium Risk
-                from: 70,
-                to: 95,
+                from: 60,
+                to: 80,
                 color: 'rgba(246, 188, 42, 0.1)',
                 label: {
                     text: 'Medium Risk',
@@ -399,7 +401,7 @@
                     }
                 }
             }, { // High Risk
-                from: 95,
+                from: 80,
                 to: 100,
                 color: 'rgba(246, 42, 46, 0.1)',
                 label: {
@@ -411,7 +413,8 @@
             }]
             },
             tooltip: {
-                valueSuffix: ''
+                // valueSuffix: '',
+                pointFormat: '{series.name}: <b>{point.y:.2f}%</b>',
             },
             credits: {
                 enabled: false
