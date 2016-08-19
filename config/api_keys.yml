@@ -16,8 +16,6 @@ test:
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
   csback_base_url: http://64.201.248.179:8888
   csback_script_base_url: http://64.201.248.179:8888
-  salesforce_client_id: 3MVG9uudbyLbNPZOrXNoq6dS0sp5YD0kySrCYQeKobKUklay_Ao4ojqQZrwv1a4__doJ7S2MJ4uOiAiJn2ODL
-  salesforce_client_secret: 17000624918700934
   salesforce_url_instance: https://na30.salesforce.com
 
 production:
@@ -27,6 +25,4 @@ production:
   mandrill_api_key: wndqLIBQRJbIsA9S3bM-1w
   csback_base_url: http://64.201.248.179:8889
   csback_script_base_url: http://64.201.248.179:8889
-  salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
-  salesforce_client_secret: 3550523996344810646
   salesforce_url_instance: https://na30.salesforce.com
