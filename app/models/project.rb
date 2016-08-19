@@ -69,22 +69,24 @@ class Project < ActiveRecord::Base
 		# Everything lives in OnboardingController#confirm_projects right now
 	end
 
-  def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, test=false)
+  def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, test=false, day_range=14)
     # Calculate time since epoch in seconds for today at 23:59:59 based on current user time zone
     # current_time = Time.zone.now
     # current_time_int = Time.zone.local(current_time.year, current_time.month, current_time.day,23,59,59).utc.to_i
     current_time_int = Time.current.end_of_day.utc.to_i
-    start_time_sec = 13.days.ago.midnight.utc.to_i
+    start_time_sec = (day_range-1).days.ago.midnight.utc.to_i
 
     if test
-      current_time_int = Time.zone.local(2014,9,26,23,59,59).utc.to_i
-      start_time_sec = current_time_int - 60*60*24*-14 + 1
+      current_time_int = Time.zone.local(2014,9,21,23,59,59).utc.to_i
+      start_time_sec = current_time_int - 60*60*24*day_range + 1
     end
 
     query = <<-SQL
         SELECT messages->>'sentimentItems' as sentiment_item,
                messages ->> 'sentDate' as sentdate,
-               activities.project_id as project_id
+               activities.project_id as project_id,
+               messages ->> 'messageId' AS message_id,
+               activities.backend_id AS conversation_id
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
         WHERE category = 'Conversation'
         AND messages->>'sentimentItems' is NOT NULL 
@@ -94,9 +96,11 @@ class Project < ActiveRecord::Base
     result= Activity.find_by_sql(query)
 
     project_min_score = Hash.new()
+    project_min_temp = Hash.new()
 
     array_of_project_ids.each do |pid|
-      project_min_score[pid] = Array.new(14,nil) 
+      project_min_score[pid] = Array.new(day_range,nil) 
+      project_min_temp[pid] = Array.new(day_range, nil)
     end
     
     if !result.nil?
@@ -108,35 +112,48 @@ class Project < ActiveRecord::Base
         # 24*60*60 = seconds in a day
         # (current_time - sent_date)/24/60/60 = days since sent_date
         # 13 - ( days since sent_date ) = days since sent_date from 13 days ago
-        temp = 13 - ((current_time_int - r.sentdate.to_i) / (24*60*60))
+        temp_date_index = (day_range-1) - ((current_time_int - r.sentdate.to_i) / (24*60*60))
 
-        if project_min_score[r.project_id][temp].nil? || project_min_score[r.project_id][temp] > sentiment_json[0]['score'].to_f
-          project_min_score[r.project_id][temp] = sentiment_json[0]['score'].to_f
-        end         
+       
+        # for each score, it will show up from the first appearing date to the current date
+        # if that notification is completed(could be uncomplete or no notification if score is less than 95%)
+        # pop the score starting from the complete date till current date
+        # so for each day we have the correct possible score values
+        for i in temp_date_index..day_range-1
+          if project_min_temp[r.project_id][i].nil?
+            project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
+          else
+            project_min_temp[r.project_id][i].push(sentiment_json[0]['score'].to_f)
+          end 
+        end
         
+        target = Notification.find_by(category: Notification::CATEGORY[:Risk], project_id: r.project_id, conversation_id: r.conversation_id, message_id: r.message_id, is_complete: true)
+        if !target.nil?
+          index = (day_range-1) - ((current_time_int - target.complete_date.to_i) / (24*60*60))
+          if temp_date_index<=index
+            for i in index..day_range-1
+              project_min_temp[r.project_id][i].pop()
+            end
+          end
+        end 
       end
     end
 
-    # incase that day has no risk score, use the score of the previous day
-    project_min_score.each do |key, value|
-      for i in 1..13
-        if value[i].nil?
-          value[i] = value[i-1]
-          # puts i
+    # set min score of each day
+    project_min_temp.each do |key, value|
+      for i in 0..day_range-1
+        if !value[i].nil? and value[i].length>0
+          value[i] = value[i].sort {|x, y| (x.to_s[0,7].to_f) <=> (y.to_s[0,7].to_f) }
+          project_min_score[key][i] = value[i][0]
         end
       end
-    end
+    end     
 
-    # change float to percentage
-    # don't use round because 99.998 will become 100
-    # change anything < 50 to 50
+    # scale score
     project_min_score.each do |key, value|
-      for i in 0..13
+      for i in 0..day_range-1
         if !value[i].nil?
-          value[i] = (value[i] * 10000 * -1).floor/100.0
-          if value[i] < 50
-            value[i] = 50.0
-          end
+          value[i] = round_and_scale_score(value[i])
         end
       end
     end
