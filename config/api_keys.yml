@@ -16,7 +16,6 @@ test:
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
   csback_base_url: http://64.201.248.179:8888
   csback_script_base_url: http://64.201.248.179:8888
-  salesforce_url_instance: https://na30.salesforce.com
 
 production:
   google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
@@ -24,5 +23,4 @@ production:
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: wndqLIBQRJbIsA9S3bM-1w
   csback_base_url: http://64.201.248.179:8889
-  csback_script_base_url: http://64.201.248.179:8889
-  salesforce_url_instance: https://na30.salesforce.com
+  csback_script_base_url: http://64.201.248.179:8889 
