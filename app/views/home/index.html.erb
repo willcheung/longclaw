@@ -2,28 +2,7 @@
 
 <div class="wrapper wrapper-content animated fadeInRight">
 
-    <div class="row m-b-md">
-        <div class="col-lg-12">
-            <div class="alert alert-info" style="margin-bottom:0;">
-                <p><strong><i class="fa fa-lightbulb-o"></i> Tip: &nbsp;</strong> 
-                Gain complete insight into all your customer communications and alerts.   <a style="text-align:center;text-decoration: underline;" href="<%= settings_path %>">Invite your team</a>.</p>
-            </div>
-        </div>
-    </div>
-
     <div class="row">
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Recently Active Streams</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of streams that have had email activity in the past 7 days."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @active_projects %></h1>
-                    <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
-                </div>
-            </div>
-        </div>
         <div class="col-lg-3">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
@@ -31,8 +10,20 @@
                     <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open risks across all accounts."></i>
                 </div>
                 <div class="ibox-content">
-                    <h1 class="no-margins"><%= @open_risks %></h1>
+                    <h1 class="no-margins <%= @open_risks > 0 ? 'text-danger' : '' %>"><%= @open_risks %></h1>
                     <div class="m-t-sm"><a href="<%= projects_path %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Overdue Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open risks across all accounts."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins <%= @overdue_tasks > 0 ? 'text-danger' : '' %>"><%= @overdue_tasks %></h1>
+                    <div class="m-t-sm"><a href="<%= notifications_path + '?type=incomplete&duedate=overdue' %>">See details &rarr;</a></div>
                 </div>
             </div>
         </div>
