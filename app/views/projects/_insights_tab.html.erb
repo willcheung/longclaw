@@ -23,6 +23,8 @@
     }
     div.pinned {
         color: #e8941a;
+        position: absolute;
+        z-index: 9999;
     }
     g.cell {
         cursor: pointer;
@@ -97,7 +99,7 @@
     var smallCircleSize = 4.5;
     var largeCircleSize = 9;
 
-    var legendWidth = 255;
+    var legendWidth = 0;
     var xMargin = 20;
 
     var yMargin = 40;
@@ -450,6 +452,7 @@
                 .duration(200)
                 .style("opacity", 0.9);
             pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>Title: " + clickedOn.title + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
             });
