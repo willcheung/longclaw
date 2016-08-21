@@ -165,6 +165,16 @@ class Notification < ActiveRecord::Base
     end
 
     sent_date = Time.at(contextMessage.sentDate).utc
+
+    assign_to = User.find_by email: contextMessage.from[0].address
+    if(assign_to.nil? and !contextMessage.to.nil? )
+      assign_to = User.find_by email: contextMessage.to[0].address
+    end
+
+    assign_id = 0
+    if(!assign_to.nil?)
+        assign_id = assign_to.id
+    end
    
     # description = "Risk Level: " + (score*100).to_s[1..2] + "%\n"
   
@@ -186,7 +196,7 @@ class Notification < ActiveRecord::Base
         original_due_date: '',
         remind_date: '',
         is_complete: false,
-        assign_to: '',
+        assign_to: assign_id,
         content_offset: context_start,
         has_time: false,
         score: score)
