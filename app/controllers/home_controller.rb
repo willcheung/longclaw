@@ -9,17 +9,16 @@ class HomeController < ApplicationController
     @projects_min_scores = Hash.new()
     project_activities = Activity.where(project_id: @projects.pluck(:id))
     project_tasks = Notification.where(project_id: @projects.pluck(:id))
-    @open_tasks = project_tasks.where(is_complete: false).length
-    @closed_tasks = project_tasks.where(is_complete: true, complete_date: (7.days.ago..Time.current)).length
-    @open_risks = project_tasks.where(is_complete: false, category: Notification::CATEGORY[:Risk]).length
-    @active_projects = 0
-    # @conversations_tracked = Activity.where(project_id: @projects.pluck(:id), category: 'Conversation').length
+    @open_tasks = project_tasks.where(is_complete: false).count
+    @closed_tasks = project_tasks.where(is_complete: true, complete_date: (7.days.ago..Time.current)).count
+    @open_risks = project_tasks.where(is_complete: false, category: Notification::CATEGORY[:Risk]).count
+    @overdue_tasks = project_tasks.where("is_complete = false and original_due_date::date < ?", Date.today).count
+
     ###### Dashboard Metrics ######
     if !@projects.empty?
       static = Rails.env.development?
       
       project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
-      @active_projects = project_sum_activities.length
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
       @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
 

@@ -8,6 +8,7 @@ class UserMailer < ApplicationMailer
 
     track user: user # ahoy_email tracker
     track click: false # disable ahoy_email click tracker for links in email
+    track open: false # disable ahoy_email open tracker
     mail(to: @user.email, subject: "Your Account Streams are ready at ContextSmith")
   end
 
@@ -37,6 +38,7 @@ class UserMailer < ApplicationMailer
 
       track user: user # ahoy_email tracker
       track click: false # disable ahoy_email click tracker for links in email
+      track open: false # disable ahoy_email open tracker
       mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
     end
   end
@@ -54,6 +56,7 @@ class UserMailer < ApplicationMailer
 
       track user: user # ahoy_email tracker
       track click: false # disable ahoy_email click tracker for links in email
+      track open: false # disable ahoy_email open tracker
       mail(to: user.email, subject: "Weekly Summary for #{1.week.ago.strftime('%A, %B %d')} - #{Time.current.strftime('%A, %B %d')}")
     end
   end
@@ -75,6 +78,7 @@ class UserMailer < ApplicationMailer
 
     track user: user # ahoy_email tracker
     track click: false # disable ahoy_email click tracker for links in email
+    track open: false # disable ahoy_email open tracker
     mail(to: @user.email, subject: "#{invited_by} invites you to join ContextSmith")
   end
 
@@ -86,6 +90,7 @@ class UserMailer < ApplicationMailer
 
     track user: @user # ahoy_email tracker
     track click: false # disable ahoy_email click tracker for links in email
+    track open: false # disable ahoy_email open tracker
     mail(to: @user.email, subject: "#{get_full_name(assigner)} assigned a task to you: #{@task.name}")
   end
 

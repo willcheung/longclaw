@@ -364,11 +364,11 @@ ul.notes li div {
 }
 
 .category-list li a .text-danger {
-  color: #ef5352;
+  color: $danger;
 }
 
 .category-list li a .text-warning {
-  color: #f8ac59;
+  color: $warning;
 }
 
 .file-manager h5.tag-title {
