@@ -1,5 +1,15 @@
 
+var checkCounter = 0;
+
+
 $(document).ready(function(){
+  
+  $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
+  
+  $('.owner_box').chosen({ allow_single_deselect: true});
+  
+  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+
   //DataTables
   $('#accounts-table').DataTable( {
     responsive: true,
@@ -18,6 +28,31 @@ $(document).ready(function(){
 
   $('input[type=search]').attr('size', '50');
 
+
+  $('.filter-group, .bulk-group').hover(function(){
+    $('.chosen-container-single').css('cursor', 'pointer');
+    $('.chosen-single').css('cursor', 'pointer'); 
+  });
+
+  $('.category_box').on('change',function(evt,params){
+    bulkOperation("category",  params["selected"], "/account_bulk");
+    window.location.replace("/accounts");     
+  });
+
+  $('.owner_box').on('change',function(evt,params){
+    bulkOperation("owner",  params["selected"], "/account_bulk");
+    window.location.replace("/accounts");     
+  });
+
+  $('.category_filter').on('change',function(evt,params){
+    var taskType="";
+    if(params){
+        window.location.replace("/accounts?type="+params["selected"]);    
+    }
+    else{
+      window.location.replace("/accounts");
+    }
+  });
 
   $('.bulk-account').change(function(){
     if($(this).is(":checked")){
@@ -40,48 +75,22 @@ $(document).ready(function(){
       $('#bulk-type').prop("disabled",true).trigger("chosen:updated");
     }
     // console.log(checkCounter);
-
   });
 
-  $('#bulk-delete').click(function(){
-      bulkOperation("delete",  null, "/account_bulk");
+  $('#bulk-delete').click(function(){  
+    if(bulkOperation("delete",  null, "/account_bulk")==true){
       window.location.replace("/accounts");
-  });
 
-  $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
-  $('.category_box').on('change',function(evt,params){
-      bulkOperation("category",  params["selected"], "/account_bulk");
-      window.location.replace("/accounts");     
-  });
-
-  $('.owner_box').chosen({ allow_single_deselect: true});
-  $('.owner_box').on('change',function(evt,params){
-      bulkOperation("owner",  params["selected"], "/account_bulk");
-      window.location.replace("/accounts");     
-  });
-
-
-  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
-  $('.category_filter').on('change',function(evt,params){
-    var taskType="";
-    if(params){
-        window.location.replace("/accounts?type="+params["selected"]);    
     }
     else{
-      window.location.replace("/accounts");
+      console.log("bulk error");
     }
   });
-
-  $('.filter-group, .bulk-group').hover(function(){
-    $('.chosen-container-single').css('cursor', 'pointer');
-    $('.chosen-single').css('cursor', 'pointer'); 
-  });
-
-
+  
 });
 
 
-var checkCounter = 0;
+
 
 
 function bulkOperation(operation, value, url){
@@ -99,13 +108,29 @@ function bulkOperation(operation, value, url){
   };
 
   msg= JSON.stringify(temp);
-  // console.log(msg);
-  $.ajax({
-      type: "POST",
+  console.log(msg);
+
+  var result = false;
+
+  $.ajax({     
+      type: 'POST',
       url: url,
       contentType: 'application/json',
       dataType: 'json',
-      data: msg
+      data: msg,
+      async: false,
+      success: function(){
+        // alert("success!");
+        result = true;
+
+       
+      },
+      error: function(){
+        // alert("bulk error");
+        result = false;
+      }
   });
+
+  return result;
 }
 
