@@ -23,6 +23,8 @@
     }
     div.pinned {
         color: #e8941a;
+        position: absolute;
+        z-index: 9999;
     }
     g.cell {
         cursor: pointer;
@@ -71,6 +73,8 @@
     }
     svg {
         fill: white;
+        position: absolute;
+        z-index: -1;
     }
 </style>
 <script type="text/javascript">
@@ -97,7 +101,7 @@
     var smallCircleSize = 4.5;
     var largeCircleSize = 9;
 
-    var legendWidth = 255;
+    var legendWidth = 0;
     var xMargin = 20;
 
     var yMargin = 40;
@@ -199,32 +203,34 @@
 
         //Initialize SVG
         var graph = d3.select("#force-graph").append("svg")
+          .style("position", "absolute")
+          .style("z-index", "-1")
           .append("g")
-            .attr("class", "graph")
+            .attr("class", "graph");
             // .on("mousedown", function(){
             //     mousePos = d3.mouse(this);
             //     if(mousePos[0] < legendWidth && mousePos[1] < height) d3.event.stopImmediatePropagation(); //Only clicks no drag or pan on menu area
             // })
             // .call(zoomer);
-        graph.append("rect")
-            .attr("width", "100%")
-            .attr("height", "100%")
-            .attr("fill", "white")
-            .attr("class", "background")
-            .attr("fill-opacity", 0.9);
+        // graph.append("rect")
+        //     .attr("width", "100%")
+        //     .attr("height", "100%")
+        //     .attr("fill", "white")
+        //     .attr("class", "background")
+        //     .attr("fill-opacity", 0.9);
 
         // Rectangle to catch mouse events for zoom
-        var rect = graph.append("rect")
-            .attr("width", "100%")
-            .attr("height", "100%")
-            .style("margin", "0 auto")
-            .style("fill", "none")
-            .style("pointer-events", "all")
-            // .style("cursor", "move")
-            .on("click", function(){
-                if (d3.event.defaultPrevented) return;
-                showAllNodes();
-            });
+        // var rect = graph.append("rect")
+        //     .attr("width", "100%")
+        //     .attr("height", "100%")
+        //     .style("margin", "0 auto")
+        //     .style("fill", "none")
+        //     .style("pointer-events", "all")
+        //     // .style("cursor", "move")
+        //     .on("click", function(){
+        //         if (d3.event.defaultPrevented) return;
+        //         showAllNodes();
+        //     });
 
         // Create a group that will hold all content to be zoomed
         var vis = graph.append("svg:g")
@@ -235,14 +241,18 @@
             .attr("class", "tooltip pinned")
             .style("right", "40px")
             .style("top", "70px")
-            .style("opacity", 0);
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("z-index", "9999");
 
         // Tooptip in top right corner
         var tooltip = d3.select("#force-graph").append("div")
             .attr("class", "tooltip")
             .style("right", "40px")
             .style("top", "70px")
-            .style("opacity", "0");
+            .style("opacity", "0")
+            .style("position", "absolute")
+            .style("z-index", "9999");
 
         // Container to hold legend elements
         var legendContainer = graph.append("g")
@@ -450,6 +460,7 @@
                 .duration(200)
                 .style("opacity", 0.9);
             pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>Title: " + clickedOn.title + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
             });
@@ -573,7 +584,7 @@
             d3.select("svg").attr("width", width).attr("height", height);
             force.size([width, height]).resume();
 
-            rect.attr("x", legendWidth);
+            //rect.attr("x", legendWidth);
 
             legendContainer.moveToFront();
             tick();
