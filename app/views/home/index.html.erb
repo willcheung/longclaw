@@ -96,8 +96,28 @@
                     <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
-
-            <div class="col-lg-12 ibox-subcontent">
+            <div class="col-lg-6 ibox-subcontent">
+                <div class="ibox-title">
+                    <span class="label pull-right">All Time</span>
+                    <h3>Top Risks</h3>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Highest risk scores and number of open risks. (Top 5)"></i>
+                    <!-- <div class="btn-group m-l-sm">
+                        <a id="most-open" type="button" class="btn btn-xs btn-white active">Open</a>
+                        <a id="most-closed" type="button" class="btn btn-xs btn-white">Closed</a>
+                    </div> -->
+                    <!-- 
+                    <select data-placeholder="Choose a Stream..." class="chosen-select" id="risk-project-chosen-select" multiple="" tabindex="-1">
+                        <option value=""></option>
+                        <% @projects.each do |p| %>
+                            <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                        <% end %>
+                    </select> -->
+                </div>
+                <div class="ibox-content">
+                    <div id="risks-count-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
+            </div>
+            <div class="col-lg-6 ibox-subcontent">
                 <div class="ibox-title">
                     <span class="label pull-right">14 day trend</span>
                     <h3>Risk Score Trend</h3>
@@ -105,7 +125,7 @@
                     <select data-placeholder="Choose a Stream..." class="chosen-select" id="risk-project-chosen-select" multiple="" tabindex="-1">
                         <option value=""></option>
                         <% @projects.each do |p| %>
-                            <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                            <option value="<%= p.id %>" <% if @top_risks.map {|r| r[:id] }.include?(p.id) %> selected <% end %>><%= p.name %></option>
                         <% end %>
                     </select>
                 </div>
@@ -113,23 +133,6 @@
                     <div id="risks-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
                 </div>
             </div>
-
-            <!-- <div class="col-lg-12 ibox-subcontent">
-                <div class="ibox-title">                   
-                    <span class="label pull-right">14 day trend</span>
-                    <h3>Streams Trend</h3>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activities by Streams, trending over Last 14 Days."></i>
-                    <select data-placeholder="Choose a Stream..." class="chosen-select" id="project-chosen-select" multiple="" tabindex="-1">
-                        <option value=""></option>
-                        <% @projects.each do |p| %>
-                            <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
-                        <% end %>
-                    </select>
-                </div>
-                <div class="ibox-content">
-                    <div id="activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
-                </div>
-            </div> -->
         </div>
     </div>
 
@@ -203,29 +206,6 @@
         
         chart.redraw();
     }
-
-    // function redraw_activities_trend_chart(chart, project_ids) {
-    //     // Delete all the series.
-    //     while (chart.series.length > 0) {
-    //       chart.series[0].remove(false);
-    //     }
-        
-    //     if (project_ids != null) {
-    //         // Add the new series.
-    //         <% @projects.each do |p| %>
-    //             if (project_ids.indexOf("<%= p.id %>") > -1) {
-    //                 chart.addSeries({
-    //                         name: '<%= p.name %>',
-    //                         pointInterval: <%= 1.day * 1000 %>,
-    //                         pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-    //                         data: <%# get_num_activities_by_project(14.days.ago.to_date..Date.current, @project_trend, p.id) %>
-    //                     });
-    //             }
-    //         <% end %>
-    //     }
-        
-    //     chart.redraw();
-    // }
 
     function redraw_touches_chart(chart, max) {
         // Delete all the series.
@@ -359,6 +339,41 @@
     });
 
     $(function () {
+        $('#risks-count-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @top_risks.map { |r| r[:name] }.to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Risk Score',
+                data: <%= @top_risks.map { |r| r[:risk_score] }.to_json.html_safe %>,
+                color: 'red'
+            }, {
+                name: 'Open Risks',
+                data: <%= @top_risks.map { |r| r[:open_risks] }.to_json.html_safe %>,
+                color: '#7cb5ec'
+            }]
+        });
+    });
+
+    $(function () {
         $('#risks-trend-chart').highcharts({
             title: {
                 text: ''
@@ -429,66 +444,18 @@
                 itemDistance: 10
             },
             series: [
-            <% @project_max.each_with_index do |p,i| %>
+            <% @top_risks.each_with_index do |p,i| %>
                 {
-                name: '<%= p.name %>',
+                name: '<%= p[:name] %>',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= get_risk_score_by_project(@projects_min_scores, p.id) %>
+                data: <%= get_risk_score_by_project(@projects_min_scores, p[:id]) %>
                 }<% if i != @project_max.size - 1 %>,<% end %>
             <% end %>
             ]
 
         });
     });
-
-    // $(function () {
-    //     $('#activities-trend-chart').highcharts({
-    //         title: {
-    //             text: ''
-    //         },
-    //         xAxis: {
-    //             type: 'datetime'
-    //         },
-    //         yAxis: {
-    //             title: {
-    //                 text: ''
-    //             },
-    //             plotLines: [{
-    //                 value: 0,
-    //                 width: 1,
-    //                 color: '#808080'
-    //             }],
-    //             min: 0
-    //         },
-    //         tooltip: {
-    //             valueSuffix: ''
-    //         },
-    //         credits: {
-    //             enabled: false
-    //         },
-    //         legend: {
-    //             layout: 'horizontal',
-    //             align: 'center',
-    //             y: 20,
-    //             itemStyle: {
-    //              fontSize:'10px'
-    //             },
-    //             itemDistance: 10
-    //         },
-    //         series: [
-    //         <% @project_max.each_with_index do |p,i| %>
-    //             {
-    //             name: '<%= p.name %>',
-    //             pointInterval: <%= 1.day * 1000 %>,
-    //             pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-    //             data: <%# get_num_activities_by_project(14.days.ago.to_date..Date.current, @project_trend, p.id) %>
-    //             }<% if i != @project_max.size - 1 %>,<% end %>
-    //         <% end %>
-    //         ]
-
-    //     });
-    // });
 
     $(function () {
         $('#user-activities-trend-chart').highcharts({
