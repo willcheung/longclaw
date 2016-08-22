@@ -77,7 +77,7 @@ namespace :projects do
 		Organization.all.each do |org|
 			org.users.each do |usr|
 				Time.use_zone(usr.time_zone) do
-					if Time.current.hour == 5 && Time.current.wday.between?(1, 5) || (args[:test] && !Rails.env.production?) # In the hour of 5am on weekdays
+					if Time.current.hour == 5 && Time.current.wday.between?(2, 6) || (args[:test] && !Rails.env.production?) # 5am next day after a weekday
 						puts "Emailing #{usr.email}..."
 						UserMailer.daily_summary_email(usr).deliver_later
 						sleep(1)

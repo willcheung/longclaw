@@ -98,7 +98,7 @@ class AccountsController < ApplicationController
       bulk_update_owner(newArray, params["value"])
     end
 
-    render :text =>"" 
+    render :json => {:success => true, :msg => ''}.to_json 
   end
 
 
