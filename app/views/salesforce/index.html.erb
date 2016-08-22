@@ -14,7 +14,7 @@
               </div>
             <% else %>
         	    <% @projects.each do |p| %>
-                <span style="font-size: 18px;"><% if p.id!= @project.id %> <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> "><% end %><%=p.name%><% if p.id!= @project.id %></a><% end %> | </span>
+                <span style="font-size: 15px;"><% if p.id!= @project.id %> <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> "><% end %><%=p.name%><% if p.id!= @project.id %></a><% end %> | </span>
               <% end %>
             <% end %>
           </ul>
