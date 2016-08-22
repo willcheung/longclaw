@@ -112,9 +112,12 @@
     // Configure force layout
     var force = d3.layout.force();
 
-    d3.json("lookup.json", function (error, lookup) {
+    var lookupURL = '/projects/<%=project_id%>/lookup.json'
+    var networkURL = '/projects/<%=project_id%>/network_map.json'
+    // d3.json("lookup.json", function (error, lookup) {
+    d3.json(lookupURL, function (error, lookup) {
         if (error) throw error;
-        d3.json("network_map.json", function (error, links) {
+        d3.json(networkURL, function (error, links) {
             if (error) throw error;
             ready(lookup, links);
         })

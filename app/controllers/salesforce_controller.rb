@@ -10,6 +10,10 @@ class SalesforceController < ApplicationController
     @project = Project.new
     @isconnect = true
 
+    @actiontype = 'show'
+    @pinned_activities = []
+    @data = []
+
   	if params[:id].nil?
   		return
   	else
@@ -23,6 +27,10 @@ class SalesforceController < ApplicationController
         return
       end
   	end
+
+    if !params[:actiontype].nil?
+      @actiontype = params[:actiontype]
+    end
 
   	# check if id is valid and in the scope
 
@@ -63,6 +71,15 @@ class SalesforceController < ApplicationController
       project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
       @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
       @notifications = @project.notifications.order(:is_complete, :original_due_date)  
+
+      @pinned_activities = @project.activities.pinned.includes(:comments)
+      # filter out not visible items
+      @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }
+
+      @data = @project.activities.where(category: %w(Conversation Meeting))
+
+      @project_open_tasks_count = @project.notifications.where(is_complete: false).length
+      @project_pinned_count = @project.activities.pinned.length
  		end
 
     if(!params[:category].nil? and !params[:category].empty?)

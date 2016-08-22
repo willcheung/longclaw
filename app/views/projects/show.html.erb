@@ -90,7 +90,7 @@
             <%= render 'timeline' if params[:action] == "show" %>
             <%= render 'pinned_tab', pinned_activities: @pinned_activities if params[:action] == "pinned_tab" %>
             <%= render 'notifications/project' if params[:action] == "tasks_tab" %>
-            <%= render 'insights_tab' if params[:action] == "insights_tab" %>
+            <%= render 'insights_tab', project_id: @project.id if params[:action] == "insights_tab" %>
 
         </div>
     </div>
