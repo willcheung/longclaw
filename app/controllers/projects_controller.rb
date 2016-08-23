@@ -197,7 +197,7 @@ class ProjectsController < ApplicationController
       bulk_update_owner(newArray, params["value"])
     end
 
-    render :text =>"" 
+    render :json => {:success => true, :msg => ''}.to_json
   end
 
   def activity_count

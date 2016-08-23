@@ -7,6 +7,11 @@
 
 jQuery(document).ready(function($) {
 
+  $("#search-account-projects").chosen();
+  $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
+  $('.owner_box').chosen({ allow_single_deselect: true});
+  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+
 	$('.switch').on('click', function(e) {    
 	    var trigger = $(this);
 	 
@@ -22,7 +27,6 @@ jQuery(document).ready(function($) {
 	  todayHighlight: true,
 	  autoclose: true
 	});
-
 
   //DataTables
   $('#projects-table').DataTable( {
@@ -107,9 +111,7 @@ jQuery(document).ready(function($) {
       // Manually prevent input box from being cleared on blur
       this.setTextboxValue(this.lastQuery);
     }
-  })
-
-  $("#search-account-projects").chosen()
+  })  
 
 
   $('.bulk-project').change(function(){
@@ -139,24 +141,33 @@ jQuery(document).ready(function($) {
   });
 
   $('#bulk-delete').click(function(){
-    bulkOperation("delete",  null, "/project_bulk");
-    window.location.replace("/projects");
+    if(bulkOperation("delete",  null, "/project_bulk")==true){
+      window.location.replace("/projects");
+    }
+    else{
+      console.log("bulk error");
+    }
   });
 
-  $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
   $('.category_box').on('change',function(evt,params){
-      bulkOperation("category",  params["selected"], "/project_bulk");
-      window.location.replace("/projects");     
+      if(bulkOperation("category",  params["selected"], "/project_bulk")==true){
+        window.location.replace("/projects");     
+      }
+      else{
+        console.log("bulk error");
+      }  
   });
 
-  $('.owner_box').chosen({ allow_single_deselect: true});
   $('.owner_box').on('change',function(evt,params){
-      bulkOperation("owner",  params["selected"], "/project_bulk");
-      window.location.replace("/projects");     
+      if(bulkOperation("owner",  params["selected"], "/project_bulk")==true){
+        window.location.replace("/projects");     
+      }
+      else{
+        console.log("bulk error");
+      }
   });
 
 
-  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
   $('.category_filter').on('change',function(evt,params){
     var taskType="";
     if(params){
@@ -195,13 +206,27 @@ function bulkOperation(operation, value, url){
 
   msg= JSON.stringify(temp);
   // console.log(msg);
+
+  var result = false;
+
   $.ajax({
       type: "POST",
       url: url,
       contentType: 'application/json',
       dataType: 'json',
-      data: msg
+      data: msg, 
+      async: false,
+      success: function(){
+        // alert("success!");
+        result = true;
+      },
+      error: function(){
+        // alert("bulk error");
+        result = false;
+      }
   });
+
+  return result;
 }
 
 // Copied from notifications.js for displaying notifications per project
