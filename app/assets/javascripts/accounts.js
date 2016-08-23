@@ -35,13 +35,23 @@ $(document).ready(function(){
   });
 
   $('.category_box').on('change',function(evt,params){
-    bulkOperation("category",  params["selected"], "/account_bulk");
-    window.location.replace("/accounts");     
+    if(bulkOperation("category",  params["selected"], "/account_bulk")==true){
+      window.location.replace("/accounts");
+    }
+    else{
+      console.log("bulk error");
+    }
+         
   });
 
   $('.owner_box').on('change',function(evt,params){
-    bulkOperation("owner",  params["selected"], "/account_bulk");
-    window.location.replace("/accounts");     
+    if(bulkOperation("owner",  params["selected"], "/account_bulk")==true){
+      window.location.replace("/accounts");
+    }
+    else{
+      console.log("bulk error");
+    }
+         
   });
 
   $('.category_filter').on('change',function(evt,params){
@@ -108,7 +118,7 @@ function bulkOperation(operation, value, url){
   };
 
   msg= JSON.stringify(temp);
-  console.log(msg);
+  // console.log(msg);
 
   var result = false;
 
