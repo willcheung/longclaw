@@ -348,6 +348,7 @@
                 opposite: true
             }, { // Open Risks Axis
                 allowDecimals: false,
+                gridLineWidth: 0,
                 title: {
                     text: 'Open Risks',
                     style: {
@@ -370,7 +371,10 @@
                 yAxis: 0,
                 name: 'Risk Score',
                 data: <%= @top_risks.map { |r| r[:risk_score] }.to_json.html_safe %>,
-                color: 'red'
+                color: 'red',
+                tooltip: {
+                    valueSuffix: '%'
+                }
             }, {
                 yAxis: 1,
                 name: 'Open Risks',
