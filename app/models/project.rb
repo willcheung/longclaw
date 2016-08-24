@@ -165,7 +165,7 @@ class Project < ActiveRecord::Base
     query = <<-SQL
         SELECT projects.id AS id, 
                projects.name AS name,
-               COUNT(*) FILTER (WHERE is_complete = TRUE AND notifications.category = 'Risk') AS open_risks
+               COUNT(*) FILTER (WHERE is_complete = FALSE AND notifications.category = 'Risk') AS open_risks
         FROM projects
         LEFT JOIN notifications
         ON projects.id = notifications.project_id

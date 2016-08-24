@@ -40,14 +40,13 @@ class HomeController < ApplicationController
       @projects_min_scores = Project.find_min_risk_score_by_day(@projects.pluck(:id), current_user.time_zone, static)
 
       # Top Risks
-      projects_risk_scores = Project.current_risk_score(@projects.pluck(:id)).max_by(5) { |pid, score| score }
+      projects_risk_scores = Project.current_risk_score(@projects.pluck(:id)).sort_by { |pid, score| score }.reverse[0...5]
+      ### NOT using built in Ruby max_by function due to bug
       projects_risks_counts = Project.count_risks_per_project(@projects.pluck(:id))
-      # puts projects_risks_counts
       @top_risks = projects_risk_scores.map do |p|
         rc = projects_risks_counts.find { |r| r.id == p[0] }
         { id: p[0], risk_score: p[1], name: rc.name, open_risks: rc.open_risks }
       end
-      puts @top_risks.first
     end
   end
 
