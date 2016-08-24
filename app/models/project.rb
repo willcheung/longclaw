@@ -159,7 +159,20 @@ class Project < ActiveRecord::Base
     end
     
     return project_min_score
-    
+  end
+
+  def self.count_risks_per_project(array_of_project_ids)
+    query = <<-SQL
+        SELECT projects.id AS id, 
+               projects.name AS name,
+               COUNT(*) FILTER (WHERE is_complete = FALSE AND notifications.category = 'Risk') AS open_risks
+        FROM projects
+        LEFT JOIN notifications
+        ON projects.id = notifications.project_id
+        WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
+        GROUP BY projects.id
+      SQL
+    result = Project.find_by_sql(query)
   end
 
   # for risk counts, show every risk regardless of private conversation
@@ -425,6 +438,7 @@ class Project < ActiveRecord::Base
   	return metrics
   end
 
+  # Top Active Streams
   def self.find_include_sum_activities(array_of_project_ids, hours_ago_start, hours_ago_end=Date.current)
     hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
 	  hours_ago_start_sql = "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_start} hours'"
@@ -499,7 +513,7 @@ class Project < ActiveRecord::Base
 		end
 	end
 
-
+  # Top Movers
 	def self.calculate_pct_from_prev(projects, projects_prev)
     project_chg_activities = []
 

@@ -544,7 +544,7 @@ code {
   border-width: 0;
 }
 
-.ibox-subcontent:nth-child(2) {
+.ibox-subcontent:nth-child(even) {
   @media screen and (min-width: 1200px) {
     border-right-width: 1px;
   }
