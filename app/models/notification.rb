@@ -22,6 +22,7 @@
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  score             :float            default(0.0)
+#  activity_id       :integer          default(-1)
 #
 
 include ActionView::Helpers::DateHelper
@@ -29,8 +30,7 @@ include ActionView::Helpers::DateHelper
 class Notification < ActiveRecord::Base
 
 	belongs_to  :project, foreign_key: "project_id"
-  # belongs_to  :activity association does NOT work, see activity method below if access needed
-  # belongs_to  :activity, foreign_key: "conversation_id"
+  belongs_to  :activity, foreign_key: "activity_id"
 	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
@@ -53,22 +53,18 @@ class Notification < ActiveRecord::Base
 	    d.conversations.each do |c|
 	    	c.messages.each do |message|
 
-          sent_date = Time.at(message.sentDate).utc
-          if(sent_date.utc < (current_time - 14.day).utc)
-              # puts "skip this one"
-              next
-            end
-
           #save risk (message score < 0)  
           if !message.sentimentItems.nil?
-            load_risk_for_each_message(project.id, c.conversationId, message)
+            load_risk_for_each_message(project.id, c.conversationId, message, test)
           end
 
-          if message.temporalItems.nil?
+          sent_date = Time.at(message.sentDate).utc
+          if (sent_date.utc < (current_time - 14.day).utc) || message.temporalItems.nil?
             #puts "no task"
             next
           end
 
+          # save smart action in previous two weeks
           assign_to = User.find_by email: message.from[0].address
           if(assign_to.nil? and !message.to.nil? )
             assign_to = User.find_by email: message.to[0].address
@@ -96,7 +92,18 @@ class Notification < ActiveRecord::Base
               next
             end
 
-    	      notification = Notification.new(category: 'Smart Action',
+            # try to find activitiy id, if no such activity id exists, skip this smart action
+            activity_id = -1
+            a = Activity.find_by(category: "Conversation", backend_id: c.conversationId, project_id: project.id)
+            if !a.nil?
+              activity_id = a.id 
+            else
+              puts "Warning: smart action with no activity id"
+              next
+            end
+
+
+    	      notification = Notification.new(category: CATEGORY[:Action],
       	      	name: message.subject,
       	      	description: description,
       	        message_id: message.messageId,
@@ -108,7 +115,8 @@ class Notification < ActiveRecord::Base
       	        is_complete: false,
       	        assign_to: assign_id,
                 content_offset: context_start,
-                has_time: has_time)
+                has_time: has_time,
+                activity_id: activity_id)
 
     	      notification.save
           end
@@ -130,7 +138,7 @@ class Notification < ActiveRecord::Base
       if !a.nil?
         n = Notification.where(category: CATEGORY[:Opportunity], is_complete: false, project_id: p.id, conversation_id: a.backend_id)
         if n.empty?
-          notification = Notification.new(category: 'Opportunity',
+          notification = Notification.new(category: CATEGORY[:Opportunity],
                                           name: "Check in with #{p.account.name}",
                                           description: "Last touch #{time_ago_in_words(Time.at(p.last_sent_date.to_i))} ago by #{p.from[0]['personal']}",
                                           message_id: '',
@@ -142,7 +150,8 @@ class Notification < ActiveRecord::Base
                                           is_complete: false,
                                           assign_to: '',
                                           content_offset: -1,
-                                          has_time: false)
+                                          has_time: false,
+                                          activity_id: a.id)
 
           notification.save
         end
@@ -151,7 +160,7 @@ class Notification < ActiveRecord::Base
   end
 
 # add new risk(message score below 0)
-  def self.load_risk_for_each_message(project_id, conversation_id, contextMessage)
+  def self.load_risk_for_each_message(project_id, conversation_id, contextMessage, test=false)
     if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Risk] 
       # avoid redundant
       return
@@ -175,6 +184,15 @@ class Notification < ActiveRecord::Base
     if(!assign_to.nil?)
         assign_id = assign_to.id
     end
+
+    # get activity id. If no such activity exist in front end(could be caused by users deleting this activity), ignore this risk
+    activity_id = -1
+    a = Activity.find_by(category: "Conversation", backend_id: conversation_id, project_id: project_id)
+    if !a.nil?
+      activity_id = a.id 
+    else
+      return
+    end
    
     # description = "Risk Level: " + (score*100).to_s[1..2] + "%\n"
   
@@ -186,6 +204,22 @@ class Notification < ActiveRecord::Base
 
     # puts description        
 
+    # check if older than previous two weeks, if true set auto complete
+    current_time = Time.now.utc
+    if test==true
+      current_time = Time.new(2012,8,1).utc
+    end
+
+    is_complete = false
+    completed_by = nil
+    complete_date = nil
+    sent_date = Time.at(contextMessage.sentDate).utc
+    if (sent_date.utc < (current_time - 14.day).utc)
+      is_complete = true
+      completed_by = "00000000-0000-0000-0000-000000000000"
+      complete_date = current_time
+    end
+
     notification = Notification.new(category: CATEGORY[:Risk],
         name: contextMessage.subject,
         description: description,
@@ -195,11 +229,14 @@ class Notification < ActiveRecord::Base
         sent_date: sent_date,
         original_due_date: '',
         remind_date: '',
-        is_complete: false,
+        is_complete: is_complete,
         assign_to: assign_id,
         content_offset: context_start,
         has_time: false,
-        score: score)
+        score: score,
+        completed_by: completed_by,
+        complete_date: complete_date,
+        activity_id: activity_id)
 
     notification.save
   end
@@ -218,11 +255,6 @@ class Notification < ActiveRecord::Base
     end
   
     Notification.find_by_sql(query)
-  end
-
-  # Accessor method for activity since belongs_to does not work
-  def activity
-    Activity.find_by(backend_id: conversation_id, project_id: project_id)
   end
 
   # Checks whether notification is visible to user based on Activity

@@ -497,11 +497,11 @@ class Project < ActiveRecord::Base
 				# Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
 				# project.subscribers.create(user_id: user_id)
 
-				# Load Smart Tasks
-				Notification.load(get_project_conversations(data, p), project, false)
-
 				# Project conversations
         Activity.load(get_project_conversations(data, p), project, true, user_id)
+
+        # Load Smart Tasks
+        Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
         Notification.load_opportunity_for_stale_projects(project)
