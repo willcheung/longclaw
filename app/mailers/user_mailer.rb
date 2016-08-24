@@ -1,5 +1,6 @@
 class UserMailer < ApplicationMailer
   add_template_helper(MailerHelper)
+  before_action :set_base_url
 
   def welcome_email(user, num_of_projects, url)
     @user = user
@@ -92,6 +93,14 @@ class UserMailer < ApplicationMailer
     track click: false # disable ahoy_email click tracker for links in email
     track open: false # disable ahoy_email open tracker
     mail(to: @user.email, subject: "#{get_full_name(assigner)} assigned a task to you: #{@task.name}")
+  end
+
+  private
+
+  def set_base_url
+    protocol = Rails.env.development? ? "http://" : "https://"
+    port = Rails.env.development? ? ":3000" : ""
+    @base_url = protocol + self.default_url_options[:host] + port
   end
 
 end
