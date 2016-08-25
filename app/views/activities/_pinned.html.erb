@@ -38,15 +38,13 @@
                             <span class="message-author" href="#"> <%= m.from[0].personal %> </span> to <%= get_conversation_member_names([], m.to, m.cc, "All") %>
                             <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
                             <hr class="message-divider"/>
-                                <span class="message-content">
-                                     <p>
-                                         <%= if m.content.is_a?(String) 
-                                                  simple_format(m.content)
-                                                else
-                                                    simple_format(m.content.body)
-                                                end%>
-                                    </p>
-                                </span>
+                            <span class="message-content">
+                                <%= if m.content.nil? || m.content.is_a?(String) 
+                                      simple_format(m.content)
+                                    else
+                                        simple_format(m.content.body)
+                                    end %>
+                            </span>
                         </div>
                     </div>
                 </div>
