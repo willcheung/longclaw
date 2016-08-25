@@ -247,6 +247,7 @@ Devise.setup do |config|
   Devise.setup do |config|
     config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
     config.omniauth :salesforce, ENV['salesforce_client_id'], ENV['salesforce_client_secret']
+    config.omniauth :salesforce_sandbox, ENV['salesforce_sandbox_client_id'], ENV['salesforce_sandbox_client_secret']
   end
 
   # ==> Warden configuration
