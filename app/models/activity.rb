@@ -35,6 +35,7 @@ class Activity < ActiveRecord::Base
   belongs_to :user, class_name: "User", foreign_key: "posted_by"
   belongs_to :project
   has_many :comments, dependent: :destroy
+  has_many :notifications, dependent: :destroy
 
   scope :pinned, -> { where is_pinned: true }
   scope :last_active_on, -> { maximum "last_sent_date" }
