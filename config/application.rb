@@ -49,6 +49,9 @@ module Longclaw
     # config.action_dispatch.default_headers['X-Frame-Options'] = "ALLOW-FROM na30.salesforce.com"
     config.action_dispatch.default_headers['X-Frame-Options'] = "ALLOWALL"
 
+    # Set ActionMailer default return url here, set config var on Heroku per domain
+    config.action_mailer.default_url_options = { :host => ENV['BASE_URL'] }
+
     require 'contextsmith_parser'
     require 'utils'
   end

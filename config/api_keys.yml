@@ -8,6 +8,7 @@ development:
   salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
   salesforce_client_secret: 3550523996344810646
   salesforce_url_instance: https://na30.salesforce.com
+  BASE_URL: http://localhost:3000
 
 test:
   google_client_id: 9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com
