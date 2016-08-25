@@ -217,7 +217,7 @@ class Notification < ActiveRecord::Base
     if (sent_date.utc < (current_time - 14.day).utc)
       is_complete = true
       completed_by = "00000000-0000-0000-0000-000000000000"
-      complete_date = current_time
+      complete_date = sent_date
     end
 
     notification = Notification.new(category: CATEGORY[:Risk],
