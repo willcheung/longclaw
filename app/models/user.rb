@@ -59,7 +59,7 @@ class User < ActiveRecord::Base
   scope :onboarded, -> {where("onboarding_step = #{Utils::ONBOARDING[:onboarded]}")}
 
   devise :database_authenticatable, :registerable,
-         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce]
+         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce, :salesforce_sandbox]
 
   validates :email, uniqueness: true
 
