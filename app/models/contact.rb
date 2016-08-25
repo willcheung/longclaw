@@ -30,17 +30,32 @@ class Contact < ActiveRecord::Base
 
   def self.load(data, project, save_in_db=true)
     contacts = []
-    val = []
+    current_org = project.account.organization
 
     data_hash = data.map { |hash| Hashie::Mash.new(hash) }
 
     data_hash.each do |d|
       d.newExternalMembers.each do |mem|
-        contact = project.account.contacts.find_or_create_by(
+        domain = get_domain(mem.address)
+        # find account this new member should belong to
+        account = Account.find_by(domain: domain, organization: current_org)
+        unless account
+          # create a new account for this domain if one doesn't exist yet
+          account = Account.create(domain: domain, 
+                                name: domain, 
+                                category: "Customer",
+                                address: "",
+                                website: "http://www.#{domain}",
+                                owner_id: project.owner_id, 
+                                organization: current_org,
+                                created_by: project.owner_id)
+        end
+        # find or create contact for this member
+        contact = account.contacts.find_or_create_by(
           first_name: get_first_name(mem.personal),
           last_name: get_last_name(mem.personal),
           email: mem.address)
-
+        # add member to project
         project.project_members.create(contact_id: contact.id)
 
         contacts << contact
