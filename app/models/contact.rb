@@ -23,8 +23,14 @@
 
 class Contact < ActiveRecord::Base
 	belongs_to :account
-	has_many :project_members, dependent: :destroy
-	has_many :projects, through: "project_members"
+
+  ### project_members/projects relations have 2 versions
+  # v1: only shows confirmed, similar to old logic without project_members.status column
+  # v2: "_all" version, ignores status
+  has_many   :project_members, -> { where "project_members.status = #{ProjectMember::STATUS[:Confirmed]}" }, dependent: :destroy
+  has_many   :project_members_all, class_name: "ProjectMember", dependent: :destroy
+  has_many   :projects, through: "project_members"
+  has_many   :projects_all, through: "project_members_all", source: :project
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
 
@@ -56,7 +62,7 @@ class Contact < ActiveRecord::Base
           last_name: get_last_name(mem.personal),
           email: mem.address)
         # add member to project
-        project.project_members.create(contact_id: contact.id)
+        project.project_members.create(contact_id: contact.id, status: ProjectMember::STATUS[:Pending])
 
         contacts << contact
       end unless d.newExternalMembers.nil?

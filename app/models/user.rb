@@ -48,11 +48,17 @@ include ContextSmithParser
 class User < ActiveRecord::Base
 	belongs_to 	:organization
   has_many    :accounts, foreign_key: "owner_id", dependent: :nullify
-  has_many    :project_members, dependent: :destroy
-  has_many    :projects, through: "project_members"
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
   has_many    :notifications, foreign_key: "assign_to" 
+
+  ### project_members/projects relations have 2 versions
+  # v1: only shows confirmed, similar to old logic without project_members.status column
+  # v2: "_all" version, ignores status
+  has_many    :project_members, -> { where "project_members.status = #{ProjectMember::STATUS[:Confirmed]}" }, dependent: :destroy
+  has_many    :project_members_all, class_name: "ProjectMember", dependent: :destroy
+  has_many    :projects, through: "project_members"
+  has_many    :projects_all, through: "project_members_all", source: :project 
 
   scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
   scope :not_disabled, -> {where("users.is_disabled = false")}
