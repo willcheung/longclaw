@@ -38,7 +38,7 @@ class Notification < ActiveRecord::Base
 
   CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Risk: 'Risk', Opportunity: 'Opportunity' }
 
-	def self.load(data, project, test=false)
+	def self.load(data, project, test=false, day_range=7)
 		notifications = []
 		data_hash = data.map { |hash| Hashie::Mash.new(hash) }
 
@@ -55,11 +55,11 @@ class Notification < ActiveRecord::Base
 
           #save risk (message score < 0)  
           if !message.sentimentItems.nil?
-            load_risk_for_each_message(project.id, c.conversationId, message, test)
+            load_risk_for_each_message(project.id, c.conversationId, message, test, day_range)
           end
 
           sent_date = Time.at(message.sentDate).utc
-          if (sent_date.utc < (current_time - 14.day).utc) || message.temporalItems.nil?
+          if (sent_date.utc < (current_time - day_range.day).utc) || message.temporalItems.nil?
             #puts "no task"
             next
           end
@@ -160,7 +160,7 @@ class Notification < ActiveRecord::Base
   end
 
 # add new risk(message score below 0)
-  def self.load_risk_for_each_message(project_id, conversation_id, contextMessage, test=false)
+  def self.load_risk_for_each_message(project_id, conversation_id, contextMessage, test=false, day_range=7)
     if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Risk] 
       # avoid redundant
       return
@@ -214,7 +214,7 @@ class Notification < ActiveRecord::Base
     completed_by = nil
     complete_date = nil
     sent_date = Time.at(contextMessage.sentDate).utc
-    if (sent_date.utc < (current_time - 14.day).utc)
+    if (sent_date.utc < (current_time - day_range.day).utc)
       is_complete = true
       completed_by = "00000000-0000-0000-0000-000000000000"
       complete_date = sent_date
