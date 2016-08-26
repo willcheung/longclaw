@@ -176,7 +176,7 @@ ActiveRecord::Schema.define(version: 20160826005113) do
     t.datetime "created_at",                       null: false
     t.datetime "updated_at",                       null: false
     t.uuid     "user_id"
-    t.integer  "status",     limit: 2, default: 0, null: false
+    t.integer  "status",     limit: 2, default: 1, null: false
   end
 
   add_index "project_members", ["contact_id"], name: "index_project_members_on_contact_id", using: :btree
