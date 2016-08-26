@@ -8,6 +8,7 @@
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #  user_id    :uuid
+#  status     :integer          default(0), not null
 #
 # Indexes
 #
@@ -22,4 +23,6 @@ class ProjectMember < ActiveRecord::Base
 	belongs_to :user
 
 	validates :project_id, uniqueness: {:scope => [:contact_id, :user_id]}
+
+  STATUS = { Pending: 0, Rejected: 1, Confirmed: 2 }
 end
