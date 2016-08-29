@@ -1,6 +1,11 @@
 $('.<%= @project_member.id %>').fadeOut(400, function(){
     $('.<%= @project_member.id %>').remove();
-    // Get current pm-length, transform to number and decrement
-    // TODO check whether destroy coming from suggested or not for AJAX
-    $('#pm-length').text(Number($('#pm-length').text()) - 1);
+    // Get current length, transform to number and decrement
+    // check whether destroy coming from suggested or not for AJAX
+    <% if @prev_status == ProjectMember::STATUS[:Pending] %> 
+    var length = $('#suggested-length');
+    <% else %>
+    var length = $('#pm-length');
+    <% end %>
+    length.text(Number(length.text()) - 1);
 });

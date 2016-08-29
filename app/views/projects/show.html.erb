@@ -9,7 +9,7 @@
         <% if @project.owner_id == current_user.id %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
             <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-primary btn-outline m-t-n-sm", id: "btn-refresh" %>
-            <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails and meetings from collaborators."></i>
+            <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails and meetings from members."></i>
         <% end %>
         <ol class="breadcrumb">
             <li>
@@ -155,14 +155,14 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="pm-length"><%= @suggested_members.length %></span> Suggested Collaborators</strong>
+                    <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested Members</strong>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be involved in this stream. Click the ✔ or X to confirm or reject our suggestions."></i>
                 </div>
             </div>
             <!-- empty span here for proper toggle-open event handler traversal -->
             <span></span>
             <dl class="no-display">
-                <dd class="project-people members">
+                <dd class="project-people suggested-members">
                     <% @suggested_members.each do |pm| %>
                         <%= render 'project_members/member', pm: pm %>
                     <% end %>
@@ -174,7 +174,7 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="pm-length"><%= @project_members.length %></span> Collaborators</strong>
+                    <strong><span id="pm-length"><%= @project_members.length %></span> Members</strong>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
                 </div>
             </div>
@@ -184,7 +184,7 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                         <input type="search" name="email" id="member-search" class="contacts z-top" placeholder="Add collaborators...">
+                         <input type="search" name="email" id="member-search" class="contacts z-top" placeholder="Add members...">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
                     <%end%>

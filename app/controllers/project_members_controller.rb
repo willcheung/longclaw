@@ -3,6 +3,7 @@ class ProjectMembersController < ApplicationController
 
   def destroy
     project = @project_member.project
+    @prev_status = @project_member.status
     @project_member.status = ProjectMember::STATUS[:Rejected]
     @project_member.save
     respond_to do |format|
@@ -28,14 +29,21 @@ class ProjectMembersController < ApplicationController
     emails = params[:email].split(',')
 
     emails.each do |email|
-      contact_result = Contact.find_by_email(email);
-      if contact_result!=nil
-        project_member = ProjectMember.new(project_id: params[:project_id], contact_id: contact_result.id)
+
+      contact = Contact.find_by_email(email)
+      if contact
+        project_member = ProjectMember.find_by(project_id: params[:project_id], contact_id: contact.id)
+        project_member = ProjectMember.new(project_id: params[:project_id], contact_id: contact.id) if project_member.nil? 
+      else
+        user = User.find_by_email(email)
+        project_member = ProjectMember.find_by(project_id: params[:project_id], user_id: user.id) 
+        project_member = ProjectMember.new(project_id: params[:project_id], user_id: user.id) if project_member.nil?
       end
 
-      user_result = User.find_by_email(email);
-      if user_result!=nil
-        project_member = ProjectMember.new(project_id: params[:project_id], user_id: user_result.id) 
+      if !project_member.status.nil? && project_member.status == ProjectMember::STATUS[:Confirmed]
+        next
+      else
+        project_member.status = ProjectMember::STATUS[:Confirmed]
       end
 
       if project_member.save
