@@ -1,0 +1,8 @@
+$('.<%= @project_member.id %>').fadeOut(400, function(){
+    $('.<%= @project_member.id %>').remove();
+    // Get current suggested-length, transform to number and decrement
+    $('#suggested-length').text(Number($('#suggested-length').text()) - 1);
+    // increment pm-length
+    $('#pm-length').text(Number($('#pm-length').text()) + 1);
+    $('.project-people.members').append('<%= escape_javascript(render "project_members/member", pm: @project_member) %>')
+});

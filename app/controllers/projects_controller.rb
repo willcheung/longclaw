@@ -225,6 +225,7 @@ class ProjectsController < ApplicationController
     # project people
     @project_members = @project.project_members
     @project_subscribers = @project.subscribers
+    @suggested_members = @project.project_members_all.pending
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)

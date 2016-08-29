@@ -34,13 +34,20 @@ class Project < ActiveRecord::Base
   acts_as_paranoid
 
 	belongs_to 	:account
-	belongs_to	:project_owner, class_name: "User", foreign_key: "owner_id"
-	has_many	:project_members, dependent: :destroy
+  belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
 	has_many	:activities, -> { order "last_sent_date DESC" }, dependent: :destroy
-	has_many	:contacts, through: "project_members"
-	has_many	:users, through: "project_members"
 	has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
+
+  ### project_members/contacts/users relations have 2 versions
+  # v1: only shows confirmed, similar to old logic without project_members.status column
+  # v2: "_all" version, ignores status
+  has_many  :project_members, -> { where "project_members.status = #{ProjectMember::STATUS[:Confirmed]}" }, dependent: :destroy
+  has_many  :project_members_all, class_name: "ProjectMember", dependent: :destroy
+  has_many  :contacts, through: "project_members"
+  has_many  :contacts_all, through: "project_members_all", source: :contact
+  has_many  :users, through: "project_members"
+  has_many  :users_all, through: "project_members_all", source: :user
 
 	scope :visible_to, -> (organization_id, user_id) {
 		select('DISTINCT(projects.*)')
