@@ -22,7 +22,7 @@ Longclaw::Application.routes.draw do
     resources :users
     resources :notifications, only: [:index, :update, :create]
     resources :salesforce, only: [:index]
-    get "salesforce/disconnect" => 'salesforce#disconnect'
+    get "salesforce/disconnect/:id" => 'salesforce#disconnect'
 
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "projects/:id/pinned" => 'projects#pinned_tab'
@@ -63,6 +63,7 @@ Longclaw::Application.routes.draw do
 
   devise_scope :user do # Unauthenticated user
   	root to: "sessions#new"
+    get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
 	end
 
   # Cluster callback
