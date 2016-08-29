@@ -40,11 +40,8 @@ class ProjectMembersController < ApplicationController
         project_member = ProjectMember.new(project_id: params[:project_id], user_id: user.id) if project_member.nil?
       end
 
-      if !project_member.status.nil? && project_member.status == ProjectMember::STATUS[:Confirmed]
-        next
-      else
-        project_member.status = ProjectMember::STATUS[:Confirmed]
-      end
+      next if !project_member.id.nil? && project_member.status == ProjectMember::STATUS[:Confirmed]
+      project_member.status = ProjectMember::STATUS[:Confirmed]
 
       if project_member.save
         @project_members.push(project_member)

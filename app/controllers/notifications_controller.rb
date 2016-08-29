@@ -235,8 +235,7 @@ class NotificationsController < ApplicationController
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 
     @users = current_user.organization.users.map { |u| [u.first_name+' '+ u.last_name+' '+u.email, u.id] }.to_h
-    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
-   
+    @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
   end
 
   def get_email_and_member

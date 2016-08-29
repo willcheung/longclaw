@@ -66,7 +66,7 @@
         </td>
         <% end %>
         <td>
-          <%=best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#task-#{n.id}-assignee-activator" %>       
+          <%= best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#task-#{n.id}-assignee-activator" %>       
           <i id="task-<%= n.id %>-assignee-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
         </td>
         <td>
