@@ -3,24 +3,41 @@ class SettingsController < ApplicationController
 		@users = current_user.organization.users
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 
-        @salesforce_user = OauthUser.find_by(oauth_instance_url: ENV['salesforce_url_instance'], organization_id: current_user.organization_id)
+
+        salesforce_client_id = ENV['salesforce_client_id']
+        salesforce_client_secret = ENV['salesforce_client_secret'] 
+        hostURL = 'login.salesforce.com'  
+        # try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
+        @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+
+        if(@salesforce_user.nil?)
+        	@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
+        	salesforce_client_id = ENV['salesforce_sandbox_client_id']
+        	salesforce_client_secret = ENV['salesforce_sandbox_client_secret']
+        	hostURL = 'test.salesforce.com' 
+      	end
+
         @salesforce_accounts = []
 
-        if(!@salesforce_user.nil?)
-        	client = Restforce.new :oauth_token => @salesforce_user.oauth_access_token,
-                                  :refresh_token => @salesforce_user.oauth_refresh_token,
-                                  :instance_url => @salesforce_user.oauth_instance_url,
-                                  :client_id => ENV['salesforce_client_id'],
-                                  :client_secret => ENV['salesforce_client_secret']
+        if(!@salesforce_user.nil?)        	
+          client = Restforce.new :host => hostURL,
+                                 :client_id => salesforce_client_id,
+                                 :client_secret => salesforce_client_secret,
+          											 :oauth_token => @salesforce_user.oauth_access_token,
+          											 :refresh_token => @salesforce_user.oauth_refresh_token,
+          											 :instance_url => @salesforce_user.oauth_instance_url          
+         
           begin
+          	puts client.user_info
   					@salesforce_accounts = client.query("select Id, Name from Account ORDER BY Name")
   			  rescue  
   			  	# salesforce refresh token expires when different app use it for 5 times
-  			  	@salesforce_user.destroy
-  			  	respond_to do |format|
-      				format.html { redirect_to settings_url }
-    				end
-  			  end
+  			  	# @salesforce_user.destroy
+  			  	puts "Error: salesforce error"
+  			  	# respond_to do |format|
+      		# 		format.html { redirect_to settings_url }
+    				# end
+  			  end 			  
         end      
 	end
 

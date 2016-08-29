@@ -96,7 +96,7 @@ class SalesforceController < ApplicationController
 
 
   def disconnect
-    salesforce_user = OauthUser.find_by(oauth_instance_url: ENV['salesforce_url_instance'], organization_id: current_user.organization_id)
+    salesforce_user = OauthUser.find_by(id: params[:id])
     salesforce_user.destroy
 
     respond_to do |format|

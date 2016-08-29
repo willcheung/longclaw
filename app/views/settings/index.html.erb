@@ -67,7 +67,7 @@
                           <th style="text-align:center">ContextSmith Account</th>
                           <th>
                               <%="Salesforce Account ("+@salesforce_user.oauth_user_name + ')' %>
-                              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/salesforce/disconnect">Disconnect</a>
+                              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/salesforce/disconnect/<%=@salesforce_user.id %>">Disconnect</a>
                               
                             </th>
                          
