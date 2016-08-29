@@ -1,0 +1,9 @@
+// FROM destroy.js.erb
+$('.<%= @project_member.id %>').fadeOut(400, function(){
+    $('.<%= @project_member.id %>').remove();
+    // Get current suggested-pm-length, transform to number and decrement
+    $('#pm-length').text(Number($('#pm-length').text()) - 1);
+});
+// FROM create.js.erb
+// increment pm-length
+$('#pm-length').text(Number($('#pm-length').text()) + Number("<%= @project_members.length %>"));

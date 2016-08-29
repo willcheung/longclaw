@@ -13,8 +13,8 @@
     </div>
     <% else %>
     <div class="col-sm-3 m-t-xs">
-        <%= link_to "<i class=\"fa fa-check-circle fa-lg\"></i>".html_safe, pm, method: :delete, class: "text-primary", title: "Confirm", data: {confirm: "Confirm this suggested collaborator?"}, remote: true %>
-        <%= link_to "<i class=\"fa fa-times-circle fa-lg\"></i>".html_safe, pm, method: :delete, class: "text-muted", title: "Reject", data: {confirm: "Reject this suggested collaborator?"}, remote: true %>
+        <%= link_to "<i class=\"fa fa-check-circle fa-lg\"></i>".html_safe, pm, method: :put, class: "text-primary", title: "Confirm", data: {confirm: "Confirm this suggested collaborator?"} %>
+        <%= link_to "<i class=\"fa fa-times-circle fa-lg\"></i>".html_safe, pm, method: :delete, class: "text-muted", title: "Reject", data: {confirm: "Reject this suggested collaborator?"} %>
     </div>
     <% end %>
 </div>

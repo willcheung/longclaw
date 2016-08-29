@@ -1,5 +1,6 @@
 $('.<%= @project_member.id %>').fadeOut(400, function(){
     $('.<%= @project_member.id %>').remove();
     // Get current pm-length, transform to number and decrement
+    // TODO check whether destroy coming from suggested or not for AJAX
     $('#pm-length').text(Number($('#pm-length').text()) - 1);
 });

@@ -1,9 +1,21 @@
 class ProjectMembersController < ApplicationController
-  before_action :set_project_member, only: [:destroy]
+  before_action :set_project_member, only: [:destroy, :update]
 
   def destroy
     project = @project_member.project
-    @project_member.destroy
+    @project_member.status = ProjectMember::STATUS[:Rejected]
+    @project_member.save
+    respond_to do |format|
+      format.html { redirect_to project_url(project) }
+      format.json { head :no_content }
+      format.js
+    end
+  end
+
+  def update
+    project = @project_member.project
+    @project_member.status = ProjectMember::STATUS[:Confirmed]
+    @project_member.save
     respond_to do |format|
       format.html { redirect_to project_url(project) }
       format.json { head :no_content }
@@ -50,10 +62,4 @@ class ProjectMembersController < ApplicationController
   def set_project_member
     @project_member = ProjectMember.find(params[:id])
   end
-
-
-
-
-  
-
 end
