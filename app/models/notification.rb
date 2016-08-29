@@ -58,10 +58,18 @@ class Notification < ActiveRecord::Base
             load_risk_for_each_message(project.id, c.conversationId, message, test, day_range)
           end
 
-          sent_date = Time.at(message.sentDate).utc
-          if (sent_date.utc < (current_time - day_range.day).utc) || message.temporalItems.nil?
-            #puts "no task"
+          if message.temporalItems.nil?
             next
+          end
+
+          is_complete = false
+          completed_by = nil
+          complete_date = nil
+          sent_date = Time.at(message.sentDate).utc
+          if (sent_date.utc < (current_time - day_range.day).utc)
+            is_complete = true
+            completed_by = "00000000-0000-0000-0000-000000000000"
+            complete_date = sent_date
           end
 
           # save smart action in previous two weeks
@@ -112,11 +120,13 @@ class Notification < ActiveRecord::Base
                 sent_date: sent_date,
       	        original_due_date: o_due_date,
       	        remind_date: remind_date,
-      	        is_complete: false,
+      	        is_complete: is_complete,
       	        assign_to: assign_id,
                 content_offset: context_start,
                 has_time: has_time,
-                activity_id: activity_id)
+                activity_id: activity_id,
+                completed_by: completed_by,
+                complete_date: complete_date)
 
     	      notification.save
           end
