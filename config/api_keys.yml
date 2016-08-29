@@ -8,6 +8,8 @@ development:
   salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
   salesforce_client_secret: 3550523996344810646
   salesforce_url_instance: https://na30.salesforce.com
+  salesforce_sandbox_client_id: 3MVG9AJuBE3rTYDjEqcDW6Eg4A_4ywCmcxP0WzK5lJrz2Lkbf0x6SBv12itLjnMYiPMcTeDstsw==
+  salesforce_sandbox_client_secret: 1678725751303799117
   BASE_URL: http://localhost:3000
 
 test:

@@ -32,7 +32,7 @@
   <div style="padding:0;margin:0;margin-top:20px;">
 
     <!-- Stream Name & Metrics -->
-    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px;background-color:#ffffff;vertical-align:top;margin-bottom:10px;">
+    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px 0;background-color:#ffffff;vertical-align:top;margin-bottom:10px;">
     <tbody>
       <tr>
         <td style="padding-bottom:5px;">
@@ -69,7 +69,7 @@
 
 <!-- Assigned Notifications -->
 <% unless p.notifications.empty? %>
-      <div style="font-size:14px;padding:0 0 6px 0;">
+      <div style="font-size:14px;padding:0 0 6px 20px;">
             
           <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
              <tbody>
@@ -99,9 +99,9 @@
                       <%= n.category%>
                     </span>
                   </td>
-                  <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:170px;max-width:175px;padding:3px;">
+                  <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:90px;max-width:95px;padding:3px;">
                     <span style="font-weight:normal;font-size:14px;line-height:19px;">
-                      Due: <%= n.original_due_date.nil? ? "(no date)" : n.original_due_date.strftime('%B %d, %Y') %>
+                      Due: <%= n.original_due_date.nil? ? "(no date)" : n.original_due_date.strftime('%b %d') %>
                     </span>               
                   </td>
                 </tr>
@@ -131,13 +131,20 @@
     <!-- Conversations -->
   <% p.activities.each do |a| %>
       
-      <div style="font-size:14px;padding:0 0 5px 0;">
+      <div style="font-size:14px;padding:0 0 6px 20px;">
           <% if a.category == "Conversation" %>
               <h4 style="font-size:14px;line-height:19px;font-weight:bold;margin:0 0 5px!important;padding:3px 0!important;border-bottom:solid 1px #bbb">
                <%= a.title %>
               </h4>
+
+              <% if a.email_messages.size > 2 %>
+                    <h5 style="font-size:12px;line-height:16px;font-weight:bold;margin:10px">
+                        <i><%= pluralize((a.email_messages.size - 2), 'older message') %>.  <a href="<%= project_url(p.id) %>">Go to stream</a>.</i>
+                    </h5>
+              <% end %>
+
               <div style="padding:0;margin:0;">
-              <% a.email_messages.each_with_index do |m,i| %>
+              <% a.email_messages.last(2).each do |m| %>
                  <div style="margin:0">
                     <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
                        <tbody>
@@ -162,19 +169,11 @@
                                   <span style="font-weight:200;font-size:12px;color:#888;float:right;margin-right:20px;"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
                                   <br>
                                   <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
-                                      <% if a.email_messages.size == i+1 %>
-                                        <%= if m.content.nil? || m.content.is_a?(String) 
-                                              simple_format(m.content)
-                                            else
-                                              simple_format(m.content.body)
-                                            end %>
-                                      <% else %>
-                                        <%= if m.content.nil? || m.content.is_a?(String) 
-                                              truncate(m.content, length: 200, separator: ' ')
-                                            else
-                                              truncate(m.content.body, length: 200, separator: ' ')
-                                            end%>
-                                      <% end %>
+                                    <%= if m.content.nil? || m.content.is_a?(String) 
+                                          simple_format(m.content)
+                                        else
+                                          simple_format(m.content.body)
+                                        end %>
                                   </span> 
                                 </div>             
                             </td> 
@@ -277,5 +276,5 @@
 
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
 <tr><td><p style="color:#333;font-weight: normal; text-align: left; line-height: 20px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="center">
-<a target="_blank" href="<%= projects_url %>">Manage your Streams subscriptions here</a>
+<a target="_blank" href="<%= projects_url %>">You can "Follow" or "Unfollow" Streams here</a>.
 </p></td></tr></table>
