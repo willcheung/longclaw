@@ -7,7 +7,14 @@
         <span><%= get_full_name(m) %></span><br>
         <span><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
     </div>
+    <% if pm.status == ProjectMember::STATUS[:Confirmed] %>
     <div class="col-sm-3 m-t-xs delete-member">
-        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this member from the project?"}, remote: true %>
+        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this collaborator from the stream?"}, remote: true %>
     </div>
+    <% else %>
+    <div class="col-sm-3 m-t-xs">
+        <%= link_to "<i class=\"fa fa-check-circle fa-lg\"></i>".html_safe, pm, method: :delete, class: "text-primary", title: "Confirm", data: {confirm: "Confirm this suggested collaborator?"}, remote: true %>
+        <%= link_to "<i class=\"fa fa-times-circle fa-lg\"></i>".html_safe, pm, method: :delete, class: "text-muted", title: "Reject", data: {confirm: "Reject this suggested collaborator?"}, remote: true %>
+    </div>
+    <% end %>
 </div>

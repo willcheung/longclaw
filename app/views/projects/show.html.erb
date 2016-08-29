@@ -98,52 +98,84 @@
     <!-- Right sidebar -->
     <div class="col-lg-3">
         <div class="row wrapper wrapper-content project-manager">
-            <div class="m-t-md">
-                <strong>Project Description:</strong>
-                <i id="proj-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+            <div class="row m-t-md toggle-open">
+                <div class="col-sm-2">
+                    <span class="fa fa-caret-right toggle-icon"></span>
+                </div>
+                <div class="col-sm-10">
+                    <strong>Stream Details</strong>
+                </div>
             </div>
+            <!-- empty span here for proper toggle-open event handler traversal -->
+            <span></span>
+            <div class="no-display">
+                <div class="m-t-md">
+                    <strong>Description:</strong>
+                    <i id="proj-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+                </div>
 
-            <small><%= best_in_place @project, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#proj-desc-activator' %></small>
+                <small><%= best_in_place @project, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#proj-desc-activator' %></small>
 
-            <ul class="list-group clear-list m-t-sm">
-                <li class="list-group-item first-item">
-                    <strong>Type:</strong>
-                    <span class="pull-right">
-                        <%= best_in_place @project, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-sm fa-caret-down' %>
-                    </span>
-                </li>
-                <li class="list-group-item first-item">
-                    <strong>Open Collaboration:</strong>
-                    <% if @project.is_public %>
-                        <span class="label label-default pull-right" style="font-size:12px">Public</span>
-                    <% else %>
-                        <span class="label label-warning pull-right" style="font-size:12px">Private</span>
+                <ul class="list-group clear-list m-t-sm">
+                    <li class="list-group-item first-item">
+                        <strong>Type:</strong>
+                        <span class="pull-right">
+                            <%= best_in_place @project, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-sm fa-caret-down' %>
+                        </span>
+                    </li>
+                    <li class="list-group-item first-item">
+                        <strong>Open Collaboration:</strong>
+                        <% if @project.is_public %>
+                            <span class="label label-default pull-right" style="font-size:12px">Public</span>
+                        <% else %>
+                            <span class="label label-warning pull-right" style="font-size:12px">Private</span>
+                        <% end %>
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Project Owner:</strong>
+                        <span class="pull-right"><%= get_full_name(@project.project_owner) %></span>
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Account:</strong>
+                        <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
+                    </li>
+                    <li class="list-group-item small m-t-md first-item">
+                        <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
+                        Last Updated:
+                    </li>
+                    <li class="list-group-item small">
+                        <span class="pull-right"><%= @project.created_at.to_date.to_formatted_s(:long) %></span>
+                        Created:
+                    </li>
+                </ul>
+            </div>
+            <!-- SUGGESTED MEMBERS SECTION -->
+            <div class="row m-t-md toggle-open">
+                <div class="col-sm-2">
+                    <span class="fa fa-caret-right toggle-icon"></span>
+                </div>
+                <div class="col-sm-10">
+                    <strong><span id="pm-length"><%= @suggested_members.length %></span> Suggested Collaborators</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be involved in this stream. Click the ✔ or X to confirm or reject our suggestions."></i>
+                </div>
+            </div>
+            <!-- empty span here for proper toggle-open event handler traversal -->
+            <span></span>
+            <dl class="no-display">
+                <dd class="project-people members">
+                    <% @suggested_members.each do |pm| %>
+                        <%= render 'project_members/member', pm: pm %>
                     <% end %>
-                </li>
-                <li class="list-group-item">
-                    <strong>Project Owner:</strong>
-                    <span class="pull-right"><%= get_full_name(@project.project_owner) %></span>
-                </li>
-                <li class="list-group-item">
-                    <strong>Account:</strong>
-                    <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
-                </li>
-                <li class="list-group-item small m-t-md first-item">
-                    <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
-                    Last Updated:
-                </li>
-                <li class="list-group-item small">
-                    <span class="pull-right"><%= @project.created_at.to_date.to_formatted_s(:long) %></span>
-                    Created:
-                </li>
-            </ul>
-            <div class="row m-t-md">
+                </dd>
+            </dl>
+            <!-- PROJECT MEMBERS SECTION -->
+            <div class="row m-t-md toggle-open">
+                <div class="col-sm-2">
+                    <span class="fa fa-caret-right toggle-icon"></span>
+                </div>
                 <div class="col-sm-10">
                     <strong><span id="pm-length"><%= @project_members.length %></span> Collaborators</strong>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
-                </div>
-                <div class="col-sm-2">
-                    <span class="fa fa-plus toggle-open"></span>
                 </div>
             </div>
             <div class="row member">
@@ -163,16 +195,16 @@
                     <% @project_members.each do |pm| %>
                         <%= render 'project_members/member', pm: pm %>
                     <% end %>
-                    
                 </dd>
             </dl>
-            <div class="row m-t-md">
+            <!-- PROJECT SUBSCRIBERS SECTION -->
+            <div class="row m-t-md toggle-open">
+                <div class="col-sm-2">
+                    <span class="fa fa-caret-right toggle-icon"></span>
+                </div>
                 <div class="col-sm-10">
                     <strong><span id="ps-length"><%= @project_subscribers.length %></span> Followers</strong>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project."></i>
-                </div>
-                <div class="col-sm-2">
-                    <span class="fa fa-plus toggle-open"></span>
                 </div>
             </div>
             <div class="row">
@@ -191,7 +223,6 @@
                     <% @project_subscribers.each do |ps| %>
                         <%= render 'project_subscribers/subscriber', ps: ps %>
                     <% end %>
-                    
                 </dd>
             </dl>
         </div>
@@ -238,9 +269,9 @@
     $('.best_in_place.switch').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { }); });
 
     /* Toggle Show Project Subs */
-    $('.fa.toggle-open').click( function () {
-        $(this).toggleClass("fa-plus fa-minus");
-        $(this).parent().parent().next().next().toggle(400);
+    $('.toggle-open').click( function () {
+        $(this).find(".toggle-icon").toggleClass("fa-caret-right fa-caret-down");
+        $(this).next().next().toggle(400);
     })
 
     /* Spin the refresh icon to show that refresh is running */
