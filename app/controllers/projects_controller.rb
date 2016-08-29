@@ -26,7 +26,10 @@ class ProjectsController < ApplicationController
     # new project modal
     @project = Project.new
 
-    @owners = User.where(organization_id: current_user.organization_id) 
+    # for bulk owner assignment
+    @owners = User.where(organization_id: current_user.organization_id)
+    # for single best_in_place owner assignment
+    @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h 
   end
 
   # GET /projects/1
@@ -61,7 +64,6 @@ class ProjectsController < ApplicationController
 
     @activities_by_date = @activities_by_date.sort {|x, y| y.utc_milli_timestamp <=> x.utc_milli_timestamp }.reverse!
     @notifications = @project.notifications.order(:is_complete, :original_due_date)
-    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
   end
 
   def pinned_tab
@@ -75,7 +77,6 @@ class ProjectsController < ApplicationController
   def tasks_tab   
     # show every risk regardless of private conversation 
     @notifications = @project.notifications
-    @users_reverse = current_user.organization.users.map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
 
     render "show"
   end
@@ -226,6 +227,9 @@ class ProjectsController < ApplicationController
     @project_members = @project.project_members
     @project_subscribers = @project.subscribers
     @suggested_members = @project.project_members_all.pending
+
+    # array of users for best_in_place assignment
+    @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
