@@ -45,7 +45,7 @@
           <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
              <tbody>
                 <tr style="border-top:1px solid #c1c1c1;">
-                <% risk_score = p.current_risk_score(current_user) %>
+                <% risk_score = p.current_risk_score(@user) %>
                   <td style="color:<%= risk_score > 95.0 ? '#ed5565' : '#A1C436' %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
                     <span style="display:block;"><%= risk_score %>%</span>
                     <span style="font-size:14px;display:block;"><%= risk_score > 95.0 ? 'High' : 'Low' %> Risk</span>
