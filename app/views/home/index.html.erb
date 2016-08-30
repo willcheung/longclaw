@@ -105,7 +105,7 @@
                     <select data-placeholder="Choose a Stream..." class="chosen-select" id="risk-project-chosen-select" multiple="" tabindex="-1">
                         <option value=""></option>
                         <% @projects.each do |p| %>
-                            <option value="<%= p.id %>" <% if @project_max.map(&:id).include?(p.id) %> selected <% end %>><%= p.name %></option>
+                            <option value="<%= p.id %>" <% if @top_risks.map { |r| r[:id] }.include?(p.id) %> selected <% end %>><%= p.name %></option>
                         <% end %>
                     </select>
                 </div>
@@ -455,13 +455,13 @@
                 itemDistance: 10
             },
             series: [
-            <% @project_max.each_with_index do |p,i| %>
+            <% @top_risks.each_with_index do |p,i| %>
                 {
-                name: '<%= p.name %>',
+                name: '<%= p[:name] %>',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= get_risk_score_by_project(@projects_min_scores, p.id) %>
-                }<% if i != @project_max.size - 1 %>,<% end %>
+                data: <%= get_risk_score_by_project(@projects_min_scores, p[:id]) %>
+                }<% if i != @top_risks.size - 1 %>,<% end %>
             <% end %>
             ]
 
