@@ -45,7 +45,7 @@
           <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
              <tbody>
                 <tr style="border-top:1px solid #c1c1c1;">
-                <% risk_score = p.current_risk_score %>
+                <% risk_score = p.current_risk_score(@user) %>
                   <td style="color:<%= if risk_score > 80.0
                                           '#ed5565'
                                        elsif risk_score > 60.0
