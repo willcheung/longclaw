@@ -93,21 +93,24 @@ class Project < ActiveRecord::Base
                messages ->> 'sentDate' as sentdate,
                activities.project_id as project_id,
                messages ->> 'messageId' AS message_id,
-               activities.backend_id AS conversation_id
+               activities.backend_id AS conversation_id,
+               activities.id AS id
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
         WHERE category = 'Conversation'
         AND messages->>'sentimentItems' is NOT NULL 
         AND project_id IN ('#{array_of_project_ids.join("','")}')
-        AND (messages ->> 'sentDate')::integer > #{start_time_sec}
       SQL
+
     result= Activity.find_by_sql(query)
 
     project_min_score = Hash.new()
     project_min_temp = Hash.new()
+    project_not_risk_sentiment_min_score = Hash.new()
 
     array_of_project_ids.each do |pid|
       project_min_score[pid] = Array.new(day_range,nil) 
       project_min_temp[pid] = Array.new(day_range, nil)
+      project_not_risk_sentiment_min_score[pid] = 0
     end
     
     if !result.nil?
@@ -121,28 +124,61 @@ class Project < ActiveRecord::Base
         # 13 - ( days since sent_date ) = days since sent_date from 13 days ago
         temp_date_index = (day_range-1) - ((current_time_int - r.sentdate.to_i) / (24*60*60))
 
-       
-        # for each score, it will show up from the first appearing date to the current date
-        # if that notification is completed(could be uncomplete or no notification if score is less than 95%)
-        # pop the score starting from the complete date till current date
-        # so for each day we have the correct possible score values
-        for i in temp_date_index..day_range-1
-          if project_min_temp[r.project_id][i].nil?
-            project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
-          else
-            project_min_temp[r.project_id][i].push(sentiment_json[0]['score'].to_f)
-          end 
+        if temp_date_index<0 
+          temp_date_index = 0
         end
-        
-        target = Notification.find_by(category: Notification::CATEGORY[:Risk], project_id: r.project_id, conversation_id: r.conversation_id, message_id: r.message_id, is_complete: true)
-        if !target.nil?
-          index = (day_range-1) - ((current_time_int - target.complete_date.to_i) / (24*60*60))
-          if temp_date_index<=index
-            for i in index..day_range-1
-              project_min_temp[r.project_id][i].pop()
+
+        is_notification = nil
+        if sentiment_json[0]['score'].to_f<= -0.95
+          is_notification = Notification.find_by(activity_id: r.id, message_id: r.message_id, category: Notification::CATEGORY[:Risk])
+        end
+
+        if(is_notification.blank?) 
+          #risks that don't have notification, can't be closed
+          if sentiment_json[0]['score'].to_f < project_not_risk_sentiment_min_score[r.project_id]
+            if (r.sentdate.to_i < start_time_sec)
+              project_not_risk_sentiment_min_score[r.project_id] = sentiment_json[0]['score'].to_f
+            else
+              for i in temp_date_index..day_range-1
+                if project_min_temp[r.project_id][i].nil?
+                  project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
+                else
+                  project_min_temp[r.project_id][i].push(sentiment_json[0]['score'].to_f)
+                end 
+              end
             end
           end
-        end 
+        else
+          # is risk
+          if is_notification.is_complete==true and is_notification.complete_date.to_i >= start_time_sec
+            index = (day_range-1) - ((current_time_int - is_notification.complete_date.to_i) / (24*60*60))
+            for i in temp_date_index..index
+              if project_min_temp[r.project_id][i].nil?
+                project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
+              else
+                project_min_temp[r.project_id][i].push(sentiment_json[0]['score'].to_f)
+              end 
+            end
+          elsif is_notification.is_complete == false
+            for i in temp_date_index..day_range-1
+              if project_min_temp[r.project_id][i].nil?
+                project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
+              else
+                project_min_temp[r.project_id][i].push(sentiment_json[0]['score'].to_f)
+              end 
+            end
+          end
+        end
+      end
+
+      project_not_risk_sentiment_min_score.each do |key, value|
+        for i in 0..day_range-1
+          if project_min_temp[key][i].nil?
+            project_min_temp[key][i] = [value]
+          else
+            project_min_temp[key][i].push(value)
+          end 
+        end
       end
     end
 
@@ -156,6 +192,8 @@ class Project < ActiveRecord::Base
       end
     end     
 
+    puts project_min_score
+
     # scale score
     project_min_score.each do |key, value|
       for i in 0..day_range-1
@@ -164,6 +202,8 @@ class Project < ActiveRecord::Base
         end
       end
     end
+
+    puts project_min_score
     
     return project_min_score
   end
@@ -194,108 +234,22 @@ class Project < ActiveRecord::Base
 
   end
 
-  def self.current_risk_score(array_of_project_ids)
-    # results hash, initialize with 0 for every project
+  def self.current_risk_score(array_of_project_ids, current_user)
+    day_range=14
+    projects_min_scores = Project.find_min_risk_score_by_day(array_of_project_ids, current_user.time_zone, Rails.env.development?, day_range)
+
     project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
-    # get every risk score for all projects in array of project ids
-    query = <<-SQL
-      SELECT messages->>'sentimentItems' AS sentiment_item,
-             messages ->> 'sentDate' AS sent_date,
-             activities.project_id AS project_id,
-             messages ->> 'messageId' AS message_id,
-             activities.backend_id AS backend_id
-      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-      WHERE category = 'Conversation' 
-      AND messages->>'sentimentItems' IS NOT NULL
-      AND project_id IN ('#{array_of_project_ids.join("','")}')
-      ORDER BY (messages ->> 'sentDate')::integer DESC
-    SQL
-    result = Activity.find_by_sql(query)
-    return project_current_score if result.blank?
 
-    open_risks = Notification.where(category: Notification::CATEGORY[:Risk], is_complete: false)
-    completed_risks = Notification.where(category: Notification::CATEGORY[:Risk], is_complete: true)
-
-    scores_by_pid = result.group_by { |a| a.project_id }
-    scores_by_pid.each do |pid, scores|
-      score = 0
-      pid_open_risks = open_risks.where(project_id: pid)
-      if pid_open_risks.present?
-        # get every risk score from open risks
-        open_risk_scores = scores.select do |a|
-          pid_open_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
-        end
-        # Risk notification may refer to emails that are not found in db for some reason, open_risk_scores may be empty
-        if open_risk_scores.present?
-          # get min score of all open risk scores
-          score = min_risk_score(open_risk_scores)
-        end
-      end
-
-      # if score for this pid is still 0 after calculation from open risks
-      if score == 0
-        # get min score from last day that has risk score, excluding completed risks
-        pid_completed_risks = completed_risks.where(project_id: pid)
-        scores.reject! do |a|
-          pid_completed_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
-        end
-        last_sent_date = Time.zone.at(scores.first.sent_date.to_i).to_date
-        scores.select! do |a|
-          Time.zone.at(a.sent_date.to_i).to_date == last_sent_date
-        end
-        score = min_risk_score(scores)
-      end
-      project_current_score[pid] = round_and_scale_score(score)
+    projects_min_scores.each do |key, value|
+      project_current_score[key] = value[day_range-1]
     end
-      
-    project_current_score
+
+    return project_current_score
   end
 
-  def current_risk_score
-    # get every risk score for this project
-    query = <<-SQL
-      SELECT messages->>'sentimentItems' AS sentiment_item,
-             messages ->> 'sentDate' AS sent_date,
-             messages ->> 'messageId' AS message_id,
-             backend_id
-      FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-      WHERE category = 'Conversation'
-      AND messages->>'sentimentItems' IS NOT NULL
-      AND project_id = '#{self.id}'
-      ORDER BY (messages ->> 'sentDate')::integer DESC
-    SQL
-    result = Activity.find_by_sql(query)
-    # if no risk scores found, return score of 0
-    return 0 if result.blank?
-
-    open_risks = notifications.where(category: Notification::CATEGORY[:Risk], is_complete: false)
-    if open_risks.present?
-      # get every risk score from open risks
-      open_risk_scores = result.select do |a|
-        open_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
-      end
-      # Risk notification may refer to emails that are not found in db for some reason, open_risk_scores may be empty
-      if open_risk_scores.present?
-        # get min score of all open risk scores
-        score = min_risk_score(open_risk_scores)
-      end
-    end
-
-    # if no score calculated from open risks
-    if score.nil?
-      # get min score from last day that has risk score, excluding completed risks
-      completed_risks = notifications.where(category: Notification::CATEGORY[:Risk], is_complete: true)
-      result.reject! do |a|
-        completed_risks.any? { |r| r.conversation_id == a.backend_id && r.message_id == a.message_id }
-      end
-      last_sent_date = Time.zone.at(result.first.sent_date.to_i).to_date
-      result.select! do |a|
-        Time.zone.at(a.sent_date.to_i).to_date == last_sent_date
-      end
-      score = min_risk_score(result)
-    end
-
-    round_and_scale_score(score)
+  def current_risk_score(current_user)
+    project_current_score = Project.current_risk_score([self.id], current_user)
+    return project_current_score[self.id]
   end
 
   # query to generate Account Relationship Graph from DB entries
