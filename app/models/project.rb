@@ -152,7 +152,7 @@ class Project < ActiveRecord::Base
           # is risk
           if is_notification.is_complete==true and is_notification.complete_date.to_i >= start_time_sec
             index = (day_range-1) - ((current_time_int - is_notification.complete_date.to_i) / (24*60*60))
-            for i in temp_date_index..index
+            for i in temp_date_index..index-1
               if project_min_temp[r.project_id][i].nil?
                 project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
               else
