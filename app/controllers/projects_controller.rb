@@ -20,7 +20,7 @@ class ProjectsController < ApplicationController
     unless projects.empty?
       @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
-      @risk_scores = Project.current_risk_score(projects.map(&:id))
+      @risk_scores = Project.current_risk_score(projects.map(&:id), current_user)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
     end
     # new project modal
@@ -221,7 +221,7 @@ class ProjectsController < ApplicationController
     # select all open tasks regardless of private conversation
     @project_open_tasks_count = @project.notifications.where(is_complete: false).length
     @project_pinned_count = @project.activities.pinned.length
-    @project_risk_score = @project.current_risk_score
+    @project_risk_score = @project.current_risk_score(current_user)
 
     # project people
     @project_members = @project.project_members

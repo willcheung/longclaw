@@ -44,7 +44,7 @@ class SalesforceController < ApplicationController
     			if p.id == params[:pid]
             @final_filter_user = Activity.all_involved_user(p, current_user)
             activities = Activity.get_activity_by_filter(p, params)
-            @project_risk_score =p.current_risk_score
+            @project_risk_score =p.current_risk_score(current_user)
             @project = p
     				break
     			end
@@ -53,7 +53,7 @@ class SalesforceController < ApplicationController
         @final_filter_user = Activity.all_involved_user(@projects[0], current_user)
         activities = Activity.get_activity_by_filter(@projects[0], params)
         
-        @project_risk_score = @projects[0].current_risk_score
+        @project_risk_score = @projects[0].current_risk_score(current_user)
         @project = @projects[0]
   		end
 	    @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
