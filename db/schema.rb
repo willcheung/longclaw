@@ -145,6 +145,7 @@ ActiveRecord::Schema.define(version: 20160826005113) do
     t.datetime "created_at",                          null: false
     t.datetime "updated_at",                          null: false
     t.float    "score",             default: 0.0
+    t.integer  "activity_id",       default: -1
   end
 
   create_table "oauth_users", force: :cascade do |t|
