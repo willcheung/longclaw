@@ -230,16 +230,16 @@
                 <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
                    <tbody>
                       <tr>
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;margin-left:5px;border-bottom:1px solid #bbbbbb;">
-                          <strong style="font-weight:bold;">Event: <%= a.title %></strong>
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;margin-left:5px;border-bottom:1px solid #bbbbbb;width:33%;">
+                          <strong style="font-weight:bold;"><%= a.title %></strong>
                         </td>
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;border-bottom:1px solid #bbbbbb;">
+                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;border-bottom:1px solid #bbbbbb;width:66%;">
                           <%= get_calendar_interval(a) %>
                         </td>
                       </tr>
                       <tr>
                         <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;margin-left:5px;">
-                          <strong style="font-weight:bold;">Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %>
+                          <strong style="font-weight:bold;">Meeting Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %>
                         </td> 
                         <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;">
                           <strong style="font-weight:bold;">Attendees:</strong> <%= get_calendar_member_names(a.to) %>

@@ -230,7 +230,8 @@ class Activity < ActiveRecord::Base
     self.last_sent_date_epoch = (self.last_sent_date_epoch.to_i + sec).to_s
     em = self.email_messages
     em.each do |e|
-      e.sentDate += sec
+      e.sentDate += sec if self.category == CATEGORY[:Conversation]
+      e.end_epoch += sec if self.category == CATEGORY[:Meeting]
     end
     self.email_messages = em
     self.save
