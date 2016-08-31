@@ -511,7 +511,10 @@ class Project < ActiveRecord::Base
         Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
-        Notification.load_opportunity_for_stale_projects(project)
+        # 8/30: Temporarily disable this because it gets too noisy during initial onboarding phase
+        # Also removing the rake scheduler for this.  Will need to think of a better solution to surface this.
+        # Notification.load_opportunity_for_stale_projects(project)
+        #Notification.load_opportunity_for_stale_projects(project)
 
         # Project meetings
 				# Activity.load_calendar(get_project_conversations(data, p), project, true, user_id)
