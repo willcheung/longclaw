@@ -7,6 +7,8 @@
 #  user_id    :uuid
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
+#  daily      :boolean          default(FALSE), not null
+#  weekly     :boolean          default(FALSE), not null
 #
 # Indexes
 #
@@ -17,6 +19,9 @@
 class ProjectSubscriber < ActiveRecord::Base
 	belongs_to :project
 	belongs_to :user
+
+  scope :daily, -> { where daily: true }
+  scope :weekly, -> { where weekly: true }
 
 	validates :project_id, uniqueness: {:scope => [:user_id]}
 end

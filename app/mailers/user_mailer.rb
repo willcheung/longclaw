@@ -19,10 +19,10 @@ class UserMailer < ApplicationMailer
     activity_from_yesterday = "activities.last_sent_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours'"
     your_notifications = "((notifications.is_complete = false) OR (notifications.is_complete = true AND notifications.complete_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours')) AND (notifications.assign_to = '#{user.id}')"
 
-    sub = user.subscriptions
+    sub = user.subscriptions.daily
 
     if !sub.nil? and !sub.empty?
-      updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday + " OR " + your_notifications).group("activities.id, accounts.id, notifications.id")
+      updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday + " OR " + your_notifications).group("activities.id, accounts.id, notifications.id")
       @updates_today = updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
         temp = proj.dup
@@ -48,10 +48,10 @@ class UserMailer < ApplicationMailer
 
     open_or_recently_closed = "notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
     
-    @subs = user.subscriptions
+    @subs = user.subscriptions.weekly
 
     if !@subs.nil? and !@subs.empty?
-      @projects_with_tasks = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
+      @projects_with_tasks = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
       @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
 
       track user: user # ahoy_email tracker

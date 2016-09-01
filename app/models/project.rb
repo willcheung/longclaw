@@ -56,10 +56,15 @@ class Project < ActiveRecord::Base
 							 organization_id, user_id, user_id)
 				.group('projects.id')
 	}
-	# Only using this for Daily Summaries
-	scope :following, -> (user_id) {
+  # Only using this for Daily Summaries
+  scope :following_daily, -> (user_id) {
+    joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
+    .where("project_subscribers.user_id = ? AND project_subscribers.daily IS TRUE", user_id)
+  }
+	# Only using this for Weekly Summaries
+	scope :following_weekly, -> (user_id) {
 		joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
-		.where("project_subscribers.user_id = ?", user_id)
+		.where("project_subscribers.user_id = ? AND project_subscribers.weekly IS TRUE", user_id)
 	}
 	scope :is_active, -> {where("projects.status = 'Active'")}
 
