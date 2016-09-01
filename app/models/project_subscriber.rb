@@ -7,8 +7,8 @@
 #  user_id    :uuid
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
-#  daily      :boolean          default(FALSE), not null
-#  weekly     :boolean          default(FALSE), not null
+#  daily      :boolean          default(TRUE), not null
+#  weekly     :boolean          default(TRUE), not null
 #
 # Indexes
 #
