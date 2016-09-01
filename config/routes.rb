@@ -43,6 +43,7 @@ Longclaw::Application.routes.draw do
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
     get "notifications/show_email_body/:id" => 'notifications#show_email_body'
 
+    get "/delete_single_activity/:id" => 'activities#destroy'
     
     resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy], shallow: true
