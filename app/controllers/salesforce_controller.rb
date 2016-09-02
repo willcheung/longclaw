@@ -89,13 +89,58 @@ class SalesforceController < ApplicationController
     if(!params[:emails].nil? and !params[:emails].empty?)
       @filter_email = params[:emails].split(',')
     end
+  end
 
+  def link_salesforce_account
+    #check if contextsmith account is connected
+    if !params[:account_id].nil?
+      salesforce_account_duplicate = SalesforceAccount.where(contextsmith_account_id: params[:account_id])
 
+      salesforce_account_duplicate.each do |s|
+        s.contextsmith_account_id = nil
+        s.save
+      end
+    end
 
+    salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
+    if !salesforce_account.nil?
+      salesforce_account.contextsmith_account_id = params[:account_id]
+      salesforce_account.save
+    end
+
+    account = Account.find_by(id: params[:account_id])
+    if !account.nil?
+      account.salesforce_id = params[:salesforce_id]
+      account.save
+    end
+    
+    respond_to do |format|
+      format.html { redirect_to settings_url }
+    end
+  end
+
+  def refresh
+    SalesforceAccount.load(current_user)
+
+    respond_to do |format|
+      format.html { redirect_to settings_url }
+    end
+         
   end
 
 
   def disconnect
+    salesforce_accounts = SalesforceAccount.eager_load(:account).where(contextsmith_organization_id: current_user.organization_id)
+    salesforce_accounts.each do |s|
+      if !s.account.nil?
+        puts s.account.id
+        s.account.salesforce_id = ''
+        s.save
+      end
+    end
+
+    salesforce_accounts.update_all(contextsmith_account_id: nil)
+
     salesforce_user = OauthUser.find_by(id: params[:id])
     salesforce_user.destroy
 

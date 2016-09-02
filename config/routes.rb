@@ -23,6 +23,8 @@ Longclaw::Application.routes.draw do
     resources :notifications, only: [:index, :update, :create]
     resources :salesforce, only: [:index]
     get "salesforce/disconnect/:id" => 'salesforce#disconnect'
+    post "/link_salesforce" => 'salesforce#link_salesforce_account'
+    get "/salesforce_refresh" => 'salesforce#refresh'
 
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "projects/:id/pinned" => 'projects#pinned_tab'
@@ -54,6 +56,7 @@ Longclaw::Application.routes.draw do
     get "search/autocomplete_project_name"
     get "search/autocomplete_project_subs"
     get "search/autocomplete_project_member"
+    get "search/autocomplete_salesforce_account_name"
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
     
     # get 'reports/touches/team' => 'reports#touches_by_team'

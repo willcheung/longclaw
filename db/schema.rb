@@ -11,11 +11,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160826005113) do
+ActiveRecord::Schema.define(version: 20160901223423) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "pg_stat_statements"
   enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
@@ -216,6 +215,18 @@ ActiveRecord::Schema.define(version: 20160826005113) do
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
   add_index "projects", ["deleted_at"], name: "index_projects_on_deleted_at", using: :btree
+
+  create_table "salesforce_accounts", force: :cascade do |t|
+    t.string   "salesforce_account_id",        default: "", null: false
+    t.string   "salesforce_account_name",      default: "", null: false
+    t.datetime "salesforce_updated_at"
+    t.uuid     "contextsmith_account_id"
+    t.uuid     "contextsmith_organization_id",              null: false
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
+  end
+
+  add_index "salesforce_accounts", ["salesforce_account_id"], name: "index_salesforce_accounts_on_salesforce_account_id", unique: true, using: :btree
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "first_name",             default: "",    null: false
