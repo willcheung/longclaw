@@ -71,61 +71,66 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <% @projects.each do |account,projects| %>
-                                    <% projects.each do |p| %>
-                                        <tr style="height:70px;">
-                                            <td><input type="checkbox" class="bulk-project" value="<%=p.id  %>"</td>
-                                            <td>
-                                                <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
-                                                <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(account) %>"><%= account.name %></a><small></div>
-                                            </td>
-                                            <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
-                                            <td>
-                                                <%= best_in_place p, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-#{p.id}-owner-activator" %>       
-                                                <i id="project-<%= p.id %>-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
-                                            </td>
-                                            <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
-                                            <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activities.size) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activities.size) %></span></td>
-                                            <td style="text-align:right;" class="<%= 
-                                                if @risk_scores[p.id] > 80.0
-                                                    'text-danger'
-                                                elsif @risk_scores[p.id] > 60.0
-                                                    'text-warning'
-                                                else
-                                                    'text-success'
-                                                end %>"><%= @risk_scores[p.id] %>%</td>
-                                            <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                            <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
-                                            <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : ((Time.current - @project_last_activity_date[p.id])/86400).to_i %></td>
-                                            <td><% if !p.is_public %>
-                                                    <span class="label label-warning pull-right">Private</span>
+                                <% @projects.each do |p| %>
+                                    <tr style="height:70px;">
+                                        <td><input type="checkbox" class="bulk-project" value="<%=p.id  %>"</td>
+                                        <td>
+                                            <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
+                                            <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a><small></div>
+                                        </td>
+                                        <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
+                                        <td>
+                                            <%= best_in_place p, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-#{p.id}-owner-activator" %>       
+                                            <i id="project-<%= p.id %>-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                                        </td>
+                                        <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
+                                        <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activities.size) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activities.size) %></span></td>
+                                        <td style="text-align:right;" class="<%= 
+                                            if @risk_scores[p.id] > 80.0
+                                                'text-danger'
+                                            elsif @risk_scores[p.id] > 60.0
+                                                'text-warning'
+                                            else
+                                                'text-success'
+                                            end %>"><%= @risk_scores[p.id] %>%</td>
+                                        <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
+                                        <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
+                                        <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : ((Time.current - @project_last_activity_date[p.id])/86400).to_i %></td>
+                                        <td><% if !p.is_public %>
+                                                <span class="label label-warning pull-right">Private</span>
+                                            <% else %>
+                                                <span class="label label-default pull-right">Public</span>
+                                            <% end %>
+                                        </td>
+                                        <td style="width: 120px"> 
+                                            <span data-toggle="tooltip" data-placement="left" data-original-title="Follow to receive daily updates and alerts." data-delay='{"show":"300"}'>
+                                                <% if p.daily %>
+                                                    <%= link_to "<i class=\"fa fa-check\"></i> Following Daily".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-daily-#{p.id}", class: "block m-b-xs" %>
                                                 <% else %>
-                                                    <span class="label label-default pull-right">Public</span>
+                                                    <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Daily".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id), remote: true, method: :post, id: "follow-daily-#{p.id}", class: "block m-b-xs" %>
                                                 <% end %>
-                                            </td>
-                                            <td style="width: 80px"> 
-                                                <span data-toggle="tooltip" data-placement="left" data-original-title="Follow to receive daily updates and alerts." data-delay='{"show":"300"}'>                                                   
-                                                    <% if p.subscribers.map(&:user_id).include?(current_user.id) %>
-                                                        <%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{p.id}" %>
-                                                    <% else %>
-                                                        <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{p.id}" %>
-                                                    <% end %>
-                                                </span>
-                                            </td>
-                                        </tr>
+                                            </span>
+                                            <span data-toggle="tooltip" data-placement="left" data-original-title="Follow to receive weekly updates and alerts." data-delay='{"show":"300"}'>
+                                                <% if p.weekly %>
+                                                    <%= link_to "<i class=\"fa fa-check\"></i> Following Weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-weekly-#{p.id}", class: "block" %>
+                                                <% else %>
+                                                    <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id), remote: true, method: :post, id: "follow-weekly-#{p.id}", class: "block" %>
+                                                <% end %>
+                                            </span>
+                                        </td>
+                                    </tr>
 
-                                        <script>        
-                                        $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {       
-                                            type: 'bar',      
-                                            height: '20',     
-                                            barWidth: 12,     
-                                            barSpacing: 2,        
-                                            barColor: '#5DA5DA',      
-                                            zeroAxis: false,      
-                                            zeroColor: '#ed5565'      
-                                        });       
-                                        </script>
-                                    <% end %>
+                                    <script>        
+                                    $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {       
+                                        type: 'bar',      
+                                        height: '20',     
+                                        barWidth: 12,     
+                                        barSpacing: 2,        
+                                        barColor: '#5DA5DA',      
+                                        zeroAxis: false,      
+                                        zeroColor: '#ed5565'      
+                                    });       
+                                    </script>
                                 <% end %>
                             </tbody>
                         </table>

@@ -1,10 +1,15 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-6">
         <h2 class="in-bl"><%= @project.name %></h2>
-        <% if @project.subscribers.map(&:user_id).include?(current_user.id) %>
-            <%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+        <% if @user_subscription.present? && @user_subscription.daily %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following Daily".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
         <% else %>
-            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Daily".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+        <% end %>
+        <% if @user_subscription.present? && @user_subscription.weekly %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following Weekly".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
+        <% else %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
         <% end %>
         <% if @project.owner_id == current_user.id %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
@@ -28,7 +33,8 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <div class="col-xs-2">
+            <div class="col-xs-3">
+            <% @project_risk_score = 75 %>
                 <div class="metric <%= if @project_risk_score > 80.0
                                          "text-danger"
                                         elsif @project_risk_score > 60.0
@@ -50,7 +56,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-3">
+            <div class="col-xs-4">
                 <div class="metric text-danger">
                     <div class="metric-title" align="center">
                         <h5>Open Risks</h5>
@@ -60,7 +66,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-4">
+            <div class="col-xs-5">
                 <div class="metric">
                     <div class="metric-title" align="center">
                         <h5>Last Activity</h5>

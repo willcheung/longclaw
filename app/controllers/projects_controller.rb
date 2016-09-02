@@ -11,17 +11,22 @@ class ProjectsController < ApplicationController
 
     # all projects and their accounts, sorted by account name alphabetically
     if params[:type]
-      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").where(category: params[:type]).preload([:users,:contacts,:subscribers, :account, :activities])
+      @projects = Project.visible_to(current_user.organization_id, current_user.id).where(category: params[:type]).preload([:users, :contacts, :account, :activities])
+      .joins("LEFT JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'")
+      .select('project_subscribers.daily, project_subscribers.weekly').group('project_subscribers.id')
     else
-      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").preload([:users,:contacts,:subscribers, :account, :activities])
+      @projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users, :contacts, :account, :activities])
+      .joins("LEFT JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'")
+      .select('project_subscribers.daily, project_subscribers.weekly').group('project_subscribers.id')
     end
 
-    @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
-    unless projects.empty?
+    # @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
+    unless @projects.empty?
       @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
-      @metrics = Project.count_activities_by_day(7, projects.map(&:id))
-      @risk_scores = Project.current_risk_score(projects.map(&:id), current_user)
-      @open_risk_count = Project.open_risk_count(projects.map(&:id))
+      @metrics = Project.count_activities_by_day(7, @projects.map(&:id))
+      @risk_scores = Project.current_risk_score(@projects.map(&:id), current_user)
+      @open_risk_count = Project.open_risk_count(@projects.map(&:id))
+      @user_subscriptions = current_user.subscriptions
     end
     # new project modal
     @project = Project.new
@@ -227,6 +232,7 @@ class ProjectsController < ApplicationController
     @project_members = @project.project_members
     @project_subscribers = @project.subscribers
     @suggested_members = @project.project_members_all.pending
+    @user_subscription = @project_subscribers.where(user: current_user).take
 
     # array of users for best_in_place assignment
     @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
