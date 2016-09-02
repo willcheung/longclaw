@@ -128,6 +128,23 @@ class SalesforceController < ApplicationController
          
   end
 
+  def remove_link
+    salesforce_account = SalesforceAccount.eager_load(:account).find_by(id: params[:id], contextsmith_organization_id: current_user.organization_id)
+
+    if !salesforce_account.nil?
+      if !salesforce_account.account.nil? 
+        salesforce_account.account.salesforce_id = ''
+      end
+      salesforce_account.contextsmith_account_id = nil
+      salesforce_account.save
+    end
+
+    respond_to do |format|
+      format.html { redirect_to settings_url }
+    end
+
+  end
+
 
   def disconnect
     salesforce_accounts = SalesforceAccount.eager_load(:account).where(contextsmith_organization_id: current_user.organization_id)

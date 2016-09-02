@@ -101,7 +101,10 @@
                     <% @salesforce_link_accounts.each do |a| %>
                       <tr>
                         <td class="col-lg-2"><%= a.account.name %></td>
-                        <td class="col-lg-6"><%= a.salesforce_account_name %></td>
+                        <td class="col-lg-6"><%= a.salesforce_account_name %>
+                          <a href="/delete_salesforce_account/<%=a.id%>"><i class="delete-note fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;" data-toggle="tooltip" data-placement="top" data-original-title="Delete this link"></i></a>
+                        </td>
+
                       </tr>
                     <% end %>
                   </tbody>
