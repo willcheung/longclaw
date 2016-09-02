@@ -230,9 +230,11 @@ class ProjectsController < ApplicationController
 
     # project people
     @project_members = @project.project_members
-    @project_subscribers = @project.subscribers
+    project_subscribers = @project.subscribers
+    @daily_subscribers = project_subscribers.daily
+    @weekly_subscribers = project_subscribers.weekly
     @suggested_members = @project.project_members_all.pending
-    @user_subscription = @project_subscribers.where(user: current_user).take
+    @user_subscription = project_subscribers.where(user: current_user).take
 
     # array of users for best_in_place assignment
     @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h

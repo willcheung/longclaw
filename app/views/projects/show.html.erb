@@ -193,7 +193,7 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                         <input type="search" name="email" id="member-search" class="contacts z-top" placeholder="Add members...">
+                         <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add members...">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
                     <%end%>
@@ -206,14 +206,14 @@
                     <% end %>
                 </dd>
             </dl>
-            <!-- PROJECT SUBSCRIBERS SECTION -->
+            <!-- DAILY SUBSCRIBERS SECTION -->
             <div class="row m-t-md toggle-open">
                 <div class="col-sm-2">
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="ps-length"><%= @project_subscribers.length %></span> Followers</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project."></i>
+                    <strong><span id="ps-length"><%= @daily_subscribers.length %></span> Daily Followers</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project every day."></i>
                 </div>
             </div>
             <div class="row">
@@ -222,14 +222,42 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                        <input type="search" name="user_id" id="search-subs" class="contacts" placeholder="Add followers...">
+                        <input type="search" name="user_id" class="contacts search-subs z-2" placeholder="Add followers...">
                         <%= submit_tag "Add subscriber", class: "hide-submit-button" %>
                     <%end%>
                 </div>
             </div>
             <dl class="no-display">
                 <dd class="project-people subs">
-                    <% @project_subscribers.each do |ps| %>
+                    <% @daily_subscribers.each do |ps| %>
+                        <%= render 'project_subscribers/subscriber', ps: ps %>
+                    <% end %>
+                </dd>
+            </dl>
+            <!-- WEEKLY SUBSCRIBERS SECTION -->
+            <div class="row m-t-md toggle-open">
+                <div class="col-sm-2">
+                    <span class="fa fa-caret-right toggle-icon"></span>
+                </div>
+                <div class="col-sm-10">
+                    <strong><span id="ps-length"><%= @weekly_subscribers.length %></span> Weekly Followers</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project every week."></i>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-2">
+                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
+                </div>
+                <div class="col-sm-9 project-team-title">
+                    <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
+                        <input type="search" name="user_id" class="contacts search-subs" placeholder="Add followers...">
+                        <%= submit_tag "Add subscriber", class: "hide-submit-button" %>
+                    <%end%>
+                </div>
+            </div>
+            <dl class="no-display">
+                <dd class="project-people subs">
+                    <% @weekly_subscribers.each do |ps| %>
                         <%= render 'project_subscribers/subscriber', ps: ps %>
                     <% end %>
                 </dd>
