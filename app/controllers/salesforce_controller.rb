@@ -20,8 +20,13 @@ class SalesforceController < ApplicationController
   		# set this salesforce id to contextsmith account id
   		@salesforce_id = params[:id]
 
-      account = Account.find_by(salesforce_id: params[:id])
-      # account = Account.find_by(id: 'e699af1c-2069-44e0-9a2c-80b01cd0fab0')
+      salesforce = SalesforceAccount.eager_load(:account).find_by(salesforce_account_id: params[:id], contextsmith_organization_id: current_user.organization_id)
+
+      if salesforce.nil?
+        return
+      end
+
+      account = salesforce.account
       if account.nil?
         @isconnect = false
         return
