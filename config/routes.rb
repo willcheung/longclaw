@@ -25,6 +25,7 @@ Longclaw::Application.routes.draw do
     get "salesforce/disconnect/:id" => 'salesforce#disconnect'
     post "/link_salesforce" => 'salesforce#link_salesforce_account'
     get "/salesforce_refresh" => 'salesforce#refresh'
+    get "/delete_salesforce_account/:id" => 'salesforce#remove_link'
 
     get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
     get "projects/:id/pinned" => 'projects#pinned_tab'
