@@ -82,4 +82,12 @@ class SearchController < ApplicationController
     end
   end
 
+  def autocomplete_salesforce_account_name
+    @salesforce_accounts = SalesforceAccount.where("lower(salesforce_account_name) like ? AND contextsmith_organization_id=?", "%#{params[:term]}%", "#{current_user.organization_id}")
+  
+    respond_to do |format|
+      format.json { render json: @salesforce_accounts.map { |x| { :id => x.id, :name => x.salesforce_account_name } }.to_json.html_safe }
+    end
+  end
+
 end
