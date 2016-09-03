@@ -5,7 +5,7 @@
     <h4 class="text-center">Click on the <span class="label label-primary">Pin as Key Activity</span> button at the bottom of each conversation or note to pin the important ones here.</h4>
   </div>
 <% else %>
-    <table class="table pinned-table table-condensed table-hover white-bg">
+    <table class="table pinned-table table-condensed white-bg">
         <tbody>
                 <% pinned_activities.each do |a| %>
                     <%= render 'activities/pinned', a: a %>

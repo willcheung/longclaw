@@ -302,6 +302,8 @@ span.best_in_place.btn {
 .social-comment:hover .delete-comment {
   display: block;
 }
+.task-name { font-weight: 500;font-size:14px; }
+.task-desc { font-weight: 300; }
 .task-name:hover .edit-task,
 .task-desc:hover .edit-task,
 .contact-info:hover .edit-contact {
