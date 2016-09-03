@@ -37,7 +37,7 @@
             </span>
         </td>
         <td>
-          <div class="task-name" style="font-size:14px">
+          <div class="task-name">
             <span class="in-bl max-w-lg"><%= best_in_place n, :name, :as => :input, :place_holder => '(no title)', :activator => "#task-#{n.id}-name-activator" %></span>
             <% unless n.category == Notification::CATEGORY[:Action] || n.category == Notification::CATEGORY[:Opportunity] || n.category == Notification::CATEGORY[:Risk] %>
             <i id="task-<%= n.id %>-name-activator" class="fa fa-pencil fa-lg m-l-xs bip_activator text-mute-gray vtop edit-task"></i>
