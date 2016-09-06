@@ -36,13 +36,14 @@ class SalesforceController < ApplicationController
       @actiontype = params[:actiontype]
     end
 
+    @isconnect = true
+
   	# check if id is valid and in the scope
 
   	# for now, just use test account
   	@projects = Project.includes(:activities).where(account_id: account.id)
     activities = []   
     if !@projects.empty?
-      @isconnect = true
     	if !params[:pid].nil?
     		@projects.each do |p|
     			if p.id == params[:pid]
@@ -74,6 +75,7 @@ class SalesforceController < ApplicationController
       @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
       project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
       @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
+      @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).length
       @notifications = @project.notifications.order(:is_complete, :original_due_date)  
 
       @pinned_activities = @project.activities.pinned.includes(:comments)

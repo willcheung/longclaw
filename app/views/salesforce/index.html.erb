@@ -6,10 +6,10 @@
           <ul class="nav nav-tabs">            
             <% if @projects.empty? %>
               <div class="text-center m-t-lg">
-                <% if @isconnect %>
-                  <h3>Cannot find your ContextSmith Stream</h3>
-                <% else %>
+                <% if !@isconnect %>
                   <h3>Not connected to any ContextSmith Account</h3>
+                <% else %>
+                  <h3>No project in this account</h3>
                 <% end  %>
               </div>
             <% else %>
@@ -51,12 +51,12 @@
             </div>
             </div>
             <div class="col-xs-3" style="padding-top: 10px;">
-              <div class="metric text-primary">
+              <div class="metric text-danger">
                 <div class="metric-title">
-                  <h5>Last Touch By</h5>
+                  <h5>Open Risks</h5>
                 </div>
                 <div class="metric-content">
-                  <h3><%= @project_last_touch_by %></h3>
+                  <h3><%= @project_open_risks_count %></h3>
                 </div>
               </div>
             </div>
