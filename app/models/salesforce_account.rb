@@ -54,9 +54,6 @@ class SalesforceAccount < ActiveRecord::Base
 		  	# salesforce refresh token expires when different app use it for 5 times
 		  	salesforce_user.destroy
 		  	puts "Error: salesforce error"
-		  	respond_to do |format|
-    				format.html { redirect_to settings_url }
- 				end
 		  end 		
     end
 
