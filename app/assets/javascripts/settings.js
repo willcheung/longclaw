@@ -1,5 +1,6 @@
 $(document).ready(function() {
     $('#users-table').DataTable( {
+        "scrollX": false,
         "responsive": true,
         "order": [[5, "desc"]],
         "bPaginate": false,
