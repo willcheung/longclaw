@@ -8,7 +8,7 @@ class SalesforceController < ApplicationController
   	@activities_by_month = []
     @activities_by_date = []
     @project = Project.new
-    @isconnect = true
+    @isconnect = false
 
     @actiontype = 'show'
     @pinned_activities = []
@@ -28,7 +28,6 @@ class SalesforceController < ApplicationController
 
       account = salesforce.account
       if account.nil?
-        @isconnect = false
         return
       end
   	end
@@ -40,10 +39,10 @@ class SalesforceController < ApplicationController
   	# check if id is valid and in the scope
 
   	# for now, just use test account
-
   	@projects = Project.includes(:activities).where(account_id: account.id)
     activities = []   
     if !@projects.empty?
+      @isconnect = true
     	if !params[:pid].nil?
     		@projects.each do |p|
     			if p.id == params[:pid]
