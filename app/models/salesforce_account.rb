@@ -69,6 +69,11 @@ class SalesforceAccount < ActiveRecord::Base
       	      	salesforce_updated_at: DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time)
 
   	      salesforce_account.save
+        else
+          SalesforceAccount.find_by(salesforce_account_id: s.Id).update(salesforce_account_name: s.Name,
+                contextsmith_organization_id: current_user.organization_id,
+                salesforce_updated_at: DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time)
+
 				end
 			end
 		end

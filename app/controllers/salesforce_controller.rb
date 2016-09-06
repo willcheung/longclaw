@@ -161,7 +161,7 @@ class SalesforceController < ApplicationController
       end
     end
 
-    salesforce_accounts.update_all(contextsmith_account_id: nil)
+    salesforce_accounts.update_all(contextsmith_account_id: nil, contextsmith_organization_id: "00000000-0000-0000-0000-000000000000")
 
     salesforce_user = OauthUser.find_by(id: params[:id])
     salesforce_user.destroy
