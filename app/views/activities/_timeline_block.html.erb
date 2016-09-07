@@ -23,11 +23,9 @@
         <% else %>
         <% if !a.email_addresses.nil? %> "<%=a.email_addresses.to_a.join(',') %>"  <% end %>
         <% end %>  >
-        <% if a.category == Activity::CATEGORY[:Conversation] %>
-          <div class="timeline-note">
+        <% if a.category == Activity::CATEGORY[:Conversation] %>          
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
-                <span><a href="/delete_single_activity/<%=a.id%>"><i class="delete-note fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;" data-toggle="tooltip" data-placement="top" data-original-title="Delete this conversation"></i></a></span>
                 <% if not_in_current_user_inbox(a) %><span id="not-in-inox"><i class="fa fa-eye pull-right" style="font-size:14px;" data-toggle="tooltip" data-placement="top" data-original-title="This conversation is not in your inbox"></i></span><% end %>
                 <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" style="color:#ed5565" title="Private"></i></span>
             </h3>
@@ -76,7 +74,6 @@
         <% unless params[:action] == "daily_summary" %>
             <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => true, :notifications => @notifications.where(conversation_id: a.backend_id) %></div>
         <% end %>
-          </div>
         
         <% elsif a.category == Activity::CATEGORY[:Note] %>
             <div class="chat-discussion timeline-note" data-myvalue="<%= a.last_sent_date_epoch %>">
@@ -99,10 +96,8 @@
             </div>
 
         <% elsif a.category == Activity::CATEGORY[:Meeting] %>
-          <div class="timeline-note">
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_calendar_interval(a) %></small>
-                <span><a href="/delete_single_activity/<%=a.id%>"<i class="delete-note fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;" data-toggle="tooltip" data-placement="top" data-original-title="Delete this conversation"></i></a></span>
                 <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" style="color:#ed5565" title="Private"></i></span>
             </h3>
 
@@ -121,7 +116,6 @@
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 </div>
             </div> <!-- chat discussion -->
-          </div>
         <% end %>
         
         <div class="content-footer footer-<%= a.id %>" style="display: none;">
