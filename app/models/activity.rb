@@ -278,6 +278,9 @@ class Activity < ActiveRecord::Base
       u.first_name = c.first_name
       u.last_name = c.last_name
       u.email = c.email
+      if u.first_name.blank? and u.last_name.blank?
+        u.first_name  = c.email
+      end
       #avoid contacts with same email
       if tempSet.include?(c.email)
         final_filter_user.push(u)
@@ -286,6 +289,9 @@ class Activity < ActiveRecord::Base
     end
 
     filter_user.each do |u|
+      if u.first_name.blank? and u.last_name.blank?
+        u.first_name  = u.email
+      end
       final_filter_user.push(u)
       tempSet.delete(u.email)
     end
