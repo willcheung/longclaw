@@ -1,6 +1,6 @@
 $(document).ready(function() {
     $('#users-table').DataTable( {
-        "scrollX": true,
+        "scrollX": false,
         "responsive": true,
         "order": [[5, "desc"]],
         "bPaginate": false,
@@ -39,14 +39,12 @@ $(document).ready(function() {
       create: false,
       render: {
         item: function(item, escape) {
-          console.log("meow");
           return '<div>' +
               (item.name ? '<span class="name">' + escape(item.name) + '</span>' : '') +
               (item.account ? '<span class="account">' + escape(item.account) + '</span>' : '') +
           '</div>';
         },
         option: function(item, escape) {
-          console.log("woof");
           var label = item.name || item.account;
           var caption = item.name ? item.account : null;
           return '<div>' +
@@ -61,7 +59,6 @@ $(document).ready(function() {
         // console.log(callback);
         $.getJSON( '/search/autocomplete_salesforce_account_name.json', { term: encodeURIComponent(term) } )
           .done( function (data) {
-            console.log("yes!!!");
             // console.log(data);
             callback(data);
           })

@@ -234,9 +234,10 @@ function applyFilter(minDate, maxDate){
                     if(monthShow==false){
                       monthShow = true;
                       $('#vertical-timeline').children().eq(monthIndex).show("slow");
-                      $(this).parent().parent().parent().show();
-                      breakFlag = true;
                     }
+                    $(this).parent().parent().parent().show();
+                    breakFlag = true;
+                    
                   }
                   else{
                     $(this).parent().parent().parent().hide();
@@ -291,8 +292,6 @@ function applyFilter(minDate, maxDate){
                 if(monthShow==false){
                   monthShow = true;
                   $('#vertical-timeline').children().eq(monthIndex).show("slow");
-                  $(this).parent().parent().parent().show();
-                 
                 }
               }
               else{

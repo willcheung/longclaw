@@ -8,7 +8,7 @@ class SalesforceController < ApplicationController
   	@activities_by_month = []
     @activities_by_date = []
     @project = Project.new
-    @isconnect = true
+    @isconnect = false
 
     @actiontype = 'show'
     @pinned_activities = []
@@ -28,7 +28,6 @@ class SalesforceController < ApplicationController
 
       account = salesforce.account
       if account.nil?
-        @isconnect = false
         return
       end
   	end
@@ -37,10 +36,11 @@ class SalesforceController < ApplicationController
       @actiontype = params[:actiontype]
     end
 
+    @isconnect = true
+
   	# check if id is valid and in the scope
 
   	# for now, just use test account
-
   	@projects = Project.includes(:activities).where(account_id: account.id)
     activities = []   
     if !@projects.empty?
@@ -75,6 +75,7 @@ class SalesforceController < ApplicationController
       @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
       project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
       @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
+      @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).length
       @notifications = @project.notifications.order(:is_complete, :original_due_date)  
 
       @pinned_activities = @project.activities.pinned.includes(:comments)
@@ -85,6 +86,8 @@ class SalesforceController < ApplicationController
 
       @project_open_tasks_count = @project.notifications.where(is_complete: false).length
       @project_pinned_count = @project.activities.pinned.length
+
+      @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h 
  		end
 
     if(!params[:category].nil? and !params[:category].empty?)
@@ -161,7 +164,7 @@ class SalesforceController < ApplicationController
       end
     end
 
-    salesforce_accounts.update_all(contextsmith_account_id: nil)
+    salesforce_accounts.update_all(contextsmith_account_id: nil, contextsmith_organization_id: "00000000-0000-0000-0000-000000000000")
 
     salesforce_user = OauthUser.find_by(id: params[:id])
     salesforce_user.destroy

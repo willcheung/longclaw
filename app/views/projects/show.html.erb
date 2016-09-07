@@ -412,3 +412,6 @@
     $('#timeline-filters').hide();
   });
 </script>
+<% if params[:action] == "tasks_tab" %>
+<%= javascript_include_tag 'notifications' %>
+<% end %>
