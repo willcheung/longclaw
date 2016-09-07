@@ -4,7 +4,11 @@
         <%= get_profile_pic(get_full_name(m), m.email, "message-avatar") %>
     </div>
     <div class="col-sm-7 project-team-title">
-        <span><%= get_full_name(m) %></span><br>
+        <span><% if m.first_name.blank? and m.last_name.blank? %> <%= get_local_part(m.email) %>   
+          <% else %>
+          <%=get_full_name(m)  %>
+          <% end %>
+        </span><br>
         <span><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
     </div>
     <% if pm.status == ProjectMember::STATUS[:Confirmed] %>
