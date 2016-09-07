@@ -46,6 +46,10 @@ module Utils
 	  email.split("@").last
 	end
 
+	def get_local_part(email)
+		email.split("@").first
+	end
+
 	def get_short_name(domain)
 	  domain.gsub('.com', '')
 	end
