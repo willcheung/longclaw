@@ -7,10 +7,13 @@
 /* Tooltip */
 $('[data-toggle="tooltip"]').tooltip();
 
+/* Chosen */
+$('.metric_filter').chosen({ disable_search: true, allow_single_deselect: true}); 
+$('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+
 $('input[name="daterange"]').daterangepicker({
     "alwaysShowCalendars": true,
-    // "opens": "left",
-    "cancelClass": "btn-danger",
+    "opens": "left",
     "startDate": moment().subtract(7, "days").format("l"),
     "ranges": {
         "Today": [
@@ -21,10 +24,7 @@ $('input[name="daterange"]').daterangepicker({
             moment().subtract(7, "days").format("l"),
             moment().format("l")
         ],
-        "Last 14 Days": [
-            moment().subtract(14, "days").format("l"),
-            moment().format("l")
-        ],
+
         "Last 30 Days": [
             moment().subtract(30, "days").format("l"),
             moment().format("l")
@@ -32,10 +32,6 @@ $('input[name="daterange"]').daterangepicker({
         "Last 90 Days": [
             moment().subtract(90, "days").format("l"),
             moment().format("l")
-        ],
-        "This Month": [
-            moment().date(1).format("l"),
-            moment().date(moment().daysInMonth()).format("l")
         ]
     }
 });
