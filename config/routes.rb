@@ -61,7 +61,7 @@ Longclaw::Application.routes.draw do
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
     
     # get 'reports/touches/team' => 'reports#touches_by_team'
-    # get 'reports/customer'
+    get 'reports/accounts'
     # get 'reports/team'
     # get 'reports/lifecycle'
   end
