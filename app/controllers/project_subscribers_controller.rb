@@ -1,17 +1,35 @@
 class ProjectSubscribersController < ApplicationController
-	before_action :set_project_subscriber, only: [:destroy]
+  before_action :set_project
+	before_action :set_project_subscriber, only: [:create, :destroy]
 
   # for subscribing yourself to a project
 	def create
-		@subscriber = ProjectSubscriber.new(user_id: params[:user_id], project_id: params[:project_id])
-		@project = Project.find(params[:project_id])
+    puts '================'
+    if params[:type] == "daily"
+      if @project_subscriber
+        puts 'daily - found'
+        @project_subscriber.daily = true
+      else
+        puts 'daily - nil'
+        @project_subscriber = ProjectSubscriber.new(user_id: params[:user_id], project_id: params[:project_id], weekly: false)
+      end
+    elsif params[:type] == "weekly"
+      if @project_subscriber
+        puts 'weekly - found'
+        @project_subscriber.weekly = true
+      else
+        puts 'weekly - nil'
+        @project_subscriber = ProjectSubscriber.new(user_id: params[:user_id], project_id: params[:project_id], daily: false)
+      end
+    end
+    puts '=============='
 
     respond_to do |format|
-      if @subscriber.save
+      if @project_subscriber.save
       	format.js 
         format.json { head :no_content }
       else
-        format.json { render json: @subscriber.errors, status: :unprocessable_entity }
+        format.json { render json: @project_subscriber.errors, status: :unprocessable_entity }
       end
     end
 	end
@@ -31,7 +49,6 @@ class ProjectSubscribersController < ApplicationController
     @project_subscribers.map! { |s| ProjectSubscriber.new(user_id: s, project_id: params[:project_id]) }
     # @project_subscribers is array of subscribers who are saved successfully
     @project_subscribers.select! { |s| s.save }
-    @project = Project.find(params[:project_id])
 
     respond_to do |format|
       format.html { redirect_to :back }
@@ -41,8 +58,18 @@ class ProjectSubscribersController < ApplicationController
   end
 
 	def destroy
-		@project = Project.find(params[:project_id])
-		@project_subscriber.destroy_all
+    if params[:type] == "daily"
+      @project_subscriber.daily = false
+    elsif params[:type] == "weekly"
+      @project_subscriber.weekly = false
+    end
+
+    if !@project_subscriber.daily && !@project_subscriber.weekly
+      @project_subscriber.destroy
+    else
+      @project_subscriber.save
+    end
+
     respond_to do |format|
       format.js 
       format.json { head :no_content }
@@ -63,6 +90,10 @@ class ProjectSubscribersController < ApplicationController
 	private
   
 	def set_project_subscriber
-    @project_subscriber = ProjectSubscriber.where("user_id = ? and project_id = ?", params[:user_id], params[:project_id])
+    @project_subscriber = ProjectSubscriber.find_by(user_id: params[:user_id], project_id: params[:project_id])
+  end
+
+  def set_project
+    @project = Project.find(params[:project_id])
   end
 end
