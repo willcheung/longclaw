@@ -4,24 +4,6 @@
 //= require datepicker/bootstrap-datepicker.js
 //= require iCheck/icheck.min.js
 
-$(document).ready(function() {
-    $('#notifications-table').DataTable({
-        "scrollX": true,
-    	responsive: true,
-	    columnDefs: [
-	      { searchable: false, targets: [0,1,3,4,6,7]},
-	      { orderable: false, targets: [2,3] }
-	    ],
-	    "bPaginate": false,
-	    "order": [[ 7, "desc" ]],
-	    "dom":' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
-	    "language": {
-      search: "_INPUT_",
-      searchPlaceholder: "Start typing to filter list..."
-    	}
-    });
-    $('input[type=search]').attr('size', '50');
-});
 
 $(function() {
     $('.i-checks').iCheck({
@@ -118,16 +100,16 @@ function hoverGetData(){
     });
 
     cachedData[id] = localData;
-
     return localData;
 }
 
 $('.hoverToolTip').hover(function(){
     $('.tooltip-inner').css('background-color', 'white');
+    $('.tooltip-inner').css('color', 'black');
     $('.tooltip-inner').css('opacity', '1');
-
     $('.tooltip-inner').css('padding', '20px 20px');
     $('.tooltip-inner').css('max-width', '512px');
+    $('.tooltip-inner').css('text-align', 'left');
     
     $('.tooltip').css('background-color', 'white');
     $('.tooltip').css('opacity', '1');
