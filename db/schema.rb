@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160901223423) do
+ActiveRecord::Schema.define(version: 20160908000658) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -259,6 +259,7 @@ ActiveRecord::Schema.define(version: 20160901223423) do
     t.datetime "cluster_update_date"
     t.string   "title"
     t.string   "time_zone",              default: "UTC"
+    t.boolean  "mark_private",           default: false, null: false
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree

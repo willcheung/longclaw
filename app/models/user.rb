@@ -33,6 +33,7 @@
 #  cluster_update_date    :datetime
 #  title                  :string
 #  time_zone              :string           default("UTC")
+#  mark_private           :boolean          default(FALSE), not null
 #
 # Indexes
 #
