@@ -14,13 +14,13 @@ class ContextsmithService
     final_cluster = format_ex_clusters(ex_clusters)
 
     after = after.nil? ? "" : ("&after=" + after.to_s)
-    query = query.nil? ? "" : ("&query=" + query.to_s)
+    query = query.nil? ? "" : ("&query=" + url_encode(query.to_s))
     is_time = is_time.nil? ? "" : ("&time=" + is_time.to_s)
     request = request.nil? ? "": ("&request=" + request.to_s)
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
        
     ### TODO: Add "&request=true" to final_url
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + url_encode(query) + is_time + neg_sentiment #+ request
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + query + is_time + neg_sentiment #+ request
     puts "Calling backend service: " + final_url
 
     request_backend_service(final_url, project, save_in_db, "conversations", is_test)    
