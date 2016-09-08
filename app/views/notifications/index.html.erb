@@ -37,7 +37,7 @@
         <option value="2" <% if @duedate=="none"  %> selected  <% end %>  >No due date</option>
         <option value="3" <% if @duedate=="overdue"  %> selected  <% end %>  >Overdue</option>
       </select>
-      <select class="project_box col-sm-3" data-placeholder="Select Project">
+      <select class="project_box col-sm-3" data-placeholder="Select stream">
         <option value="0"></option>
         <% if !@projects.nil?  %>
         <% @projects.each do |p| %>
