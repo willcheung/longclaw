@@ -33,7 +33,7 @@
                   <% if u.first_name.include?('@')%>
                       <%=u.first_name%>
                   <% else %>
-                      <%=u.first_name+' '+u.last_name+'(@'+  get_short_name(get_domain(u.email))+')' %>
+                      <%=u.first_name+' '+u.last_name+' @'+  get_short_name(get_domain(u.email)) %>
                   <% end %>         
                 </option>
               <% end %>
