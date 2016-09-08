@@ -97,8 +97,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row text-right">
-                        <h3><a href="" class="btn btn-outline btn-primary btn-xs">See detailed risks &rarr;</a></h3>
+                    <div class="row text-center">
+                        <h3><a href="" class="btn btn-outline btn-primary btn-xs">See risks &rarr;</a></h3>
                     </div>
                 </div>
 
@@ -116,19 +116,19 @@
                         <div id="activities-chart" style="height:240px"></div>
                     </div>
 
-                    <div class="row m-t-lg text-right">
-                        <h3><a href="" class="btn btn-outline btn-primary btn-xs">See detailed activities &rarr;</a></h3>
+                    <div class="row m-t-lg text-center">
+                        <h3><a href="" class="btn btn-outline btn-primary btn-xs">See activities &rarr;</a></h3>
                     </div>
                 </div>
 
                 <div class="ibox-content">
-                     <div class="row">
-                        <h3>Engagement by Team</h3>
-                        <div class="col-lg-12" id="activities-breakdown" style="height:200px"></div>
+                    <div class="row">
+                        <div class="col-lg-6" id="activities-breakdown" style="height:200px"></div>
+                        <div class="col-lg-6" id="top-contributors" style="height:200px;"></div>
                     </div>
 
-                    <div class="row m-t-lg text-right">
-                        <h3><a href="https://demo-contextsmith.herokuapp.com/projects/63785ef0-af65-475e-be6b-d2451b5dc565/insights" class="btn btn-outline btn-primary btn-xs">See details in Account Relationship Graph &rarr;</a></h3>
+                    <div class="row m-t-lg text-center">
+                        <h3><a href="https://demo-contextsmith.herokuapp.com/projects/63785ef0-af65-475e-be6b-d2451b5dc565/insights" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
                     </div>
                 </div>
             </div>
@@ -183,6 +183,99 @@
             ]
         });
 
+        $('#activities-breakdown').highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            credits: false,
+            title: {
+                text: "Activities by Team",
+                align: 'left',
+                margin: 0,
+                x: 35,
+                style: {
+                    color: '#555555',
+                    fontSize: '16px'
+                }
+            },
+            tooltip: {
+                pointFormat: '{point.percentage:.1f}%'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false,
+                        distance: -25,
+                        format: '{point.name}',
+                    }
+                }
+            },
+            series: [{
+                name: 'Team',
+                colorByPoint: true,
+                data: [{
+                    name: 'Sales',
+                    y: 56.3,
+                    sliced: true,
+                    dataLabels: { 
+                        enabled: true
+                    },
+                }, {
+                    name: 'Marketing',
+                    y: 24
+                }, {
+                    name: 'Account Managment',
+                    y: 10.3
+                }, {
+                    name: 'Support',
+                    y: 4.7
+                }]
+            }]
+        });
+
+        $('#top-contributors').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: 'Most Active Contributors',
+                align: 'left',
+                margin: 0,
+                x: 35,
+                style: {
+                    color: '#555555',
+                    fontSize: '15px'
+                }
+            },
+            credits: { enabled: false },
+            xAxis: {
+                categories: ['Justin', 'Kelvin', 'Will', 'Richard', 'Ben']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Engagement',
+                data: [7, 5, 4, 3, 2]
+            }]
+        });
+
         /***********
         Sychronize Charts
         ************/
@@ -199,7 +292,7 @@
 
             console.log(Highcharts.charts);
 
-            for (i = 1; i < Highcharts.charts.length; i = i + 1) { // i=1 to exclude first chart #left-chart
+            for (i = 3; i < Highcharts.charts.length; i = i + 1) { // i=3 to exclude first chart #left-chart
                 chart = Highcharts.charts[i];
                 event = chart.pointer.normalize(e.originalEvent); // Find coordinates within the chart
                 point = chart.series[0].searchPoint(event, true); // Get the hovered point
@@ -318,7 +411,7 @@
                     borderWidth: 0,
                     backgroundColor: 'none',
                     pointFormat: '{point.y}',
-                    xDateFormat: '%b %e, %Y',
+                    xDateFormat: '%b %e',
                     shadow: false,
                     style: {
                         fontSize: '16px',
@@ -391,7 +484,7 @@
                 borderWidth: 0,
                 backgroundColor: 'none',
                 pointFormat: '{point.y}',
-                xDateFormat: '%b %e, %Y',
+                xDateFormat: '%b %e',
                 shadow: false,
                 style: {
                     fontSize: '16px',
@@ -455,7 +548,7 @@
                 borderWidth: 0,
                 backgroundColor: 'none',
                 pointFormat: '{point.stackTotal}',
-                xDateFormat: '%b %e, %Y',
+                xDateFormat: '%b %e',
                 shadow: false,
                 style: {
                     fontSize: '16px',
@@ -498,51 +591,6 @@
             ]
         });
 
-
-        $('#activities-breakdown').highcharts({
-            chart: {
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false,
-                type: 'pie'
-            },
-            credits: false,
-            title: {
-                text: ''
-            },
-            tooltip: {
-                pointFormat: '{point.percentage:.1f}%'
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: {
-                        enabled: true,
-                        format: '{point.name}',
-                    }
-                }
-            },
-            series: [{
-                name: 'Team',
-                colorByPoint: true,
-                data: [{
-                    name: 'Sales',
-                    y: 56.33
-                }, {
-                    name: 'Marketing',
-                    y: 24.03,
-                    sliced: true,
-                    selected: true
-                }, {
-                    name: 'Account Managment',
-                    y: 10.38
-                }, {
-                    name: 'Support',
-                    y: 4.77
-                }]
-            }]
-        });
     });
 
 </script>
