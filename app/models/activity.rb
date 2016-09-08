@@ -59,7 +59,14 @@ class Activity < ActiveRecord::Base
     data_hash.each do |d|
       d.conversations.each do |c|
         is_public_flag = true
-        c.messages.collect { |m| m.isPrivate ? is_public_flag = false : nil } # check if there's any private emails
+        c.messages.last.isPrivate ? is_public_flag = false : true  # check if last message is private
+
+        # overwrite is_public_flag if the last message was sent from a user 
+        sender = User.find_by(email: c.messages.last.from[0]['address'])
+
+        if is_public_flag!=true and !sender.nil? and !sender.blank? 
+          is_public_flag = !sender.mark_private
+        end
 
         val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Conversation]}', #{Activity.sanitize(c.subject)}, #{is_public_flag}, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
                    #{Activity.sanitize(c.messages.last.from.to_json)},
@@ -67,8 +74,7 @@ class Activity < ActiveRecord::Base
                    #{Activity.sanitize(c.messages.last.cc.to_json)}, 
                    #{Activity.sanitize(c.messages.to_json)}, 
                    '#{Time.now}', '#{Time.now}')"
-
-
+               
         # Create activities object
         activities << Activity.new(
             posted_by: user_id,
@@ -89,7 +95,7 @@ class Activity < ActiveRecord::Base
     end
 
     insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "created_at", "updated_at") VALUES'
-    on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages'
+    on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, email_messages = EXCLUDED.email_messages, is_public = EXCLUDED.is_public'
     values = val.join(', ')
 
     if !val.empty? and save_in_db

@@ -27,6 +27,7 @@
                         <th style="text-align:center">Accounts Owned</th>
                         <th style="text-align:center">Projects Owned</th>
                         <th style="text-align:center">Time Zone</th>
+                        <th style="text-align:center">Set Private</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,6 +47,7 @@
                         <td style="text-align:center"><%= u.accounts.count.to_s %> </td>
                         <td style="text-align:center"><%= u.projects_owner_of.count.to_s %></td>
                         <td><%= u.time_zone %></td>
+                        <td><%= best_in_place u, :mark_private, :as => 'checkbox', :data => {:user => u}, collection: {false: raw('<i class="fa fa-square-o"></i>'), true: raw('<i class="fa fa-check-square-o"></i>')}%></td>
                     </tr>
                     <% end %>
             </table>
