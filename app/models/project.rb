@@ -35,9 +35,20 @@ class Project < ActiveRecord::Base
 
 	belongs_to 	:account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
-	has_many	:activities, -> { order "last_sent_date DESC" }, dependent: :destroy
-	has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
+  has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
+
+  has_many  :activities, -> { order last_sent_date: :desc }, dependent: :destroy
+  has_many  :conversations, -> { conversations }, class_name: "Activity"
+  has_many  :notes, -> { notes }, class_name: "Activity"
+  has_many  :meetings, -> { meetings }, class_name: "Activity"
+  has_many  :conversations_for_email, -> { 
+    conversations.from_yesterday
+    .select(:category, :title, :from, :to, :cc, :project_id, :last_sent_date, :is_public, 
+      'jsonb_array_length(email_messages) AS num_messages', 
+      'email_messages->-1 AS last_msg') }, class_name: "Activity"
+  has_many  :notes_for_email, -> { notes.from_yesterday }, class_name: "Activity"
+  has_many  :meetings_for_email, -> { meetings.from_yesterday }, class_name: "Activity"
 
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column

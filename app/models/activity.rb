@@ -39,6 +39,10 @@ class Activity < ActiveRecord::Base
 
   scope :pinned, -> { where is_pinned: true }
   scope :last_active_on, -> { maximum "last_sent_date" }
+  scope :conversations, -> { where category: CATEGORY[:Conversation] }
+  scope :notes, -> { where category: CATEGORY[:Note] }
+  scope :meetings, -> { where category: CATEGORY[:Meeting] }
+  scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
 
   acts_as_commentable
 

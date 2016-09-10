@@ -16,25 +16,26 @@ class UserMailer < ApplicationMailer
     @user = user
     d_tz = Time.current.yesterday.midnight.utc
 
-    activity_from_yesterday = "activities.last_sent_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours'"
+    # activity_from_yesterday = "activities.last_sent_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours'"
     your_notifications = "((notifications.is_complete = false) OR (notifications.is_complete = true AND notifications.complete_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours')) AND (notifications.assign_to = '#{user.id}')"
 
     sub = user.subscriptions
 
-    if !sub.nil? and !sub.empty?
-      updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).includes(:activities, :account, :notifications).where(activity_from_yesterday + " OR " + your_notifications).group("activities.id, accounts.id, notifications.id")
-      @updates_today = updates_today.map do |proj|
+    unless sub.blank?
+      @updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).preload(:conversations_for_email, :notes_for_email, :meetings_for_email, :account, :notifications)
+      @updates_today = @updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
         temp = proj.dup
         # temp = Project.new     # another option
         # assign relations before id
-        temp.activities = proj.activities.where(activity_from_yesterday).select { |a| a.is_visible_to(user) }
+        temp.activities = (proj.conversations_for_email + proj.notes_for_email + proj.meetings_for_email).select { |a| a.is_visible_to(user) }.sort  {|a,b| b.last_sent_date <=> a.last_sent_date }
         temp.notifications = proj.notifications.where(your_notifications).order(:is_complete, :original_due_date)
         temp.account = proj.account
         # CAUTION: if id is assigned before the relations, assigned relation will be overwritten in actual record
         temp.id = proj.id
         temp
       end
+      @updates_today.reject! { |proj| proj.activities.blank? && proj.notifications.blank? }
 
       track user: user # ahoy_email tracker
       track click: false # disable ahoy_email click tracker for links in email

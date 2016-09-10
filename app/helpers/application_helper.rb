@@ -94,7 +94,7 @@ module ApplicationHelper
       return get_first_names([], to, nil)
     else
       if trailing_text == "other"
-        return get_first_names([], to, nil) + " and " + pluralize(attendees_size - size_limit, 'other')
+        return get_first_names([], to[0..size_limit], nil) + " and " + pluralize(attendees_size - size_limit, 'other')
       else
         return "All"
       end
