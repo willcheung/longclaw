@@ -33,51 +33,51 @@
 
     <!-- Stream Name & Metrics -->
     <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px 0;background-color:#ffffff;vertical-align:top;margin-bottom:10px;">
-    <tbody>
-      <tr>
-        <td style="padding-bottom:5px;">
-          <a href="<%= project_url(p.id) %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
-          <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
-             <tbody>
-                <tr style="border-top:1px solid #c1c1c1;">
-                <% risk_score = p.current_risk_score(@user) %>
-                  <td style="color:<%= if risk_score > 80.0
-                                          '#ed5565'
-                                       elsif risk_score > 60.0
-                                          '#FFA500'
-                                       else 
-                                          '#A1C436'
-                                       end %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
-                    <span style="display:block;"><%= risk_score %>%</span>
-                    <span style="font-size:14px;display:block;"><%= if risk_score > 80.0
-                                                                      'High'
-                                                                    elsif risk_score > 60.0
-                                                                      'Medium'
-                                                                    else 
-                                                                      'Low'
-                                                                    end %> Risk</span>
-                  </td>
-                  <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
-                    <span style="display:block;"><%= p.activities.size %></span>
-                    <span style="font-size:14px;display:block;"><%= 'Activity'.pluralize(p.activities.size) %></span>
-                  </td>
-                  <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
-                  <% your_open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
-                    <span style="display:block;"><%= your_open_notification_count %></span>
-                    <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(your_open_notification_count) %> Assigned To You</span>
-                  </td>
-                </tr>
-             </tbody>
-          </table>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+      <tbody>
+        <tr>
+          <td style="padding-bottom:5px;">
+            <a href="<%= project_url(p.id) %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
+            <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
+               <tbody>
+                  <tr style="border-top:1px solid #c1c1c1;">
+                  <% risk_score = p.current_risk_score(@user) %>
+                    <td style="color:<%= if risk_score > 80.0
+                                            '#ed5565'
+                                         elsif risk_score > 60.0
+                                            '#FFA500'
+                                         else 
+                                            '#A1C436'
+                                         end %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                      <span style="display:block;"><%= risk_score %>%</span>
+                      <span style="font-size:14px;display:block;"><%= if risk_score > 80.0
+                                                                        'High'
+                                                                      elsif risk_score > 60.0
+                                                                        'Medium'
+                                                                      else 
+                                                                        'Low'
+                                                                      end %> Risk</span>
+                    </td>
+                    <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                      <span style="display:block;"><%= p.activities.size %></span>
+                      <span style="font-size:14px;display:block;"><%= 'Activity'.pluralize(p.activities.size) %></span>
+                    </td>
+                    <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
+                    <% your_open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
+                      <span style="display:block;"><%= your_open_notification_count %></span>
+                      <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(your_open_notification_count) %> Assigned To You</span>
+                    </td>
+                  </tr>
+               </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
   <!-- Activities -->
   <% unless p.activities.empty? %>
@@ -87,6 +87,7 @@
 
     <% p.activities.each do |a| %>
       <tr>
+
       <% if a.category == Activity::CATEGORY[:Conversation] %>
       <!-- Conversation -->
         <td style="padding-top:5px;padding-right:5px;">
@@ -101,6 +102,7 @@
                     <strong style="font-weight:bold;"><%= a.title %></strong> (<%= a.num_messages %>) <span style="font-size:12px;"><%= get_conversation_member_names(a.from, a.to, a.cc) %></span>
                   </td>
                 </tr>
+                <tr>
                   <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;">
                     <%= if a.last_msg['content'].nil? || a.last_msg['content'].is_a?(String)    
                           truncate(a.last_msg['content'], length: 60, separator: ' ')    
@@ -108,7 +110,7 @@
                           truncate(a.last_msg['content']['body'], length: 60, separator: ' ')   
                         end %>   
                   </td>
-                <tr>
+                </tr>
 
               </tbody>
           </table>
@@ -143,7 +145,6 @@
         <td style="padding-top:5px;padding-right:5px;">
           <img src="<%= root_url %>/assets/images/icons/meeting_icon.png" alt="Meeting">
         </td>
-
         <td>
           
           <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
@@ -162,11 +163,10 @@
           </table>
 
         </td>
-    <% end %>
+      <% end %>
 
       </tr>
-
-  <% end %>  
+    <% end %>  
 
     </tbody>
   </table>
