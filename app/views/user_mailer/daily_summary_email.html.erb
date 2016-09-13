@@ -90,8 +90,8 @@
       <% if a.category == Activity::CATEGORY[:Conversation] %>
       <!-- Conversation -->
         <td style="padding-top:5px;padding-right:5px;">
-          <div style="background-color:#3C8DC5;border-radius:50%;width:30px;height:30px;">
-            <span style="color:white;position:relative;top:5px;left:5px;font-size:21px;">&#9993;</span>
+          <div style="background-color:#3C8DC5;border-radius:50%;width:25px;height:25px;padding-top:5px;padding-left:5px;">
+            <span style="color:white;font-size:21px;">&#9993;</span>
           </div>
         </td>
         <td>
@@ -120,8 +120,8 @@
       <% elsif a.category == Activity::CATEGORY[:Note] %>
       <!-- Note -->
         <td style="padding-top:5px;padding-right:5px;">
-          <div style="background-color:#FFDE6B;border-radius:50%;width:30px;height:30px;">
-            <span style="color:white;position:relative;top:6px;left:6px;font-size:19px;">&#128196;</span>
+          <div style="background-color:#FFDE6B;border-radius:50%;width:24px;height:24px;padding-top:6px;padding-left:6px;">
+            <span style="color:white;font-size:19px;">📄</span>
           </div>
         </td>
         <td>
@@ -145,8 +145,8 @@
       <% elsif a.category == Activity::CATEGORY[:Meeting] %>
       <!-- Meeting -->
         <td style="padding-top:5px;padding-right:5px;">
-          <div style="background-color:#FFA500;border-radius:50%;width:30px;height:30px;">
-            <span style="color:white;position:relative;top:6px;left:7px;font-size:16px;">&#128197;</span>
+          <div style="background-color:#FFA500;border-radius:50%;width:23px;height:24px;padding-top:6px;padding-left:7px;">
+            <span style="color:white;font-size:16px;">📅</span>
           </div>
         </td>
 
