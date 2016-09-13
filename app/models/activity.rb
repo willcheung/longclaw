@@ -61,11 +61,24 @@ class Activity < ActiveRecord::Base
         is_public_flag = true
         c.messages.last.isPrivate ? is_public_flag = false : true  # check if last message is private
 
-        # overwrite is_public_flag if the last message was sent from a user 
-        sender = User.find_by(email: c.messages.last.from[0]['address'])
 
-        if is_public_flag!=true and !sender.nil? and !sender.blank? 
-          is_public_flag = !sender.mark_private
+        # if last message is a private message (one to one email), check user settings
+
+        if is_public_flag==false
+          sender = User.find_by(email: c.messages.last.from[0]['address'])
+          if !sender.nil? and !sender.blank?
+            is_public_flag = !sender.mark_private
+          elsif !c.messages.last.to.nil?
+            to = User.find_by(email: c.messages.last.to[0]['address'])
+            if !to.nil? and !to.blank?
+              is_public_flag = !to.mark_private
+            end
+          elsif !c.messages.last.cc.nil?
+            cc = User.find_by(email: c.messages.last.cc[0]['address'])
+            if !cc.nil? and !cc.blank?
+              is_public_flag = !cc.mark_private
+            end
+          end
         end
 
         val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Conversation]}', #{Activity.sanitize(c.subject)}, #{is_public_flag}, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
