@@ -5,6 +5,15 @@ class ReportsController < ApplicationController
     @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 
+  def accounts_dashboard
+    @projects = Project.visible_to(current_user.organization_id, current_user.id)
+    risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user).sort_by { |pid, score| score }.reverse
+    @risk_scores = risk_scores.map do |r|
+      proj = @projects.find { |p| p.id == r[0] }
+      Hashie::Mash.new({ id: proj.id, score: r[1], name: proj.name })
+    end
+  end
+
   def accounts
     # if params[:type]
     #   # Filter
