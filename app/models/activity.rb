@@ -39,6 +39,10 @@ class Activity < ActiveRecord::Base
 
   scope :pinned, -> { where is_pinned: true }
   scope :last_active_on, -> { maximum "last_sent_date" }
+  scope :conversations, -> { where category: CATEGORY[:Conversation] }
+  scope :notes, -> { where category: CATEGORY[:Note] }
+  scope :meetings, -> { where category: CATEGORY[:Meeting] }
+  scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
 
   acts_as_commentable
 
@@ -249,7 +253,8 @@ class Activity < ActiveRecord::Base
     self.last_sent_date_epoch = (self.last_sent_date_epoch.to_i + sec).to_s
     em = self.email_messages
     em.each do |e|
-      e.sentDate += sec
+      e.sentDate += sec if self.category == CATEGORY[:Conversation]
+      e.end_epoch += sec if self.category == CATEGORY[:Meeting]
     end
     self.email_messages = em
     self.save

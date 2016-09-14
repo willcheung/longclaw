@@ -33,226 +33,143 @@
 
     <!-- Stream Name & Metrics -->
     <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px 0;background-color:#ffffff;vertical-align:top;margin-bottom:10px;">
+      <tbody>
+        <tr>
+          <td style="padding-bottom:5px;">
+            <a href="<%= project_url(p.id) %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
+            <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
+               <tbody>
+                  <tr style="border-top:1px solid #c1c1c1;">
+                  <% risk_score = p.current_risk_score(@user) %>
+                    <td style="color:<%= if risk_score > 80.0
+                                            '#ed5565'
+                                         elsif risk_score > 60.0
+                                            '#FFA500'
+                                         else 
+                                            '#A1C436'
+                                         end %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                      <span style="display:block;"><%= risk_score %>%</span>
+                      <span style="font-size:14px;display:block;"><%= if risk_score > 80.0
+                                                                        'High'
+                                                                      elsif risk_score > 60.0
+                                                                        'Medium'
+                                                                      else 
+                                                                        'Low'
+                                                                      end %> Risk</span>
+                    </td>
+                    <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                      <span style="display:block;"><%= p.activities.size %></span>
+                      <span style="font-size:14px;display:block;"><%= 'Activity'.pluralize(p.activities.size) %></span>
+                    </td>
+                    <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
+                    <% your_open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
+                      <span style="display:block;"><%= your_open_notification_count %></span>
+                      <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(your_open_notification_count) %> Assigned To You</span>
+                    </td>
+                  </tr>
+               </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  <!-- Activities -->
+  <% unless p.activities.empty? %>
+  <div style="padding:0;margin:0;">
+  <table>
     <tbody>
+
+    <% p.activities.each do |a| %>
       <tr>
-        <td style="padding-bottom:5px;">
-          <a href="<%= project_url(p.id) %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
-          <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
+
+      <% if a.category == Activity::CATEGORY[:Conversation] %>
+      <!-- Conversation -->
+        <td style="padding-top:5px;padding-right:5px;min-width:30px;">
+          <img src="<%= root_url %>/assets/images/icons/conversation_icon.png" alt="Conversation">
         </td>
-      </tr>
-      <tr>
         <td>
-          <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
+          
+          <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;background-color:#F0F6FB;">
              <tbody>
-                <tr style="border-top:1px solid #c1c1c1;">
-                <% risk_score = p.current_risk_score(@user) %>
-                  <td style="color:<%= if risk_score > 80.0
-                                          '#ed5565'
-                                       elsif risk_score > 60.0
-                                          '#FFA500'
-                                       else 
-                                          '#A1C436'
-                                       end %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
-                    <span style="display:block;"><%= risk_score %>%</span>
-                    <span style="font-size:14px;display:block;"><%= if risk_score > 80.0
-                                                                      'High'
-                                                                    elsif risk_score > 60.0
-                                                                      'Medium'
-                                                                    else 
-                                                                      'Low'
-                                                                    end %> Risk</span>
-                  </td>
-                  <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
-                    <span style="display:block;"><%= p.activities.size %></span>
-                    <span style="font-size:14px;display:block;"><%= 'Conversation'.pluralize(p.activities.size) %></span>
-                  </td>
-                  <td style="color:#3cc5b9;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
-                  <% your_open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
-                    <span style="display:block;"><%= your_open_notification_count %></span>
-                    <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(your_open_notification_count) %> Assigned To You</span>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;border-bottom:1px solid #bbbbbb;">
+                    <strong style="font-weight:bold;"><%= a.title %></strong> (<%= a.num_messages %>) <span style="font-size:12px;"><%= get_conversation_member_names(a.from, a.to, a.cc) %></span>
                   </td>
                 </tr>
-             </tbody>
-          </table>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-<!-- Assigned Notifications -->
-<% unless p.notifications.empty? %>
-      <div style="font-size:14px;padding:0 0 6px 20px;">
-            
-          <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
-             <tbody>
-
-      <% p.notifications.each do |n| %>
-
-                <tr style="padding:3px 0 3px 0;border-top:1px solid #c1c1c1;">
-                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
-                    <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;line-height:15px;font-size:18px;"><%= '✔' if n.is_complete %></div>
-                  </td>
-                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
-                    <span style="font-weight:normal;font-size:14px;line-height:19px;">
-                      <%= n.name %>
-                    </span>
-                  </td>
-                  <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:72px;max-width:75px;padding:3px;">         
-                    <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
-                    <% if n.category == Notification::CATEGORY[:Action] %>
-                      background-color:#3C8DC5">
-                    <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
-                      background-color:#A1C436">
-                    <% elsif n.category == Notification::CATEGORY[:Todo] %>  
-                      background-color:#3cc5b9">
-                    <% else %>
-                      background-color:#e58646">
-                    <% end %>
-                      <%= n.category%>
-                    </span>
-                  </td>
-                  <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:90px;max-width:95px;padding:3px;">
-                    <span style="font-weight:normal;font-size:14px;line-height:19px;">
-                      Due: <%= n.original_due_date.nil? ? "(no date)" : n.original_due_date.strftime('%b %d') %>
-                    </span>               
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;">
+                    <%= if a.last_msg['content'].nil? || a.last_msg['content'].is_a?(String)    
+                          truncate(a.last_msg['content'], length: 60, separator: ' ')    
+                        else    
+                          truncate(a.last_msg['content']['body'], length: 60, separator: ' ')   
+                        end %>   
                   </td>
                 </tr>
-
-      <% end %>
 
               </tbody>
           </table>
-      </div>
-  </div>
-    
-  <table class="row" style="padding:0;margin:0;margin-top:-15px;">
-      <tr>
-         <td style="padding:6px;">
-            <a href="<%= project_url(p.id) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #5cb85c;border-radius:4px;color:#5cb85c;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks</a>
-         </td>
-         <td class="expander"></td>
+
+        </td>
+
+      <% elsif a.category == Activity::CATEGORY[:Note] %>
+      <!-- Note -->
+        <td style="padding-top:5px;padding-right:5px;min-width:30px;">
+          <img src="<%= root_url %>/assets/images/icons/note_icon.png" alt="Note">
+        </td>
+        <td>
+          
+          <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
+             <tbody>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px 8px 0;">
+                    <strong style="font-weight:bold;"><%= get_full_name(a.user) %></strong> wrote a note:
+                  </td>
+                </tr>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px;">
+                    <%= a.note %>
+                  </td> 
+                </tr>
+              </tbody>
+          </table>
+
+        </td>        
+      <% elsif a.category == Activity::CATEGORY[:Meeting] %>
+      <!-- Meeting -->
+        <td style="padding-top:5px;padding-right:5px;min-width:30px;">
+          <img src="<%= root_url %>/assets/images/icons/meeting_icon.png" alt="Meeting">
+        </td>
+        <td>
+          
+          <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
+             <tbody>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;border-bottom:1px solid #bbbbbb;">
+                    <strong style="font-weight:bold;"><%= a.title %></strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="text-align:left;font-size:12px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;">
+                    <%= get_calendar_member_names(a.to, 'other', 2) %>
+                  </td>
+                </tr>
+              </tbody>
+          </table>
+
+        </td>
+      <% end %>
+
       </tr>
+    <% end %>  
+
+    </tbody>
   </table>
-<% end %>
-
-
-  <div style="padding:0;margin:0;">
-
-<% unless p.activities.empty? %>
-    
-    <!-- Conversations -->
-  <% p.activities.each do |a| %>
-      
-      <div style="font-size:14px;padding:0 0 6px 20px;">
-          <% if a.category == "Conversation" %>
-              <h4 style="font-size:14px;line-height:19px;font-weight:bold;margin:0 0 5px!important;padding:3px 0!important;border-bottom:solid 1px #bbb">
-               <%= a.title %>
-              </h4>
-
-              <% if a.email_messages.size > 2 %>
-                    <h5 style="font-size:12px;line-height:16px;font-weight:bold;margin:10px">
-                        <i><%= pluralize((a.email_messages.size - 2), 'older message') %>.  <a href="<%= project_url(p.id) %>">Go to stream</a>.</i>
-                    </h5>
-              <% end %>
-
-              <div style="padding:0;margin:0;">
-              <% a.email_messages.last(2).each do |m| %>
-                 <div style="margin:0">
-                    <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
-                       <tbody>
-                          <tr style="padding:3px 0 3px 0;">
-                            <th style="padding:2px 5px 2px 0;vertical-align:top;width:8%;font-weight:200;text-align:left;font-size:12px;color:#888">
-                              <% if is_internal_user?(m.from[0].address) %>
-                                  <%= rounded_initials_for_email(m.from[0].personal, m.from[0].address) %>
-                              <% else %>
-                                  &nbsp;
-                              <% end %>
-                            </th>
-
-                            <% if is_internal_user?(m.from[0].address) %>
-                              <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;color:#333;margin:0;">
-                                 <div style="min-height:0;width:0;border-top:8px solid transparent;border-right:8px solid #f4f4f4;border-left:0;border-bottom:8px solid transparent;margin:10px 0"> </div>
-                              </td>
-                            <% end %>
-
-                            <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;">
-                                <div style="<%= is_internal_user?(m.from[0].address) ? "background:#f4f4f4;" : "background:#e2eef7" %>;border-radius:8px;padding:8px 4px 10px 8px;">
-                                  <span style="font-weight:normal;font-size:14px;line-height:15px;color:#444"><b><%= m.from[0].personal %> </b> to <%= get_conversation_member_names([], m.to, m.cc, "All") %></span>
-                                  <span style="font-weight:200;font-size:12px;color:#888;float:right;margin-right:20px;"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
-                                  <br>
-                                  <span style="font-weight:normal;font-size:12px;line-height:15px;color:grey">
-                                    <%= if m.content.nil? || m.content.is_a?(String) 
-                                          simple_format(m.content)
-                                        else
-                                          simple_format(m.content.body)
-                                        end %>
-                                  </span> 
-                                </div>             
-                            </td> 
-
-                            <% unless is_internal_user?(m.from[0].address) %>
-                              <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;color:#333;margin:0;">
-                                 <div style="min-height:0;width:0;border-top:8px solid transparent;border-left:8px solid #e2eef7;border-right:0;border-bottom:8px solid transparent;margin:10px 0"> </div>
-                              </td>
-                             <% end %> 
-                             
-                            <th style="padding:2px 5px 2px 0;vertical-align:top;width:8%;font-weight:200;font-size:12px;color:#888;">
-                              <% if is_internal_user?(m.from[0].address) %>
-                                  &nbsp;
-                              <% else %>
-                                  <%= rounded_initials_for_email(m["from"][0].personal, m.from[0].address) %>
-                              <% end %>
-                            </th>
-                          </tr>
-                        </tbody>
-                    </table>
-                  </div>
-                <% end %>
-              </div>
-            
-            <% elsif a.category == "Note" %>
-                <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
-                   <tbody>
-                      <tr>
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px 8px 0;">
-                          <strong style="font-weight:bold;"><%= get_full_name(a.user) %></strong> wrote a note:
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px;">
-                          <%= a.note %>
-                        </td> 
-                      </tr>
-                    </tbody>
-                </table>
-
-            <% elsif a.category == "Meeting" %>
-                <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
-                   <tbody>
-                      <tr>
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;margin-left:5px;border-bottom:1px solid #bbbbbb;">
-                          <strong style="font-weight:bold;">Event: <%= a.title %></strong>
-                        </td>
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;border-bottom:1px solid #bbbbbb;">
-                          <%= get_calendar_interval(a) %>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;margin-left:5px;">
-                          <strong style="font-weight:bold;">Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %>
-                        </td> 
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px;">
-                          <strong style="font-weight:bold;">Attendees:</strong> <%= get_calendar_member_names(a.to) %>
-                        </td>
-                      </tr>
-                    </tbody>
-                </table>
-
-            <% end %>
-      </div>
-
-    <% end %>
-
   </div>
 
   <table class="row" style="padding:0;margin:0;margin-top:-5px;">
@@ -263,6 +180,62 @@
          <td class="expander"></td>
       </tr>
   </table>
+  <% end %>
+
+  <!-- Assigned Notifications -->
+  <% unless p.notifications.empty? %>
+      <div style="font-size:14px;padding:0 0 6px 20px;">
+            
+        <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
+          <tbody>
+
+    <% p.notifications.each do |n| %>
+
+            <tr style="padding:3px 0 3px 0;border-top:1px solid #c1c1c1;">
+              <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;line-height:15px;font-size:18px;"><%= '✔' if n.is_complete %></div>
+              </td>
+              <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                <span style="font-weight:normal;font-size:14px;line-height:19px;">
+                  <%= n.name %>
+                </span>
+              </td>
+              <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:72px;max-width:75px;padding:3px;">         
+                <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
+                <% if n.category == Notification::CATEGORY[:Action] %>
+                  background-color:#3C8DC5">
+                <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                  background-color:#A1C436">
+                <% elsif n.category == Notification::CATEGORY[:Todo] %>  
+                  background-color:#3cc5b9">
+                <% else %>
+                  background-color:#e58646">
+                <% end %>
+                  <%= n.category%>
+                </span>
+              </td>
+              <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:90px;max-width:95px;padding:3px;">
+                <span style="font-weight:normal;font-size:14px;line-height:19px;">
+                  Due: <%= n.original_due_date.nil? ? "(no date)" : n.original_due_date.strftime('%b %d') %>
+                </span>               
+              </td>
+            </tr>
+
+    <% end %>
+
+            </tbody>
+          </table>
+        </div>
+    </div>
+      
+    <table class="row" style="padding:0;margin:0;margin-top:-15px;">
+        <tr>
+           <td style="padding:6px;">
+              <a href="<%= project_url(p.id) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #5cb85c;border-radius:4px;color:#5cb85c;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks</a>
+           </td>
+           <td class="expander"></td>
+        </tr>
+    </table>
 
   <% end %>
 
