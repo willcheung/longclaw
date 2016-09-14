@@ -81,7 +81,7 @@ class SalesforceAccount < ActiveRecord::Base
 
   end
 
-	def self.load(current_user, save_in_db=true)
+	def self.load(current_user, save_in_db=false)
     salesforce_account_objects = []
     val = []
 		client = connect_salesforce(current_user)
@@ -90,55 +90,67 @@ class SalesforceAccount < ActiveRecord::Base
       return
     end
 
-    salesforce_accounts = client.query("select Id, Name, LastModifiedDate from Account")
+    queryRange = 20000
+    firstQuery = true   
+    last_Created_Id = nil
+
+    # salesforce offset sucks, don't use it
+    # if offset is larger than 2000 it will return a  NUMBER_OUTSIDE_VALID_RANGE 
+    # note that apex has a limit of 50,000 records
+    # meaning we can get only 50,000 at most with 1 query
 
     puts "--------------------start------------------------"
     puts Time.now
-  #   if !salesforce_accounts.nil?
-		# 	salesforce_accounts.each do |s|
-		# 		if !SalesforceAccount.exists?(salesforce_account_id: s.Id)
-		# 			salesforce_account = SalesforceAccount.new(salesforce_account_id: s.Id,
-  #     	      	salesforce_account_name: s.Name,
-  #     	      	contextsmith_organization_id: current_user.organization_id,
-  #     	      	salesforce_updated_at: DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time)
 
-  # 	      salesforce_account.save
-  #       else
-  #         SalesforceAccount.find_by(salesforce_account_id: s.Id).update(salesforce_account_name: s.Name,
-  #               contextsmith_organization_id: current_user.organization_id,
-  #               salesforce_updated_at: DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time)
+    while true
+      if firstQuery
+        query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT " + queryRange.to_s
+        firstQuery = false
+      else
+        query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT " + queryRange.to_s
+      end
+      puts query_statement 
+      
+      salesforce_accounts = query_salesforce(client, query_statement)
 
-		# 		end
-		# 	end
-		# end
-    if !salesforce_accounts.nil?
-      salesforce_accounts.each do |s|
-        salesforce_updated_at = DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time    
-        val << "('#{s.Id}', #{SalesforceAccount.sanitize(s.Name)}, '#{current_user.organization_id}', '#{salesforce_updated_at}','#{Time.now}', '#{Time.now}' )"
+      puts salesforce_accounts.length
+      if salesforce_accounts.nil? or salesforce_accounts.length==0 
+        break
+      else  
+       
+        salesforce_accounts.each do |s|
 
-        salesforce_account_objects << SalesforceAccount.new(salesforce_account_id: s.Id,
-                                                            salesforce_account_name: s.Name,
-                                                            contextsmith_organization_id: current_user.organization_id,
-                                                            salesforce_updated_at: salesforce_updated_at)    
+          if last_Created_Id.nil?
+            last_Created_Id = s.Id
+          elsif last_Created_Id < s.Id
+            last_Created_Id = s.Id
+          end
+
+          salesforce_updated_at = DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time    
+          val << "('#{s.Id}', #{SalesforceAccount.sanitize(s.Name)}, '#{current_user.organization_id}', '#{salesforce_updated_at}','#{Time.now}', '#{Time.now}' )"
+
+          salesforce_account_objects << SalesforceAccount.new(salesforce_account_id: s.Id,
+                                                              salesforce_account_name: s.Name,
+                                                              contextsmith_organization_id: current_user.organization_id,
+                                                              salesforce_updated_at: salesforce_updated_at)    
+        end
+    
+        insert = 'INSERT INTO "salesforce_accounts" ("salesforce_account_id", "salesforce_account_name", "contextsmith_organization_id", "salesforce_updated_at", "created_at", "updated_at") VALUES'
+        on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
+        values = val.join(', ')
+
+        if !val.empty? and save_in_db
+          SalesforceAccount.transaction do
+            # Insert activities into database
+            SalesforceAccount.connection.execute([insert,values,on_conflict].join(' '))
+          end
+        end
+
+        sleep(20)
       end
     end
-
-
-    insert = 'INSERT INTO "salesforce_accounts" ("salesforce_account_id", "salesforce_account_name", "contextsmith_organization_id", "salesforce_updated_at", "created_at", "updated_at") VALUES'
-    on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
-    values = val.join(', ')
-
-    if !val.empty? and save_in_db
-      SalesforceAccount.transaction do
-        # Insert activities into database
-        SalesforceAccount.connection.execute([insert,values,on_conflict].join(' '))
-      end
-    end
-
 
     puts Time.now
     puts "--------------------end------------------------"
-
 	end
-
 end

@@ -130,9 +130,10 @@ class SalesforceController < ApplicationController
   def refresh
     SalesforceAccount.load(current_user)
 
-    respond_to do |format|
-      format.html { redirect_to settings_url }
-    end
+    # respond_to do |format|
+    #   format.html { redirect_to settings_url }
+    # end
+    render :text => ' '
          
   end
 
