@@ -90,7 +90,7 @@
 
       <% if a.category == Activity::CATEGORY[:Conversation] %>
       <!-- Conversation -->
-        <td style="padding-top:5px;padding-right:5px;">
+        <td style="padding-top:5px;padding-right:5px;min-width:30px;">
           <img src="<%= root_url %>/assets/images/icons/conversation_icon.png" alt="Conversation">
         </td>
         <td>
@@ -119,7 +119,7 @@
 
       <% elsif a.category == Activity::CATEGORY[:Note] %>
       <!-- Note -->
-        <td style="padding-top:5px;padding-right:5px;">
+        <td style="padding-top:5px;padding-right:5px;min-width:30px;">
           <img src="<%= root_url %>/assets/images/icons/note_icon.png" alt="Note">
         </td>
         <td>
@@ -142,7 +142,7 @@
         </td>        
       <% elsif a.category == Activity::CATEGORY[:Meeting] %>
       <!-- Meeting -->
-        <td style="padding-top:5px;padding-right:5px;">
+        <td style="padding-top:5px;padding-right:5px;min-width:30px;">
           <img src="<%= root_url %>/assets/images/icons/meeting_icon.png" alt="Meeting">
         </td>
         <td>
