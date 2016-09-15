@@ -88,7 +88,7 @@ class SalesforceAccount < ActiveRecord::Base
       return
     end
 
-    queryRange = 1000
+    queryRange = 500
     firstQuery = true   
     last_Created_Id = nil
 
@@ -96,6 +96,9 @@ class SalesforceAccount < ActiveRecord::Base
     # if offset is larger than 2000 it will return a  NUMBER_OUTSIDE_VALID_RANGE 
     # note that apex has a limit of 50,000 records
     # meaning we can get only 50,000 at most with 1 query
+
+    # queryRange: 1000 will take about 36.1M memory for each transaction
+    # queryRange: 500 will take about 36.1M memory for each transaction
 
     puts "--------------------start------------------------"
     puts Time.now
@@ -163,7 +166,7 @@ class SalesforceAccount < ActiveRecord::Base
           end
         end
 
-        sleep(0.5)
+        # sleep(0.5)
       end
     end
 
