@@ -179,9 +179,10 @@
                     point: {
                         events: {
                             click: function () {
-                                renderCharts(this.y);
                                 $("#account-header").show();
                                 $("#account-charts").show();
+                                $("#intro-account-header").hide();
+                                renderCharts(this.y);
                                 //alert('Category: ' + this.category + ', value: ' + this.y);
                             }
                         }
