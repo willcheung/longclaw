@@ -101,6 +101,7 @@ class SalesforceAccount < ActiveRecord::Base
     puts Time.now
 
     GC::Profiler.enable
+    GC::Profiler.clear
 
     puts GC::Profiler.enabled? 
 
@@ -167,6 +168,6 @@ class SalesforceAccount < ActiveRecord::Base
     end
 
     puts Time.now
-    puts "--------------------end------------------------"
+    puts "--------------------end------------------------"   
 	end
 end
