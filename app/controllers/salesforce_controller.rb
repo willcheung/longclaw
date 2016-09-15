@@ -133,7 +133,7 @@ class SalesforceController < ApplicationController
     # respond_to do |format|
     #   format.html { redirect_to settings_url }
     # end
-    # render :text => ' '
+    render :text => ' '
          
   end
 
