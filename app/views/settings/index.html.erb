@@ -93,8 +93,8 @@
                       <tr>
                           <th style="padding-top:15px;">ContextSmith Account</th>
                           <th>
-                              <div style="padding-top:15px; display: inline; margin-right:5px;"><%="Salesforce Account ("+@salesforce_user.oauth_user_name + ')' %></div>
-                              <a class="btn btn-sm btn-primary btn-outline" href="/salesforce_refresh"><i class="fa fa-refresh"></i> Refresh </a>
+                              <div style="padding-top:15px; display: inline; margin-right:5px;"><%="Salesforce Account ("+@salesforce_user.oauth_user_name + ')' %></div>                              
+                              <div class="salesforce-refresh btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh</div>
                   <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest accounts from salesforce."></i>
                               <a class="btn btn-danger btn-sm pull-right"  style="font-size:12px;" href="/salesforce/disconnect/<%=@salesforce_user.id %>">Disconnect</a>
                               
@@ -130,5 +130,24 @@ $('.contextsmith_account_box').on('change',function(evt,params){
     $('input[name=account_id]').val('');
     $(".salesforce_account").hide();
   }    
+});
+
+function removeSpin() {
+  $('.fa.fa-refresh').removeClass('fa-spin');
+  // $('.salesforce-refresh').removeAttr("disabled"); 
+}
+
+$('.salesforce-refresh').click(function(){
+  // $.ajax({url:'/salesforce_refresh'});
+
+  $.ajax('/salesforce_refresh', {
+        async: true
+    });
+  $('.fa.fa-refresh').addClass('fa-spin');
+  // $('.salesforce-refresh').attr("disabled", "disabled");
+  setTimeout(removeSpin, 30000);
+
+  return;
+
 });
 </script>
