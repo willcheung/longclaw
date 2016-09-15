@@ -100,7 +100,14 @@ class SalesforceAccount < ActiveRecord::Base
     puts "--------------------start------------------------"
     puts Time.now
 
+    GC::Profiler.enable
+
+    puts GC::Profiler.enabled? 
+
     while true
+      puts "Garbage Count => #{GC.count}"
+      puts "result => #{GC::Profiler.result}"
+      # puts GC::Profiler.enable
       if firstQuery
         query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT " + queryRange.to_s
         firstQuery = false
@@ -135,8 +142,8 @@ class SalesforceAccount < ActiveRecord::Base
                                                               salesforce_updated_at: salesforce_updated_at)    
         end
 
-        puts val.length
-        puts salesforce_account_objects.length
+        # puts val.length
+        # puts salesforce_account_objects.length
     
         insert = 'INSERT INTO "salesforce_accounts" ("salesforce_account_id", "salesforce_account_name", "contextsmith_organization_id", "salesforce_updated_at", "created_at", "updated_at") VALUES'
         on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
@@ -149,7 +156,7 @@ class SalesforceAccount < ActiveRecord::Base
           end
         end
 
-        sleep(2)
+        # sleep(0.5)
       end
     end
 
