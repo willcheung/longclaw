@@ -97,21 +97,22 @@ class SalesforceAccount < ActiveRecord::Base
     # note that apex has a limit of 50,000 records
     # meaning we can get only 50,000 at most with 1 query
 
-    # queryRange: 1000 will take about 36.1M memory for each transaction
-    # queryRange: 500 will take about 36.1M memory for each transaction
+    # heroku statics     | memory per transaction|
+    # queryRange: 1000   | 36.1M                 |
+    # queryRange: 500    | 12.4M                 |
+
+    # queryRange higher than 1000 may cause Error R14 (Memory quota exceeded) on heroku
+    # 
 
     puts "--------------------start------------------------"
     puts Time.now
 
-    GC::Profiler.enable
-    GC::Profiler.clear
+    # GC::Profiler.enable
+    # GC::Profiler.clear
 
-    puts GC::Profiler.enabled? 
+    # puts GC::Profiler.enabled? 
 
     while true
-      # puts "Garbage Count => #{GC.count}"
-      # puts "result => #{GC::Profiler.result}"
-      # puts GC::Profiler.enable
       if firstQuery
         query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT " + queryRange.to_s
         firstQuery = false
@@ -129,8 +130,8 @@ class SalesforceAccount < ActiveRecord::Base
 
       GC.start
 
-      puts "Garbage Count => #{GC.count}"
-      puts "result => #{GC::Profiler.result}"
+      # puts "Garbage Count => #{GC.count}"
+      # puts "result => #{GC::Profiler.result}"
 
       if salesforce_accounts.nil? or salesforce_accounts.length==0 
         break
@@ -152,8 +153,8 @@ class SalesforceAccount < ActiveRecord::Base
                                                               salesforce_updated_at: salesforce_updated_at)    
         end
 
-        puts "val.length => #{val.length}"
-        puts "salesforce_account_objects.length => #{salesforce_account_objects.length}"
+        # puts "val.length => #{val.length}"
+        # puts "salesforce_account_objects.length => #{salesforce_account_objects.length}"
     
         insert = 'INSERT INTO "salesforce_accounts" ("salesforce_account_id", "salesforce_account_name", "contextsmith_organization_id", "salesforce_updated_at", "created_at", "updated_at") VALUES'
         on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
