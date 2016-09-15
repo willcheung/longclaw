@@ -15,6 +15,11 @@ class ReportsController < ApplicationController
   end
 
   def account_data
+    @account = Project.find(params[:id])
+    @risk_score = @account.current_risk_score(current_user)
+    @open_risks_count = @account.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).count
+    @last_activity_date = @account.activities.conversations.maximum("activities.last_sent_date")
+    # @risk_score_trend = Project.find_min_risk_score_by_day(params[:id], current_user.time_zone, static)
     render layout: false
   end
 

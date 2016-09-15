@@ -1,7 +1,7 @@
 <div id="account-header">
     <div class="row m-b-sm">
         <div class="col-lg-8">
-            <h2 >Stark Industries</h2>
+            <h2><%= @account.name %></h2>
         </div>
         <div class="col-lg-4">
             <small>Date range: </small><input type="text" name="daterange" class="form-control daterange">
@@ -11,12 +11,24 @@
     <div class="ibox-content">
         <div class="row">
             <div class="col-md-4 text-center">
-                <div class="metric text-danger">
+                <div class="metric <%= if @risk_score > 80.0
+                                         "text-danger"
+                                        elsif @risk_score > 60.0
+                                         "text-warning"
+                                        else
+                                         "text-success"
+                                        end %>">
                     <div class="metric-title">
-                        <h4>High Risk</h4>
+                        <h4><%= if @risk_score > 80.0
+                                    "High"
+                                elsif @risk_score > 60.0 
+                                    "Medium"
+                                else
+                                    "Low"
+                                end %> Risk</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px">96</h2>
+                        <h2 style="font-weight:600;font-size:46px"><%= @risk_score %></h2>
                     </div>
                 </div>
             </div>
@@ -27,7 +39,7 @@
                         <h4>Open Risks</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px">5</h2>
+                        <h2 style="font-weight:600;font-size:46px"><%= @open_risks_count %></h2>
                     </div>
                 </div>
             </div>
@@ -38,7 +50,7 @@
                         <h4>Last Touch</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="line-height:50px;">9 days ago</h2>
+                        <h2 style="line-height:50px;"><%= @last_activity_date ? time_ago_in_words(@last_activity_date) + " ago" : "--" %></h2>
                     </div>
                 </div>
             </div>
