@@ -14,6 +14,10 @@ class ReportsController < ApplicationController
     end
   end
 
+  def account_data
+    render layout: false
+  end
+
   def accounts
     # if params[:type]
     #   # Filter
