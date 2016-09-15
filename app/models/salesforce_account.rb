@@ -36,21 +36,12 @@ class SalesforceAccount < ActiveRecord::Base
 
     client = nil
     if(!salesforce_user.nil?)         
-      # client = Restforce.new :host => hostURL,
-      #                        :client_id => salesforce_client_id,
-      #                        :client_secret => salesforce_client_secret,
-      #                        :oauth_token => salesforce_user.oauth_access_token,
-      #                        :refresh_token => salesforce_user.oauth_refresh_token,
-      #                        :instance_url => salesforce_user.oauth_instance_url
-
-      client = Restforce.new :host => 'login.salesforce.com',
-                            :client_id => '3MVG9Nc1qcZ7BbZ3io5S_xDYDlw5Av.e8KAfPXrKIC3WJ4_6ETfQB.UDG1z_uVxKAN7clLQYDaWV4vLtGXvZU',
-                            :client_secret => '1942484012556265234',
-                            :oauth_token => '00D80000000cyus!AQEAQNZEDQv4JYZFo813M_Ga6k4wAfaCQU45Lsds5KJmJJGMIZsPK.dEM5fvwJwIb5jL4R4PFdkZijWk1Czwo_C54FZwREOL',
-                            :refresh_token => '5Aep861QT4b0TO85TNHK50wZyj8TyYTbKWkHyxSdT5zDCBIt_DzaoygNy8cvi.Hi9MNt1z8DHoeRv.vmfBDyKdV',
-                            :instance_url => 'https://na6.salesforce.com'
-
-
+      client = Restforce.new :host => hostURL,
+                             :client_id => salesforce_client_id,
+                             :client_secret => salesforce_client_secret,
+                             :oauth_token => salesforce_user.oauth_access_token,
+                             :refresh_token => salesforce_user.oauth_refresh_token,
+                             :instance_url => salesforce_user.oauth_instance_url
       begin
         client.user_info
       rescue  
@@ -107,6 +98,8 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   # because transaction size is only 500 records
   # sleep is not necessary after each transaction
+  # 
+  # 
   ################################################################################################## 
 	def self.load(current_user, save_in_db=true)
 		client = connect_salesforce(current_user)
