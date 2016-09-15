@@ -90,7 +90,7 @@ class SalesforceAccount < ActiveRecord::Base
       return
     end
 
-    queryRange = 10000
+    queryRange = 2000
     firstQuery = true   
     last_Created_Id = nil
 
@@ -146,7 +146,7 @@ class SalesforceAccount < ActiveRecord::Base
           end
         end
 
-        sleep(20)
+        sleep(2)
       end
     end
 
