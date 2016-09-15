@@ -81,6 +81,33 @@ class SalesforceAccount < ActiveRecord::Base
 
   end
 
+  #################################################################################################
+  # salesforce offset sucks, don't use it
+  # if offset is larger than 2000 it will return a  NUMBER_OUTSIDE_VALID_RANGE 
+  # Apex has a limit of 50,000 records
+  # meaning we can get only 50,000 at most in 1 query
+  # 
+  # 
+  # Heroku statics     | memory per transaction|
+  # queryRange: 1000   | 36.1M                 |
+  # queryRange: 500    | 12.4M                 |
+  # 
+  # queryRange higher than 1000 may cause Error R14 (Memory quota exceeded) on heroku
+  # 
+  # 
+  # for 26,394 records of salesforce data, the processing time is about 28.2 s
+  # records more than this may cause time out error on heroku (code=H12 desc="Request timeout")
+  # although Heroku will still execute the task, but will return a error page on client side
+  # please use ajax or asynchronous or background job instead
+  #
+  # 
+  # to make sure memory is always released right alway
+  # GC is forced on every transaction
+  # to see GC status, use GC::Profiler.result
+  # 
+  # because transaction size is only 500 records
+  # sleep is not necessary after each transaction
+  ################################################################################################## 
 	def self.load(current_user, save_in_db=true)
 		client = connect_salesforce(current_user)
 
@@ -92,52 +119,37 @@ class SalesforceAccount < ActiveRecord::Base
     firstQuery = true   
     last_Created_Id = nil
 
-    # salesforce offset sucks, don't use it
-    # if offset is larger than 2000 it will return a  NUMBER_OUTSIDE_VALID_RANGE 
-    # note that apex has a limit of 50,000 records
-    # meaning we can get only 50,000 at most with 1 query
-
-    # heroku statics     | memory per transaction|
-    # queryRange: 1000   | 36.1M                 |
-    # queryRange: 500    | 12.4M                 |
-
-    # queryRange higher than 1000 may cause Error R14 (Memory quota exceeded) on heroku
-    # 
-
-    puts "--------------------start------------------------"
-    puts Time.now
-
     # GC::Profiler.enable
     # GC::Profiler.clear
 
-    # puts GC::Profiler.enabled? 
 
     while true
+      # Query salesforce
       if firstQuery
         query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT " + queryRange.to_s
         firstQuery = false
       else
         query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT " + queryRange.to_s
       end
-      puts query_statement 
       
       salesforce_accounts = query_salesforce(client, query_statement)
 
-      puts salesforce_accounts.length 
+      # puts query_statement 
+      # puts "salesforce_accounts.length => #{salesforce_accounts.length}"
 
+      # call GC
       salesforce_account_objects = []
       val = []
 
       GC.start
-
       # puts "Garbage Count => #{GC.count}"
       # puts "result => #{GC::Profiler.result}"
 
+      # start transaction
       if salesforce_accounts.nil? or salesforce_accounts.length==0 
         break
       else  
         salesforce_accounts.each do |s|
-
           if last_Created_Id.nil?
             last_Created_Id = s.Id
           elsif last_Created_Id < s.Id
@@ -166,12 +178,7 @@ class SalesforceAccount < ActiveRecord::Base
             SalesforceAccount.connection.execute([insert,values,on_conflict].join(' '))
           end
         end
-
-        # sleep(0.5)
       end
     end
-
-    puts Time.now
-    puts "--------------------end------------------------"   
 	end
 end
