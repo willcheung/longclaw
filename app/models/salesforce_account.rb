@@ -90,7 +90,7 @@ class SalesforceAccount < ActiveRecord::Base
       return
     end
 
-    queryRange = 20000
+    queryRange = 10000
     firstQuery = true   
     last_Created_Id = nil
 
