@@ -81,7 +81,7 @@ class SalesforceAccount < ActiveRecord::Base
 
   end
 
-	def self.load(current_user, save_in_db=false)
+	def self.load(current_user, save_in_db=true)
 		client = connect_salesforce(current_user)
 
     if client.nil?
@@ -163,7 +163,7 @@ class SalesforceAccount < ActiveRecord::Base
           end
         end
 
-        # sleep(0.5)
+        sleep(0.5)
       end
     end
 
