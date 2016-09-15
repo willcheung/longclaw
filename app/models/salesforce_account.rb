@@ -88,7 +88,7 @@ class SalesforceAccount < ActiveRecord::Base
       return
     end
 
-    queryRange = 2000
+    queryRange = 1000
     firstQuery = true   
     last_Created_Id = nil
 
@@ -105,8 +105,8 @@ class SalesforceAccount < ActiveRecord::Base
     puts GC::Profiler.enabled? 
 
     while true
-      puts "Garbage Count => #{GC.count}"
-      puts "result => #{GC::Profiler.result}"
+      # puts "Garbage Count => #{GC.count}"
+      # puts "result => #{GC::Profiler.result}"
       # puts GC::Profiler.enable
       if firstQuery
         query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT " + queryRange.to_s
@@ -118,13 +118,19 @@ class SalesforceAccount < ActiveRecord::Base
       
       salesforce_accounts = query_salesforce(client, query_statement)
 
-      puts salesforce_accounts.length
+      puts salesforce_accounts.length 
+
+      salesforce_account_objects = []
+      val = []
+
+      GC.start
+
+      puts "Garbage Count => #{GC.count}"
+      puts "result => #{GC::Profiler.result}"
+
       if salesforce_accounts.nil? or salesforce_accounts.length==0 
         break
       else  
-        salesforce_account_objects = []
-        val = []
-
         salesforce_accounts.each do |s|
 
           if last_Created_Id.nil?
@@ -142,8 +148,8 @@ class SalesforceAccount < ActiveRecord::Base
                                                               salesforce_updated_at: salesforce_updated_at)    
         end
 
-        # puts val.length
-        # puts salesforce_account_objects.length
+        puts "val.length => #{val.length}"
+        puts "salesforce_account_objects.length => #{salesforce_account_objects.length}"
     
         insert = 'INSERT INTO "salesforce_accounts" ("salesforce_account_id", "salesforce_account_name", "contextsmith_organization_id", "salesforce_updated_at", "created_at", "updated_at") VALUES'
         on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
