@@ -82,8 +82,6 @@ class SalesforceAccount < ActiveRecord::Base
   end
 
 	def self.load(current_user, save_in_db=false)
-    salesforce_account_objects = []
-    val = []
 		client = connect_salesforce(current_user)
 
     if client.nil?
@@ -117,7 +115,9 @@ class SalesforceAccount < ActiveRecord::Base
       if salesforce_accounts.nil? or salesforce_accounts.length==0 
         break
       else  
-       
+        salesforce_account_objects = []
+        val = []
+
         salesforce_accounts.each do |s|
 
           if last_Created_Id.nil?
@@ -134,6 +134,9 @@ class SalesforceAccount < ActiveRecord::Base
                                                               contextsmith_organization_id: current_user.organization_id,
                                                               salesforce_updated_at: salesforce_updated_at)    
         end
+
+        puts val.length
+        puts salesforce_account_objects.length
     
         insert = 'INSERT INTO "salesforce_accounts" ("salesforce_account_id", "salesforce_account_name", "contextsmith_organization_id", "salesforce_updated_at", "created_at", "updated_at") VALUES'
         on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
