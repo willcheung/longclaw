@@ -94,6 +94,7 @@
                     point: {
                         events: {
                             click: function () {
+                                // console.log(this.options.id)
                                 $.get("account_data/" + this.options.id, function (data) {
                                     $("#account-data").html(data);
                                     renderCharts(this.y);

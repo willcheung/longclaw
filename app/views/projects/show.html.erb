@@ -387,18 +387,10 @@
         series: [{
             type: 'column',
             name: 'Activity Count',
-            data: [ 
-                    <% counter = 0  %>
-                    <% @activities_by_date.each do |a| %>
-                        <% if (counter < @activities_by_date.length)  %>
-                          <% counter = counter + 1  %>
-                          <%='['+a.utc_milli_timestamp.inspect + ','+ a.count.inspect+'],' %>
-                        <% else  %>
-                          <%='['+ +a.utc_milli_timestamp.inspect + ','+ a.count.inspect+']' %>
-                        <% end %>
-                      
-                    <% end %>
-                  ]                
+            data: [ <% @activities_by_date.each_with_index do |a, i| %>
+                        <%='['+a.utc_milli_timestamp.inspect + ','+ a.count.inspect+']' %> <%= ',' unless i + 1 == @activities_by_date.length %>
+                    <% end %> 
+            ]                
         }]
     });
   });
