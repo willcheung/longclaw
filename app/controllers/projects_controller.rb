@@ -210,17 +210,17 @@ class ProjectsController < ApplicationController
 
   def get_show_data
     # metrics
-    @project_last_activity_date = @project.activities.where(category: "Conversation").maximum("activities.last_sent_date")
+    @project_last_activity_date = @project.activities.conversations.maximum("activities.last_sent_date")
     project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
     @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
     visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
 
     # for risk counts, show every risk regardless of private conversation
-    @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).length
+    @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).count
 
     # select all open tasks regardless of private conversation
-    @project_open_tasks_count = @project.notifications.where(is_complete: false).length
-    @project_pinned_count = @project.activities.pinned.length
+    @project_open_tasks_count = @project.notifications.where(is_complete: false).count
+    @project_pinned_count = @project.activities.pinned.count
     @project_risk_score = @project.current_risk_score(current_user)
 
     # project people

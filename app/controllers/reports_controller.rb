@@ -5,6 +5,36 @@ class ReportsController < ApplicationController
     @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 
+  def accounts_dashboard
+    @projects = Project.visible_to(current_user.organization_id, current_user.id)
+    risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user).sort_by { |pid, score| score }.reverse
+    @risk_scores = risk_scores.map do |r|
+      proj = @projects.find { |p| p.id == r[0] }
+      Hashie::Mash.new({ id: proj.id, score: r[1], name: proj.name })
+    end
+  end
+
+  def account_data
+    @account = Project.find(params[:id])
+    @risk_score = @account.current_risk_score(current_user)
+    @open_risks_count = @account.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).count
+    @last_activity_date = @account.activities.conversations.maximum("activities.last_sent_date")
+    @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
+    
+    # Engagement Volume Chart
+    # format of data: { category => { date => count} }
+    # TODO: Add another array that has raw counts of all activities for each day, for use in doing the special binding lines
+    # put [count] as first data set in series for this chart, but hide it. Just use count for tooltip in top right corner of chart.
+    # Then, current dummy data can be removed.
+    activities_by_category = @account.activities.where(last_sent_date: 14.days.ago..Time.current).select { |a| a.is_visible_to(current_user) }.reverse.group_by { |a| a.category }
+    @activities_by_category_date = {}
+    activities_by_category.each do |category, activities|
+      @activities_by_category_date[category] = activities.group_by { |a| a.last_sent_date.to_date.to_time(:utc).to_i * 1000 }
+    end
+
+    render layout: false
+  end
+
   def accounts
     # if params[:type]
     #   # Filter

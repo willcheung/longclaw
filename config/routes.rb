@@ -62,6 +62,8 @@ Longclaw::Application.routes.draw do
     
     # get 'reports/touches/team' => 'reports#touches_by_team'
     get 'reports/accounts'
+    get 'reports/accounts_dashboard'
+    get 'reports/account_data/:id' => 'reports#account_data'
     # get 'reports/team'
     # get 'reports/lifecycle'
   end
