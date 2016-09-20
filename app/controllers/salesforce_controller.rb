@@ -124,16 +124,13 @@ class SalesforceController < ApplicationController
     end
     
     respond_to do |format|
-      format.html { redirect_to settings_url }
+      format.html { redirect_to settings_salesforce_path }
     end
   end
 
   def refresh
     SalesforceAccount.load(current_user)
 
-    # respond_to do |format|
-    #   format.html { redirect_to settings_url }
-    # end
     render :text => ' '
          
   end
@@ -150,7 +147,7 @@ class SalesforceController < ApplicationController
     end
 
     respond_to do |format|
-      format.html { redirect_to settings_url }
+      format.html { redirect_to settings_salesforce_path }
     end
 
   end
@@ -166,7 +163,7 @@ class SalesforceController < ApplicationController
     salesforce_user.destroy
 
     respond_to do |format|
-      format.html { redirect_to settings_url }
+      format.html { redirect_to settings_salesforce_path }
     end
   end
 end
