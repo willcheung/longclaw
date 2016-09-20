@@ -42,7 +42,6 @@ Longclaw::Application.routes.draw do
     get "settings/super_user" => 'settings#super_user'
     post "settings/invite_user/:user_id" => 'settings#invite_user'
 
-    # get "sasuke/" => 'notifications#sasuke'
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
     get "notifications/show_email_body/:id" => 'notifications#show_email_body'
 
@@ -58,7 +57,8 @@ Longclaw::Application.routes.draw do
     get "search/autocomplete_project_subs"
     get "search/autocomplete_project_member"
     get "search/autocomplete_salesforce_account_name"
-    get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects"
+    get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects", "onboarding/fill_in_info"
+    post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
     
     # get 'reports/touches/team' => 'reports#touches_by_team'
     get 'reports/accounts'
@@ -71,7 +71,7 @@ Longclaw::Application.routes.draw do
   devise_scope :user do # Unauthenticated user
   	root to: "sessions#new"
     get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
-	end
+  end
 
   # Cluster callback
   post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'

@@ -27,11 +27,6 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
       logger.info "Google devise.omniauth_callbacks.success for user " + @user.email
       flash[:notice] = "Welcome, #{@user.first_name}!"
 
-      if @user.cluster_create_date.nil?
-        # Kick off cluster analysis to backend
-        get_emails_from_backend_with_callback(@user)
-      end
-
       sign_in_and_redirect @user, :event => :authentication
     else
       reset_session

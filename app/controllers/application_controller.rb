@@ -26,6 +26,8 @@ class ApplicationController < ActionController::Base
         end
       when Utils::ONBOARDING[:tutorial]
         onboarding_tutorial_path
+      when Utils::ONBOARDING[:fill_in_info]
+        onboarding_fill_in_info_path
       else
         stored_location_for(resource) || root_path
       end
