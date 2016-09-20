@@ -39,6 +39,8 @@ Longclaw::Application.routes.draw do
     post "/project_bulk" => 'projects#bulk'
 
     get "settings/" => 'settings#index'
+    get "settings/users" => 'settings#users'
+    get "settings/salesforce" => 'settings#salesforce'
     get "settings/super_user" => 'settings#super_user'
     post "settings/invite_user/:user_id" => 'settings#invite_user'
 
