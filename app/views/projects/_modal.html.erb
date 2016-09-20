@@ -1,25 +1,31 @@
 <div class="modal inmodal fade" id="<%= modal_id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <% if modal_id == 'edit_project_modal' %>
-          <h4 class="modal-title">Edit Stream</h4>
-        <% else %>
-          <h4 class="modal-title">New Stream</h4>
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <% if modal_id == 'edit_project_modal' %>
+              <h4 class="modal-title">Edit Stream</h4>
+            <% else %>
+              <h4 class="modal-title">New Stream</h4>
+            <% end %>
+        </div>
+
+        <% remote ||= false %>
+        <%= simple_form_for @project, remote: remote, html: {role: :form, 'data-model' => 'project'} do |f| %>
+            <div class="modal-body">
+              <div class="row">
+                <%# Render the new person form (passing modal => true to enable remote => true) %>
+                <%= render 'projects/form', f: f %>
+              </div>
+            </div>
+            
+              <div class="modal-footer">
+                <%= f.button :submit, class: 'btn-primary pull-left form-group' %>
+                <% if modal_id == 'edit_project_modal' %>
+                    <%= link_to "Disable project", @project, method: :delete, data: {confirm: "All conversations and notes in this Stream will be disabled! Are you sure?"} %>
+                <% end %>
+              </div>
         <% end %>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <%# Render the new person form (passing modal => true to enable remote => true) %>
-          <%= render 'projects/form', remote: true %>
-        </div>
-      </div>
-      <% if modal_id == 'edit_project_modal' %>
-        <div class="modal-footer">
-          <%= link_to "Disable project", @project, method: :delete, data: {confirm: "All conversations and notes in this Stream will be disabled! Are you sure?"} %>
-        </div>
-      <% end %>
     </div>
   </div>
 </div>
