@@ -5,8 +5,14 @@ include ERB::Util
 class OnboardingController < ApplicationController
 	layout 'empty', except: ['tutorial']
 
+	def fill_in_info
+		# change user onboarding status
+    current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
+	end
+
 	def tutorial
 		render layout: false
+		# change user onboarding status
 		current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:confirm_projects]) if current_user.onboarding_step == Utils::ONBOARDING[:tutorial]
 	end
 

@@ -1,7 +1,7 @@
 #require 'whois'
 
 module Utils
-  ONBOARDING = { "onboarded": -1, "create_organization": 0, "tutorial": 1, "confirm_projects": 2 }
+  ONBOARDING = { "onboarded": -1, "fill_in_info": 0, "tutorial": 1, "confirm_projects": 2 }
 
 
 	def get_user_or_contact_from_pm(project_member)

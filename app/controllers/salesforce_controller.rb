@@ -1,5 +1,6 @@
 class SalesforceController < ApplicationController
 	layout "empty", only: [:index]
+  
   def index
     @category_param = []
     @filter_email = []
