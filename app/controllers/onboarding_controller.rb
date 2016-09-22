@@ -7,7 +7,7 @@ class OnboardingController < ApplicationController
 
 	def fill_in_info
 		# change user onboarding status and cluster_create_date becomes join date
-    current_user.update_attributes(cluster_create_date: Time.now, cluster_update_date: Time.now, onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
+    current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
 	end
 
 	def tutorial
