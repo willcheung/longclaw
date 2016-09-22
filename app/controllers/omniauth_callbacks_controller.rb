@@ -1,14 +1,14 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController   
   def salesforce
     User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id)
-    SalesforceAccount.load(current_user)
-    sign_in_and_redirect current_user
+    # SalesforceAccount.load(current_user)
+    redirect_to settings_salesforce_path
   end
 
   def salesforcesandbox
     User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id)
-    SalesforceAccount.load(current_user)
-    sign_in_and_redirect current_user
+    # SalesforceAccount.load(current_user)
+    redirect_to settings_salesforce_path
   end
 
 	def google_oauth2
@@ -26,11 +26,6 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     	session["devise.google_data"] = auth
       logger.info "Google devise.omniauth_callbacks.success for user " + @user.email
       flash[:notice] = "Welcome, #{@user.first_name}!"
-
-      if @user.cluster_create_date.nil?
-        # Kick off cluster analysis to backend
-        get_emails_from_backend_with_callback(@user)
-      end
 
       sign_in_and_redirect @user, :event => :authentication
     else
@@ -64,36 +59,4 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   	redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
   end
 
-  private
-
-  def get_emails_from_backend_with_callback(user)
-    max=10000
-    base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
-
-    if Rails.env.production?
-      callback_url = "https://#{request.host}/onboarding/#{user.id}/create_clusters.json"
-      user.refresh_token! if user.token_expired?
-      token_emails = [{ token: user.oauth_access_token, email: user.email }]
-      in_domain = ""
-    elsif Rails.env.test? # DEBUG
-      callback_url = "https://#{request.host}/onboarding/#{user.id}/create_clusters.json"
-      user.refresh_token! if user.token_expired?
-      token_emails = [{ token: user.oauth_access_token, email: user.email }]
-      in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
-    else # Dev environment
-      callback_url = "http://#{request.host}:3000/onboarding/#{user.id}/create_clusters.json"
-      u = User.find_by_email('indifferenzetester@gmail.com')
-      u.refresh_token! if u.token_expired?
-      token_emails = [{ token: u.oauth_access_token, email: u.email }]
-      in_domain = "&in_domain=comprehend.com"
-    end
-    ### TODO: add "&request=true" to final_url
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&preview=true&time=true&neg_sentiment=0&max=" + max.to_s + "&callback=" + callback_url + in_domain
-    logger.info "Calling backend service: " + final_url
-    ahoy.track("Calling backend service", service: "newsfeed/cluster", final_url: final_url)
-
-    url = URI.parse(final_url)
-    req = Net::HTTP::Get.new(url.to_s)
-    res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
-  end
 end

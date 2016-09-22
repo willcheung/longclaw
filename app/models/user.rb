@@ -132,7 +132,7 @@ class User < ActiveRecord::Base
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: Utils::ONBOARDING[:tutorial],
+          onboarding_step: Utils::ONBOARDING[:fill_in_info],
           is_disabled: false,
           time_zone: time_zone
         )
@@ -150,7 +150,7 @@ class User < ActiveRecord::Base
           oauth_access_token: credentials["token"],
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: Utils::ONBOARDING[:tutorial],
+          onboarding_step: Utils::ONBOARDING[:fill_in_info],
           is_disabled: false,
           time_zone: time_zone
         )

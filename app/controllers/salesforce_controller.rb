@@ -1,5 +1,6 @@
 class SalesforceController < ApplicationController
 	layout "empty", only: [:index]
+  
   def index
     @category_param = []
     @filter_email = []
@@ -123,16 +124,14 @@ class SalesforceController < ApplicationController
     end
     
     respond_to do |format|
-      format.html { redirect_to settings_url }
+      format.html { redirect_to settings_salesforce_path }
     end
   end
 
   def refresh
     SalesforceAccount.load(current_user)
 
-    respond_to do |format|
-      format.html { redirect_to settings_url }
-    end
+    render :text => ' '
          
   end
 
@@ -148,29 +147,23 @@ class SalesforceController < ApplicationController
     end
 
     respond_to do |format|
-      format.html { redirect_to settings_url }
+      format.html { redirect_to settings_salesforce_path }
     end
 
   end
 
 
   def disconnect
-    salesforce_accounts = SalesforceAccount.eager_load(:account).where(contextsmith_organization_id: current_user.organization_id)
-    salesforce_accounts.each do |s|
-      if !s.account.nil?
-        puts s.account.id
-        s.account.salesforce_id = ''
-        s.save
-      end
-    end
-
-    salesforce_accounts.update_all(contextsmith_account_id: nil, contextsmith_organization_id: "00000000-0000-0000-0000-000000000000")
-
+    # update account
+    # delete salesforce data
+    # delete salesforce oauth_user
+    Account.where(organization_id: current_user.organization_id).update_all(salesforce_id: '')
+    SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).delete_all
     salesforce_user = OauthUser.find_by(id: params[:id])
     salesforce_user.destroy
 
     respond_to do |format|
-      format.html { redirect_to settings_url }
+      format.html { redirect_to settings_salesforce_path }
     end
   end
 end
