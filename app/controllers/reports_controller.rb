@@ -22,14 +22,16 @@ class ReportsController < ApplicationController
     @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
     
     # Engagement Volume Chart
-    # format of data: { category => { date => count} }
-    # TODO: Add another array that has raw counts of all activities for each day, for use in doing the special binding lines
-    # put [count] as first data set in series for this chart, but hide it. Just use count for tooltip in top right corner of chart.
-    # Then, current dummy data can be removed.
-    activities_by_category = @account.activities.where(last_sent_date: 14.days.ago..Time.current).select { |a| a.is_visible_to(current_user) }.reverse.group_by { |a| a.category }
+    # TODO: Generate data for Engagement Volume Chart in SQL query   
+    activities_by_category = @account.activities.where(last_sent_date: 14.days.ago.midnight..Time.current.midnight).select { |a| a.is_visible_to(current_user) }.reverse.group_by { |a| a.category }
     @activities_by_category_date = {}
     activities_by_category.each do |category, activities|
-      @activities_by_category_date[category] = activities.group_by { |a| a.last_sent_date.to_date.to_time(:utc).to_i * 1000 }
+      temp_activities_by_date = Array.new(14, 0)
+      activities.each do |a|
+        day_number = (a.last_sent_date - 14.days.ago.midnight).floor/(60*60*24)
+        temp_activities_by_date[day_number] += 1
+      end
+      @activities_by_category_date[category] = temp_activities_by_date
     end
 
     # TODO: Generate data for Risk Volume Chart in SQL query
