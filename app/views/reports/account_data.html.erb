@@ -414,7 +414,8 @@
                 color: '#FF5050',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(5) }  %>
+                // data: <%= 14.times.map{ Random.rand(5) }  %>
+                data: <%= @risks_by_date.to_json.html_safe  %>
             }]
         });
 

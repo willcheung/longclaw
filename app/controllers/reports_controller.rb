@@ -32,6 +32,16 @@ class ReportsController < ApplicationController
       @activities_by_category_date[category] = activities.group_by { |a| a.last_sent_date.to_date.to_time(:utc).to_i * 1000 }
     end
 
+    # TODO: Generate data for Risk Volume Chart in SQL query
+    # Risk Volume Chart
+    risk_notifications = @account.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
+    @risks_by_date = Array.new(14, 0)
+    risk_notifications.each do |r|
+      # risks_by_date based on number of days since 14 days ago
+      day_number = (r.created_at - 14.days.ago.midnight).floor/(60*60*24)
+      @risks_by_date[day_number] += 1
+    end
+
     render layout: false
   end
 
