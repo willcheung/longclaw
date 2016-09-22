@@ -38,6 +38,8 @@ class UsersController < ApplicationController
         if @user.cluster_create_date.nil? and @user.mark_private == false
           # Kick off cluster analysis to backend
           ContextsmithService.get_emails_from_backend_with_callback(@user)
+        else
+          @user.update_attributes(cluster_create_date: Time.now)
         end
 
         format.html { redirect_to onboarding_tutorial_path }

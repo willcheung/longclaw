@@ -240,17 +240,17 @@
     <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title">Share this stream with others</h4>
+            <h4 class="modal-title">Share this stream</h4>
         </div>
         <div class="modal-body">
-            <div class="row">
+            <div class="row m-b-sm">
                 <div class="col-lg-12">
-                    <h4>You can only share with people in your "Followers" list</h4>
+                    <h3>Grant access to this stream</h3>
                 </div>
     
                 <div class="col-lg-12">
                     <div class="input-group m-b">
-                        <input type="text" class="form-control">
+                        <input type="text" class="form-control" placeholder="Enter email address...">
                         <div class="input-group-btn">
                             <button data-toggle="dropdown" class="btn btn-white dropdown-toggle" type="button" aria-expanded="false">Permission <span class="caret"></span></button>
                             <ul class="dropdown-menu">
@@ -260,6 +260,17 @@
                         </div>
                         
                     </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <h3>Shareable link</h3>
+                </div>
+
+                <div class="col-lg-12">
+                    <input type="text" class="form-control" value="https://app.contextsmith.com/projects/a2cba6e0-317a-4d13-99ff-9803587d5a3a/guest_view" readonly="readonly">
+                    <span class="help-block m-b-none">People with access can use this link.</span>
                 </div>
             </div>
         </div>

@@ -1,3 +1,5 @@
+$('[data-toggle="tooltip"]').tooltip();
+
 $(document).ready(function() {
 
     $('.salesforce_account_box').chosen({allow_single_deselect: true});
