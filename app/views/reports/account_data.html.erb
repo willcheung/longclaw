@@ -56,7 +56,7 @@
             </div>
         </div>
         <div class="row text-center">
-            <h3><a href="" class="btn btn-outline btn-primary btn-xs">See risks &rarr;</a></h3>
+            <h3><%= link_to "See risks &rarr;".html_safe, project_path(@account)+"/tasks", class: "btn btn-outline btn-primary btn-xs" %></h3>
         </div>
     </div>
 </div>
@@ -78,7 +78,7 @@
         </div>
 
         <div class="row m-t-lg text-center">
-            <h3><a href="" class="btn btn-outline btn-primary btn-xs">See activities &rarr;</a></h3>
+            <h3><%= link_to "See activities &rarr;".html_safe, project_path(@account), class: "btn btn-outline btn-primary btn-xs" %></h3>
         </div>
     </div>
 
@@ -233,7 +233,7 @@
             },
             credits: { enabled: false },
             xAxis: {
-                categories: ['Justin', 'Kelvin', 'Will', 'Richard', 'Ben']
+                categories: <%= @team_leaderboard.map(&:email).to_json.html_safe %>
             },
             yAxis: {
                 min: 0,
@@ -250,12 +250,13 @@
                 }
             },
             series: [{
-                name: 'Engagement',
-                data: [7, 5, 4, 3, 2]
+                name: 'Inbound',
+                data: <%= @team_leaderboard.map(&:inbound_count).to_json.html_safe %>
+            }, {
+                name: 'Outbound',
+                data: <%= @team_leaderboard.map(&:outbound_count).to_json.html_safe %>
             }]
         });
-
-
 
         $('#risk-chart').highcharts({
             title: {
@@ -414,7 +415,6 @@
                 color: '#FF5050',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                // data: <%= 14.times.map{ Random.rand(5) }  %>
                 data: <%= @risks_by_date.to_json.html_safe  %>
             }]
         });

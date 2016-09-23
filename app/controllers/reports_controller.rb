@@ -1,7 +1,7 @@
 class ReportsController < ApplicationController
   def touches_by_team
     # TODO: find way to get number of projects for each user listed here
-    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain, 7.days.ago.utc)
+    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
     @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 
@@ -43,6 +43,10 @@ class ReportsController < ApplicationController
       day_number = (r.created_at - 14.days.ago.midnight).floor/(60*60*24)
       @risks_by_date[day_number] += 1
     end
+
+    # Most Active Contributors
+    @team_leaderboard = User.count_activities_by_user_flex([@account.account.id], current_user.organization.domain)
+    @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
 
     render layout: false
   end
