@@ -170,7 +170,7 @@
             },
             credits: false,
             title: {
-                text: "Activities by Team",
+                text: "Activities By Team",
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -196,23 +196,14 @@
             series: [{
                 name: 'Team',
                 colorByPoint: true,
-                data: [{
-                    name: 'Sales',
-                    y: 56.3,
-                    sliced: true,
-                    dataLabels: { 
-                        enabled: true
-                    },
-                }, {
-                    name: 'Marketing',
-                    y: 24
-                }, {
-                    name: 'Account Managment',
-                    y: 10.3
-                }, {
-                    name: 'Support',
-                    y: 4.7
-                }]
+                data: [
+                <% @activities_by_dept.each do |dept, count| %>
+                {
+                    name: "<%= dept %>",
+                    y: <%= count %>
+                },
+                <% end %>
+                ]
             }]
         });
 

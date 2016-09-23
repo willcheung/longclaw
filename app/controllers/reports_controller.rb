@@ -44,9 +44,20 @@ class ReportsController < ApplicationController
       @risks_by_date[day_number] += 1
     end
 
-    # Most Active Contributors
-    @team_leaderboard = User.count_activities_by_user_flex([@account.account.id], current_user.organization.domain)
-    @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
+    # Most Active Contributors & Activities By Team
+    user_num_activities = User.count_activities_by_user_flex([@account.account.id], current_user.organization.domain)
+    @team_leaderboard = []
+    @activities_by_dept = Hash.new(0)
+    activities_by_dept_total = 0
+    user_num_activities.each do |u|
+      user = User.find_by_email(u.email)
+      u.email = get_full_name(user)
+      @team_leaderboard << u
+      dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
+      @activities_by_dept[dept] += u.inbound_count + u.outbound_count
+      activities_by_dept_total += u.inbound_count + u.outbound_count
+    end
+    @activities_by_dept.each { |dept, count| @activities_by_dept[dept] = (count.to_f/activities_by_dept_total*100).round(1)  }
 
     render layout: false
   end
