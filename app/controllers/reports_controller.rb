@@ -47,6 +47,7 @@ class ReportsController < ApplicationController
       @risks_by_date[day_number] += 1
     end
 
+    # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
     user_num_activities = User.count_activities_by_user_flex([@account.account.id], current_user.organization.domain)
     @team_leaderboard = []
@@ -60,7 +61,10 @@ class ReportsController < ApplicationController
       @activities_by_dept[dept] += u.inbound_count + u.outbound_count
       activities_by_dept_total += u.inbound_count + u.outbound_count
     end
+    # Convert Activities By Team to %
     @activities_by_dept.each { |dept, count| @activities_by_dept[dept] = (count.to_f/activities_by_dept_total*100).round(1)  }
+    # Only show top 5 for Most Active Contributors
+    @team_leaderboard = @team_leaderboard[0...5]
 
     render layout: false
   end
