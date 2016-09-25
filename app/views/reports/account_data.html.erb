@@ -56,7 +56,7 @@
             </div>
         </div>
         <div class="row text-center">
-            <h3><a href="" class="btn btn-outline btn-primary btn-xs">See risks &rarr;</a></h3>
+            <h3><%= link_to "See risks &rarr;".html_safe, project_path(@account)+"/tasks", class: "btn btn-outline btn-primary btn-xs" %></h3>
         </div>
     </div>
 </div>
@@ -65,20 +65,19 @@
 <div id="account-charts">
     <div id="charts-container" class="ibox-content">
         <div class="row m-t-md">
-            <div id="risk-chart" style="height:240px;padding-right:15px;padding-left:5px;"></div>
+            <div id="risk-chart" style="height:240px;"></div>
         </div>
 
         <div class="row m-t-md">
-            <div id="risk-detection-chart" style="height:130px"></div>
+            <div id="risk-detection-chart"></div>
         </div>
         
         <div class="row m-t-md">
-            
-            <div id="activities-chart" style="height:240px"></div>
+            <div id="activities-chart"></div>
         </div>
 
         <div class="row m-t-lg text-center">
-            <h3><a href="" class="btn btn-outline btn-primary btn-xs">See activities &rarr;</a></h3>
+            <h3><%= link_to "See activities &rarr;".html_safe, project_path(@account), class: "btn btn-outline btn-primary btn-xs" %></h3>
         </div>
     </div>
 
@@ -171,7 +170,7 @@
             },
             credits: false,
             title: {
-                text: "Activities by Team",
+                text: "Activities By Team",
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -197,23 +196,14 @@
             series: [{
                 name: 'Team',
                 colorByPoint: true,
-                data: [{
-                    name: 'Sales',
-                    y: 56.3,
-                    sliced: true,
-                    dataLabels: { 
-                        enabled: true
-                    },
-                }, {
-                    name: 'Marketing',
-                    y: 24
-                }, {
-                    name: 'Account Managment',
-                    y: 10.3
-                }, {
-                    name: 'Support',
-                    y: 4.7
-                }]
+                data: [
+                <% @activities_by_dept.each do |dept, count| %>
+                {
+                    name: "<%= dept %>",
+                    y: <%= count %>
+                },
+                <% end %>
+                ]
             }]
         });
 
@@ -233,7 +223,7 @@
             },
             credits: { enabled: false },
             xAxis: {
-                categories: ['Justin', 'Kelvin', 'Will', 'Richard', 'Ben']
+                categories: <%= @team_leaderboard.map(&:email).to_json.html_safe %>
             },
             yAxis: {
                 min: 0,
@@ -250,12 +240,13 @@
                 }
             },
             series: [{
-                name: 'Engagement',
-                data: [7, 5, 4, 3, 2]
+                name: 'Inbound',
+                data: <%= @team_leaderboard.map(&:inbound_count).to_json.html_safe %>
+            }, {
+                name: 'Outbound',
+                data: <%= @team_leaderboard.map(&:outbound_count).to_json.html_safe %>
             }]
         });
-
-
 
         $('#risk-chart').highcharts({
             title: {
@@ -353,6 +344,7 @@
 
         $('#risk-detection-chart').highcharts({
             chart: {
+                height: 140,
                 events:{
                   load: function(event) {
                     var extremes = this.yAxis[0].getExtremes();
@@ -388,9 +380,6 @@
             legend: {
                 enabled: false
             },
-            plotOptions: {
-                
-            },
             tooltip: {
                 positioner: function () {
                     return {
@@ -414,12 +403,13 @@
                 color: '#FF5050',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(5) }  %>
+                data: <%= @risks_by_date.to_json.html_safe  %>
             }]
         });
 
         $('#activities-chart').highcharts({
             chart: {
+                height: <%= @activities_by_category_date.blank? ? 140 : 240 %>,
                 events:{
                   load: function(event) {
                     var extremes = this.yAxis[0].getExtremes();
@@ -443,8 +433,6 @@
             xAxis: {
                 type: 'datetime',
                 crosshair: true,
-                min: <%= 14.days.ago.midnight.to_i * 1000 %>,
-                max: <%= 1.day.ago.midnight.to_i * 1000 %>,
                 events: {
                     setExtremes: syncExtremes
                 }
@@ -486,21 +474,17 @@
                 name: '<%= category %>',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: [ 
-                <% activities_by_date.each do |date, activities| %>
-                    [<%= date %>, <%= activities.length %>],
-                <% end %>
-                ]
+                data: <%= activities_by_date.to_json.html_safe %>
             },
             <% end %>
             // Dummy data series to make sure axis still shown when there is no data
-            {   
+            {     
                 type: 'column',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= Array.new(14, 0) %>,
                 showInLegend: false
-            }
-            ]
+            }]
         });
 
     };

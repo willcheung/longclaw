@@ -34,6 +34,8 @@ class Notification < ActiveRecord::Base
 	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
+  scope :risks, -> { where category: CATEGORY[:Risk] }
+
   validates :project, presence: true
 
   CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Risk: 'Risk', Opportunity: 'Opportunity' }

@@ -1,6 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>Accounts Dashboard</h2>
+        <h2>Account Stream Dashboard</h2>
     </div>
 </div>
 
@@ -113,6 +113,13 @@
                 <% @risk_scores.each do |r| %>
                 {
                     y: <%= r.score %>,
+                    color: "<%= if r.score > 80.0 
+                            '#ed5565'
+                        elsif r.score > 60.0
+                            '#FFA500'
+                        else
+                            '#A1C436'
+                        end %>",
                     id: "<%= r.id %>"
                 }, 
                 <% end %>
@@ -121,9 +128,9 @@
                 name: 'Average',
                 type: 'line',
                 lineWidth: 2,
-                color: '#FFA500',
+                color: '#7cb5ec',
                 marker: { enabled: false, radius: 0 },
-                data: <%= Array.new(@risk_scores.length, 55).to_json.html_safe %>
+                data: <%= Array.new(@risk_scores.length, @average_risk_score).to_json.html_safe %>
             }]
         });
 

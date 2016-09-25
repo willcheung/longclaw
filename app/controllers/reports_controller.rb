@@ -1,17 +1,20 @@
 class ReportsController < ApplicationController
   def touches_by_team
     # TODO: find way to get number of projects for each user listed here
-    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain, 7.days.ago.utc)
+    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
     @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 
   def accounts_dashboard
     @projects = Project.visible_to(current_user.organization_id, current_user.id)
     risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user).sort_by { |pid, score| score }.reverse
+    total_risk_scores = 0
     @risk_scores = risk_scores.map do |r|
       proj = @projects.find { |p| p.id == r[0] }
+      total_risk_scores += r[1]
       Hashie::Mash.new({ id: proj.id, score: r[1], name: proj.name })
     end
+    @average_risk_score = (total_risk_scores.to_f/@risk_scores.length).round(1)
   end
 
   def account_data
@@ -22,15 +25,46 @@ class ReportsController < ApplicationController
     @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
     
     # Engagement Volume Chart
-    # format of data: { category => { date => count} }
-    # TODO: Add another array that has raw counts of all activities for each day, for use in doing the special binding lines
-    # put [count] as first data set in series for this chart, but hide it. Just use count for tooltip in top right corner of chart.
-    # Then, current dummy data can be removed.
-    activities_by_category = @account.activities.where(last_sent_date: 14.days.ago..Time.current).select { |a| a.is_visible_to(current_user) }.reverse.group_by { |a| a.category }
+    # TODO: Generate data for Engagement Volume Chart in SQL query   
+    activities_by_category = @account.activities.where(last_sent_date: 14.days.ago.midnight..Time.current.midnight).select { |a| a.is_visible_to(current_user) }.reverse.group_by { |a| a.category }
     @activities_by_category_date = {}
     activities_by_category.each do |category, activities|
-      @activities_by_category_date[category] = activities.group_by { |a| a.last_sent_date.to_date.to_time(:utc).to_i * 1000 }
+      temp_activities_by_date = Array.new(14, 0)
+      activities.each do |a|
+        day_number = (a.last_sent_date - 14.days.ago.midnight).floor/(60*60*24)
+        temp_activities_by_date[day_number] += 1
+      end
+      @activities_by_category_date[category] = temp_activities_by_date
     end
+
+    # TODO: Generate data for Risk Volume Chart in SQL query
+    # Risk Volume Chart
+    risk_notifications = @account.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
+    @risks_by_date = Array.new(14, 0)
+    risk_notifications.each do |r|
+      # risks_by_date based on number of days since 14 days ago
+      day_number = (r.created_at - 14.days.ago.midnight).floor/(60*60*24)
+      @risks_by_date[day_number] += 1
+    end
+
+    # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
+    # Most Active Contributors & Activities By Team
+    user_num_activities = User.count_activities_by_user_flex([@account.account.id], current_user.organization.domain)
+    @team_leaderboard = []
+    @activities_by_dept = Hash.new(0)
+    activities_by_dept_total = 0
+    user_num_activities.each do |u|
+      user = User.find_by_email(u.email)
+      u.email = get_full_name(user)
+      @team_leaderboard << u
+      dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
+      @activities_by_dept[dept] += u.inbound_count + u.outbound_count
+      activities_by_dept_total += u.inbound_count + u.outbound_count
+    end
+    # Convert Activities By Team to %
+    @activities_by_dept.each { |dept, count| @activities_by_dept[dept] = (count.to_f/activities_by_dept_total*100).round(1)  }
+    # Only show top 5 for Most Active Contributors
+    @team_leaderboard = @team_leaderboard[0...5]
 
     render layout: false
   end
