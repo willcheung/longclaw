@@ -207,7 +207,6 @@ class User < ActiveRecord::Base
 
   # Team Leaderboard chart
   def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
-    date_range = "TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'"
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
       WITH email_activities AS 
@@ -225,7 +224,7 @@ class User < ActiveRecord::Base
           FROM activities,
           LATERAL jsonb_array_elements(email_messages) messages
           WHERE category = 'Conversation'
-          AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN #{date_range}
+          AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
           AND project_id IN 
           (
             SELECT id AS project_id 
@@ -234,8 +233,8 @@ class User < ActiveRecord::Base
           )
           GROUP BY 1,2,3,4
         )
-      SELECT t2.inbound AS email,
-             t2.inbound_count, 
+      SELECT COALESCE(t2.inbound, t1.outbound) AS email,
+             COALESCE(t2.inbound_count,0) AS inbound_count, 
              COALESCE(t1.outbound_count,0) AS outbound_count, 
              COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) AS total 
       FROM

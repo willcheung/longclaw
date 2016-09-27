@@ -55,7 +55,7 @@ class ReportsController < ApplicationController
     activities_by_dept_total = 0
     user_num_activities.each do |u|
       user = User.find_by_email(u.email)
-      u.email = get_full_name(user)
+      u.email = get_full_name(user) if user
       @team_leaderboard << u
       dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
       @activities_by_dept[dept] += u.inbound_count + u.outbound_count
