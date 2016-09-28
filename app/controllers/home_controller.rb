@@ -15,7 +15,6 @@ class HomeController < ApplicationController
 
     ###### Dashboard Metrics ######
     if !@projects.empty?
-      static = Rails.env.development?
       
       project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
 
@@ -37,10 +36,10 @@ class HomeController < ApplicationController
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
 
       # Risk Score Trend
-      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.pluck(:id), current_user.time_zone, static)
+      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.pluck(:id), current_user.time_zone)
 
       # Top Risks
-      projects_risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user).sort_by { |pid, score| score }.reverse[0...5]
+      projects_risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse[0...5]
       ### NOT using built in Ruby max_by function due to bug
       projects_risks_counts = Project.count_risks_per_project(@projects.pluck(:id))
       @top_risks = projects_risk_scores.map do |p|
