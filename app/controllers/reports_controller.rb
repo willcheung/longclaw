@@ -7,7 +7,7 @@ class ReportsController < ApplicationController
 
   def accounts_dashboard
     @projects = Project.visible_to(current_user.organization_id, current_user.id)
-    risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user).sort_by { |pid, score| score }.reverse
+    risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse
     total_risk_scores = 0
     @risk_scores = risk_scores.map do |r|
       proj = @projects.find { |p| p.id == r[0] }
@@ -19,7 +19,7 @@ class ReportsController < ApplicationController
 
   def account_data
     @account = Project.find(params[:id])
-    @risk_score = @account.current_risk_score(current_user)
+    @risk_score = @account.current_risk_score(current_user.time_zone)
     @open_risks_count = @account.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).count
     @last_activity_date = @account.activities.conversations.maximum("activities.last_sent_date")
     @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
@@ -30,9 +30,10 @@ class ReportsController < ApplicationController
     @activities_by_category_date = {}
     activities_by_category.each do |category, activities|
       temp_activities_by_date = Array.new(14, 0)
+      # temp_activities_by_date based on number of days since 14 days ago
       activities.each do |a|
-        day_number = (a.last_sent_date - 14.days.ago.midnight).floor/(60*60*24)
-        temp_activities_by_date[day_number] += 1
+        day_index = (a.last_sent_date - 14.days.ago.midnight).floor/(60*60*24)
+        temp_activities_by_date[day_index] += 1
       end
       @activities_by_category_date[category] = temp_activities_by_date
     end
@@ -43,8 +44,8 @@ class ReportsController < ApplicationController
     @risks_by_date = Array.new(14, 0)
     risk_notifications.each do |r|
       # risks_by_date based on number of days since 14 days ago
-      day_number = (r.created_at - 14.days.ago.midnight).floor/(60*60*24)
-      @risks_by_date[day_number] += 1
+      day_index = (r.created_at - 14.days.ago.midnight).floor/(60*60*24)
+      @risks_by_date[day_index] += 1
     end
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
@@ -55,7 +56,7 @@ class ReportsController < ApplicationController
     activities_by_dept_total = 0
     user_num_activities.each do |u|
       user = User.find_by_email(u.email)
-      u.email = get_full_name(user)
+      u.email = get_full_name(user) if user
       @team_leaderboard << u
       dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
       @activities_by_dept[dept] += u.inbound_count + u.outbound_count

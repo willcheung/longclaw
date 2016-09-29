@@ -122,13 +122,6 @@ module Utils
 		(a & b).size
 	end
 
-  def min_risk_score(scores)
-    scores.reduce(0.0) do |min_score, a|
-      sentiment_score = JSON.parse(a.sentiment_item)[0]['score']  
-      min_score < sentiment_score ? min_score : sentiment_score
-    end
-  end
-
   # adjust scale and round float to a percentage
   def round_and_scale_score(score)
     score = (((-score - 0.75) * 4) * 100).floor

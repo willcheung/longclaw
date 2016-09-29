@@ -87,17 +87,9 @@ class Project < ActiveRecord::Base
 		# Everything lives in OnboardingController#confirm_projects right now
 	end
 
-  def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, test=false, day_range=14)
-    # Calculate time since epoch in seconds for today at 23:59:59 based on current user time zone
-    # current_time = Time.zone.now
-    # current_time_int = Time.zone.local(current_time.year, current_time.month, current_time.day,23,59,59).utc.to_i
-    current_time_int = Time.current.end_of_day.utc.to_i
-    start_time_sec = (day_range-1).days.ago.midnight.utc.to_i
-
-    if test
-      current_time_int = Time.zone.local(2014,9,21,23,59,59).utc.to_i
-      start_time_sec = current_time_int - 60*60*24*day_range + 1
-    end
+  def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, day_range=14)
+    start_time_sec = (day_range-1).days.ago.in_time_zone(time_zone).midnight.utc.to_i
+    end_time_sec = Time.current.in_time_zone(time_zone).end_of_day.utc.to_i
 
     query = <<-SQL
         SELECT messages->>'sentimentItems' as sentiment_item,
@@ -112,111 +104,80 @@ class Project < ActiveRecord::Base
         AND project_id IN ('#{array_of_project_ids.join("','")}')
       SQL
 
-    result= Activity.find_by_sql(query)
+    result = Activity.find_by_sql(query)
 
-    project_min_score = Hash.new()
-    project_min_temp = Hash.new()
-    project_not_risk_sentiment_min_score = Hash.new()
+    # instantiate min_scores as Hash of Arrays of Arrays
+    # project_id => [day in day_range][possible scores]
+    min_scores = Hash.new()
+    # instantiate non_risk_min_score as Hash
+    # project_id => lowest score for all scores created before day_range
+    non_risk_min_score = Hash.new()
 
     array_of_project_ids.each do |pid|
-      project_min_score[pid] = Array.new(day_range,nil) 
-      project_min_temp[pid] = Array.new(day_range, nil)
-      project_not_risk_sentiment_min_score[pid] = 0
+      min_scores[pid] = Array.new(day_range) { [] }
+      non_risk_min_score[pid] = 0
     end
     
-    if !result.nil?
-      result.each do|r|          
-        sentiment_json = JSON.parse(r.sentiment_item)
-      
-        #reverse
-        # current_time - sent_date = seconds since sent_date
-        # 24*60*60 = seconds in a day
-        # (current_time - sent_date)/24/60/60 = days since sent_date
-        # 13 - ( days since sent_date ) = days since sent_date from 13 days ago
-        temp_date_index = (day_range-1) - ((current_time_int - r.sentdate.to_i) / (24*60*60))
+    if result
+      result.each do|r|
+        sentiment_score = JSON.parse(r.sentiment_item)[0]['score'].to_f
 
-        if temp_date_index<0 
-          temp_date_index = 0
-        end
+        # array position for sent date of current sentiment score (0 if before date range)
+        date_index = (day_range-1) - ((end_time_sec - r.sentdate.to_i) / (24*60*60))
+        date_index = 0 if date_index < 0 
 
-        is_notification = nil
-        if sentiment_json[0]['score'].to_f<= -0.95
-          is_notification = Notification.find_by(activity_id: r.id, message_id: r.message_id, category: Notification::CATEGORY[:Risk])
-        end
+        # risk notification that corresponds to this sentiment score, if any
+        risk_notification = nil
+        risk_notification = Notification.find_by(activity_id: r.id, message_id: r.message_id, category: Notification::CATEGORY[:Risk]) if sentiment_score <= -0.95
 
-        if(is_notification.blank?) 
-          #risks that don't have notification, can't be closed
-          if sentiment_json[0]['score'].to_f < project_not_risk_sentiment_min_score[r.project_id]
-            if (r.sentdate.to_i < start_time_sec)
-              project_not_risk_sentiment_min_score[r.project_id] = sentiment_json[0]['score'].to_f
-            else
-              for i in temp_date_index..day_range-1
-                if project_min_temp[r.project_id][i].nil?
-                  project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
-                else
-                  project_min_temp[r.project_id][i].push(sentiment_json[0]['score'].to_f)
-                end 
-              end
-            end
+        # array position for end date of current sentiment score, set below
+        end_index = nil
+
+        if risk_notification
+          # risk notification found
+          if risk_notification.is_complete && risk_notification.complete_date.to_i >= start_time_sec
+            complete_index = (day_range-1) - ((end_time_sec - risk_notification.complete_date.to_i) / (24*60*60))
+            # consider score for days it is open
+            end_index = complete_index-1 
+          elsif !risk_notification.is_complete
+            # consider score for all days after it was created
+            end_index = day_range-1 
           end
         else
-          # is risk
-          if is_notification.is_complete==true and is_notification.complete_date.to_i >= start_time_sec
-            index = (day_range-1) - ((current_time_int - is_notification.complete_date.to_i) / (24*60*60))
-            for i in temp_date_index..index-1
-              if project_min_temp[r.project_id][i].nil?
-                project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
-              else
-                project_min_temp[r.project_id][i].push(sentiment_json[0]['score'].to_f)
-              end 
-            end
-          elsif is_notification.is_complete == false
-            for i in temp_date_index..day_range-1
-              if project_min_temp[r.project_id][i].nil?
-                project_min_temp[r.project_id][i] = [sentiment_json[0]['score'].to_f]
-              else
-                project_min_temp[r.project_id][i].push(sentiment_json[0]['score'].to_f)
-              end 
+          # no risk notification, can't be closed
+          if sentiment_score < non_risk_min_score[r.project_id]
+            if r.sentdate.to_i < start_time_sec
+              # min score from before day_range, will add to consideration later
+              non_risk_min_score[r.project_id] = sentiment_score 
+            else
+              # consider score for all days after it was created
+              end_index = day_range-1 
             end
           end
         end
+
+        # push score into min_scores to be considered for lowest score on each day it can apply for
+        (date_index..end_index).each do |i|
+          min_scores[r.project_id][i] << sentiment_score
+        end if end_index # scores where end_index is set above are considered
       end
 
-      project_not_risk_sentiment_min_score.each do |key, value|
-        for i in 0..day_range-1
-          if project_min_temp[key][i].nil?
-            project_min_temp[key][i] = [value]
-          else
-            project_min_temp[key][i].push(value)
-          end 
-        end
-      end
-    end
-
-    # set min score of each day
-    project_min_temp.each do |key, value|
-      for i in 0..day_range-1
-        if !value[i].nil? and value[i].length>0
-          value[i] = value[i].sort {|x, y| (x.to_s[0,7].to_f) <=> (y.to_s[0,7].to_f) }
-          project_min_score[key][i] = value[i][0]
-        end
-      end
-    end     
-
-    puts project_min_score
-
-    # scale score
-    project_min_score.each do |key, value|
-      for i in 0..day_range-1
-        if !value[i].nil?
-          value[i] = round_and_scale_score(value[i])
-        end
+      # push score from non_risk_min_score into min_scores
+      non_risk_min_score.each do |key, value|
+        (0..day_range-1).each do |i|
+          min_scores[key][i] << value
+        end 
       end
     end
 
-    puts project_min_score
+    # set final score of each day by taking min from the innermost array, then round and scale score
+    min_scores.each do |key, value|
+      (0..day_range-1).each do |i|
+        min_scores[key][i] = round_and_scale_score(value[i].sort[0])
+      end
+    end
     
-    return project_min_score
+    min_scores
   end
 
   def self.count_risks_per_project(array_of_project_ids)
@@ -245,9 +206,9 @@ class Project < ActiveRecord::Base
 
   end
 
-  def self.current_risk_score(array_of_project_ids, current_user)
-    day_range=14
-    projects_min_scores = Project.find_min_risk_score_by_day(array_of_project_ids, current_user.time_zone, Rails.env.development?, day_range)
+  def self.current_risk_score(array_of_project_ids, time_zone)
+    day_range = 1
+    projects_min_scores = Project.find_min_risk_score_by_day(array_of_project_ids, time_zone, day_range)
 
     project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
 
@@ -258,8 +219,8 @@ class Project < ActiveRecord::Base
     return project_current_score
   end
 
-  def current_risk_score(current_user)
-    project_current_score = Project.current_risk_score([self.id], current_user)
+  def current_risk_score(time_zone)
+    project_current_score = Project.current_risk_score([self.id], time_zone)
     return project_current_score[self.id]
   end
 
