@@ -16,7 +16,6 @@ class UserMailer < ApplicationMailer
     @user = user
     d_tz = Time.current.yesterday.midnight.utc
 
-    # activity_from_yesterday = "activities.last_sent_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours'"
     your_notifications = "((notifications.is_complete = false) OR (notifications.is_complete = true AND notifications.complete_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours')) AND (notifications.assign_to = '#{user.id}')"
 
     sub = user.subscriptions
@@ -36,6 +35,7 @@ class UserMailer < ApplicationMailer
         temp
       end
       @updates_today.reject! { |proj| proj.activities.blank? && proj.notifications.blank? }
+      @risk_scores = Project.current_risk_score(@updates_today.map(&:id), user.time_zone) unless @updates_today.blank?
 
       track user: user # ahoy_email tracker
       track click: false # disable ahoy_email click tracker for links in email
