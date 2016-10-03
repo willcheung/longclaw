@@ -21,7 +21,7 @@ class UserMailer < ApplicationMailer
     sub = user.subscriptions
 
     unless sub.blank?
-      @updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).preload(:conversations_for_email, :notes_for_email, :meetings_for_email, :account, :notifications)
+      @updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).preload(:conversations_for_email, :notes_for_email, :meetings_for_email, :notifications)
       @updates_today = @updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
         temp = proj.dup
