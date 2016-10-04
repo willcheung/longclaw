@@ -11,9 +11,9 @@ class ProjectsController < ApplicationController
 
     # all projects and their accounts, sorted by account name alphabetically
     if params[:type]
-      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").where(category: params[:type]).preload([:users,:contacts,:subscribers, :account, :activities])
+      projects = Project.visible_to(current_user.organization_id, current_user.id).where(category: params[:type]).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
     else
-      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").preload([:users,:contacts,:subscribers, :account, :activities])
+      projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
     end
 
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
