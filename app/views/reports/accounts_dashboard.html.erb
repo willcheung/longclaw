@@ -35,15 +35,14 @@
             <!-- LEFT -->
             <div class="col-lg-5">
                 <h4 class="m-l-md">Sort by: 
-                <select class="metric_filter col-lg-8" data-placeholder="Select Type">
-                    <option value="1">Days Inactive</option>
-                    <option value="2">Engagement Last 7d</option>
-                    <option value="3" selected="true">Risk Score Today</option>
-                    <option value="4">Risk / Engagement Ratio</option>
-                    <option value="5">Total Open Risks</option>
-                    <option value="6">Total Overdue Tasks</option>
-                  </select>    
-               
+                    <select id="dashboard-type" class="metric_filter col-lg-8" data-placeholder="Select Type">
+                        <option selected="true">Risk Score Today</option>
+                        <option>Days Inactive</option>
+                        <option>Engagement Last 7d</option>
+                        <option>Risk / Engagement Ratio</option>
+                        <option>Total Open Risks</option>
+                        <option>Total Overdue Tasks</option>
+                    </select>
                 </h4>
                 <div id="left-chart" class="left-chart" style="height:1200px;"></div>
                 
@@ -64,6 +63,10 @@
 
 <script>
     $(function () {
+
+        $('#dashboard-type').change( function () {
+            $.getScript("dashboard_data/" + $(this).val())
+        });
 
         $('#left-chart').highcharts({
             chart: {
@@ -113,9 +116,9 @@
                 <% @risk_scores.each do |r| %>
                 {
                     y: <%= r.score %>,
-                    color: "<%= if r.score > 80.0 
+                    color: "<%= if r.score >= 80.0 
                             '#ed5565'
-                        elsif r.score > 60.0
+                        elsif r.score >= 60.0
                             '#FFA500'
                         else
                             '#A1C436'

@@ -1,0 +1,28 @@
+var barColors = { 
+  blue: '#7cb5ec', 
+  highRisk: '#ed5565',
+  mediumRisk: '#FFA500',
+  lowRisk: '#A1C436'
+};
+var chart = $('#left-chart').highcharts()
+chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
+chart.series[0].update({ 
+  name: "<%= @type %>",
+  data: [ <% @data.each do |d| %>
+  {
+    y: <%= d.y %>,
+    color: barColors["<%= d.color %>"],
+    id: "<%= d.id %>"
+  },
+  <% end %> ]
+}, false);
+
+<% if @type == "Risk Score Today" %>
+chart.yAxis[0].update({min: 0, max: 100}, false);
+chart.series[1].show();
+<% else %>
+chart.yAxis[0].update({min: undefined, max: undefined}, false);
+chart.series[1].hide();
+<% end %>
+
+chart.redraw();
