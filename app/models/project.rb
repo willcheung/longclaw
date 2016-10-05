@@ -137,7 +137,7 @@ class Project < ActiveRecord::Base
         if r.has_risk
           # risk notification found
           if r.is_complete && r.complete_date.to_i >= start_time_sec
-            complete_index = (r.complete_date.to_i - start_time_sec) / (24*60*60))
+            complete_index = (r.complete_date.to_i - start_time_sec) / (24*60*60)
             # consider score for days it is open
             end_index = complete_index-1 
           elsif !r.is_complete
