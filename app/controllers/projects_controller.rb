@@ -11,9 +11,9 @@ class ProjectsController < ApplicationController
 
     # all projects and their accounts, sorted by account name alphabetically
     if params[:type]
-      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").where(category: params[:type]).preload([:users,:contacts,:subscribers, :account, :activities])
+      projects = Project.visible_to(current_user.organization_id, current_user.id).where(category: params[:type]).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
     else
-      projects = Project.visible_to(current_user.organization_id, current_user.id).group("accounts.id").preload([:users,:contacts,:subscribers, :account, :activities])
+      projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
     end
 
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
@@ -216,10 +216,10 @@ class ProjectsController < ApplicationController
     visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
 
     # for risk counts, show every risk regardless of private conversation
-    @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).count
+    @project_open_risks_count = @project.notifications.open.risks.count
 
     # select all open tasks regardless of private conversation
-    @project_open_tasks_count = @project.notifications.where(is_complete: false).count
+    @project_open_tasks_count = @project.notifications.open.count
     @project_pinned_count = @project.activities.pinned.count
     @project_risk_score = @project.current_risk_score(current_user.time_zone)
 
