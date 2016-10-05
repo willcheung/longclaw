@@ -89,19 +89,24 @@ class Project < ActiveRecord::Base
 
   def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, day_range=14)
     start_time_sec = (day_range-1).days.ago.in_time_zone(time_zone).midnight.utc.to_i
-    end_time_sec = Time.current.in_time_zone(time_zone).end_of_day.utc.to_i
 
     query = <<-SQL
-        SELECT messages->>'sentimentItems' as sentiment_item,
-               messages ->> 'sentDate' as sentdate,
-               activities.project_id as project_id,
-               messages ->> 'messageId' AS message_id,
-               activities.backend_id AS conversation_id,
-               activities.id AS id
-        FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE category = 'Conversation'
-        AND messages->>'sentimentItems' is NOT NULL 
-        AND project_id IN ('#{array_of_project_ids.join("','")}')
+        SELECT activities.id AS id,
+               activities.project_id AS project_id,
+               messages ->> 'sentDate' AS sent_date,
+               jsonb_array_elements(messages->'sentimentItems')->>'score' AS sentiment_score,
+               notifications.id AS has_risk,
+               notifications.is_complete,
+               notifications.complete_date
+        FROM activities
+        CROSS JOIN LATERAL jsonb_array_elements(email_messages) messages
+        LEFT JOIN notifications
+        ON activities.id = notifications.activity_id
+        AND messages ->> 'messageId' = notifications.message_id
+        AND notifications.category = '#{Notification::CATEGORY[:Risk]}'
+        WHERE activities.category = '#{Activity::CATEGORY[:Conversation]}'
+        AND messages->>'sentimentItems' IS NOT NULL 
+        AND activities.project_id IN ('#{array_of_project_ids.join("','")}')
       SQL
 
     result = Activity.find_by_sql(query)
@@ -120,33 +125,29 @@ class Project < ActiveRecord::Base
     
     if result
       result.each do|r|
-        sentiment_score = JSON.parse(r.sentiment_item)[0]['score'].to_f
+        sentiment_score = r.sentiment_score.to_f
 
         # array position for sent date of current sentiment score (0 if before date range)
-        date_index = (day_range-1) - ((end_time_sec - r.sentdate.to_i) / (24*60*60))
+        date_index = (r.sent_date.to_i - start_time_sec) / (24*60*60)
         date_index = 0 if date_index < 0 
-
-        # risk notification that corresponds to this sentiment score, if any
-        risk_notification = nil
-        risk_notification = Notification.find_by(activity_id: r.id, message_id: r.message_id, category: Notification::CATEGORY[:Risk]) if sentiment_score <= -0.95
 
         # array position for end date of current sentiment score, set below
         end_index = nil
 
-        if risk_notification
+        if r.has_risk
           # risk notification found
-          if risk_notification.is_complete && risk_notification.complete_date.to_i >= start_time_sec
-            complete_index = (day_range-1) - ((end_time_sec - risk_notification.complete_date.to_i) / (24*60*60))
+          if r.is_complete && r.complete_date.to_i >= start_time_sec
+            complete_index = (r.complete_date.to_i - start_time_sec) / (24*60*60))
             # consider score for days it is open
             end_index = complete_index-1 
-          elsif !risk_notification.is_complete
+          elsif !r.is_complete
             # consider score for all days after it was created
             end_index = day_range-1 
           end
         else
           # no risk notification, can't be closed
           if sentiment_score < non_risk_min_score[r.project_id]
-            if r.sentdate.to_i < start_time_sec
+            if r.sent_date.to_i < start_time_sec
               # min score from before day_range, will add to consideration later
               non_risk_min_score[r.project_id] = sentiment_score 
             else
@@ -196,32 +197,17 @@ class Project < ActiveRecord::Base
 
   # for risk counts, show every risk regardless of private conversation
   def self.open_risk_count(array_of_project_ids)
-    project_open_risk_count = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
-
-    array_of_project_ids.each do |id|
-      project_open_risk_count[id] = Notification.where(is_complete: false, category: Notification::CATEGORY[:Risk], project_id: id).length
-    end
-
-    return project_open_risk_count
-
+    risks_per_project = Project.count_risks_per_project(array_of_project_ids)
+    Hash[risks_per_project.map { |p| [p.id, p.open_risks] }]
   end
 
   def self.current_risk_score(array_of_project_ids, time_zone)
-    day_range = 1
-    projects_min_scores = Project.find_min_risk_score_by_day(array_of_project_ids, time_zone, day_range)
-
-    project_current_score = Hash[array_of_project_ids.map { |pid| [pid, 0] }]
-
-    projects_min_scores.each do |key, value|
-      project_current_score[key] = value[day_range-1]
-    end
-
-    return project_current_score
+    projects_min_scores = Project.find_min_risk_score_by_day(array_of_project_ids, time_zone, 1)
+    Hash[projects_min_scores.map { |pid, scores| [pid, scores[0]] }]
   end
 
   def current_risk_score(time_zone)
-    project_current_score = Project.current_risk_score([self.id], time_zone)
-    return project_current_score[self.id]
+    Project.current_risk_score([self.id], time_zone)[self.id]
   end
 
   # query to generate Account Relationship Graph from DB entries
