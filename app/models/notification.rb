@@ -35,6 +35,7 @@ class Notification < ActiveRecord::Base
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
   scope :risks, -> { where category: CATEGORY[:Risk] }
+  scope :open, -> { where is_complete: false }
 
   validates :project, presence: true
 

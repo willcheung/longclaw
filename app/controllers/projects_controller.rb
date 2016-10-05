@@ -216,10 +216,10 @@ class ProjectsController < ApplicationController
     visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
 
     # for risk counts, show every risk regardless of private conversation
-    @project_open_risks_count = @project.notifications.where(is_complete: false, category: Notification::CATEGORY[:Risk]).count
+    @project_open_risks_count = @project.notifications.open.risks.count
 
     # select all open tasks regardless of private conversation
-    @project_open_tasks_count = @project.notifications.where(is_complete: false).count
+    @project_open_tasks_count = @project.notifications.open.count
     @project_pinned_count = @project.activities.pinned.count
     @project_risk_score = @project.current_risk_score(current_user.time_zone)
 

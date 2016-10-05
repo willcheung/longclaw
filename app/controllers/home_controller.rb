@@ -6,11 +6,10 @@ class HomeController < ApplicationController
     # Load all projects visible to user
     @projects = Project.visible_to(current_user.organization_id, current_user.id)
     @projects_min_scores = Hash.new()
-    project_activities = Activity.where(project_id: @projects.pluck(:id))
     project_tasks = Notification.where(project_id: @projects.pluck(:id))
-    @open_tasks = project_tasks.where(is_complete: false).count
+    @open_tasks = project_tasks.open.count
     @closed_tasks = project_tasks.where(is_complete: true, complete_date: (7.days.ago..Time.current)).count
-    @open_risks = project_tasks.where(is_complete: false, category: Notification::CATEGORY[:Risk]).count
+    @open_risks = project_tasks.open.risks.count
     @overdue_tasks = project_tasks.where("is_complete = false and original_due_date::date < ?", Date.today).count
 
     ###### Dashboard Metrics ######
