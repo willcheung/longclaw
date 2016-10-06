@@ -33,6 +33,7 @@ class HomeController < ApplicationController
       # Team Leaderboard
       @team_leaderboard = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
+      @team_leaderboard = @team_leaderboard[0...5] # only show top 5
 
       # Risk Score Trend
       @projects_min_scores = Project.find_min_risk_score_by_day(@projects.pluck(:id), current_user.time_zone)
