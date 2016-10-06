@@ -191,6 +191,7 @@ class Project < ActiveRecord::Base
         ON projects.id = notifications.project_id
         WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
         GROUP BY projects.id
+        ORDER BY open_risks DESC
       SQL
     result = Project.find_by_sql(query)
   end

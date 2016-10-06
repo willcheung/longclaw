@@ -53,6 +53,10 @@ class ReportsController < ApplicationController
       end
       @data.sort_by! { |d| d.y }.reverse!
     when "Total Open Risks"
+      open_risk_counts = Project.count_risks_per_project(projects.pluck(:id))
+      @data = open_risk_counts.map do |r|
+        Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'highRisk'})
+      end
     when "Total Overdue Tasks"
     else # Invalid
     end
