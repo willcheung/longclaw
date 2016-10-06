@@ -17,7 +17,7 @@
       </div>
       <% if modal_id == 'edit_account_modal' %>
         <div class="modal-footer">
-          <%= link_to "Disable account", @account, method: :delete, data: {confirm: "All projects and contacts in this account will be disabled! Are you sure?"} %>
+          <%= link_to "Delete account", @account, method: :delete, data: {confirm: "All projects and contacts in this account will be deleted! Are you sure?"} %>
         </div>
       <% end %>
     </div>
