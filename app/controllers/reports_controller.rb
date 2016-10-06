@@ -44,7 +44,14 @@ class ReportsController < ApplicationController
       @data = project_engagement.map do |p|
         Hashie::Mash.new({ id: p.id, name: p.name, y: p.num_activities, color: 'blue'})
       end
-    when "Risk/Engagement Ratio"
+    when "Risk / Engagement Ratio"
+      project_engagement = Project.find_include_sum_activities(projects.pluck(:id))
+      project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group("projects.id")
+      @data = project_engagement.map do |e|
+        risk = project_risks.find { |r| r.id == e.id }
+        Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities).round(3), color: 'mediumRisk'})
+      end
+      @data.sort_by! { |d| d.y }.reverse!
     when "Total Open Risks"
     when "Total Overdue Tasks"
     else # Invalid

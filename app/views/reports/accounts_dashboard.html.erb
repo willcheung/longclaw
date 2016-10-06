@@ -65,7 +65,7 @@
     $(function () {
 
         $('#dashboard-type').change( function () {
-            $.getScript("dashboard_data/" + $(this).val())
+            $.getScript("dashboard_data/" + encodeURIComponent($(this).val()))
         });
 
         $('#left-chart').highcharts({

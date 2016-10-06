@@ -358,9 +358,9 @@ class Project < ActiveRecord::Base
   end
 
   # Top Active Streams/Engagement Last 7d
-  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start, hours_ago_end=0)
+  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
     hours_ago_end = hours_ago_end.hours.ago.to_i
-    hours_ago_start = hours_ago_start.hours.ago.to_i
+    hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
 
     query = <<-SQL
       SELECT projects.*, COUNT(*) AS num_activities
