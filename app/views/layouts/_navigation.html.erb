@@ -20,7 +20,10 @@
                 <a href="<%= projects_path %>"><i class="fa fa-comments"></i> <span class="nav-label">Streams</span></a>
             </li>
             <li class="<%= is_active_controller('notifications') %>">
-                <a href="<%= notifications_path %>"><i class="fa fa-list-ul"></i> <span class="nav-label">Smart Tasks</span></a>
+                <a href="<%= notifications_path %>/?type=incomplete&assignee=me"><i class="fa fa-list-ul"></i> <span class="nav-label">Smart Tasks</span></a>
+            </li>
+            <li class="<%= is_active_controller('reports') %>">
+                <a href="<%= reports_accounts_dashboard_path %>"><i class="fa fa-bar-chart"></i> <span class="nav-label">Dashboard</span></a>
             </li>
             <li class="<%= is_active_controller('accounts') %>">
                 <a href="<%= accounts_path %>"><i class="fa fa-users"></i> <span class="nav-label">Accounts</span></a>
