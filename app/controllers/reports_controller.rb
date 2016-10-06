@@ -49,18 +49,18 @@ class ReportsController < ApplicationController
       project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group("projects.id")
       @data = project_engagement.map do |e|
         risk = project_risks.find { |r| r.id == e.id }
-        Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities).round(3), color: 'mediumRisk'})
+        Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities).round(3), color: 'blue'})
       end
       @data.sort_by! { |d| d.y }.reverse!
     when "Total Open Risks"
       open_risk_counts = Project.count_risks_per_project(projects.pluck(:id))
       @data = open_risk_counts.map do |r|
-        Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'highRisk'})
+        Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'blue'})
       end
     when "Total Overdue Tasks"
       overdue_tasks = projects.select("COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.is_complete IS FALSE AND EXTRACT(EPOCH FROM notifications.original_due_date) < #{Time.current.to_i}").group("projects.id").order("task_count DESC")
       @data = overdue_tasks.map do |t|
-        Hashie::Mash.new({ id: t.id, name: t.name, y: t.task_count, color: 'mediumRisk'})
+        Hashie::Mash.new({ id: t.id, name: t.name, y: t.task_count, color: 'blue'})
       end
     else # Invalid
       @data = []
