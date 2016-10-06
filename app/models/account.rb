@@ -30,7 +30,6 @@ include Utils
 include ContextSmithParser
 
 class Account < ActiveRecord::Base
-    acts_as_paranoid
 
     has_many    :projects, -> { where is_confirmed: true }, dependent: :destroy
     has_many  :contacts, dependent: :destroy

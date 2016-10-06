@@ -31,7 +31,6 @@ include Utils
 include ContextSmithParser
 
 class Project < ActiveRecord::Base
-  acts_as_paranoid
 
 	belongs_to 	:account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
