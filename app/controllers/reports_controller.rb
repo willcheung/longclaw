@@ -58,7 +58,12 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'highRisk'})
       end
     when "Total Overdue Tasks"
+      overdue_tasks = projects.select("COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.is_complete IS FALSE AND EXTRACT(EPOCH FROM notifications.original_due_date) < #{Time.current.to_i}").group("projects.id").order("task_count DESC")
+      @data = overdue_tasks.map do |t|
+        Hashie::Mash.new({ id: t.id, name: t.name, y: t.task_count, color: 'mediumRisk'})
+      end
     else # Invalid
+      @data = []
     end
   end
 
