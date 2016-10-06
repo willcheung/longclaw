@@ -19,6 +19,7 @@ chart.series[0].update({
 
 <% if @type == "Risk Score Today" %>
 chart.yAxis[0].update({min: 0, max: 100}, false);
+chart.series[1].setData(<%= Array.new(@data.length, @average_risk_score).to_json.html_safe %>)
 chart.series[1].show();
 <% else %>
 chart.yAxis[0].update({min: undefined, max: undefined}, false);
