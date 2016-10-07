@@ -1,4 +1,3 @@
-//= require datepicker/bootstrap-datepicker.js
 //= require iCheck/icheck.min.js
 
 jQuery(document).ready(function($) {  
