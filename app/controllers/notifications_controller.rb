@@ -138,8 +138,8 @@ class NotificationsController < ApplicationController
       new_params = notification_params.merge(remind_date: nil)
     else
       new_params = notification_params.merge(
-                          remind_date: notification_params[:original_due_date].to_time.yesterday.utc,
-                          original_due_date: notification_params[:original_due_date].to_time.utc)
+                          remind_date: DateTime.strptime(notification_params[:original_due_date], '%m/%d/%Y').to_date.yesterday,
+                          original_due_date: DateTime.strptime(notification_params[:original_due_date], '%m/%d/%Y').to_date)
     end
 
     # send notification email for the new assign_to user

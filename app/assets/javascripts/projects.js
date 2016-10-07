@@ -2,7 +2,6 @@
 // All this logic will automatically be available in application.js.
 
 // Copied from notifications.js for displaying notifications per project
-//= require datepicker/bootstrap-datepicker.js
 //= require iCheck/icheck.min.js
 
 jQuery(document).ready(function($) {
@@ -22,11 +21,6 @@ jQuery(document).ready(function($) {
 	    e.preventDefault();
 	  });
 
-	$('.start_date_datepicker').datepicker({
-	  keyboardNavigation: false,
-	  todayHighlight: true,
-	  autoclose: true
-	});
 
   //DataTables
   $('#projects-table').DataTable( {
