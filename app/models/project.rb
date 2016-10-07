@@ -66,6 +66,10 @@ class Project < ActiveRecord::Base
 							 organization_id, user_id, user_id)
 				.group('projects.id')
 	}
+  scope :owner_of, -> (user_id) {
+    select('DISTINCT(projects.*)')
+      .where("projects.owner_id = ?", user_id)
+  }
 	# Only using this for Daily Summaries
 	scope :following, -> (user_id) {
 		joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
