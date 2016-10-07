@@ -41,17 +41,17 @@
                <tbody>
                   <tr style="">
                   <% risk_score = @risk_scores[p.id] %>
-                    <td style="color:<%= if risk_score > 80.0
+                    <td style="color:<%= if risk_score >= 80.0
                                             '#ed5565'
-                                         elsif risk_score > 60.0
+                                         elsif risk_score >= 60.0
                                             '#FFA500'
                                          else 
                                             '#A1C436'
                                          end %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
-                      <span style="display:block;"><%= risk_score %>%</span>
-                      <span style="font-size:14px;display:block;"><%= if risk_score > 80.0
+                      <span style="display:block;"><%= risk_score %></span>
+                      <span style="font-size:14px;display:block;"><%= if risk_score >= 80.0
                                                                         'High'
-                                                                      elsif risk_score > 60.0
+                                                                      elsif risk_score >= 60.0
                                                                         'Medium'
                                                                       else 
                                                                         'Low'
