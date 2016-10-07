@@ -18,10 +18,14 @@ class ReportsController < ApplicationController
   end
 
   def dashboard_data
-    @type = params[:type]
-    projects = Project.visible_to(current_user.organization_id, current_user.id)
+    @sort = params[:sort]
 
-    case @type
+    projects = Project.visible_to(current_user.organization_id, current_user.id)
+    projects = projects.where(category: params[:category]) if params[:category]
+    projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
+    @data = [] and return if projects.blank?
+
+    case @sort
     when "Risk Score Today"
       risk_scores = Project.current_risk_score(projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse
       total_risk_scores = 0
