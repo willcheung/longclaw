@@ -7,7 +7,7 @@ var barColors = {
 var chart = $('#left-chart').highcharts()
 chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
 chart.series[0].update({ 
-  name: "<%= @type %>",
+  name: "<%= @sort %>",
   data: [ <% @data.each do |d| %>
   {
     y: <%= d.y %>,
@@ -17,7 +17,7 @@ chart.series[0].update({
   <% end %> ]
 }, false);
 
-<% if @type == "Risk Score Today" %>
+<% if @sort == "Risk Score Today" %>
 chart.yAxis[0].update({min: 0, max: 100}, false);
 chart.series[1].setData(<%= Array.new(@data.length, @average_risk_score).to_json.html_safe %>)
 chart.series[1].show();
