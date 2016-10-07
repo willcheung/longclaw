@@ -194,6 +194,7 @@ class Project < ActiveRecord::Base
         ON projects.id = notifications.project_id
         WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
         GROUP BY projects.id
+        ORDER BY open_risks DESC
       SQL
     result = Project.find_by_sql(query)
   end
@@ -360,29 +361,31 @@ class Project < ActiveRecord::Base
   	return metrics
   end
 
-  # Top Active Streams
-  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start, hours_ago_end=Date.current)
-    hours_ago_end_sql = (hours_ago_end == Date.current) ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_end} hours'"
-	  hours_ago_start_sql = "CURRENT_TIMESTAMP - INTERVAL '#{hours_ago_start} hours'"
+  # Top Active Streams/Engagement Last 7d
+  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
+    hours_ago_end = hours_ago_end.hours.ago.to_i
+    hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
 
-  	query = <<-SQL
-  		SELECT projects.*, count(*) as num_activities from (
-				SELECT id, 
-							 backend_id, 
-							 last_sent_date, 
-							 project_id, 
-							 jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date 
-					from activities 
-          where project_id in ('#{array_of_project_ids.join("','")}')
-          AND category = 'Conversation'
-				) t 
-			JOIN projects ON projects.id = t.project_id
-      WHERE sent_date::integer between EXTRACT(EPOCH FROM #{hours_ago_start_sql})::integer and EXTRACT(EPOCH FROM #{hours_ago_end_sql})::integer 
-			GROUP BY projects.id
-			ORDER BY num_activities DESC
-		SQL
-		return Project.find_by_sql(query)
+    query = <<-SQL
+      SELECT projects.*, COUNT(*) AS num_activities
+      FROM (
+        SELECT id,
+               category,
+               project_id,
+               last_sent_date,
+               jsonb_array_elements(email_messages) ->> 'sentDate' AS sent_date
+        FROM activities 
+        WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+        ) t 
+      JOIN projects ON projects.id = t.project_id
+      WHERE (t.category = '#{Activity::CATEGORY[:Conversation]}' AND (sent_date::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
+      OR (t.category = '#{Activity::CATEGORY[:Meeting]}' AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
+      GROUP BY projects.id
+      ORDER BY num_activities DESC
+    SQL
+    return Project.find_by_sql(query)
   end
+
 
 	# This method should be called *after* all accounts, contacts, and users are processed & inserted.
 	def self.create_from_clusters(data, user_id, organization_id)
