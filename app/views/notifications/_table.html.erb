@@ -6,7 +6,7 @@
       <th></th>
       <th>Type  <i class="fa fa-question-circle tool-tip-category" data-placement="right" ></i></th>
       <th class="col-md-4">Task</th>
-      <th></th>
+      <% unless multi_table == "timeline-block-notification-table" %><th></th><% end %>
       <% if params[:controller] == "notifications" %><th>Stream</th> <% end %>
       <th>Assign</th>
       <th>Due </th>
@@ -50,6 +50,7 @@
             <% end %>
           </div>      
         </td>
+        <% unless multi_table == "timeline-block-notification-table" %>
         <td>
             <% if n.category == Notification::CATEGORY[:Action] || n.category == Notification::CATEGORY[:Opportunity] || n.category == Notification::CATEGORY[:Risk] %>
             <div class="hoverToolTip" data-placement="right" data-id="<%=n.id %>">
@@ -57,6 +58,7 @@
             </div>
             <% end %>
         </td>
+        <% end %>
         <% if params[:controller] == "notifications" %>
         <td>
           <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)', :activator => "#task-#{n.id}-project-activator" %>
