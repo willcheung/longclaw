@@ -167,6 +167,50 @@ class ReportsController < ApplicationController
   end
 
   def team
+    # Placeholder stuff from home_controller
+    # Load all projects visible to user
+    @projects = Project.visible_to(current_user.organization_id, current_user.id)
+    @projects_min_scores = Hash.new()
+    project_tasks = Notification.where(project_id: @projects.pluck(:id))
+    @open_tasks = project_tasks.open.count
+    @closed_tasks = project_tasks.where(is_complete: true, complete_date: (7.days.ago..Time.current)).count
+    @open_risks = project_tasks.open.risks.count
+    @overdue_tasks = project_tasks.where("is_complete = false and original_due_date::date < ?", Date.today).count
+
+    ###### Dashboard Metrics ######
+    if !@projects.empty?
+      
+      project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
+
+      # Top Active Streams
+      @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
+      @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
+
+      project_prev_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 14*24, 7*24)
+      project_chg_activities = Project.calculate_pct_from_prev(project_sum_activities, project_prev_sum_activities)
+      # Top Movers
+      @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
+      @project_min_chg = project_chg_activities.min_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev <= 0 }
+
+      # How Busy Are We? Chart
+      @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.pluck(:id), current_user.time_zone)
+      
+      # Team Leaderboard
+      @team_leaderboard = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
+      @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
+
+      # Risk Score Trend
+      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.pluck(:id), current_user.time_zone)
+
+      # Top Risks
+      projects_risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse[0...5]
+      ### NOT using built in Ruby max_by function due to bug
+      projects_risks_counts = Project.count_risks_per_project(@projects.pluck(:id))
+      @top_risks = projects_risk_scores.map do |p|
+        rc = projects_risks_counts.find { |r| r.id == p[0] }
+        { id: p[0], risk_score: p[1], name: rc.name, open_risks: rc.open_risks }
+      end
+    end
   end
 
   def lifecycle

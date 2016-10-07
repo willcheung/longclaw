@@ -1,2 +1,590 @@
-<h1>Reports#team</h1>
-<p>Find me in app/views/reports/team.html.erb</p>
+
+
+<div class="wrapper wrapper-content animated fadeInRight">
+
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Open Risks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open risks across all accounts."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins <%= @open_risks > 0 ? 'text-danger' : '' %>"><%= @open_risks %></h1>
+                    <div class="m-t-sm"><a href="<%= notifications_path %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Overdue Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of overdue tasks across all accounts."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins <%= @overdue_tasks > 0 ? 'text-danger' : '' %>"><%= @overdue_tasks %></h1>
+                    <div class="m-t-sm"><a href="<%= notifications_path + '?type=incomplete&duedate=overdue' %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Open Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open tasks across all accounts."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @open_tasks %></h1>
+                    <div class="m-t-sm"><a href="<%= notifications_path %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Completed Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of tasks that have been completed in the past 7 days."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @closed_tasks %></h1>
+                    <div class="m-t-sm"><a href="<%= notifications_path + '?type=complete' %>">See details &rarr;</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="row ibox float-e-margins">
+        <div class="col-lg-12">
+            <div class="ibox-title">
+                <h2>Accounts Overview</h2>
+            </div>
+            <div class="col-lg-6 ibox-subcontent">
+                <div class="ibox-title">
+                    <span class="label pull-right">Last 7 days</span>
+                    <h3>Top Active Streams</h3>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
+                    <div class="btn-group m-l-sm">
+                        <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
+                        <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div id="touches-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
+            </div>
+            <div class="col-lg-6 ibox-subcontent">
+                <div class="ibox-title">                   
+                    <span class="label pull-right">Last 7 days vs Prev 7 days</span>
+                    <h3>Top Movers</h3>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days. (Top 5)"></i>
+                    <div class="btn-group m-l-sm">
+                        <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
+                        <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
+            </div>
+            <div class="col-lg-6 ibox-subcontent">
+                <div class="ibox-title">
+                    <span class="label pull-right">All Time</span>
+                    <h3>Top Risks</h3>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Highest risk scores and number of open risks. (Top 5)"></i>
+                </div>
+                <div class="ibox-content">
+                    <div id="risks-count-chart" style="min-width: 310px; max-width: 800px; height: 253px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
+            </div>
+            <div class="col-lg-6 ibox-subcontent">
+                <div class="ibox-title">
+                    <span class="label pull-right">14 day trend</span>
+                    <h3>Risk Score Trend</h3>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Risk score by Streams, trending over Last 14 Days."></i>
+                    <select data-placeholder="Choose a Stream..." class="chosen-select" id="risk-project-chosen-select" multiple="" tabindex="-1">
+                        <option value=""></option>
+                        <% @projects.each do |p| %>
+                            <option value="<%= p.id %>" <% if @top_risks.map { |r| r[:id] }.include?(p.id) %> selected <% end %>><%= p.name %></option>
+                        <% end %>
+                    </select>
+                </div>
+                <div class="ibox-content">
+                    <div id="risks-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h2>Team Activities</h2>
+                </div>
+                <div class="col-lg-6 ibox-subcontent">
+                    <div class="ibox-title">
+                        <span class="label pull-right">14 day trend</span>
+                        <h3>How Busy Are We?</h3>
+                        <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total customer activities, trending over Last 14 Days."></i>
+                    </div>
+                    <div class="ibox-content">
+                        <div id="user-activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                    </div>
+                </div>
+                <div class="col-lg-6 ibox-subcontent">
+                    <div class="ibox-title">
+                        <h3>Team Leaderboard</h3>
+                        <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 10 by activities."></i>
+                        <span class="label pull-right">Last 14 days</span>
+                    </div>
+                    <div class="ibox-content">
+                        <div id="user-leaderboard-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+
+    <% if !@projects.empty? %>
+
+    /* Highcharts support functions */
+
+    var nil = null;
+
+    function redraw_risks_trend_chart(chart, project_ids) {
+        // Delete all the series.
+        while (chart.series.length > 0) {
+          chart.series[0].remove(false);
+        }
+        
+        if (project_ids != null) {
+            // Add the new series.
+            <% @projects.each do |p| %>
+                if (project_ids.indexOf("<%= p.id %>") > -1) {
+                    // var nil = NULL;
+                    var test = <%= get_risk_score_by_project(@projects_min_scores, p.id) %>;
+                    // var nil = NULL;
+                     console.log(test);
+
+
+                    chart.addSeries({
+                            name: '<%= p.name %>',
+                            pointInterval: <%= 1.day * 1000 %>,
+                            pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                            data: <%= get_risk_score_by_project(@projects_min_scores, p.id) %>
+                        });
+                }
+            <% end %>
+        }
+        
+        chart.redraw();
+    }
+
+    function redraw_touches_chart(chart, max) {
+        // Delete all the series.
+        while (chart.series.length > 0) {
+          chart.series[0].remove(false);
+        }
+
+        if(max) {
+            chart.xAxis[0].setCategories(<%= @project_max.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Touches',
+                    data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
+                    color: '#7cb5ec'
+                });
+            
+        } else {
+            chart.xAxis[0].setCategories(<%= @project_min.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Touches',
+                    data: <%= @project_min.map(&:num_activities).to_json.html_safe %>,
+                    color: '#7cb5ec'
+                });
+        }
+
+        chart.redraw();
+    }
+
+    function redraw_changes_chart(chart, max) {
+        // Delete all the series.
+        while (chart.series.length > 0) {
+          chart.series[0].remove(false);
+        }
+
+        if(max) {
+            chart.xAxis[0].setCategories(<%= @project_max_chg.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Gain',
+                    data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                    color: '#32B232'
+                });
+            
+        } else {
+            chart.xAxis[0].setCategories(<%= @project_min_chg.map(&:name).to_json.html_safe %>);
+            chart.addSeries({
+                    name: 'Decline',
+                    data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                    color: '#FF5050'
+                });
+        }
+
+        chart.redraw();
+    }
+
+    /* Highcharts */
+    $(function () {
+        $('#touches-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @project_max.map(&:name).to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Touches',
+                data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
+                color: '#7cb5ec'
+            }]
+        });
+    });
+
+    $(function () {
+        $('#percent-change-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @project_max_chg.map(&:name).to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                labels: {
+                    format: '{value}%'
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: false
+            },
+            tooltip: {
+                valueSuffix: '%'
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Gain',
+                data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
+                color: '#32B232'
+            }]
+        });
+    });
+
+    $(function () {
+        $('#risks-count-chart').highcharts({
+            chart: {
+                type: 'bar',
+                alignTicks: false
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @top_risks.map { |r| r[:name] }.to_json.html_safe %>
+            },
+            yAxis: [{ // Risk Score Axis
+                max: 100,
+                title: {
+                    text: 'Risk Score',
+                    style: {
+                        color: 'red'
+                    }
+                },
+                labels: {
+                    format: '{value}%',
+                    style: {
+                        color: 'red'
+                    }
+                },
+                opposite: true
+            }, { // Open Risks Axis
+                allowDecimals: false,
+                gridLineWidth: 0,
+                title: {
+                    text: 'Open Risks',
+                    style: {
+                        color: '#7cb5ec'
+                    }
+                },
+                labels: {
+                    style: {
+                        color: '#7cb5ec'
+                    }
+                }
+            }],
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                yAxis: 0,
+                name: 'Risk Score',
+                data: <%= @top_risks.map { |r| r[:risk_score] }.to_json.html_safe %>,
+                color: 'red',
+                tooltip: {
+                    valueSuffix: '%'
+                }
+            }, {
+                yAxis: 1,
+                name: 'Open Risks',
+                data: <%= @top_risks.map { |r| r[:open_risks] }.to_json.html_safe %>,
+                color: '#7cb5ec'
+            }]
+        });
+    });
+
+
+    $(function () {
+        $('#risks-trend-chart').highcharts({
+            title: {
+                text: ''
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+                labels: { enabled: false },
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }],
+                min: 0,
+                max: 100,
+                plotBands: [ { // Low Risk
+                from: 0,
+                to: 60,
+                color: 'rgba(170, 252, 174, 0.1)',
+                label: {
+                    text: 'Low Risk',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }, { // Medium Risk
+                from: 60,
+                to: 80,
+                color: 'rgba(246, 188, 42, 0.1)',
+                label: {
+                    text: 'Medium Risk',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }, { // High Risk
+                from: 80,
+                to: 100,
+                color: 'rgba(246, 42, 46, 0.1)',
+                label: {
+                    text: 'High Risk',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }]
+            },
+            tooltip: {
+                // valueSuffix: '',
+                pointFormat: '{series.name}: <b>{point.y:.2f}%</b>',
+            },
+            credits: {
+                enabled: false
+            },
+            legend: {
+                layout: 'horizontal',
+                align: 'center',
+                y: 20,
+                itemStyle: {
+                 fontSize:'10px'
+                },
+                itemDistance: 10
+            },
+            series: [
+            <% @top_risks.each_with_index do |p,i| %>
+                {
+                name: '<%= p[:name] %>',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= get_risk_score_by_project(@projects_min_scores, p[:id]) %>
+                }<% if i != @top_risks.size - 1 %>,<% end %>
+            <% end %>
+            ]
+
+        });
+    });
+
+    $(function () {
+        $('#user-activities-trend-chart').highcharts({
+            title: {
+                text: ''
+            },
+            chart: {
+                type: 'column'
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                }
+            },
+            tooltip: {
+                valueSuffix: ''
+            },
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: false
+            },
+            series: [
+                {
+                name: 'All activities',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= get_num_activities(14.days.ago.to_date..Date.current, @all_activities_trend) %>
+                }
+            ]
+
+        });
+    });
+
+    $(function () {
+        $('#user-leaderboard-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @team_leaderboard.map(&:email).to_json.html_safe %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            legend: {
+                reversed: true
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Inbound',
+                data: <%= @team_leaderboard.map(&:inbound_count).to_json.html_safe %>
+            }, {
+                name: 'Outbound',
+                data: <%= @team_leaderboard.map(&:outbound_count).to_json.html_safe %>
+            }]
+        });
+    });
+
+    /* Event Handlers */
+    var projects_chosen;
+
+    $('#risk-project-chosen-select').on('change', function(evt) {
+        projects_chosen = $(evt.target).val();
+        chart = $('#risks-trend-chart').highcharts();
+        redraw_risks_trend_chart(chart, projects_chosen);
+    });
+
+    $('#project-chosen-select').on('change', function(evt) {
+        projects_chosen = $(evt.target).val();
+        chart = $('#activities-trend-chart').highcharts();
+        redraw_activities_trend_chart(chart, projects_chosen);
+    });
+
+    $('#most-touches').click(function() {
+        chart = $('#touches-chart').highcharts();
+        $(this).addClass("active");
+        $('#least-touches').removeClass("active");
+        redraw_touches_chart(chart, true);
+    });
+
+    $('#least-touches').click(function() {
+        chart = $('#touches-chart').highcharts();
+        $(this).addClass("active");
+        $('#most-touches').removeClass("active");
+        redraw_touches_chart(chart, false);
+    });
+
+    $('#most-change').click(function() {
+        chart = $('#percent-change-chart').highcharts();
+        $(this).addClass("active");
+        $('#least-change').removeClass("active");
+        redraw_changes_chart(chart, true);
+    });
+
+    $('#least-change').click(function() {
+        chart = $('#percent-change-chart').highcharts();
+        $(this).addClass("active");
+        $('#most-change').removeClass("active");
+        redraw_changes_chart(chart, false);
+    });
+
+    <% end %>
+</script>
