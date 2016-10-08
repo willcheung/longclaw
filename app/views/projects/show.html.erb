@@ -30,24 +30,12 @@
     <div class="col-lg-6">
         <div class="row">
             <div class="col-xs-2">
-                <div class="metric <%= if @project_risk_score > 80.0
-                                         "text-danger"
-                                        elsif @project_risk_score > 60.0
-                                         "text-warning"
-                                        else
-                                         "text-success"
-                                        end %>">
+                <div class="metric <%= risk_color(@project_risk_score) %>">
                     <div class="metric-title" align="center">
-                        <h5><%= if @project_risk_score > 80.0
-                                    "High"
-                                elsif @project_risk_score > 60.0 
-                                    "Medium"
-                                else
-                                    "Low"
-                                end %> Risk</h5>
+                        <h5><%= risk_level(@project_risk_score) %> Risk</h5>
                     </div>
                     <div class="metric-content" align="center">
-                        <h3><%= @project_risk_score %>%</h3>
+                        <h3><%= @project_risk_score %></h3>
                     </div>
                 </div>
             </div>
