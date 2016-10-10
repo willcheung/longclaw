@@ -75,7 +75,7 @@
                 <h2>Open Tasks</h2>
                      <div class="col-lg-12 m-b-md">
                         <% if @open_tasks_not_overdue.empty? %>
-                            <p>Nothing due today.</p>
+                            <p>Nothing here, nice.</p>
                         <% else %>
                             <%= render "notifications/table", :notifications => @open_tasks_not_overdue %>
                         <% end %>
@@ -116,9 +116,9 @@
                                     <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
                                     <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
                                     <td style="text-align:right;" class="<%= 
-                                        if @risk_scores[p.id] > 80.0
+                                        if @risk_scores[p.id] and @risk_score[p.id] > 80.0
                                             'text-danger'
-                                        elsif @risk_scores[p.id] > 60.0
+                                        elsif @risk_scores[p.id] and @risk_score[p.id] > 60.0
                                             'text-warning'
                                         else
                                             'text-success'

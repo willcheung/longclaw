@@ -133,7 +133,7 @@
                         <% end %>
                     </li>
                     <li class="list-group-item">
-                        <strong>Stream Owner:</strong>
+                        <strong>Owner:</strong>
                         <span class="pull-right">                            
                             <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>       
                             <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
