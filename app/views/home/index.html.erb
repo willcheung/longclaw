@@ -75,7 +75,7 @@
                 <h2>Open Tasks</h2>
                      <div class="col-lg-12 m-b-md">
                         <% if @open_tasks_not_overdue.empty? %>
-                            <p>Nothing due today.</p>
+                            <p>Nothing here, nice.</p>
                         <% else %>
                             <%= render "notifications/table", :notifications => @open_tasks_not_overdue %>
                         <% end %>

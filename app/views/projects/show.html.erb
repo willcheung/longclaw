@@ -32,7 +32,7 @@
             <div class="col-xs-2">
                 <div class="metric <%= risk_color(@project_risk_score) %>">
                     <div class="metric-title" align="center">
-                        <h5><%= risk_level(@project_risk_score) %> Risk</h5>
+                        <h5><%= risk_level(@project_risk_score) %></h5>
                     </div>
                     <div class="metric-content" align="center">
                         <h3><%= @project_risk_score %></h3>
@@ -121,7 +121,7 @@
                         <% end %>
                     </li>
                     <li class="list-group-item">
-                        <strong>Stream Owner:</strong>
+                        <strong>Owner:</strong>
                         <span class="pull-right">                            
                             <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>       
                             <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>

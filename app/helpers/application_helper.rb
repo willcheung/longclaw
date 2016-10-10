@@ -22,6 +22,8 @@ module ApplicationHelper
   end
 
   def risk_color(score, in_email=false)
+    return unless score
+
     unless in_email
       if score >= 80.0
         "text-danger"
@@ -42,12 +44,14 @@ module ApplicationHelper
   end
 
   def risk_level(score)
-    if score >= 80.0
-        "High"
-    elsif score >= 60.0 
-        "Medium"
-    else
-        "Low"
+    if score 
+      if score >= 80.0
+          "High Risk"
+      elsif score >= 60.0 
+          "Medium Risk"
+      else
+          "Low Risk"
+      end
     end
   end
 
