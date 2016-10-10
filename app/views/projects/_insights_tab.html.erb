@@ -411,9 +411,9 @@
         force
             .nodes(nodes)
             .links(links)
-            .charge(-150)
+            .charge(-200)
             // .linkDistance(function(d) { return 20 + nodes.length*10 - (d.source.inbound + d.source.outbound)/20; })
-            .linkDistance(15 + nodes.length*15)
+            .linkDistance(100 + nodes.length*2)
             .linkStrength(0.08)
             .on("tick", function(){tick();})
             .start();
@@ -493,21 +493,6 @@
                 return nodesByEmail[d.email].domain == searchVal
             });
 
-            // if(searchVal == 1 || searchVal == 0){ // Large Node filter
-            //     var entryLevel;
-            //     var other;
-            //     entryLevel = searchNode.filter(function(d){
-            //        return d.name == "WILL CHEUNG" ||
-            //             d.name == "JAMES TAYLOR" ||
-            //             d.name == "CAITLIN O'MALLEY";
-            //     });
-            //     other = searchNode.filter(function(d){
-            //        return d.name != "WILL CHEUNG" &&
-            //          d.name != "JAMES TAYLOR" &&
-            //          d.name != "CAITLIN O'MALLEY";
-            //     });
-            //     searchVal == 1? (selectedNodes = entryLevel, notSelectedNodes = other) : (selectedNodes = other, notSelectedNodes = entryLevel);
-            // }
             var link = d3.selectAll(".link");
             if (!d3.select(gObject).classed("active")){
                 selectedNodes

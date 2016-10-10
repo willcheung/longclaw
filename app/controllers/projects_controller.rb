@@ -117,7 +117,7 @@ class ProjectsController < ApplicationController
 
   def refresh
     ContextsmithService.load_emails_from_backend(@project, nil, 300)
-    ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 1.month.ago.to_i, 1000)
+    ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 1.year.ago.to_i, 300)
     redirect_to :back
   end
 

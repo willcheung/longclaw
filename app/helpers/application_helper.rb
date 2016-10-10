@@ -21,6 +21,40 @@ module ApplicationHelper
     num > 0 ? "<i class=\"fa fa-level-up\"></i>".html_safe : "<i class=\"fa fa-level-down\"></i>".html_safe
   end
 
+  def risk_color(score, in_email=false)
+    return unless score
+
+    unless in_email
+      if score >= 80.0
+        "text-danger"
+      elsif score >= 60.0
+        "text-warning"
+      else
+        "text-success"
+      end
+    else
+      if score >= 80.0
+        "#ed5565"
+      elsif score >= 60.0
+        "#FFA500"
+      else
+        "#A1C436"
+      end
+    end
+  end
+
+  def risk_level(score)
+    if score 
+      if score >= 80.0
+          "High Risk"
+      elsif score >= 60.0 
+          "Medium Risk"
+      else
+          "Low Risk"
+      end
+    end
+  end
+
   def get_first_names(from, to, cc)
       a = []
 

@@ -35,7 +35,7 @@ namespace :projects do
 	  end
 	end
 
-	desc 'Retrieve latest 1000 calendar events for all projects in all organization'
+	desc 'Retrieve latest 300 calendar events for all projects in all organization'
 	task load_events: :environment do
     puts "\n\n=====Task (load_events) started at #{Time.now}====="
 
@@ -43,7 +43,7 @@ namespace :projects do
     	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
 	    		puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 1.month.ago.to_i, 1000)
+	    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 1.year.ago.to_i, 300)
 	    		sleep(1)
 	    	end
 	    end
