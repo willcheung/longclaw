@@ -89,14 +89,13 @@ class ProjectsController < ApplicationController
 
   def network_map
     respond_to do |format|
-      format.text { render file: 'app/views/projects/map_astellas.txt', layout: false, content_type: 'text/plain' }
       format.json { render json: @project.network_map}
     end
   end 
 
   def lookup
-    pinned = @project.activities.pinned.where(category: 'Conversation')
-    meetings = @project.activities.where(category: 'Meeting')
+    pinned = @project.conversations.pinned
+    meetings = @project.meetings
     members = (@project.users + @project.contacts).map do |m|
       pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
@@ -110,7 +109,6 @@ class ProjectsController < ApplicationController
       }
     end
     respond_to do |format|
-      format.text { render file: 'app/views/projects/lookup_astellas.txt', layout: false, content_type: 'text/plain' }
       format.json { render json: members }
     end
   end
