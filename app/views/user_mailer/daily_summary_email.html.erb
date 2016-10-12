@@ -218,7 +218,7 @@
           </td>
           <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:92px;max-width:95px;padding:3px;">
             <span style="font-weight:normal;font-size:12px;line-height:19px;">
-              Assignee: <%= n.assign_to_user.first_name %>
+              Assignee: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
             </span>               
           </td>
         </tr>
