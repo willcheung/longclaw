@@ -90,12 +90,8 @@ var g_maxDate = 0;
 var g_emails = [];
 var g_categories = [];
 
-function activityEmailFilter(value, emails){
-  // console.log('-------------meow------------------');
-  // console.log(value);
-  // console.log(emails);
-  // console.log('-----------------------------------');
-   for (var i = 0; i < value.length; i++) {
+function activityEmailFilter(value, emails) {
+  for (var i = 0; i < value.length; i++) {
     if(emails.indexOf(value[i])!=-1){
       return true;
     }    
@@ -103,34 +99,25 @@ function activityEmailFilter(value, emails){
   return false;
 }
 
-function activityCategoryFilter(value, categories){
-  if(categories.indexOf(value)!=-1)
-    return true;
-
-  return false;
+function activityCategoryFilter(value, categories) {
+  return categories.indexOf(value) !== -1
 }
 
-function activityTimeFilter(value, minDate, maxDate){
-  // console.log(value);
-  // console.log(minDate);
-  // console.log(maxDate);
-   if(value>=minDate && value<=maxDate){
-    return true;
-   }
-   return false;
+function activityTimeFilter(value, minDate, maxDate) {
+  return value >= minDate && value <= maxDate
 }
 
-function applyFilter(minDate, maxDate){
+function applyFilter(minDate, maxDate) {
 
-  activityTimeFilterReset();
+  $('#vertical-timeline').children().show();
 
   var monthIndex = 0;
   var i = 0;
   var monthShow = false;
 
-  $('#vertical-timeline').children().each(function(){
-    if( $(this).is("div") ){
-      if( $(this).data('myvalue') == 'month'){
+  $('#vertical-timeline').children(/* TODO: Add a selector here instead of filtering with if statement below */).each( function () {
+    if( $(this).is("div") ){ // if div used here in order to get correct index for hiding or showing
+      if ($(this).data('myvalue') == 'month') {
         monthIndex = i;
         monthShow = false;
         $(this).hide();
@@ -307,18 +294,13 @@ function applyFilter(minDate, maxDate){
   });
 }
 
-function activityTimeFilterReset(){
-  $('#vertical-timeline').children().show();
-}
-
-$(document).ready(function(){  
-  $('#filter-timeline-expand').css( 'cursor', 'pointer' );
- 
+$(document).ready(function(){   
   $("#filter-timeline-expand").click(function() {
     $("#timeline-filters").toggle();
   });
 
-  $('.comment_category').on('change',function(evt,params){  
+  $('.comment_category').on('change',function(evt,params){
+    console.log(params)
     if(params["selected"]!=null){
       g_categories.push(params["selected"]);
     }
@@ -329,10 +311,11 @@ $(document).ready(function(){
       }
     }
 
-    applyFilter();
+    // applyFilter();
   });
 
   $('.user_filter').on('change',function(evt,params){
+    console.log(params)
     if(params["selected"]!=null){
       g_emails.push(params["selected"]);
     }
@@ -343,7 +326,7 @@ $(document).ready(function(){
       }
     }
    
-    applyFilter();
+    // applyFilter();
   });
 
 });

@@ -1,8 +1,9 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :lookup, :network_map, :refresh]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :lookup, :network_map, :refresh, :show_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab]
+  before_action :load_timeline, only: [:show, :show_timeline]
 
   # GET /projects
   # GET /projects.json
@@ -35,35 +36,11 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    @category_param = []
-    @filter_email = []
-    @final_filter_user = Activity.all_involved_user(@project, current_user)
-    
-    activities = Activity.get_activity_by_filter(@project, params)
-    
-    if(!params[:category].nil? and !params[:category].empty?)
-      @category_param = params[:category].split(',')
-    end
 
-    if(!params[:emails].nil? and !params[:emails].empty?)
-      @filter_email = params[:emails].split(',')
-    end
+  end
 
-    # filter out not visible items
-    @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
-    activities_by_date_temp = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
-
-    @activities_by_date = []
-
-    activities_by_date_temp.each do |date, activities|
-      temp = Struct.new(:utc_milli_timestamp, :count).new
-      temp.utc_milli_timestamp = DateTime.strptime(date, '%Y %m %d').to_i * 1000
-      temp.count = activities.length
-      @activities_by_date.push(temp)
-    end
-
-    @activities_by_date = @activities_by_date.sort {|x, y| y.utc_milli_timestamp <=> x.utc_milli_timestamp }.reverse!
-    @notifications = @project.notifications.order(:is_complete, :original_due_date)
+  def show_timeline
+    respond_to :js
   end
 
   def pinned_tab
@@ -199,11 +176,6 @@ class ProjectsController < ApplicationController
     render :json => {:success => true, :msg => ''}.to_json
   end
 
-  def activity_count
-
-
-  end
-
   private
 
   def get_show_data
@@ -231,6 +203,39 @@ class ProjectsController < ApplicationController
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
+  end
+
+  def load_timeline
+    # get all the same data here?
+    @category_param = []
+    @filter_email = []
+    @final_filter_user = Activity.all_involved_user(@project, current_user)
+    
+    activities = Activity.get_activity_by_filter(@project, params)
+    
+    if(!params[:category].nil? and !params[:category].empty?)
+      @category_param = params[:category].split(',')
+    end
+
+    if(!params[:emails].nil? and !params[:emails].empty?)
+      @filter_email = params[:emails].split(',')
+    end
+
+    # filter out not visible items
+    @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
+    activities_by_date_temp = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
+
+    @activities_by_date = []
+
+    activities_by_date_temp.each do |date, activities|
+      temp = Struct.new(:utc_milli_timestamp, :count).new
+      temp.utc_milli_timestamp = DateTime.strptime(date, '%Y %m %d').to_i * 1000
+      temp.count = activities.length
+      @activities_by_date.push(temp)
+    end
+
+    @activities_by_date = @activities_by_date.sort {|x, y| y.utc_milli_timestamp <=> x.utc_milli_timestamp }.reverse!
+    @notifications = @project.notifications.order(:is_complete, :original_due_date)
   end
 
   def bulk_update_owner(array_of_id, new_owner)

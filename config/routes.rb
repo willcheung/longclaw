@@ -31,6 +31,7 @@ Longclaw::Application.routes.draw do
     get "projects/:id/pinned" => 'projects#pinned_tab'
     get "projects/:id/tasks" => 'projects#tasks_tab'
     get "projects/:id/insights" => 'projects#insights_tab'
+    get "projects/:id/timeline" => 'projects#show_timeline'
 
     get "projects/:id/network_map" => 'projects#network_map'
     get "projects/:id/lookup" => 'projects#lookup'
