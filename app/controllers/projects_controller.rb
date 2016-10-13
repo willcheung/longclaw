@@ -36,7 +36,15 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-
+    # handle query string filters
+    @category_param = params[:category].blank? ? [] : params[:category].split(',')
+    @filter_email = params[:emails].blank? ? [] : params[:emails].split(',')
+    @final_filter_user = Activity.all_involved_user(@project, current_user)
+    activities_by_date = @project.activities.visible_to(current_user.email).pluck(:last_sent_date).group_by { |a| Time.zone.at(a).to_date }
+    @activities_by_date = activities_by_date.map do |date, activities|
+      Hashie::Mash.new(date: date.to_time.to_i*1000, num_activities: activities.length)
+    end
+    @activities_by_date = @activities_by_date.sort {|x, y| x.date <=> y.date }
   end
 
   def show_timeline
@@ -44,9 +52,7 @@ class ProjectsController < ApplicationController
   end
 
   def pinned_tab
-    @pinned_activities = @project.activities.pinned.includes(:comments)
-    # filter out not visible items
-    @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }
+    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
 
     render "show"
   end
@@ -180,18 +186,15 @@ class ProjectsController < ApplicationController
 
   def get_show_data
     # metrics
-    @project_last_activity_date = @project.activities.conversations.maximum("activities.last_sent_date")
-    project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
-    @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
-    visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
-
-    # for risk counts, show every risk regardless of private conversation
+    @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
     @project_open_risks_count = @project.notifications.open.risks.count
-
-    # select all open tasks regardless of private conversation
-    @project_open_tasks_count = @project.notifications.open.count
     @project_pinned_count = @project.activities.pinned.count
     @project_risk_score = @project.current_risk_score(current_user.time_zone)
+
+    # old metrics
+    # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
+    # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
+    # @project_open_tasks_count = @project.notifications.open.count
 
     # project people
     @project_members = @project.project_members
@@ -206,37 +209,8 @@ class ProjectsController < ApplicationController
   end
 
   def load_timeline
-    # get all the same data here?
-    @category_param = []
-    @filter_email = []
-    @final_filter_user = Activity.all_involved_user(@project, current_user)
-    
-    # activities = Activity.get_activity_by_filter(@project, params)
-    
-    # if(!params[:category].nil? and !params[:category].empty?)
-    #   @category_param = params[:category].split(',')
-    # end
-
-    # if(!params[:emails].nil? and !params[:emails].empty?)
-    #   @filter_email = params[:emails].split(',')
-    # end
-
-    activities = @project.activities.visible_to(current_user).includes(:notifications, :comments).limit(30).offset(params[:page].to_i)
-
-    # filter out not visible items
-    @activities_by_month = activities.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
-    activities_by_date_temp = activities.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
-
-    @activities_by_date = []
-
-    activities_by_date_temp.each do |date, activities|
-      temp = Struct.new(:utc_milli_timestamp, :count).new
-      temp.utc_milli_timestamp = DateTime.strptime(date, '%Y %m %d').to_i * 1000
-      temp.count = activities.length
-      @activities_by_date.push(temp)
-    end
-
-    @activities_by_date = @activities_by_date.sort {|x, y| y.utc_milli_timestamp <=> x.utc_milli_timestamp }.reverse!
+    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments).limit(30)#.offset(params[:page].to_i)
+    @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
   end
 
   def bulk_update_owner(array_of_id, new_owner)

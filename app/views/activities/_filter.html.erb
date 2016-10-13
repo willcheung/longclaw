@@ -167,8 +167,8 @@ $(function () {
     series: [{
         type: 'column',
         name: 'Activity Count',
-        data: [ <% @activities_by_date.each_with_index do |a, i| %>
-            <%='['+a.utc_milli_timestamp.inspect + ','+ a.count.inspect+']' %> <%= ',' unless i + 1 == @activities_by_date.length %>
+        data: [ <% @activities_by_date.each do |a| %>
+            [<%= a.date %>,<%= a.num_activities %>],
           <% end %> ]                
     }]
   });
