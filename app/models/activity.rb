@@ -43,6 +43,13 @@ class Activity < ActiveRecord::Base
   scope :notes, -> { where category: CATEGORY[:Note] }
   scope :meetings, -> { where category: CATEGORY[:Meeting] }
   scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
+  scope :visible_to, -> (user) { where <<-SQL 
+    is_public IS TRUE 
+    OR "from" @> '[{"address":"#{user.email}"}]'::jsonb
+    OR "to" @> '[{"address":"#{user.email}"}]'::jsonb
+    OR "cc" @> '[{"address":"#{user.email}"}]'::jsonb
+  SQL
+  }
 
   acts_as_commentable
 

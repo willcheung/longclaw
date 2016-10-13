@@ -67,12 +67,12 @@
                     }  %>
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 <% unless params[:action] == "daily_summary" %>
-                  &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= @notifications.where(conversation_id: a.backend_id).size %>)</a>
+                  &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= a.notifications.size %>)</a>
                 <% end %>
                 </div>
             </div> <!-- chat discussion -->
         <% unless params[:action] == "daily_summary" %>
-            <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => "timeline-block-notification-table", :notifications => @notifications.where(conversation_id: a.backend_id) %></div>
+            <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => "timeline-block-notification-table", :notifications => a.notifications %></div>
         <% end %>
         
         <% elsif a.category == Activity::CATEGORY[:Note] %>

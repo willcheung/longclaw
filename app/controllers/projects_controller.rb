@@ -211,19 +211,21 @@ class ProjectsController < ApplicationController
     @filter_email = []
     @final_filter_user = Activity.all_involved_user(@project, current_user)
     
-    activities = Activity.get_activity_by_filter(@project, params)
+    # activities = Activity.get_activity_by_filter(@project, params)
     
-    if(!params[:category].nil? and !params[:category].empty?)
-      @category_param = params[:category].split(',')
-    end
+    # if(!params[:category].nil? and !params[:category].empty?)
+    #   @category_param = params[:category].split(',')
+    # end
 
-    if(!params[:emails].nil? and !params[:emails].empty?)
-      @filter_email = params[:emails].split(',')
-    end
+    # if(!params[:emails].nil? and !params[:emails].empty?)
+    #   @filter_email = params[:emails].split(',')
+    # end
+
+    activities = @project.activities.visible_to(current_user).includes(:notifications, :comments).limit(30).offset(params[:page].to_i)
 
     # filter out not visible items
-    @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
-    activities_by_date_temp = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
+    @activities_by_month = activities.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
+    activities_by_date_temp = activities.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
 
     @activities_by_date = []
 
@@ -235,7 +237,6 @@ class ProjectsController < ApplicationController
     end
 
     @activities_by_date = @activities_by_date.sort {|x, y| y.utc_milli_timestamp <=> x.utc_milli_timestamp }.reverse!
-    @notifications = @project.notifications.order(:is_complete, :original_due_date)
   end
 
   def bulk_update_owner(array_of_id, new_owner)
