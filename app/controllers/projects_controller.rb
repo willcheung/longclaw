@@ -1,8 +1,8 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :lookup, :network_map, :refresh]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab]
+  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
 
   # GET /projects
   # GET /projects.json
@@ -82,6 +82,55 @@ class ProjectsController < ApplicationController
   end
 
   def insights_tab
+    @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
+    
+    # Engagement Volume Chart
+    # TODO: Generate data for Engagement Volume Chart in SQL query   
+    activities_by_category = @project.activities.where.not(category: Activity::CATEGORY[:Note]).where(last_sent_date: 14.days.ago.midnight..Time.current.midnight).select { |a| a.is_visible_to(current_user) }.reverse.group_by { |a| a.category }
+    @activities_by_category_date = {}
+    activities_by_category.each do |category, activities|
+      temp_activities_by_date = Array.new(14, 0)
+      # temp_activities_by_date based on number of days since 14 days ago
+      activities.each do |a|
+        day_index = a.last_sent_date.to_date.mjd - 14.days.ago.midnight.to_date.mjd
+        temp_activities_by_date[day_index] += 1
+      end
+      @activities_by_category_date[category] = temp_activities_by_date
+    end
+
+    # TODO: Generate data for Risk Volume Chart in SQL query
+    # Risk Volume Chart
+    risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
+    @risks_by_date = Array.new(14, 0)
+    risk_notifications.each do |r|
+      # risks_by_date based on number of days since 14 days ago
+      day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
+      @risks_by_date[day_index] += 1
+    end
+
+    # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
+    # Most Active Contributors & Activities By Team
+    user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)
+    @team_leaderboard = []
+    @activities_by_dept = Hash.new(0)
+    activities_by_dept_total = 0
+    user_num_activities.each do |u|
+      user = User.find_by_email(u.email)
+      u.email = get_full_name(user) if user
+      @team_leaderboard << u
+      dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
+      @activities_by_dept[dept] += u.inbound_count + u.outbound_count
+      activities_by_dept_total += u.inbound_count + u.outbound_count
+    end
+    # Convert Activities By Team to %
+    @activities_by_dept.each { |dept, count| @activities_by_dept[dept] = (count.to_f/activities_by_dept_total*100).round(1)  }
+    # Only show top 5 for Most Active Contributors
+    @team_leaderboard = @team_leaderboard[0...5]
+
+    render "show"
+  end
+
+  def arg_tab # Account Relationship Graph
     @data = @project.activities.where(category: %w(Conversation Meeting))
 
     render "show"
