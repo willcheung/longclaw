@@ -255,14 +255,14 @@ class Project < ActiveRecord::Base
     query = <<-SQL
       -- This controls the dates return by the query
       WITH time_series as (
-        SELECT '#{self.id}'::uuid as project_id, generate_series(date (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '1 day', INTERVAL '1 day') as days
+        SELECT '#{self.id}'::uuid as project_id, generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day', INTERVAL '1 day') as days
        )
       (
       -- Emails using emails_activities_last_14d view
-      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, 'Conversation' as category, count(activities.*) as num_activities
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, activities.category, count(activities.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id, '#{Activity::CATEGORY[:Conversation]}'::text as category
-                 FROM email_activities_last_14d where project_id = '#{self.id}' and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                 FROM email_activities_last_14d where project_id = '#{self.id}' and EXTRACT(EPOCH FROM (to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}')) > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
@@ -271,10 +271,10 @@ class Project < ActiveRecord::Base
       UNION ALL
       (
       -- Meetings
-      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, 'Meeting' as category, count(meetings.*) as num_activities
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, meetings.category, count(meetings.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id, category
-                  FROM activities where category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                  FROM activities where category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as meetings
         ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
