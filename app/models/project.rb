@@ -250,6 +250,42 @@ class Project < ActiveRecord::Base
     result = Activity.find_by_sql(query)
   end
 
+  # This is the SQL query that gets the daily activities over the last x days, where x is 1-14
+  def daily_activities_last_x_days(time_zone, days_ago=14)
+    query = <<-SQL
+      -- This controls the dates return by the query
+      WITH time_series as (
+        SELECT '#{self.id}'::uuid as project_id, generate_series(date (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '1 day', INTERVAL '1 day') as days
+       )
+      (
+      -- Emails using emails_activities_last_14d view
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, 'Conversation' as category, count(activities.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT sent_date, project_id, '#{Activity::CATEGORY[:Conversation]}'::text as category
+                 FROM email_activities_last_14d where project_id = '#{self.id}' and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                 ) as activities
+        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
+      UNION ALL
+      (
+      -- Meetings
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, 'Meeting' as category, count(meetings.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date as sent_date, project_id, category
+                  FROM activities where category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                ) as meetings
+        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
+    SQL
+
+    Activity.find_by_sql(query)
+  end
+
+  # This is the SQL query to get daily activities for multiple projects.  TO DO: get rid of cross join
 	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
 		query = <<-SQL
       WITH time_series as (
@@ -268,7 +304,7 @@ class Project < ActiveRecord::Base
       ORDER BY time_series.project_id, days ASC
     SQL
 
-    Project.find_by_sql(query)
+    Activity.find_by_sql(query)
   end
 
   # How Busy Are We? Chart on Home#index
