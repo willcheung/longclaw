@@ -258,10 +258,10 @@ class Project < ActiveRecord::Base
         SELECT '#{self.id}'::uuid as project_id, generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') as days
        )
       (
-      -- Emails using emails_activities_last_14d view
-      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, activities.category, count(activities.*) as num_activities
+      -- Email Conversation using emails_activities_last_14d view
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Conversation]}' as category, count(activities.*) as num_activities
       FROM time_series
-      LEFT JOIN (SELECT sent_date, project_id, '#{Activity::CATEGORY[:Conversation]}'::text as category
+      LEFT JOIN (SELECT sent_date, project_id
                  FROM email_activities_last_14d where project_id = '#{self.id}' and EXTRACT(EPOCH FROM (to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}')) > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
@@ -270,10 +270,10 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
-      -- Meetings
+      -- Meetings directly from actvities
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Meeting]}' as category, count(meetings.*) as num_activities
       FROM time_series
-      LEFT JOIN (SELECT last_sent_date as sent_date, project_id, category
+      LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as meetings
         ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
