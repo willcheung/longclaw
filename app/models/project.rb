@@ -255,7 +255,7 @@ class Project < ActiveRecord::Base
     query = <<-SQL
       -- This controls the dates return by the query
       WITH time_series as (
-        SELECT '#{self.id}'::uuid as project_id, generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day', INTERVAL '1 day') as days
+        SELECT '#{self.id}'::uuid as project_id, generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') as days
        )
       (
       -- Emails using emails_activities_last_14d view
@@ -271,7 +271,7 @@ class Project < ActiveRecord::Base
       UNION ALL
       (
       -- Meetings
-      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, meetings.category, count(meetings.*) as num_activities
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Meeting]}' as category, count(meetings.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id, category
                   FROM activities where category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
