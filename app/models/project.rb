@@ -270,7 +270,7 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
-      -- Meetings directly from actvities
+      -- Meetings directly from actvities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Meeting]}' as category, count(meetings.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
