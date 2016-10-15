@@ -391,6 +391,7 @@
             {
             type: 'column',
             name: '<%= category %>',
+            color: '<%= highcharts_series_color(category) %>',
             data: [ <% activities_by_date.each_with_index do |a, i| %>
                         <%='['+(a.last_sent_date.to_i * 1000).to_s + ','+ a.activity_count.to_s+']' %> <%= ',' unless i + 1 == activities_by_date.length %>
                     <% end %> 
