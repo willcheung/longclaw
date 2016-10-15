@@ -79,7 +79,7 @@ class ReportsController < ApplicationController
     @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
     
     # Engagement Volume Chart
-    @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
+    @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
 
 
     # TODO: Generate data for Risk Volume Chart in SQL query
