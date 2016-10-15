@@ -1,5 +1,12 @@
 
 <div id="account-charts">
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-lg-6" id="activities-breakdown" style="height:200px"></div>
+            <div class="col-lg-6" id="top-contributors" style="height:200px;"></div>
+        </div>
+    </div>
+
     <div id="charts-container" class="ibox-content">
         <div class="row m-t-md">
             <div id="risk-chart" style="height:240px;margin-right:3%;margin-left:2%" class="m-l-sm"></div>
@@ -11,13 +18,6 @@
         
         <div class="row m-t-md">
             <div id="activities-chart"></div>
-        </div>
-    </div>
-
-    <div class="ibox-content">
-        <div class="row">
-            <div class="col-lg-6" id="activities-breakdown" style="height:200px"></div>
-            <div class="col-lg-6" id="top-contributors" style="height:200px;"></div>
         </div>
     </div>
 </div>
@@ -42,7 +42,7 @@
 
         // console.log(Highcharts.charts);
 
-        for (i = 2; i < Highcharts.charts.length; i = i + 1) { // i=3 to exclude first chart #left-chart
+        for (i = 2; i < Highcharts.charts.length; i = i + 1) { // i=2 to exclude first two contributors charts
             chart = Highcharts.charts[i];
             event = chart.pointer.normalize(e.originalEvent); // Find coordinates within the chart
             point = chart.series[0].searchPoint(event, true); // Get the hovered point
