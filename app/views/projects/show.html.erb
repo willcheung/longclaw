@@ -381,6 +381,9 @@
             enabled: false
         },
         plotOptions: {
+            series: {
+                stacking: 'normal'
+            }
         },
         series: [
             <% @activities_by_category_date.each do |category, activities_by_date| %>
