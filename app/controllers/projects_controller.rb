@@ -53,16 +53,9 @@ class ProjectsController < ApplicationController
     @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
     activities_by_date_temp = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
 
-    @activities_by_date = []
-
-    activities_by_date_temp.each do |date, activities|
-      temp = Struct.new(:utc_milli_timestamp, :count).new
-      temp.utc_milli_timestamp = DateTime.strptime(date, '%Y %m %d').to_i * 1000
-      temp.count = activities.length
-      @activities_by_date.push(temp)
-    end
-
-    @activities_by_date = @activities_by_date.sort {|x, y| y.utc_milli_timestamp <=> x.utc_milli_timestamp }.reverse!
+    # get data for time series filter
+    @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
+    
     @notifications = @project.notifications.order(:is_complete, :original_due_date)
   end
 

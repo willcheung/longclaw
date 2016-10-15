@@ -250,7 +250,66 @@ class Project < ActiveRecord::Base
     result = Activity.find_by_sql(query)
   end
 
+  # Used for exploding all activities of a given project without time bound, specifically for time series filter.  
+  # Subquery is based on email_activities_last_14d view.
+  def daily_activities(time_zone)
+    query = <<-SQL
+      -- Email conversations
+      (
+      SELECT date(to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}') as last_sent_date,
+             '#{Activity::CATEGORY[:Conversation]}' as category,
+             count(t.*) as activity_count
+      FROM
+        ( SELECT 
+            id, 
+            backend_id, 
+            last_sent_date, 
+            project_id, 
+            is_public,
+            jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date,
+            jsonb_array_elements(email_messages) -> 'from' as from, 
+            jsonb_array_elements(email_messages) -> 'to' as to,
+            jsonb_array_elements(email_messages) -> 'cc' as cc
+          FROM 
+            activities,
+            LATERAL jsonb_array_elements(email_messages) messages
+          WHERE
+            category = '#{Activity::CATEGORY[:Conversation]}'
+            AND
+            project_id = '#{self.id}'
+          GROUP BY 1,2,3,4,5,6,7,8,9 ) t
+      GROUP BY date(to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}') ASC
+      )
+      UNION ALL
+      (
+      -- Meetings
+      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:Meeting]}' as category,
+            count(*) as activity_count
+      FROM activities 
+      WHERE category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      )
+      UNION ALL
+      (
+      -- Notes
+      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:Note]}' as category,
+            count(*) as activity_count
+      FROM activities 
+      WHERE category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      )
+    SQL
+
+    Activity.find_by_sql(query)
+  end
+
   # This is the SQL query that gets the daily activities over the last x days, where x is 1-14
+  # Used for time bounded time series
   def daily_activities_last_x_days(time_zone, days_ago=14)
     query = <<-SQL
       -- This controls the dates return by the query
@@ -344,7 +403,8 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
-	def self.count_activities_by_day(days_ago, array_of_project_ids) # TO-DO: This needs to be deprecated
+# TO-DO: This needs to be deprecated.  Use daily_activities_last_x_days.
+	def self.count_activities_by_day(days_ago, array_of_project_ids)
 		metrics = {}
     previous = nil
     arr = []

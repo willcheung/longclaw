@@ -332,7 +332,6 @@
       Highcharts.setOptions({                                            
       // This is for all plots, change Date axis to local timezone
         global : {
-          // timezoneOffset: -7 * 60,
           useUTC : false
         },
         lang: {
@@ -351,25 +350,14 @@
                 if(event.xAxis !=null){
                   g_minDate = event.xAxis[0].min/1000;
                   g_maxDate = event.xAxis[0].max/1000;
-                  console.log('----------------');
-                  console.log(g_minDate);
-                  console.log(g_maxDate);
-                  console.log('----------------');
                   applyFilter();
-
-                  // activityTimeFilter(event.xAxis[0].min/1000,event.xAxis[0].max/1000);
-
                 }
                 else{
-                  // console.log("selection: reset");
-                  // activityTimeFilterReset();
                   g_minDate = 0; 
                   g_maxDate = 0;
                   applyFilter();
                 }
-
               }
-
             },
             zoomType: 'x',
             backgroundColor: '#f3f3f4'
@@ -380,10 +368,6 @@
         title: {
             text: ''
         },
-        // subtitle: {
-        //     text: document.ontouchstart === undefined ?
-        //             'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
-        // },
         xAxis: {
             type: 'datetime'
         },
@@ -397,40 +381,25 @@
             enabled: false
         },
         plotOptions: {
-            area: {
-                fillColor: {
-                    linearGradient: {
-                        x1: 0,
-                        y1: 0,
-                        x2: 0,
-                        y2: 1
-                    },
-                    stops: [
-                        [0, Highcharts.getOptions().colors[0]],
-                        [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
-                    ]
-                },
-                marker: {
-                    radius: 2
-                },
-                lineWidth: 1,
-                states: {
-                    hover: {
-                        lineWidth: 1
-                    }
-                },
-                threshold: null
-            }
         },
-
-        series: [{
+        series: [
+            <% @activities_by_category_date.each do |category, activities_by_date| %>
+            {
             type: 'column',
-            name: 'Activity Count',
-            data: [ <% @activities_by_date.each_with_index do |a, i| %>
-                        <%='['+a.utc_milli_timestamp.inspect + ','+ a.count.inspect+']' %> <%= ',' unless i + 1 == @activities_by_date.length %>
+            name: '<%= category %>',
+            data: [ <% activities_by_date.each_with_index do |a, i| %>
+                        <%='['+(a.last_sent_date.to_i * 1000).to_s + ','+ a.activity_count.to_s+']' %> <%= ',' unless i + 1 == activities_by_date.length %>
                     <% end %> 
-            ]                
-        }]
+                  ]                
+            },
+            <% end %>
+            // Dummy data series to make sure axis still shown when there is no data
+            {     
+            type: 'column',
+            data: [],
+            showInLegend: false
+            }
+        ]
     });
   });
 
