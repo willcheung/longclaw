@@ -9,9 +9,26 @@
     </div>
 </div>
 
-<div id="timeline-section">
-  <%= render 'timeline' %>
+<!-- Filter Section -->
+<%= render 'activities/filter', type: 'stream' %>
+
+<!-- Activities -->
+<div id="newsfeed">
+    <div class="row">
+        <div class="col-lg-12">
+            <div id="vertical-timeline" class="vertical-container light-timeline m-t">
+                <%= render 'timeline' %>
+            </div>
+        </div>
+    </div>
 </div>
+
+<% if @activities_by_month.empty? %>
+    <div class="p-m m-l m-t white-bg" style="width:100%;">
+        <h4 class="text-center">There's nothing here! Did you filter everything out?</h4>
+        <h4 class="text-center">To add a note for this project, type something into the area above and click on the <a class="btn btn-sm sticky-bg" style="display:inline;">Post</a> button.</h4>
+    </div>
+<% end %>
 
 <button id="load-more" class="btn btn-primary pull-right m-b">Read More <i class="fa fa-cog"></i></button>
 

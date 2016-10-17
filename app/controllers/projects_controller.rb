@@ -188,15 +188,15 @@ class ProjectsController < ApplicationController
 
   def get_show_data
     # metrics
-    @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
-    @project_open_risks_count = @project.notifications.open.risks.count
-    @project_pinned_count = @project.activities.pinned.count
     @project_risk_score = @project.current_risk_score(current_user.time_zone)
+    @project_open_risks_count = @project.notifications.open.risks.count
+    @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
+    @project_pinned_count = @project.activities.pinned.count
+    @project_open_tasks_count = @project.notifications.open.count
 
     # old metrics
     # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
     # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
-    # @project_open_tasks_count = @project.notifications.open.count
 
     # project people
     @project_members = @project.project_members
