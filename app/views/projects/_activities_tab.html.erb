@@ -13,6 +13,27 @@
   <%= render 'timeline' %>
 </div>
 
+<button id="load-more" class="btn btn-primary pull-right m-b">Read More <i class="fa fa-cog"></i></button>
+
 <script type="text/javascript">
-  $("#newsfeed-link").parent().addClass("active");  
+  $(function () {
+    $("#newsfeed-link").parent().addClass("active");
+
+    // Pagination
+    var page = <%= @page %>
+    $('#load-more').click( function () {
+      console.log('loading more...');
+      this.disabled = true;
+      $(this).children().first().addClass('fa-spin')
+      page++;
+      var url = '<%= project_path(@project) %>/more?page=' + page
+      $.getScript(url);
+    });
+    var win = $(window);
+    win.scroll(function () {
+      if ($(document).height() - win.height() == win.scrollTop()) {
+        $('#load-more').click();
+      }
+    });
+  })
 </script>

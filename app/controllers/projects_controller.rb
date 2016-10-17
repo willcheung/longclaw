@@ -1,9 +1,9 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :lookup, :network_map, :refresh, :show_timeline]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :lookup, :network_map, :refresh, :show_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab]
-  before_action :load_timeline, only: [:show, :show_timeline]
+  before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
 
   # GET /projects
   # GET /projects.json
@@ -36,9 +36,7 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    # handle query string filters
-    @category_param = params[:category].blank? ? [] : params[:category].split(',')
-    @filter_email = params[:emails].blank? ? [] : params[:emails].split(',')
+    # get data to populate filters
     @final_filter_user = Activity.all_involved_user(@project, current_user)
     activities_by_date = @project.activities.visible_to(current_user.email).pluck(:last_sent_date).group_by { |a| Time.zone.at(a).to_date }
     @activities_by_date = activities_by_date.map do |date, activities|
@@ -47,7 +45,11 @@ class ProjectsController < ApplicationController
     @activities_by_date = @activities_by_date.sort {|x, y| x.date <=> y.date }
   end
 
-  def show_timeline
+  def filter_timeline
+    respond_to :js
+  end
+
+  def more_timeline
     respond_to :js
   end
 
@@ -209,7 +211,28 @@ class ProjectsController < ApplicationController
   end
 
   def load_timeline
-    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments).limit(30)#.offset(params[:page].to_i)
+    activities = @project.activities.visible_to(current_user.email)
+    # filter by categories
+    @filter_category = []
+    unless params[:category].blank?
+      @filter_category = params[:category].split(',')
+      activities = activities.where(category: @filter_category)
+    end
+    # filter by people
+    @filter_email = []
+    unless params[:emails].blank?
+      @filter_email = params[:email].split(',')
+      users = User.where(email: @filter_email).pluck(:id)
+      where_email_clause = @filter_email.map { |e| '"from" || "to" || "cc" @> \'[{"address":"#{e}"}]\'::jsonb' }.join(' OR ') + " OR posted_by IN ('#{users.join("','")}')"
+      activities = activities.where(where_email_clause)
+    end
+    # filter by time
+    ### TODO: add time filter logic here
+    # pagination
+    page_size = 10
+    @page = params[:page].blank? ? 1 : params[:page].to_i
+    @last_page = (activities.count - (page_size * @page)) > 0 # check whether there is another page to load
+    activities = activities.limit(page_size).offset(page_size * (@page - 1)).includes(:notifications, :comments)
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
   end
 

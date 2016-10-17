@@ -14,7 +14,7 @@
           <div class="col-sm-11"> 
             <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
               <% Activity::CATEGORY.each do |k,v| %>
-                <option value="<%= v %>" <% if @category_param.include?(v) %> selected <% end %> ><%= v %></option>
+                <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
               <% end %> 
             </select>
           </div>
@@ -46,7 +46,7 @@
       <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
         <option value="0"></option>
         <% Activity::CATEGORY.each{|k,v|    %>
-          <option value="<%= v %>" <% if @category_param.include?(v) %> selected <% end %> ><%= v %></option>
+          <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
            <% } %> 
       </select>
     
@@ -73,19 +73,22 @@
 </div>
 <script type="text/javascript">
 $(function () {
+  // Show/Hide Filter Area
   $("#filter-timeline-expand").click(function() {
     $("#timeline-filters").toggle();
     $('.comment_category, .user_filter').trigger('chosen:updated'); // update chosen to show full placeholder
     $('#time-filter-highcharts').highcharts().reflow(); // reflow chart to fit to parent container
   });
 
+  // Category Filter & Person Filter
   $('.comment_category, .user_filter')
     .chosen({ width: '100%'})
     .change( function (event, params) {
       console.log('chosen change detected.');
-      // $.getScript('<%= project_path(@project) %>/timeline');
+      // $.getScript('<%= project_path(@project) %>/filter');
     });
 
+  // Time Filter
   Highcharts.setOptions({                                            
   // This is for all plots, change Date axis to local timezone
     global : {
@@ -172,5 +175,6 @@ $(function () {
           <% end %> ]                
     }]
   });
+
 });
 </script>

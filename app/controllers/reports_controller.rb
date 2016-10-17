@@ -80,7 +80,7 @@ class ReportsController < ApplicationController
     
     # Engagement Volume Chart
     # TODO: Generate data for Engagement Volume Chart in SQL query   
-    activities_by_category = @account.activities.where.not(category: Activity::CATEGORY[:Note]).where(last_sent_date: 14.days.ago.midnight..Time.current.midnight).select { |a| a.is_visible_to(current_user) }.reverse.group_by { |a| a.category }
+    activities_by_category = @account.activities.where.not(category: Activity::CATEGORY[:Note]).where(last_sent_date: 14.days.ago.midnight..Time.current.midnight).visible_to(current_user.email).group_by { |a| a.category }
     @activities_by_category_date = {}
     activities_by_category.each do |category, activities|
       temp_activities_by_date = Array.new(14, 0)
