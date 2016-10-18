@@ -7,9 +7,47 @@
         <%= render 'activities/timeline_block', a: a %>
     <% end %>
 <% end %>
-<% if @last_page && @activities_by_month.present? %>
-<div class="timeline-end">
-    <hr>
-    <h3 class="text-mute-gray">You've reached the beginning.</h3>
-</div>
+
+<% if @activities_by_month.present? %>
+  <% if @last_page %>
+    <div class="timeline-end">
+        <hr>
+        <h3 class="text-mute-gray">You've reached the beginning.</h3>
+    </div>
+  <% else %>
+    <button id="load-more" class="btn btn-primary pull-right m-b">Read More <i class="fa fa-cog"></i></button>
+    <script type="text/javascript">
+    $(function () {
+      // Pagination/Infinite Scroll
+      var page = <%= @page %>
+      $('#load-more').click( function () {
+        $(this).prop("disabled", true);
+        $(this).children().first().addClass('fa-spin');
+        page++;
+        var url = '<%= project_path(@project) %>/more?page=' + page
+        var categoryFilter = $('.comment_category').val() ? "category=" + $('.comment_category').val() : "";
+        var emailFilter = $('.user_filter').val() ? "emails=" + $('.user_filter').val() : "";
+        if (emailFilter || categoryFilter) {
+            url += "&" + emailFilter;
+            if (emailFilter && categoryFilter) {
+                url += "&";
+            }
+            url += categoryFilter;
+        }
+        $.getScript(url);
+      });
+      var win = $(window);
+      win.scroll(function () {
+        if ($(document).height() - win.height() == win.scrollTop()) {
+          $('#load-more').click();
+        }
+      });
+    });
+    </script>
+  <% end %>
+<% elsif params[:action] == "filter_timeline" %>
+    <div class="timeline-end" style="height:0;">
+        <hr>
+        <h3 class="text-mute-gray">You've filtered everything out.</h3>
+    </div>
 <% end %>

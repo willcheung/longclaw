@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :lookup, :network_map, :refresh, :show_timeline, :more_timeline]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab]
@@ -221,9 +221,10 @@ class ProjectsController < ApplicationController
     # filter by people
     @filter_email = []
     unless params[:emails].blank?
-      @filter_email = params[:email].split(',')
+      @filter_email = params[:emails].split(',')
+      where_email_clause = @filter_email.map { |e| "\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{e}\"}]'::jsonb" }.join(' AND ')
       users = User.where(email: @filter_email).pluck(:id)
-      where_email_clause = @filter_email.map { |e| '"from" || "to" || "cc" @> \'[{"address":"#{e}"}]\'::jsonb' }.join(' OR ') + " OR posted_by IN ('#{users.join("','")}')"
+      where_email_clause += " OR posted_by IN ('#{users.join("','")}')" if users.present?
       activities = activities.where(where_email_clause)
     end
     # filter by time
@@ -231,7 +232,7 @@ class ProjectsController < ApplicationController
     # pagination
     page_size = 10
     @page = params[:page].blank? ? 1 : params[:page].to_i
-    @last_page = activities.count < (page_size * @page) # check whether there is another page to load
+    @last_page = activities.count <= (page_size * @page) # check whether there is another page to load
     activities = activities.limit(page_size).offset(page_size * (@page - 1)).includes(:notifications, :comments)
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
   end

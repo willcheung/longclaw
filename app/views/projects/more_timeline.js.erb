@@ -1,8 +1,4 @@
+$('#load-more').remove();
+$(window).off();
+// Pagination event handlers reloaded when timeline is rendered
 $("#vertical-timeline").append('<%= escape_javascript(render "timeline") %>');
-$('#load-more').children().first().removeClass('fa-spin');
-<% if @last_page %>
-$('#load-more').hide();
-$('#load-more').off();
-<% else %>
-$('#load-more').prop('disabled', false);
-<% end %>

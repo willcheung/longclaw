@@ -84,8 +84,18 @@ $(function () {
   $('.comment_category, .user_filter')
     .chosen({ width: '100%'})
     .change( function (event, params) {
-      console.log('chosen change detected.');
-      // $.getScript('<%= project_path(@project) %>/filter');
+      // Build URL for AJAX call for filtered data
+      var url = "<%= project_path(@project) %>/filter"
+      var categoryFilter = $('.comment_category').val() ? "category=" + $('.comment_category').val() : "";
+      var emailFilter = $('.user_filter').val() ? "emails=" + $('.user_filter').val() : "";
+      if (emailFilter || categoryFilter) {
+          url += "?" + emailFilter;
+          if (emailFilter && categoryFilter) {
+              url += "&";
+          }
+          url += categoryFilter;
+      }
+      $.getScript(url)
     });
 
   // Time Filter
