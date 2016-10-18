@@ -50,9 +50,9 @@
                       <span style="font-size:14px;display:block;"><%= 'Activity'.pluralize(p.activities.size) %></span>
                     </td>
                     <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
-                    <% your_open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
-                      <span style="display:block;"><%= your_open_notification_count %></span>
-                      <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(your_open_notification_count) %> Assigned To You</span>
+                    <% open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
+                      <span style="display:block;"><%= open_notification_count %></span>
+                      <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(open_notification_count) %></span>
                     </td>
                   </tr>
                </tbody>
@@ -102,9 +102,9 @@
                 <tr>
                   <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;">
                     <%= if a.last_msg['content'].nil? || a.last_msg['content'].is_a?(String)    
-                          truncate(a.last_msg['content'], length: 60, separator: ' ')    
+                          truncate(a.last_msg['content'], length: 160, separator: ' ')    
                         else    
-                          truncate(a.last_msg['content']['body'], length: 60, separator: ' ')   
+                          truncate(a.last_msg['content']['body'], length: 160, separator: ' ')   
                         end %>   
                   </td>
                 </tr>
@@ -178,7 +178,7 @@
       <tbody style="width:100%;display:table;">
         <tr>
           <td style="vertical-align:middle;">
-            <span style="font-size:15px;font-weight:bold;">Your Open Tasks:</span>
+            <span style="font-size:15px;font-weight:bold;">Open Tasks:</span>
           </td>
           <td class="expander"></td>
           <td style="padding:6px;text-align:right;">
@@ -217,8 +217,8 @@
             </span>
           </td>
           <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:92px;max-width:95px;padding:3px;">
-            <span style="font-weight:normal;font-size:14px;line-height:19px;">
-              Due: <%= n.original_due_date.nil? ? "(no date)" : n.original_due_date.strftime('%b %d') %>
+            <span style="font-weight:normal;font-size:12px;line-height:19px;">
+              Assignee: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
             </span>               
           </td>
         </tr>

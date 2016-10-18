@@ -21,6 +21,16 @@ module ApplicationHelper
     num > 0 ? "<i class=\"fa fa-level-up\"></i>".html_safe : "<i class=\"fa fa-level-down\"></i>".html_safe
   end
 
+  def highcharts_series_color(category)
+    if category == Activity::CATEGORY[:Conversation]
+      "#7cb5ec"
+    elsif category == Activity::CATEGORY[:Meeting]
+      "#FFA500"
+    elsif category == Activity::CATEGORY[:Note]
+      "#ffde6b"
+    end
+  end
+
   def risk_color(score, in_email=false)
     return unless score
 

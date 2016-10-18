@@ -8,6 +8,13 @@ class OnboardingController < ApplicationController
 	def fill_in_info
 		# change user onboarding status and cluster_create_date becomes join date
     current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
+
+    if ENV["RAILS_ENV"] == 'production'
+			# Fire hubspot event to add new user to list
+			s = "http://track.hubspot.com/v1/event?_n=000000617114&_a=2189465&email=#{current_user.email}&firstname=#{url_encode(current_user.first_name)}&lastname=#{url_encode(current_user.last_name)}&lifecyclestage=customer"
+			url = URI.parse(s)
+			req = Net::HTTP.get(url)
+		end
 	end
 
 	def tutorial
@@ -158,13 +165,6 @@ class OnboardingController < ApplicationController
 		
 		# Change user onboarding flag
 		current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
-
-		if ENV["RAILS_ENV"] == 'production'
-			# Fire hubspot event to add new user to list
-			s = "http://track.hubspot.com/v1/event?_n=000000617114&_a=2189465&email=#{current_user.email}&firstname=#{url_encode(current_user.first_name)}&lastname=#{url_encode(current_user.last_name)}&lifecyclestage=opportunity"
-			url = URI.parse(s)
-			req = Net::HTTP.get(url)
-		end
 	end
 
 	#########################################################################

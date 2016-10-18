@@ -8,8 +8,8 @@
 
     <div class="row">
         <div class="col-sm-4">
-            <div class="font-bold col-lg-4">Account Type:</div>
-            <select id="account-filter" class="category_filter col-lg-8">
+            <div class="font-bold col-lg-5 m-t-sm">Account Type:</div>
+            <select id="account-filter" class="category_filter col-lg-7">
                 <option>All</option>
                 <% Account::CATEGORY.each do |k,v| %>
                 <option <% if params[:account] == v %> selected <% end %> ><%= v %></option>
@@ -17,8 +17,8 @@
             </select> 
         </div>
         <div class="col-sm-4 filter-space">
-            <div class="font-bold col-lg-4">Stream Type:</div>
-            <select id="category-filter" class="category_filter col-lg-8">
+            <div class="font-bold col-lg-5 m-t-sm">Stream Type:</div>
+            <select id="category-filter" class="category_filter col-lg-7">
                 <option>All</option>
                 <% Project::CATEGORY.each do |k,v|    %>
                 <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>

@@ -79,18 +79,7 @@ class ReportsController < ApplicationController
     @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
     
     # Engagement Volume Chart
-    # TODO: Generate data for Engagement Volume Chart in SQL query   
-    activities_by_category = @account.activities.where.not(category: Activity::CATEGORY[:Note]).where(last_sent_date: 14.days.ago.midnight..Time.current.midnight).visible_to(current_user.email).group_by { |a| a.category }
-    @activities_by_category_date = {}
-    activities_by_category.each do |category, activities|
-      temp_activities_by_date = Array.new(14, 0)
-      # temp_activities_by_date based on number of days since 14 days ago
-      activities.each do |a|
-        day_index = a.last_sent_date.to_date.mjd - 14.days.ago.midnight.to_date.mjd
-        temp_activities_by_date[day_index] += 1
-      end
-      @activities_by_category_date[category] = temp_activities_by_date
-    end
+    @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
 
     # TODO: Generate data for Risk Volume Chart in SQL query
     # Risk Volume Chart

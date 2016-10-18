@@ -103,7 +103,6 @@ $(function () {
   Highcharts.setOptions({                                            
   // This is for all plots, change Date axis to local timezone
     global : {
-      // timezoneOffset: -7 * 60,
       useUTC : false
     },
     lang: {
@@ -153,38 +152,30 @@ $(function () {
       enabled: false
     },
     plotOptions: {
-      area: {
-        fillColor: {
-          linearGradient: {
-            x1: 0,
-            y1: 0,
-            x2: 0,
-            y2: 1
-          },
-          stops: [
-            [0, Highcharts.getOptions().colors[0]],
-            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
-          ]
-        },
-        marker: {
-          radius: 2
-        },
-        lineWidth: 1,
-        states: {
-          hover: {
-            lineWidth: 1
-          }
-        },
-        threshold: null
+      series: {
+        stacking: 'normal',
+        borderWidth: 0
       }
     },
-    series: [{
+    series: [
+      <% @activities_by_category_date.each do |category, activities_by_date| %>
+      {
         type: 'column',
-        name: 'Activity Count',
-        data: [ <% @activities_by_date.each do |a| %>
-            [<%= a.date %>,<%= a.num_activities %>],
-          <% end %> ]                
-    }]
+        name: '<%= category %>',
+        color: '<%= highcharts_series_color(category) %>',
+        data: [ <% activities_by_date.each_with_index do |a, i| %>
+          <%='['+(a.last_sent_date.to_i * 1000).to_s + ','+ a.activity_count.to_s+']' %> <%= ',' unless i + 1 == activities_by_date.length %>
+          <% end %> 
+        ]
+      },
+      <% end %>
+      // Dummy data series to make sure axis still shown when there is no data
+      {     
+        type: 'column',
+        data: [],
+        showInLegend: false
+      }
+    ]
   });
 
 });
