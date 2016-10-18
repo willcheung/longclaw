@@ -1,3 +1,8 @@
 $("#vertical-timeline").append('<%= escape_javascript(render "timeline") %>');
-$('#load-more')[0].disabled = false;
 $('#load-more').children().first().removeClass('fa-spin');
+<% if @last_page %>
+$('#load-more').hide();
+$('#load-more').off();
+<% else %>
+$('#load-more').prop('disabled', false);
+<% end %>

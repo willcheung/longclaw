@@ -231,7 +231,7 @@ class ProjectsController < ApplicationController
     # pagination
     page_size = 10
     @page = params[:page].blank? ? 1 : params[:page].to_i
-    @last_page = (activities.count - (page_size * @page)) > 0 # check whether there is another page to load
+    @last_page = activities.count < (page_size * @page) # check whether there is another page to load
     activities = activities.limit(page_size).offset(page_size * (@page - 1)).includes(:notifications, :comments)
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
   end

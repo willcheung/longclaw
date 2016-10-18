@@ -7,3 +7,9 @@
         <%= render 'activities/timeline_block', a: a %>
     <% end %>
 <% end %>
+<% if @last_page && @activities_by_month.present? %>
+<div class="timeline-end">
+    <hr>
+    <h3 class="text-mute-gray">You've reached the beginning.</h3>
+</div>
+<% end %>

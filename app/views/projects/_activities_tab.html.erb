@@ -10,7 +10,7 @@
 </div>
 
 <!-- Filter Section -->
-<%= render 'activities/filter', type: 'stream' %>
+<%= render 'activities/filter', type: 'stream' unless @activities_by_month.blank? %>
 
 <!-- Activities -->
 <div id="newsfeed">
@@ -23,25 +23,25 @@
     </div>
 </div>
 
-<% if @activities_by_month.empty? %>
-    <div class="p-m m-l m-t white-bg" style="width:100%;">
-        <h4 class="text-center">There's nothing here! Did you filter everything out?</h4>
-        <h4 class="text-center">To add a note for this project, type something into the area above and click on the <a class="btn btn-sm sticky-bg" style="display:inline;">Post</a> button.</h4>
+<% if @activities_by_month.blank? %>
+    <div class="p-m m-l m-t white-bg">
+        <h4 class="text-center">You don't have any activities for this stream!</h4>
+        <h4 class="text-center">To add a note for this stream, type something into the area above and click on the <a class="btn btn-sm sticky-bg" style="display:inline;">Post</a> button.</h4>
     </div>
-<% end %>
-
+<% elsif !@last_page %>
 <button id="load-more" class="btn btn-primary pull-right m-b">Read More <i class="fa fa-cog"></i></button>
+<% end %>
 
 <script type="text/javascript">
   $(function () {
     $("#newsfeed-link").parent().addClass("active");
 
+  <% unless @last_page %>
     // Pagination
     var page = <%= @page %>
     $('#load-more').click( function () {
-      console.log('loading more...');
-      this.disabled = true;
-      $(this).children().first().addClass('fa-spin')
+      $(this).prop("disabled", true);
+      $(this).children().first().addClass('fa-spin');
       page++;
       var url = '<%= project_path(@project) %>/more?page=' + page
       $.getScript(url);
@@ -52,5 +52,6 @@
         $('#load-more').click();
       }
     });
+  <% end %>
   })
 </script>
