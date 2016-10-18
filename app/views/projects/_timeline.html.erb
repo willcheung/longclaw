@@ -15,14 +15,16 @@
         <h3 class="text-mute-gray">You've reached the beginning.</h3>
     </div>
   <% else %>
-    <button id="load-more" class="btn btn-primary pull-right m-b">Read More <i class="fa fa-cog"></i></button>
+    <div class="text-center">
+      <button id="load-more" class="btn btn-primary m-b-lg">Read More <i class="fa fa-angle-double-right"></i></button>
+    </div>
     <script type="text/javascript">
     $(function () {
       // Pagination/Infinite Scroll
       var page = <%= @page %>
       $('#load-more').click( function () {
         $(this).prop("disabled", true);
-        $(this).children().first().addClass('fa-spin');
+        $(this).replaceWith('<i id="loading-more" class="fa fa-spinner fa-3x fa-pulse m-b-lg"></i>');
         page++;
         var url = '<%= project_path(@project) %>/more?page=' + page
         var categoryFilter = $('.comment_category').val() ? "category=" + $('.comment_category').val() : "";

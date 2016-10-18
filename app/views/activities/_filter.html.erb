@@ -84,6 +84,7 @@ $(function () {
   $('.comment_category, .user_filter')
     .chosen({ width: '100%'})
     .change( function (event, params) {
+      $('#vertical-timeline').html('<div class="text-center"><i class="fa fa-spinner fa-3x fa-pulse"></i></div>');
       // Build URL for AJAX call for filtered data
       var url = "<%= project_path(@project) %>/filter"
       var categoryFilter = $('.comment_category').val() ? "category=" + $('.comment_category').val() : "";
