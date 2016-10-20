@@ -246,29 +246,40 @@ class ProjectsController < ApplicationController
   end
 
   def load_timeline
-    activities = @project.activities.visible_to(current_user.email)
+    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments)
     # filter by categories
     @filter_category = []
-    unless params[:category].blank?
+    if params[:category].present?
       @filter_category = params[:category].split(',')
       activities = activities.where(category: @filter_category)
     end
     # filter by people
     @filter_email = []
-    unless params[:emails].blank?
+    if params[:emails].present?
       @filter_email = params[:emails].split(',')
+      # filter for Meetings/Conversations where all people participated
       where_email_clause = @filter_email.map { |e| "\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{e}\"}]'::jsonb" }.join(' AND ')
+      # filter for Notes written by any people included
       users = User.where(email: @filter_email).pluck(:id)
       where_email_clause += " OR posted_by IN ('#{users.join("','")}')" if users.present?
       activities = activities.where(where_email_clause)
     end
     # filter by time
-    ### TODO: add time filter logic here
+    @filter_time = []
+    if params[:time].present?
+      @filter_time = params[:time].split(',').map(&:to_i)
+      # filter for Meetings/Notes in time range + Conversations that have at least 1 email message in time range
+      activities = activities.where("EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{@filter_time[0]} AND #{@filter_time[1]} OR ((email_messages->0->>'sentDate')::integer <= #{@filter_time[1]} AND (email_messages->-1->>'sentDate')::integer >= #{@filter_time[0]} )")
+      # filter Conversations for only the email messages in time range
+      activities.select { |a| a.category == Activity::CATEGORY[:Conversation] }.each do |a| 
+        a.email_messages = a.email_messages.select { |em| em.sentDate >= @filter_time[0] && em.sentDate <= @filter_time[1] }
+      end
+    end
     # pagination
     page_size = 10
     @page = params[:page].blank? ? 1 : params[:page].to_i
     @last_page = activities.count <= (page_size * @page) # check whether there is another page to load
-    activities = activities.limit(page_size).offset(page_size * (@page - 1)).includes(:notifications, :comments)
+    activities = activities.limit(page_size).offset(page_size * (@page - 1))
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
   end
 
