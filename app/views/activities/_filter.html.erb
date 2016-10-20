@@ -5,65 +5,39 @@
   </h4>
   
   <div id="timeline-filters" style="display: none;">
-    <% if type=='stream'  %>
-      <div class="row">
-        <div class="col-sm-6">
-          <div class="col-sm-1">
-            <i class="fa fa-tasks m-t-sm" aria-hidden="true"></i>
-          </div>
-          <div class="col-sm-11"> 
-            <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
-              <% Activity::CATEGORY.each do |k,v| %>
-                <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
-              <% end %> 
-            </select>
-          </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="col-sm-1">
+          <i class="fa fa-tasks m-t-sm" aria-hidden="true"></i>
         </div>
-
-        <div class="col-sm-6">
-          <div class="col-sm-1">
-            <i class="fa fa-users m-t-sm" aria-hidden="true"></i>
-          </div>
-          <div class="col-sm-11">
-            <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
-              <% @final_filter_user.each do |u| %>
-                <option value="<%= u.email %>" <% if @filter_email.include?(u.email) %> selected <% end %> >
-                  <% if u.first_name.include?('@')%>
-                      <%= u.first_name%>
-                  <% else %>
-                      <%= u.first_name+' '+u.last_name+' @'+  get_short_name(get_domain(u.email)) %>
-                  <% end %>         
-                </option>
-              <% end %>
-            </select>
-          </div>
+        <div class="col-sm-11"> 
+          <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
+            <% Activity::CATEGORY.each do |k,v| %>
+              <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
+            <% end %> 
+          </select>
         </div>
-        <!-- <div class="col-sm-2"></div> -->
       </div>
-<!-- TODO: Figure out if this is used for anything, otherwise may need to delete -->
-    <% elsif type=='salesforce' %>
-      <i class="fa fa-tasks" aria-hidden="true"></i>
-      <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
-        <option value="0"></option>
-        <% Activity::CATEGORY.each{|k,v|    %>
-          <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
-           <% } %> 
-      </select>
-    
-      <i class="fa fa-users" aria-hidden="true" style="padding-left:15px;"></i>
-      <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
-        <option value="0"></option>
-        <% @final_filter_user.each do |u| %>
-          <option value="<%= u.email %>" <% if @filter_email.include?(u.email) %> selected <% end %> >
-            <% if u.first_name.include?('@')%>
-                <%= u.first_name %>
-            <% else %>
-                <%= u.first_name+' '+u.last_name+'(@'+ get_short_name(get_domain(u.email))+')' %>
-            <% end %>         
-          </option>
-        <% end %>
-      </select>
-    <% end %>
+
+      <div class="col-sm-6">
+        <div class="col-sm-1">
+          <i class="fa fa-users m-t-sm" aria-hidden="true"></i>
+        </div>
+        <div class="col-sm-11">
+          <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
+            <% @final_filter_user.each do |u| %>
+              <option value="<%= u.email %>" <% if @filter_email.include?(u.email) %> selected <% end %> >
+                <% if u.first_name.include?('@')%>
+                    <%= u.first_name %>
+                <% else %>
+                    <%= get_full_name(u)+' @'+  get_short_name(get_domain(u.email)) %>
+                <% end %>         
+              </option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+    </div>
 
     <div class="row">
       <div class="col-sm-12">
