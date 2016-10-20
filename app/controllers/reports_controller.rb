@@ -81,7 +81,6 @@ class ReportsController < ApplicationController
     # Engagement Volume Chart
     @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
 
-
     # TODO: Generate data for Risk Volume Chart in SQL query
     # Risk Volume Chart
     risk_notifications = @account.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)

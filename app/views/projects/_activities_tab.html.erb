@@ -1,0 +1,37 @@
+<!-- Form -->
+<div class="row header-box projects-box white-bg">
+    <div class="col-lg-12">
+        <div id="add-note-form" class="m-t">
+            
+            <%= render 'activities/form', :project_id => @project.id %>  
+            
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<%= render 'activities/filter', type: 'stream' unless @activities_by_month.blank? %>
+
+<!-- Activities -->
+<div id="newsfeed">
+    <div class="row">
+        <div class="col-lg-12">
+            <div id="vertical-timeline" class="vertical-container light-timeline m-t">
+                <%= render 'timeline' %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<% if @activities_by_month.blank? %>
+    <div class="p-m m-l m-t white-bg">
+        <h4 class="text-center">You don't have any activities for this stream!</h4>
+        <h4 class="text-center">To add a note for this stream, type something into the area above and click on the <a class="btn btn-sm sticky-bg" style="display:inline;">Post</a> button.</h4>
+    </div>
+<% end %>
+
+<script type="text/javascript">
+  $(function () {
+    $("#newsfeed-link").parent().addClass("active");
+  });
+</script>

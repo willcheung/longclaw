@@ -53,6 +53,24 @@
   padding: 0 13px;
 }
 
+.timeline-end {
+  width: 400px;
+  margin: 30px auto 0;
+  text-align: center;
+}
+
+.timeline-end hr {
+  border-top-color: #cccccc;
+}
+
+.timeline-end h3 {
+  position: relative;
+  top: -30px;
+  background-color: #f3f3f4;
+  width: 225px;
+  margin: 0 auto;
+}
+
 @media only screen and (max-width: 768px) {
   .vertical-date {
     display: none;

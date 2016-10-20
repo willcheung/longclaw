@@ -1,7 +1,7 @@
 $('#activity_note').val("");
 $('#activity_note').height(20);
 $('#vertical-timeline').prepend('<%= escape_javascript(render "activities/timeline_block", a: @activity) %>');
-$('.btn-note')[0].disabled = true;
+$('.btn-note').prop('disabled', true);
 $('.vertical-timeline-block').first().hide().show("blind", {direction: "up"}, 1000);
 // event handler for best_in_place activator for editing on Notes added with AJAX
 $('#note-<%= @activity.id %>-activator').on('click.activate', function () {

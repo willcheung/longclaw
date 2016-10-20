@@ -43,6 +43,7 @@ class Activity < ActiveRecord::Base
   scope :notes, -> { where category: CATEGORY[:Note] }
   scope :meetings, -> { where category: CATEGORY[:Meeting] }
   scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
+  scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
 
   acts_as_commentable
 
@@ -331,45 +332,6 @@ class Activity < ActiveRecord::Base
     final_filter_user = final_filter_user.sort_by {|u| u.first_name.downcase}
 
     return final_filter_user
-  end
-
-  def self.get_activity_by_filter(project, params)
-    activities = []
-
-    # filter by params category
-    if(!params[:category].nil? and !params[:category].empty?)
-      category_param = params[:category].split(',')
-      temp_activities = project.activities.where('category in (?)',category_param).includes(:comments, :user)
-    else
-      # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
-      temp_activities = project.activities.includes(:comments, :user)
-    end
-
-    # filter by params email
-    if(!params[:emails].nil? and !params[:emails].empty?)
-      filter_email = params[:emails].split(',')
-
-      temp_activities.each do |a|
-        filter_email.each do |e|
-          if a.category==CATEGORY[:Note]
-            if a.user.email == e
-              activities.push(a)
-              break
-            end
-          else
-            if a.email_addresses.include?(e)
-              activities.push(a)
-              break
-            end
-          end
-        end
-      end
-    else
-      activities = temp_activities
-    end
-
-    return activities
-
   end
 
   private
