@@ -1,8 +1,6 @@
 // Place all the behaviors and hooks related to the matching controller here.
 // All this logic will automatically be available in application.js.
 
-//= require iCheck/icheck.min.js
-
 function removeParam(search, keyword){
     if(search.length==0) return search;
 

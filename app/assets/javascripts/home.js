@@ -1,4 +1,3 @@
-//= require iCheck/icheck.min.js
 
 jQuery(document).ready(function($) {  
   //DataTables
