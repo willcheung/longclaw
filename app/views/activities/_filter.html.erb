@@ -4,13 +4,13 @@
     <span><i class="fa fa-filter" style="font-size:16px;" aria-hidden="true"></i> FILTER TIMELINE <i class="fa fa-caret-down" style="font-size:16px;" aria-hidden="true"></i></span>
   </h4>
   
-  <div id="timeline-filters" style="display: none;">
+  <div id="timeline-filters" class="m-l" style="display: none;">
     <div class="row">
       <div class="col-sm-6">
-        <div class="col-sm-1">
+        <div class="pull-left in-bl">
           <i class="fa fa-tasks m-t-sm" aria-hidden="true"></i>
         </div>
-        <div class="col-sm-11"> 
+        <div class="m-l-md"> 
           <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
             <% Activity::CATEGORY.each do |k,v| %>
               <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
@@ -20,10 +20,10 @@
       </div>
 
       <div class="col-sm-6">
-        <div class="col-sm-1">
+        <div class="pull-left in-bl">
           <i class="fa fa-users m-t-sm" aria-hidden="true"></i>
         </div>
-        <div class="col-sm-11">
+        <div class="m-l-md">
           <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
             <% @final_filter_user.each do |u| %>
               <option value="<%= u.email %>" <% if @filter_email.include?(u.email) %> selected <% end %> >
@@ -41,10 +41,8 @@
 
     <div class="row">
       <div class="col-sm-12">
-        <div class="col-sm-12">
-          <h4 class="m-t-sm"><i class="fa fa-clock-o m-r-xs" aria-hidden="true"></i> Filter by date <small>(Click and drag in graph to filter)</small></h4>
-          <div id="time-filter-highcharts" style="height:100px;"></div>
-        </div>
+        <h4 class="m-t-sm"><i class="fa fa-clock-o m-r-xs" aria-hidden="true"></i> Filter by date <small>(Click and drag in graph to filter)</small></h4>
+        <div id="time-filter-highcharts" style="height:100px;"></div>
       </div>
     </div>
   </div>
