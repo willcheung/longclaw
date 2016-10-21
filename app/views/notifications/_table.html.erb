@@ -93,23 +93,45 @@
 
 <script>
 
-$('.hoverToolTip').tooltip({
+$(function() {
+  $('.i-checks').iCheck({
+    checkboxClass: 'icheckbox_square-green'
+  });
+
+  $('input').on('ifChecked', function(event){
+    $(this).parent().parent().parent().attr("bgcolor", "#eeeeee");
+    $(this).parent().parent().parent().css('opacity', '0.5');
+    $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+
+    var target = '#notification_row_'+$(this).attr('id');
+    $(target).fadeOut();
+    
+  });
+
+
+  $('input').on('ifUnchecked', function(event){
+    $(this).parent().parent().parent().attr("bgcolor", "");
+    $(this).parent().parent().parent().css('opacity', '1');
+    $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+  });
+
+  $('.hoverToolTip').tooltip({
     title: hoverGetData,
     html: true,
     container: 'body'
-    });
+  });
 
  
-$('.tool-tip-category').tooltip({   
+  $('.tool-tip-category').tooltip({   
     title: "<p style=\"line-height:20px;\"><b>Smart Action:</b> Tasks with due dates that are automatically detected from the email body.<br>"+
            "<b>Risk:</b> Negative sentiment detected in email body.<br>"+
            "<b>Opportunity:</b> Streams that have been inactive for 30+ days and is an opportunity to follow up.<br>"+
            "<b>To-do:</b> Manually generated task.<p>",
     html: true,
     container: 'body'
-});
+  });
 
-$('.tool-tip-category').hover(function(){
+  $('.tool-tip-category').hover(function(){
     $('.tooltip-inner').css('max-width', '600px');
     $('.tooltip-inner').css('padding', '2px 2px');
     $('.tooltip-inner').css('opacity', '1');
@@ -118,12 +140,12 @@ $('.tool-tip-category').hover(function(){
     
     $('.tooltip-arrow').css('opacity', '0');
 
-});
+  });
 
 
-$('[data-toggle="overdue"]').tooltip();   
+  $('[data-toggle="overdue"]').tooltip();   
 
-$('[data-toggle="overdue"]').hover(function(){
+  $('[data-toggle="overdue"]').hover(function(){
     $('.tooltip-inner').css('max-width', '64px');
     $('.tooltip-inner').css('padding', '2px 2px');
     $('.tooltip-inner').css('opacity', '1');
@@ -131,11 +153,11 @@ $('[data-toggle="overdue"]').hover(function(){
     $('.tooltip-inner').css('color', 'white');
     
     $('.tooltip-arrow').css('opacity', '0');
-});
+  });
 
 var cachedData = Array();
 
-function hoverGetData(){
+  function hoverGetData(){
     var element = $(this);
 
     var id = element.data('id');
@@ -155,9 +177,9 @@ function hoverGetData(){
 
     cachedData[id] = localData;
     return localData;
-}
+  }
 
-$('.hoverToolTip').hover(function(){
+  $('.hoverToolTip').hover(function(){
     $('.tooltip-inner').css('background-color', 'white');
     $('.tooltip-inner').css('color', 'black');
     $('.tooltip-inner').css('opacity', '1');
@@ -174,5 +196,6 @@ $('.hoverToolTip').hover(function(){
 
     $('.tooltip-inner-content').css('margin-bottom', '7px');
     $('.tooltip-arrow').css('opacity', '0');
+  });
 });
 </script>
