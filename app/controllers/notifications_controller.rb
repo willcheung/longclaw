@@ -1,7 +1,8 @@
 class NotificationsController < ApplicationController
-  include Utils
+  ### TODO: refactor show_email_body so that it does not depend on simple_format which must be included from ActionView module (separate Controller from Views)
   include ActionView::Helpers::TextHelper
-  before_action :set_notification, only: [:update]
+  ### 
+  before_action :set_notification, only: [:update, :update_is_complete, :get_email_and_member]
   before_action :set_visible_project_user, only: [:index, :show, :create]
   def index
     
@@ -84,6 +85,7 @@ class NotificationsController < ApplicationController
 
   end
 
+  # TODO: move view logic (like simple_format part) into its own partial or template
   def show_email_body
     result = get_email_and_member
     body = ""
@@ -165,60 +167,14 @@ class NotificationsController < ApplicationController
     end
   end
 
-  def show_member_by_org
-    query = <<-SQL
-      SELECT user_id FROM project_members where project_id=('#{params[:id]}') and not user_id is NULL
-    SQL
-
-    members= ProjectMember.find_by_sql(query)
-
-    result = ""
-    members.each do |m|
-      user = User.find_by_id(m.user_id)
-      result = result + "<option value='#{m.user_id}'>#{user.first_name} #{user.last_name} '#{user.email}'</option>"
-    end
-
-    render :text=>result
-    
-
-  end
-
-
   def update_is_complete
-    target = Notification.find_by_id(params[:id])
-
-    if(target.is_complete)
-      target.update(is_complete: false, completed_by: nil, complete_date: nil)
+    if @notification.is_complete
+      @notification.update(is_complete: false, completed_by: nil, complete_date: nil)
     else
-      target.update(is_complete: true, completed_by: current_user.id, complete_date: Time.now.utc)
+      @notification.update(is_complete: true, completed_by: current_user.id, complete_date: Time.now.utc)
     end
-    
     respond_to :js
-
   end
-
-	def sasuke
-   is_test = true
-
-   Organization.all.each do |org|
-      org.accounts.each do |acc| 
-        acc.projects.each do |proj|
-          # puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-          ContextsmithService.load_emails_from_backend(proj, nil, 300, nil, true, true, is_test,0)
-          sleep(1)
-        end
-      end
-    end
-
-     # proj = Project.find_by_id("f460b2a2-29f5-4798-a239-b71955c2b96a")
-     # ContextsmithService.load_emails_from_backend(proj, nil, 300, nil, true, true, is_test)
-
-    @notification = Notification.first
-   
-    render :show
-	end
-
-  
 
   private
   # Use callbacks to share common setup or constraints between actions.
@@ -245,11 +201,7 @@ class NotificationsController < ApplicationController
   end
 
   def get_email_and_member
-    @notification = Notification.find_by_id(params[:id])
-
-    if(@notification.nil?)
-      return nil
-    end
+    return nil if(@notification.nil?)
 
     # Opportunity only have project_id and conversation_id
     # Smart action and risk should have conversation_id, message_id and project_id

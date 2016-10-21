@@ -54,14 +54,14 @@
         <td>
             <% if n.category == Notification::CATEGORY[:Action] || n.category == Notification::CATEGORY[:Opportunity] || n.category == Notification::CATEGORY[:Risk] %>
             <div class="hoverToolTip" data-placement="right" data-id="<%=n.id %>">
-              <a href="<%= "/projects/" + n.project_id.to_s+'#'+n.conversation_id.to_s %>"><i class="fa fa-info" aria-hidden="true"></i></a>
+              <a><i class="fa fa-info" aria-hidden="true"></i></a>
             </div>
             <% end %>
         </td>
         <% end %>
         <% if params[:controller] == "notifications" or params[:controller] == "home" %>
         <td>
-          <%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)', :activator => "#task-#{n.id}-project-activator" %>
+          <a href="/projects/<%= n.project_id %>"><%= best_in_place n, :project_id, :as => :select, :collection => @projects_reverse, :place_holder => '(change project)', :activator => "#task-#{n.id}-project-activator" %></a>
           <% unless n.category == Notification::CATEGORY[:Action] || n.category == Notification::CATEGORY[:Opportunity] || n.category == Notification::CATEGORY[:Risk] %>
           <i id="task-<%= n.id %>-project-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
           <% end %>

@@ -278,62 +278,6 @@ class Activity < ActiveRecord::Base
     self.save
   end
 
-  def self.all_involved_user(project, user)
-    final_filter_user = []
-
-    # get all possbible email options
-    total_activities_email = project.activities.select('to','from','cc','posted_by','category','is_public').includes(:user).select {|a| a.is_visible_to(user) }
-
-    tempSet = Set.new
-    total_activities_email.each do |a|
-      a.email_addresses.each do |e|
-        tempSet.add(e)
-      end
-      #add notes post_by email
-      if !a.user.nil?
-        tempSet.add(a.user.email)
-      end
-    end
-
-    filter_user = User.where('email in (?)',tempSet.to_a)
-    filter_contact = Contact.where('email in (?)',tempSet.to_a)
-     
-    filter_contact.each do |c|
-      u = User.new
-      u.first_name = c.first_name
-      u.last_name = c.last_name
-      u.email = c.email
-      if u.first_name.blank? and u.last_name.blank?
-        u.first_name  = c.email
-      end
-      #avoid contacts with same email
-      if tempSet.include?(c.email)
-        final_filter_user.push(u)
-        tempSet.delete(c.email)
-      end
-    end
-
-    filter_user.each do |u|
-      if u.first_name.blank? and u.last_name.blank?
-        u.first_name  = u.email
-      end
-      final_filter_user.push(u)
-      tempSet.delete(u.email)
-    end
-
-    tempSet.each do |s|
-      u = User.new
-      u.first_name = s
-      u.last_name = ''
-      u.email = s
-      final_filter_user.push(u)
-    end
-
-    final_filter_user = final_filter_user.sort_by {|u| u.first_name.downcase}
-
-    return final_filter_user
-  end
-
   private
   # helper method for email_replace_all, used to replace the emails in from/to/cc
   def email_replace(message, email1, email2)
