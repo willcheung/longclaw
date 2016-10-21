@@ -2,7 +2,7 @@ class NotificationsController < ApplicationController
   ### TODO: refactor show_email_body so that it does not depend on simple_format which must be included from ActionView module (separate Controller from Views)
   include ActionView::Helpers::TextHelper
   ### 
-  before_action :set_notification, only: [:update, :update_is_complete, :get_email_and_member]
+  before_action :set_notification, only: [:update, :update_is_complete, :show_email_body]
   before_action :set_visible_project_user, only: [:index, :show, :create]
   def index
     
