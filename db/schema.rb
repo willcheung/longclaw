@@ -11,11 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160908000658) do
+ActiveRecord::Schema.define(version: 20161023220926) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "uuid-ossp"
+  enable_extension "hstore"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                       default: "",         null: false
@@ -224,9 +225,33 @@ ActiveRecord::Schema.define(version: 20160908000658) do
     t.uuid     "contextsmith_organization_id",              null: false
     t.datetime "created_at",                                null: false
     t.datetime "updated_at",                                null: false
+    t.hstore   "custom_fields"
   end
 
+  add_index "salesforce_accounts", ["custom_fields"], name: "index_salesforce_accounts_on_custom_fields", using: :gin
   add_index "salesforce_accounts", ["salesforce_account_id"], name: "index_salesforce_accounts_on_salesforce_account_id", unique: true, using: :btree
+
+  create_table "salesforce_opportunities", force: :cascade do |t|
+    t.string   "salesforce_opportunity_id",                         default: "", null: false
+    t.string   "salesforce_account_id",                             default: "", null: false
+    t.string   "name",                                              default: "", null: false
+    t.text     "description"
+    t.decimal  "amount",                    precision: 8, scale: 2
+    t.decimal  "decimal",                   precision: 8, scale: 2
+    t.boolean  "is_closed"
+    t.boolean  "is_won"
+    t.string   "stage_name"
+    t.date     "renewal_date"
+    t.date     "contract_start_date"
+    t.date     "contract_end_date"
+    t.decimal  "contract_arr",              precision: 8, scale: 2
+    t.decimal  "contract_mrr",              precision: 8, scale: 2
+    t.hstore   "custom_fields"
+    t.datetime "created_at",                                                     null: false
+    t.datetime "updated_at",                                                     null: false
+  end
+
+  add_index "salesforce_opportunities", ["custom_fields"], name: "index_salesforce_opportunities_on_custom_fields", using: :gin
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "first_name",             default: "",    null: false

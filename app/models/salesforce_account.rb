@@ -10,15 +10,18 @@
 #  contextsmith_organization_id :uuid             not null
 #  created_at                   :datetime         not null
 #  updated_at                   :datetime         not null
+#  custom_fields                :hstore
 #
 # Indexes
 #
+#  index_salesforce_accounts_on_custom_fields          (custom_fields)
 #  index_salesforce_accounts_on_salesforce_account_id  (salesforce_account_id) UNIQUE
 #
 
 class SalesforceAccount < ActiveRecord::Base
 	belongs_to  :organiztion, foreign_key: "contextsmith_organization_id"
 	belongs_to :account, foreign_key: "contextsmith_account_id"
+  has_many :salesforce_opportunities, foreign_key: "salesforce_account_id"
    
   def self.connect_salesforce(current_user)
     salesforce_client_id = ENV['salesforce_client_id']
