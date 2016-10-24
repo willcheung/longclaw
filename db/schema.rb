@@ -35,7 +35,6 @@ ActiveRecord::Schema.define(version: 20161023220926) do
     t.string   "domain",          limit: 64, default: "",         null: false
     t.string   "category",                   default: "Customer"
     t.datetime "deleted_at"
-    t.string   "salesforce_id",              default: ""
   end
 
   add_index "accounts", ["deleted_at"], name: "index_accounts_on_deleted_at", using: :btree

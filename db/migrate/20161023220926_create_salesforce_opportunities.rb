@@ -22,6 +22,7 @@ class CreateSalesforceOpportunities < ActiveRecord::Migration
     end
 
     add_column :salesforce_accounts, :custom_fields, :hstore
+    remove_column :accounts, :salesforce_id
 
     add_index :salesforce_opportunities, :custom_fields, using: :gin
     add_index :salesforce_accounts, :custom_fields, using: :gin
