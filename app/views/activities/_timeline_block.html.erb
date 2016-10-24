@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>" data-myvalue='block'>
+<div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>">
     
     <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon primary-bg">
@@ -18,11 +18,7 @@
         <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span>
 
-    <div class="vertical-timeline-content" <% if a.category == Activity::CATEGORY[:Note] %> style="background-color: #fff7db" <% end %> data-mytype="<%= a.category %>" data-myemail= <% if a.category==Activity::CATEGORY[:Note] %>
-        <% if !a.user.nil? %> "<%=a.user.email %>"  <% end %>
-        <% else %>
-        <% if !a.email_addresses.nil? %> "<%=a.email_addresses.to_a.join(',') %>"  <% end %>
-        <% end %>  >
+    <div class="vertical-timeline-content" <% if a.category == Activity::CATEGORY[:Note] %> style="background-color: #fff7db" <% end %> >
         <% if a.category == Activity::CATEGORY[:Conversation] %>          
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
@@ -38,7 +34,7 @@
                 <% end %>
 
                 <% a.email_messages.each do |m| %>
-                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" data-myvalue="<%= m.sentDate %>" <% if a.email_messages.last != m %> style="display:none;" <% end %>>
+                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% if a.email_messages.last != m %> style="display:none;" <% end %>>
                         <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
                             <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
                             <div class="message">
@@ -67,16 +63,16 @@
                     }  %>
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 <% unless params[:action] == "daily_summary" %>
-                  &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= @notifications.where(conversation_id: a.backend_id).size %>)</a>
+                  &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= a.notifications.size %>)</a>
                 <% end %>
                 </div>
             </div> <!-- chat discussion -->
         <% unless params[:action] == "daily_summary" %>
-            <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => "timeline-block-notification-table", :notifications => @notifications.where(conversation_id: a.backend_id) %></div>
+            <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => "timeline-block-notification-table", :notifications => a.notifications %></div>
         <% end %>
         
         <% elsif a.category == Activity::CATEGORY[:Note] %>
-            <div class="chat-discussion timeline-note" data-myvalue="<%= a.last_sent_date_epoch %>">
+            <div class="chat-discussion timeline-note">
                 <div class="row">
                     <div class="col-xs-11">
                         <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
@@ -101,7 +97,7 @@
                 <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" style="color:#ed5565" title="Private"></i></span>
             </h3>
 
-            <div class="chat-discussion" data-myvalue="<%= a.last_sent_date_epoch %>">
+            <div class="chat-discussion">
                 <div class="row">
                     <div class="col-lg-3"><strong>Meeting Organizer:</strong> <%= a.from[0].personal ? a.from[0].personal : a.from[0].address %></div>
                     <div class="col-lg-9"><strong>Attendees:</strong> <%= get_calendar_member_names(a.to) %></div>

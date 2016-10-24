@@ -250,6 +250,37 @@ class Project < ActiveRecord::Base
     result = Activity.find_by_sql(query)
   end
 
+  # generate options for Person Filter on Timeline, from activities visible to user with user_email
+  def all_involved_people(user_email)
+    activities = self.activities.visible_to(user_email).select(:from, :to, :cc, :posted_by).includes(:user)
+
+    people = []
+    tempSet = Set.new
+    activities.each do |a|
+      a.email_addresses.each do |e|
+        tempSet.add(e) unless get_domain(e) == 'resources.calendar.google.com' # exclude Google Calendar resource emails
+      end
+      tempSet.add(a.user.email) if a.user # Add Note Authors
+    end
+
+    (User.where(email: tempSet.to_a) + Contact.where(email: tempSet.to_a)).each do |p|
+      # exclude duplicate Users/Contacts with the same email
+      if tempSet.include? p.email 
+        if p.first_name.blank? && p.last_name.blank?
+          p.first_name  = p.email
+        end
+        people << p
+        tempSet.delete(p.email)
+      end
+    end
+
+    tempSet.each do |s|
+      people << Hashie::Mash.new(first_name: s, email: s)
+    end
+
+    people.sort_by {|u| u.first_name.downcase}
+  end
+
   # Used for exploding all activities of a given project without time bound, specifically for time series filter.  
   # Subquery is based on email_activities_last_14d view.
   def daily_activities(time_zone)

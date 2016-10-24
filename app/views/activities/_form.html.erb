@@ -23,10 +23,10 @@
     $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 32));
   }).keyup( function () {
     if ($(this).val()) {
-      $(".btn-note")[0].disabled = false;
+      $(".btn-note").prop('disabled', false);
     }
     else {
-      $(".btn-note")[0].disabled = true;
+      $(".btn-note").prop('disabled', true);
     }
   });
 </script>

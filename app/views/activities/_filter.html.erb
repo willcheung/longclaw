@@ -1,74 +1,159 @@
 <!-- Filter Section -->
-<div class="filter_section col-lg-12" style="padding-top: 10px; margin-right:0; padding-right:0;">
-  <h4 id="filter-timeline-expand" style="margin-left:-15px" class="text-primary">
-    <span><i class="fa fa-filter" style="font-size:16px; text-align: right; padding-top:4px" aria-hidden="true"></i> FILTER TIMELINE <i class="fa fa-caret-down" style="font-size:16px;" aria-hidden="true"></i></span>
+<div class="filter_section col-lg-12">
+  <h4 id="filter-timeline-expand" class="text-primary m-t">
+    <span><i class="fa fa-filter" style="font-size:16px;" aria-hidden="true"></i> FILTER TIMELINE <i class="fa fa-caret-down" style="font-size:16px;" aria-hidden="true"></i></span>
   </h4>
   
-  <div id="timeline-filters">
-    <% if type=='stream'  %>
-      <div class="row">
-        <div class="col-sm-4">
-          <div class="col-sm-1" style="margin:0px; padding:0px; padding-top:5px; border:0px;">
-            <i class="fa fa-tasks" aria-hidden="true"></i>
-          </div>
-          <div class="col-sm-11 comment_category_div" style="margin:0px; padding:0px; border:0px;"> 
-            <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
-              <option value="0"></option>
-              <% Activity::CATEGORY.each{|k,v|    %>
-                <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
-                 <% } %> 
-            </select>
-          </div>
+  <div id="timeline-filters" class="m-l" style="display: none;">
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="pull-left in-bl">
+          <i class="fa fa-tasks m-t-sm" aria-hidden="true"></i>
         </div>
-
-        <div class="col-sm-6">
-          <div class="col-sm-1" style="margin:0px; padding:0px; padding-top:5px; border:0px;">
-            <i class="fa fa-users" aria-hidden="true"></i>
-          </div>
-          <div class="col-sm-11 user_filter_div" style="margin:0px; padding:0px; border:0px;">
-            <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
-              <option value="0"></option>
-              <% @final_filter_user.each do |u| %>
-                <option value="<%=u.email %>"  <% if @filter_email.include?(u.email)  %> selected   <% end %> >
-                  <% if u.first_name.include?('@')%>
-                      <%=u.first_name%>
-                  <% else %>
-                      <%=u.first_name+' '+u.last_name+' @'+  get_short_name(get_domain(u.email)) %>
-                  <% end %>         
-                </option>
-              <% end %>
-            </select>
-          </div>
+        <div class="m-l-md"> 
+          <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
+            <% Activity::CATEGORY.each do |k,v| %>
+              <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
+            <% end %> 
+          </select>
         </div>
-        <div class="col-sm-2"></div>
       </div>
-    <% elsif type=='salesforce' %>
-      <i class="fa fa-tasks" aria-hidden="true"></i>
-      <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
-        <option value="0"></option>
-        <% Activity::CATEGORY.each{|k,v|    %>
-          <option value="<%=v %>"  <% if @category_param.include?(v)  %> selected   <% end %> ><%=v %></option>
-           <% } %> 
-      </select>
-    
-      <i class="fa fa-users" aria-hidden="true" style="padding-left:15px;"></i>
-      <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
-        <option value="0"></option>
-        <% @final_filter_user.each do |u| %>
-          <option value="<%=u.email %>"  <% if @filter_email.include?(u.email)  %> selected   <% end %> >
-            <% if u.first_name.include?('@')%>
-                <%=u.first_name%>
-            <% else %>
-                <%=u.first_name+' '+u.last_name+'(@'+  get_short_name(get_domain(u.email))+')' %>
-            <% end %>         
-          </option>
-        <% end %>
-      </select>
-    <% end %>
 
-    <div class="row" style="margin-left:0">
-      <h4 class="m-t-sm"><i class="fa fa-clock-o m-r-xs" aria-hidden="true"></i> Filter by date <small>(Click and drag in graph to filter)</small></h4>
-      <div class="col-lg-12" id="time-filter-highcharts" style="height: 100px; margin-bottom:10px; margin-right:0; padding-right:0;"></div>
+      <div class="col-sm-6">
+        <div class="pull-left in-bl">
+          <i class="fa fa-users m-t-sm" aria-hidden="true"></i>
+        </div>
+        <div class="m-l-md">
+          <select class="user_filter" data-placeholder="  Filter by people" multiple="true">
+            <% @final_filter_user.each do |u| %>
+              <option value="<%= u.email %>" <% if @filter_email.include?(u.email) %> selected <% end %> >
+                <% if u.first_name.include?('@')%>
+                    <%= u.first_name %>
+                <% else %>
+                    <%= get_full_name(u)+' @'+  get_short_name(get_domain(u.email)) %>
+                <% end %>         
+              </option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-12">
+        <h4 class="m-t-sm"><i class="fa fa-clock-o m-r-xs" aria-hidden="true"></i> Filter by date <small>(Click and drag in graph to filter)</small></h4>
+        <div id="time-filter-highcharts" style="height:100px;"></div>
+      </div>
     </div>
   </div>
 </div>
+<script type="text/javascript">
+$(function () {
+  // Show/Hide Filter Area
+  $("#filter-timeline-expand").click(function() {
+    $("#timeline-filters").toggle();
+    $('.comment_category, .user_filter').trigger('chosen:updated'); // update chosen to show full placeholder
+    $('#time-filter-highcharts').highcharts().reflow(); // reflow chart to fit to parent container
+  });
+
+  // Category Filter & Person Filter
+  $('.comment_category, .user_filter')
+    .chosen({ width: '100%'})
+    .change( function (event, params) {
+      $('#vertical-timeline').html('<div class="text-center"><i class="fa fa-spinner fa-3x fa-pulse"></i></div>');
+      // Build URL for AJAX call for filtered data
+      var url = "<%= project_path(@project) %>/filter?";
+      var params = [];
+      var timeAxis = $('#time-filter-highcharts').highcharts().xAxis[0];
+      params.push(timeAxis.min > timeAxis.dataMin || timeAxis.max < timeAxis.dataMax ? "time=" +  timeAxis.min/1000 + "," + timeAxis.max/1000 : "");
+      params.push($('.comment_category').val() ? "category=" + $('.comment_category').val() : "");
+      params.push($('.user_filter').val() ? "emails=" + $('.user_filter').val() : "");
+      url += params.join('&');
+      $.getScript(url)
+    });
+
+  // Time Filter
+  Highcharts.setOptions({                                            
+  // This is for all plots, change Date axis to local timezone
+    global : {
+      useUTC : false
+    },
+    lang: {
+        resetZoom: "Clear date filter"
+    }
+  });
+
+  $('#time-filter-highcharts').highcharts({
+    chart: {
+      events: {
+        load: function(event) {
+          var extremes = this.yAxis[0].getExtremes();
+          this.yAxis[0].setExtremes(0, extremes.dataMax);
+        },
+        selection: function(event) {
+          $('#vertical-timeline').html('<div class="text-center"><i class="fa fa-spinner fa-3x fa-pulse"></i></div>');
+          // Build URL for AJAX call for filtered data
+          var url = "<%= project_path(@project) %>/filter?";
+          var params = [];
+          var timeAxis = this.xAxis[0];
+          if (!event.resetSelection) {
+            timeAxis.setExtremes(event.xAxis[0].min, event.xAxis[0].max);
+            params.push("time=" + timeAxis.min/1000 + "," + timeAxis.max/1000);
+          }
+          params.push($('.comment_category').val() ? "category=" + $('.comment_category').val() : "");
+          params.push($('.user_filter').val() ? "emails=" + $('.user_filter').val() : "");
+          url += params.join('&');
+          // console.log(url);
+          $.getScript(url)
+        }
+      },
+      zoomType: 'x',
+      backgroundColor: '#f3f3f4'
+    },
+    credits: {
+      enabled: false
+    },
+    title: {
+      text: ''
+    },
+    xAxis: {
+      type: 'datetime'
+    },
+    yAxis: {
+      title: { text: '' },
+      labels: { enabled: false },
+      gridLineWidth: 0,
+      minorGridLineWidth: 0
+    },
+    legend: {
+      enabled: false
+    },
+    plotOptions: {
+      series: {
+        stacking: 'normal',
+        borderWidth: 0
+      }
+    },
+    series: [
+      <% @activities_by_category_date.each do |category, activities_by_date| %>
+      {
+        type: 'column',
+        name: '<%= category %>',
+        color: '<%= highcharts_series_color(category) %>',
+        data: [ <% activities_by_date.each_with_index do |a, i| %>
+          <%='['+(a.last_sent_date.to_i * 1000).to_s + ','+ a.activity_count.to_s+']' %> <%= ',' unless i + 1 == activities_by_date.length %>
+          <% end %> 
+        ]
+      },
+      <% end %>
+      // Dummy data series to make sure axis still shown when there is no data
+      {     
+        type: 'column',
+        data: [],
+        showInLegend: false
+      }
+    ]
+  });
+
+});
+</script>

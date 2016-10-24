@@ -1,0 +1,4 @@
+$('#loading-more').remove();
+$(window).off();
+// Pagination event handlers reloaded when timeline is rendered
+$("#vertical-timeline").append('<%= escape_javascript(render "timeline") %>');

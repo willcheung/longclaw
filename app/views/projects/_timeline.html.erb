@@ -1,53 +1,52 @@
-<!-- Form -->
-<div class="row header-box projects-box white-bg">
-    <div class="col-lg-12">
-        <div id="add-note-form" class="m-t">
-            
-            <%= render 'activities/form', :project_id => @project.id %>  
-            
-        </div>
+<% @activities_by_month.each do |month, activities| %>
+    <div class="vertical-timeline-month">
+        <h3 class="p-xs m-l-n-sm gray-bg"><%= month %></h3>
     </div>
-</div>
-
-<!-- Filter Section -->
-<%= render 'activities/filter', type: 'stream' %>
-
-
-<!-- Activities -->
-<div id="newsfeed">
-    <div class="row">
-        <div class="col-lg-12">
-            <div id="vertical-timeline" class="vertical-container light-timeline m-t">
-                <% @activities_by_month.each do |month, activities| %>
-                    <div class="vertical-timeline-month" data-myvalue='month'>
-                        <h3 class="p-xs m-l-n-sm gray-bg"><%= month %></h3>
-                    </div>
-                    
-                    <% activities.each do |a| %>
-                        <%= render 'activities/timeline_block', a: a %>
-                    <% end %>
-                <% end %>
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<% if @activities_by_month.empty? %>
-  <div class="p-m m-l m-t white-bg" style="width:100%;">
-    <h4 class="text-center">You don't have any emails or notes for this project!</h4>
-    <h4 class="text-center">To add a note for this project, type something into the area above and click on the <a class="btn btn-sm sticky-bg" style="display:inline;">Post</a> button.</h4>
-  </div>
+    
+    <% activities.each do |a| %>
+        <%= render 'activities/timeline_block', a: a %>
+    <% end %>
 <% end %>
 
-<%= javascript_include_tag 'activity_filter' %>
-
-<script type="text/javascript">
-  $("#newsfeed-link").parent().addClass("active");
-
-  // $("#filter-timeline-expand").click(function() {
-  //   $("#timeline-filters").toggle();
-  // });
-  // $('#filter-timeline-expand').css( 'cursor', 'pointer' );
-  
-</script>
+<% if @activities_by_month.present? %>
+  <% if @last_page %>
+    <div class="timeline-end">
+        <hr>
+        <h3 class="text-mute-gray">You've reached the beginning.</h3>
+    </div>
+  <% else %>
+    <div class="text-center">
+      <button id="load-more" class="btn btn-primary m-b-lg">Read More <i class="fa fa-angle-double-down"></i></button>
+    </div>
+    <script type="text/javascript">
+    $(function () {
+      // Pagination/Infinite Scroll
+      var page = <%= @page %>
+      $('#load-more').click( function () {
+        $(this).prop("disabled", true);
+        $(this).replaceWith('<i id="loading-more" class="fa fa-spinner fa-3x fa-pulse m-b-lg"></i>');
+        page++;
+        var url = '<%= project_path(@project) %>/more?page=' + page + '&';
+        var params = [];
+        var timeAxis = $('#time-filter-highcharts').highcharts().xAxis[0]
+        params.push(timeAxis.min > timeAxis.dataMin || timeAxis.max < timeAxis.dataMax ? "time=" +  timeAxis.min/1000 + "," + timeAxis.max/1000 : "");
+        params.push($('.comment_category').val() ? "category=" + $('.comment_category').val() : "");
+        params.push($('.user_filter').val() ? "emails=" + $('.user_filter').val() : "");
+        url += params.join('&');
+        $.getScript(url);
+      });
+      var win = $(window);
+      win.scroll(function () {
+        if ($(document).height() - win.height() == win.scrollTop()) {
+          $('#load-more').click();
+        }
+      });
+    });
+    </script>
+  <% end %>
+<% elsif params[:action] == "filter_timeline" %>
+    <div class="timeline-end" style="height:0;">
+        <hr>
+        <h3 class="text-mute-gray">You've filtered everything out.</h3>
+    </div>
+<% end %>

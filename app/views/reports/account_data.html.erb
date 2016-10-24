@@ -8,21 +8,9 @@
     <div class="ibox-content">
         <div class="row">
             <div class="col-md-4 text-center">
-                <div class="metric <%= if @risk_score > 80.0
-                                         "text-danger"
-                                        elsif @risk_score > 60.0
-                                         "text-warning"
-                                        else
-                                         "text-success"
-                                        end %>">
+                <div class="metric <%= risk_color(@risk_score) %>">
                     <div class="metric-title">
-                        <h4><%= if @risk_score > 80.0
-                                    "High"
-                                elsif @risk_score > 60.0 
-                                    "Medium"
-                                else
-                                    "Low"
-                                end %> Risk</h4>
+                        <h4><%= risk_level(@risk_score) %></h4>
                     </div>
                     <div class="metric-content">
                         <h2 style="font-weight:600;font-size:46px"><%= @risk_score %></h2>

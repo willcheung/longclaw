@@ -1,8 +1,9 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh]
+  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
+  before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
 
   # GET /projects
   # GET /projects.json
@@ -35,34 +36,22 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    @category_param = []
-    @filter_email = []
-    @final_filter_user = Activity.all_involved_user(@project, current_user)
-    
-    activities = Activity.get_activity_by_filter(@project, params)
-    
-    if(!params[:category].nil? and !params[:category].empty?)
-      @category_param = params[:category].split(',')
-    end
-
-    if(!params[:emails].nil? and !params[:emails].empty?)
-      @filter_email = params[:emails].split(',')
-    end
-
-    # filter out not visible items
-    @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
-    activities_by_date_temp = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
-
+    # get data for user filter
+    @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
     @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
-    
-    @notifications = @project.notifications.order(:is_complete, :original_due_date)
+  end
+
+  def filter_timeline
+    respond_to :js
+  end
+
+  def more_timeline
+    respond_to :js
   end
 
   def pinned_tab
-    @pinned_activities = @project.activities.pinned.includes(:comments)
-    # filter out not visible items
-    @pinned_activities = @pinned_activities.select {|a| a.is_visible_to(current_user) }
+    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
 
     render "show"
   end
@@ -120,14 +109,13 @@ class ProjectsController < ApplicationController
 
   def network_map
     respond_to do |format|
-      format.text { render file: 'app/views/projects/map_astellas.txt', layout: false, content_type: 'text/plain' }
       format.json { render json: @project.network_map}
     end
   end 
 
   def lookup
-    pinned = @project.activities.pinned.where(category: 'Conversation')
-    meetings = @project.activities.where(category: 'Meeting')
+    pinned = @project.conversations.pinned
+    meetings = @project.meetings
     members = (@project.users + @project.contacts).map do |m|
       pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
@@ -141,7 +129,6 @@ class ProjectsController < ApplicationController
       }
     end
     respond_to do |format|
-      format.text { render file: 'app/views/projects/lookup_astellas.txt', layout: false, content_type: 'text/plain' }
       format.json { render json: members }
     end
   end
@@ -232,27 +219,19 @@ class ProjectsController < ApplicationController
     render :json => {:success => true, :msg => ''}.to_json
   end
 
-  def activity_count
-
-
-  end
-
   private
 
   def get_show_data
     # metrics
-    @project_last_activity_date = @project.activities.conversations.maximum("activities.last_sent_date")
-    project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
-    @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
-    visible_activities = @project.activities.select { |a| a.is_visible_to(current_user) }
-
-    # for risk counts, show every risk regardless of private conversation
-    @project_open_risks_count = @project.notifications.open.risks.count
-
-    # select all open tasks regardless of private conversation
-    @project_open_tasks_count = @project.notifications.open.count
-    @project_pinned_count = @project.activities.pinned.count
     @project_risk_score = @project.current_risk_score(current_user.time_zone)
+    @project_open_risks_count = @project.notifications.open.risks.count
+    @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
+    @project_pinned_count = @project.activities.pinned.count
+    @project_open_tasks_count = @project.notifications.open.count
+
+    # old metrics
+    # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
+    # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
 
     # project people
     @project_members = @project.project_members
@@ -264,6 +243,40 @@ class ProjectsController < ApplicationController
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
+  end
+
+  def load_timeline
+    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments)
+    # filter by categories
+    @filter_category = []
+    if params[:category].present?
+      @filter_category = params[:category].split(',')
+      activities = activities.where(category: @filter_category)
+    end
+    # filter by people
+    @filter_email = []
+    if params[:emails].present?
+      @filter_email = params[:emails].split(',')
+      # filter for Meetings/Conversations where all people participated
+      where_email_clause = @filter_email.map { |e| "\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{e}\"}]'::jsonb" }.join(' AND ')
+      # filter for Notes written by any people included
+      users = User.where(email: @filter_email).pluck(:id)
+      where_email_clause += " OR posted_by IN ('#{users.join("','")}')" if users.present?
+      activities = activities.where(where_email_clause)
+    end
+    # filter by time
+    @filter_time = []
+    if params[:time].present?
+      @filter_time = params[:time].split(',').map(&:to_i)
+      # filter for Meetings/Notes in time range + Conversations that have at least 1 email message in time range
+      activities = activities.where("EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{@filter_time[0]} AND #{@filter_time[1]} OR ((email_messages->0->>'sentDate')::integer <= #{@filter_time[1]} AND (email_messages->-1->>'sentDate')::integer >= #{@filter_time[0]} )")
+    end
+    # pagination, must be after filters to have accurate count!
+    page_size = 10
+    @page = params[:page].blank? ? 1 : params[:page].to_i
+    @last_page = activities.count <= (page_size * @page) # check whether there is another page to load
+    activities = activities.limit(page_size).offset(page_size * (@page - 1))
+    @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
   end
 
   def bulk_update_owner(array_of_id, new_owner)

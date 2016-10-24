@@ -43,6 +43,7 @@ class Activity < ActiveRecord::Base
   scope :notes, -> { where category: CATEGORY[:Note] }
   scope :meetings, -> { where category: CATEGORY[:Meeting] }
   scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
+  scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
 
   acts_as_commentable
 
@@ -275,101 +276,6 @@ class Activity < ActiveRecord::Base
     self.email_messages = em
     
     self.save
-  end
-
-  def self.all_involved_user(project, user)
-    final_filter_user = []
-
-    # get all possbible email options
-    total_activities_email = project.activities.select('to','from','cc','posted_by','category','is_public').includes(:user).select {|a| a.is_visible_to(user) }
-
-    tempSet = Set.new
-    total_activities_email.each do |a|
-      a.email_addresses.each do |e|
-        tempSet.add(e)
-      end
-      #add notes post_by email
-      if !a.user.nil?
-        tempSet.add(a.user.email)
-      end
-    end
-
-    filter_user = User.where('email in (?)',tempSet.to_a)
-    filter_contact = Contact.where('email in (?)',tempSet.to_a)
-     
-    filter_contact.each do |c|
-      u = User.new
-      u.first_name = c.first_name
-      u.last_name = c.last_name
-      u.email = c.email
-      if u.first_name.blank? and u.last_name.blank?
-        u.first_name  = c.email
-      end
-      #avoid contacts with same email
-      if tempSet.include?(c.email)
-        final_filter_user.push(u)
-        tempSet.delete(c.email)
-      end
-    end
-
-    filter_user.each do |u|
-      if u.first_name.blank? and u.last_name.blank?
-        u.first_name  = u.email
-      end
-      final_filter_user.push(u)
-      tempSet.delete(u.email)
-    end
-
-    tempSet.each do |s|
-      u = User.new
-      u.first_name = s
-      u.last_name = ''
-      u.email = s
-      final_filter_user.push(u)
-    end
-
-    final_filter_user = final_filter_user.sort_by {|u| u.first_name.downcase}
-
-    return final_filter_user
-  end
-
-  def self.get_activity_by_filter(project, params)
-    activities = []
-
-    # filter by params category
-    if(!params[:category].nil? and !params[:category].empty?)
-      category_param = params[:category].split(',')
-      temp_activities = project.activities.where('category in (?)',category_param).includes(:comments, :user)
-    else
-      # todo: Right now anyone can mark anything as private ~ should only recipient of activity be able to do it?
-      temp_activities = project.activities.includes(:comments, :user)
-    end
-
-    # filter by params email
-    if(!params[:emails].nil? and !params[:emails].empty?)
-      filter_email = params[:emails].split(',')
-
-      temp_activities.each do |a|
-        filter_email.each do |e|
-          if a.category==CATEGORY[:Note]
-            if a.user.email == e
-              activities.push(a)
-              break
-            end
-          else
-            if a.email_addresses.include?(e)
-              activities.push(a)
-              break
-            end
-          end
-        end
-      end
-    else
-      activities = temp_activities
-    end
-
-    return activities
-
   end
 
   private
