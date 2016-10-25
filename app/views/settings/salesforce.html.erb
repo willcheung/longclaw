@@ -72,7 +72,7 @@
                       <tr>
                         <td class="col-lg-2"><%= a.account.name %></td>
                         <td class="col-lg-5"><%= a.salesforce_account_name %></td>
-                        <td class="col-lg-5"><%= a.salesforce_opportunities.map { |o| "* <strong>" + o.name + "</strong>, " + number_to_currency(o.amount, unit: "$", precision: 0) + ", " + o.stage_name}.join("<br>").html_safe %></td>
+                        <td class="col-lg-5"><ul><%= a.salesforce_opportunities.map { |o| "<li> <strong>" + o.name + "</strong>, " + number_to_currency(o.amount, unit: "$", precision: 0) + ", " + o.stage_name + ", isClosed: #{o.is_closed}, isWon: #{o.is_won}, close_date: #{o.close_date}" + "</li>"}.join("").html_safe %></ul></td>
                         <td><a href="/delete_salesforce_account/<%=a.id%>"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
                       </tr>
                     <% end %>
@@ -119,6 +119,7 @@ $('#salesforce-opp-refresh').click(function(){
         },
         complete: function() {
             $('#salesforce-opp-refresh .fa.fa-refresh').removeClass('fa-spin');
+            location.reload();
         }
     });
 });

@@ -11,6 +11,7 @@
 #  is_closed                 :boolean
 #  is_won                    :boolean
 #  stage_name                :string
+#  close_date                :date
 #  renewal_date              :date
 #  contract_start_date       :date
 #  contract_end_date         :date
@@ -38,7 +39,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).is_linked
 
     sfdc_accounts.each do |a|
-    	query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"
+    	query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"
 
     	opportunities = SalesforceAccount.query_salesforce(client, query_statement)
 
@@ -51,11 +52,12 @@ class SalesforceOpportunity < ActiveRecord::Base
     						#{opp.IsClosed}, 
     						#{opp.IsWon}, 
     						#{SalesforceOpportunity.sanitize(opp.StageName)},
+    						'#{opp.CloseDate}',
     						'#{Time.now}', '#{Time.now}')"
     	end
 
-    	insert = 'INSERT INTO "salesforce_opportunities" ("salesforce_opportunity_id", "salesforce_account_id", "name", "description", "amount", "is_closed", "is_won", "stage_name", "created_at", "updated_at") VALUES'
-    	on_conflict = 'ON CONFLICT (salesforce_opportunity_id) DO UPDATE SET salesforce_account_id = EXCLUDED.salesforce_account_id, name = EXCLUDED.name, description = EXCLUDED.description, amount = EXCLUDED.amount, is_closed = EXCLUDED.is_closed, is_won = EXCLUDED.is_won, stage_name = EXCLUDED.stage_name, updated_at = EXCLUDED.updated_at'
+    	insert = 'INSERT INTO "salesforce_opportunities" ("salesforce_opportunity_id", "salesforce_account_id", "name", "description", "amount", "is_closed", "is_won", "stage_name", "close_date", "created_at", "updated_at") VALUES'
+    	on_conflict = 'ON CONFLICT (salesforce_opportunity_id) DO UPDATE SET salesforce_account_id = EXCLUDED.salesforce_account_id, name = EXCLUDED.name, description = EXCLUDED.description, amount = EXCLUDED.amount, is_closed = EXCLUDED.is_closed, is_won = EXCLUDED.is_won, stage_name = EXCLUDED.stage_name, close_date = EXCLUDED.close_date, updated_at = EXCLUDED.updated_at'
       values = val.join(', ')
 
       if !val.empty?

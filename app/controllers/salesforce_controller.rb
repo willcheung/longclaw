@@ -136,6 +136,7 @@ class SalesforceController < ApplicationController
     salesforce_account = SalesforceAccount.eager_load(:account).find_by(id: params[:id], contextsmith_organization_id: current_user.organization_id)
 
     if !salesforce_account.nil?
+      salesforce_account.salesforce_opportunities.destroy_all
       salesforce_account.contextsmith_account_id = nil
       salesforce_account.save
     end

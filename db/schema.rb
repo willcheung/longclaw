@@ -239,6 +239,7 @@ ActiveRecord::Schema.define(version: 20161023220926) do
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
+    t.date     "close_date"
     t.date     "renewal_date"
     t.date     "contract_start_date"
     t.date     "contract_end_date"
