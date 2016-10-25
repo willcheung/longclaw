@@ -116,32 +116,27 @@ class SalesforceController < ApplicationController
       salesforce_account.contextsmith_account_id = params[:account_id]
       salesforce_account.save
     end
-
-    account = Account.find_by(id: params[:account_id])
-    if !account.nil?
-      account.salesforce_id = params[:salesforce_id]
-      account.save
-    end
     
     respond_to do |format|
       format.html { redirect_to settings_salesforce_path }
     end
   end
 
-  def refresh
+  def refresh_accounts
     SalesforceAccount.load(current_user)
-
-    render :text => ' '
-         
+    render :text => ' '   
   end
 
-  def remove_link
+  def refresh_opportunities
+    SalesforceOpportunity.load(current_user)
+    render :text => ' '
+  end
+
+  def remove_account_link
     salesforce_account = SalesforceAccount.eager_load(:account).find_by(id: params[:id], contextsmith_organization_id: current_user.organization_id)
 
     if !salesforce_account.nil?
-      if !salesforce_account.account.nil? 
-        salesforce_account.account.salesforce_id = ''
-      end
+      salesforce_account.salesforce_opportunities.destroy_all
       salesforce_account.contextsmith_account_id = nil
       salesforce_account.save
     end

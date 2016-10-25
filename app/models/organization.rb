@@ -15,7 +15,7 @@ class Organization < ActiveRecord::Base
 	has_many :users
 	has_many :accounts
   has_many :oauth_users
-  has_many :salesforce_accounts, dependent: :destroy
+  has_many :salesforce_accounts, foreign_key: "contextsmith_organization_id"
 
   validates :domain, uniqueness: true
 

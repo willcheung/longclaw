@@ -10,15 +10,20 @@
 #  contextsmith_organization_id :uuid             not null
 #  created_at                   :datetime         not null
 #  updated_at                   :datetime         not null
+#  custom_fields                :hstore
 #
 # Indexes
 #
+#  index_salesforce_accounts_on_custom_fields          (custom_fields)
 #  index_salesforce_accounts_on_salesforce_account_id  (salesforce_account_id) UNIQUE
 #
 
 class SalesforceAccount < ActiveRecord::Base
 	belongs_to  :organiztion, foreign_key: "contextsmith_organization_id"
 	belongs_to :account, foreign_key: "contextsmith_account_id"
+  has_many :salesforce_opportunities, primary_key: "salesforce_account_id", primary_key: "salesforce_account_id"
+
+  scope :is_linked, -> {where("contextsmith_account_id is not null")}
    
   def self.connect_salesforce(current_user)
     salesforce_client_id = ENV['salesforce_client_id']
@@ -80,10 +85,10 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   # 
   # Heroku statics     | memory per transaction|
-  # queryRange: 1000   | 36.1M                 |
-  # queryRange: 500    | 12.4M                 |
+  # query_range: 1000   | 36.1M                 |
+  # query_range: 500    | 12.4M                 |
   # 
-  # queryRange higher than 1000 may cause Error R14 (Memory quota exceeded) on heroku
+  # query_range higher than 1000 may cause Error R14 (Memory quota exceeded) on heroku
   # 
   # 
   # for 26,394 records of salesforce data, the processing time is about 28.2 s
@@ -101,14 +106,11 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   # 
   ################################################################################################## 
-	def self.load(current_user, save_in_db=true)
+	def self.load(current_user, query_range=500)
 		client = connect_salesforce(current_user)
+    return if client.nil?
 
-    if client.nil?
-      return
-    end
 
-    queryRange = 500
     firstQuery = true   
     last_Created_Id = nil
 
@@ -119,10 +121,10 @@ class SalesforceAccount < ActiveRecord::Base
     while true
       # Query salesforce
       if firstQuery
-        query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT " + queryRange.to_s
+        query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT " + query_range.to_s
         firstQuery = false
       else
-        query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT " + queryRange.to_s
+        query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT " + query_range.to_s
       end
       
       salesforce_accounts = query_salesforce(client, query_statement)
@@ -165,11 +167,13 @@ class SalesforceAccount < ActiveRecord::Base
         on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
         values = val.join(', ')
 
-        if !val.empty? and save_in_db
+        if !val.empty?
           SalesforceAccount.transaction do
             # Insert activities into database
             SalesforceAccount.connection.execute([insert,values,on_conflict].join(' '))
           end
+
+          val = []
         end
       end
     end
