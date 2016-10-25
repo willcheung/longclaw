@@ -86,4 +86,8 @@ Longclaw::Application.routes.draw do
   post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'
   get 'home/access_denied'
 
+  scope "hooks", controller: :hooks do
+    post "jira"
+    get "jira_setup"
+  end
 end
