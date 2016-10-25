@@ -48,7 +48,7 @@ class SalesforceController < ApplicationController
     	if !params[:pid].nil?
     		@projects.each do |p|
     			if p.id == params[:pid]
-            @final_filter_user = Activity.all_involved_user(p, current_user)
+            @final_filter_user = p.all_involved_people(current_user.email)
             activities = Activity.get_activity_by_filter(p, params)
             @project_risk_score = p.current_risk_score(current_user.time_zone)
             @project = p
@@ -56,7 +56,7 @@ class SalesforceController < ApplicationController
     			end
     		end
   		else
-        @final_filter_user = Activity.all_involved_user(@projects[0], current_user)
+        @final_filter_user = @projects[0].all_involved_people(current_user.email)
         activities = Activity.get_activity_by_filter(@projects[0], params)
         
         @project_risk_score = @projects[0].current_risk_score(current_user.time_zone)
