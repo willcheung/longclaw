@@ -236,7 +236,6 @@ ActiveRecord::Schema.define(version: 20161023220926) do
     t.string   "name",                                              default: "", null: false
     t.text     "description"
     t.decimal  "amount",                    precision: 8, scale: 2
-    t.decimal  "decimal",                   precision: 8, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -251,6 +250,7 @@ ActiveRecord::Schema.define(version: 20161023220926) do
   end
 
   add_index "salesforce_opportunities", ["custom_fields"], name: "index_salesforce_opportunities_on_custom_fields", using: :gin
+  add_index "salesforce_opportunities", ["salesforce_opportunity_id"], name: "index_salesforce_opportunities_on_salesforce_opportunity_id", unique: true, using: :btree
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "first_name",             default: "",    null: false

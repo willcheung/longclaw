@@ -122,14 +122,17 @@ class SalesforceController < ApplicationController
     end
   end
 
-  def refresh
+  def refresh_accounts
     SalesforceAccount.load(current_user)
-
-    render :text => ' '
-         
+    render :text => ' '   
   end
 
-  def remove_link
+  def refresh_opportunities
+    SalesforceOpportunity.load(current_user)
+    render :text => ' '
+  end
+
+  def remove_account_link
     salesforce_account = SalesforceAccount.eager_load(:account).find_by(id: params[:id], contextsmith_organization_id: current_user.organization_id)
 
     if !salesforce_account.nil?

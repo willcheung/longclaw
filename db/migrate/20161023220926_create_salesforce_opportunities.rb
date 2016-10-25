@@ -7,7 +7,7 @@ class CreateSalesforceOpportunities < ActiveRecord::Migration
     	t.string	:salesforce_account_id, null: false, default: ""
     	t.string 	:name, null: false, default: ""
     	t.text		:description
-    	t.decimal :amount, :decimal, :precision => 8, :scale => 2
+    	t.decimal :amount, :precision => 8, :scale => 2
     	t.boolean :is_closed
     	t.boolean :is_won
     	t.string	:stage_name
@@ -22,8 +22,9 @@ class CreateSalesforceOpportunities < ActiveRecord::Migration
     end
 
     add_column :salesforce_accounts, :custom_fields, :hstore
-    remove_column :accounts, :salesforce_id
+    remove_column :accounts, :salesforce_id, :string
 
+    add_index :salesforce_opportunities, :salesforce_opportunity_id, unique: true
     add_index :salesforce_opportunities, :custom_fields, using: :gin
     add_index :salesforce_accounts, :custom_fields, using: :gin
   end
