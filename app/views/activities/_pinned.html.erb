@@ -99,13 +99,31 @@
         </div>
         <% elsif a.category == Activity::CATEGORY[:JIRA] %>
         <h3 class="font-bold">
-            <%= a.title %>
+            <a href="<%= a.email_messages.first.issue.self.sub(/(?<=atlassian\.net\/).*/, "browse/" + a.email_messages.first.issue['key']) %>"><%= a.title %></a>
             <small class="m-l-md font-normal"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
+            <span class="label pull-right"><%= a.email_messages.first.issue.fields.status.name %></span>
             <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" style="color:#ed5565" title="Private"></i></span>
         </h3>
 
         <div class="chat-discussion">
-            <div><%= a.note %></div>
+            <div><strong>Description:</strong> <%= a.note %></div>
+            <% if a.email_messages.first.issue.fields.comment.total > 0 %>
+                <div class="more-messages">
+                    <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize(a.email_messages.first.issue.fields.comment.total, 'comment') %> on JIRA</a>
+                </div>
+            <% end %>
+
+            <% a.email_messages.first.issue.fields.comment.comments.each do |c| %>
+                <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" style="display:none;" >
+                    <div class="chat-message left">
+                        <%= get_profile_pic(c.author.displayName, c.author.emailAddress, "message-avatar") %>
+                        <div class="message">
+                            <span class="message-author" href="#"> <%=c.author.displayName %> </span> commented on <span class="message-date"><%= c.updated.to_time.strftime("%b %d") %></span>
+                            <span class="message-content"><%= simple_format(c.body) %></span>
+                        </div>
+                    </div>
+                </div>
+            <% end %>
             <div class="action-links">
               <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
               &sdot;
