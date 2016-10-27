@@ -23,15 +23,20 @@
       // Pagination/Infinite Scroll
       var page = <%= @page %>
       $('#load-more').click( function () {
-        $(this).prop("disabled", true);
         $(this).replaceWith('<i id="loading-more" class="fa fa-spinner fa-3x fa-pulse m-b-lg"></i>');
         page++;
-        var url = '<%= project_path(@project) %>/more?page=' + page + '&';
-        var params = [];
-        var timeAxis = $('#time-filter-highcharts').highcharts().xAxis[0]
-        params.push(timeAxis.min > timeAxis.dataMin || timeAxis.max < timeAxis.dataMax ? "time=" +  timeAxis.min/1000 + "," + timeAxis.max/1000 : "");
-        params.push($('.comment_category').val() ? "category=" + $('.comment_category').val() : "");
-        params.push($('.user_filter').val() ? "emails=" + $('.user_filter').val() : "");
+        var url = '<%= project_path(@project) %>/more?';
+        var params = ['page=' + page];
+        var timeAxis = $('#time-filter-highcharts').highcharts().xAxis[0];
+        if (timeAxis.min > timeAxis.dataMin || timeAxis.max < timeAxis.dataMax) {
+          params.push("time=" +  timeAxis.min/1000 + "," + timeAxis.max/1000);
+        } 
+        if ($('.comment_category').val()) { 
+          params.push("category=" + $('.comment_category').val()); 
+        }
+        if ($('.user_filter').val()) { 
+          params.push("emails=" + $('.user_filter').val()); 
+        }
         url += params.join('&');
         $.getScript(url);
       });
