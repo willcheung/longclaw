@@ -55,16 +55,18 @@
                 <% end %>
 
                 <div class="action-links">
-                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
-                  &sdot;
+                    <strong><a href="#" id="reply"><i class="fa fa-reply-all" aria-hidden="true"></i> Reply Email</a></strong>
+                    &sdot;
+                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                    &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
                       true: raw('<a>Mark Private</a>')
                     }  %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
-                <% unless params[:action] == "daily_summary" %>
-                  &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= a.notifications.size %>)</a>
-                <% end %>
+                    &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                    <% unless params[:action] == "daily_summary" %>
+                    &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= a.notifications.size %>)</a>
+                    <% end %>
                 </div>
             </div> <!-- chat discussion -->
         <% unless params[:action] == "daily_summary" %>
