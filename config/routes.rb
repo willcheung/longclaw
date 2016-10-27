@@ -14,9 +14,22 @@ Longclaw::Application.routes.draw do
 
     resources :contacts, only: [:create, :update, :destroy]
     resources :projects do
+      member do
+        get "render_pinned_tab"
+        get "pinned" => 'projects#pinned_tab'
+        get "tasks" => 'projects#tasks_tab'
+        get "insights" => 'projects#insights_tab'
+        get "arg" => 'projects#arg_tab'
+        get "filter" => 'projects#filter_timeline'
+        get "more" => 'projects#more_timeline'
+        get "network_map"
+        get "lookup"
+        post "refresh"
+      end
       resources :project_subscribers, param: :user_id, only: [:destroy, :create]
       post "project_subscribers/create_all"
     end
+    post "/project_bulk" => 'projects#bulk'
     delete "project_subscribers/destroy_other"
     resources :project_members
     resources :users
@@ -28,25 +41,13 @@ Longclaw::Application.routes.draw do
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
     get "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
 
-    get "projects/:id/render_pinned_tab" => 'projects#render_pinned_tab'
-    get "projects/:id/pinned" => 'projects#pinned_tab'
-    get "projects/:id/tasks" => 'projects#tasks_tab'
-    get "projects/:id/insights" => 'projects#insights_tab'
-    get "projects/:id/arg" => 'projects#arg_tab'
-    get "projects/:id/filter" => 'projects#filter_timeline'
-    get "projects/:id/more" => 'projects#more_timeline'
-
-    get "projects/:id/network_map" => 'projects#network_map'
-    get "projects/:id/lookup" => 'projects#lookup'
-
-    post "projects/:id/refresh" => 'projects#refresh'
-    post "/project_bulk" => 'projects#bulk'
-
-    get "settings/" => 'settings#index'
-    get "settings/users" => 'settings#users'
-    get "settings/salesforce" => 'settings#salesforce'
-    get "settings/super_user" => 'settings#super_user'
-    post "settings/invite_user/:user_id" => 'settings#invite_user'
+    scope "settings", controller: :settings, as: 'settings' do
+      get "/" => "settings#index"
+      get "users"
+      get "salesforce" 
+      get "super_user"
+      post "invite_user/:user_id" => 'settings#invite_user'
+    end
 
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
     get "notifications/show_email_body/:id" => 'notifications#show_email_body'
@@ -58,21 +59,23 @@ Longclaw::Application.routes.draw do
     end
     #resources :organizations  # not using yet
 
-    get "search/results"
-    get "search/autocomplete_project_name"
-    get "search/autocomplete_project_subs"
-    get "search/autocomplete_project_member"
-    get "search/autocomplete_salesforce_account_name"
+    scope "search", controller: :search, as: 'search' do
+      get "results"
+      get "autocomplete_project_name"
+      get "autocomplete_project_subs"
+      get "autocomplete_project_member"
+      get "autocomplete_salesforce_account_name"
+    end
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects", "onboarding/fill_in_info"
     post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
     
-    # get 'reports/touches/team' => 'reports#touches_by_team'
-    get 'reports/accounts'
-    get 'reports/accounts_dashboard'
-    get 'reports/dashboard_data/:sort' => 'reports#dashboard_data'
-    get 'reports/account_data/:id' => 'reports#account_data'
-    # get 'reports/team'
-    # get 'reports/lifecycle'
+    scope "reports", controller: :reports, as: 'reports' do
+      get 'accounts'
+      get 'accounts_dashboard'
+      get 'dashboard_data/:sort' => 'reports#dashboard_data'
+      get 'account_data/:id' => 'reports#account_data'
+    end
+
   end
 
   devise_scope :user do # Unauthenticated user
@@ -84,4 +87,8 @@ Longclaw::Application.routes.draw do
   post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'
   get 'home/access_denied'
 
+  scope "hooks", controller: :hooks do
+    post "jira"
+    get "jira_setup"
+  end
 end

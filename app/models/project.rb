@@ -36,18 +36,23 @@ class Project < ActiveRecord::Base
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
+  has_many  :notifications_for_email, -> { 
+    where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc)
+    .order(:is_complete, :original_due_date)
+  }, class_name: "Notification"
 
-  has_many  :activities, -> { order last_sent_date: :desc }, dependent: :destroy
-  has_many  :conversations, -> { conversations }, class_name: "Activity"
-  has_many  :notes, -> { notes }, class_name: "Activity"
-  has_many  :meetings, -> { meetings }, class_name: "Activity"
+  has_many  :activities, -> { reverse_chronological }, dependent: :destroy
+  has_many  :conversations, -> { conversations.reverse_chronological }, class_name: "Activity"
+  has_many  :notes, -> { notes.reverse_chronological }, class_name: "Activity"
+  has_many  :meetings, -> { meetings.reverse_chronological }, class_name: "Activity"
   has_many  :conversations_for_email, -> { 
-    conversations.from_yesterday
+    from_yesterday.reverse_chronological.conversations
     .select(:category, :title, :from, :to, :cc, :project_id, :last_sent_date, :is_public, 
       'jsonb_array_length(email_messages) AS num_messages', 
       'email_messages->-1 AS last_msg') }, class_name: "Activity"
-  has_many  :notes_for_email, -> { notes.from_yesterday }, class_name: "Activity"
-  has_many  :meetings_for_email, -> { meetings.from_yesterday }, class_name: "Activity"
+  has_many  :other_activities_for_email, -> { 
+    from_yesterday.reverse_chronological
+    .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
 
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column

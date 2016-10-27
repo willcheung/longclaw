@@ -12,6 +12,10 @@
         <div class="vertical-timeline-icon warning-bg">
             <i class="fa fa-calendar"></i>
         </div>
+    <% elsif a.category == Activity::CATEGORY[:JIRA] %>
+        <div class="vertical-timeline-icon info-bg">
+            <i class="fa fa-exclamation"></i>
+        </div>
     <% end %>
     
     <span class="vertical-date left"><%= Time.zone.at(a.last_sent_date).strftime("%b %d") %><br />
@@ -110,6 +114,45 @@
                       true: raw('<a>Mark Private</a>')
                     }  %>
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                </div>
+            </div> <!-- chat discussion -->
+
+        <% elsif a.category == Activity::CATEGORY[:JIRA] %>
+            <h3>
+                <%= a.title %>
+                <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
+                <span class="label pull-right"><%= a.email_messages.first.issue.fields.status.name %></span>
+                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" style="color:#ed5565" title="Private"></i></span>
+            </h3>
+
+            <div class="chat-discussion">
+                <div><strong>Description:</strong> <%= a.note %></div>
+                <% if a.email_messages.first.issue.fields.comment.total > 0 %>
+                    <div class="more-messages">
+                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize(a.email_messages.first.issue.fields.comment.total, 'comment') %> on JIRA</a>
+                    </div>
+                <% end %>
+
+                <% a.email_messages.first.issue.fields.comment.comments.each do |c| %>
+                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" style="display:none;" >
+                        <div class="chat-message left">
+                            <%= get_profile_pic(c.author.displayName, c.author.emailAddress, "message-avatar") %>
+                            <div class="message">
+                                <span class="message-author" href="#"> <%=c.author.displayName %> </span> added a comment - <%= time_ago_in_words(c.updated.to_time) %> ago
+                                <span class="message-content"><%= simple_format(c.body) %></span>
+                            </div>
+                        </div>
+                    </div>
+                <% end %>
+                <div class="action-links">
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  &sdot;
+                    <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
+                      false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
+                      true: raw('<a>Mark Private</a>')
+                    }  %>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a href="<%= a.email_messages.first.issue.self.sub(/(?<=atlassian\.net\/).*/, "browse/" + a.email_messages.first.issue['key']) %>">View in JIRA <i class="fa fa-external-link"></i></a>
                 </div>
             </div> <!-- chat discussion -->
         <% end %>
