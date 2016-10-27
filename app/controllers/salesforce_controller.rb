@@ -101,19 +101,10 @@ class SalesforceController < ApplicationController
   end
 
   def link_salesforce_account
-    #check if contextsmith account is connected
-    if !params[:account_id].nil?
-      salesforce_account_duplicate = SalesforceAccount.where(contextsmith_account_id: params[:account_id])
-
-      salesforce_account_duplicate.each do |s|
-        s.contextsmith_account_id = nil
-        s.save
-      end
-    end
-
+    # One CS Account can link to many Salesforce Accounts
     salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
     if !salesforce_account.nil?
-      salesforce_account.contextsmith_account_id = params[:account_id]
+      salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save
     end
     

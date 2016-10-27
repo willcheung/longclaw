@@ -36,7 +36,7 @@ class Account < ActiveRecord::Base
     belongs_to  :organization
     belongs_to  :user, foreign_key: "owner_id"
 
-    has_one :salesforce_account, foreign_key: "contextsmith_account_id", dependent: :nullify
+    has_many :salesforce_accounts, foreign_key: "contextsmith_account_id", dependent: :nullify
 
     validates :name, presence: true, uniqueness: { scope: :organization, message: "There's already an account with the same name." }
 
