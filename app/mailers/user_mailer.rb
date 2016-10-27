@@ -14,21 +14,17 @@ class UserMailer < ApplicationMailer
 
   def daily_summary_email(user)
     @user = user
-    d_tz = Time.current.yesterday.midnight.utc
-
-    open_notifications = "((notifications.is_complete = false) OR (notifications.is_complete = true AND notifications.complete_date BETWEEN TIMESTAMP '#{d_tz}' AND TIMESTAMP '#{d_tz}' + INTERVAL '24 hours'))"
-
     sub = user.subscriptions
 
     unless sub.blank?
-      @updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).preload(:conversations_for_email, :notes_for_email, :meetings_for_email, :notifications)
+      @updates_today = Project.visible_to(user.organization_id, user.id).following(user.id).preload(:conversations_for_email, :other_activities_for_email, :notifications_for_email)
       @updates_today = @updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
         temp = proj.dup
         # temp = Project.new     # another option
         # assign relations before id
-        temp.activities = (proj.conversations_for_email + proj.notes_for_email + proj.meetings_for_email).select { |a| a.is_visible_to(user) }.sort  {|a,b| b.last_sent_date <=> a.last_sent_date }
-        temp.notifications = proj.notifications.where(open_notifications).order(:is_complete, :original_due_date)
+        temp.activities = (proj.conversations_for_email.visible_to(user.email) + proj.other_activities_for_email.visible_to(user.email)).sort  {|a,b| b.last_sent_date <=> a.last_sent_date }
+        temp.notifications = proj.notifications_for_email
         temp.account = proj.account
         # CAUTION: if id is assigned before the relations, assigned relation will be overwritten in actual record
         temp.id = proj.id
