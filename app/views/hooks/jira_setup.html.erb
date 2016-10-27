@@ -7,6 +7,11 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="row">
         <div class="col-lg-3">WebHook URL</div>
-        <div class="col-lg-9">https://<%= request.domain %>/hooks/jira</div>
+        <div class="col-lg-9">https://<%= request.host %>/hooks/jira</div>
     </div>
+    <div>request.domain: <%= request.domain %></div>
+    <div>request.host: <%= request.host %></div>
+    <div>request.host_with_port: <%= request.host_with_port %></div>
+    <div>request.raw_host_with_port: <%= request.raw_host_with_port %></div>
+    <div>request.subdomain: <%= request.subdomain %></div>
 </div>

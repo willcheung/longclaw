@@ -118,7 +118,7 @@
                     <div class="chat-message left">
                         <%= get_profile_pic(c.author.displayName, c.author.emailAddress, "message-avatar") %>
                         <div class="message">
-                            <span class="message-author" href="#"> <%=c.author.displayName %> </span> commented on <span class="message-date"><%= c.updated.to_time.strftime("%b %d") %></span>
+                            <span class="message-author" href="#"> <%=c.author.displayName %> </span> added a comment - <%= time_ago_in_words(c.updated.to_time) %> ago
                             <span class="message-content"><%= simple_format(c.body) %></span>
                         </div>
                     </div>
@@ -132,6 +132,7 @@
                   true: raw('<a>Mark Private</a>')
                 }  %>
               &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+              &sdot; <a href="<%= a.email_messages.first.issue.self.sub(/(?<=atlassian\.net\/).*/, "browse/" + a.email_messages.first.issue['key']) %>">View in JIRA <i class="fa fa-external-link"></i></a>
             </div>
         </div> <!-- chat discussion --> 
         <% end %>
