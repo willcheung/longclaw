@@ -131,7 +131,7 @@ module ApplicationHelper
     end
   end
 
-  def get_calendar_member_names(to, trailing_text="other", size_limit=4)
+  def get_calendar_member_names(to, trailing_text="other", size_limit=6)
     attendees_size = (to.nil? ? 0 : to.size)
 
     if attendees_size <= size_limit
@@ -151,9 +151,9 @@ module ApplicationHelper
     if start.to_date == end_t.to_date
       return start.strftime("%l:%M%P") + ' - ' + end_t.strftime("%l:%M%P")
     elsif start == start.midnight && end_t == end_t.midnight # if there is no time, date only
-      return start.strftime("%b %e %Y") + ' - ' + end_t.strftime("%b %e %Y")
+      return start.strftime("%b %e") + ' - ' + end_t.strftime("%b %e")
     else
-      return start.strftime("%b %e %Y,%l:%M%P") + ' - ' + end_t.strftime("%b %e %Y,%l:%M%P")
+      return start.strftime("%b %e,%l:%M%P") + ' - ' + end_t.strftime("%b %e,%l:%M%P")
     end
   end
 
