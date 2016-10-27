@@ -3,8 +3,8 @@ development:
   google_client_secret: kMCmqlzYF6pYp6L8-SIP8IGY
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
-  csback_base_url: http://64.201.248.179:8887
-  csback_script_base_url: http://64.201.248.179:8887
+  csback_base_url: http://104.198.4.24:80
+  csback_script_base_url: http://104.198.4.24:80
   salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
   salesforce_client_secret: 3550523996344810646
   salesforce_url_instance: https://na30.salesforce.com
@@ -17,8 +17,8 @@ test:
   google_client_secret: kMCmqlzYF6pYp6L8-SIP8IGY
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
-  csback_base_url: http://64.201.248.179:8888
-  csback_script_base_url: http://64.201.248.179:8888
+  csback_base_url: http://104.198.4.24:80
+  csback_script_base_url: http://104.198.4.24:80
 
 production:
   google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
