@@ -45,6 +45,7 @@ Longclaw::Application.routes.draw do
       get "users"
       get "salesforce" 
       get "super_user"
+      get "jira_setup"
       post "invite_user/:user_id" => 'settings#invite_user'
     end
 
@@ -86,8 +87,8 @@ Longclaw::Application.routes.draw do
   post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'
   get 'home/access_denied'
 
-  scope "hooks", controller: :hooks do
+  scope "hooks", controller: :hooks, as: 'hooks' do
     post "jira"
-    get "jira_setup"
   end
+
 end

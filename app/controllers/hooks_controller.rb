@@ -30,9 +30,4 @@ class HooksController < ApplicationController
     render nothing: true
   end
 
-  def jira_setup
-    # show webhook URL
-    # give user option to populate historical JIRA stuff?
-  end
-
 end

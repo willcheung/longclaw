@@ -40,4 +40,7 @@ class SettingsController < ApplicationController
 			format.js
 		end
 	end
+
+	def jira_setup
+	end
 end
