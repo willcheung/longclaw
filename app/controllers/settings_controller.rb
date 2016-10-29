@@ -41,6 +41,4 @@ class SettingsController < ApplicationController
 		end
 	end
 
-	def jira_setup
-	end
 end

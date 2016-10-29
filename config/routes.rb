@@ -45,7 +45,6 @@ Longclaw::Application.routes.draw do
       get "users"
       get "salesforce" 
       get "super_user"
-      get "jira_setup"
       post "invite_user/:user_id" => 'settings#invite_user'
     end
 
