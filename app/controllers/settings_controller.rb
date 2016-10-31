@@ -40,4 +40,5 @@ class SettingsController < ApplicationController
 			format.js
 		end
 	end
+
 end
