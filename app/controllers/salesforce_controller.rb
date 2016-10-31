@@ -48,7 +48,7 @@ class SalesforceController < ApplicationController
     	if !params[:pid].nil?
     		@projects.each do |p|
     			if p.id == params[:pid]
-            @final_filter_user = Activity.all_involved_user(p, current_user)
+            @final_filter_user = p.all_involved_people(current_user.email)
             activities = Activity.get_activity_by_filter(p, params)
             @project_risk_score = p.current_risk_score(current_user.time_zone)
             @project = p
@@ -56,7 +56,7 @@ class SalesforceController < ApplicationController
     			end
     		end
   		else
-        @final_filter_user = Activity.all_involved_user(@projects[0], current_user)
+        @final_filter_user = @projects[0].all_involved_people(current_user.email)
         activities = Activity.get_activity_by_filter(@projects[0], params)
         
         @project_risk_score = @projects[0].current_risk_score(current_user.time_zone)
@@ -101,26 +101,11 @@ class SalesforceController < ApplicationController
   end
 
   def link_salesforce_account
-    #check if contextsmith account is connected
-    if !params[:account_id].nil?
-      salesforce_account_duplicate = SalesforceAccount.where(contextsmith_account_id: params[:account_id])
-
-      salesforce_account_duplicate.each do |s|
-        s.contextsmith_account_id = nil
-        s.save
-      end
-    end
-
+    # One CS Account can link to many Salesforce Accounts
     salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
     if !salesforce_account.nil?
-      salesforce_account.contextsmith_account_id = params[:account_id]
+      salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save
-    end
-
-    account = Account.find_by(id: params[:account_id])
-    if !account.nil?
-      account.salesforce_id = params[:salesforce_id]
-      account.save
     end
     
     respond_to do |format|
@@ -128,20 +113,21 @@ class SalesforceController < ApplicationController
     end
   end
 
-  def refresh
+  def refresh_accounts
     SalesforceAccount.load(current_user)
-
-    render :text => ' '
-         
+    render :text => ' '   
   end
 
-  def remove_link
+  def refresh_opportunities
+    SalesforceOpportunity.load(current_user)
+    render :text => ' '
+  end
+
+  def remove_account_link
     salesforce_account = SalesforceAccount.eager_load(:account).find_by(id: params[:id], contextsmith_organization_id: current_user.organization_id)
 
     if !salesforce_account.nil?
-      if !salesforce_account.account.nil? 
-        salesforce_account.account.salesforce_id = ''
-      end
+      salesforce_account.salesforce_opportunities.destroy_all
       salesforce_account.contextsmith_account_id = nil
       salesforce_account.save
     end

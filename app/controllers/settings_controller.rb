@@ -14,7 +14,7 @@ class SettingsController < ApplicationController
 
 	def salesforce
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
-		@salesforce_link_accounts = SalesforceAccount.eager_load(:account).where('contextsmith_organization_id = ? and contextsmith_account_id IS NOT NULL',current_user.organization_id).order("lower(accounts.name)")
+		@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("lower(accounts.name)")
 		# try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
     @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
     if(@salesforce_user.nil?)

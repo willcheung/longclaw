@@ -37,8 +37,9 @@ Longclaw::Application.routes.draw do
     resources :salesforce, only: [:index]
     get "salesforce/disconnect/:id" => 'salesforce#disconnect'
     post "/link_salesforce" => 'salesforce#link_salesforce_account'
-    get "/salesforce_refresh" => 'salesforce#refresh'
-    get "/delete_salesforce_account/:id" => 'salesforce#remove_link'
+    post "/salesforce_refresh" => 'salesforce#refresh_accounts'
+    post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
+    get "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
 
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"

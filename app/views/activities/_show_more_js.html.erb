@@ -1,4 +1,5 @@
 <script>
+// Show More
 $(document).ready(function() {
     $(".show-more-<%= a.id.to_s %>").click(function() {
         $(".hidden-chat-message-<%= a.id.to_s %>").each(function() {
@@ -13,5 +14,13 @@ $(document).ready(function() {
     $(".tasks-link-<%= a.id %>").click(function() {
         $(".tasks-footer-<%= a.id %>").toggle();
     });
+});
+
+// Reply in new Gmail window
+$('#reply').click(function () {
+var left  = ($(window).width()/2)-(700/2),
+    top   = ($(window).height()/2)-(500/2),
+    popup = window.open ("https://mail.google.com/mail/?ui=2&view=cm&fs=1&tf=1&shva=1&authuser=wcheung@contextsmith.com&to=someone@example.com,someone@cs.com&su=SUBJECT&body=BODY", 
+        "popup", "menubar=no,location=no,status=no,width=700,height=500,top="+top+",left="+left);
 });
 </script>
