@@ -68,7 +68,13 @@ module ApplicationHelper
   def get_first_names(from, to, cc)
       a = []
 
-      a << get_first_name(from[0]["personal"]) if !from.empty?
+      if !from.empty?
+        if from[0]["personal"].nil?
+          a << from[0]["address"]
+        else
+          a << get_first_name(from[0]["personal"])
+        end
+      end
 
       unless to.nil? or to.empty?
         to.each do |n| 
