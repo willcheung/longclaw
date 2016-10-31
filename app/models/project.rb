@@ -339,6 +339,17 @@ class Project < ActiveRecord::Base
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
       )
+      UNION ALL
+      (
+      -- JIRA
+      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:JIRA]}' as category,
+            count(*) as activity_count
+      FROM activities 
+      WHERE category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      )
     SQL
 
     Activity.find_by_sql(query)
@@ -370,6 +381,30 @@ class Project < ActiveRecord::Base
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                ) as meetings
+        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
+      UNION ALL
+      (
+      -- Meetings directly from actvities table
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Note]}' as category, count(meetings.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date as sent_date, project_id
+                  FROM activities where category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                ) as meetings
+        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
+      UNION ALL
+      (
+      -- JIRA directly from actvities table
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:JIRA]}' as category, count(meetings.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date as sent_date, project_id
+                  FROM activities where category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as meetings
         ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
