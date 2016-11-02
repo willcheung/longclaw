@@ -59,7 +59,7 @@
                 <% end %>
 
                 <div class="action-links">
-                    <strong><a href="#" id="reply"><i class="fa fa-reply-all" aria-hidden="true"></i> Reply Email</a></strong>
+                    <strong><a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= last_recipients(a) %>&su=Re:+<%= URI.escape(a.title, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")) %>&body=<%= last_body_ref(a) %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"><i class="fa fa-reply-all" aria-hidden="true"></i> Reply Email</a></strong>
                     &sdot;
                     <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                     &sdot;

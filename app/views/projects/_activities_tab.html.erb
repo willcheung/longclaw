@@ -34,4 +34,21 @@
   $(function () {
     $("#newsfeed-link").parent().addClass("active");
   });
+
+  var popupWindowRef = null;
+  var prevPopup = null;
+
+  var openGmailComposePopup = function (strUrl, strTarget) {
+    if (popupWindowRef == null || popupWindowRef.closed) {
+      popupWindowRef = window.open(strUrl, strTarget, "left=0,top=0");
+    }
+    else if (prevPopup != strUrl) {   
+      popupWindowRef = window.open(strUrl, strTarget, "left=0,top=0");
+      popupWindowRef.focus();
+    }
+    else {
+      popupWindowRef.focus();
+    }
+    prevPopup = strUrl;
+  }
 </script>
