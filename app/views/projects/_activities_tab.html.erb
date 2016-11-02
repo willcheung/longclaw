@@ -39,11 +39,14 @@
   var prevPopup = null;
 
   var openGmailComposePopup = function (strUrl, strTarget) {
+    // var top = (window.screen.height/2) - (500/2);
+    // var left = (window.screen.width/2) - (700/2);
+    var strOptions = "width=700,height=500";
     if (popupWindowRef == null || popupWindowRef.closed) {
-      popupWindowRef = window.open(strUrl, strTarget, "left=0,top=0");
+      popupWindowRef = window.open(strUrl, strTarget, strOptions);
     }
     else if (prevPopup != strUrl) {   
-      popupWindowRef = window.open(strUrl, strTarget, "left=0,top=0");
+      popupWindowRef = window.open(strUrl, strTarget, strOptions);
       popupWindowRef.focus();
     }
     else {

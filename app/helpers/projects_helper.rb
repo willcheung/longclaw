@@ -26,6 +26,6 @@ module ProjectsHelper
     from += " <" + from_hash.address + ">" if from_hash.address
     body = ""
     body = URI.escape(last_msg.content.body, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")) unless last_msg.content.nil? || !last_msg.content.respond_to?(:body) 
-    "On " + sent_date + "," + from + " wrote:%0A%0A" + body
+    "%0A%0AOn " + sent_date + "," + from + " wrote:%0A%0A" + body
   end
 end
