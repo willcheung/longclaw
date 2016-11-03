@@ -21,7 +21,7 @@
 class SalesforceAccount < ActiveRecord::Base
 	belongs_to  :organiztion, foreign_key: "contextsmith_organization_id"
 	belongs_to :account, foreign_key: "contextsmith_account_id"
-  has_many :salesforce_opportunities, -> { order("close_date desc") }, primary_key: "salesforce_account_id", primary_key: "salesforce_account_id"
+  has_many :salesforce_opportunities, -> { order("close_date desc") }, primary_key: "salesforce_account_id"
 
   scope :is_linked, -> {where("contextsmith_account_id is not null")}
    
