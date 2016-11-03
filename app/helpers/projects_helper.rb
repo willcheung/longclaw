@@ -7,7 +7,7 @@ module ProjectsHelper
 		)
 	end
 
-  def last_recipients(a)
+  def last_msg_recipients(a)
     addresses = Set.new
     last_msg = a.email_messages.last
     from = last_msg.from || []
@@ -17,7 +17,11 @@ module ProjectsHelper
     (addresses - [current_user.email]).to_a * ","
   end
 
-  def last_body_ref(a)
+  def last_msg_subject(a)
+    "Re:+" + URI.escape(a.title, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+  end
+
+  def last_msg_body(a)
     last_msg = a.email_messages.last
     sent_date = Time.zone.at(last_msg.sentDate).strftime("%b %-d, %Y %I:%M %p")
     from_hash = last_msg.from.first
