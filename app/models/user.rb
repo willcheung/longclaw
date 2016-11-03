@@ -288,7 +288,8 @@ class User < ActiveRecord::Base
     data = JSON.parse(response.body)
 
     if data['access_token'].nil?
-      puts "Warning: access_token nil while refreshing token for user #{email}"
+      puts "Access_token nil while refreshing token for user #{email}"
+      update_attributes(oauth_access_token: "invalid")
       return false
     else
       update_attributes(
