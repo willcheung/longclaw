@@ -15,7 +15,7 @@
             <div class="modal-body">
               <div class="row">
                 <%# Render the new person form (passing modal => true to enable remote => true) %>
-                <%= render 'projects/form', f: f %>
+                <%= render 'projects/form', f: f, modal_id: modal_id %>
               </div>
             </div>
             
@@ -29,3 +29,10 @@
     </div>
   </div>
 </div>
+
+<script>
+    /* Switchery */
+    var elem = document.querySelector('.is_public-switch');
+    new Switchery(elem);
+    $('.best_in_place.switch').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { }); });
+</script>

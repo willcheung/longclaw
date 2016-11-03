@@ -305,10 +305,6 @@
         }
     });
 
-    /* Switchery */
-    var elem = document.querySelector('.is_public-switch');
-    new Switchery(elem);
-    $('.best_in_place.switch').bind("ajax:success", function () { new Switchery($(this).children('.is_public-switch')[0], { }); });
 
     /* Toggle Show Project Subs */
     $('.toggle-open').click( function () {

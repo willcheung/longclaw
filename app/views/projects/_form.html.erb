@@ -10,5 +10,11 @@
   
   <div class="col-md-4">
     <label class="select optional control-label" for="project_account_id">Open Collaboration &nbsp;&nbsp;<i data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can view and collaborate." class="fa fa-question-circle"></i></label>
-    <%= best_in_place @project, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch col-xs-3' %>
+    <% if modal_id == 'edit_project_modal' %>
+      <%= best_in_place @project, :is_public, :as => 'checkbox', collection: {false: raw("<input type=\"checkbox\" class=\"is_public-switch\" />"), true: raw("<input type=\"checkbox\" class=\"is_public-switch\" checked/>")}, :class => 'switch col-xs-3' %>
+    <% else %>
+      <div class="switch col-xs-3">
+        <%= f.check_box :is_public, checked: true, class: 'is_public-switch' %>
+      </div>
+    <% end %>
   </div>
