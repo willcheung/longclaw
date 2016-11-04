@@ -26,7 +26,7 @@ namespace :projects do
 	    	org.accounts.each do |acc| 
 		    	acc.projects.each do |proj|
 		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-		    		ContextsmithService.load_emails_from_backend(proj, nil, 60)
+		    		ContextsmithService.load_emails_from_backend(proj, nil, 100)
 		    		sleep(1)
 		    	end
 		    end
@@ -43,7 +43,8 @@ namespace :projects do
     	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
 	    		puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 1.year.ago.to_i, 300)
+	    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 150.days.ago.to_i, 300)
+	    		# 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
 	    		sleep(1)
 	    	end
 	    end

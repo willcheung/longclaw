@@ -134,8 +134,15 @@ class ProjectsController < ApplicationController
   end
 
   def refresh
-    ContextsmithService.load_emails_from_backend(@project, nil, 300)
-    ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 1.year.ago.to_i, 300)
+    # big refresh when no activities (normally a new stream), small refresh otherwise
+    if @project.activities.count == 0
+      ContextsmithService.load_emails_from_backend(@project, nil, 2000)
+      ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000) 
+      # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
+    else
+      ContextsmithService.load_emails_from_backend(@project, nil, 100)
+      ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 1.day.ago.to_i, 100)
+    end
     redirect_to :back
   end
 
