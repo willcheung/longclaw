@@ -18,7 +18,7 @@ module ProjectsHelper
   end
 
   def last_msg_subject(a)
-    "Re:+" + URI.escape(a.title, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+    URI.escape("Re: " + a.title, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
   end
 
   def last_msg_body(a)
@@ -28,8 +28,16 @@ module ProjectsHelper
     from = ""
     from += " \"" + from_hash.personal + "\"" if from_hash.personal
     from += " <" + from_hash.address + ">" if from_hash.address
-    body = ""
-    body = URI.escape(last_msg.content.body, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")) unless last_msg.content.nil? || !last_msg.content.respond_to?(:body) 
-    "%0A%0AOn " + sent_date + "," + from + " wrote:%0A%0A" + body
+    body = last_msg.content && last_msg.content.respond_to?(:body) ? last_msg.content.body : last_msg.content.to_s 
+    URI.escape("\n\nOn " + sent_date + "," + from + " wrote:\n\n" + body, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+  end
+
+  def smart_email_body(message)
+    body = message.content.nil? || message.content.is_a?(String) ? message.content : message.content.body
+    message.temporalItems.reverse_each do |i|
+      task = i.taskAnnotation
+      body.insert(task.endOffset, "</a>").insert(task.beginOffset, "<a class=\"suggested-action\">")
+    end if message.temporalItems
+    simple_format(body, {}, sanitize: false)
   end
 end

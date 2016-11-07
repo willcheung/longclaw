@@ -19,8 +19,7 @@ class ContextsmithService
     request = request.nil? ? "": ("&request=" + request.to_s)
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
        
-    ### TODO: Add "&request=true" to final_url
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + query + is_time + neg_sentiment #+ request
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + query + is_time + neg_sentiment + request
     puts "Calling backend service: " + final_url
 
     request_backend_service(final_url, project, save_in_db, "conversations", is_test)    
@@ -145,9 +144,10 @@ class ContextsmithService
       if type == "conversations"
         Contact.load(data, project, save_in_db)
         # always load activity before notification
-        result = Activity.load(data, project, save_in_db)
-        Notification.load(data, project, is_test)
-        return result
+        # result = Activity.load(data, project, save_in_db)
+        Activity.load(data, project, save_in_db)
+        # Notification.load(data, project, is_test)
+        # return result
       elsif type == "events"
         return Activity.load_calendar(data, project, save_in_db)
       end

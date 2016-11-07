@@ -472,3 +472,17 @@ span.best_in_place.btn {
 .timeline-note p {
   margin: 6px 0;
 }
+
+.jira-logo {
+  font-size: 10.25px;
+  font-weight: 900;
+}
+
+a.suggested-action {
+  color: $text-color;
+  border-bottom: 1px dashed $text-color;
+}
+
+a.suggested-action:hover, a.suggested-action:focus {
+  border-bottom: 1px solid $text-color;
+}
