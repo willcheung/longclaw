@@ -51,6 +51,7 @@ Longclaw::Application.routes.draw do
 
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
     get "notifications/show_email_body/:id" => 'notifications#show_email_body'
+    post "notifications/create_from_suggestion"
 
     get "/delete_single_activity/:id" => 'activities#destroy'
     

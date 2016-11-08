@@ -14,5 +14,14 @@ $(document).ready(function() {
     $(".tasks-link-<%= a.id %>").click(function() {
         $(".tasks-footer-<%= a.id %>").toggle();
     });
+
+    // $(".<%= a.id.to_s + a.category %> .suggested-action").bsTooltip();
+
+    $(".<%= a.id.to_s + a.category %> .suggested-action").each( function () {
+        $(this).popover({
+            html: true,
+            content: '<form action="<%= notifications_create_from_suggestion_path %>" method="post"><input type="text" class="form-control" name="notification[name]" placeholder="Name" value="<%= a.title %>"><input type="textarea" class="form-control" name="notification[description]" placeholder="Description" value="' + $(this).text() + '"><button class="btn btn-primary btn-block">Create</button><input type="hidden" name="notification[project_id]" value="<%= @project.id %>"<input type="hidden" name="notification[message_id]" value="' + $(this).data("message") +'"><input type="hidden" name="notification[conversation_id]" value="<%= a.backend_id %>"><input type="hidden" name="notification[activity_id]" value="<%= a.id %>"></form>'
+        });
+    });
 });
 </script>
