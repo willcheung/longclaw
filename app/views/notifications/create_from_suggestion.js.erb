@@ -1,0 +1,4 @@
+$('.tasks-footer-<%= @notification.activity_id %> tbody').prepend('<%= escape_javascript(render "notifications/table_row", n: @notification, multi_table: "timeline-block-notification-table") %>');
+$('#tasks-count-<%= @notification.activity_id %>').text( Number($('#tasks-count-<%= @notification.activity_id %>').text()) + 1 );
+$(".<%= @notification.activity_id %>Conversation .suggested-action").popover('hide');
+jQuery(".best_in_place").best_in_place();
