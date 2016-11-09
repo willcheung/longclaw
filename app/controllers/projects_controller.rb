@@ -2,6 +2,7 @@ class ProjectsController < ApplicationController
   before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
+  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
 
@@ -29,8 +30,6 @@ class ProjectsController < ApplicationController
 
     # for bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id)
-    # for single best_in_place owner assignment
-    @users_reverse = get_current_org_users
   end
 
   # GET /projects/1
@@ -228,6 +227,10 @@ class ProjectsController < ApplicationController
 
   private
 
+  def get_users_reverse
+    @users_reverse = get_current_org_users
+  end
+
   def get_show_data
     # metrics
     @project_risk_score = @project.current_risk_score(current_user.time_zone)
@@ -244,9 +247,6 @@ class ProjectsController < ApplicationController
     @project_members = @project.project_members
     @project_subscribers = @project.subscribers
     @suggested_members = @project.project_members_all.pending
-
-    # array of users for best_in_place assignment
-    @users_reverse = get_current_org_users
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)

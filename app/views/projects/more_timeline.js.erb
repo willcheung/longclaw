@@ -2,3 +2,6 @@ $('#loading-more').remove();
 $(window).off();
 // Pagination event handlers reloaded when timeline is rendered
 $("#vertical-timeline").append('<%= escape_javascript(render "timeline") %>');
+// reinitialize best_in_place/iCheck for dynamically added Smart Actions
+jQuery(".best_in_place").best_in_place();
+$('.i-checks').iCheck({checkboxClass: 'icheckbox_square-green'});
