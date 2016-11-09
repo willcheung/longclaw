@@ -54,4 +54,8 @@ class ApplicationController < ActionController::Base
     end
     Time.use_zone(current_user.time_zone, &block)
   end
+
+  def get_current_org_users
+    current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+  end
 end

@@ -88,7 +88,7 @@ class SalesforceController < ApplicationController
       @project_open_tasks_count = @project.notifications.open.count
       @project_pinned_count = @project.activities.pinned.count
 
-      @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h 
+      @users_reverse = get_current_org_users
  		end
 
     if(!params[:category].nil? and !params[:category].empty?)

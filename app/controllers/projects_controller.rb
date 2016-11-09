@@ -30,7 +30,7 @@ class ProjectsController < ApplicationController
     # for bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id)
     # for single best_in_place owner assignment
-    @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h 
+    @users_reverse = get_current_org_users
   end
 
   # GET /projects/1
@@ -246,7 +246,7 @@ class ProjectsController < ApplicationController
     @suggested_members = @project.project_members_all.pending
 
     # array of users for best_in_place assignment
-    @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+    @users_reverse = get_current_org_users
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)

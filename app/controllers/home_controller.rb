@@ -13,7 +13,7 @@ class HomeController < ApplicationController
     
     # Need this to show project name and user name
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
-    @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+    @users_reverse = get_current_org_users
 
     unless @projects.empty?
       #@project_last_activity_date = Project.owner_of(current_user.id).includes(:activities).maximum("activities.last_sent_date")
