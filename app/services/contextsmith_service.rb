@@ -144,10 +144,10 @@ class ContextsmithService
       if type == "conversations"
         Contact.load(data, project, save_in_db)
         # always load activity before notification
-        # result = Activity.load(data, project, save_in_db)
+        result = Activity.load(data, project, save_in_db)
         Activity.load(data, project, save_in_db)
-        # Notification.load(data, project, is_test)
-        # return result
+        Notification.load(data, project, is_test)
+        return result
       elsif type == "events"
         return Activity.load_calendar(data, project, save_in_db)
       end
