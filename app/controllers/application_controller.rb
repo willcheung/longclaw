@@ -11,6 +11,7 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :null_session, only: Proc.new { |c| c.request.format.json? }
   layout :layout_by_resource
   around_action :set_time_zone, if: :current_user
+  around_action :check_google_oauth_valid_token, if: :current_user
 
   def after_sign_in_path_for(resource)    
     if resource.is_a?(User)
@@ -53,6 +54,15 @@ class ApplicationController < ActionController::Base
       current_user.update_attributes(time_zone: cookies[:timezone])
     end
     Time.use_zone(current_user.time_zone, &block)
+  end
+
+  def check_google_oauth_valid_token
+    if current_user.oauth_access_token == "invalid"
+      reset_session
+      session[:redirect_to] = request.referer
+      redirect_to session[:redirect_to] || root_path
+    end
+    yield
   end
 
   def get_current_org_users

@@ -7,7 +7,7 @@
 #  salesforce_account_id     :string           default(""), not null
 #  name                      :string           default(""), not null
 #  description               :text
-#  amount                    :decimal(8, 2)
+#  amount                    :decimal(14, 2)
 #  is_closed                 :boolean
 #  is_won                    :boolean
 #  stage_name                :string
