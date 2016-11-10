@@ -145,7 +145,7 @@ class ContextsmithService
         Contact.load(data, project, save_in_db)
         # always load activity before notification
         result = Activity.load(data, project, save_in_db)
-        Activity.load(data, project, save_in_db)
+        # Activity.load(data, project, save_in_db)
         Notification.load(data, project, is_test)
         return result
       elsif type == "events"
