@@ -486,3 +486,21 @@ a.suggested-action {
 a.suggested-action:hover, a.suggested-action:focus {
   border-bottom: 1px solid $text-color;
 }
+
+.popover {
+  width: 100%;
+  max-width: 100%;
+}
+
+.popover .popover-title {
+  margin: 0;
+  text-align: center;
+}
+
+.popover-content {
+  padding: 0;
+}
+
+/*.popover-content input, .popover-content select, .popover-content textarea {
+  border: 0;
+}*/

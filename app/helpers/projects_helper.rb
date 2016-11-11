@@ -36,7 +36,7 @@ module ProjectsHelper
     body = message.content.nil? || message.content.is_a?(String) ? message.content : message.content.body
     message.temporalItems.reverse_each do |i|
       task = i.taskAnnotation
-      body.insert(task.endOffset, "</a>").insert(task.beginOffset, "<a class=\"suggested-action\" data-placement=\"bottom\" data-title=\"Create Smart Action\" data-message=\"#{message.messageId}\">")
+      body.insert(task.endOffset, "</a>").insert(task.beginOffset, "<a class=\"suggested-action\" data-message=\"#{message.messageId}\" data-due-date=\"#{Time.zone.at(i.resolvedDates.first).strftime('%Y-%m-%d')}\">")
     end if message.temporalItems
     simple_format(body, {}, sanitize: false)
   end
