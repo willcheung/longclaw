@@ -47,11 +47,7 @@
                                 <hr class="message-divider"/>
                                 <span class="message-content">
                                     <!-- some emails don't even have content -->
-                                    <%= if m.content.nil? || m.content.is_a?(String) 
-                                            simple_format(m.content)
-                                        else
-                                            simple_format(m.content.body)
-                                        end %>                                            
+                                    <%= smart_email_body(m) %>                                            
                                 </span>
                             </div>
                         </div>
@@ -69,7 +65,7 @@
                     }  %>
                     &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                     <% unless params[:action] == "daily_summary" %>
-                    &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<%= a.notifications.size %>)</a>
+                    &sdot; <a class="tasks-link-<%= a.id %>">Smart Tasks (<span id="tasks-count-<%= a.id %>"><%= a.notifications.size %></span>)</a>
                     <% end %>
                 </div>
             </div> <!-- chat discussion -->

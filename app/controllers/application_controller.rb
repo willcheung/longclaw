@@ -64,4 +64,8 @@ class ApplicationController < ActionController::Base
     end
     yield
   end
+
+  def get_current_org_users
+    current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+  end
 end

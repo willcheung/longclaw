@@ -60,79 +60,6 @@ class Notification < ActiveRecord::Base
           if !message.sentimentItems.nil?
             load_risk_for_each_message(project.id, c.conversationId, message, test, day_range)
           end
-
-          if message.temporalItems.nil?
-            next
-          end
-
-          is_complete = false
-          completed_by = nil
-          complete_date = nil
-          sent_date = Time.at(message.sentDate).utc
-          if (sent_date.utc < (current_time - day_range.day).utc)
-            is_complete = true
-            completed_by = "00000000-0000-0000-0000-000000000000"
-            complete_date = sent_date
-          end
-
-          # save smart action in previous two weeks
-          assign_to = User.find_by email: message.from[0].address
-          if(assign_to.nil? and !message.to.nil? )
-            assign_to = User.find_by email: message.to[0].address
-          end
-
-          assign_id = 0
-          if(!assign_to.nil?)
-              assign_id = assign_to.id
-          end
-
-          message.temporalItems.each do |t|
-            context_start = t.taskAnnotation.beginOffset.to_i
-            context_end = t.taskAnnotation.endOffset.to_i
-            description = message.content.body[context_start..context_end]
-            o_due_date = Time.at(t.resolvedDates[0]).utc
-            # rake have no idea about local time zone, Time.zone.at will just return the time zone in application.rb
-            # so can't covert to user local time.
-            # don't deal with has_time = false (previously we change the hour and min to 0)
-            # just use back end garbage time.
-            has_time = t.hasTime.to_s
-            remind_date = o_due_date.yesterday.utc
-
-            if Notification.find_by project_id: project.id, conversation_id: c.conversationId, message_id: message.messageId, content_offset: context_start 
-              # avoid redundant
-              next
-            end
-
-            # try to find activitiy id, if no such activity id exists, skip this smart action
-            activity_id = -1
-            a = Activity.find_by(category: "Conversation", backend_id: c.conversationId, project_id: project.id)
-            if !a.nil?
-              activity_id = a.id 
-            else
-              puts "Warning: smart action with no activity id"
-              next
-            end
-
-
-    	      notification = Notification.new(category: CATEGORY[:Action],
-      	      	name: message.subject,
-      	      	description: description,
-      	        message_id: message.messageId,
-      	        project_id: project.id,
-      	        conversation_id: c.conversationId,
-                sent_date: sent_date,
-      	        original_due_date: o_due_date,
-      	        remind_date: remind_date,
-      	        is_complete: is_complete,
-      	        assign_to: assign_id,
-                content_offset: context_start,
-                has_time: has_time,
-                activity_id: activity_id,
-                completed_by: completed_by,
-                complete_date: complete_date)
-
-    	      notification.save
-          end
       	end
 	    end
 	  end
@@ -206,16 +133,11 @@ class Notification < ActiveRecord::Base
     else
       return
     end
-   
-    # description = "Risk Level: " + (score*100).to_s[1..2] + "%\n"
-  
+     
     s = contextMessage.sentimentItems[0]
     context_start = s.sentence.beginOffset.to_i
     context_end = s.sentence.endOffset.to_i
-    # description = description + contextMessage.content.body[context_start..context_end] 
     description = contextMessage.content.body[context_start..context_end] 
-
-    # puts description        
 
     # check if older than previous two weeks, if true set auto complete
     current_time = Time.now.utc

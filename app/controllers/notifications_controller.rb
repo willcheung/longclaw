@@ -134,6 +134,29 @@ class NotificationsController < ApplicationController
     end
   end
 
+  def create_from_suggestion
+    @notification = Notification.new(notification_params.merge(
+      category: Notification::CATEGORY[:Action],
+      has_time: true
+    ))
+
+    @users_reverse = get_current_org_users
+
+    # send notification email for the assign_to user
+    send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id
+
+    respond_to do |format|
+      if @notification.save
+        UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email        
+        format.html { redirect_to :back, notice: 'Smart Action was successfully created.' }
+        format.js
+      else
+        format.html { redirect_to :back, notice: 'Smart Action was not created. Did you assign it to a project?' }
+        format.js { render json: @notification.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
   def update
     new_params = notification_params
     if notification_params[:original_due_date].blank?
@@ -184,7 +207,7 @@ class NotificationsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def notification_params
-    params.require(:notification).permit(:description, :name, :original_due_date, :remind_date, :assign_to, :project_id, :category)
+    params.require(:notification).permit(:description, :name, :original_due_date, :remind_date, :assign_to, :project_id, :category, :message_id, :conversation_id, :activity_id)
   end
 
   def set_visible_project_user
@@ -197,7 +220,7 @@ class NotificationsController < ApplicationController
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 
     @users = current_user.organization.users.map { |u| [u.first_name+' '+ u.last_name+' '+u.email, u.id] }.to_h
-    @users_reverse = current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+    @users_reverse = get_current_org_users
   end
 
   def get_email_and_member

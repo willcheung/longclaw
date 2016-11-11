@@ -14,5 +14,16 @@ $(document).ready(function() {
     $(".tasks-link-<%= a.id %>").click(function() {
         $(".tasks-footer-<%= a.id %>").toggle();
     });
+
+    // $(".<%= a.id.to_s + a.category %> .suggested-action").bsTooltip();
+
+    $(".<%= a.id.to_s + a.category %> .suggested-action").each( function () {
+        $(this).popover({
+            html: true,
+            content: '<%= form_tag notifications_create_from_suggestion_path, remote: true %><input type="text" class="form-control" name="notification[name]" placeholder="Title" value="' + $(this).text() + '"><div class="row"><div class="col-sm-6"><select class="form-control" name="notification[assign_to]"><option value="">Assignee</option><% @users_reverse.each do |id, name| %><option value="<%= id %>"><%= name %></option><% end %></select></div><div class="col-sm-6"><input type="date" class="form-control" name="notification[original_due_date]" value="' + $(this).data("due-date") + '"></div></div><button class="btn btn-primary pull-left btn-xs m-t-sm">Create</button><input type="hidden" name="notification[project_id]" value="<%= a.project_id %>"><input type="hidden" name="notification[message_id]" value="' + $(this).data("message") +'"><input type="hidden" name="notification[conversation_id]" value="<%= a.backend_id %>"><input type="hidden" name="notification[activity_id]" value="<%= a.id %>"></form>',
+            placement: "bottom",
+            title: "Create Smart Action"
+        });
+    });
 });
 </script>
