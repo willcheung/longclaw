@@ -488,8 +488,8 @@ a.suggested-action:hover, a.suggested-action:focus {
 }
 
 .popover {
-  width: 100%;
-  max-width: 100%;
+  width: 500px;
+  max-width: 500px;
 }
 
 .popover .popover-title {
@@ -501,6 +501,8 @@ a.suggested-action:hover, a.suggested-action:focus {
   padding: 0;
 }
 
-/*.popover-content input, .popover-content select, .popover-content textarea {
-  border: 0;
-}*/
+.popover-content input, .popover-content select {
+  font-size: 12px;
+  line-height: 12px;
+  padding: 5px;
+}
