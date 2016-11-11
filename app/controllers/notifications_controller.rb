@@ -142,8 +142,12 @@ class NotificationsController < ApplicationController
 
     @users_reverse = get_current_org_users
 
+    # send notification email for the assign_to user
+    send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id
+
     respond_to do |format|
       if @notification.save
+        UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email        
         format.html { redirect_to :back, notice: 'Smart Action was successfully created.' }
         format.js
       else
