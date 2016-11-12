@@ -26,12 +26,12 @@
         <option value="1" <% if @complete=="incomplete"  %> selected  <% end %> >Open</option>
         <option value="2" <% if @complete=="complete"  %> selected  <% end %> >Completed</option>
       </select>
-      <select class="assignee_box col-sm-2" data-placeholder="Pick assignee">
+      <select class="assignee_box col-sm-2" data-placeholder="Assigned To">
         <option value="0"></option>
         <option value="1" <% if @assignee=="me"  %> selected  <% end %> >Assigned to me</option>
         <option value="2" <% if @assignee=="none"  %> selected  <% end %> >Unassigned</option>
       </select>
-      <select class="due_date_box col-sm-2" data-placeholder="Due date">
+      <select class="due_date_box col-sm-2" data-placeholder="Due Date">
         <option value="0"></option>
         <option value="1" <% if @duedate=="oneweek"  %> selected  <% end %> >Due in 7 days</option>
         <option value="2" <% if @duedate=="none"  %> selected  <% end %>  >No due date</option>

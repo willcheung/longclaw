@@ -28,7 +28,7 @@
     </div>
     <div class="task-desc">
       <small class="in-bl max-w-lg"><%= best_in_place n, :description, :as => 'textarea', :place_holder => '(no description)', :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => "#task-#{n.id}-description-activator" %></small>
-      <% unless n.category == Notification::CATEGORY[:Opportunity] || n.category == Notification::CATEGORY[:Risk] %>
+      <% unless n.category == Notification::CATEGORY[:Action]|| n.category == Notification::CATEGORY[:Opportunity] || n.category == Notification::CATEGORY[:Risk] %>
       <i id="task-<%= n.id %>-description-activator" class="fa fa-pencil m-l-xs bip_activator text-mute-gray vtop edit-task"></i>
       <% end %>
     </div>      

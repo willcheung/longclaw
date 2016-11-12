@@ -498,11 +498,23 @@ a.suggested-action:hover, a.suggested-action:focus {
 }
 
 .popover-content {
-  padding: 0;
+  padding: 5px;
+}
+
+.popover label {
+  font-size: 12px;
+  margin-top: 5px;
 }
 
 .popover-content input, .popover-content select {
+  height: 26px;
   font-size: 12px;
   line-height: 12px;
   padding: 5px;
+}
+
+.popover-content input[type=date], .popover-content select {
+  width: 121px;
+  display: inline-block;
+  margin: 0 5px;
 }
