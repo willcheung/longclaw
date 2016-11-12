@@ -25,5 +25,5 @@ production:
   google_client_secret: ZbgIgjg6M2LhCUc2RIIOS-TQ
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: wndqLIBQRJbIsA9S3bM-1w
-  csback_base_url: http://64.201.248.179:8889
-  csback_script_base_url: http://64.201.248.179:8889 
+  csback_base_url: http://104.198.4.24:80
+  csback_script_base_url: http://104.198.4.24:80
