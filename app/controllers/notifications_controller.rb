@@ -136,7 +136,7 @@ class NotificationsController < ApplicationController
 
   def create_from_suggestion
     @notification = Notification.new(notification_params.merge(
-      category: Notification::CATEGORY[:Action],
+      category: Notification::CATEGORY[:Todo],
       has_time: true
     ))
 
@@ -148,10 +148,10 @@ class NotificationsController < ApplicationController
     respond_to do |format|
       if @notification.save
         UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email        
-        format.html { redirect_to :back, notice: 'Smart Action was successfully created.' }
+        format.html { redirect_to :back, notice: 'To-Do was successfully created.' }
         format.js
       else
-        format.html { redirect_to :back, notice: 'Smart Action was not created. Did you assign it to a project?' }
+        format.html { redirect_to :back, notice: 'To-Do was not created. Did you assign it to a project?' }
         format.js { render json: @notification.errors, status: :unprocessable_entity }
       end
     end
