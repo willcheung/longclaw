@@ -64,6 +64,8 @@ class Project < ActiveRecord::Base
   has_many  :users, through: "project_members"
   has_many  :users_all, through: "project_members_all", source: :user
 
+  has_many  :salesforce_opportunities, foreign_key: "contextsmith_project_id", dependent: :nullify
+
 	scope :visible_to, -> (organization_id, user_id) {
 		select('DISTINCT(projects.*)')
 				.joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])

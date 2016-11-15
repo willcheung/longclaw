@@ -54,7 +54,7 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce'}
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -177,6 +177,40 @@ class Activity < ActiveRecord::Base
     end
 
     return events
+  end
+
+  def self.load_salesforce_activities(project, current_user)
+    val = []
+
+    client = SalesforceService.connect_salesforce(current_user)
+    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit 500) from Account where Name='Abbett'"
+
+    activities = SalesforceService.query_salesforce(client, query_statement)
+
+    activities.first.each do |a|
+      if a.first == "ActivityHistories"
+        a.second.each do |c|
+          owner = { "address": c.Owner.Email, "personal": c.Owner.Name }
+          val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                   '[#{owner.to_json}]',
+                   '[]',
+                   '[]',
+                   #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)}, 
+                   '#{Time.now}', '#{Time.now}')"
+        end
+      end
+    end
+
+    insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "note", "created_at", "updated_at") VALUES'
+    on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note'
+    values = val.join(', ')
+
+    if !val.empty?
+      Activity.transaction do
+        # Insert activities into database
+        Activity.connection.execute([insert,values,on_conflict].join(' '))
+      end
+    end
   end
 
   def self.copy_email_activities(source_project, target_project)

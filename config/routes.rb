@@ -45,6 +45,8 @@ Longclaw::Application.routes.draw do
       get "/" => "settings#index"
       get "users"
       get "salesforce" 
+      get "salesforce_opportunities" 
+      get "salesforce_activities" 
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
     end
