@@ -33,8 +33,8 @@ class HooksController < ApplicationController
     data = Hashie::Mash.new(JSON.parse(request.body.read))
     user = User.find_by_email(data.current_user.address)
     user_id = user ? user.id : '00000000-0000-0000-0000-000000000000'
-    project = Project.find_by_name(data.organization)
-    project_id = project ? project.id : '00000000-0000-0000-0000-000000000000'
+    account = Account.find_by_name(data.organization) || Account.find_by_domain(get_domain(data.requester.first.address))
+    project_id = account ? account.projects.first.id : '00000000-0000-0000-0000-000000000000'
     zd = Activity.find_or_initialize_by(
       category: Activity::CATEGORY[:Zendesk],
       backend_id: data.id
