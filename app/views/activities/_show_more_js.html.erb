@@ -17,6 +17,7 @@ $(document).ready(function() {
 
     // $(".<%= a.id.to_s + a.category %> .suggested-action").bsTooltip();
 
+  <% if a.category == Activity::CATEGORY[:Conversation] %>
     $(".<%= a.id.to_s + a.category %> .suggested-action").each( function () {
         $(this).popover({
             html: true,
@@ -25,5 +26,6 @@ $(document).ready(function() {
             title: "New To-do"
         });
     });
+  <% end %>
 });
 </script>
