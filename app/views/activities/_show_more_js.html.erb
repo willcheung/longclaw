@@ -11,13 +11,16 @@ $(document).ready(function() {
     $(".comment-link-<%= a.id %>").click(function() {
         $(".footer-<%= a.id %>").toggle();
     });
+
+
+  <% if a.category == Activity::CATEGORY[:Conversation] %>
+
+    // $(".<%= a.id.to_s + a.category %> .suggested-action").bsTooltip();
+  
     $(".tasks-link-<%= a.id %>").click(function() {
         $(".tasks-footer-<%= a.id %>").toggle();
     });
-
-    // $(".<%= a.id.to_s + a.category %> .suggested-action").bsTooltip();
-
-  <% if a.category == Activity::CATEGORY[:Conversation] %>
+  
     $(".<%= a.id.to_s + a.category %> .suggested-action").each( function () {
         $(this).popover({
             html: true,

@@ -90,6 +90,7 @@ Longclaw::Application.routes.draw do
 
   scope "hooks", controller: :hooks, as: 'hooks' do
     post "jira"
+    post "zendesk"
   end
 
 end
