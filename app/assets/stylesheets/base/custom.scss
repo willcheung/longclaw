@@ -536,3 +536,15 @@ a.suggested-action:hover, a.suggested-action:focus {
   display: inline-block;
   margin: 0 5px;
 }
+
+.vertical-timeline-icon.salesforce-bg .salesforce-logo{
+  background-image: url("images/salesforce.png");
+  background-size: 24px;
+  background-repeat: no-repeat;
+  background-color: #fff;
+  background-position: center;
+  border-radius: 50%;
+  margin-top:-12px;
+  height:24px;
+  width: 24px;
+}

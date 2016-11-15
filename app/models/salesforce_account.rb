@@ -21,61 +21,9 @@
 class SalesforceAccount < ActiveRecord::Base
 	belongs_to  :organiztion, foreign_key: "contextsmith_organization_id"
 	belongs_to :account, foreign_key: "contextsmith_account_id"
-  has_many :salesforce_opportunities, -> { order("close_date desc") }, primary_key: "salesforce_account_id"
+  has_many :salesforce_opportunities, -> { order("close_date desc") }, primary_key: "salesforce_account_id", dependent: :destroy
 
   scope :is_linked, -> {where("contextsmith_account_id is not null")}
-   
-  def self.connect_salesforce(current_user)
-    salesforce_client_id = ENV['salesforce_client_id']
-    salesforce_client_secret = ENV['salesforce_client_secret'] 
-    hostURL = 'login.salesforce.com'  
-    # try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
-    salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
-
-    if(salesforce_user.nil?)
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
-      salesforce_client_id = ENV['salesforce_sandbox_client_id']
-      salesforce_client_secret = ENV['salesforce_sandbox_client_secret']
-      hostURL = 'test.salesforce.com' 
-    end
-
-    client = nil
-    if(!salesforce_user.nil?)         
-      client = Restforce.new :host => hostURL,
-                             :client_id => salesforce_client_id,
-                             :client_secret => salesforce_client_secret,
-                             :oauth_token => salesforce_user.oauth_access_token,
-                             :refresh_token => salesforce_user.oauth_refresh_token,
-                             :instance_url => salesforce_user.oauth_instance_url
-      begin
-        client.user_info
-      rescue  
-        # salesforce refresh token expires when different app use it for 5 times
-        salesforce_user.destroy
-        client = nil
-        puts "Error: salesforce error"
-      end      
-    end
-
-    return client
-
-  end
-
-  def self.query_salesforce(client, query_statement)
-    salesforce_result = nil
-
-    if(!client.nil?)          
-      begin
-        salesforce_result = client.query(query_statement)
-      rescue  
-        salesforce_result = nil
-        puts "Error: salesforce " + query_statement + " error"
-      end     
-    end
-
-    return salesforce_result
-
-  end
 
   #################################################################################################
   # salesforce offset sucks, don't use it
@@ -107,7 +55,7 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   ################################################################################################## 
 	def self.load(current_user, query_range=500)
-		client = connect_salesforce(current_user)
+		client = SalesforceService.connect_salesforce(current_user)
     return if client.nil?
 
 
@@ -127,7 +75,7 @@ class SalesforceAccount < ActiveRecord::Base
         query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT " + query_range.to_s
       end
       
-      salesforce_accounts = query_salesforce(client, query_statement)
+      salesforce_accounts = SalesforceService.query_salesforce(client, query_statement)
 
       # puts query_statement 
       # puts "salesforce_accounts.length => #{salesforce_accounts.length}"

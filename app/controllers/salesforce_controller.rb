@@ -140,11 +140,9 @@ class SalesforceController < ApplicationController
 
 
   def disconnect
-    # update account
     # delete salesforce data
     # delete salesforce oauth_user
-    Account.where(organization_id: current_user.organization_id).update_all(salesforce_id: '')
-    SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).delete_all
+    SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).destroy_all
     salesforce_user = OauthUser.find_by(id: params[:id])
     salesforce_user.destroy
 

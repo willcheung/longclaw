@@ -20,6 +20,7 @@
 #  custom_fields             :hstore
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
+#  contextsmith_project_id   :uuid
 #
 # Indexes
 #
@@ -29,11 +30,12 @@
 
 class SalesforceOpportunity < ActiveRecord::Base
 	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id"
+  belongs_to  :projects, foreign_key: "contextsmith_project_id"
 
 	def self.load(current_user, query_range=500)
-		val = []
+  	val = []
 
-		client = SalesforceAccount.connect_salesforce(current_user)
+  	client = SalesforceService.connect_salesforce(current_user)
     return if client.nil?
 
     sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).is_linked
@@ -41,7 +43,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     sfdc_accounts.each do |a|
     	query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"
 
-    	opportunities = SalesforceAccount.query_salesforce(client, query_statement)
+    	opportunities = SalesforceService.query_salesforce(client, query_statement)
 
     	opportunities.each do |opp|
     		val << "('#{opp.Id}', 
