@@ -29,4 +29,30 @@ class HooksController < ApplicationController
     render nothing: true
   end
 
+  def zendesk
+    data = Hashie::Mash.new(JSON.parse(request.body.read))
+    user = User.find_by_email(data.current_user.address)
+    user_id = user ? user.id : '00000000-0000-0000-0000-000000000000'
+    account = Account.find_by_name(data.organization) || Account.find_by_domain(get_domain(data.requester.first.address))
+    project_id = account ? account.projects.first.id : '00000000-0000-0000-0000-000000000000'
+    zd = Activity.find_or_initialize_by(
+      category: Activity::CATEGORY[:Zendesk],
+      backend_id: data.id
+    )
+    zd.update(
+      title: data.title,
+      note: data.comments.last.text,
+      last_sent_date: data.updated_at.to_time.utc,
+      last_sent_date_epoch: data.updated_at.to_time.to_i,
+      from: data.requester,
+      to: data.assignee,
+      cc: data.cc,
+      email_messages: [data],
+      posted_by: user_id,
+      project_id: project_id
+    )
+
+    render nothing: true
+  end
+
 end

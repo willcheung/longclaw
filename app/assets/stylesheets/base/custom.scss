@@ -473,9 +473,27 @@ span.best_in_place.btn {
   margin: 6px 0;
 }
 
-.jira-logo {
-  font-size: 10.25px;
-  font-weight: 900;
+.jira-bg {
+  background-color: #55AEE3;
+  color: #ffffff;
+}
+
+.jira-bg > .jira-logo {
+  background-image: url("images/icons/jira_rgb_white.svg");
+  height: 20px;
+  background-size: 24px 18px;
+}
+
+.zd-bg {
+  background-color: #02363D;
+  color: #ffffff;
+}
+
+.zd-bg > .zd-logo {
+  background-image: url("images/icons/zendesk-medium-white.svg");
+  height: 20px;
+  background-size: 24px 18px;
+  margin-top: -9px;
 }
 
 a.suggested-action {
