@@ -90,7 +90,7 @@
         <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
           <img src="<%= root_url %>/assets/images/icons/conversation_icon.png" alt="Conversation">
         </td>
-        <td>
+        <td style="min-width:400px;">
           
           <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;background-color:#F0F6FB;">
              <tbody>
@@ -119,7 +119,7 @@
         <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
           <img src="<%= root_url %>/assets/images/icons/note_icon.png" alt="Note">
         </td>
-        <td>
+        <td style="min-width:400px;">
           
           <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
              <tbody>
@@ -142,7 +142,7 @@
         <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
           <img src="<%= root_url %>/assets/images/icons/meeting_icon.png" alt="Meeting">
         </td>
-        <td>
+        <td style="min-width:400px;">
           
           <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
              <tbody>
@@ -166,13 +166,63 @@
         <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
           <img src="<%= root_url %>/assets/images/icons/JIRA_icon.png" alt="JIRA">
         </td>
-        <td>
+        <td style="min-width:400px;">
           
           <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
              <tbody>
                 <tr>
                   <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;border-bottom:1px solid #bbbbbb;">
                     <strong style="font-weight:bold;"><%= a.title %></strong> (<%= a.email_messages.first.issue.fields.comment.total %>) <span style="font-size:12px;"><%= get_conversation_member_names(a.from, a.to, a.cc) %></span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;">
+                    <%= truncate(a.note, length: 160, separator: ' ') %>   
+                  </td>
+                </tr>
+
+              </tbody>
+          </table>
+
+        </td>
+
+      <% elsif a.category == Activity::CATEGORY[:Zendesk] %>
+      <!-- Zendesk -->
+        <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
+          <img src="<%= root_url %>/assets/images/icons/Zendesk_icon.png" alt="Zendesk">
+        </td>
+        <td style="min-width:400px;">
+          
+          <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
+             <tbody>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;border-bottom:1px solid #bbbbbb;">
+                    <strong style="font-weight:bold;"><%= a.title %></strong> (<%= a.email_messages.first.comments.length %>) <span style="font-size:12px;"><%= get_conversation_member_names(a.from, a.to, a.cc) %></span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;">
+                    <%= truncate(a.email_messages.first.comments.last.text, length: 160, separator: ' ') %>   
+                  </td>
+                </tr>
+
+              </tbody>
+          </table>
+
+        </td>
+
+      <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
+      <!-- Salesforce -->
+        <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
+          <img src="<%= root_url %>/assets/images/icons/Salesforce_icon.png" alt="Salesforce">
+        </td>
+        <td style="min-width:400px;">
+          
+          <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
+             <tbody>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;border-bottom:1px solid #bbbbbb;">
+                    <strong style="font-weight:bold;"><%= a.title %></strong>&nbsp;&nbsp;&nbsp;<span style="font-size:12px;"><%= get_conversation_member_names(a.from, a.to, a.cc) %></span>
                   </td>
                 </tr>
                 <tr>
@@ -227,7 +277,7 @@
               <%= n.name %>
             </span>
           </td>
-          <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:72px;max-width:75px;padding:3px;">         
+          <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:75px;max-width:80px;padding:3px;">         
             <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
             <% if n.category == Notification::CATEGORY[:Action] %>
               background-color:#3C8DC5">
@@ -241,7 +291,7 @@
               <%= n.category%>
             </span>
           </td>
-          <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:92px;max-width:95px;padding:3px;">
+          <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px;padding:3px;">
             <span style="font-weight:normal;font-size:12px;line-height:19px;">
               Assigned to: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
             </span>               
