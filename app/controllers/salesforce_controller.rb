@@ -114,12 +114,28 @@ class SalesforceController < ApplicationController
   end
 
   def refresh_accounts
-    SalesforceAccount.load(current_user)
+    SalesforceAccount.load(current_user.organization_id)
     render :text => ' '   
   end
 
   def refresh_opportunities
-    SalesforceOpportunity.load(current_user)
+    SalesforceOpportunity.load(current_user.organization_id)
+    render :text => ' '
+  end
+
+  def refresh_activities
+    @streams = Project.all.is_active.includes(:salesforce_opportunities) # all active projects because "admin" role can see everything
+    
+    @streams.each do |s|
+      if s.salesforce_opportunities.empty? # Stream not linked to Opportunity
+        if !s.account.salesforce_accounts.empty? # Stream linked to Account
+          Activity.load_salesforce_activities(s, current_user.organization_id)
+        end
+      else # Stream linked to Opportunity
+
+      end
+    end
+
     render :text => ' '
   end
 
