@@ -54,8 +54,8 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   # 
   ################################################################################################## 
-	def self.load(current_user, query_range=500)
-		client = SalesforceService.connect_salesforce(current_user)
+	def self.load(organization_id, query_range=500)
+		client = SalesforceService.connect_salesforce(organization_id)
     return if client.nil?
 
 
@@ -100,11 +100,11 @@ class SalesforceAccount < ActiveRecord::Base
           end
 
           salesforce_updated_at = DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time    
-          val << "('#{s.Id}', #{SalesforceAccount.sanitize(s.Name)}, '#{current_user.organization_id}', '#{salesforce_updated_at}','#{Time.now}', '#{Time.now}' )"
+          val << "('#{s.Id}', #{SalesforceAccount.sanitize(s.Name)}, '#{organization_id}', '#{salesforce_updated_at}','#{Time.now}', '#{Time.now}' )"
 
           salesforce_account_objects << SalesforceAccount.new(salesforce_account_id: s.Id,
                                                               salesforce_account_name: s.Name,
-                                                              contextsmith_organization_id: current_user.organization_id,
+                                                              contextsmith_organization_id: organization_id,
                                                               salesforce_updated_at: salesforce_updated_at)    
         end
 
