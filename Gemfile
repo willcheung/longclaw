@@ -1,4 +1,4 @@
-source 'https://rubygems.org'
+source 'http://rubygems.org'
 
 ruby "2.2.3"
 gem 'rails', '4.2.3'
@@ -6,7 +6,7 @@ gem 'bootstrap-sass', '~> 3.3.6'
 gem 'simple_form', '~> 3.1.0'			# run 'rails generate simple_form:install --bootstrap' after installing gem
 gem 'pg' 													# Use postgresql as the database for ActiveRecord
 gem 'sass-rails', '~>5.0.4'       # Use SCSS for stylesheets
-# gem 'turbolinks' 									# Turbolinks makes following links in your web application faster. 
+# gem 'turbolinks' 									# Turbolinks makes following links in your web application faster.
                                     # (creates some weird caching issues so don't include it unless absolutely necessary)
 gem 'jbuilder', '~> 1.2' 					# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'devise', '~> 3.4.1' 					# User Authentication
@@ -21,7 +21,7 @@ gem 'acts_as_commentable'
 gem 'pg_search'
 # gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
 gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
-gem 'omniauth-salesforce'  
+gem 'omniauth-salesforce'
 gem 'restforce', '~> 2.4.2'  #saleforce REST gem
 gem 'd3-rails', '~> 3.5'          # Use D3 for cool data visualizations
 

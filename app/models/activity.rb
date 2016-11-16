@@ -21,6 +21,7 @@
 #  is_pinned            :boolean          default(FALSE)
 #  pinned_by            :uuid
 #  pinned_at            :datetime
+#  rag_score            :integer
 #
 # Indexes
 #

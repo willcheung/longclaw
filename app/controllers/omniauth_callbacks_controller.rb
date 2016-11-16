@@ -1,4 +1,4 @@
-class OmniauthCallbacksController < Devise::OmniauthCallbacksController   
+class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
     User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id)
     # SalesforceAccount.load(current_user)
@@ -12,7 +12,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
 	def google_oauth2
-    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com)
+    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com sdyong88@gmail.com)
     auth = request.env["omniauth.auth"]
 
     if auth.info.email.include?('gmail.com') and !allowed_emails.include?(auth.info.email)
@@ -21,7 +21,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
 
     @user = User.find_for_google_oauth2(auth, (cookies[:timezone] || 'UTC'))
- 
+
     if @user.persisted?
     	session["devise.google_data"] = auth
       logger.info "Google devise.omniauth_callbacks.success for user " + @user.email
