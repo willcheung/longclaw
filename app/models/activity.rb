@@ -179,24 +179,25 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  def self.load_salesforce_activities(project, organization_id)
+  def self.load_salesforce_activities(project, organization_id, account_name, limit=200)
     val = []
 
     client = SalesforceService.connect_salesforce(organization_id)
-    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit 500) from Account where Name='Abbett'"
-
+    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Name='#{account_name}'"
     activities = SalesforceService.query_salesforce(client, query_statement)
-
+    
     activities.first.each do |a|
       if a.first == "ActivityHistories"
-        a.second.each do |c|
-          owner = { "address": c.Owner.Email, "personal": c.Owner.Name }
-          val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
-                   '[#{owner.to_json}]',
-                   '[]',
-                   '[]',
-                   #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)}, 
-                   '#{Time.now}', '#{Time.now}')"
+        if !a.second.nil?
+          a.second.each do |c|
+            owner = { "address": c.Owner.Email, "personal": c.Owner.Name }
+            val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                     '[#{owner.to_json}]',
+                     '[]',
+                     '[]',
+                     #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)}, 
+                     '#{Time.now}', '#{Time.now}')"
+          end
         end
       end
     end
