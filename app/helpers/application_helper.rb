@@ -28,6 +28,12 @@ module ApplicationHelper
       "#FFA500"
     elsif category == Activity::CATEGORY[:Note]
       "#ffde6b"
+    elsif category == Activity::CATEGORY[:JIRA]
+      "#205081"
+    elsif category == Activity::CATEGORY[:Salesforce]
+      "#1798c1"
+    elsif category == Activity::CATEGORY[:Zendesk]
+      "#78a300"
     end
   end
 
