@@ -32,13 +32,13 @@ class SalesforceOpportunity < ActiveRecord::Base
 	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id"
   belongs_to  :projects, foreign_key: "contextsmith_project_id"
 
-	def self.load(current_user, query_range=500)
+	def self.load(organization_id, query_range=500)
   	val = []
 
-  	client = SalesforceService.connect_salesforce(current_user)
+  	client = SalesforceService.connect_salesforce(organization_id)
     return if client.nil?
 
-    sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).is_linked
+    sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: organization_id).is_linked
 
     sfdc_accounts.each do |a|
     	query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"

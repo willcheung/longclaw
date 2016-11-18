@@ -6,6 +6,7 @@
           <i class="fa fa-sticky-note"></i>
         </button>
       </span>
+      <%= f.collection_radio_buttons :rag_score, [[1, 'red' ] ,[ 2, 'Yellow'],[3,'Green']], :first, :last,  {:item_wrapper_class => 'radio-inline'}, {:class => "create-project", :style=> 'width: 650px' }  %>
       <%= f.input :note, label: false, as: 'text', input_html: { class: 'input-border', style: 'resize:none;overflow:hidden;margin-bottom:15px;', rows: "1" }, placeholder: "Post a note..." %>
     </div>
   </div>

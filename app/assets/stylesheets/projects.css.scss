@@ -76,3 +76,28 @@
     display: none;
   }
 }
+
+
+.circleBase{
+  border-radius: 50%;
+}
+.type1{
+  width: 60px;
+  height: 60px;
+  background: #ed5565;
+  border: 1px solid black;
+}
+
+.type2{
+  width: 60px;
+  height: 60px;
+  background: #FFA500;
+  border: 1px solid black;
+}
+
+.type3{
+  width: 60px;
+  height: 60px;
+  background: #A1C436;
+  border: 1px solid black;
+}

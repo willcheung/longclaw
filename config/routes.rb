@@ -39,6 +39,7 @@ Longclaw::Application.routes.draw do
     post "/link_salesforce" => 'salesforce#link_salesforce_account'
     post "/salesforce_refresh" => 'salesforce#refresh_accounts'
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
+    post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
     get "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
 
     scope "settings", controller: :settings, as: 'settings' do
@@ -92,6 +93,7 @@ Longclaw::Application.routes.draw do
 
   scope "hooks", controller: :hooks, as: 'hooks' do
     post "jira"
+    post "zendesk"
   end
 
 end

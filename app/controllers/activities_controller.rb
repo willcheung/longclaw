@@ -19,7 +19,7 @@ class ActivitiesController < ApplicationController
 
   def update
     respond_to do |format|
-				
+
     	if activity_params[:is_pinned] == "true"
     		params = activity_params.merge(pinned_at: Time.now, pinned_by: current_user.id)
     	else
@@ -56,6 +56,6 @@ class ActivitiesController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def activity_params
-      params.require(:activity).permit(:is_pinned, :pinned_by, :pinned_at, :is_public, :title, :note, :last_sent_date, :last_sent_date_epoch)
+      params.require(:activity).permit(:is_pinned, :pinned_by, :pinned_at, :is_public, :title, :note, :last_sent_date, :last_sent_date_epoch, :rag_score)
     end
 end

@@ -36,7 +36,7 @@ class Project < ActiveRecord::Base
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
-  has_many  :notifications_for_email, -> { 
+  has_many  :notifications_for_email, -> {
     where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc)
     .order(:is_complete, :original_due_date)
   }, class_name: "Notification"
@@ -45,12 +45,12 @@ class Project < ActiveRecord::Base
   has_many  :conversations, -> { conversations.reverse_chronological }, class_name: "Activity"
   has_many  :notes, -> { notes.reverse_chronological }, class_name: "Activity"
   has_many  :meetings, -> { meetings.reverse_chronological }, class_name: "Activity"
-  has_many  :conversations_for_email, -> { 
+  has_many  :conversations_for_email, -> {
     from_yesterday.reverse_chronological.conversations
-    .select(:category, :title, :from, :to, :cc, :project_id, :last_sent_date, :is_public, 
-      'jsonb_array_length(email_messages) AS num_messages', 
+    .select(:category, :title, :from, :to, :cc, :project_id, :last_sent_date, :is_public,
+      'jsonb_array_length(email_messages) AS num_messages',
       'email_messages->-1 AS last_msg') }, class_name: "Activity"
-  has_many  :other_activities_for_email, -> { 
+  has_many  :other_activities_for_email, -> {
     from_yesterday.reverse_chronological
     .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
 
@@ -115,7 +115,7 @@ class Project < ActiveRecord::Base
         AND messages ->> 'messageId' = notifications.message_id
         AND notifications.category = '#{Notification::CATEGORY[:Risk]}'
         WHERE activities.category = '#{Activity::CATEGORY[:Conversation]}'
-        AND messages->>'sentimentItems' IS NOT NULL 
+        AND messages->>'sentimentItems' IS NOT NULL
         AND activities.project_id IN ('#{array_of_project_ids.join("','")}')
       SQL
 
@@ -132,14 +132,14 @@ class Project < ActiveRecord::Base
       min_scores[pid] = Array.new(day_range) { [] }
       non_risk_min_score[pid] = 0
     end
-    
+
     if result
       result.each do|r|
         sentiment_score = r.sentiment_score.to_f
 
         # array position for sent date of current sentiment score (0 if before date range)
         date_index = (r.sent_date.to_i - start_time_sec) / (24*60*60)
-        date_index = 0 if date_index < 0 
+        date_index = 0 if date_index < 0
 
         # array position for end date of current sentiment score, set below
         end_index = nil
@@ -149,20 +149,20 @@ class Project < ActiveRecord::Base
           if r.is_complete && r.complete_date.to_i >= start_time_sec
             complete_index = (r.complete_date.to_i - start_time_sec) / (24*60*60)
             # consider score for days it is open
-            end_index = complete_index-1 
+            end_index = complete_index-1
           elsif !r.is_complete
             # consider score for all days after it was created
-            end_index = day_range-1 
+            end_index = day_range-1
           end
         else
           # no risk notification, can't be closed
           if sentiment_score < non_risk_min_score[r.project_id]
             if r.sent_date.to_i < start_time_sec
               # min score from before day_range, will add to consideration later
-              non_risk_min_score[r.project_id] = sentiment_score 
+              non_risk_min_score[r.project_id] = sentiment_score
             else
               # consider score for all days after it was created
-              end_index = day_range-1 
+              end_index = day_range-1
             end
           end
         end
@@ -177,7 +177,7 @@ class Project < ActiveRecord::Base
       non_risk_min_score.each do |key, value|
         (0..day_range-1).each do |i|
           min_scores[key][i] << value
-        end 
+        end
       end
     end
 
@@ -187,13 +187,13 @@ class Project < ActiveRecord::Base
         min_scores[key][i] = round_and_scale_score(value[i].sort[0])
       end
     end
-    
+
     min_scores
   end
 
   def self.count_risks_per_project(array_of_project_ids)
     query = <<-SQL
-        SELECT projects.id AS id, 
+        SELECT projects.id AS id,
                projects.name AS name,
                COUNT(*) FILTER (WHERE is_complete = FALSE AND notifications.category = 'Risk') AS open_risks
         FROM projects
@@ -223,8 +223,8 @@ class Project < ActiveRecord::Base
 
   # query to generate Account Relationship Graph from DB entries
   def network_map
-    query = <<-SQL 
-      WITH email_activities AS 
+    query = <<-SQL
+      WITH email_activities AS
         (
           SELECT messages ->> 'messageId'::text AS message_id,
                  jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
@@ -245,7 +245,7 @@ class Project < ActiveRecord::Base
       SELECT "from" AS source,
              "to" AS target,
              COUNT(DISTINCT message_id) AS count
-      FROM 
+      FROM
         (SELECT "from", "to", message_id
           FROM email_activities
           UNION ALL
@@ -272,7 +272,7 @@ class Project < ActiveRecord::Base
 
     (User.where(email: tempSet.to_a) + Contact.where(email: tempSet.to_a)).each do |p|
       # exclude duplicate Users/Contacts with the same email
-      if tempSet.include? p.email 
+      if tempSet.include? p.email
         if p.first_name.blank? && p.last_name.blank?
           p.first_name  = p.email
         end
@@ -288,7 +288,7 @@ class Project < ActiveRecord::Base
     people.sort_by {|u| u.first_name.downcase}
   end
 
-  # Used for exploding all activities of a given project without time bound, specifically for time series filter.  
+  # Used for exploding all activities of a given project without time bound, specifically for time series filter.
   # Subquery is based on email_activities_last_14d view.
   def daily_activities(time_zone)
     query = <<-SQL
@@ -298,17 +298,17 @@ class Project < ActiveRecord::Base
              '#{Activity::CATEGORY[:Conversation]}' as category,
              count(t.*) as activity_count
       FROM
-        ( SELECT 
-            id, 
-            backend_id, 
-            last_sent_date, 
-            project_id, 
+        ( SELECT
+            id,
+            backend_id,
+            last_sent_date,
+            project_id,
             is_public,
             jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date,
-            jsonb_array_elements(email_messages) -> 'from' as from, 
+            jsonb_array_elements(email_messages) -> 'from' as from,
             jsonb_array_elements(email_messages) -> 'to' as to,
             jsonb_array_elements(email_messages) -> 'cc' as cc
-          FROM 
+          FROM
             activities,
             LATERAL jsonb_array_elements(email_messages) messages
           WHERE
@@ -325,7 +325,7 @@ class Project < ActiveRecord::Base
       SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Meeting]}' as category,
             count(*) as activity_count
-      FROM activities 
+      FROM activities
       WHERE category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}'
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
@@ -336,7 +336,7 @@ class Project < ActiveRecord::Base
       SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Note]}' as category,
             count(*) as activity_count
-      FROM activities 
+      FROM activities
       WHERE category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}'
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
@@ -347,7 +347,7 @@ class Project < ActiveRecord::Base
       SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:JIRA]}' as category,
             count(*) as activity_count
-      FROM activities 
+      FROM activities
       WHERE category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}'
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
@@ -421,18 +421,18 @@ class Project < ActiveRecord::Base
 	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
 		query = <<-SQL
       WITH time_series as (
-        SELECT * 
-          from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1 
-                CROSS JOIN 
+        SELECT *
+          from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1
+                CROSS JOIN
                (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
        )
       SELECT time_series.project_id as id, date(time_series.days) as date, count(activities.*) as num_activities
       FROM time_series
-      LEFT JOIN (SELECT sent_date, project_id 
+      LEFT JOIN (SELECT sent_date, project_id
       					 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}') and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'))
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
-      GROUP BY time_series.project_id, days 
+      GROUP BY time_series.project_id, days
       ORDER BY time_series.project_id, days ASC
     SQL
 
@@ -443,11 +443,11 @@ class Project < ActiveRecord::Base
   def self.count_total_activities_by_day(array_of_account_ids, time_zone)
 		query = <<-SQL
       WITH time_series AS (
-          SELECT * 
-          FROM (SELECT generate_series(date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') AS days) t1 
-                CROSS JOIN 
-               (SELECT id AS project_id 
-                FROM projects 
+          SELECT *
+          FROM (SELECT generate_series(date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') AS days) t1
+                CROSS JOIN
+               (SELECT id AS project_id
+                FROM projects
                 WHERE account_id IN ('#{array_of_account_ids.join("','")}')) t2
         ), user_activities AS (
           SELECT messages ->> 'messageId'::text AS message_id,
@@ -457,10 +457,10 @@ class Project < ActiveRecord::Base
           LATERAL jsonb_array_elements(email_messages) messages
           WHERE category = 'Conversation'
           AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days') AND (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}')
-          AND project_id IN 
+          AND project_id IN
           (
-            SELECT id AS project_id 
-            FROM projects 
+            SELECT id AS project_id
+            FROM projects
             WHERE account_id IN ('#{array_of_account_ids.join("','")}')
           )
           GROUP BY 1,2,3
@@ -469,7 +469,7 @@ class Project < ActiveRecord::Base
       FROM time_series
       LEFT JOIN user_activities AS activities
       ON activities.project_id = time_series.project_id AND date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
-      GROUP BY days 
+      GROUP BY days
       ORDER BY days ASC
     SQL
 
@@ -485,23 +485,23 @@ class Project < ActiveRecord::Base
 
 		query = <<-SQL
       WITH time_series as (
-        SELECT * 
-          FROM (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1 
-                CROSS JOIN 
+        SELECT *
+          FROM (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1
+                CROSS JOIN
                (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
        )
       SELECT time_series.project_id, time_series.days, count(activities.*) as count_activities
       FROM time_series
-      LEFT JOIN (SELECT sent_date, project_id from 
-      							(SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id 
-                    	FROM activities 
+      LEFT JOIN (SELECT sent_date, project_id from
+      							(SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id
+                    	FROM activities
                       where project_id in ('#{array_of_project_ids.join("','")}')
                       AND category = 'Conversation'
                 		) t
                  WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
-      GROUP BY time_series.project_id, days 
+      GROUP BY time_series.project_id, days
       ORDER BY time_series.project_id, days ASC
     SQL
 
@@ -529,6 +529,10 @@ class Project < ActiveRecord::Base
 
   	return metrics
   end
+	#returns rag score
+	def current_rag_score
+		return self.activities.first
+	end
 
   # Top Active Streams/Engagement Last 7d
   def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
@@ -543,9 +547,9 @@ class Project < ActiveRecord::Base
                project_id,
                last_sent_date,
                jsonb_array_elements(email_messages) ->> 'sentDate' AS sent_date
-        FROM activities 
+        FROM activities
         WHERE project_id IN ('#{array_of_project_ids.join("','")}')
-        ) t 
+        ) t
       JOIN projects ON projects.id = t.project_id
       WHERE (t.category = '#{Activity::CATEGORY[:Conversation]}' AND (sent_date::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
       OR (t.category = '#{Activity::CATEGORY[:Meeting]}' AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
@@ -560,7 +564,7 @@ class Project < ActiveRecord::Base
 	def self.create_from_clusters(data, user_id, organization_id)
 		project_domains = get_project_top_domain(data)
 		accounts = Account.where(domain: project_domains, organization_id: organization_id)
-		
+
 		project_domains.each do |p|
 			external_members, internal_members = get_project_members(data, p)
 			project = Project.new(name: (accounts.find {|a| a.domain == p}).name,
@@ -573,13 +577,13 @@ class Project < ActiveRecord::Base
 													 is_public: true,
 													 is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
 													)
-			
+
 			if project.save
 				# Project members
 				# assuming contacts and users have already been inserted, we just need to link them
 				contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
 				users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
-				
+
 				external_members.each do |m|
 					project.project_members.create(contact_id: (contacts.find {|c| c.email == m.address}).id)
 				end
@@ -634,7 +638,7 @@ class Project < ActiveRecord::Base
 	end
 
 	def self.find_stale_projects_30_days
-      return project_last_activity_date = Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t 
+      return project_last_activity_date = Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t
                                                       ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
                                 .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
                                 .where("activities.category = 'Conversation' and projects.status='Active' and (t.last_sent_date_epoch::integer + 2592000) < EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)")
@@ -642,7 +646,7 @@ class Project < ActiveRecord::Base
   end
 
   def is_stale_project_30_days
-  	Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t 
+  	Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t
                                                       ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
                                 .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
                                 .where("activities.category = 'Conversation' and projects.status='Active' and projects.id = '#{self.id}' and (t.last_sent_date_epoch::integer + 2592000) < EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)")

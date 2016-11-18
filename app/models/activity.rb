@@ -55,7 +55,7 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce', Zendesk: 'Zendesk Ticket'}
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -180,10 +180,10 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  def self.load_salesforce_activities(project, current_user)
+  def self.load_salesforce_activities(project, organization_id)
     val = []
 
-    client = SalesforceService.connect_salesforce(current_user)
+    client = SalesforceService.connect_salesforce(organization_id)
     query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit 500) from Account where Name='Abbett'"
 
     activities = SalesforceService.query_salesforce(client, query_statement)
