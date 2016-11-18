@@ -23,7 +23,7 @@ module ApplicationHelper
 
   def highcharts_series_color(category)
     if category == Activity::CATEGORY[:Conversation]
-      "#7cb5ec"
+      "#46C6C6"
     elsif category == Activity::CATEGORY[:Meeting]
       "#FFA500"
     elsif category == Activity::CATEGORY[:Note]

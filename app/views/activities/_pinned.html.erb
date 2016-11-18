@@ -2,7 +2,7 @@
 <tr id="pin-<%=a.id%>">
     <td>
         <% if a.category == Activity::CATEGORY[:Conversation] %>
-            <div class="vertical-timeline-icon primary-bg pinned">
+            <div class="vertical-timeline-icon secondary-bg pinned">
                 <i class="fa fa-envelope"></i>
             </div>
         <% elsif a.category == Activity::CATEGORY[:Note] %>
