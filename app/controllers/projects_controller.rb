@@ -239,7 +239,6 @@ class ProjectsController < ApplicationController
     @project_pinned_count = @project.activities.pinned.count
     @project_open_tasks_count = @project.notifications.open.count
     @project_rag_score = @project.current_rag_score
-    puts "=========",@project_rag_score.rag_score,"========="
 
 
 

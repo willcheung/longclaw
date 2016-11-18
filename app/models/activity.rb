@@ -55,7 +55,9 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce', Zendesk: 'Zendesk Ticket'}
+
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket'}
+
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -90,11 +92,11 @@ class Activity < ActiveRecord::Base
 
         val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Conversation]}', #{Activity.sanitize(c.subject)}, #{is_public_flag}, '#{c.conversationId}', '#{Time.at(c.lastSentDate)}', '#{c.lastSentDate}',
                    #{Activity.sanitize(c.messages.last.from.to_json)},
-                   #{Activity.sanitize(c.messages.last.to.to_json)}, 
-                   #{Activity.sanitize(c.messages.last.cc.to_json)}, 
-                   #{Activity.sanitize(c.messages.to_json)}, 
+                   #{Activity.sanitize(c.messages.last.to.to_json)},
+                   #{Activity.sanitize(c.messages.last.cc.to_json)},
+                   #{Activity.sanitize(c.messages.to_json)},
                    '#{Time.now}', '#{Time.now}')"
-               
+
         # Create activities object
         activities << Activity.new(
             posted_by: user_id,
@@ -140,11 +142,11 @@ class Activity < ActiveRecord::Base
         # store miscellaneous data in email_messages column
         messages_data = [{ created: event.createdTime, updated: event.updatedTime, end_epoch: event.endTime }]
 
-        val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Meeting]}', #{Activity.sanitize(c.subject)}, true, 
+        val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Meeting]}', #{Activity.sanitize(c.subject)}, true,
                  '#{c.conversationId}', '#{Time.at(c.lastSentDate).utc}', '#{c.lastSentDate}',
                   #{Activity.sanitize(event.from.to_json)},
-                  #{Activity.sanitize(event.to.to_json)}, 
-                  #{Activity.sanitize(messages_data.to_json)}, 
+                  #{Activity.sanitize(event.to.to_json)},
+                  #{Activity.sanitize(messages_data.to_json)},
                  '#{Time.now}', '#{Time.now}')"
 
 
@@ -180,24 +182,27 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  def self.load_salesforce_activities(project, organization_id)
+
+  def self.load_salesforce_activities(project, organization_id, account_name, limit=200)
     val = []
 
     client = SalesforceService.connect_salesforce(organization_id)
-    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit 500) from Account where Name='Abbett'"
+    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Name='#{account_name}'"
 
     activities = SalesforceService.query_salesforce(client, query_statement)
 
     activities.first.each do |a|
       if a.first == "ActivityHistories"
-        a.second.each do |c|
-          owner = { "address": c.Owner.Email, "personal": c.Owner.Name }
-          val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
-                   '[#{owner.to_json}]',
-                   '[]',
-                   '[]',
-                   #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)}, 
-                   '#{Time.now}', '#{Time.now}')"
+        if !a.second.nil?
+          a.second.each do |c|
+            owner = { "address": c.Owner.Email, "personal": c.Owner.Name }
+            val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                     '[#{owner.to_json}]',
+                     '[]',
+                     '[]',
+                     #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)},
+                     '#{Time.now}', '#{Time.now}')"
+          end
         end
       end
     end
@@ -221,11 +226,11 @@ class Activity < ActiveRecord::Base
 
     source_project.activities.each do |c|
       if c.category == 'Conversation'
-        val << "('#{c.posted_by}', '#{target_project.id}', '#{c.category}', #{Activity.sanitize(c.title)}, #{c.is_public}, '#{c.backend_id}', '#{c.last_sent_date}', '#{c.last_sent_date_epoch}', 
-                  #{Activity.sanitize(c.from.to_json)}, 
-                  #{Activity.sanitize(c.to.to_json)}, 
-                  #{Activity.sanitize(c.cc.to_json)}, 
-                  #{Activity.sanitize(c.email_messages.to_json)}, 
+        val << "('#{c.posted_by}', '#{target_project.id}', '#{c.category}', #{Activity.sanitize(c.title)}, #{c.is_public}, '#{c.backend_id}', '#{c.last_sent_date}', '#{c.last_sent_date_epoch}',
+                  #{Activity.sanitize(c.from.to_json)},
+                  #{Activity.sanitize(c.to.to_json)},
+                  #{Activity.sanitize(c.cc.to_json)},
+                  #{Activity.sanitize(c.email_messages.to_json)},
                   '#{c.created_at}', '#{c.updated_at}')"
       end
     end
@@ -271,7 +276,7 @@ class Activity < ActiveRecord::Base
   def email_addresses
     carbon_copy =  cc || []
     sent_to = to || []
-    
+
     emails = Set.new
     from.each { |entry| emails.add(entry.address) }
     sent_to.each { |entry| emails.add(entry.address) }
@@ -304,13 +309,13 @@ class Activity < ActiveRecord::Base
   def email_replace_all(email1, email2, *personal)
     email1 = Hashie::Mash.new({address: email1, personal: personal.shift}) unless email1.respond_to?(:address) && email1.respond_to?(:personal)
     email2 = Hashie::Mash.new({address: email2, personal: personal.shift}) unless email2.respond_to?(:address) && email2.respond_to?(:personal)
-    
+
     email_replace(self, email1, email2)
 
     em = self.email_messages
     em.each_with_index { |e, j| em[j] = email_replace(e, email1, email2) } unless em.blank?
     self.email_messages = em
-    
+
     self.save
   end
 
