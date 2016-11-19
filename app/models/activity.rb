@@ -298,12 +298,11 @@ class Activity < ActiveRecord::Base
   end
 
   # finds all instances of email1 and replaces all with email2 in from/to/cc and email_messages for the activity
-  # emails should be passed in the format <#Hashie::Mash address: a, personal: p>
-  # the email hash can also be created at runtime if either email is just passed as a string
-  # for each email passed as a string, must pass an additional string to work as the personal
-  def email_replace_all(email1, email2, *personal)
-    email1 = Hashie::Mash.new({address: email1, personal: personal.shift}) unless email1.respond_to?(:address) && email1.respond_to?(:personal)
-    email2 = Hashie::Mash.new({address: email2, personal: personal.shift}) unless email2.respond_to?(:address) && email2.respond_to?(:personal)
+  # email1 should be passed as a string, e.g. 'klu@contextsmith.com'
+  # email 2 should be passed in the format <#Hashie::Mash address: a, personal: p>
+  # the email2 hash can also be created at runtime if it is just passed as a string, then passing a personal is recommended
+  def email_replace_all(email1, email2, personal=nil)
+    email2 = Hashie::Mash.new({address: email2, personal: personal}) unless email2.respond_to?(:address) && email2.respond_to?(:personal)
     
     email_replace(self, email1, email2)
 
@@ -318,15 +317,15 @@ class Activity < ActiveRecord::Base
   # helper method for email_replace_all, used to replace the emails in from/to/cc
   def email_replace(message, email1, email2)
     from = message.from
-    from[0] = email2 if from[0] == email1
+    from.each_with_index { |f, i| from[i] = email2 if f.address == email1 } unless from.blank?
     message.from = from
 
     to = message.to
-    to.each_with_index { |t, i| to[i] = email2 if t == email1 } unless to.blank?
+    to.each_with_index { |t, i| to[i] = email2 if t.address == email1 } unless to.blank?
     message.to = to
 
     cc = message.cc
-    cc.each_with_index { |t, i| cc[i] = email2 if t == email1 } unless cc.blank?
+    cc.each_with_index { |c, i| cc[i] = email2 if c.address == email1 } unless cc.blank?
     message.cc = cc
 
     message

@@ -1,4 +1,6 @@
+$(".tasks-footer-<%= @notification.activity_id %>").show();
 $('.tasks-footer-<%= @notification.activity_id %> tbody').prepend('<%= escape_javascript(render "notifications/table_row", n: @notification, multi_table: "timeline-block-notification-table") %>');
+$('.tasks-footer-<%= @notification.activity_id %> tbody tr').first().hide().show("highlight", {color: '#D7D7D7'}, 750);
 $('#tasks-count-<%= @notification.activity_id %>').text( Number($('#tasks-count-<%= @notification.activity_id %>').text()) + 1 );
 $(".<%= @notification.activity_id %>Conversation .suggested-action").popover('hide');
 // reinitialize best_in_place/iCheck for new Smart Action row
