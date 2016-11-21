@@ -306,9 +306,13 @@ class Activity < ActiveRecord::Base
     
     email_replace(self, email1, email2)
 
-    em = self.email_messages
-    em.each_with_index { |e, j| em[j] = email_replace(e, email1, email2) } unless em.blank?
-    self.email_messages = em
+    if self.category == CATEGORY[:Conversation]
+      em = self.email_messages
+      unless em.blank?
+        em.each_with_index { |e, j| em[j] = email_replace(e, email1, email2) } 
+        self.email_messages = em
+      end
+    end
     
     self.save
   end
@@ -317,16 +321,22 @@ class Activity < ActiveRecord::Base
   # helper method for email_replace_all, used to replace the emails in from/to/cc
   def email_replace(message, email1, email2)
     from = message.from
-    from.each_with_index { |f, i| from[i] = email2 if f.address == email1 } unless from.blank?
-    message.from = from
+    unless from.blank?
+      from.each_with_index { |f, i| from[i] = email2 if f.address == email1 } 
+      message.from = from
+    end
 
     to = message.to
-    to.each_with_index { |t, i| to[i] = email2 if t.address == email1 } unless to.blank?
-    message.to = to
+    unless to.blank?
+      to.each_with_index { |t, i| to[i] = email2 if t.address == email1 } 
+      message.to = to
+    end
 
     cc = message.cc
-    cc.each_with_index { |c, i| cc[i] = email2 if c.address == email1 } unless cc.blank?
-    message.cc = cc
+    unless cc.blank?
+      cc.each_with_index { |c, i| cc[i] = email2 if c.address == email1 } 
+      message.cc = cc
+    end
 
     message
   end
