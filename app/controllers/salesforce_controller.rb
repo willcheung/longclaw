@@ -1,6 +1,6 @@
 class SalesforceController < ApplicationController
 	layout "empty", only: [:index]
-  
+
   def index
     @category_param = []
     @filter_email = []
@@ -43,7 +43,7 @@ class SalesforceController < ApplicationController
 
   	# for now, just use test account
   	@projects = Project.includes(:activities).where(account_id: account.id)
-    activities = []   
+    activities = []
     if !@projects.empty?
     	if !params[:pid].nil?
     		@projects.each do |p|
@@ -58,7 +58,7 @@ class SalesforceController < ApplicationController
   		else
         @final_filter_user = @projects[0].all_involved_people(current_user.email)
         activities = Activity.get_activity_by_filter(@projects[0], params)
-        
+
         @project_risk_score = @projects[0].current_risk_score(current_user.time_zone)
         @project = @projects[0]
   		end
@@ -77,7 +77,7 @@ class SalesforceController < ApplicationController
       project_last_touch = @project.activities.find_by(category: "Conversation", last_sent_date: @project_last_activity_date)
       @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
       @project_open_risks_count = @project.notifications.open.risks.count
-      @notifications = @project.notifications.order(:is_complete, :original_due_date)  
+      @notifications = @project.notifications.order(:is_complete, :original_due_date)
 
       @pinned_activities = @project.activities.pinned.includes(:comments)
       # filter out not visible items
@@ -107,7 +107,7 @@ class SalesforceController < ApplicationController
       salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save
     end
-    
+
     respond_to do |format|
       format.html { redirect_to settings_salesforce_path }
     end
@@ -115,7 +115,7 @@ class SalesforceController < ApplicationController
 
   def refresh_accounts
     SalesforceAccount.load(current_user.organization_id)
-    render :text => ' '   
+    render :text => ' '
   end
 
   def refresh_opportunities
@@ -125,8 +125,9 @@ class SalesforceController < ApplicationController
 
   def refresh_activities
     @streams = Project.all.is_active.includes(:salesforce_opportunities) # all active projects because "admin" role can see everything
-    
+
     @streams.each do |s|
+
       if s.salesforce_opportunities.empty? # Stream not linked to SF Opportunity
         if !s.account.salesforce_accounts.empty? # Stream linked to SF Account
           s.account.salesforce_accounts.each do |sf_a|
