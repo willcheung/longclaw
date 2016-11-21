@@ -1,7 +1,7 @@
 <div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>">
     
     <% if a.category == Activity::CATEGORY[:Conversation] %>
-        <div class="vertical-timeline-icon primary-bg">
+        <div class="vertical-timeline-icon secondary-bg">
             <i class="fa fa-envelope"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Note] %>

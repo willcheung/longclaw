@@ -363,6 +363,17 @@ class Project < ActiveRecord::Base
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
       )
+      UNION ALL
+      (
+      -- Zendesk
+      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:Zendesk]}' as category,
+            count(*) as activity_count
+      FROM activities 
+      WHERE category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      )
     SQL
 
     Activity.find_by_sql(query)
@@ -430,6 +441,18 @@ class Project < ActiveRecord::Base
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                ) as meetings
+        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
+      UNION ALL
+      (
+      -- Zendesk directly from actvities table
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Zendesk]}' as category, count(meetings.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date as sent_date, project_id
+                  FROM activities where category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as meetings
         ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
@@ -678,14 +701,12 @@ class Project < ActiveRecord::Base
   end
 
   ### method to batch update activities in a project by person
-  # finds all instances of email1 and replaces all with email2 in from/to/cc and email_messages for all activities in this project
-  # emails should be passed in the format <#Hashie::Mash address: a, personal: p>
-  # the email hash can also be created at runtime if either email is just passed as a string
-  # for each email passed as a string, must pass an additional string to work as the personal
-  def email_replace_all(email1, email2, *personal)
-    email1 = Hashie::Mash.new({address: email1, personal: personal.shift}) unless email1.respond_to?(:address) && email1.respond_to?(:personal)
-    email2 = Hashie::Mash.new({address: email2, personal: personal.shift}) unless email2.respond_to?(:address) && email2.respond_to?(:personal)
-
+  # finds all instances of email1 and replaces all with email2 in from/to/cc and email_messages for the activity
+  # email1 should be passed as a string, e.g. 'klu@contextsmith.com'
+  # email 2 should be passed in the format <#Hashie::Mash address: a, personal: p>
+  # the email2 hash can also be created at runtime if it is just passed as a string, then passing a personal is recommended
+  def email_replace_all(email1, email2, personal=nil)
+    email2 = Hashie::Mash.new({address: email2, personal: personal}) unless email2.respond_to?(:address) && email2.respond_to?(:personal)
     self.activities.each { |a| a.email_replace_all(email1, email2) }
   end
 
