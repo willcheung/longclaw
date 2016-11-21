@@ -238,7 +238,11 @@ class ProjectsController < ApplicationController
     @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
     @project_pinned_count = @project.activities.pinned.count
     @project_open_tasks_count = @project.notifications.open.count
-    @project_rag_score = @project.activities.latest_rag_score.first
+    project_rag_score = @project.activities.latest_rag_score.first
+
+    if project_rag_score
+      @project_rag_status = project_rag_score['rag_score']
+    end
 
 
 
