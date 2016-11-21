@@ -358,7 +358,7 @@ class Project < ActiveRecord::Base
       SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Salesforce]}' as category,
             count(*) as activity_count
-      FROM activities 
+      FROM activities
       WHERE category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}'
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
@@ -552,11 +552,7 @@ class Project < ActiveRecord::Base
 
   	return metrics
   end
-	#returns rag score
-	def current_rag_score
-		return self.activities.first
-	end
-
+	
   # Top Active Streams/Engagement Last 7d
   def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
     hours_ago_end = hours_ago_end.hours.ago.to_i
