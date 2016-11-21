@@ -4,7 +4,7 @@ class ActivitiesController < ApplicationController
  	def create
  		project = Project.find_by_id(params[:project_id])
  		@activity = project.activities.new(activity_params.merge(category: "Note", title: "", posted_by: current_user.id, is_public: true, last_sent_date: Time.now, last_sent_date_epoch: Time.now.to_i))
-
+    
  		respond_to do |format|
       if @activity.save
         #format.html { redirect_to @activity, notice: 'Activity was successfully created.' }
