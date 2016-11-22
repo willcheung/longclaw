@@ -49,6 +49,8 @@ Longclaw::Application.routes.draw do
       get "salesforce_activities" 
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
+      get "iframe_test"
+      get "chrome_gmail_plugin"
     end
 
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
