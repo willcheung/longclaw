@@ -320,7 +320,6 @@ class Activity < ActiveRecord::Base
       end
     end
 
-
     self.save
   end
 

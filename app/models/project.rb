@@ -221,24 +221,34 @@ class Project < ActiveRecord::Base
     Project.current_risk_score([self.id], time_zone)[self.id]
   end
 
-  # def self.new_risk_score(array_of_project_ids)
-  #   # "Risk / Engagement Ratio"
-  #   project_engagement = Project.find_include_sum_activities(array_of_project_ids)
-  #   project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group("projects.id")
-  #   @data = project_engagement.map do |e|
-  #     risk = project_risks.find { |r| r.id == e.id }
-  #     Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities).round(3)*100, color: 'blue'})
-  #   end
-  # end
+  def self.new_risk_score(array_of_project_ids)
+    # Risk / Engagement Ratio
+    p_neg_sentiment_weight = 0.5
+    project_engagement = Project.joins(:activities).where(id: array_of_project_ids, activities: { category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]] }).group('projects.id').sum('jsonb_array_length(activities.email_messages)')
+    project_risks = Project.where(id: array_of_project_ids).joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group('projects.id').count('notifications.id')
+    project_p_neg_sentiment = project_engagement.merge(project_risks) { |pid, engagement, risks| risks.to_f/engagement*100*p_neg_sentiment_weight }
+
+    # Days Inactive
+    inactivity_risk_weight = 0.5
+    project_inactivity_risk = Project.joins(:activities).where(id: array_of_project_ids).group('projects.id').maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
+    project_inactivity_risk.each { |pid, last_sent_date| project_inactivity_risk[pid] = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
+    project_inactivity_risk.each { |pid, days_inactive| project_inactivity_risk[pid] = [days_inactive/30*25, 100].min*inactivity_risk_weight } # convert days inactive to effect on risk score
+
+    # Overall Score
+    overall = [project_p_neg_sentiment, project_inactivity_risk].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
+    overall.each { |pid, score| overall[pid] = score.round }
+    # puts overall
+    # nil
+  end
 
   def new_risk_score
-    # "Risk / Engagement Ratio"
+    # Risk / Engagement Ratio
     p_neg_sentiment_weight = 0.5
     engagement = Project.find_include_sum_activities([self.id]).first.num_activities
     risks = self.notifications.risks.count
     percent_neg_sentiment = risks.to_f/engagement*100*p_neg_sentiment_weight
 
-     # "Days Inactive"
+    # Days Inactive
     inactivity_risk_weight = 0.5
     last_sent_date = self.activities.maximum("activities.last_sent_date")
     days_inactive = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd

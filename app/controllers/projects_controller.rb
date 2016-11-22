@@ -22,7 +22,8 @@ class ProjectsController < ApplicationController
     unless projects.empty?
       @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
-      @risk_scores = Project.current_risk_score(projects.map(&:id), current_user.time_zone)
+      @risk_scores = Project.new_risk_score(projects.pluck(:id))
+      @sentiment_scores = Project.current_risk_score(projects.map(&:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
     end
     # new project modal
