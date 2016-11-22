@@ -233,7 +233,8 @@ class ProjectsController < ApplicationController
 
   def get_show_data
     # metrics
-    @project_risk_score = @project.current_risk_score(current_user.time_zone)
+    @project_risk_score = @project.new_risk_score
+    @project_sentiment_score = @project.current_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
     @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
     @project_pinned_count = @project.activities.pinned.count

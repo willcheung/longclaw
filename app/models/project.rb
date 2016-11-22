@@ -221,6 +221,33 @@ class Project < ActiveRecord::Base
     Project.current_risk_score([self.id], time_zone)[self.id]
   end
 
+  # def self.new_risk_score(array_of_project_ids)
+  #   # "Risk / Engagement Ratio"
+  #   project_engagement = Project.find_include_sum_activities(array_of_project_ids)
+  #   project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group("projects.id")
+  #   @data = project_engagement.map do |e|
+  #     risk = project_risks.find { |r| r.id == e.id }
+  #     Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities).round(3)*100, color: 'blue'})
+  #   end
+  # end
+
+  def new_risk_score
+    # "Risk / Engagement Ratio"
+    p_neg_sentiment_weight = 0.5
+    engagement = Project.find_include_sum_activities([self.id]).first.num_activities
+    risks = self.notifications.risks.count
+    percent_neg_sentiment = risks.to_f/engagement*100*p_neg_sentiment_weight
+
+     # "Days Inactive"
+    inactivity_risk_weight = 0.5
+    last_sent_date = self.activities.maximum("activities.last_sent_date")
+    days_inactive = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd
+    inactivity_risk = [days_inactive/30*25, 100].min*inactivity_risk_weight
+
+    # Overall Score
+    (percent_neg_sentiment + inactivity_risk).round
+  end
+
   # query to generate Account Relationship Graph from DB entries
   def network_map
     query = <<-SQL
