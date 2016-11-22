@@ -40,7 +40,7 @@ class ReportsController < ApplicationController
       last_sent_dates = projects.includes(:activities).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
       @data = last_sent_dates.map do |d|
         proj = projects.find { |p| p.id == d[0] }
-        y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone(current_user.time_zone).to_date.mjd
+        y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: y, color: 'blue' })
       end
     when "Engagement Last 7d"
@@ -48,12 +48,12 @@ class ReportsController < ApplicationController
       @data = project_engagement.map do |p|
         Hashie::Mash.new({ id: p.id, name: p.name, y: p.num_activities, color: 'blue'})
       end
-    when "Risk / Engagement Ratio"
+    when "Risk / Engagement %"
       project_engagement = Project.find_include_sum_activities(projects.pluck(:id))
       project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group("projects.id")
       @data = project_engagement.map do |e|
         risk = project_risks.find { |r| r.id == e.id }
-        Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities).round(3), color: 'blue'})
+        Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities*100).round(2), color: 'blue'})
       end
       @data.sort_by! { |d| d.y }.reverse!
     when "Total Open Risks"
