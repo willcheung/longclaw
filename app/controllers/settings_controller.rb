@@ -24,7 +24,7 @@ class SettingsController < ApplicationController
 	end
 
 	def salesforce_activities
-		Activity.load_salesforce_activities(Project.find_by_id('6a1d0e56-0e4b-45f6-ac48-3acdaba0ea57'), current_user)
+		@streams = Project.all.is_active.includes(:salesforce_opportunities) # all active projects because "admin" role can see everything
 	end
 
 	def super_user

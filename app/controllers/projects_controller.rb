@@ -55,8 +55,8 @@ class ProjectsController < ApplicationController
     render "show"
   end
 
-  def tasks_tab   
-    # show every risk regardless of private conversation 
+  def tasks_tab
+    # show every risk regardless of private conversation
     @notifications = @project.notifications
 
     render "show"
@@ -64,7 +64,7 @@ class ProjectsController < ApplicationController
 
   def insights_tab
     @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
-    
+
     # Engagement Volume Chart
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
 
@@ -110,7 +110,7 @@ class ProjectsController < ApplicationController
     respond_to do |format|
       format.json { render json: @project.network_map}
     end
-  end 
+  end
 
   def lookup
     pinned = @project.conversations.pinned
@@ -118,7 +118,7 @@ class ProjectsController < ApplicationController
     members = (@project.users + @project.contacts).map do |m|
       pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
-      { 
+      {
         name: get_full_name(m),
         domain: get_domain(m.email),
         email: m.email,
@@ -136,7 +136,7 @@ class ProjectsController < ApplicationController
     # big refresh when no activities (normally a new stream), small refresh otherwise
     if @project.activities.count == 0
       ContextsmithService.load_emails_from_backend(@project, nil, 2000)
-      ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000) 
+      ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000)
       # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
     else
       ContextsmithService.load_emails_from_backend(@project, nil, 100)
@@ -162,7 +162,7 @@ class ProjectsController < ApplicationController
   # POST /projects
   # POST /projects.json
   def create
-    @project = Project.new(project_params.merge(status: 'Active', 
+    @project = Project.new(project_params.merge(status: 'Active',
                                                 owner_id: current_user.id,
                                                 is_confirmed: true,
                                                 created_by: current_user.id,
@@ -174,7 +174,7 @@ class ProjectsController < ApplicationController
     respond_to do |format|
       if @project.save
         format.html { redirect_to @project, notice: 'Project was successfully created.' }
-        format.js 
+        format.js
         #format.json { render action: 'show', status: :created, location: @project }
       else
         format.html { render action: 'new' }
@@ -211,7 +211,7 @@ class ProjectsController < ApplicationController
     end
   end
 
-  def bulk 
+  def bulk
     newArray = params["selected"].map { |key, value| key }
 
     if(params["operation"]=="delete")
@@ -238,6 +238,14 @@ class ProjectsController < ApplicationController
     @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
     @project_pinned_count = @project.activities.pinned.count
     @project_open_tasks_count = @project.notifications.open.count
+    project_rag_score = @project.activities.latest_rag_score.first
+
+    if project_rag_score
+      @project_rag_status = project_rag_score['rag_score']
+    end
+
+
+
 
     # old metrics
     # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
@@ -315,8 +323,8 @@ class ProjectsController < ApplicationController
 
   def set_editable_project
     @project = Project.joins(:account)
-                      .where('accounts.organization_id = ? 
-                              AND (projects.is_public=true 
+                      .where('accounts.organization_id = ?
+                              AND (projects.is_public=true
                                     OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
                       .find(params[:id])
   end

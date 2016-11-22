@@ -23,11 +23,17 @@ module ApplicationHelper
 
   def highcharts_series_color(category)
     if category == Activity::CATEGORY[:Conversation]
-      "#7cb5ec"
+      "#46C6C6"
     elsif category == Activity::CATEGORY[:Meeting]
       "#FFA500"
     elsif category == Activity::CATEGORY[:Note]
       "#ffde6b"
+    elsif category == Activity::CATEGORY[:JIRA]
+      "#205081"
+    elsif category == Activity::CATEGORY[:Salesforce]
+      "#1798c1"
+    elsif category == Activity::CATEGORY[:Zendesk]
+      "#78a300"
     end
   end
 
@@ -54,10 +60,10 @@ module ApplicationHelper
   end
 
   def risk_level(score)
-    if score 
+    if score
       if score >= 80.0
           "High Risk"
-      elsif score >= 60.0 
+      elsif score >= 60.0
           "Medium Risk"
       else
           "Low Risk"
@@ -77,20 +83,20 @@ module ApplicationHelper
       end
 
       unless to.nil? or to.empty?
-        to.each do |n| 
+        to.each do |n|
           if n["personal"].nil?
             a << n["address"]
-          else 
+          else
             a << get_first_name(n["personal"])
           end
         end
-      end 
+      end
 
       unless cc.nil? or cc.empty?
-        cc.each do |n| 
+        cc.each do |n|
           if n["personal"].nil?
             a << n["address"]
-          else 
+          else
             a << get_first_name(n["personal"])
           end
         end
@@ -105,11 +111,11 @@ module ApplicationHelper
     from_size = (from.nil? ? 0 : from.size)
 
     total_size = from_size + to_size + cc_size
-    
+
     if to_size <= size_limit and cc_size == 0
       return get_first_names(from, to, cc)
     elsif to_size <= size_limit and cc_size > 0
-      remaining = size_limit - to_size 
+      remaining = size_limit - to_size
       if remaining == 0
         if trailing_text=="other"
           return get_first_names(from, to, nil) + " and " + pluralize(total_size - size_limit, 'other')
@@ -178,7 +184,7 @@ module ApplicationHelper
 
   def get_rounded_initials_from_name(name, css_class="")
     if name.nil? or name.empty? or name == " "
-      s = '<i class="fa fa-user"></i>' 
+      s = '<i class="fa fa-user"></i>'
       name = ""
     elsif name.include?(', ') # first and last name reverse because of comma
       s = name.split(', ').last[0,1] + name.split(', ').first[0,1]

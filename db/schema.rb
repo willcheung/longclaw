@@ -11,12 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161108231515) do
+ActiveRecord::Schema.define(version: 20161116233503) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "uuid-ossp"
   enable_extension "hstore"
+  enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                       default: "",         null: false
@@ -58,6 +58,7 @@ ActiveRecord::Schema.define(version: 20161108231515) do
     t.boolean  "is_pinned",            default: false
     t.uuid     "pinned_by"
     t.datetime "pinned_at"
+    t.integer  "rag_score"
   end
 
   add_index "activities", ["category", "backend_id", "project_id"], name: "index_activities_on_category_and_backend_id_and_project_id", unique: true, using: :btree
