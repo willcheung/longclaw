@@ -76,22 +76,97 @@
     display: none;
   }
 }
-
-
-.circleBase{
+//*------- Used to display Rag Status --------*//
+.circle-base{
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid black;
+  border: 1px solid #737373;
+  opacity: 0.8 ;
 }
+
+.small-circle{
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  opacity: 0.8 ;
+  margin: 5px;
+}
+
+.rag-circle1{
+  background-color:#ed5565;
+}
+
+.rag-circle2{
+  background-color:#FFA500;
+}
+
+.rag-circle3{
+  background-color:#A1C436;
+}
+
 .type1{
-  background: #ed5565;
+  border: 3px solid #e7182d;
 }
 
 .type2{
-  background: #FFA500;
+  border: 3px solid #cc8500;
 }
 
 .type3{
-  background: #A1C436;
+  border: 3px solid #A1C436;
+}
+//=======
+.rag_bar1{
+  border-left: 4px solid #ed5565;
+}
+
+.rag_bar2{
+  border-left: 4px solid #FFA500;
+}
+
+.rag_bar3{
+  border-left: 4px solid #A1C436;
+}
+
+//==========
+.rag-bar1{
+  border-left: 4px solid #ed5565;
+}
+
+.rag-bar2{
+  border-left: 4px solid #FFA500;
+}
+
+.rag-bar3{
+  border-left: 4px solid #A1C436;
+}
+
+//* ----- SimpleForm Styles -------*//
+
+.simple_form {
+  label > input{
+    visibility: hidden;
+    position: absolute;
+  }
+
+  label > input + .small-circle{
+    cursor:pointer;
+  }
+
+  label > input:checked + .type1{
+    background: #e7182d;
+    opacity: 0.5;
+  }
+
+  label > input:checked + .type2{
+    background: #cc8500;
+    opacity: 0.5;
+  }
+
+  label > input:checked + .type3{
+    background: #A1C436;
+    opacity: 0.9;
+  }
+
 }

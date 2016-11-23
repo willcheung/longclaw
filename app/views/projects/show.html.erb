@@ -29,6 +29,7 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
+            <div class="col-xs-4"></div>
             <div class="col-xs-2">
                 <div class="metric <%= risk_color(@project_risk_score) %>">
                     <div class="metric-title" align="center">
@@ -39,7 +40,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-3">
+            <div class="col-xs-2">
                 <div class="metric text-danger">
                     <div class="metric-title" align="center">
                         <h5>Open Risks</h5>
@@ -49,13 +50,13 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-3">
+            <div class="col-xs-2">
                 <div class="metric">
                     <div class="metric-title" align="center">
-                        <h5>RAG Status </h5>
+                        <h5>Status</h5>
                     </div>
                     <div class="metric-content" align="center">
-                      <div class="circleBase type<%=@project_rag_status%>"></div>
+                      <div class="circle-base rag-circle<%=@project_rag_status%>"></div>
                     </div>
                 </div>
             </div>
