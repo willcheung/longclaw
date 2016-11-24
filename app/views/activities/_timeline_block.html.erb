@@ -82,7 +82,7 @@
         <% end %>
 
         <% elsif a.category == Activity::CATEGORY[:Note] %>
-            <div class="chat-discussion timeline-note rag_bar<%=a['rag_score']%>">
+            <div class="chat-discussion timeline-note rag-bar<%=a['rag_score']%>">
                 <div class="row">
                     <div class="col-xs-11">
                         <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>

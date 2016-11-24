@@ -71,13 +71,17 @@
   margin: 0 auto;
 }
 
+.input-group {
+  width: 550px;
+}
+
 @media only screen and (max-width: 768px) {
   .vertical-date {
     display: none;
   }
 }
 //*------- Used to display Rag Status --------*//
-.circle-base{
+.large-circle{
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -92,6 +96,14 @@
   opacity: 0.8 ;
   margin: 5px;
 }
+.index-circle{
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  opacity: 0.8 ;
+  border: 1px solid #737373;
+  opacity: 0.8 ;
+}
 
 .rag-circle1{
   background-color:#ed5565;
@@ -105,31 +117,18 @@
   background-color:#A1C436;
 }
 
-.type1{
+.rag-border-color1{
   border: 3px solid #e7182d;
 }
 
-.type2{
+.rag-border-color2{
   border: 3px solid #cc8500;
 }
 
-.type3{
+.rag-border-color3{
   border: 3px solid #A1C436;
 }
-//=======
-.rag_bar1{
-  border-left: 4px solid #ed5565;
-}
 
-.rag_bar2{
-  border-left: 4px solid #FFA500;
-}
-
-.rag_bar3{
-  border-left: 4px solid #A1C436;
-}
-
-//==========
 .rag-bar1{
   border-left: 4px solid #ed5565;
 }
@@ -154,19 +153,18 @@
     cursor:pointer;
   }
 
-  label > input:checked + .type1{
+  label > input:checked + .rag-border-color1{
     background: #e7182d;
     opacity: 0.5;
   }
 
-  label > input:checked + .type2{
+  label > input:checked + .rag-border-color2{
     background: #cc8500;
     opacity: 0.5;
   }
 
-  label > input:checked + .type3{
+  label > input:checked + .rag-border-color3{
     background: #A1C436;
     opacity: 0.9;
   }
-
 }

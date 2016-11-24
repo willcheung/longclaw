@@ -27,7 +27,7 @@
             </div>
         <% end %>
     </td>
-    <td <% if a.category == Activity::CATEGORY[:Note] %>style="background-color: #fff7db"<% end %> class="pinned-content">
+    <td <% if a.category == Activity::CATEGORY[:Note] %>style="background-color: #fff7db; margin-left=-3px;"<% end %> class="pinned-content rag-bar<%=a['rag_score']%>">
         <% if a.category == Activity::CATEGORY[:Conversation] %>
         <h3 class="font-bold">
             <%= a.title %>
@@ -74,8 +74,8 @@
         </div>
 
         <% elsif a.category == Activity::CATEGORY[:Note] %>
-        <div class="chat-discussion ">
-          <div class="col-xs-11 rag_bar<%=a['rag_score']%>">
+        <div class="chat-discussion">
+          <div class="col-xs-11 rag-border-color<%=a['rag_status']%>">
             <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
             <%= simple_format(a.note) %>
             <div class="col-4-lg action-links">

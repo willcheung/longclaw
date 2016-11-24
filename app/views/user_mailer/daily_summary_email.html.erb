@@ -122,10 +122,12 @@
         <td style="min-width:400px;">
           <% if a['rag_score'] == 3 %>
             <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;border-left:4px solid #A1C436;background-color:#ffefb8;">
-            <% elsif a['rag_score'] == 2 %>
+          <% elsif a['rag_score'] == 2 %>
             <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;border-left:4px solid #FFA500;background-color:#ffefb8;">
-            <% else a['rag_score'] == 1 %>
+          <% elsif a['rag_score'] == 1 %>
             <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;border-left:4px solid #e7182d;background-color:#ffefb8;">
+          <% else %>
+            <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
           <% end %>
               <tbody>
                 <tr>
