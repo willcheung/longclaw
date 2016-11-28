@@ -120,16 +120,16 @@
           <img src="<%= root_url %>/assets/images/icons/note_icon.png" alt="Note">
         </td>
         <td style="min-width:400px;">
+          <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
           <% if a['rag_score'] == 3 %>
-            <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;border-left:4px solid #A1C436;background-color:#ffefb8;">
+            <tbody style="border-left:4px solid #A1C436">
           <% elsif a['rag_score'] == 2 %>
-            <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;border-left:4px solid #FFA500;background-color:#ffefb8;">
+            <tbody style="border-left:4px solid #FFA500">
           <% elsif a['rag_score'] == 1 %>
-            <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;border-left:4px solid #e7182d;background-color:#ffefb8;">
+            <tbody style="border-left:4px solid #e7182d">
           <% else %>
-            <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
+            <tbody>
           <% end %>
-              <tbody>
                 <tr>
                   <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px 8px 0;">
                     <strong style="font-weight:bold;"><%= get_full_name(a.user) %></strong> wrote a note:

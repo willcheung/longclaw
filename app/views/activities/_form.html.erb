@@ -5,7 +5,6 @@
         <!-- <button class="sticky-bg btn-icon" disabled="true">
           <i class="fa fa-sticky-note"></i>
         </button> -->
-
       </span>
       <%=f.collection_radio_buttons(:rag_score, [[1, "<div class='small-circle rag-border-color1'></div>"] ,[2, "<div class='small-circle rag-border-color2'></div>"],[3, "<div class='small-circle rag-border-color3'></div>"]], :first, :last) do |b| %>
         <%=b.radio_button + b.text.html_safe %>
@@ -22,12 +21,12 @@
 <% end %>
 <script type="text/javascript">
   // Auto resize textarea with pop out for button
-  $("#activity_note").on("focus keyup input", function () {
+  $("#activity_note, #activity_rag_score_1, #activity_rag_score_2, #activity_rag_score_3").on("focus keyup input click", function () {
     $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 104));
   }).blur ( function () {
     $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 32));
   }).keyup( function () {
-    if ($(this).val()) {
+    if ($("#activity_note, #activity_rag_score_1, #activity_rag_score_2, #activity_rag_score_3").val()) {
       $(".btn-note").prop('disabled', false);
     }
     else {
