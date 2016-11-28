@@ -208,12 +208,14 @@ class Project < ActiveRecord::Base
 
 	def self.find_rag_status_per_project(array_of_project_ids)
 		query = <<-SQL
-			SELECT projects.id AS project_id,
-						 activities.rag_score AS rag_score
-			FROM projects
-			JOIN activities ON projects.id = activities.project_id
-			WHERE projects.id IN ('#{array_of_project_ids.join("','")}') AND activities.rag_score IS NOT NULL
-			ORDER BY activities.created_at ASC;
+			SELECT project_id,
+			rag_score,
+			note,
+			max(last_sent_date)
+			FROM activities
+			WHERE project_id IN ('#{array_of_project_ids.join("','")}') AND category='Note'
+			GROUP BY project_id, note, rag_score, created_at
+			ORDER BY created_at ASC;
 		SQL
 		result = Project.find_by_sql(query)
 	end

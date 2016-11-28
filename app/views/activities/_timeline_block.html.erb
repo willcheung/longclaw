@@ -86,7 +86,7 @@
                 <div class="row">
                     <div class="col-xs-11">
                         <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
-                        <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => '(Add text)', :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
+                        <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => rag_note(a['rag_score']), :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
                     </div>
                     <% if a.user == current_user %>
                         <div class="col-xs-1 delete-note">
