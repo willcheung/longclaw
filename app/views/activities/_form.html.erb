@@ -22,12 +22,11 @@
 <script type="text/javascript">
   // Auto resize textarea with pop out for button
 
-  $("#activity_note,#activity_rag_score_1,#activity_rag_score_2, #activity_rag_score_3 ").on("focus keypress input change", function () {
+  $("#activity_note,#activity_rag_score_1,#activity_rag_score_2, #activity_rag_score_3 ").on("focus keypress input", function () {
     $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 104));
   }).blur ( function () {
     $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 32));
   }).keypress( function () {
-    console.log($("#activity_note").val());
     if ($("#activity_note").val() ){
       $(".btn-note").prop('disabled',false);
     }
@@ -35,7 +34,6 @@
       $(".btn-note").prop('disabled', true);
     }
   }).change( function(){
-    console.log('click function');
     if($('#activity_rag_score_1').val() || $('#activity_rag_score_2').val() || $('#activity_rag_score_3').val() ){
       $(".btn-note").prop('disabled',false);
     } else {
