@@ -1,0 +1,69 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Alerts Settings</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= settings_path%>">Settings</a>
+            </li>
+            <li class="active">
+                <strong>Alerts</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox float-e-margins">
+        <div class="ibox-content">
+            <h1>Risk Metrics</h1>
+            <table class="table table-hover responsive no-wrap">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Benchmark</th>
+                        <th>Medium Threshold</th>
+                        <th>High Threshold</th>
+                        <th>Weight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>% Negative Sentiment</td>
+                        <td>7%</td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.pns_med_thresh %>%"></td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.pns_high_thresh %>%"></td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.pns_weight %>%"></td>
+                    </tr>
+                    <tr>
+                        <td>Days Inactive</td>
+                        <td>9</td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_med_thresh %>"></td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_high_thresh %>"></td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_weight %>%"></td>
+                    </tr>
+                    <tr>
+                        <td>Days Until Renewal</td>
+                        <td>80</td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_med_thresh %>"></td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_high_thresh %>"></td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_weight %>%"></td>
+                    </tr>
+                    <tr>
+                        <td>RAG Status</td>
+                        <td>Green</td>
+                        <td>Amber</td>
+                        <td>Red</td>
+                        <td><input type="text" class="form-control" value="<%= @risk_settings.rag_weight %>%"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn btn-primary">Save</button>
+            <%# form_for :notification do |f| %>
+                <%# f.button :button, 'Save', class: 'btn btn-primary' %>
+            <%# end %>
+        </div>
+    </div>
+</div>

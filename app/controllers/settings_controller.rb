@@ -14,6 +14,10 @@ class SettingsController < ApplicationController
 		@users = current_user.organization.users
 	end
 
+	def alerts
+		@risk_settings = Hashie::Mash.new({ rag_weight: 25, pns_med_thresh: 10, pns_high_thresh: 25, pns_weight: 30,  inactive_weight: 25, inactive_med_thresh: 30, inactive_high_thresh: 45, renewal_med_thresh: 45, renewal_high_thresh: 30, renewal_weight: 25 })
+	end
+
 	def salesforce
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 		@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("lower(accounts.name)")

@@ -45,6 +45,7 @@ Longclaw::Application.routes.draw do
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"
       get "users"
+      get "alerts"
       get "salesforce" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 
