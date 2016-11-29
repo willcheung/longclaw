@@ -6,12 +6,12 @@ jQuery(document).ready(function($) {
   $('.owner_box').chosen({ allow_single_deselect: true});
   $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
 
-	$('.switch').on('click', function(e) {    
+	$('.switch').on('click', function(e) {
 	    var trigger = $(this);
-	 
+
 	    if ( !trigger.hasClass('active') ) {
 	      $('#loader').find('.loader-icon').addClass('hidden').filter('[data-cog*="' +  trigger.data('trigger') + '"]').removeClass('hidden');
-	      trigger.addClass('active').siblings('.active').removeClass('active'); 
+	      trigger.addClass('active').siblings('.active').removeClass('active');
 	    }
 	    e.preventDefault();
 	  });
@@ -22,7 +22,7 @@ jQuery(document).ready(function($) {
     responsive: true,
     columnDefs: [
       { searchable: false, targets: [0,4,5,6,7,8,9,10,11]},
-      { orderable: false, targets: [0,4,5,8,10,11] }
+      { orderable: false, targets: [0,4,5,10,11] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -86,7 +86,7 @@ jQuery(document).ready(function($) {
     create: false,
     render: renderContacts,
     load: function (term, callback) {
-      if (!term.length) return callback()   
+      if (!term.length) return callback()
       $.getJSON( '/search/autocomplete_project_member.json', { term: encodeURIComponent(term) } )
         .done( function (data) {
           callback(data);
@@ -94,13 +94,13 @@ jQuery(document).ready(function($) {
         .fail( function () {
           callback();
         })
-      
+
     },
     onBlur: function () {
       // Manually prevent input box from being cleared on blur
       this.setTextboxValue(this.lastQuery);
     }
-  })  
+  })
 
 
   /* Handle bulk action */
@@ -141,16 +141,16 @@ jQuery(document).ready(function($) {
 
   $('.category_box').on('change',function(evt,params){
       if(bulkOperation("category",  params["selected"], "/project_bulk")==true){
-        window.location.replace("/projects");     
+        window.location.replace("/projects");
       }
       else{
         console.log("bulk error");
-      }  
+      }
   });
 
   $('.owner_box').on('change',function(evt,params){
       if(bulkOperation("owner",  params["selected"], "/project_bulk")==true){
-        window.location.replace("/projects");     
+        window.location.replace("/projects");
       }
       else{
         console.log("bulk error");
@@ -161,7 +161,7 @@ jQuery(document).ready(function($) {
   $('.category_filter').on('change',function(evt,params){
     var taskType="";
     if(params){
-        window.location.replace("/projects?type="+params["selected"]);    
+        window.location.replace("/projects?type="+params["selected"]);
     }
     else{
       window.location.replace("/projects");
@@ -171,7 +171,7 @@ jQuery(document).ready(function($) {
 
   $('.filter-group, .bulk-group').hover(function(){
     $('.chosen-container-single').css('cursor', 'pointer');
-    $('.chosen-single').css('cursor', 'pointer'); 
+    $('.chosen-single').css('cursor', 'pointer');
   });
 
 
@@ -186,8 +186,8 @@ function bulkOperation(operation, value, url){
   $('.bulk-project:checked').each(function(){
     array[i] = $(this).val();
     i++;
-  }); 
-  
+  });
+
   var temp = {
     selected: array,
     operation: operation,
@@ -204,7 +204,7 @@ function bulkOperation(operation, value, url){
       url: url,
       contentType: 'application/json',
       dataType: 'json',
-      data: msg, 
+      data: msg,
       async: false,
       success: function(){
         // alert("success!");

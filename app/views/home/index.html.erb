@@ -87,7 +87,7 @@
 
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
-            
+
                 <div class="ibox-title">
                     <h2>My Account Streams</h2>
                 </div>
@@ -101,7 +101,7 @@
                                 <th></th>
                                 <th>Risk Score</th>
                                 <th>Open Risks</th>
-                                <th>Last 7d Activity</th>
+                                <th>Score</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -117,35 +117,34 @@
                                     <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
                                     <td style="text-align:right;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
                                     <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                    <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
-                                    
+                                    <td><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div></td>
                                     <td><% if !p.is_public %>
                                             <span class="label label-warning pull-right">Private</span>
                                         <% else %>
                                             <span class="label label-default pull-right">Public</span>
                                         <% end %>
                                     </td>
-                                    
+
                                 </tr>
 
-                                <script>        
-                                $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {       
-                                    type: 'bar',      
-                                    height: '20',     
-                                    barWidth: 12,     
-                                    barSpacing: 2,        
-                                    barColor: '#5DA5DA',      
-                                    zeroAxis: false,      
-                                    zeroColor: '#ed5565'      
-                                });       
+                                <script>
+                                $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {
+                                    type: 'bar',
+                                    height: '20',
+                                    barWidth: 12,
+                                    barSpacing: 2,
+                                    barColor: '#5DA5DA',
+                                    zeroAxis: false,
+                                    zeroColor: '#ed5565'
+                                });
                                 </script>
                             <% end %>
-                        
+
                         </tbody>
                     </table>
 
                 </div>
-            
+
         </div>
 
     </div>

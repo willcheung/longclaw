@@ -71,6 +71,21 @@ module ApplicationHelper
     end
   end
 
+  def rag_note(score)
+    if score
+      s = "Status set to "
+      if score == 3
+        s + "Green"
+      elsif score == 2
+        s + "Amber"
+      elsif score == 1
+        s + "Red"
+      else
+        "Add Text"
+      end
+    end
+  end
+
   def get_first_names(from, to, cc)
       a = []
 
