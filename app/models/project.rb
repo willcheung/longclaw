@@ -213,7 +213,7 @@ class Project < ActiveRecord::Base
 			note,
 			max(last_sent_date)
 			FROM activities
-			WHERE project_id IN ('#{array_of_project_ids.join("','")}') AND category='Note'
+			WHERE project_id IN ('#{array_of_project_ids.join("','")}') AND category='Note' AND rag_score IS NOT NULL
 			GROUP BY project_id, note, rag_score, created_at
 			ORDER BY created_at ASC;
 		SQL

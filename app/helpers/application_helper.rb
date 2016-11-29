@@ -73,13 +73,15 @@ module ApplicationHelper
 
   def rag_note(score)
     if score
-      s = "Status changed to "
+      s = "Status set to "
       if score == 3
         s + "Green"
       elsif score == 2
         s + "Amber"
-      else score == 1
+      elsif score == 1
         s + "Red"
+      else
+        "Add Text"
       end
     end
   end
