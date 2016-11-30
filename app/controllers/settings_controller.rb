@@ -15,7 +15,7 @@ class SettingsController < ApplicationController
 	end
 
 	def alerts
-		@risk_settings = Hashie::Mash.new({ rag_weight: 25, pns_med_thresh: 10, pns_high_thresh: 25, pns_weight: 30,  inactive_weight: 25, inactive_med_thresh: 30, inactive_high_thresh: 45, renewal_med_thresh: 45, renewal_high_thresh: 30, renewal_weight: 25 })
+		@risk_settings = Hashie::Mash.new({ rag_weight: 25, pns_med_thresh: 10, pns_high_thresh: 25, pns_weight: 25,  inactive_weight: 25, inactive_med_thresh: 30, inactive_high_thresh: 45, renewal_med_thresh: 45, renewal_high_thresh: 30, renewal_weight: 25 })
 	end
 
 	def salesforce

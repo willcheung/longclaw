@@ -16,10 +16,28 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-    <div class="ibox float-e-margins">
+    <div class="ibox">
         <div class="ibox-content">
             <h1>Risk Metrics</h1>
-            <table class="table table-hover responsive no-wrap">
+            <div class="form-inline">
+                <label>Level:</label>
+                <select id="select-metric-level" class="form-control">
+                    <option>Organization</option>
+                    <option>Account</option>
+                    <option>Project</option>
+                </select>
+                <div class="form-group" style="display: none;">
+                  <select class="form-control">
+                      <option>Stark Industries</option>
+                      <option>Hooli</option>
+                      <option>Pied Piper</option>
+                  </select>
+                  <span>Settings currently inherited from Organization level</span>
+                </div>
+                <button class="btn btn-info" style="display: none;">Edit</button>
+                <button class="btn btn-primary">Save</button>
+            </div>
+            <table class="table table-condensed responsive no-wrap">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -27,15 +45,39 @@
                         <th>Medium Threshold</th>
                         <th>High Threshold</th>
                         <th>Weight</th>
+                        <th>Notifications</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <tr>
+                        <td>Risk Notifications</td>
+                        <td>45</td>
+                        <td><input type="text" class="form-control" value="-"></td>
+                        <td><input type="text" class="form-control" value="80"></td>
+                        <td><input type="text" class="form-control" value="0%"></td>
+                        <td>
+                            <div>
+                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
+                            </div>
+                            <div>
+                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="" checked>
+                            </div>
+                        </td>
+                    </tr>
                     <tr>
                         <td>% Negative Sentiment</td>
                         <td>7%</td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.pns_med_thresh %>%"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.pns_high_thresh %>%"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.pns_weight %>%"></td>
+                        <td>
+                            <div>
+                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
+                            </div>
+                            <div>
+                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="">
+                            </div>
+                        </td>
                     </tr>
                     <tr>
                         <td>Days Inactive</td>
@@ -43,6 +85,14 @@
                         <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_med_thresh %>"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_high_thresh %>"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_weight %>%"></td>
+                        <td>
+                            <div>
+                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
+                            </div>
+                            <div>
+                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="">
+                            </div>
+                        </td>
                     </tr>
                     <tr>
                         <td>Days Until Renewal</td>
@@ -50,6 +100,14 @@
                         <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_med_thresh %>"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_high_thresh %>"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_weight %>%"></td>
+                        <td>
+                            <div>
+                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
+                            </div>
+                            <div>
+                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="">
+                            </div>
+                        </td>
                     </tr>
                     <tr>
                         <td>RAG Status</td>
@@ -57,13 +115,39 @@
                         <td>Amber</td>
                         <td>Red</td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.rag_weight %>%"></td>
+                        <td>
+                            <div>
+                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
+                            </div>
+                            <div>
+                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><button class="btn btn-success"><i class="fa fa-plus"></i></button></td>
                     </tr>
                 </tbody>
             </table>
-            <button class="btn btn-primary">Save</button>
-            <%# form_for :notification do |f| %>
-                <%# f.button :button, 'Save', class: 'btn btn-primary' %>
-            <%# end %>
         </div>
     </div>
 </div>
+<script type="text/javascript">
+  $("#select-metric-level").change(function () {
+    if ($(this).val() != 'Organization') {
+      $(this).next().show();
+      $('table tbody tr').addClass('active');
+      $('table tbody input').prop('disabled', true);
+    }
+    else {
+      $(this).next().hide();
+      $('table tbody tr').removeClass('active');
+      $('table tbody input').prop('disabled', false);
+    }
+  })
+</script>
