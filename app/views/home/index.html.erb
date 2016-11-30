@@ -101,7 +101,7 @@
                                 <th></th>
                                 <th>Risk Score</th>
                                 <th>Open Risks</th>
-                                <th>Score</th>
+                                <th>Status</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -117,7 +117,7 @@
                                     <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
                                     <td style="text-align:right;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
                                     <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                    <td><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div></td>
+                                    <td><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id]%></div></td>
                                     <td><% if !p.is_public %>
                                             <span class="label label-warning pull-right">Private</span>
                                         <% else %>

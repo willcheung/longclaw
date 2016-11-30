@@ -71,10 +71,6 @@
   margin: 0 auto;
 }
 
-.input-group {
-  width: 550px;
-}
-
 @media only screen and (max-width: 768px) {
   .vertical-date {
     display: none;
@@ -118,11 +114,11 @@
 }
 
 .rag-border-color1{
-  border: 3px solid #e7182d;
+  border: 3px solid #ed5565;
 }
 
 .rag-border-color2{
-  border: 3px solid #cc8500;
+  border: 3px solid #FFA500;
 }
 
 .rag-border-color3{
@@ -154,17 +150,14 @@
   }
 
   label > input:checked + .rag-border-color1{
-    background: #e7182d;
-    opacity: 0.5;
+    background: #ed5565;
   }
 
   label > input:checked + .rag-border-color2{
-    background: #cc8500;
-    opacity: 0.5;
+    background: #FFA500;
   }
 
   label > input:checked + .rag-border-color3{
     background: #A1C436;
-    opacity: 0.9;
   }
 }
