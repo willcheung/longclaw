@@ -23,8 +23,8 @@
                 <label>Level:</label>
                 <select id="select-metric-level" class="form-control">
                     <option>Organization</option>
-                    <option>Account</option>
-                    <option>Project</option>
+                    <option>Account (Coming Soon)</option>
+                    <option>Stream (Coming Soon)</option>
                 </select>
                 <div class="form-group" style="display: none;">
                   <select class="form-control">
@@ -34,50 +34,36 @@
                   </select>
                   <span>Settings currently inherited from Organization level</span>
                 </div>
-                <button class="btn btn-info" style="display: none;">Edit</button>
-                <button class="btn btn-primary">Save</button>
+                <button id="edit-btn" class="btn btn-info" style="display: none;">Edit</button>
+                <button id="save-btn" class="btn btn-primary">Save</button>
             </div>
-            <table class="table table-condensed responsive no-wrap">
+            <table class="table table-condensed responsive no-wrap m-t-sm">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Benchmark</th>
+                        <th>Metric</th>
+                        <th>Average</th>
                         <th>Medium Threshold</th>
                         <th>High Threshold</th>
-                        <th>Weight</th>
-                        <th>Notifications</th>
+                        <th>Risk Score Weight</th>
+                        <th>Add to Smart Tasks</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Risk Notifications</td>
+                        <td>Negative Sentiment Score</td>
                         <td>45</td>
-                        <td><input type="text" class="form-control" value="-"></td>
+                        <td>-</td>
                         <td><input type="text" class="form-control" value="80"></td>
-                        <td><input type="text" class="form-control" value="0%"></td>
-                        <td>
-                            <div>
-                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
-                            </div>
-                            <div>
-                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="" checked>
-                            </div>
-                        </td>
+                        <td>-</td>
+                        <td><input type="checkbox" name="" checked></td>
                     </tr>
                     <tr>
                         <td>% Negative Sentiment</td>
-                        <td>7%</td>
+                        <td>7% (Last 30d)</td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.pns_med_thresh %>%"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.pns_high_thresh %>%"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.pns_weight %>%"></td>
-                        <td>
-                            <div>
-                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
-                            </div>
-                            <div>
-                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="">
-                            </div>
-                        </td>
+                        <td><input type="checkbox" name=""></td>
                     </tr>
                     <tr>
                         <td>Days Inactive</td>
@@ -85,14 +71,7 @@
                         <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_med_thresh %>"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_high_thresh %>"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_weight %>%"></td>
-                        <td>
-                            <div>
-                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
-                            </div>
-                            <div>
-                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="">
-                            </div>
-                        </td>
+                        <td><input type="checkbox" name=""></td>
                     </tr>
                     <tr>
                         <td>Days Until Renewal</td>
@@ -100,14 +79,7 @@
                         <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_med_thresh %>"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_high_thresh %>"></td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_weight %>%"></td>
-                        <td>
-                            <div>
-                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
-                            </div>
-                            <div>
-                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="">
-                            </div>
-                        </td>
+                        <td><input type="checkbox" name=""></td>
                     </tr>
                     <tr>
                         <td>RAG Status</td>
@@ -115,14 +87,7 @@
                         <td>Amber</td>
                         <td>Red</td>
                         <td><input type="text" class="form-control" value="<%= @risk_settings.rag_weight %>%"></td>
-                        <td>
-                            <div>
-                                <label class="m-r-xs">Email:</label><input type="checkbox" name="">
-                            </div>
-                            <div>
-                                <label class="m-r-xs">Smart Action:</label><input type="checkbox" name="">
-                            </div>
-                        </td>
+                        <td><input type="checkbox" name=""></td>
                     </tr>
                     <tr>
                         <td></td>
@@ -130,7 +95,7 @@
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td><button class="btn btn-success"><i class="fa fa-plus"></i></button></td>
+                        <td><button id="add-btn" class="btn btn-success"><i class="fa fa-plus"></i></button></td>
                     </tr>
                 </tbody>
             </table>
@@ -138,16 +103,45 @@
     </div>
 </div>
 <script type="text/javascript">
-  $("#select-metric-level").change(function () {
+  $('#select-metric-level').change(function () {
     if ($(this).val() != 'Organization') {
       $(this).next().show();
-      $('table tbody tr').addClass('active');
-      $('table tbody input').prop('disabled', true);
+      $('tbody tr').addClass('active');
+      $('tbody input, tbody button').prop('disabled', true);
+      $('#save-btn').hide();
+      $('#edit-btn').show();
     }
     else {
       $(this).next().hide();
-      $('table tbody tr').removeClass('active');
-      $('table tbody input').prop('disabled', false);
+      $('tbody tr').removeClass('active');
+      $('tbody input, tbody button').prop('disabled', false);
+      $('#save-btn').show();
+      $('#edit-btn').hide();
     }
+  });
+
+  $('#edit-btn').click(function () {
+    $('#save-btn').show();
+    $(this).hide();
+    $('tbody tr').removeClass('active');
+    $('tbody input, tbody button').prop('disabled', false);
+  });
+
+  $('#add-btn').click( function () {
+    $(this).parent().parent().before(`
+      <tr>
+          <td>
+              <select class="form-control">
+                  <option>Risk Metric A</option>
+                  <option>Risk Metric B</option>
+                  <option>Risk Metric C</option>
+              </select>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+      </tr>)`);
   })
 </script>
