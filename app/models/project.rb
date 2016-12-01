@@ -222,40 +222,55 @@ class Project < ActiveRecord::Base
   end
 
   def self.new_risk_score(array_of_project_ids)
+    projects = Project.where(id: array_of_project_ids).group('projects.id')
+
     # Risk / Engagement Ratio
-    p_neg_sentiment_weight = 0.5
-    project_engagement = Project.joins(:activities).where(id: array_of_project_ids, activities: { category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]] }).group('projects.id').sum('jsonb_array_length(activities.email_messages)')
-    project_risks = Project.where(id: array_of_project_ids).joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group('projects.id').count('notifications.id')
+    p_neg_sentiment_weight = 0.33
+    project_engagement = projects.joins(:activities).where(activities: { category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]] }).sum('jsonb_array_length(activities.email_messages)')
+    project_risks = projects.joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").count('notifications.id')
     project_p_neg_sentiment = project_engagement.merge(project_risks) { |pid, engagement, risks| risks.to_f/engagement*100*p_neg_sentiment_weight }
 
     # Days Inactive
-    inactivity_risk_weight = 0.5
-    project_inactivity_risk = Project.joins(:activities).where(id: array_of_project_ids).group('projects.id').maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
+    inactivity_risk_weight = 0.33
+    project_inactivity_risk = projects.joins(:activities).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
     project_inactivity_risk.each { |pid, last_sent_date| project_inactivity_risk[pid] = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
     project_inactivity_risk.each { |pid, days_inactive| project_inactivity_risk[pid] = [days_inactive/30*25, 100].min*inactivity_risk_weight } # convert days inactive to effect on risk score
 
+    # RAG Status
+    rag_score_weight = 0.33
+    project_rag_status = Project.where(id: array_of_project_ids).joins(:activities).where(activities: { category: Activity::CATEGORY[:Note] }).where.not(activities: { rag_score: nil }).order('activities.last_sent_date').select('activities.rag_score')
+    # project_rag_scores = Hash[project_rag_status.map { |p| [p.id, p.rag_score] }]
+    # rag_status = self.activities.latest_rag_score.first
+    # rag_score = (rag_status ? (3 - rag_status.rag_score)*50 : 0)*rag_score_weight
+    # puts rag_status.first.rag_score
+
+    puts "===============",project_rag_status, project_rag_status.each {|p| puts p.id, p.rag_score },"==================="
+    # nil
     # Overall Score
     overall = [project_p_neg_sentiment, project_inactivity_risk].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
     overall.each { |pid, score| overall[pid] = score.round }
-    # puts overall
-    # nil
   end
 
   def new_risk_score
     # Risk / Engagement Ratio
-    p_neg_sentiment_weight = 0.5
+    p_neg_sentiment_weight = 0.3
     engagement = Project.find_include_sum_activities([self.id]).first.num_activities
     risks = self.notifications.risks.count
     percent_neg_sentiment = risks.to_f/engagement*100*p_neg_sentiment_weight
 
     # Days Inactive
-    inactivity_risk_weight = 0.5
+    inactivity_risk_weight = 0.3
     last_sent_date = self.activities.maximum("activities.last_sent_date")
     days_inactive = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd
     inactivity_risk = [days_inactive/30*25, 100].min*inactivity_risk_weight
 
+    # RAG Status
+    rag_score_weight = 0.4
+    rag_status = self.activities.latest_rag_score.first
+    rag_score = (rag_status ? (3 - rag_status.rag_score)*50 : 0)*rag_score_weight
+
     # Overall Score
-    (percent_neg_sentiment + inactivity_risk).round
+    (percent_neg_sentiment + inactivity_risk + rag_score).round
   end
 
   # query to generate Account Relationship Graph from DB entries
