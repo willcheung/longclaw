@@ -25,6 +25,7 @@ class ProjectsController < ApplicationController
       @risk_scores = Project.new_risk_score(projects.pluck(:id))
       @sentiment_scores = Project.current_risk_score(projects.map(&:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
+      @rag_status = Project.current_rag_score(projects.map(&:id))
     end
     # new project modal
     @project = Project.new

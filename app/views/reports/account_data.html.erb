@@ -4,7 +4,7 @@
             <h2><%= @account.name %></h2>
         </div>
     </div>
-    
+
     <div class="ibox-content">
         <div class="row">
             <div class="col-md-4 text-center">
@@ -56,7 +56,7 @@
         <div class="row m-t-md">
             <div id="risk-detection-chart"></div>
         </div>
-        
+
         <div class="row m-t-md">
             <div id="activities-chart"></div>
         </div>
@@ -78,7 +78,7 @@
     </div>
 </div>
 <script type="text/javascript">
-    
+
     /***********
     Sychronize Charts
     ************/
@@ -464,7 +464,7 @@
             },
             <% end %>
             // Dummy data series to make sure axis still shown when there is no data
-            {     
+            {
                 type: 'column',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,

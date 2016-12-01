@@ -77,7 +77,7 @@ class ReportsController < ApplicationController
     @open_risks_count = @account.notifications.open.risks.count
     @last_activity_date = @account.activities.conversations.maximum("activities.last_sent_date")
     @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
-    
+
     # Engagement Volume Chart
     @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
 
@@ -172,7 +172,7 @@ class ReportsController < ApplicationController
 
     ###### Dashboard Metrics ######
     if !@projects.empty?
-      
+
       project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
 
       # Top Active Streams
@@ -187,7 +187,7 @@ class ReportsController < ApplicationController
 
       # How Busy Are We? Chart
       @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.pluck(:id), current_user.time_zone)
-      
+
       # Team Leaderboard
       @team_leaderboard = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
       @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name

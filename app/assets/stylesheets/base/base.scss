@@ -1225,6 +1225,36 @@ a.close-canvas-menu:hover {
 .in-bl {
   display: inline-block;
 }
+.index-circle{
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  opacity: 0.8 ;
+  border: 1px solid #737373;
+  opacity: 0.8 ;
+}
+.rag-circle1{
+  background-color:#ed5565;
+}
+
+.rag-circle2{
+  background-color:#FFA500;
+}
+
+.rag-circle3{
+  background-color:#A1C436;
+}
+.rag-bar1{
+  border-left: 4px solid #ed5565;
+}
+
+.rag-bar2{
+  border-left: 4px solid #FFA500;
+}
+
+.rag-bar3{
+  border-left: 4px solid #A1C436;
+}
 
 // Bootstrap issue in 3.3.0 with modal https://github.com/twbs/bootstrap/issues/9855
 // Fix

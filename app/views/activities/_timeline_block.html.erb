@@ -1,5 +1,5 @@
 <div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>">
-    
+
     <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon secondary-bg">
             <i class="fa fa-envelope"></i>
@@ -25,13 +25,13 @@
             <i class="salesforce-logo"></i>
         </div>
     <% end %>
-    
+
     <span class="vertical-date left"><%= Time.zone.at(a.last_sent_date).strftime("%b %d") %><br />
         <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span>
 
     <div class="vertical-timeline-content" <% if a.category == Activity::CATEGORY[:Note] %> style="background-color: #fff7db" <% end %> >
-        <% if a.category == Activity::CATEGORY[:Conversation] %>          
+        <% if a.category == Activity::CATEGORY[:Conversation] %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
                 <% if not_in_current_user_inbox(a) %><span id="not-in-inox"><i class="fa fa-eye pull-right" style="font-size:14px;" data-toggle="tooltip" data-placement="top" data-original-title="This conversation is not in your inbox"></i></span><% end %>
@@ -55,7 +55,7 @@
                                 <hr class="message-divider"/>
                                 <span class="message-content">
                                     <!-- some emails don't even have content -->
-                                    <%= smart_email_body(m) %>                                            
+                                    <%= smart_email_body(m) %>
                                 </span>
                             </div>
                         </div>
@@ -80,13 +80,13 @@
         <% unless params[:action] == "daily_summary" %>
             <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => "timeline-block-notification-table", :notifications => a.notifications %></div>
         <% end %>
-        
+
         <% elsif a.category == Activity::CATEGORY[:Note] %>
-            <div class="chat-discussion timeline-note">
+            <div class="chat-discussion timeline-note rag-bar<%=a['rag_score']%>">
                 <div class="row">
                     <div class="col-xs-11">
                         <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
-                        <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => '(Add text)', :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
+                        <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => rag_note(a['rag_score']), :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
                     </div>
                     <% if a.user == current_user %>
                         <div class="col-xs-1 delete-note">
@@ -97,7 +97,7 @@
                 </div>
                 <div class="action-links">
                     <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
-                     &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a> 
+                     &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 </div>
             </div>
 
@@ -225,9 +225,9 @@
                 </div>
             </div>
         <% end %>
-        
+
         <div class="content-footer footer-<%= a.id %>" style="display: none;">
-            
+
             <% a.comments.each do |c| %>
                 <% if !(c.nil? or c.user.nil?) %>
                     <%= render "comments/comment", :c => c %>

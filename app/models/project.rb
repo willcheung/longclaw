@@ -206,6 +206,20 @@ class Project < ActiveRecord::Base
     result = Project.find_by_sql(query)
   end
 
+	def self.find_rag_status_per_project(array_of_project_ids)
+		query = <<-SQL
+			SELECT project_id,
+			rag_score,
+			note,
+			max(last_sent_date)
+			FROM activities
+			WHERE project_id IN ('#{array_of_project_ids.join("','")}') AND category='Note' AND rag_score IS NOT NULL
+			GROUP BY project_id, note, rag_score, created_at
+			ORDER BY created_at ASC;
+		SQL
+		result = Project.find_by_sql(query)
+	end
+
   # for risk counts, show every risk regardless of private conversation
   def self.open_risk_count(array_of_project_ids)
     risks_per_project = Project.count_risks_per_project(array_of_project_ids)
@@ -272,6 +286,11 @@ class Project < ActiveRecord::Base
     # Overall Score
     (percent_neg_sentiment + inactivity_risk + rag_score).round
   end
+
+	def self.current_rag_score(array_of_project_ids)
+		rag_per_project = Project.find_rag_status_per_project(array_of_project_ids)
+		Hash[rag_per_project.map { |p| [p.project_id, p.rag_score ]}]
+	end
 
   # query to generate Account Relationship Graph from DB entries
   def network_map
@@ -421,7 +440,7 @@ class Project < ActiveRecord::Base
       SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Zendesk]}' as category,
             count(*) as activity_count
-      FROM activities 
+      FROM activities
       WHERE category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}'
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
@@ -627,7 +646,7 @@ class Project < ActiveRecord::Base
 
   	return metrics
   end
-	
+
   # Top Active Streams/Engagement Last 7d
   def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
     hours_ago_end = hours_ago_end.hours.ago.to_i

@@ -13,8 +13,8 @@
                 <option>All</option>
                 <% Account::CATEGORY.each do |k,v| %>
                 <option <% if params[:account] == v %> selected <% end %> ><%= v %></option>
-                <% end %> 
-            </select> 
+                <% end %>
+            </select>
         </div>
         <div class="col-sm-4 filter-space">
             <div class="font-bold col-lg-5 m-t-sm">Stream Type:</div>
@@ -22,15 +22,15 @@
                 <option>All</option>
                 <% Project::CATEGORY.each do |k,v|    %>
                 <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>
-                <% end %> 
-            </select> 
+                <% end %>
+            </select>
         </div>
     </div>
-    
+
     <div class="row border-bottom white-bg dashboard-header">
             <!-- LEFT -->
             <div class="col-lg-5">
-                <h4 class="m-l-md">Sort by: 
+                <h4 class="m-l-md">Sort by:
                     <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Type">
                         <option selected>Risk Score Today</option>
                         <option>Days Inactive</option>
@@ -109,7 +109,7 @@
                             }
                         }
                     }
-                }   
+                }
             },
             credits: {
                 enabled: false
@@ -120,7 +120,7 @@
                 <% @risk_scores.each do |r| %>
                 {
                     y: <%= r.score %>,
-                    color: "<%= if r.score >= 80.0 
+                    color: "<%= if r.score >= 80.0
                             '#ed5565'
                         elsif r.score >= 60.0
                             '#FFA500'
@@ -128,7 +128,7 @@
                             '#A1C436'
                         end %>",
                     id: "<%= r.id %>"
-                }, 
+                },
                 <% end %>
                 ],
             }, {
