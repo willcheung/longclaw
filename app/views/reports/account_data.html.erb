@@ -146,6 +146,7 @@
         };
 
 
+
         $('#activities-breakdown').highcharts({
             chart: {
                 plotBackgroundColor: null,
@@ -328,6 +329,7 @@
             });
 
         $('#risk-detection-chart').highcharts({
+
             chart: {
                 height: 140,
                 events:{
@@ -341,7 +343,7 @@
                 enabled: false
             },
             title: {
-                text: "Risk Volume",
+                text: "Risk/Engagement %",
                     align: 'left',
                     margin: 0,
                     x: 35,
@@ -374,7 +376,7 @@
                 },
                 borderWidth: 0,
                 backgroundColor: 'none',
-                pointFormat: '{point.y}',
+                pointFormat: '{point.y:.0f}'+"%" ,
                 xDateFormat: '%b %e',
                 shadow: false,
                 style: {
@@ -382,14 +384,21 @@
                     color: '#555555'
                 }
             },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
             series: [{
                 type: 'column',
-                name: 'New Risks',
+                name: 'New Risk',
                 color: '#FF5050',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= @risks_by_date.to_json.html_safe  %>
-            }]
+                data: <%= @risk_activity_engagement.to_json.html_safe  %>,
+            }
+
+          ]
         });
 
         $('#activities-chart').highcharts({
@@ -434,7 +443,6 @@
                 positioner: function () {
                     return {
                         x: this.chart.chartWidth - this.label.width, // right aligned
-                        y: -15 // align to title
                     };
                 },
                 borderWidth: 0,
@@ -474,4 +482,5 @@
         });
 
     };
+
 </script>
