@@ -15,7 +15,7 @@
         <div class="row m-t-md">
             <div id="risk-detection-chart" ></div>
         </div>
-        
+
         <div class="row m-t-md">
             <div id="activities-chart"></div>
         </div>
@@ -25,7 +25,7 @@
 <script type="text/javascript">
 
     $("#insights-link").parent().addClass("active");
-    
+
     /***********
     Sychronize Charts
     ************/
@@ -71,7 +71,7 @@
         }
     }
 
-    
+
     /**
      * Override the reset function, we don't need to hide the tooltips and crosshairs.
      */
@@ -284,7 +284,7 @@
             enabled: false
         },
         title: {
-            text: "Risk Volume",
+            text: "Risk/Engagement %",
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -317,7 +317,7 @@
             },
             borderWidth: 0,
             backgroundColor: 'none',
-            pointFormat: '{point.y}',
+            pointFormat: '{point.y:.0f}'+"%",
             xDateFormat: '%b %e',
             shadow: false,
             style: {
@@ -331,7 +331,7 @@
             color: '#FF5050',
             pointInterval: <%= 1.day * 1000 %>,
             pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-            data: <%= @risks_by_date.to_json.html_safe  %>
+            data: <%= @risk_activity_engagement.to_json.html_safe  %>
         }]
     });
 
@@ -407,7 +407,7 @@
         },
         <% end %>
         // Dummy data series to make sure axis still shown when there is no data
-        {     
+        {
             type: 'column',
             pointInterval: <%= 1.day * 1000 %>,
             pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
@@ -416,5 +416,5 @@
         }]
     });
 
-    
+
 </script>
