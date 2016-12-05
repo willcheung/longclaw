@@ -93,15 +93,17 @@ class ReportsController < ApplicationController
       risks_by_date[day_index] += 1
     end
 
+
     # Calculates the Risk Volume / Activity Engagment through Conversation
     @risk_activity_engagement = []
-    activity_engagement.zip(risks_by_date).each do | a, b|
+    risks_by_date.zip(activity_engagement).each do | a, b|
       if b == 0
         @risk_activity_engagement.push(0)
       else
         @risk_activity_engagement.push(a/b.to_f * 100)
       end
     end
+
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team

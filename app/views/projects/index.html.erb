@@ -65,6 +65,7 @@
                                     <th>Risk Score</th>
                                     <th>Open Risks</th>
                                     <th>Status</th>
+                                    <th>Last 7d Activity</th>
                                     <th>Inactive Days</th>
                                     <th></th>
                                     <th></th>
@@ -89,6 +90,8 @@
                                             <td style="text-align:right;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
                                             <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
                                             <td style="text-align:center"><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id].to_i%></div></td>
+                                            <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
+
                                             <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : ((Time.current - @project_last_activity_date[p.id])/86400).to_i %></td>
                                             <td><% if !p.is_public %>
                                                     <span class="label label-warning pull-right">Private</span>
