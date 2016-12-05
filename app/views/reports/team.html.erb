@@ -39,8 +39,7 @@
                 <select class="metric_filter col-lg-8" data-placeholder="Select Type">
                     <option value="1" selected="true">Activities (Last 7d)</option>
                     <option value="2">Activities (Last 30d)</option>
-                    <option value="3">Time Spent on Emails (Last 7d)</option>
-                    <option value="4">Time Spent on Emails (Last 30d)</option>
+                    <option value="3">Open Tasks</option>
                   </select>    
                
                 </h4>
@@ -61,54 +60,18 @@
                 <div id="account-header" style="display:none;">
                     <div class="row m-b-sm">
                         <div class="col-lg-8">
-                            <h2 >Will Charleston</h2>
+                            <h1>Will Charleston</h1>
                         </div>
                         <div class="col-lg-4 m-t-md">
                             <span class="label">Last 14 days</span>
-                        </div>
-                    </div>
-                    
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-md-4 text-center">
-                                <div class="metric text-danger">
-                                    <div class="metric-title">
-                                        <h4>Customer Emails</h4>
-                                    </div>
-                                    <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">96</h2>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4 text-center">
-                                <div class="metric text-danger">
-                                    <div class="metric-title">
-                                        <h2>% more than average</h2>
-                                    </div>
-                                    <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">5</h2>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4 text-center">
-                                <div class="metric">
-                                    <div class="metric-title">
-                                        <h4>Last Touch</h4>
-                                    </div>
-                                    <div class="metric-content">
-                                        <h2 style="line-height:50px;">9 days ago</h2>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
                 <!-- end id="account-header" -->
                 
                 <div id="account-charts" style="display:none;">
-                    <div id="charts-container" class="ibox-content">
+                    <div class="ibox-content">
+                        <h2>Activities Volume</h2>
                         
                         <div class="row m-t-md">
                             <div id="activities-chart" style="height:240px"></div>
@@ -118,24 +81,17 @@
                             <div id="customers-volume-chart" style="height:340px"></div>
                         </div>
 
-                        <div class="row m-t-md">
-                            <div id="customers-time-chart" style="height:340px"></div>
-                        </div>
-
-                        <div class="row m-t-lg text-center">
-                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e" class="btn btn-outline btn-primary btn-xs">See activities &rarr;</a></h3>
-                        </div>
                     </div>
 
                     <div class="ibox-content">
                         <div class="row">
-                            <div class="col-lg-6" id="activities-breakdown" style="height:200px"></div>
-                            <div class="col-lg-6" id="top-contributors" style="height:200px;"></div>
+                            <h2>Task Management</h2>
+                            <div id="tasks-trend" style="height:300px"></div>
                         </div>
+                    </div>
 
-                        <div class="row m-t-lg text-center">
-                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/arg" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
-                        </div>
+                    <div class="ibox-content">
+
                     </div>
                 </div>
             </div>
@@ -179,7 +135,6 @@
                                 $("#account-charts").show();
                                 $("#intro-account-header").hide();
                                 renderCharts(this.y);
-                                //alert('Category: ' + this.category + ', value: ' + this.y);
                             }
                         }
                     }
@@ -228,7 +183,11 @@
             },
             credits: false,
             title: {
-                text: 'Activities Volume'
+                text: 'By Account Stream',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
             },
             xAxis: {
                 categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise']
@@ -255,100 +214,57 @@
                 data: [2, 2, 3, 2, 1]
             }, {
                 name: 'Meetings',
-                data: [1, 0, 0, 3, 5]
+                data: [1, 0, 0, 3, 2]
+            }, {
+                name: 'Open Smart Tasks',
+                data: [2, 2, 0, 1, 4]
             }]
         });
 
-        $('#activities-breakdown').highcharts({
-            chart: {
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false,
-                type: 'pie'
+
+        $('#tasks-trend').highcharts({
+            title: {
+                text: ''
             },
             credits: false,
-            title: {
-                text: "Activities by Team",
-                align: 'left',
-                margin: 0,
-                x: 35,
-                style: {
-                    color: '#555555',
-                    fontSize: '16px'
-                }
-            },
-            tooltip: {
-                pointFormat: '{point.percentage:.1f}%'
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: {
-                        enabled: false,
-                        distance: -25,
-                        format: '{point.name}',
-                    }
-                }
-            },
-            series: [{
-                name: 'Team',
-                colorByPoint: true,
-                data: [{
-                    name: 'Sales',
-                    y: 56.3,
-                    sliced: true,
-                    dataLabels: { 
-                        enabled: true
-                    },
-                }, {
-                    name: 'Marketing',
-                    y: 24
-                }, {
-                    name: 'Account Managment',
-                    y: 10.3
-                }, {
-                    name: 'Support',
-                    y: 4.7
-                }]
-            }]
-        });
-
-        $('#top-contributors').highcharts({
-            chart: {
-                type: 'bar'
-            },
-            title: {
-                text: 'Most Active Contributors',
-                align: 'left',
-                margin: 0,
-                x: 35,
-                style: {
-                    color: '#555555',
-                    fontSize: '15px'
-                }
-            },
-            credits: { enabled: false },
             xAxis: {
-                categories: ['Justin', 'Kelvin', 'Will', 'Richard', 'Ben']
+                type: 'datetime'
             },
             yAxis: {
-                min: 0,
                 title: {
                     text: ''
-                }
+                },
+                min: 0,
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
             },
-            legend: {
-                enabled: false
-            },
-            plotOptions: {
-                series: {
-                    stacking: 'normal'
-                }
+            tooltip: {
+                shared: true
             },
             series: [{
-                name: 'Engagement',
-                data: [7, 5, 4, 3, 2]
+                name: 'Total Open Task',
+                data: [3, 4, 5, 8, 11, 13, 17, 17, 18, 18, 17, 15],
+                type: 'area',
+                color: '#cccccc',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'New Smart Task',
+                data: [5, 7, 10, 10, 13, 13, 21, 19, 26, 25, 19, 17],
+                type: 'line',
+                color: '#B23232',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'Closed Smart Task',
+                data: [2, 3, 5, 2, 2, 0, 4, 2, 3, 8, 1, 2],
+                type: 'line',
+                color: '#149414',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
             }]
         });
 
@@ -366,7 +282,12 @@
                 enabled: false
             },
             title: {
-                text: "Activities Volume"
+                text: "By Day",
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+                
             },
             xAxis: {
                 type: 'datetime'
@@ -406,25 +327,25 @@
                 name: 'Email',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(20) }  %>
+                data: <%= 14.times.map{ Random.rand(10) }  %>
             },
             {
                 type: 'column',
                 name: 'Meeting',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(4) }  %>
+                data: <%= 14.times.map{ Random.rand(2) }  %>
             },
             {
                 type: 'column',
-                name: 'Support Case',
+                name: 'Support Ticket',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(20) }  %>
+                data: <%= 14.times.map{ Random.rand(2) }  %>
             },
             {
                 type: 'column',
-                name: 'Key Activity',
+                name: 'New Smart Tasks',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(2) }  %>
