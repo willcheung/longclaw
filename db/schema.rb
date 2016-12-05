@@ -11,12 +11,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161116233503) do
+ActiveRecord::Schema.define(version: 20161201230647) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "hstore"
+  enable_extension "pg_stat_statements"
   enable_extension "uuid-ossp"
+  enable_extension "hstore"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                       default: "",         null: false
@@ -216,6 +217,21 @@ ActiveRecord::Schema.define(version: 20161116233503) do
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
   add_index "projects", ["deleted_at"], name: "index_projects_on_deleted_at", using: :btree
+
+  create_table "risk_settings", force: :cascade do |t|
+    t.float    "medium_threshold"
+    t.float    "high_threshold"
+    t.float    "weight"
+    t.boolean  "notify_task"
+    t.boolean  "notify_email"
+    t.integer  "metric"
+    t.uuid     "level_id"
+    t.string   "level_type"
+    t.datetime "created_at",       null: false
+    t.datetime "updated_at",       null: false
+  end
+
+  add_index "risk_settings", ["level_type", "level_id"], name: "index_risk_settings_on_level_type_and_level_id", using: :btree
 
   create_table "salesforce_accounts", force: :cascade do |t|
     t.string   "salesforce_account_id",        default: "", null: false
