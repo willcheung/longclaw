@@ -81,7 +81,7 @@ class ProjectsController < ApplicationController
     end
 
     @risk_activity_engagement = []
-    activity_engagement.zip(risks_by_date).each do | a, b|
+    risks_by_date.zip(activity_engagement).each do | a, b|
       if b == 0
         @risk_activity_engagement.push(0)
       else

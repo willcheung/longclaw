@@ -284,7 +284,7 @@
             enabled: false
         },
         title: {
-            text: "Risk/Engagement %",
+            text: "% Negative Sentiment / Engagement Volume",
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -326,7 +326,7 @@
             }
         },
         series: [{
-            type: 'column',
+            type: 'area',
             name: 'New Risks',
             color: '#FF5050',
             pointInterval: <%= 1.day * 1000 %>,
