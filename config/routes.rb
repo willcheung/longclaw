@@ -75,6 +75,7 @@ Longclaw::Application.routes.draw do
     
     scope "reports", controller: :reports, as: 'reports' do
       get 'accounts'
+      get 'team'
       get 'accounts_dashboard'
       get 'dashboard_data/:sort' => 'reports#dashboard_data'
       get 'account_data/:id' => 'reports#account_data'
