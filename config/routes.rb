@@ -46,6 +46,7 @@ Longclaw::Application.routes.draw do
       get "/" => "settings#index"
       get "users"
       get "alerts"
+      post "alerts" => "settings#create_for_alerts"
       get "salesforce" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 

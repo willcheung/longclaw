@@ -21,7 +21,7 @@
             <h1>Risk Metrics</h1>
             <div class="form-inline">
                 <label>Level:</label>
-                <select id="select-metric-level" class="form-control">
+                <select id="select-metric-level" class="form-control" name="level_type" form="risk-setting-form">
                     <option>Organization</option>
                     <option>Account (Coming Soon)</option>
                     <option>Stream (Coming Soon)</option>
@@ -35,8 +35,9 @@
                   <span>Settings currently inherited from Organization level</span>
                 </div>
                 <button id="edit-btn" class="btn btn-info" style="display: none;">Edit</button>
-                <button id="save-btn" class="btn btn-primary">Save</button>
+                <button id="save-btn" form="risk-setting-form" class="btn btn-primary">Save</button>
             </div>
+            <%= form_for :risk_settings, html: { id: "risk-setting-form" } do %>
             <table class="table table-condensed responsive no-wrap m-t-sm">
                 <thead>
                     <tr>
@@ -53,41 +54,49 @@
                         <td>Negative Sentiment Score</td>
                         <td>45</td>
                         <td>-</td>
-                        <td><input type="text" class="form-control" value="80"></td>
+                        <td><input type="text" name="settings[NegSentiment][high_threshold]" class="form-control" value="<%= @risk_settings[:NegSentiment].high_threshold %>"></td>
                         <td>-</td>
-                        <td><input type="checkbox" name="" checked></td>
+                        <td><input type="checkbox" name="settings[NegSentiment][notify_task]" <%= "checked" if @risk_settings[:NegSentiment].notify_task %>></td>
                     </tr>
                     <tr>
                         <td>% Negative Sentiment</td>
                         <td>7% (Last 30d)</td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.pns_med_thresh %>%"></td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.pns_high_thresh %>%"></td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.pns_weight %>%"></td>
-                        <td><input type="checkbox" name=""></td>
+                        <td><input type="text" name="settings[PctNegSentiment][medium_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].medium_threshold*100 %>%"></td>
+                        <td><input type="text" name="settings[PctNegSentiment][high_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].high_threshold*100 %>%"></td>
+                        <td><input type="text" name="settings[PctNegSentiment][weight]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[PctNegSentiment][notify_task]" <%= "checked" if @risk_settings[:PctNegSentiment].notify_task %>></td>
                     </tr>
                     <tr>
                         <td>Days Inactive</td>
                         <td>9</td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_med_thresh %>"></td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_high_thresh %>"></td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.inactive_weight %>%"></td>
-                        <td><input type="checkbox" name=""></td>
+                        <td><input type="text" name="settings[DaysInactive][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysInactive].medium_threshold.round %>"></td>
+                        <td><input type="text" name="settings[DaysInactive][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysInactive].high_threshold.round %>"></td>
+                        <td><input type="text" name="settings[DaysInactive][weight]" class="form-control" value="<%= @risk_settings[:DaysInactive].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[DaysInactive][notify_task]" <%= "checked" if @risk_settings[:DaysInactive].notify_task %>></td>
                     </tr>
                     <tr>
-                        <td>Days Until Renewal</td>
+                        <td><i class="fa fa-plug"></i> Days Until Renewal</td>
                         <td>80</td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_med_thresh %>"></td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_high_thresh %>"></td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.renewal_weight %>%"></td>
-                        <td><input type="checkbox" name=""></td>
+                        <td><input type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysRenewal].medium_threshold.round %>"></td>
+                        <td><input type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysRenewal].high_threshold.round %>"></td>
+                        <td><input type="text" name="settings[DaysRenewal][weight]" class="form-control" value="<%= @risk_settings[:DaysRenewal].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-plug"></i> Support Ticket Volume</td>
+                        <td>12 (Last 30d)</td>
+                        <td><input type="text" name="settings[SupportVolume][medium_threshold]" class="form-control" value="<%= @risk_settings[:SupportVolume].medium_threshold.round %>"></td>
+                        <td><input type="text" name="settings[SupportVolume][high_threshold]" class="form-control" value="<%= @risk_settings[:SupportVolume].high_threshold.round %>"></td>
+                        <td><input type="text" name="settings[SupportVolume][weight]" class="form-control" value="<%= @risk_settings[:SupportVolume].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[SupportVolume][notify_task]" <%= "checked" if @risk_settings[:SupportVolume].notify_task %>></td>
                     </tr>
                     <tr>
                         <td>RAG Status</td>
                         <td>Green</td>
                         <td>Amber</td>
                         <td>Red</td>
-                        <td><input type="text" class="form-control" value="<%= @risk_settings.rag_weight %>%"></td>
-                        <td><input type="checkbox" name=""></td>
+                        <td><input type="text" name="settings[RAGStatus][weight]" class="form-control" value="<%= @risk_settings[:RAGStatus].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[RAGStatus][notify_task]" <%= "checked" if @risk_settings[:RAGStatus].notify_task %>></td>
                     </tr>
                     <tr>
                         <td></td>
@@ -99,6 +108,7 @@
                     </tr>
                 </tbody>
             </table>
+            <% end %>
         </div>
     </div>
 </div>
