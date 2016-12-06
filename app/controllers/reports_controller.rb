@@ -80,16 +80,30 @@ class ReportsController < ApplicationController
 
     # Engagement Volume Chart
     @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
+    # Total activities by Conversation
+    activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
 
     # TODO: Generate data for Risk Volume Chart in SQL query
     # Risk Volume Chart
     risk_notifications = @account.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
-    @risks_by_date = Array.new(14, 0)
+    risks_by_date = Array.new(14, 0)
     risk_notifications.each do |r|
       # risks_by_date based on number of days since 14 days ago
       day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
-      @risks_by_date[day_index] += 1
+      risks_by_date[day_index] += 1
     end
+
+
+    # Calculates the Risk Volume / Activity Engagment through Conversation
+    @risk_activity_engagement = []
+    risks_by_date.zip(activity_engagement).each do | a, b|
+      if b == 0
+        @risk_activity_engagement.push(0)
+      else
+        @risk_activity_engagement.push(a/b.to_f * 100)
+      end
+    end
+
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team

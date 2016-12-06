@@ -1,23 +1,67 @@
-<div class="text-center loginscreen animated">
-  <div>
-      <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
-      <div class="ibox-content middle-box">
-          <% if params[:invited_by] %>
-            <h1 class="logo-name oauth"><%= params[:invited_by] %> welcomes you to ContextSmith</h1>
-          <% else %>
-            <h1 class="logo-name oauth">Sign Up</h1>
-          <% end %>
-      
-      		<p class="oauth">Sign up now and turn your emails into <br/>customer insights.</p>
+<div class="loginColumns animated fadeInDown" style="padding-top:30px">
+    <div class="row">
+        <div class="pull-right"><a href="/users/sign_in">Already have an account?</a></div>
+        <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
+        <div class="col-md-6">
+            <h1><big>Sign up for ContextSmith free trial</big></h1>
+            <br/>
+            <p>
+                ContextSmith is a smarter way to manage your time and customers. Our 14-day free trial includes:
+            </p>
+            <ul style="line-height: 25px" class="m-t-md">
+                <li>Track account touch points in a single timeline.</li>
+                <li>Discover actionable insights about your accounts.</li>
+                <li>Manage customer relationship with zero data entry.</li>
+                <li>Automatic status reports of your customers.</li>
+            </ul>
 
-      		<button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google-plus oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
-          
-          <% unless params[:invited_by] %>
-      		  <p class="oauth"><small>No credit card required. No obligations.</small></p>
-          <% end %>
+            <p class="m-t-md">
+                ContextSmith works in the background of the email client you already use, so you can get started quickly and stay focused on your customers. Start your free trial today!
+            </p>
+
+        </div>
+        <div class="col-md-6 m-t-xl">
+            <div class="ibox-content">
+                <% if params[:invited_by] %>
+                  <p class="logo-name oauth"><%= params[:invited_by] %> welcomes you to ContextSmith</p>
+                <% end %>
+            
+                <p class="oauth text-center"><small>No credit card required. </small></p>
+                <div class="text-center">
+                  <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google-plus oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
+                </div>
+                <p style="font-size:12px" class="text-center"><small>By clicking this button you are agreeing to our <a href="https://www.contextsmith.com/terms/">Terms of Service</a>.</small></p>
+
+                <p class="text-muted text-center m-t-xl">
+                    <small>Microsoft Outlook customer?</small>
+                </p>
+                <div class="text-center"><a class="btn btn-sm btn-white" href="http://resources.contextsmith.com/exchange">Sign up on our waitlist</a></div>
+            </div>
+        </div>
+    </div>
+    <hr class="m-t-xl m-b-xl"/>
+    <div class="row">
+      <h2 class="m-b-md"> Frequently Asked Questions</h2>
+
+      <div class="col-md-4">
+        <h3>Is there a catch?</h3>
+        <p>No — no catch here. We do not ask for credit card information to start a free trial. We only collect work email and CRM (if applicable) to help you track customer communications and time spent with them.</p>
       </div>
 
-      <p class="m-t"><small><a href="http://www.contextsmith.com">ContextSmith.com</a> &nbsp;&nbsp;ContextSmith, Inc. © 2016</small> </p>
+      <div class="col-md-4">
+        <h3>What happens at the end of my trial?</h3>
+        <p>Don’t worry, we’ll email you when your trial is nearing its end. Once it expires, you can upgrade to a paid plan.</p>
+      </div>
+
+      <div class="col-md-4">
+        <h3>Do I have to worry about you selling my email or data?</h3>
+        <p>Absolutely not. We protect the privacy of customer data. Your contact information and email data are yours alone and safe with us. We send out emails about product updates and helpful content, but you can opt out at any time. Here’s our <a href="https://www.contextsmith.com/privacy/">privacy policy</a>.</p>
+      </div>
+    </div>
+
+    <hr />
+    <div class="row text-center">
+        <p class="m-t"><small><a href="http://www.contextsmith.com">ContextSmith.com</a> &nbsp;&nbsp;Made in Mountain View, California</small> </p>
       <p><a href="https://www.contextsmith.com/privacy/">Privacy</a> | <a href="https://www.contextsmith.com/terms/">Terms</a></p>
-  </div>
+    </div>
 </div>
