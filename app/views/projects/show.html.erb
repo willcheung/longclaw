@@ -293,11 +293,12 @@
             $(this).data('activity').is_pinned = false;
             var id = $(this).data('activity').id;
             $("tr#pin-"+id).fadeOut(400, function() {$("tr#pin-"+id).remove();});
+            $(this).parents('.vertical-timeline-content').children('h3').children('#pinned').hide();
         }
         else {
             // add to pinned tab
             $(this).data('activity').is_pinned = true;
-            $.ajax({url:'/projects/<%=@project.id%>/render_pinned_tab'});
+            $(this).parents('.vertical-timeline-content').children('h3').children('#pinned').show();
         }
     });
 
@@ -306,12 +307,10 @@
         if ($(this).data('activity').is_public) {
             $(this).data('activity').is_public = false;
             $(this).parents('.vertical-timeline-content').children('h3').children('#private').show();
-            $(this).parents('.pinned-content').children('h3').children('#private').show();
         }
         else {
             $(this).data('activity').is_public = true;
             $(this).parents('.vertical-timeline-content').children('h3').children('#private').hide();
-            $(this).parents('.pinned-content').children('h3').children('#private').hide();
         }
     });
 
