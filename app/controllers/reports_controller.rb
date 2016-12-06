@@ -92,7 +92,6 @@ class ReportsController < ApplicationController
       day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
       risks_by_date[day_index] += 1
     end
-    risk_by_date = [1,2,1,4,1,2,4,1,2,4,1,2,4,1]
 
 
     # Calculates the Risk Volume / Activity Engagment through Conversation
