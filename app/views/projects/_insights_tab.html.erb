@@ -9,15 +9,15 @@
 
     <div id="charts-container" class="ibox-content">
         <div class="row m-t-md">
-            <div id="risk-chart" style="height:240px;margin-right:3%;margin-left:2%" class="m-l-sm"></div>
+            <div id="risk-chart" style="height:240px;margin-right:25px; margin-left:55px;" class="m-l-sm"></div>
         </div>
 
         <div class="row m-t-md">
-            <div id="risk-detection-chart" ></div>
+            <div id="risk-detection-chart" style="margin-left:55px;margin-right:25px;"></div>
         </div>
 
         <div class="row m-t-md">
-            <div id="activities-chart"></div>
+            <div id="activities-chart" style="margin-left:35px;" ></div>
         </div>
     </div>
 </div>
@@ -276,7 +276,10 @@
             events:{
               load: function(event) {
                 var extremes = this.yAxis[0].getExtremes();
-                this.yAxis[0].setExtremes(0, extremes.dataMax);
+                  if(extremes.dataMax == 0){
+                    extremes.max = 100;
+                    this.yAxis[0].setExtremes(0, 100);
+                  }
                 }
             },
         },
@@ -341,7 +344,12 @@
             events:{
               load: function(event) {
                 var extremes = this.yAxis[0].getExtremes();
-                this.yAxis[0].setExtremes(0, extremes.dataMax);
+                if(extremes.dataMax == 0){
+                  extremes.max = 1;
+                  this.yAxis[0].setExtremes(0,1);
+                } else{
+                  this.yAxis[0].setExtremes(0, extremes.dataMax);
+                }
                 }
             },
         },
