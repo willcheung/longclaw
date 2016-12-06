@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161201230647) do
+ActiveRecord::Schema.define(version: 20161206014830) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -225,10 +225,11 @@ ActiveRecord::Schema.define(version: 20161201230647) do
     t.boolean  "notify_task"
     t.boolean  "notify_email"
     t.integer  "metric"
-    t.uuid     "level_id"
-    t.string   "level_type"
-    t.datetime "created_at",       null: false
-    t.datetime "updated_at",       null: false
+    t.uuid     "level_id",                        null: false
+    t.string   "level_type",                      null: false
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
+    t.boolean  "is_positive",      default: true, null: false
   end
 
   add_index "risk_settings", ["level_type", "level_id"], name: "index_risk_settings_on_level_type_and_level_id", using: :btree

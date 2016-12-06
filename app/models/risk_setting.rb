@@ -9,10 +9,11 @@
 #  notify_task      :boolean
 #  notify_email     :boolean
 #  metric           :integer
-#  level_id         :uuid
-#  level_type       :string
+#  level_id         :uuid             not null
+#  level_type       :string           not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
+#  is_positive      :boolean          default(TRUE), not null
 #
 # Indexes
 #
