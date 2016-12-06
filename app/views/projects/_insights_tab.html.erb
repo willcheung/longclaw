@@ -344,7 +344,12 @@
             events:{
               load: function(event) {
                 var extremes = this.yAxis[0].getExtremes();
-                this.yAxis[0].setExtremes(0, extremes.dataMax);
+                if(extremes.dataMax == 0){
+                  extremes.max = 1;
+                  this.yAxis[0].setExtremes(0,1);
+                } else{
+                  this.yAxis[0].setExtremes(0, extremes.dataMax);
+                }
                 }
             },
         },
