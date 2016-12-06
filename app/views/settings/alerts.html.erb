@@ -1,0 +1,157 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Alerts Settings</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= settings_path%>">Settings</a>
+            </li>
+            <li class="active">
+                <strong>Alerts</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox">
+        <div class="ibox-content">
+            <h1>Risk Metrics</h1>
+            <div class="form-inline">
+                <label>Level:</label>
+                <select id="select-metric-level" class="form-control" name="level_type" form="risk-setting-form">
+                    <option>Organization</option>
+                    <option>Account (Coming Soon)</option>
+                    <option>Stream (Coming Soon)</option>
+                </select>
+                <div class="form-group" style="display: none;">
+                  <select class="form-control">
+                      <option>Stark Industries</option>
+                      <option>Hooli</option>
+                      <option>Pied Piper</option>
+                  </select>
+                  <span>Settings currently inherited from Organization level</span>
+                </div>
+                <button id="edit-btn" class="btn btn-info" style="display: none;">Edit</button>
+                <button id="save-btn" form="risk-setting-form" class="btn btn-primary">Save</button>
+            </div>
+            <%= form_for :risk_settings, html: { id: "risk-setting-form" } do %>
+            <table class="table table-condensed responsive no-wrap m-t-sm">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Average</th>
+                        <th>Medium Threshold</th>
+                        <th>High Threshold</th>
+                        <th>Risk Score Weight</th>
+                        <th>Add to Smart Tasks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Negative Sentiment Score</td>
+                        <td>45</td>
+                        <td>-</td>
+                        <td><input type="text" name="settings[NegSentiment][high_threshold]" class="form-control" value="<%= @risk_settings[:NegSentiment].high_threshold %>"></td>
+                        <td>-</td>
+                        <td><input type="checkbox" name="settings[NegSentiment][notify_task]" <%= "checked" if @risk_settings[:NegSentiment].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td>% Negative Sentiment</td>
+                        <td>7% (Last 30d)</td>
+                        <td><input type="text" name="settings[PctNegSentiment][medium_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].medium_threshold*100 %>%"></td>
+                        <td><input type="text" name="settings[PctNegSentiment][high_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].high_threshold*100 %>%"></td>
+                        <td><input type="text" name="settings[PctNegSentiment][weight]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[PctNegSentiment][notify_task]" <%= "checked" if @risk_settings[:PctNegSentiment].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td>Days Inactive</td>
+                        <td>9</td>
+                        <td><input type="text" name="settings[DaysInactive][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysInactive].medium_threshold.round %>"></td>
+                        <td><input type="text" name="settings[DaysInactive][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysInactive].high_threshold.round %>"></td>
+                        <td><input type="text" name="settings[DaysInactive][weight]" class="form-control" value="<%= @risk_settings[:DaysInactive].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[DaysInactive][notify_task]" <%= "checked" if @risk_settings[:DaysInactive].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-plug"></i> Days Until Renewal</td>
+                        <td>80</td>
+                        <td><input type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysRenewal].medium_threshold.round %>"></td>
+                        <td><input type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysRenewal].high_threshold.round %>"></td>
+                        <td><input type="text" name="settings[DaysRenewal][weight]" class="form-control" value="<%= @risk_settings[:DaysRenewal].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-plug"></i> Support Ticket Volume</td>
+                        <td>12 (Last 30d)</td>
+                        <td><input type="text" name="settings[SupportVolume][medium_threshold]" class="form-control" value="<%= @risk_settings[:SupportVolume].medium_threshold.round %>"></td>
+                        <td><input type="text" name="settings[SupportVolume][high_threshold]" class="form-control" value="<%= @risk_settings[:SupportVolume].high_threshold.round %>"></td>
+                        <td><input type="text" name="settings[SupportVolume][weight]" class="form-control" value="<%= @risk_settings[:SupportVolume].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[SupportVolume][notify_task]" <%= "checked" if @risk_settings[:SupportVolume].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td>RAG Status</td>
+                        <td>Green</td>
+                        <td>Amber</td>
+                        <td>Red</td>
+                        <td><input type="text" name="settings[RAGStatus][weight]" class="form-control" value="<%= @risk_settings[:RAGStatus].weight*100 %>%"></td>
+                        <td><input type="checkbox" name="settings[RAGStatus][notify_task]" <%= "checked" if @risk_settings[:RAGStatus].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><button id="add-btn" class="btn btn-success"><i class="fa fa-plus"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <% end %>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+  $('#select-metric-level').change(function () {
+    if ($(this).val() != 'Organization') {
+      $(this).next().show();
+      $('tbody tr').addClass('active');
+      $('tbody input, tbody button').prop('disabled', true);
+      $('#save-btn').hide();
+      $('#edit-btn').show();
+    }
+    else {
+      $(this).next().hide();
+      $('tbody tr').removeClass('active');
+      $('tbody input, tbody button').prop('disabled', false);
+      $('#save-btn').show();
+      $('#edit-btn').hide();
+    }
+  });
+
+  $('#edit-btn').click(function () {
+    $('#save-btn').show();
+    $(this).hide();
+    $('tbody tr').removeClass('active');
+    $('tbody input, tbody button').prop('disabled', false);
+  });
+
+  $('#add-btn').click( function () {
+    $(this).parent().parent().before(`
+      <tr>
+          <td>
+              <select class="form-control">
+                  <option>Risk Metric A</option>
+                  <option>Risk Metric B</option>
+                  <option>Risk Metric C</option>
+              </select>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+      </tr>)`);
+  })
+</script>

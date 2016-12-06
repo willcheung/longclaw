@@ -45,11 +45,15 @@ Longclaw::Application.routes.draw do
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"
       get "users"
+      get "alerts"
+      post "alerts" => "settings#create_for_alerts"
       get "salesforce" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
+      get "iframe_test"
+      get "chrome_gmail_plugin"
     end
 
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'

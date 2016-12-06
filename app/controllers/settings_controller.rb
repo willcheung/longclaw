@@ -6,12 +6,35 @@ class SettingsController < ApplicationController
 		@registered_user_count = current_user.organization.users.registered.count
 		@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
     if(@salesforce_user.nil?)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)      
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
     end
 	end
 
 	def users
 		@users = current_user.organization.users
+	end
+
+	def alerts
+		@risk_settings = current_user.organization.risk_settings.index_by { |rm| RiskSetting::METRIC.key(rm.metric) }
+	end
+
+	def create_for_alerts
+		if params[:level_type] == "Organization"
+			level_id = current_user.organization.id
+		end
+		risk_settings = RiskSetting.where(level_type: params[:level_type], level_id: level_id)
+		new_settings = params['settings']
+		new_settings.each do |metric, settings|
+			rs = risk_settings.find_by_metric(RiskSetting::METRIC[metric.to_sym])
+			settings.each do |prop, value|
+				value = value.to_f/100 if (metric == 'PctNegSentiment' && (prop == 'medium_threshold' || prop == 'high_threshold')) || prop == 'weight'
+				rs[prop] = value
+			end
+			rs.notify_task = settings['notify_task'] == 'on'
+			rs.save
+		end
+
+		redirect_to :back
 	end
 
 	def salesforce
@@ -46,13 +69,21 @@ class SettingsController < ApplicationController
 		end
 	end
 
+	def iframe_test
+		render layout: "empty"
+	end
+
+	def chrome_gmail_plugin
+		render layout: "empty"
+	end
+
 	private
 
 	def get_salesforce_user
 		# try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
 		@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
     if(@salesforce_user.nil?)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)      
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
     end
   end
 end

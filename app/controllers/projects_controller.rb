@@ -22,7 +22,8 @@ class ProjectsController < ApplicationController
     unless projects.empty?
       @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
-      @risk_scores = Project.current_risk_score(projects.map(&:id), current_user.time_zone)
+      @risk_scores = Project.new_risk_score(projects.pluck(:id))
+      @sentiment_scores = Project.current_risk_score(projects.map(&:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
       @rag_status = Project.current_rag_score(projects.map(&:id))
     end
@@ -244,7 +245,8 @@ class ProjectsController < ApplicationController
 
   def get_show_data
     # metrics
-    @project_risk_score = @project.current_risk_score(current_user.time_zone)
+    @project_risk_score = @project.new_risk_score
+    @project_sentiment_score = @project.current_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
     @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
     @project_pinned_count = @project.activities.pinned.count
