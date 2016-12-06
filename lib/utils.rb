@@ -122,9 +122,4 @@ module Utils
 		(a & b).size
 	end
 
-  # adjust scale and round float to a percentage
-  def round_and_scale_score(score)
-    score = (((-score - 0.75) * 4) * 100).floor
-    score < 0.0 ? 0 : score
-  end
 end

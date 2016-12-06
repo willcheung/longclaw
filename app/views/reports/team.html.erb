@@ -1,247 +1,107 @@
-
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Team Dashboard</h2>
+    </div>
+</div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
 
     <div class="row">
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Open Risks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open risks across all accounts."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins <%= @open_risks > 0 ? 'text-danger' : '' %>"><%= @open_risks %></h1>
-                    <div class="m-t-sm"><a href="<%= notifications_path %>">See details &rarr;</a></div>
-                </div>
+        <div class="col-lg-4">
+            <div class="">
+                <div class="font-bold col-lg-4">Department</div>
+                <select class="category_filter col-lg-8">
+                    <option value="Sales">Account Management</option>
+                    <option value="Sales">Customer Success</option>
+                    <option value="Sales">Sales</option>
+                </select> 
             </div>
         </div>
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Overdue Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of overdue tasks across all accounts."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins <%= @overdue_tasks > 0 ? 'text-danger' : '' %>"><%= @overdue_tasks %></h1>
-                    <div class="m-t-sm"><a href="<%= notifications_path + '?type=incomplete&duedate=overdue' %>">See details &rarr;</a></div>
-                </div>
+        <div class="col-lg-4 filter-space">
+            <div class="">
+                <div class="font-bold col-lg-4">Title:</div>
+                <select class="category_filter col-lg-8">
+                    <option value="Sales">Account Manager</option>
+                    <option value="Sales">Customer Success Manager</option>
+                    <option value="Sales">Director of Services</option>
+                    <option value="Sales">(No Title)</option>
+                </select> 
             </div>
         </div>
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Open Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open tasks across all accounts."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @open_tasks %></h1>
-                    <div class="m-t-sm"><a href="<%= notifications_path %>">See details &rarr;</a></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Completed Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of tasks that have been completed in the past 7 days."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @closed_tasks %></h1>
-                    <div class="m-t-sm"><a href="<%= notifications_path + '?type=complete' %>">See details &rarr;</a></div>
-                </div>
-            </div>
+        <div class="col-lg-4 filter-space">
         </div>
     </div>
+    
+    <div class="row border-bottom white-bg dashboard-header">
+            <!-- LEFT -->
+            <div class="col-lg-5">
+                <h4 class="m-l-md">Sort by: 
+                <select class="metric_filter col-lg-8" data-placeholder="Select Type">
+                    <option value="1" selected="true">Activities (Last 7d)</option>
+                    <option value="2">Activities (Last 30d)</option>
+                    <option value="3">Open Tasks</option>
+                  </select>    
+               
+                </h4>
+                <div id="left-chart" class="left-chart" style="height:1200px;"></div>
+                
+                <h5><a href="" class="btn btn-outline btn-primary btn-xs m-l-lg">&larr; Previous 25</a>
+                <a href="" class="btn btn-outline btn-primary btn-xs m-l-sm">Next 25 &rarr;</a></h5>
+            </div>
 
-    <!-- Metrics -->
-    <div class="row ibox float-e-margins">
-        <div class="col-lg-12">
-            <div class="ibox-title">
-                <h2>Accounts Overview</h2>
-            </div>
-            <div class="col-lg-6 ibox-subcontent">
-                <div class="ibox-title">
-                    <span class="label pull-right">Last 7 days</span>
-                    <h3>Top Active Streams</h3>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total number of emails sent by your team and received from your customers. (Top 5)"></i>
-                    <div class="btn-group m-l-sm">
-                        <a id="most-touches" type="button" class="btn btn-xs btn-white active">Most</a>
-                        <a id="least-touches" type="button" class="btn btn-xs btn-white">Least</a>
+            <!-- RIGHT -->
+            <div class="col-lg-7" style="margin-top:45px;">
+                <div id="intro-account-header">
+                    <div class="row" style="margin-top:50px;">
+                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
                     </div>
                 </div>
-                <div class="ibox-content">
-                    <div id="touches-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
-                </div>
-            </div>
-            <div class="col-lg-6 ibox-subcontent">
-                <div class="ibox-title">                   
-                    <span class="label pull-right">Last 7 days vs Prev 7 days</span>
-                    <h3>Top Movers</h3>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Percent change in email activities during Last 7 Days vs Previous 7 Days. (Top 5)"></i>
-                    <div class="btn-group m-l-sm">
-                        <a id="most-change" type="button" class="btn btn-xs btn-white active">Gain</a>
-                        <a id="least-change" type="button" class="btn btn-xs btn-white">Decline</a>
-                    </div>
-                </div>
-                <div class="ibox-content">
-                    <div id="percent-change-chart" style="min-width: 310px; max-width: 800px; height: 200px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
-                </div>
-            </div>
-            <div class="col-lg-6 ibox-subcontent">
-                <div class="ibox-title">
-                    <span class="label pull-right">All Time</span>
-                    <h3>Top Risks</h3>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Highest risk scores and number of open risks. (Top 5)"></i>
-                </div>
-                <div class="ibox-content">
-                    <div id="risks-count-chart" style="min-width: 310px; max-width: 800px; height: 253px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
-                </div>
-            </div>
-            <div class="col-lg-6 ibox-subcontent">
-                <div class="ibox-title">
-                    <span class="label pull-right">14 day trend</span>
-                    <h3>Risk Score Trend</h3>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Risk score by Streams, trending over Last 14 Days."></i>
-                    <select data-placeholder="Choose a Stream..." class="chosen-select" id="risk-project-chosen-select" multiple="" tabindex="-1">
-                        <option value=""></option>
-                        <% @projects.each do |p| %>
-                            <option value="<%= p.id %>" <% if @top_risks.map { |r| r[:id] }.include?(p.id) %> selected <% end %>><%= p.name %></option>
-                        <% end %>
-                    </select>
-                </div>
-                <div class="ibox-content">
-                    <div id="risks-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h2>Team Activities</h2>
-                </div>
-                <div class="col-lg-6 ibox-subcontent">
-                    <div class="ibox-title">
-                        <span class="label pull-right">14 day trend</span>
-                        <h3>How Busy Are We?</h3>
-                        <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total customer activities, trending over Last 14 Days."></i>
+                <div id="account-header" style="display:none;">
+                    <div class="row m-b-sm">
+                        <div class="col-lg-8">
+                            <h1>Will Charleston</h1>
+                        </div>
+                        <div class="col-lg-4 m-t-md">
+                            <span class="label">Last 14 days</span>
+                        </div>
                     </div>
+                </div>
+                <!-- end id="account-header" -->
+                
+                <div id="account-charts" style="display:none;">
                     <div class="ibox-content">
-                        <div id="user-activities-trend-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                        <h2>Activities Volume</h2>
+                        
+                        <div class="row m-t-md">
+                            <div id="activities-chart" style="height:240px"></div>
+                        </div>
+
+                        <div class="row m-t-md">
+                            <div id="customers-volume-chart" style="height:340px"></div>
+                        </div>
+
                     </div>
-                </div>
-                <div class="col-lg-6 ibox-subcontent">
-                    <div class="ibox-title">
-                        <h3>Team Leaderboard</h3>
-                        <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 10 by activities."></i>
-                        <span class="label pull-right">Last 14 days</span>
-                    </div>
+
                     <div class="ibox-content">
-                        <div id="user-leaderboard-chart" style="min-width: 310px; max-width: 800px; height: 220px; margin: 0 auto"><h2 class="text-center" style="padding-top:70px;">No data</h2></div>
+                        <div class="row">
+                            <h2>Task Management</h2>
+                            <div id="tasks-trend" style="height:300px"></div>
+                        </div>
+                    </div>
+
+                    <div class="ibox-content">
+
                     </div>
                 </div>
             </div>
         </div>
-
-    </div>
-
 </div>
 
 <script>
-    $('[data-toggle="tooltip"]').tooltip();
 
-    <% if !@projects.empty? %>
-
-    /* Highcharts support functions */
-
-    var nil = null;
-
-    function redraw_risks_trend_chart(chart, project_ids) {
-        // Delete all the series.
-        while (chart.series.length > 0) {
-          chart.series[0].remove(false);
-        }
-        
-        if (project_ids != null) {
-            // Add the new series.
-            <% @projects.each do |p| %>
-                if (project_ids.indexOf("<%= p.id %>") > -1) {
-                    // var nil = NULL;
-                    var test = <%= get_risk_score_by_project(@projects_min_scores, p.id) %>;
-                    // var nil = NULL;
-                     console.log(test);
-
-
-                    chart.addSeries({
-                            name: '<%= p.name %>',
-                            pointInterval: <%= 1.day * 1000 %>,
-                            pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                            data: <%= get_risk_score_by_project(@projects_min_scores, p.id) %>
-                        });
-                }
-            <% end %>
-        }
-        
-        chart.redraw();
-    }
-
-    function redraw_touches_chart(chart, max) {
-        // Delete all the series.
-        while (chart.series.length > 0) {
-          chart.series[0].remove(false);
-        }
-
-        if(max) {
-            chart.xAxis[0].setCategories(<%= @project_max.map(&:name).to_json.html_safe %>);
-            chart.addSeries({
-                    name: 'Touches',
-                    data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
-                    color: '#7cb5ec'
-                });
-            
-        } else {
-            chart.xAxis[0].setCategories(<%= @project_min.map(&:name).to_json.html_safe %>);
-            chart.addSeries({
-                    name: 'Touches',
-                    data: <%= @project_min.map(&:num_activities).to_json.html_safe %>,
-                    color: '#7cb5ec'
-                });
-        }
-
-        chart.redraw();
-    }
-
-    function redraw_changes_chart(chart, max) {
-        // Delete all the series.
-        while (chart.series.length > 0) {
-          chart.series[0].remove(false);
-        }
-
-        if(max) {
-            chart.xAxis[0].setCategories(<%= @project_max_chg.map(&:name).to_json.html_safe %>);
-            chart.addSeries({
-                    name: 'Gain',
-                    data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                    color: '#32B232'
-                });
-            
-        } else {
-            chart.xAxis[0].setCategories(<%= @project_min_chg.map(&:name).to_json.html_safe %>);
-            chart.addSeries({
-                    name: 'Decline',
-                    data: <%= @project_min_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                    color: '#FF5050'
-                });
-        }
-
-        chart.redraw();
-    }
-
-    /* Highcharts */
     $(function () {
-        $('#touches-chart').highcharts({
+        $('#left-chart').highcharts({
             chart: {
                 type: 'bar'
             },
@@ -249,281 +109,94 @@
                 text: ''
             },
             xAxis: {
-                categories: <%= @project_max.map(&:name).to_json.html_safe %>
+                categories: ['Will Charleston', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Batman', 'Bruce Wallus',
+                              'Wonder Woman', 'Harry Potterson','Luke Walker', 'Danny Adobe', 'Rick Martin', 'Natale Sales'],
+                crosshair: true
             },
             yAxis: {
                 min: 0,
+                max: 100,
+                opposite: true,
                 title: {
                     text: ''
-                }
-            },
-            credits: {
-                enabled: false
+                },
+                gridLineWidth: 0
             },
             legend: {
                 enabled: false
             },
             plotOptions: {
                 series: {
-                    stacking: 'normal'
-                }
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                                $("#account-header").show();
+                                $("#account-charts").show();
+                                $("#intro-account-header").hide();
+                                renderCharts(this.y);
+                            }
+                        }
+                    }
+                }   
+            },
+            credits: {
+                enabled: false
             },
             series: [{
-                name: 'Touches',
-                data: <%= @project_max.map(&:num_activities).to_json.html_safe %>,
-                color: '#7cb5ec'
+                name: 'Activities',
+                <% @risk_scores = [96, 95, 82, 81, 80, 79, 74, 74, 72, 70, 68, 55, 46, 32, 25, 25] %>
+                data: [ <% @risk_scores.each do |r| %>
+                {
+                    y: <%= r %>,
+                    color: "<%= if r >= 80.0 
+                            '#ed5565'
+                        elsif r >= 60.0
+                            '#FFA500'
+                        else
+                            '#A1C436'
+                        end %>",
+                }, 
+                <% end %> ],
+            },
+            {
+                name: 'Average',
+                type: 'line',
+                lineWidth: 2,
+                color: '#7cb5ec',
+                marker: { enabled: false, radius: 0 },
+                data: [55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55]
             }]
         });
     });
 
-    $(function () {
-        $('#percent-change-chart').highcharts({
+
+    /*****
+    Render right charts
+    ******/
+
+    function renderCharts(riskScore) {
+
+        $('#customers-volume-chart').highcharts({
             chart: {
                 type: 'bar'
             },
+            credits: false,
             title: {
-                text: ''
+                text: 'By Account Stream',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
             },
             xAxis: {
-                categories: <%= @project_max_chg.map(&:name).to_json.html_safe %>
-            },
-            yAxis: {
-                min: 0,
-                title: {
-                    text: ''
-                },
-                labels: {
-                    format: '{value}%'
-                }
-            },
-            credits: {
-                enabled: false
-            },
-            legend: {
-                enabled: false
-            },
-            tooltip: {
-                valueSuffix: '%'
-            },
-            plotOptions: {
-                series: {
-                    stacking: 'normal'
-                }
-            },
-            series: [{
-                name: 'Gain',
-                data: <%= @project_max_chg.map(&:pct_from_prev).to_json.html_safe %>,
-                color: '#32B232'
-            }]
-        });
-    });
-
-    $(function () {
-        $('#risks-count-chart').highcharts({
-            chart: {
-                type: 'bar',
-                alignTicks: false
-            },
-            title: {
-                text: ''
-            },
-            xAxis: {
-                categories: <%= @top_risks.map { |r| r[:name] }.to_json.html_safe %>
-            },
-            yAxis: [{ // Risk Score Axis
-                max: 100,
-                title: {
-                    text: 'Risk Score',
-                    style: {
-                        color: 'red'
-                    }
-                },
-                labels: {
-                    format: '{value}%',
-                    style: {
-                        color: 'red'
-                    }
-                },
-                opposite: true
-            }, { // Open Risks Axis
-                allowDecimals: false,
-                gridLineWidth: 0,
-                title: {
-                    text: 'Open Risks',
-                    style: {
-                        color: '#7cb5ec'
-                    }
-                },
-                labels: {
-                    style: {
-                        color: '#7cb5ec'
-                    }
-                }
-            }],
-            credits: {
-                enabled: false
-            },
-            legend: {
-                enabled: false
-            },
-            series: [{
-                yAxis: 0,
-                name: 'Risk Score',
-                data: <%= @top_risks.map { |r| r[:risk_score] }.to_json.html_safe %>,
-                color: 'red',
-                tooltip: {
-                    valueSuffix: '%'
-                }
-            }, {
-                yAxis: 1,
-                name: 'Open Risks',
-                data: <%= @top_risks.map { |r| r[:open_risks] }.to_json.html_safe %>,
-                color: '#7cb5ec'
-            }]
-        });
-    });
-
-
-    $(function () {
-        $('#risks-trend-chart').highcharts({
-            title: {
-                text: ''
-            },
-            xAxis: {
-                type: 'datetime'
-            },
-            yAxis: {
-                title: {
-                    text: ''
-                },
-                labels: { enabled: false },
-                gridLineWidth: 0,
-                minorGridLineWidth: 0,
-                plotLines: [{
-                    value: 0,
-                    width: 1,
-                    color: '#808080'
-                }],
-                min: 0,
-                max: 100,
-                plotBands: [ { // Low Risk
-                from: 0,
-                to: 60,
-                color: 'rgba(170, 252, 174, 0.1)',
-                label: {
-                    text: 'Low Risk',
-                    style: {
-                        color: '#606060'
-                    }
-                }
-            }, { // Medium Risk
-                from: 60,
-                to: 80,
-                color: 'rgba(246, 188, 42, 0.1)',
-                label: {
-                    text: 'Medium Risk',
-                    style: {
-                        color: '#606060'
-                    }
-                }
-            }, { // High Risk
-                from: 80,
-                to: 100,
-                color: 'rgba(246, 42, 46, 0.1)',
-                label: {
-                    text: 'High Risk',
-                    style: {
-                        color: '#606060'
-                    }
-                }
-            }]
-            },
-            tooltip: {
-                // valueSuffix: '',
-                pointFormat: '{series.name}: <b>{point.y:.2f}%</b>',
-            },
-            credits: {
-                enabled: false
-            },
-            legend: {
-                layout: 'horizontal',
-                align: 'center',
-                y: 20,
-                itemStyle: {
-                 fontSize:'10px'
-                },
-                itemDistance: 10
-            },
-            series: [
-            <% @top_risks.each_with_index do |p,i| %>
-                {
-                name: '<%= p[:name] %>',
-                pointInterval: <%= 1.day * 1000 %>,
-                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= get_risk_score_by_project(@projects_min_scores, p[:id]) %>
-                }<% if i != @top_risks.size - 1 %>,<% end %>
-            <% end %>
-            ]
-
-        });
-    });
-
-    $(function () {
-        $('#user-activities-trend-chart').highcharts({
-            title: {
-                text: ''
-            },
-            chart: {
-                type: 'column'
-            },
-            xAxis: {
-                type: 'datetime'
-            },
-            yAxis: {
-                title: {
-                    text: ''
-                }
-            },
-            tooltip: {
-                valueSuffix: ''
-            },
-            credits: {
-                enabled: false
-            },
-            legend: {
-                enabled: false
-            },
-            series: [
-                {
-                name: 'All activities',
-                pointInterval: <%= 1.day * 1000 %>,
-                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= get_num_activities(14.days.ago.to_date..Date.current, @all_activities_trend) %>
-                }
-            ]
-
-        });
-    });
-
-    $(function () {
-        $('#user-leaderboard-chart').highcharts({
-            chart: {
-                type: 'bar'
-            },
-            title: {
-                text: ''
-            },
-            xAxis: {
-                categories: <%= @team_leaderboard.map(&:email).to_json.html_safe %>
+                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise']
             },
             yAxis: {
                 min: 0,
                 title: {
                     text: ''
                 }
-            },
-            credits: {
-                enabled: false
             },
             legend: {
                 reversed: true
@@ -535,56 +208,152 @@
             },
             series: [{
                 name: 'Inbound',
-                data: <%= @team_leaderboard.map(&:inbound_count).to_json.html_safe %>
+                data: [5, 3, 4, 7, 2]
             }, {
                 name: 'Outbound',
-                data: <%= @team_leaderboard.map(&:outbound_count).to_json.html_safe %>
+                data: [2, 2, 3, 2, 1]
+            }, {
+                name: 'Meetings',
+                data: [1, 0, 0, 3, 2]
+            }, {
+                name: 'Open Smart Tasks',
+                data: [2, 2, 0, 1, 4]
             }]
         });
-    });
 
-    /* Event Handlers */
-    var projects_chosen;
 
-    $('#risk-project-chosen-select').on('change', function(evt) {
-        projects_chosen = $(evt.target).val();
-        chart = $('#risks-trend-chart').highcharts();
-        redraw_risks_trend_chart(chart, projects_chosen);
-    });
+        $('#tasks-trend').highcharts({
+            title: {
+                text: ''
+            },
+            credits: false,
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+                min: 0,
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                shared: true
+            },
+            series: [{
+                name: 'Total Open Task',
+                data: [3, 4, 5, 8, 11, 13, 17, 17, 18, 18, 17, 15],
+                type: 'area',
+                color: '#cccccc',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'New Smart Task',
+                data: [5, 7, 10, 10, 13, 13, 21, 19, 26, 25, 19, 17],
+                type: 'line',
+                color: '#B23232',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'Closed Smart Task',
+                data: [2, 3, 5, 2, 2, 0, 4, 2, 3, 8, 1, 2],
+                type: 'line',
+                color: '#149414',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }]
+        });
 
-    $('#project-chosen-select').on('change', function(evt) {
-        projects_chosen = $(evt.target).val();
-        chart = $('#activities-trend-chart').highcharts();
-        redraw_activities_trend_chart(chart, projects_chosen);
-    });
 
-    $('#most-touches').click(function() {
-        chart = $('#touches-chart').highcharts();
-        $(this).addClass("active");
-        $('#least-touches').removeClass("active");
-        redraw_touches_chart(chart, true);
-    });
+        $('#activities-chart').highcharts({
+            chart: {
+                events:{
+                  load: function(event) {
+                    var extremes = this.yAxis[0].getExtremes();
+                    this.yAxis[0].setExtremes(0, extremes.dataMax);
+                    }
+                },
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: "By Day",
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+                
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: { text: '' },
+                labels: { enabled: true },
+                minorGridLineWidth: 0
+            },
+            legend: {
+                enabled: true
+            },
+            tooltip: {
+                positioner: function () {
+                    return {
+                        x: this.chart.chartWidth - this.label.width, // right aligned
+                        y: -15 // align to title
+                    };
+                },
+                borderWidth: 0,
+                backgroundColor: 'none',
+                pointFormat: '{point.stackTotal}',
+                xDateFormat: '%b %e',
+                shadow: false,
+                style: {
+                    fontSize: '16px',
+                    color: '#555555'
+                }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                type: 'column',
+                name: 'Email',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(10) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Meeting',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Support Ticket',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'column',
+                name: 'New Smart Tasks',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            }
+            ]
+        });
 
-    $('#least-touches').click(function() {
-        chart = $('#touches-chart').highcharts();
-        $(this).addClass("active");
-        $('#most-touches').removeClass("active");
-        redraw_touches_chart(chart, false);
-    });
+    };
 
-    $('#most-change').click(function() {
-        chart = $('#percent-change-chart').highcharts();
-        $(this).addClass("active");
-        $('#least-change').removeClass("active");
-        redraw_changes_chart(chart, true);
-    });
-
-    $('#least-change').click(function() {
-        chart = $('#percent-change-chart').highcharts();
-        $(this).addClass("active");
-        $('#most-change').removeClass("active");
-        redraw_changes_chart(chart, false);
-    });
-
-    <% end %>
 </script>
+
