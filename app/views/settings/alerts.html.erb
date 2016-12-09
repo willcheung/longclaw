@@ -63,7 +63,7 @@
                         <td>7% (Last 30d)</td>
                         <td><input type="text" name="settings[PctNegSentiment][medium_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].medium_threshold*100 %>%"></td>
                         <td><input type="text" name="settings[PctNegSentiment][high_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].high_threshold*100 %>%"></td>
-                        <td><input type="text" name="settings[PctNegSentiment][weight]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].weight*100 %>%"></td>
+                        <td><input type="text" name="settings[PctNegSentiment][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:PctNegSentiment].weight*100 %>%"></td>
                         <td><input type="checkbox" name="settings[PctNegSentiment][notify_task]" <%= "checked" if @risk_settings[:PctNegSentiment].notify_task %>></td>
                     </tr>
                     <tr>
@@ -71,7 +71,7 @@
                         <td>9</td>
                         <td><input type="text" name="settings[DaysInactive][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysInactive].medium_threshold.round %>"></td>
                         <td><input type="text" name="settings[DaysInactive][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysInactive].high_threshold.round %>"></td>
-                        <td><input type="text" name="settings[DaysInactive][weight]" class="form-control" value="<%= @risk_settings[:DaysInactive].weight*100 %>%"></td>
+                        <td><input type="text" name="settings[DaysInactive][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:DaysInactive].weight*100 %>%"></td>
                         <td><input type="checkbox" name="settings[DaysInactive][notify_task]" <%= "checked" if @risk_settings[:DaysInactive].notify_task %>></td>
                     </tr>
                     <tr>
@@ -79,7 +79,7 @@
                         <td>80</td>
                         <td><input type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysRenewal].medium_threshold.round %>"></td>
                         <td><input type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysRenewal].high_threshold.round %>"></td>
-                        <td><input type="text" name="settings[DaysRenewal][weight]" class="form-control" value="<%= @risk_settings[:DaysRenewal].weight*100 %>%"></td>
+                        <td><input type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:DaysRenewal].weight*100 %>%"></td>
                         <td><input type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
                     </tr>
                     <tr>
@@ -87,7 +87,7 @@
                         <td>12 (Last 30d)</td>
                         <td><input type="text" name="settings[SupportVolume][medium_threshold]" class="form-control" value="<%= @risk_settings[:SupportVolume].medium_threshold.round %>"></td>
                         <td><input type="text" name="settings[SupportVolume][high_threshold]" class="form-control" value="<%= @risk_settings[:SupportVolume].high_threshold.round %>"></td>
-                        <td><input type="text" name="settings[SupportVolume][weight]" class="form-control" value="<%= @risk_settings[:SupportVolume].weight*100 %>%"></td>
+                        <td><input type="text" name="settings[SupportVolume][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:SupportVolume].weight*100 %>%"></td>
                         <td><input type="checkbox" name="settings[SupportVolume][notify_task]" <%= "checked" if @risk_settings[:SupportVolume].notify_task %>></td>
                     </tr>
                     <tr>
@@ -95,7 +95,7 @@
                         <td>Green</td>
                         <td>Amber</td>
                         <td>Red</td>
-                        <td><input type="text" name="settings[RAGStatus][weight]" class="form-control" value="<%= @risk_settings[:RAGStatus].weight*100 %>%"></td>
+                        <td><input type="text" name="settings[RAGStatus][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:RAGStatus].weight*100 %>%"></td>
                         <td><input type="checkbox" name="settings[RAGStatus][notify_task]" <%= "checked" if @risk_settings[:RAGStatus].notify_task %>></td>
                     </tr>
                     <tr>
@@ -105,6 +105,14 @@
                         <td></td>
                         <td></td>
                         <td><button id="add-btn" class="btn btn-success"><i class="fa fa-plus"></i></button></td>
+                    </tr>
+                    <tr style="border-top: 1px solid black;">
+                        <td>Total</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td><input type="text" name="settings[TotalRiskScore][high_threshold]" class="form-control" value="<%= @risk_settings[:TotalRiskScore].high_threshold.round(1) %>"></td>
+                        <td id="metric-weight-total"><%= @risk_settings.reduce(0) { |total, rs| total + (rs[1].weight.nil? ? 0 : rs[1].weight) }*100 %>%</td>
+                        <td><input type="checkbox" name="settings[TotalRiskScore][notify_task]" <%= "checked" if @risk_settings[:TotalRiskScore].notify_task %>></td>
                     </tr>
                 </tbody>
             </table>
@@ -153,5 +161,17 @@
           <td></td>
           <td></td>
       </tr>)`);
+    return false;
+  });
+
+  $('.metric-weight-field').change( function () {
+    var total = $('.metric-weight-field')
+      .map( function () { 
+        return Number($(this).val().replace('%', '')); 
+      }).get()
+      .reduce( function (accum, val) 
+        { return accum + val }
+        , 0);
+    $('#metric-weight-total').text(total + '%');
   })
 </script>

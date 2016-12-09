@@ -13,6 +13,7 @@ class AddIsPositiveToRiskSettings < ActiveRecord::Migration
           RiskSetting.create(metric: 3, medium_threshold: 30, high_threshold: 45, weight: 0.3, level: org)
           RiskSetting.create(metric: 4, medium_threshold: 45, high_threshold: 30, weight: 0, is_positive: false, level: org)
           RiskSetting.create(metric: 5, medium_threshold: 20, high_threshold: 40, weight: 0, level: org)
+          RiskSetting.create(metric: 6, high_threshold: 85, notify_task: true,  level: org)
         end
       end
       dir.down do
