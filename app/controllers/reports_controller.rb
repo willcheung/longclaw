@@ -48,7 +48,7 @@ class ReportsController < ApplicationController
       @data = project_engagement.map do |p|
         Hashie::Mash.new({ id: p.id, name: p.name, y: p.num_activities, color: 'blue'})
       end
-    when "Risk / Engagement %"
+    when "Negative Sentiment / Engagement %"
       project_engagement = Project.find_include_sum_activities(projects.pluck(:id))
       project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group("projects.id")
       @data = project_engagement.map do |e|
@@ -56,7 +56,7 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities*100).round(2), color: 'blue'})
       end
       @data.sort_by! { |d| d.y }.reverse!
-    when "Total Open Risks"
+    when "Total Open Tasks"
       open_risk_counts = Project.count_risks_per_project(projects.pluck(:id))
       @data = open_risk_counts.map do |r|
         Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'blue'})

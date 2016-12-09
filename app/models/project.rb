@@ -267,7 +267,12 @@ class Project < ActiveRecord::Base
     risk_settings = RiskSetting.where(level: self.account.organization)
     # Risk / Engagement Ratio
     pct_neg_sentiment_setting = risk_settings.find_by_metric(RiskSetting::METRIC[:PctNegSentiment])
-    engagement = Project.find_include_sum_activities([self.id]).first.num_activities
+    a = Project.find_include_sum_activities([self.id])
+		if a.any?
+			engagement= a.first.num_activities
+		else
+			engagement = 0
+		end
     risks = self.notifications.risks.count
     percent_neg_sentiment = Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
 
@@ -780,7 +785,7 @@ class Project < ActiveRecord::Base
     self.activities.each { |a| a.email_replace_all(email1, email2) }
   end
 
-  private  
+  private
 
   def self.calculate_score_by_setting(metric, setting)
     unless setting.is_positive

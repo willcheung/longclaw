@@ -15,12 +15,23 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="ibox">
         <div class="ibox-content row">
+            <h1>General Settings</h1>
             <div class="col-lg-12">
-              <h2>Users Settings</h2>
+              <h2>Users</h2>
               <p><%= @user_count %> total users, <%= @registered_user_count %> registered users</p>
               <p><a href="<%= settings_users_path %>">See details</a></p>
             </div>
-            
+
+            <div class="col-lg-12 m-t-md">
+              <h2>Alerts</h2>
+              <p><a href="<%= settings_alerts_path %>">See details</a></p>
+            </div>
+        </div>
+    </div>
+    <div class="ibox">
+        <div class="ibox-content row">
+            <h1>Integrations</h1>
+
             <div class="col-lg-12 m-t-md">
               <h2>Salesforce Settings</h2>
               <% if @salesforce_user.nil?%>
@@ -29,11 +40,6 @@
                 <p>Connected</p>
               <% end %>
               <p><a href="<%= settings_salesforce_path %>">See details</a></p>
-            </div>
-
-            <div class="col-lg-12 m-t-md">
-              <h2>Alert Settings</h2>
-              <p><a href="<%= settings_alerts_path %>">See details</a></p>
             </div>
             
             <div class="col-lg-12 m-t-md">

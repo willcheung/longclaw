@@ -43,7 +43,6 @@
                             <div id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Activities</div>
                             <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Activities from Salesforce."></i>
                           </th>
-                          <th></th>
                       </tr>
                   </thead>
                   <tbody>
@@ -59,7 +58,6 @@
                         <% else %>
                           <td class="col-lg-7">Activities linked to Salesforce Opportunity: <%= s.account.salesforce_opportunities.map{|n| n.name}.join(', ') %></td>
                         <% end %>
-                        <td><a href="#"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
                       </tr>
                     <% end %>
                   </tbody>

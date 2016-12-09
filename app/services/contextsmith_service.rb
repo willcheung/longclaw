@@ -35,16 +35,16 @@ class ContextsmithService
     ###
     # TESTING USING REAL TOKENS DUE TO PERMISSIONS
     ###
-    if Rails.env.development?
-      u = User.find_by_email("indifferenzetester@gmail.com")
-      success = true
-      if u.token_expired?
-        success = u.refresh_token!
-      end
-      token_emails = []
-      token_emails << { token: u.oauth_access_token, email: u.email } if success
-      return [] if token_emails.empty?
-    end
+    # if Rails.env.development?
+    #   u = User.find_by_email("indifferenzetester@gmail.com")
+    #   success = true
+    #   if u.token_expired?
+    #     success = u.refresh_token!
+    #   end
+    #   token_emails = []
+    #   token_emails << { token: u.oauth_access_token, email: u.email } if success
+    #   return [] if token_emails.empty?
+    # end
     ###
     # TESTING USING ANY EMAIL OTHER THAN TEST ACCOUNT EMAIL FOR EXTERNAL CLUSTER
     ###
@@ -103,7 +103,7 @@ class ContextsmithService
       end
     else
       u = User.find_by_email('indifferenzetester@gmail.com')
-      token_emails << { token: "test", email: u.email }
+      token_emails << { token: "test", email: 'indifferenzetester@gmail.com'}
     end
     token_emails
   end
