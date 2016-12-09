@@ -102,7 +102,7 @@ class ContextsmithService
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
     else
-      u = User.find_by_email('indifferenzetester@gmail.com')
+      # u = User.find_by_email('indifferenzetester@gmail.com')
       token_emails << { token: "test", email: 'indifferenzetester@gmail.com'}
     end
     token_emails
