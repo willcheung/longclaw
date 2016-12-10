@@ -60,7 +60,7 @@
                     </tr>
                     <tr>
                         <td>% Negative Sentiment</td>
-                        <td>7% (Last 30d)</td>
+                        <td><%= @avg_p_neg_sentiment %>% (Last 30d)</td>
                         <td><input type="text" name="settings[PctNegSentiment][medium_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].medium_threshold*100 %>%"></td>
                         <td><input type="text" name="settings[PctNegSentiment][high_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].high_threshold*100 %>%"></td>
                         <td><input type="text" name="settings[PctNegSentiment][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:PctNegSentiment].weight*100 %>%"></td>
@@ -68,7 +68,7 @@
                     </tr>
                     <tr>
                         <td>Days Inactive</td>
-                        <td>9</td>
+                        <td><%= @avg_inactivity %></td>
                         <td><input type="text" name="settings[DaysInactive][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysInactive].medium_threshold.round %>"></td>
                         <td><input type="text" name="settings[DaysInactive][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysInactive].high_threshold.round %>"></td>
                         <td><input type="text" name="settings[DaysInactive][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:DaysInactive].weight*100 %>%"></td>
@@ -106,7 +106,7 @@
                         <td></td>
                         <td><button id="add-btn" class="btn btn-success"><i class="fa fa-plus"></i></button></td>
                     </tr>
-                    <tr style="border-top: 1px solid black;">
+                    <tr class="active">
                         <td>Total</td>
                         <td>-</td>
                         <td>-</td>

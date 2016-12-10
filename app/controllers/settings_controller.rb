@@ -16,6 +16,22 @@ class SettingsController < ApplicationController
 
 	def alerts
 		@risk_settings = current_user.organization.risk_settings.index_by { |rm| RiskSetting::METRIC.key(rm.metric) }
+
+		# Average PctNegSentiment Last 30d
+    projects = Project.visible_to(current_user.organization_id, current_user.id).unscope(:group)
+		total_engagement = projects.joins(:activities).where(activities: { category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]], last_sent_date: 30.days.ago.midnight..Time.current }).sum('jsonb_array_length(activities.email_messages)')
+		if total_engagement.zero?
+			@avg_p_neg_sentiment = 0.0
+		else
+	    total_risks = projects.joins(:notifications).where(notifications: { category: Notification::CATEGORY[:Risk], created_at: 30.days.ago.midnight..Time.current }).count('DISTINCT(notifications.id)')
+	    @avg_p_neg_sentiment = (total_risks.to_f/total_engagement*100).round(1)
+	  end
+
+	  # Average Days Inactive
+	  projects_inactivity = projects.group('projects.id').joins(:activities).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
+    projects_inactivity.each { |pid, last_sent_date| projects_inactivity[pid] = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
+    @avg_inactivity = (projects_inactivity.reduce(0) { |total, days_inactive| total + days_inactive[1] }.to_f/projects.count).round(1) # get average of days inactive
+
 	end
 
 	def create_for_alerts
