@@ -21,7 +21,7 @@
             <div class="col-md-4 text-center">
                 <div class="metric text-danger">
                     <div class="metric-title">
-                        <h4>Open Risks</h4>
+                        <h4>Open Tasks</h4>
                     </div>
                     <div class="metric-content">
                         <h2 style="font-weight:600;font-size:46px"><%= @open_risks_count %></h2>
@@ -50,11 +50,11 @@
 <div id="account-charts">
     <div id="charts-container" class="ibox-content">
         <div class="row m-t-md">
-            <div id="risk-chart" style="height:240px;margin-right:3%;margin-left:2%"></div>
+            <div id="risk-chart" style="height:240px;margin-right:13px;margin-left:5px"></div>
         </div>
 
         <div class="row m-t-md">
-            <div id="risk-detection-chart"></div>
+            <div id="risk-detection-chart" style='margin-right:10px;margin-left:14px;'></div>
         </div>
 
         <div class="row m-t-md">
@@ -335,7 +335,11 @@
                 events:{
                   load: function(event) {
                     var extremes = this.yAxis[0].getExtremes();
-                    this.yAxis[0].setExtremes(0, extremes.dataMax);
+                      if(extremes.dataMax == 0){
+                        extremes.max = 100;
+                        this.yAxis[0].setExtremes(0, 100);
+                      }
+
                     }
                 },
             },
@@ -407,7 +411,12 @@
                 events:{
                   load: function(event) {
                     var extremes = this.yAxis[0].getExtremes();
-                    this.yAxis[0].setExtremes(0, extremes.dataMax);
+                    if(extremes.dataMax == 0){
+                      extremes.max = 1;
+                      this.yAxis[0].setExtremes(0,1);
+                    } else{
+                      this.yAxis[0].setExtremes(0, extremes.dataMax);
+                    }
                     }
                 },
             },
@@ -434,7 +443,8 @@
             yAxis: {
                 title: { text: '' },
                 labels: { enabled: true },
-                minorGridLineWidth: 0
+                minorGridLineWidth: 0,
+                min: 0
             },
             legend: {
                 enabled: true

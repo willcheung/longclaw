@@ -5,7 +5,7 @@ class ContextsmithService
 
   def self.load_emails_from_backend(project, after=nil, max=100, query=nil, save_in_db=true, is_time=true, is_test=false, neg_sentiment=0, request=true)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
-    
+
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
     token_emails = get_token_emails(project)
     return [] if token_emails.empty?
@@ -18,43 +18,43 @@ class ContextsmithService
     is_time = is_time.nil? ? "" : ("&time=" + is_time.to_s)
     request = request.nil? ? "": ("&request=" + request.to_s)
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
-       
+
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + query + is_time + neg_sentiment + request
     puts "Calling backend service: " + final_url
 
-    request_backend_service(final_url, project, save_in_db, "conversations", is_test)    
+    request_backend_service(final_url, project, save_in_db, "conversations", is_test)
   end
 
-  
+
   def self.load_calendar_from_backend(project, before, after, max=100, save_in_db=true)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
-    
+
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
     token_emails = get_token_emails(project)
     return [] if token_emails.empty?
     ###
     # TESTING USING REAL TOKENS DUE TO PERMISSIONS
     ###
-    if Rails.env.development?
-      u = User.find_by_email("indifferenzetester@gmail.com")
-      success = true
-      if u.token_expired?
-        success = u.refresh_token!
-      end
-      token_emails = []
-      token_emails << { token: u.oauth_access_token, email: u.email } if success
-      return [] if token_emails.empty?
-    end
+    # if Rails.env.development?
+    #   u = User.find_by_email("indifferenzetester@gmail.com")
+    #   success = true
+    #   if u.token_expired?
+    #     success = u.refresh_token!
+    #   end
+    #   token_emails = []
+    #   token_emails << { token: u.oauth_access_token, email: u.email } if success
+    #   return [] if token_emails.empty?
+    # end
     ###
     # TESTING USING ANY EMAIL OTHER THAN TEST ACCOUNT EMAIL FOR EXTERNAL CLUSTER
     ###
     # ex_clusters = (project.users + project.contacts).select { |c| c.email != 'indifferenzetester@gmail.com' }.map(&:email)
     ex_clusters = project.contacts.map(&:email)
     final_cluster = format_ex_clusters(ex_clusters)
-       
+
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + "&before=" + before.to_s + "&after=" + after.to_s
     puts "Calling backend service: " + final_url
-    
+
     request_backend_service(final_url, project, save_in_db, "events")
   end
 
@@ -102,8 +102,8 @@ class ContextsmithService
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
     else
-      u = User.find_by_email('indifferenzetester@gmail.com')
-      token_emails << { token: "test", email: u.email }
+      # u = User.find_by_email('indifferenzetester@gmail.com')
+      token_emails << { token: "test", email: 'indifferenzetester@gmail.com'}
     end
     token_emails
   end
