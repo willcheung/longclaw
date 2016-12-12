@@ -7,14 +7,14 @@ class ReportsController < ApplicationController
 
   def accounts_dashboard
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    risk_scores = Project.current_risk_score(projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse
+    risk_scores = Project.new_risk_score(projects.pluck(:id)).sort_by { |pid, score| score }.reverse
     total_risk_scores = 0
     @risk_scores = risk_scores.map do |r|
       proj = projects.find { |p| p.id == r[0] }
       total_risk_scores += r[1]
       Hashie::Mash.new({ id: proj.id, score: r[1], name: proj.name })
     end
-    @average_risk_score = (total_risk_scores.to_f/risk_scores.length).round(1)
+    @average = (total_risk_scores.to_f/risk_scores.length).round(1)
   end
 
   def dashboard_data
@@ -26,8 +26,9 @@ class ReportsController < ApplicationController
     @data = [] and return if projects.blank?
 
     case @sort
-    when "Risk Score Today"
-      risk_scores = Project.current_risk_score(projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse
+    when "Risk Score"
+      projects = Project.visible_to(current_user.organization_id, current_user.id)
+      risk_scores = Project.new_risk_score(projects.pluck(:id)).sort_by { |pid, score| score }.reverse
       total_risk_scores = 0
       @data = risk_scores.map do |r|
         proj = projects.find { |p| p.id == r[0] }
@@ -35,7 +36,17 @@ class ReportsController < ApplicationController
         color = r[1] >= 80 ? 'highRisk' : r[1] >= 60 ? 'mediumRisk' : 'lowRisk'
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: r[1], color: color })
       end
-      @average_risk_score = (total_risk_scores.to_f/risk_scores.length).round(1)
+      @average = (total_risk_scores.to_f/risk_scores.length).round(1)
+    when "Sentiment Score Today"
+      sentiment_scores = Project.current_risk_score(projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse
+      total_sentiment_scores = 0
+      @data = sentiment_scores.map do |r|
+        proj = projects.find { |p| p.id == r[0] }
+        total_sentiment_scores += r[1]
+        color = r[1] >= 80 ? 'highRisk' : r[1] >= 60 ? 'mediumRisk' : 'lowRisk'
+        Hashie::Mash.new({ id: proj.id, name: proj.name, y: r[1], color: color })
+      end
+      @average = (total_sentiment_scores.to_f/sentiment_scores.length).round(1)
     when "Days Inactive"
       last_sent_dates = projects.includes(:activities).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
       @data = last_sent_dates.map do |d|
