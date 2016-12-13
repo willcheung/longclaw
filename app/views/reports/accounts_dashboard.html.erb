@@ -32,7 +32,8 @@
             <div class="col-lg-5">
                 <h4 class="m-l-md">Sort by:
                     <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Type">
-                        <option selected>Risk Score Today</option>
+                        <option selected>Risk Score</option>
+                        <option>Negative Sentiment Score</option>
                         <option>Days Inactive</option>
                         <option>Engagement Last 7d</option>
                         <option>Negative Sentiment / Engagement %</option>
@@ -120,13 +121,7 @@
                 <% @risk_scores.each do |r| %>
                 {
                     y: <%= r.score %>,
-                    color: "<%= if r.score >= 80.0
-                            '#ed5565'
-                        elsif r.score >= 60.0
-                            '#FFA500'
-                        else
-                            '#A1C436'
-                        end %>",
+                    color: "<%= risk_color(r.score, true) %>",
                     id: "<%= r.id %>"
                 },
                 <% end %>
@@ -137,7 +132,7 @@
                 lineWidth: 2,
                 color: '#7cb5ec',
                 marker: { enabled: false, radius: 0 },
-                data: <%= Array.new(@risk_scores.length, @average_risk_score).to_json.html_safe %>
+                data: <%= Array.new(@risk_scores.length, @average).to_json.html_safe %>
             }]
         });
 
