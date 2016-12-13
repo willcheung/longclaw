@@ -39,7 +39,7 @@ class Notification < ActiveRecord::Base
 
   validates :project, presence: true
 
-  CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Risk: 'Risk', Opportunity: 'Opportunity' }
+  CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Risk: 'Alert', Opportunity: 'Opportunity' }
 
 	def self.load(data, project, test=false, day_range=7)
 		notifications = []
