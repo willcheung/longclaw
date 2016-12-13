@@ -37,7 +37,7 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: r[1], color: color })
       end
       @average = (total_risk_scores.to_f/risk_scores.length).round(1)
-    when "Sentiment Score Today"
+    when "Negative Sentiment Score"
       sentiment_scores = Project.current_risk_score(projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse
       total_sentiment_scores = 0
       @data = sentiment_scores.map do |r|

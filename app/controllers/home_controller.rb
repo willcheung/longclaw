@@ -18,7 +18,7 @@ class HomeController < ApplicationController
     unless @projects.empty?
       #@project_last_activity_date = Project.owner_of(current_user.id).includes(:activities).maximum("activities.last_sent_date")
       @metrics = Project.count_activities_by_day(7, @projects.map(&:id))
-      @risk_scores = Project.current_risk_score(@projects.map(&:id), current_user.time_zone)
+      @risk_scores = Project.new_risk_score(@projects.map(&:id))
       @open_risk_count = Project.open_risk_count(@projects.map(&:id))
       @rag_status = Project.current_rag_score(@projects.map(&:id))
     end
