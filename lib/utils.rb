@@ -22,9 +22,9 @@ module Utils
 		return "" if name.nil? or name.include?("@")
 
 	  if name.include?(', ') # Handles last name with comma
-	    name.split(', ').last.split(' ').first 
+	    name.split(', ').last.split(' ').first
 	  else
-	    name.split(' ').first 
+	    name.split(' ').first
 	  end
 	end
 
@@ -32,9 +32,9 @@ module Utils
 		return "" if name.nil? or name.include?("@")
 
 	  if name.include?(', ') # Handles last name with comma
-	    name.split(', ').first.split(' ').last 
+	    name.split(', ').first.split(' ').last
 	  else
-	    name.split(' ').last 
+	    name.split(' ').last
 	  end
 	end
 
@@ -94,7 +94,7 @@ module Utils
 		# 			org_name = r.registrant_contacts[0].organization
 		# 		end
 
-		# 		address = ([r.registrant_contacts[0].address, r.registrant_contacts[0].city, r.registrant_contacts[0].state, 
+		# 		address = ([r.registrant_contacts[0].address, r.registrant_contacts[0].city, r.registrant_contacts[0].state,
 		# 							 r.registrant_contacts[0].country, r.registrant_contacts[0].country_code]).join(' ')
 
 		# 		return org_name, address

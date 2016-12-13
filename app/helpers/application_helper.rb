@@ -86,6 +86,7 @@ module ApplicationHelper
     end
   end
 
+
   def get_first_names(from, to, cc)
       a = []
 

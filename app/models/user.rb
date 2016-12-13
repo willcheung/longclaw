@@ -51,7 +51,7 @@ class User < ActiveRecord::Base
   has_many    :accounts, foreign_key: "owner_id", dependent: :nullify
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
-  has_many    :notifications, foreign_key: "assign_to" 
+  has_many    :notifications, foreign_key: "assign_to"
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -59,7 +59,7 @@ class User < ActiveRecord::Base
   has_many    :project_members, -> { where "project_members.status = #{ProjectMember::STATUS[:Confirmed]}" }, dependent: :destroy
   has_many    :project_members_all, class_name: "ProjectMember", dependent: :destroy
   has_many    :projects, through: "project_members"
-  has_many    :projects_all, through: "project_members_all", source: :project 
+  has_many    :projects_all, through: "project_members_all", source: :project
 
   scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
   scope :not_disabled, -> {where("users.is_disabled = false")}
@@ -102,14 +102,14 @@ class User < ActiveRecord::Base
     info = auth.info
     credentials = auth.credentials
     user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
-    
+
     if user
       if credentials["refresh_token"].nil? or credentials["refresh_token"].empty?
-        user.update_attributes(oauth_access_token: credentials["token"], 
+        user.update_attributes(oauth_access_token: credentials["token"],
                                oauth_expires_at: Time.at(credentials["expires_at"]),
                                time_zone: time_zone)
       else
-        user.update_attributes(oauth_access_token: credentials["token"], 
+        user.update_attributes(oauth_access_token: credentials["token"],
                                oauth_expires_at: Time.at(credentials["expires_at"]),
                                oauth_refresh_token: credentials["refresh_token"],
                                time_zone: time_zone)
@@ -154,7 +154,7 @@ class User < ActiveRecord::Base
           is_disabled: false,
           time_zone: time_zone
         )
-        
+
         org = Organization.create_or_update_user_organization(get_domain(info["email"]), user)
         user.update_attributes(organization_id: org.id)
 
@@ -181,19 +181,19 @@ class User < ActiveRecord::Base
   def self.count_activities_by_user(array_of_account_ids, domain, time_zone='UTC')
     query = <<-SQL
       select t2.inbound as email,
-             t2.inbound_count, 
-             COALESCE(t1.outbound_count,0) as outbound_count, 
-             COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) as total 
+             t2.inbound_count,
+             COALESCE(t1.outbound_count,0) as outbound_count,
+             COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) as total
       from
-        (select "from" as outbound, 
-                count(DISTINCT message_id) as outbound_count 
-          from user_activities_last_14d 
+        (select "from" as outbound,
+                count(DISTINCT message_id) as outbound_count
+          from user_activities_last_14d
           where "from" like '%#{domain}' and to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}' BETWEEN (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days') and (CURRENT_DATE AT TIME ZONE '#{time_zone}') and project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
           group by "from" order by outbound_count desc) t1
-      FULL OUTER JOIN 
-        (select inbound, count(DISTINCT message_id) as inbound_count from 
+      FULL OUTER JOIN
+        (select inbound, count(DISTINCT message_id) as inbound_count from
           (
-            select "to" as inbound, message_id from user_activities_last_14d where "to" like '%#{domain}' UNION ALL select "cc" as inbound, message_id from user_activities_last_14d 
+            select "to" as inbound, message_id from user_activities_last_14d where "to" like '%#{domain}' UNION ALL select "cc" as inbound, message_id from user_activities_last_14d
             where "cc" like '%#{domain}' and to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}' BETWEEN (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days') and (CURRENT_DATE AT TIME ZONE '#{time_zone}') and project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
           ) t
         group by inbound order by inbound_count desc) t2
@@ -209,7 +209,7 @@ class User < ActiveRecord::Base
   def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
-      WITH email_activities AS 
+      WITH email_activities AS
         (
           SELECT messages ->> 'messageId'::text AS message_id,
                  jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
@@ -225,35 +225,35 @@ class User < ActiveRecord::Base
           LATERAL jsonb_array_elements(email_messages) messages
           WHERE category = 'Conversation'
           AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
-          AND project_id IN 
+          AND project_id IN
           (
-            SELECT id AS project_id 
-            FROM projects 
+            SELECT id AS project_id
+            FROM projects
             WHERE account_id IN ('#{array_of_account_ids.join("','")}')
           )
           GROUP BY 1,2,3,4
         )
       SELECT COALESCE(t2.inbound, t1.outbound) AS email,
-             COALESCE(t2.inbound_count,0) AS inbound_count, 
-             COALESCE(t1.outbound_count,0) AS outbound_count, 
-             COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) AS total 
+             COALESCE(t2.inbound_count,0) AS inbound_count,
+             COALESCE(t1.outbound_count,0) AS outbound_count,
+             COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) AS total
       FROM
       -- t1 counts all emails sent by each user (specified in "from" field) in the provided domain in the last 14 days across all accounts in the organization
         (
-          SELECT "from" AS outbound, 
-                count(DISTINCT message_id) AS outbound_count 
-          FROM email_activities 
+          SELECT "from" AS outbound,
+                count(DISTINCT message_id) AS outbound_count
+          FROM email_activities
           WHERE "from" LIKE '%#{domain}'
           GROUP BY "from" ORDER BY outbound_count DESC
         ) t1
-      FULL OUTER JOIN 
+      FULL OUTER JOIN
       -- t2 counts all emails received by each user in the provided domain in the last 14 days across all accounts in the organization
         (
-          SELECT inbound, count(DISTINCT message_id) AS inbound_count FROM 
+          SELECT inbound, count(DISTINCT message_id) AS inbound_count FROM
           -- t collects all emails received by each user (specified in either "to" or "cc" fields) in the provided domain in the last 14 days across all accounts in the organization
           (
             SELECT "to" AS inbound, message_id FROM email_activities WHERE "to" LIKE '%#{domain}'
-            UNION ALL 
+            UNION ALL
             SELECT "cc" AS inbound, message_id FROM email_activities WHERE "cc" LIKE '%#{domain}'
           ) t
           GROUP BY inbound ORDER BY inbound_count DESC
@@ -271,18 +271,18 @@ class User < ActiveRecord::Base
 
   # Oauth Helper Methods
   # https://www.twilio.com/blog/2014/09/gmail-api-oauth-rails.html
-  def to_params    
+  def to_params
     {'refresh_token' => oauth_refresh_token,
     'client_id' => ENV['google_client_id'],
     'client_secret' => ENV['google_client_secret'],
     'grant_type' => 'refresh_token'}
   end
- 
+
   def request_token_from_google
     url = URI("https://www.googleapis.com/oauth2/v3/token")
     Net::HTTP.post_form(url, self.to_params)
   end
- 
+
   def refresh_token!
     response = request_token_from_google
     data = JSON.parse(response.body)
@@ -298,11 +298,11 @@ class User < ActiveRecord::Base
       return true
     end
   end
- 
+
   def token_expired?
     oauth_expires_at < Time.now
   end
- 
+
   def fresh_token
     refresh_token! if token_expired?
     oauth_access_token
