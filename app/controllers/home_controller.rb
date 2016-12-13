@@ -10,6 +10,7 @@ class HomeController < ApplicationController
     @open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Risk]}'", Date.today)
     @open_risks = project_tasks.open.risks
     @overdue_tasks = project_tasks.open.where("original_due_date::date <= ? and category != '#{Notification::CATEGORY[:Risk]}'", Date.today)
+    @open_total_tasks = project_tasks.open
 
     # Need this to show project name and user name
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
