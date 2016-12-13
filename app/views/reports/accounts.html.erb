@@ -37,9 +37,10 @@
                 <h4 class="m-l-md">Sort by: 
                 <select class="metric_filter col-lg-8" data-placeholder="Select Type">
                     <option value="1">Days Inactive</option>
+                    <option>Negative Sentiment Score</option>
                     <option value="2">Engagement Last 7d</option>
-                    <option value="3" selected="true">Risk Score Today</option>
-                    <option value="4">Risk / Engagement Ratio</option>
+                    <option value="3" selected="true">Risk Score</option>
+                    <option value="4">Negative Sentiment / Engagement %</option>
                     <option value="5">Total Open Risks</option>
                     <option value="6">Total Overdue Tasks</option>
                   </select>    
@@ -77,7 +78,7 @@
                                         <h4>High Risk</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">96</h2>
+                                        <h2 style="font-weight:600;font-size:46px">80</h2>
                                     </div>
                                 </div>
                             </div>
@@ -85,10 +86,10 @@
                             <div class="col-md-4 text-center">
                                 <div class="metric text-danger">
                                     <div class="metric-title">
-                                        <h4>Open Risks</h4>
+                                        <h4>Open Alerts</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">5</h2>
+                                        <h2 style="font-weight:600;font-size:46px">3</h2>
                                     </div>
                                 </div>
                             </div>
@@ -96,16 +97,16 @@
                             <div class="col-md-4 text-center">
                                 <div class="metric">
                                     <div class="metric-title">
-                                        <h4>Last Touch</h4>
+                                        <h4>Open Tasks</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="line-height:50px;">9 days ago</h2>
+                                        <h2 style="font-weight:600;font-size:46px">1</h2>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="row text-center">
-                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/tasks" class="btn btn-outline btn-primary btn-xs">See risks &rarr;</a></h3>
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/tasks" class="btn btn-outline btn-primary btn-xs">See alerts and tasks &rarr;</a></h3>
                         </div>
                     </div>
                 </div>
@@ -194,7 +195,7 @@
             },
             series: [{
                 name: 'Risk Score',
-                <% @risk_scores = [96, 95, 82, 81, 80, 79, 74, 74, 72, 70, 68, 55, 46, 32, 25, 25, 20, 19, 18, 17, 10, 10, 5, 5, 5] %>
+                <% @risk_scores = [80, 80, 75, 75, 75, 74, 74, 74, 72, 70, 68, 55, 46, 32, 25, 25, 20, 19, 18, 17, 10, 10, 5, 5, 5] %>
                 data: [ <% @risk_scores.each do |r| %>
                 {
                     y: <%= r %>,
@@ -491,7 +492,7 @@
                 enabled: false
             },
             title: {
-                text: "Risk Volume",
+                text: "Negative Sentiment / Enagement %",
                     align: 'left',
                     margin: 0,
                     x: 35,
@@ -527,7 +528,7 @@
                 },
                 borderWidth: 0,
                 backgroundColor: 'none',
-                pointFormat: '{point.y}',
+                pointFormat: '{point.y}%',
                 xDateFormat: '%b %e',
                 shadow: false,
                 style: {
@@ -541,7 +542,7 @@
                 color: '#FF5050',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(5) }  %>
+                data: [2, 3, 8, 0, 10, 12, 0, 0, 5, 2, 0, 0, 2, 0]
             }]
         });
 
@@ -620,10 +621,17 @@
             },
             {
                 type: 'column',
-                name: 'Support Case',
+                name: 'Support Ticket',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(20) }  %>
+                data: <%= 14.times.map{ Random.rand(10) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Salesforce Activity',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(10) }  %>
             },
             {
                 type: 'column',
