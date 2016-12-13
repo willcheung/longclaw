@@ -23,5 +23,5 @@
 class RiskSetting < ActiveRecord::Base
   belongs_to :level, polymorphic: true
 
-  METRIC = { NegSentiment: 0, RAGStatus: 1, PctNegSentiment: 2, DaysInactive: 3, DaysRenewal: 4, SupportVolume: 5 }
+  METRIC = { NegSentiment: 0, RAGStatus: 1, PctNegSentiment: 2, DaysInactive: 3, DaysRenewal: 4, SupportVolume: 5, TotalRiskScore: 6 }
 end

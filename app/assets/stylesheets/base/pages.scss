@@ -1033,3 +1033,9 @@ ins {
 del {
   background-color: #ffc6c6;
 }
+
+.risk-total {
+  border-top: 2px solid $text-color;
+  font-weight: bold;
+  font-size: 16px;
+}
