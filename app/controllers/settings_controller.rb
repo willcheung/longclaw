@@ -33,7 +33,7 @@ class SettingsController < ApplicationController
     @avg_inactivity = (projects_inactivity.reduce(0) { |total, days_inactive| total + days_inactive[1] }.to_f/projects.count).round(1) # get average of days inactive
 
     # Average Risk Score
-    @avg_risk_score = (Project.new_risk_score(projects.ids).reduce(0) { |total, risk_score| total + risk_score[1] }.to_f/projects.count).round(1)
+    @avg_risk_score = (Project.new_risk_score(projects.ids, current_user.time_zone).reduce(0) { |total, risk_score| total + risk_score[1] }.to_f/projects.count).round(1)
 	end
 
 	def create_for_alerts

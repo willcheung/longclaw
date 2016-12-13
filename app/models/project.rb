@@ -237,24 +237,24 @@ class Project < ActiveRecord::Base
     Project.current_risk_score([self.id], time_zone)[self.id]
   end
 
-  def self.new_risk_score(array_of_project_ids)
+  def self.new_risk_score(array_of_project_ids, time_zone)
     projects = Project.where(id: array_of_project_ids).group('projects.id')
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
-    pct_neg_sentiment_setting = risk_settings.find_by_metric(RiskSetting::METRIC[:PctNegSentiment])
+    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
     project_engagement = projects.joins(:activities).where(activities: { category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]] }).sum('jsonb_array_length(activities.email_messages)')
     project_risks = projects.joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").count('notifications.id')
     project_p_neg_sentiment = project_engagement.merge(project_risks) { |pid, engagement, risks| calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting) }
 
     # Days Inactive
-    days_inactive_setting = risk_settings.find_by_metric(RiskSetting::METRIC[:DaysInactive])
+    days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
     project_inactivity_risk = projects.joins(:activities).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
-    project_inactivity_risk.each { |pid, last_sent_date| project_inactivity_risk[pid] = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
+    project_inactivity_risk.each { |pid, last_sent_date| project_inactivity_risk[pid] = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone(time_zone).to_date.mjd } # convert last_sent_date to days inactive
     project_inactivity_risk.each { |pid, days_inactive| project_inactivity_risk[pid] = calculate_score_by_setting(days_inactive, days_inactive_setting) } # convert days inactive to effect on risk score
 
     # RAG Status
-    rag_status_setting = risk_settings.find_by_metric(RiskSetting::METRIC[:RAGStatus])
+    rag_status_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:RAGStatus] }
     project_rag_status = Project.current_rag_score(array_of_project_ids)
     project_rag_status.each { |pid, rag_score| project_rag_status[pid] = calculate_score_by_setting(rag_score, rag_status_setting) }
 
@@ -263,32 +263,54 @@ class Project < ActiveRecord::Base
     overall.each { |pid, score| overall[pid] = score.round }
   end
 
-  def new_risk_score
+  def new_risk_score(time_zone)
     risk_settings = RiskSetting.where(level: self.account.organization)
     # Risk / Engagement Ratio
-    pct_neg_sentiment_setting = risk_settings.find_by_metric(RiskSetting::METRIC[:PctNegSentiment])
+    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
     a = Project.find_include_sum_activities([self.id])
-		if a.any?
-			engagement= a.first.num_activities
-		else
-			engagement = 0
-		end
+    if a.any?
+      engagement= a.first.num_activities
+    else
+      engagement = 0
+    end
     risks = self.notifications.risks.count
     percent_neg_sentiment = Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
 
     # Days Inactive
-    days_inactive_setting = risk_settings.find_by_metric(RiskSetting::METRIC[:DaysInactive])
+    days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
     last_sent_date = self.activities.maximum("activities.last_sent_date")
-    days_inactive = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd
+    days_inactive = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone(time_zone).to_date.mjd
     inactivity_risk = Project.calculate_score_by_setting(days_inactive, days_inactive_setting)
 
     # RAG Status
-    rag_score_setting = risk_settings.find_by_metric(RiskSetting::METRIC[:RAGStatus])
+    rag_score_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:RAGStatus] }
     rag_status = self.activities.latest_rag_score.first
     rag_score = (rag_status ? Project.calculate_score_by_setting(rag_status.rag_score, rag_score_setting) : 0)
 
     # Overall Score
     (percent_neg_sentiment + inactivity_risk + rag_score).round
+  end
+
+  def new_risk_score_trend(time_zone, day_range=14)
+    risk_settings = RiskSetting.where(level: self.account.organization)
+    
+    # Risk / Engagement Ratio
+    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    
+    # Days Inactive
+    days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
+
+    # RAG Status
+    rag_score_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:RAGStatus] }
+    rag_scores = self.activities.latest_rag_score.reverse_order
+    rag_score_by_day = Array.new(day_range, 0)
+    rag_scores.each do |rag|
+      # stuff!
+      date_index = rag.last_sent_date.in_time_zone(time_zone)
+    end
+
+
+    [15,40,15,15,30,30,30,40,40,80,70,30,15]
   end
 
 	def self.current_rag_score(array_of_project_ids)
