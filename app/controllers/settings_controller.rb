@@ -32,6 +32,8 @@ class SettingsController < ApplicationController
     projects_inactivity.each { |pid, last_sent_date| projects_inactivity[pid] = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
     @avg_inactivity = (projects_inactivity.reduce(0) { |total, days_inactive| total + days_inactive[1] }.to_f/projects.count).round(1) # get average of days inactive
 
+    # Average Risk Score
+    @avg_risk_score = (Project.new_risk_score(projects.ids).reduce(0) { |total, risk_score| total + risk_score[1] }.to_f/projects.count).round(1)
 	end
 
 	def create_for_alerts

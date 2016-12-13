@@ -106,10 +106,10 @@
                         <td></td>
                         <td><button id="add-btn" class="btn btn-success"><i class="fa fa-plus"></i></button></td>
                     </tr>
-                    <tr class="active">
-                        <td>Total</td>
-                        <td>-</td>
-                        <td>-</td>
+                    <tr class="risk-total">
+                        <td>Total Risk Score</td>
+                        <td><%= @avg_risk_score %></td>
+                        <td><input type="text" name="settings[TotalRiskScore][medium_threshold]" class="form-control" value="<%= @risk_settings[:TotalRiskScore].medium_threshold.round(1) %>"></td>
                         <td><input type="text" name="settings[TotalRiskScore][high_threshold]" class="form-control" value="<%= @risk_settings[:TotalRiskScore].high_threshold.round(1) %>"></td>
                         <td id="metric-weight-total"><%= @risk_settings.reduce(0) { |total, rs| total + (rs[1].weight.nil? ? 0 : rs[1].weight) }*100 %>%</td>
                         <td><input type="checkbox" name="settings[TotalRiskScore][notify_task]" <%= "checked" if @risk_settings[:TotalRiskScore].notify_task %>></td>
