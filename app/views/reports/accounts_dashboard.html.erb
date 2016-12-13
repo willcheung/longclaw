@@ -121,13 +121,7 @@
                 <% @risk_scores.each do |r| %>
                 {
                     y: <%= r.score %>,
-                    color: "<%= if r.score >= 80.0
-                            '#ed5565'
-                        elsif r.score >= 60.0
-                            '#FFA500'
-                        else
-                            '#A1C436'
-                        end %>",
+                    color: "<%= risk_color(r.score, true) %>",
                     id: "<%= r.id %>"
                 },
                 <% end %>
