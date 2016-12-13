@@ -48,15 +48,15 @@ class Contact < ActiveRecord::Base
         account = Account.find_by(domain: domain, organization: current_org)
         # create a new account for this domain if one doesn't exist yet
         account = Account.create(
-          domain: domain, 
-          name: domain, 
+          domain: domain,
+          name: domain,
           category: "Customer",
           address: "",
           website: "http://www.#{domain}",
-          owner_id: project.owner_id, 
+          owner_id: project.owner_id,
           organization: current_org,
           created_by: project.owner_id) unless account
-        
+
         # find contact for this member
         contact = account.contacts.find_by_email(mem.address)
         # create contact for this member if one doesn't exist yet
@@ -76,6 +76,7 @@ class Contact < ActiveRecord::Base
   end
 
 	def is_internal_user?
- 		false
-  end
+		return false
+	end
+
 end
