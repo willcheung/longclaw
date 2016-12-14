@@ -34,6 +34,7 @@
 #  title                  :string
 #  time_zone              :string           default("UTC")
 #  mark_private           :boolean          default(FALSE), not null
+#  role                   :text
 #
 # Indexes
 #
@@ -73,6 +74,7 @@ class User < ActiveRecord::Base
   # attr_encrypted :oauth_access_token
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
+  ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
 
    def self.from_omniauth(auth, organization_id)
     where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|

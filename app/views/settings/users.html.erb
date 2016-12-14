@@ -29,6 +29,7 @@
                         <th style="text-align:center">Joined ContextSmith</th>
                         <th style="text-align:center">Time Zone</th>
                         <th style="text-align:center">Private Email <i class="fa fa-question-circle"data-toggle="tooltip" data-placement="top" data-original-title="If checked, 1-on-1 emails are automatically set to private."></i></th>
+                        <th style="text-align:center">Role</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,6 +48,7 @@
                         </td>
                         <td><%= u.time_zone %></td>
                         <td><%= best_in_place u, :mark_private, :as => 'checkbox', :data => {:user => u}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%></td>
+                        <td style="width:100px"><%= best_in_place u, :role, :as => :select, :collection => User::ROLE, :place_holder => '(none)', :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></td>
                     </tr>
                     <% end %>
             </table>
