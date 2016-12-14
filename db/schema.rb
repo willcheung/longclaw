@@ -303,7 +303,7 @@ ActiveRecord::Schema.define(version: 20161214020049) do
     t.string   "title"
     t.string   "time_zone",              default: "UTC"
     t.boolean  "mark_private",           default: false, null: false
-    t.text     "role"
+    t.string   "role"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
