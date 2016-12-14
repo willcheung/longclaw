@@ -7,9 +7,9 @@ class HomeController < ApplicationController
     @projects = Project.owner_of(current_user.id).preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
     #@projects = Project.owner_of(current_user.id)
     project_tasks = Notification.where(project_id: @projects.pluck(:id))
-    @open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Risk]}'", Date.today)
+    @open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)
     @open_risks = project_tasks.open.risks
-    @overdue_tasks = project_tasks.open.where("original_due_date::date <= ? and category != '#{Notification::CATEGORY[:Risk]}'", Date.today)
+    @overdue_tasks = project_tasks.open.where("original_due_date::date <= ? and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)
     @open_total_tasks = project_tasks.open
 
     # Need this to show project name and user name

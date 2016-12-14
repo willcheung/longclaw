@@ -34,12 +34,12 @@ class Notification < ActiveRecord::Base
 	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
-  scope :risks, -> { where category: CATEGORY[:Risk] }
+  scope :risks, -> { where category: CATEGORY[:Alert] }
   scope :open, -> { where is_complete: false }
 
   validates :project, presence: true
 
-  CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Risk: 'Alert', Opportunity: 'Opportunity' }
+  CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Alert: 'Alert', Opportunity: 'Opportunity' }
 
 	def self.load(data, project, test=false, day_range=7)
 		notifications = []
@@ -101,7 +101,7 @@ class Notification < ActiveRecord::Base
 
 # add new risk(message score below 0)
   def self.load_risk_for_each_message(project_id, conversation_id, contextMessage, test=false, day_range=7)
-    if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Risk]
+    if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Alert]
       # avoid redundant
       return
     end
@@ -155,7 +155,7 @@ class Notification < ActiveRecord::Base
       complete_date = sent_date
     end
 
-    notification = Notification.new(category: CATEGORY[:Risk],
+    notification = Notification.new(category: CATEGORY[:Alert],
         name: contextMessage.subject,
         description: description,
         message_id: contextMessage.messageId,
