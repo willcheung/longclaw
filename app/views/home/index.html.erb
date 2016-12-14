@@ -59,12 +59,12 @@
                 <h2>Open Risks and Alerts</h2>
                     <div class="col-lg-12 m-b-md">
                         <% if @open_risks.empty? %>
-                            <p>Great, we did not find any risks from your account streams.</p>
+                            <p>Great, we did not find any risks or alerts from your account streams.</p>
                         <% else %>
                             <%= render "notifications/table", :notifications => @open_risks %>
                         <% end %>
                     </div>
-                <h2>Overdue / Due Today</h2>
+                <h2>Tasks Overdue / Due Today</h2>
                     <div class="col-lg-12 m-b-md">
                         <% if @overdue_tasks.empty? %>
                             <p>Hooray, no tasks due immediately!</p>
