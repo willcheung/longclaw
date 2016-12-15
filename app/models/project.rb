@@ -277,7 +277,7 @@ class Project < ActiveRecord::Base
 
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
-    last_sent_date = self.activities.maximum("activities.last_sent_date")
+    last_sent_date = self.activities.maximum(:last_sent_date)
     days_inactive = last_sent_date.nil? ? 0 : Time.current.in_time_zone(time_zone).to_date.mjd - last_sent_date.in_time_zone(time_zone).to_date.mjd
     inactivity_risk = Project.calculate_score_by_setting(days_inactive, days_inactive_setting)
 
@@ -295,7 +295,21 @@ class Project < ActiveRecord::Base
     
     # Risk / Engagement Ratio
     pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-
+    engagement_query = self.activities.where(category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]])
+    risks_query = self.notifications.risks
+    if engagement_query.count.zero?
+      pct_neg_sentiment_by_day = Array.new(day_range, 0)
+    else
+      pct_neg_sentiment_by_day = ((day_range - 1).days.ago.in_time_zone(time_zone).to_date..Time.current.in_time_zone(time_zone).to_date).map do |date|
+        engagement = engagement_query.where(last_sent_date: Time.at(0)..date).sum('jsonb_array_length(activities.email_messages)')
+        if engagement.zero?
+          0
+        else
+          risks = risks_query.where(created_at: Time.at(0)..date).count
+          Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
+        end
+      end
+    end
     
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
@@ -304,9 +318,9 @@ class Project < ActiveRecord::Base
     activity_dates = activity_dates.map { |d| d.in_time_zone(time_zone).to_date }.to_set
     days_inactive_by_day = ((day_range - 1).days.ago.in_time_zone(time_zone).to_date..Time.current.in_time_zone(time_zone).to_date).map do |date|
       last_active_date = activity_dates.drop_while { |d| d > date }.first
-      last_active_date.nil? ? 0 : date.mjd - last_active_date.mjd
+      days_inactive = last_active_date.nil? ? 0 : date.mjd - last_active_date.mjd
+      Project.calculate_score_by_setting(days_inactive, days_inactive_setting)
     end
-    days_inactive_by_day.map! { |days| Project.calculate_score_by_setting(days, days_inactive_setting) }
 
     # RAG Status
     rag_score_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:RAGStatus] }
@@ -318,15 +332,7 @@ class Project < ActiveRecord::Base
     end
     rag_score_by_day.map! { |score| Project.calculate_score_by_setting(score, rag_score_setting) }
 
-    trend = [rag_score_by_day, days_inactive_by_day].transpose.map(&:sum)
-
-    puts "=============================="
-    puts "trend"
-    p trend
-    puts "=============================="
-
-
-    [15,40,15,15,30,30,30,40,40,80,70,30,15]
+    [rag_score_by_day, days_inactive_by_day, pct_neg_sentiment_by_day].transpose.map(&:sum)
   end
 
 	def self.current_rag_score(array_of_project_ids)
