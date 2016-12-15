@@ -113,7 +113,7 @@ class Project < ActiveRecord::Base
         LEFT JOIN notifications
         ON activities.id = notifications.activity_id
         AND messages ->> 'messageId' = notifications.message_id
-        AND notifications.category = '#{Notification::CATEGORY[:Risk]}'
+        AND notifications.category = '#{Notification::CATEGORY[:Alert]}'
         WHERE activities.category = '#{Activity::CATEGORY[:Conversation]}'
         AND messages->>'sentimentItems' IS NOT NULL
         AND activities.project_id IN ('#{array_of_project_ids.join("','")}')
@@ -193,11 +193,11 @@ class Project < ActiveRecord::Base
     min_scores
   end
 
-  def self.count_risks_per_project(array_of_project_ids)
+  def self.count_tasks_per_project(array_of_project_ids)
     query = <<-SQL
         SELECT projects.id AS id,
                projects.name AS name,
-               COUNT(*) FILTER (WHERE is_complete = FALSE AND notifications.category = 'Risk') AS open_risks
+               COUNT(*) FILTER (WHERE is_complete = FALSE ) AS open_risks
         FROM projects
         LEFT JOIN notifications
         ON projects.id = notifications.project_id
@@ -224,7 +224,7 @@ class Project < ActiveRecord::Base
 
   # for risk counts, show every risk regardless of private conversation
   def self.open_risk_count(array_of_project_ids)
-    risks_per_project = Project.count_risks_per_project(array_of_project_ids)
+    risks_per_project = Project.count_tasks_per_project(array_of_project_ids)
     Hash[risks_per_project.map { |p| [p.id, p.open_risks] }]
   end
 
@@ -244,7 +244,7 @@ class Project < ActiveRecord::Base
     # Risk / Engagement Ratio
     pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
     project_engagement = projects.joins(:activities).where(activities: { category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]] }).sum('jsonb_array_length(activities.email_messages)')
-    project_risks = projects.joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").count('notifications.id')
+    project_risks = projects.joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Alert]}'").count('notifications.id')
     project_p_neg_sentiment = project_engagement.merge(project_risks) { |pid, engagement, risks| calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting) }
 
     # Days Inactive

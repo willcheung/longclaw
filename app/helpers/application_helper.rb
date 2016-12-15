@@ -59,6 +59,13 @@ module ApplicationHelper
     end
   end
 
+  def alert_color(score)
+    return unless score
+    if score > 0
+      "#ed5565"
+    end
+  end
+
   def risk_level(score)
     if score
       if score >= 80.0
@@ -85,6 +92,7 @@ module ApplicationHelper
       end
     end
   end
+
 
   def get_first_names(from, to, cc)
       a = []

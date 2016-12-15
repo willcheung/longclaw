@@ -23,7 +23,7 @@ class SettingsController < ApplicationController
 		if total_engagement.zero?
 			@avg_p_neg_sentiment = 0.0
 		else
-	    total_risks = projects.joins(:notifications).where(notifications: { category: Notification::CATEGORY[:Risk], created_at: 30.days.ago.midnight..Time.current }).count('DISTINCT(notifications.id)')
+	    total_risks = projects.joins(:notifications).where(notifications: { category: Notification::CATEGORY[:Alert], created_at: 30.days.ago.midnight..Time.current }).count('DISTINCT(notifications.id)')
 	    @avg_p_neg_sentiment = (total_risks.to_f/total_engagement*100).round(1)
 	  end
 
