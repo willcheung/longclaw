@@ -11,12 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161206014830) do
+ActiveRecord::Schema.define(version: 20161214020049) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "uuid-ossp"
   enable_extension "hstore"
+  enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                       default: "",         null: false
@@ -303,6 +303,7 @@ ActiveRecord::Schema.define(version: 20161206014830) do
     t.string   "title"
     t.string   "time_zone",              default: "UTC"
     t.boolean  "mark_private",           default: false, null: false
+    t.string   "role"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
