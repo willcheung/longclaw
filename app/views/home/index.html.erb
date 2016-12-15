@@ -3,52 +3,52 @@
 <div class="wrapper wrapper-content animated fadeInRight">
 
     <div class="row">
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>My Open Risks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open risks across my accounts."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @open_risks.size %></h1>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>My Overdue Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of overdue tasks across my accounts."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @overdue_tasks.size %></h1>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>My Open Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open tasks across my accounts."></i>
-                </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @open_tasks_not_overdue.size %></h1>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3">
+        <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h5>My Account Streams</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Account Streams that I own."></i>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total Number of Account Streams that you own."></i>
                 </div>
                 <div class="ibox-content">
                     <h1 class="no-margins"><%= @projects.empty? ? "0" : @projects.size %></h1>
                 </div>
             </div>
         </div>
-    </div>
+        <div class="col-lg-4">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>My Smart Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total Number of tasks that have been assigned to you."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @open_total_tasks.size %></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>My Overdue Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total Number of overdue tasks that have been assigned to you."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins" style="color:<%= alert_color(@overdue_tasks.size) %>"><%= @overdue_tasks.size %></h1>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>My Open Smart Tasks</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Number of open tasks across my accounts."></i>
+                </div>
+                <div class="ibox-content">
+                    <h1 class="no-margins"><%= @open_total_tasks.size %></h1>
+                </div>
+            </div>
+        </div> -->
 
+    </div>
     <!-- Metrics -->
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
@@ -56,30 +56,30 @@
                 <h1>My Smart Tasks</h1>
             </div>
             <div class="ibox-content">
-                <h2>Open Risks</h2>
+                <!-- <h2>Open and Alerts</h2> -->
                     <div class="col-lg-12 m-b-md">
-                        <% if @open_risks.empty? %>
-                            <p>Great, we did not find any risks from your account streams.</p>
+                        <% if @open_total_tasks.empty? %>
+                            <p>Great, we did not find any risks or alerts from your account streams.</p>
                         <% else %>
-                            <%= render "notifications/table", :notifications => @open_risks %>
+                            <%= render "notifications/table", :notifications => @open_total_tasks %>
                         <% end %>
                     </div>
-                <h2>Overdue / Due Today</h2>
+                <!-- <h2>Tasks Overdue / Due Today</h2>
                     <div class="col-lg-12 m-b-md">
                         <% if @overdue_tasks.empty? %>
                             <p>Hooray, no tasks due immediately!</p>
                         <% else %>
                             <%= render "notifications/table", :notifications => @overdue_tasks %>
                         <% end %>
-                    </div>
-                <h2>Open Tasks</h2>
+                    </div> -->
+                <!-- <h2>Open Tasks</h2>
                      <div class="col-lg-12 m-b-md">
                         <% if @open_tasks_not_overdue.empty? %>
                             <p>Nothing here, nice.</p>
                         <% else %>
                             <%= render "notifications/table", :notifications => @open_tasks_not_overdue %>
                         <% end %>
-                    </div>
+                    </div> -->
                 <p><a href="<%= notifications_path %>/?type=incomplete&assignee=me">See more Smart Tasks &raquo;</a>
             </div>
         </div>

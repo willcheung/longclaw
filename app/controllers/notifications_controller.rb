@@ -1,17 +1,17 @@
 class NotificationsController < ApplicationController
   ### TODO: refactor show_email_body so that it does not depend on simple_format which must be included from ActionView module (separate Controller from Views)
   include ActionView::Helpers::TextHelper
-  ### 
+  ###
   before_action :set_notification, only: [:update, :update_is_complete, :show_email_body]
   before_action :set_visible_project_user, only: [:index, :show, :create]
   def index
-    
+
     # only show valid notifications (both project and activities must be visible to user)
     # for now will only show incomplete tasks
     @notifications = []
 
     @complete = "incomplete"
- 
+
     filter_statement = Array.new
     if !params[:type].nil?
       if params["type"]=="complete"
@@ -20,12 +20,12 @@ class NotificationsController < ApplicationController
       elsif params["type"]=="incomplete"
         filter_statement.push(" is_complete=false ")
         @complete = "incomplete"
-      elsif params["type"]=="all"  
+      elsif params["type"]=="all"
         # must put something in the where clause, so put TRUE
         filter_statement.push(" TRUE ")
         @complete = "all"
       end
-    end 
+    end
 
     @assignee = ""
     if !params[:assignee].nil?
@@ -36,7 +36,7 @@ class NotificationsController < ApplicationController
         filter_statement.push(" assign_to is NULL ")
         @assignee = "none"
       end
-    end 
+    end
 
     @duedate = ""
     if !params[:duedate].nil?
@@ -58,7 +58,7 @@ class NotificationsController < ApplicationController
         filter_statement.push(" (original_due_date < '"+ end_utc_time.to_s + "') ")
         @duedate = "overdue"
       end
-    end 
+    end
 
     final_filter = filter_statement.join(" AND ")
 
@@ -110,7 +110,7 @@ class NotificationsController < ApplicationController
       o_due_date = params[:notification]["original_due_date"].to_time.utc
       r_date = params[:notification]["original_due_date"].to_time.yesterday.utc
     end
-    
+
     @notification = Notification.new(notification_params.merge(category: 'To-do',
       original_due_date: o_due_date,
       remind_date: r_date,
@@ -119,12 +119,12 @@ class NotificationsController < ApplicationController
 
     # send notification email for the assign_to user
     send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id
- 
+
     respond_to do |format|
       if @notification.save
         UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email
         format.html { redirect_to :back, notice: 'To-Do was successfully created.' }
-        format.js 
+        format.js
         #format.json { render action: 'show', status: :created, location: @project }
       else
         format.html { redirect_to :back, notice: 'To-Do was not created. Did you assign it to a project?' }
@@ -147,7 +147,7 @@ class NotificationsController < ApplicationController
 
     respond_to do |format|
       if @notification.save
-        UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email        
+        UserMailer.task_assigned_notification_email(@notification, current_user).deliver_later if send_email
         format.html { redirect_to :back, notice: 'To-Do was successfully created.' }
         format.js
       else
@@ -212,10 +212,10 @@ class NotificationsController < ApplicationController
 
   def set_visible_project_user
     @projects = Project.joins(:account)
-                      .where('accounts.organization_id = ? 
-                              AND (projects.is_public=true 
+                      .where('accounts.organization_id = ?
+                              AND (projects.is_public=true
                                     OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(projects.name)")
-           
+
 
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 
@@ -229,30 +229,30 @@ class NotificationsController < ApplicationController
     # Opportunity only have project_id and conversation_id
     # Smart action and risk should have conversation_id, message_id and project_id
 
-    if(@notification.category!=Notification::CATEGORY[:Action] and @notification.category!=Notification::CATEGORY[:Opportunity] and @notification.category!=Notification::CATEGORY[:Risk] )
+    if(@notification.category!=Notification::CATEGORY[:Action] and @notification.category!=Notification::CATEGORY[:Opportunity] and @notification.category!=Notification::CATEGORY[:Alert] )
       return nil
     end
 
-    if @notification.category==Notification::CATEGORY[:Action] or @notification.category==Notification::CATEGORY[:Risk]
+    if @notification.category==Notification::CATEGORY[:Action] or @notification.category==Notification::CATEGORY[:Alert]
       query = <<-SQL
         SELECT messages->>'content' as content,
-               messages->'from' as from, 
+               messages->'from' as from,
                messages -> 'to' as to,
                messages -> 'cc' as cc,
                messages ->> 'sentDate' as sentdate
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE backend_id='#{@notification.conversation_id}' and messages ->>'messageId' = '#{@notification.message_id}' and project_id = '#{@notification.project_id}' 
+        WHERE backend_id='#{@notification.conversation_id}' and messages ->>'messageId' = '#{@notification.message_id}' and project_id = '#{@notification.project_id}'
         LIMIT 1
       SQL
     elsif @notification.category==Notification::CATEGORY[:Opportunity]
        query = <<-SQL
         SELECT messages->>'content' as content,
-               messages->'from' as from, 
+               messages->'from' as from,
                messages -> 'to' as to,
                messages -> 'cc' as cc,
                messages ->> 'sentDate' as sentdate
         FROM activities, LATERAL jsonb_array_elements(email_messages) messages
-        WHERE backend_id='#{@notification.conversation_id}' AND project_id = '#{@notification.project_id}' ORDER BY messages ->> 'sentDate' DESC 
+        WHERE backend_id='#{@notification.conversation_id}' AND project_id = '#{@notification.project_id}' ORDER BY messages ->> 'sentDate' DESC
         LIMIT 1
       SQL
     else
@@ -339,7 +339,7 @@ class NotificationsController < ApplicationController
     final_result[1] = member
 
     #check if this notification is visible to current user
-    if Activity.find_by(backend_id: @notification.conversation_id, project_id: @notification.project_id).is_visible_to(current_user) 
+    if Activity.find_by(backend_id: @notification.conversation_id, project_id: @notification.project_id).is_visible_to(current_user)
       final_result[2] = body
     else
       final_result[2] = 'This is private conversation'
