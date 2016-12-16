@@ -7,7 +7,7 @@ class ReportsController < ApplicationController
 
   def accounts_dashboard
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    risk_scores = Project.new_risk_score(projects.pluck(:id)).sort_by { |pid, score| score }.reverse
+    risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
     total_risk_scores = 0
     @risk_scores = risk_scores.map do |r|
       proj = projects.find { |p| p.id == r[0] }
@@ -27,8 +27,7 @@ class ReportsController < ApplicationController
 
     case @sort
     when "Risk Score"
-      projects = Project.visible_to(current_user.organization_id, current_user.id)
-      risk_scores = Project.new_risk_score(projects.pluck(:id)).sort_by { |pid, score| score }.reverse
+      risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
       total_risk_scores = 0
       @data = risk_scores.map do |r|
         proj = projects.find { |p| p.id == r[0] }
@@ -48,7 +47,7 @@ class ReportsController < ApplicationController
       end
       @average = (total_sentiment_scores.to_f/sentiment_scores.length).round(1)
     when "Days Inactive"
-      last_sent_dates = projects.includes(:activities).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
+      last_sent_dates = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
       @data = last_sent_dates.map do |d|
         proj = projects.find { |p| p.id == d[0] }
         y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
@@ -84,10 +83,10 @@ class ReportsController < ApplicationController
 
   def account_data
     @account = Project.find(params[:id])
-    @risk_score = @account.new_risk_score
+    @risk_score = @account.new_risk_score(current_user.time_zone)
     @open_tasks_count = @account.notifications.open.count
-    @last_activity_date = @account.activities.conversations.maximum("activities.last_sent_date")
-    @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
+    @last_activity_date = @account.activities.where.not(category: Activity::CATEGORY[:Note]).maximum("activities.last_sent_date")
+    @risk_score_trend = @account.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
     @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }

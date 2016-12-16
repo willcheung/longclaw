@@ -42,15 +42,10 @@ class Notification < ActiveRecord::Base
   CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Alert: 'Alert', Opportunity: 'Opportunity' }
 
 	def self.load(data, project, test=false, day_range=7)
-		notifications = []
 		data_hash = data.map { |hash| Hashie::Mash.new(hash) }
 
     current_time = Time.now.utc
-    if test==true
-      current_time = Time.new(2012,8,1).utc
-    end
-
-    puts current_time
+    current_time = Time.new(2012,8,1).utc if test
 
     data_hash.each do |d|
 	    d.conversations.each do |c|

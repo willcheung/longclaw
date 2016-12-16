@@ -13,16 +13,17 @@ class ProjectsController < ApplicationController
 
     # all projects and their accounts, sorted by account name alphabetically
     if params[:type]
-      projects = Project.visible_to(current_user.organization_id, current_user.id).where(category: params[:type]).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
+      projects = Project.visible_to(current_user.organization_id, current_user.id).where(category: params[:type]).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id")
     else
-      projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
+      projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id")
     end
 
     @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
     unless projects.empty?
-      @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
+      @project_days_inactive = projects.where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date") # get last_sent_date
+      @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
-      @risk_scores = Project.new_risk_score(projects.pluck(:id))
+      @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
       @sentiment_scores = Project.current_risk_score(projects.map(&:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
       @rag_status = Project.current_rag_score(projects.map(&:id))
@@ -253,10 +254,9 @@ class ProjectsController < ApplicationController
 
   def get_show_data
     # metrics
-    @project_risk_score = @project.new_risk_score
+    @project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_sentiment_score = @project.current_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
-    @project_last_activity_date = @project.conversations.maximum("activities.last_sent_date")
     @project_pinned_count = @project.activities.pinned.count
     @project_open_tasks_count = @project.notifications.open.count
     project_rag_score = @project.activities.latest_rag_score.first
@@ -265,10 +265,8 @@ class ProjectsController < ApplicationController
       @project_rag_status = project_rag_score['rag_score']
     end
 
-
-
-
     # old metrics
+    # @project_last_activity_date = @project.activities.where.not(category: Activity::CATEGORY[:Note]).maximum("activities.last_sent_date")
     # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
     # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
 
