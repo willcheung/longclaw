@@ -34,29 +34,24 @@ class Notification < ActiveRecord::Base
 	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
-  scope :risks, -> { where category: CATEGORY[:Risk] }
+  scope :risks, -> { where category: CATEGORY[:Alert] }
   scope :open, -> { where is_complete: false }
 
   validates :project, presence: true
 
-  CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Risk: 'Risk', Opportunity: 'Opportunity' }
+  CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Alert: 'Alert', Opportunity: 'Opportunity' }
 
 	def self.load(data, project, test=false, day_range=7)
-		notifications = []
 		data_hash = data.map { |hash| Hashie::Mash.new(hash) }
 
     current_time = Time.now.utc
-    if test==true
-      current_time = Time.new(2012,8,1).utc
-    end
-
-    puts current_time
+    current_time = Time.new(2012,8,1).utc if test
 
     data_hash.each do |d|
 	    d.conversations.each do |c|
 	    	c.messages.each do |message|
 
-          #save risk (message score < 0)  
+          #save risk (message score < 0)
           if !message.sentimentItems.nil?
             load_risk_for_each_message(project.id, c.conversationId, message, test, day_range)
           end
@@ -71,7 +66,7 @@ class Notification < ActiveRecord::Base
     else
       stale_projects = project.is_stale_project_30_days
     end
-    
+
     stale_projects.each do |p|
       a = Activity.order(last_sent_date: :desc).limit(1).find_by_project_id(p.id)
 
@@ -101,7 +96,7 @@ class Notification < ActiveRecord::Base
 
 # add new risk(message score below 0)
   def self.load_risk_for_each_message(project_id, conversation_id, contextMessage, test=false, day_range=7)
-    if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Risk] 
+    if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Alert]
       # avoid redundant
       return
     end
@@ -129,15 +124,15 @@ class Notification < ActiveRecord::Base
     activity_id = -1
     a = Activity.find_by(category: "Conversation", backend_id: conversation_id, project_id: project_id)
     if !a.nil?
-      activity_id = a.id 
+      activity_id = a.id
     else
       return
     end
-     
+
     s = contextMessage.sentimentItems[0]
     context_start = s.sentence.beginOffset.to_i
     context_end = s.sentence.endOffset.to_i
-    description = contextMessage.content.body[context_start..context_end] 
+    description = contextMessage.content.body[context_start..context_end]
 
     # check if older than previous two weeks, if true set auto complete
     current_time = Time.now.utc
@@ -155,7 +150,7 @@ class Notification < ActiveRecord::Base
       complete_date = sent_date
     end
 
-    notification = Notification.new(category: CATEGORY[:Risk],
+    notification = Notification.new(category: CATEGORY[:Alert],
         name: contextMessage.subject,
         description: description,
         message_id: contextMessage.messageId,
@@ -180,15 +175,15 @@ class Notification < ActiveRecord::Base
 
     query = ""
     if !wherestatement.empty?
-      query = "SELECT notifications.*, users.first_name, users.last_name FROM notifications 
-      LEFT JOIN users ON users.id = notifications.assign_to  
+      query = "SELECT notifications.*, users.first_name, users.last_name FROM notifications
+      LEFT JOIN users ON users.id = notifications.assign_to
       WHERE notifications.project_id IN ('#{array_of_project_ids.join("','")}') AND #{wherestatement} ORDER BY created_at DESC"
     else
-      query = "SELECT notifications.*, users.first_name, users.last_name FROM notifications 
-      LEFT JOIN users ON users.id = notifications.assign_to  
+      query = "SELECT notifications.*, users.first_name, users.last_name FROM notifications
+      LEFT JOIN users ON users.id = notifications.assign_to
       WHERE notifications.project_id IN ('#{array_of_project_ids.join("','")}') AND is_complete = FALSE ORDER BY created_at DESC"
     end
-  
+
     Notification.find_by_sql(query)
   end
 

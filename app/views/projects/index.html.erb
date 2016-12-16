@@ -85,7 +85,7 @@
                                     <th></th>
                                     <th>Risk Score</th>
                                     <th>Negative Sentiment</th>
-                                    <th>Open Tasks</th>
+                                    <th>Open Smart Tasks</th>
                                     <th>Status</th>
                                     <th>Last 7d Activity</th>
                                     <th>Inactive Days</th>
@@ -115,7 +115,7 @@
                                             <td style="text-align:center"><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id].to_i%></div></td>
                                             <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
 
-                                            <td style="text-align:center"><%= @project_last_activity_date[p.id].nil? ? "" : ((Time.current - @project_last_activity_date[p.id])/86400).to_i %></td>
+                                            <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
                                             <td><% if !p.is_public %>
                                                     <span class="label label-warning pull-right">Private</span>
                                                 <% else %>

@@ -21,10 +21,10 @@
             <div class="col-md-4 text-center">
                 <div class="metric text-danger">
                     <div class="metric-title">
-                        <h4>Open Tasks</h4>
+                        <h4>Open Smart Tasks</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><%= @open_risks_count %></h2>
+                        <h2 style="font-weight:600;font-size:46px"><%= @open_tasks_count %></h2>
                     </div>
                 </div>
             </div>
@@ -236,7 +236,7 @@
 
         $('#risk-chart').highcharts({
             title: {
-                text: "Negative Sentiment Score Trend",
+                text: "Risk Score Trend",
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -324,7 +324,7 @@
                 series: [{
                     pointInterval: <%= 1.day * 1000 %>,
                     pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                    data: <%= get_risk_score_by_project(@risk_score_trend, @account.id) %>
+                    data: <%= @risk_score_trend %>
                 }]
             });
 
