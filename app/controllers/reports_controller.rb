@@ -47,7 +47,7 @@ class ReportsController < ApplicationController
       end
       @average = (total_sentiment_scores.to_f/sentiment_scores.length).round(1)
     when "Days Inactive"
-      last_sent_dates = projects.includes(:activities).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
+      last_sent_dates = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
       @data = last_sent_dates.map do |d|
         proj = projects.find { |p| p.id == d[0] }
         y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
@@ -85,7 +85,7 @@ class ReportsController < ApplicationController
     @account = Project.find(params[:id])
     @risk_score = @account.new_risk_score(current_user.time_zone)
     @open_tasks_count = @account.notifications.open.count
-    @last_activity_date = @account.activities.conversations.maximum("activities.last_sent_date")
+    @last_activity_date = @account.activities.where.not(category: Activity::CATEGORY[:Note]).maximum("activities.last_sent_date")
     @risk_score_trend = @account.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
