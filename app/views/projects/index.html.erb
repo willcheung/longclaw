@@ -17,13 +17,34 @@
 
 <div class="wrapper wrapper-content animated fadeInUp">
     <div class="row">
-        <div class="col-lg-2 filter-group">
+        <div class="col-lg-6 filter-group">
           <div class="font-bold m-b-xs">Filter:</div>
-          <select class="category_filter col-lg-12" data-placeholder="Select Type">
+          <select class="category_filter col-sm-3" data-placeholder="Select Type">
             <option value="0"></option>
-            <% Project::CATEGORY.each{|k,v|    %>
-            <option value="<%=v %>"   <% if params[:type] == v  %> selected   <% end %>  ><%=v %></option>
-            <% } %>
+            <% Project::CATEGORY.each do |k,v| %>
+            <option value="<%= v %>" <% if params[:type] == v %>selected<% end %> >
+              <%= v %>
+            </option>
+            <% end %>
+          </select>
+          <select class="owner_filter col-sm-3" data-placeholder="Select Owner">
+            <option value="0">
+            </option>
+            <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >  
+              Assigned to me
+            </option>
+
+            <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
+              <% if u.id != current_user.id %>
+                <option value="<%= u.id %>" <% if params[:owner]==u.id %> selected <% end %> >
+                  <%= get_full_name(u) %>
+                </option>
+              <% end %>
+            <% end %>
+
+            <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >
+              Unassigned
+            </option>
           </select>
         </div>
         <div class="col-lg-6 bulk-group">
@@ -31,14 +52,14 @@
             <button type="button" class="btn btn-sm btn-white" id="bulk-delete" disabled> Delete </button>
             <select class="category_box col-sm-3" data-placeholder="Change Type" id="bulk-type" disabled>
               <option value="0"></option>
-              <% Project::CATEGORY.each{|k,v| %>
+              <% Project::CATEGORY.each do |k,v| %>
               <option value="<%=v %>" ><%=v %></option>
-               <% } %>
+              <% end %>
             </select>
             <select class="owner_box col-sm-3" data-placeholder="Change Owner" id="bulk-owner" disabled>
               <option value="0"></option>
               <% @owners.each do |u|    %>
-              <option value="<%=u.id %>" ><%= "#{u.first_name} #{u.last_name}" %></option>
+              <option value="<%=u.id %>" ><%= get_full_name(u) %></option>
                <% end %>
             </select>
         </div>
