@@ -9,17 +9,30 @@ class ProjectsController < ApplicationController
   # GET /projects
   # GET /projects.json
   def index
-    @title = "Projects"
+    @title = "Streams"
 
-    # all projects and their accounts, sorted by account name alphabetically
+    # for filter and bulk owner assignment
+    @owners = User.where(organization_id: current_user.organization_id)
+
+    # Get an initial list of visible projects
+    projects = Project.visible_to(current_user.organization_id, current_user.id)
+    
+    # Incrementally apply filters
+    if !params[:owner].nil?
+      if params["owner"]=="none"
+        projects = projects.where(owner_id: nil)
+      elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+        projects = projects.where(owner_id: params[:owner]);
+      end
+    end 
     if params[:type]
-      projects = Project.visible_to(current_user.organization_id, current_user.id).where(category: params[:type]).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
-    else
-      projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
+      projects = projects.where(category: params[:type])
     end
 
-    @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
-    unless projects.empty?
+    # all projects and their accounts, sorted by account name alphabetically
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id").group_by{|e| e.account}.sort_by{|account| account[0].name}
+    
+    unless projects.empty?  #@projects.empty  should be that?
       @project_last_activity_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).maximum("activities.last_sent_date")
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
       @risk_scores = Project.new_risk_score(projects.pluck(:id))
@@ -27,11 +40,9 @@ class ProjectsController < ApplicationController
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
       @rag_status = Project.current_rag_score(projects.map(&:id))
     end
+
     # new project modal
     @project = Project.new
-
-    # for bulk owner assignment
-    @owners = User.where(organization_id: current_user.organization_id)
   end
 
   # GET /projects/1
