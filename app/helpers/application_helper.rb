@@ -68,12 +68,13 @@ module ApplicationHelper
 
   def risk_level(score)
     if score
+      s = " Risk"
       if score >= 80.0
-          "High Risk"
+          "High" + s
       elsif score >= 60.0
-          "Medium Risk"
+          "Medium" + s
       else
-          "Low Risk"
+          "Low" + s
       end
     end
   end

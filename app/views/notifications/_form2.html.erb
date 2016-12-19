@@ -14,7 +14,10 @@
 <% end %>
 <script type="text/javascript">
   $("#notification_name").keyup( function (e) {
-    if (e.keyCode == 13 && $(this).val()) { $("#new_notification").submit(); }
-  })
+    if (e.keyCode == 13 && $(this).val()) {
+      $("#new_notification").submit();
+      $(this).off(e);
+    }
+  });
 </script>
 
