@@ -24,7 +24,6 @@ class ProjectsController < ApplicationController
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
       @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
-      @sentiment_scores = Project.current_risk_score(projects.map(&:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
       @rag_status = Project.current_rag_score(projects.map(&:id))
     end
@@ -255,7 +254,6 @@ class ProjectsController < ApplicationController
   def get_show_data
     # metrics
     @project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_sentiment_score = @project.current_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
     @project_pinned_count = @project.activities.pinned.count
     @project_open_tasks_count = @project.notifications.open.count
