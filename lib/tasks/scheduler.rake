@@ -9,7 +9,7 @@ namespace :projects do
     	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
 	    		puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_emails_from_backend(proj, nil, 300)
+	    		ContextsmithService.load_emails_from_backend(proj, 300)
 	    		sleep(1)
 	    	end
 	    end
@@ -20,13 +20,12 @@ namespace :projects do
 	task load_emails_since_yesterday: :environment do
     if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
     	puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
-	    after = Time.now.to_i - 86400
 
 	    Organization.all.each do |org|
 	    	org.accounts.each do |acc| 
 		    	acc.projects.each do |proj|
 		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-		    		ContextsmithService.load_emails_from_backend(proj, nil, 100)
+		    		ContextsmithService.load_emails_from_backend(proj)
 		    		sleep(1)
 		    	end
 		    end
@@ -43,8 +42,7 @@ namespace :projects do
     	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
 	    		puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 150.days.ago.to_i, 300)
-	    		# 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
+	    		ContextsmithService.load_calendar_from_backend(proj, 300)
 	    		sleep(1)
 	    	end
 	    end
@@ -55,13 +53,12 @@ namespace :projects do
 	task load_events_since_yesterday: :environment do
     if [3,9,15,21].include?(Time.now.hour) # Runs once every 6 hours
     	puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
-	    after = Time.now.to_i - 86400
 
 	    Organization.all.each do |org|
 	    	org.accounts.each do |acc| 
 		    	acc.projects.each do |proj|
 		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-		    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 1.day.ago.to_i)
+		    		ContextsmithService.load_calendar_from_backend(proj, 100, 1.day.ago.to_i)
 		    		sleep(1)
 		    	end
 		    end

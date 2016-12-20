@@ -770,7 +770,7 @@ class Project < ActiveRecord::Base
 
         # Project meetings
 				# Activity.load_calendar(get_project_conversations(data, p), project, true, user_id)
-        ContextsmithService.load_calendar_from_backend(project, Time.current.to_i, 1.year.ago.to_i, 1000)
+        ContextsmithService.load_calendar_from_backend(project, 1000)
 			end
 		end
 	end
