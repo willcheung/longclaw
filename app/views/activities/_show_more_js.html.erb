@@ -13,9 +13,7 @@ $(document).ready(function() {
     });
 
 
-  <% if a.category == Activity::CATEGORY[:Conversation] %>
-
-    // $(".<%= a.id.to_s + a.category %> .suggested-action").bsTooltip();
+  <% if a.category == Activity::CATEGORY[:Conversation] && params[:action] != "daily_summary" %>
   
     $(".tasks-link-<%= a.id %>").click(function() {
         $(".tasks-footer-<%= a.id %>").toggle();
@@ -24,7 +22,31 @@ $(document).ready(function() {
     $(".<%= a.id.to_s + a.category %> .suggested-action").each( function () {
         $(this).popover({
             html: true,
-            content: '<%= form_tag notifications_create_from_suggestion_path, remote: true, class: "form-horizontal" %><div class="row m-b-xs"><div class="col-sm-1"><i class="fa fa-square-o fa-lg text-mute-gray m-t-xs"></i></div><div class="col-xs-11"><input type="text" class="form-control" name="notification[name]" placeholder="Title" value="' + $(this).text() + '"></div></div><div class="row"><div class="col-sm-11 col-sm-offset-1"><label>Assigned To:</label><select class="form-control" name="notification[assign_to]"><option value="">(none)</option><% @users_reverse.each do |id, name| %><option value="<%= id %>"><%= name %></option><% end %></select><label>Due Date:</label><input type="date" class="form-control" name="notification[original_due_date]" value="' + $(this).data("due-date") + '"><button class="btn btn-primary btn-xs m-t-xs">Create</button></div></div><input type="hidden" name="notification[project_id]" value="<%= a.project_id %>"><input type="hidden" name="notification[message_id]" value="' + $(this).data("message") +'"><input type="hidden" name="notification[conversation_id]" value="<%= a.backend_id %>"><input type="hidden" name="notification[activity_id]" value="<%= a.id %>"></form>',
+            content: `
+            <%= form_tag notifications_create_from_suggestion_path, remote: true, class: "form-horizontal" %>
+                <div class="row m-b-xs">
+                    <div class="col-sm-1"><i class="fa fa-square-o fa-lg text-mute-gray m-t-xs"></i></div>
+                    <div class="col-xs-11"><input type="text" class="form-control" name="notification[name]" placeholder="Title" value="'`+ $(this).text() + `"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-11 col-sm-offset-1">
+                        <label>Assigned To:</label>
+                        <select class="form-control" name="notification[assign_to]">
+                            <option value="">(none)</option>
+                            <% @users_reverse.each do |id, name| %>
+                                <option value="<%= id %>"><%= name %></option>
+                            <% end %>
+                        </select>
+                        <label>Due Date:</label>
+                        <input type="date" class="form-control" name="notification[original_due_date]" value="` + $(this).data("due-date") + `">
+                        <button class="btn btn-primary btn-xs m-t-xs">Create</button>
+                    </div>
+                </div>
+                <input type="hidden" name="notification[project_id]" value="<%= a.project_id %>">
+                <input type="hidden" name="notification[message_id]" value="` + $(this).data("message") +`">
+                <input type="hidden" name="notification[conversation_id]" value="<%= a.backend_id %>">
+                <input type="hidden" name="notification[activity_id]" value="<%= a.id %>">
+            </form>`,
             placement: "bottom",
             title: "New To-do"
         });
