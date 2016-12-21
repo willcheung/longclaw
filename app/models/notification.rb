@@ -103,7 +103,7 @@ class Notification < ActiveRecord::Base
     return if activity.blank?
 
     score = contextMessage.sentimentItems[0].score.to_f
-    scaled_score = (((-score - 0.75) * 4) * 100).floor
+    scaled_score = scale_sentiment_score(score)
     # Ignore anything less than alert setting high threshold.
     return if scaled_score < alert_setting.high_threshold 
 

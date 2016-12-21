@@ -185,8 +185,7 @@ class Project < ActiveRecord::Base
     min_scores.each do |key, value|
       (0..day_range-1).each do |i|
         score = value[i].sort[0]
-        score = (((-score - 0.75) * 4) * 100).floor
-        min_scores[key][i] = score < 0.0 ? 0 : score
+        min_scores[key][i] = scale_sentiment_score(score)
       end
     end
 
