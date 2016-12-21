@@ -29,9 +29,9 @@ include ActionView::Helpers::DateHelper
 
 class Notification < ActiveRecord::Base
 
-	belongs_to  :project, foreign_key: "project_id"
+  belongs_to  :project, foreign_key: "project_id"
   belongs_to  :activity, foreign_key: "activity_id"
-	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
+  belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
   scope :risks, -> { where category: CATEGORY[:Alert] }
@@ -41,24 +41,24 @@ class Notification < ActiveRecord::Base
 
   CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Alert: 'Alert', Opportunity: 'Opportunity' }
 
-	def self.load(data, project, test=false, day_range=7)
-		data_hash = data.map { |hash| Hashie::Mash.new(hash) }
-
-    current_time = Time.now.utc
-    current_time = Time.new(2012,8,1).utc if test
-
-    data_hash.each do |d|
-	    d.conversations.each do |c|
-	    	c.messages.each do |message|
-
-          #save risk (message score < 0)
-          if !message.sentimentItems.nil?
-            load_risk_for_each_message(project.id, c.conversationId, message, test, day_range)
+  def self.load(data, project, test=false, day_range=7)
+    alert_settings = RiskSetting.where(level: project.account.organization)
+    
+    # Negative Sentiment Alerts
+    neg_sentiment_setting = alert_settings.find { |as| as.metric == RiskSetting::METRIC[:NegSentiment] }
+    if neg_sentiment_setting.notify_task
+      data_hash = data.map { |hash| Hashie::Mash.new(hash) }
+      data_hash.each do |d|
+        d.conversations.each do |c|
+          c.messages.each do |message|
+            if message.sentimentItems.present?
+              load_alert_for_each_message(project.id, c.conversationId, message, neg_sentiment_setting, test, day_range)
+            end
           end
-      	end
-	    end
-	  end
-	end
+        end
+      end
+    end
+  end
 
   def self.load_opportunity_for_stale_projects(project=nil)
     if project.nil?
@@ -94,57 +94,39 @@ class Notification < ActiveRecord::Base
     end
   end
 
-# add new risk(message score below 0)
-  def self.load_risk_for_each_message(project_id, conversation_id, contextMessage, test=false, day_range=7)
-    if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Alert]
-      # avoid redundant
-      return
-    end
+  def self.load_alert_for_each_message(project_id, conversation_id, contextMessage, alert_setting, test=false, day_range=7)
+    # avoid redundant
+    return if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Alert]
 
-    score = contextMessage.sentimentItems[0].score.to_s[0,7].to_f
+    # get activity id. If no such activity exist in front end(could be caused by users deleting this activity), ignore this risk
+    activity = Activity.find_by(category: Activity::CATEGORY[:Conversation], backend_id: conversation_id, project_id: project_id)
+    return if activity.blank?
 
-    if score >= -0.96
-      # Ignore anything more positive than -0.96.
-      return
-    end
+    score = contextMessage.sentimentItems[0].score.to_f
+    scaled_score = (((-score - 0.75) * 4) * 100).floor
+    # Ignore anything less than alert setting high threshold.
+    return if scaled_score < alert_setting.high_threshold 
 
     sent_date = Time.at(contextMessage.sentDate).utc
 
     assign_to = User.find_by email: contextMessage.from[0].address
-    if(assign_to.nil? and !contextMessage.to.nil? )
-      assign_to = User.find_by email: contextMessage.to[0].address
-    end
-
-    assign_id = 0
-    if(!assign_to.nil?)
-        assign_id = assign_to.id
-    end
-
-    # get activity id. If no such activity exist in front end(could be caused by users deleting this activity), ignore this risk
-    activity_id = -1
-    a = Activity.find_by(category: "Conversation", backend_id: conversation_id, project_id: project_id)
-    if !a.nil?
-      activity_id = a.id
-    else
-      return
-    end
+    assign_to = User.find_by email: contextMessage.to[0].address if assign_to.nil? && contextMessage.to
+    assign_to = assign_to.blank? ? "00000000-0000-0000-0000-000000000000" : assign_to.id
 
     s = contextMessage.sentimentItems[0]
     context_start = s.sentence.beginOffset.to_i
     context_end = s.sentence.endOffset.to_i
-    description = contextMessage.content.body[context_start..context_end]
+    description = s.sentence.text
 
     # check if older than previous two weeks, if true set auto complete
-    current_time = Time.now.utc
-    if test==true
-      current_time = Time.new(2012,8,1).utc
-    end
+    current_time = Time.current.utc
+    current_time = Time.new(2012,8,1).utc if test
 
     is_complete = false
     completed_by = nil
     complete_date = nil
     sent_date = Time.at(contextMessage.sentDate).utc
-    if (sent_date.utc < (current_time - day_range.day).utc)
+    if (sent_date < (current_time - day_range.day))
       is_complete = true
       completed_by = "00000000-0000-0000-0000-000000000000"
       complete_date = sent_date
@@ -157,16 +139,14 @@ class Notification < ActiveRecord::Base
         project_id: project_id,
         conversation_id: conversation_id,
         sent_date: sent_date,
-        original_due_date: '',
-        remind_date: '',
         is_complete: is_complete,
-        assign_to: assign_id,
+        assign_to: assign_to,
         content_offset: context_start,
         has_time: false,
-        score: score,
+        score: scaled_score,
         completed_by: completed_by,
         complete_date: complete_date,
-        activity_id: activity_id)
+        activity_id: activity.id)
 
     notification.save
   end
