@@ -57,7 +57,7 @@ jQuery(document).ready(function($) {
   }
 
   /* Selectize for autocompleting possible subscribers */
-  $("#search-subs").selectize({
+  $(".search-subs").selectize({
     closeAfterSelect: true,
     valueField: 'id',
     labelField: 'name',
