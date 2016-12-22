@@ -85,5 +85,12 @@ Longclaw::Application.configure do
     :email_prefix => "[ERROR] ",
     :sender_address => %{"ContextSmith Notifications" <notifications@contextsmith.com>},
     :exception_recipients => %w{support@contextsmith.com}
+  },
+  :slack => {
+    :webhook_url => "https://hooks.slack.com/services/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",
+    :channel => "#server_errors",
+    :additional_parameters => {
+      :mrkdwn => true
+    }
   }
 end
