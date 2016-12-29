@@ -1,12 +1,5 @@
-console.log('<%= params[:type] %>');
-<% if params[:type] == 'daily' %>
-
-  $('#project-index-unfollow-daily-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Daily".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{@project.id}", class: "block m-b-xs" %>');
-  $('#project-show-unfollow-daily-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Daily".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-show-follow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>');
-
-<% else %> // weekly
-
-  $('#project-index-unfollow-weekly-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{@project.id}", class: "block" %>');
-  $('#project-show-unfollow-weekly-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>');
-
-<% end %>
+console.log('destroy: <%= params[:type] %>');
+// Use :type param ("daily" or "weekly") to modify jQuery selectors, id's, path's etc.
+$('#project-index-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow #{params[:type]}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-index-follow-#{params[:type]}-#{@project.id}", class: "block" %>');
+$('#project-show-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow #{params[:type]}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-show-follow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>');
+$("#project-show-follow-daily-<%= @project.id %>").addClass("m-l-md");
