@@ -85,13 +85,12 @@ namespace :projects do
 		end
 	end
 
-	desc 'Get weekly last touch opportunities'
-	task last_touch_weekly: :environment do
-		puts "\n\n=====Task (last_touch_weekly) started at #{Time.now}====="
-
-		if Time.now.sunday?
-    	Notification.load_opportunity_for_stale_projects
-    end
+	desc 'Generate Days Inactive alerts'
+	task alert_for_days_inactive: :environment do
+		puts "\n\n=====Task (alert_for_days_inactive) started at #{Time.now}====="
+		Organization.all.each do |org|
+			Notification.load_alert_for_days_inactive(org)
+		end
 	end
 
 	desc 'Email weekly task summary on Sundays'

@@ -63,39 +63,41 @@ class Notification < ActiveRecord::Base
     end
   end
 
-  # PROJECT LEVEL OR ORGANIZATION LEVEL??
-  def self.load_alert_for_days_inactive
-    # if project.nil?
-    #   stale_projects = Project.find_stale_projects_30_days
-    # else
-    #   stale_projects = project.is_stale_project_30_days
-    # end
+  def self.load_alert_for_days_inactive(organization)
+    days_inactive_setting = RiskSetting.find_by(level: organization, metric: RiskSetting::METRIC[:DaysInactive])
+    return unless days_inactive_setting.notify_task
 
-    days_inactive_setting = RiskSetting.find_by(level: project.account.organization, metric: RiskSetting::METRIC[:DaysInactive])
-    projects_inactive_days = Project.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).group('projects.id').maximum('activities.last_sent_date')
-    project_inactivite_days.each { |pid, last_sent_date| project_inactivite_days[pid] = Time.current.in_time_zone(time_zone).to_date.mjd - last_sent_date.in_time_zone(time_zone).to_date.mjd } # convert last_sent_date to days inactive
+    project_inactive_days = Project.where(account_id: organization.accounts.ids).joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).group('projects.id').maximum('activities.last_sent_date')
+    project_inactive_days.each { |pid, last_sent_date| project_inactive_days[pid] = Time.current.to_date.mjd - last_sent_date.to_date.mjd } # convert last_sent_date to days inactive
+    project_inactive_days = project_inactive_days.delete_if { |pid, days_inactive| days_inactive < days_inactive_setting.medium_threshold }
 
-
+    stale_projects = Project.where(id: project_inactive_days.keys)
     stale_projects.each do |p|
-      a = Activity.order(last_sent_date: :desc).limit(1).find_by_project_id(p.id)
-
-      if !a.nil?
-        n = Notification.where(category: CATEGORY[:Opportunity], is_complete: false, project_id: p.id, conversation_id: a.backend_id)
-        if n.empty?
-          notification = Notification.new(
-            category: CATEGORY[:Alert],
-            label: "DaysInactive",
-            name: "Check in with #{p.account.name}",
-            # DON'T USE time_ago_in_words, do actual # of days, 
-            description: "Last activity in #{p.name} stream was #{time_ago_in_words(Time.at(p.last_sent_date.to_i))} ago.",
-            project_id: p.id,
-            conversation_id: a.backend_id,
-            activity_id: a.id
-          )
-
-          notification.save
-        end
+      last_activity = p.activities.where.not(category: Activity::CATEGORY[:Note]).first
+      if last_activity.category == Activity::CATEGORY[:Conversation]
+        message_id = last_activity.email_messages.last.messageId
+        conversation_id = last_activity.backend_id
+      else
+        message_id = nil
+        conversation_id = nil
       end
+
+      days_inactive = project_inactive_days[p.id]
+      level = days_inactive > days_inactive_setting.high_threshold ? "high" : "medium"
+
+      p.notifications.find_or_initialize_by(
+        category: CATEGORY[:Alert],
+        label: "DaysInactive",
+      ).update(
+        name: "Days Inactive threshold exceeded for #{p.account.name}!",
+        description: "Days Inactive for #{p.name} is greater than #{level} threshold at #{days_inactive} days.",
+        is_complete: false,
+        completed_by: nil,
+        complete_date: nil,
+        message_id: message_id,
+        conversation_id: conversation_id,
+        activity_id: last_activity.id
+      )
     end
   end
 
@@ -105,15 +107,10 @@ class Notification < ActiveRecord::Base
       .each { |a| a.sentiment_score = scale_sentiment_score(a.sentiment_score) }.select { |a| a.sentiment_score > sentiment_setting.high_threshold }
     pct_neg_sentiment = neg_sentiments.count.to_f/engagement_volume
 
-    if pct_neg_sentiment < alert_setting.medium_threshold
-      return
-    elsif pct_neg_sentiment < alert_setting.high_threshold
-      level = "medium"
-    else
-      level = "high"
-    end
+    return if pct_neg_sentiment < alert_setting.medium_threshold
+    level = pct_neg_sentiment < alert_setting.high_threshold ? "medium" : "high"
 
-    a = neg_sentiments.first
+    last_neg_sentiment_activity = neg_sentiments.first
     project.notifications.find_or_initialize_by(
       category: CATEGORY[:Alert],
       label: "PctNegSentiment",
@@ -123,9 +120,9 @@ class Notification < ActiveRecord::Base
       is_complete: false,
       completed_by: nil,
       complete_date: nil,
-      message_id: a.message_id,
-      conversation_id: a.backend_id,
-      activity_id: a.id
+      message_id: last_neg_sentiment_activity.message_id,
+      conversation_id: last_neg_sentiment_activity.backend_id,
+      activity_id: last_neg_sentiment_activity.id
     )
   end
 
