@@ -9,29 +9,40 @@ class ProjectsController < ApplicationController
   # GET /projects
   # GET /projects.json
   def index
-    @title = "Projects"
+    @title = "Streams"
 
-    # all projects and their accounts, sorted by account name alphabetically
+    # for filter and bulk owner assignment
+    @owners = User.where(organization_id: current_user.organization_id)
+
+    # Get an initial list of visible projects
+    projects = Project.visible_to(current_user.organization_id, current_user.id)
+    
+    # Incrementally apply filters
+    if !params[:owner].nil?
+      if params["owner"]=="none"
+        projects = projects.where(owner_id: nil)
+      elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+        projects = projects.where(owner_id: params[:owner]);
+      end
+    end 
     if params[:type]
-      projects = Project.visible_to(current_user.organization_id, current_user.id).where(category: params[:type]).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id")
-    else
-      projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id")
+      projects = projects.where(category: params[:type])
     end
 
-    @projects = projects.group_by{|e| e.account}.sort_by{|account| account[0].name}
-    unless projects.empty?
-      @project_days_inactive = projects.where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date") # get last_sent_date
+    # all projects and their accounts, sorted by account name alphabetically
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins(:activities, "LEFT JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+    
+    unless projects.empty?  #@projects.empty  should be that?
+      @project_days_inactive = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
       @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
       @rag_status = Project.current_rag_score(projects.map(&:id))
     end
+
     # new project modal
     @project = Project.new
-
-    # for bulk owner assignment
-    @owners = User.where(organization_id: current_user.organization_id)
   end
 
   # GET /projects/1
@@ -270,8 +281,11 @@ class ProjectsController < ApplicationController
 
     # project people
     @project_members = @project.project_members
-    @project_subscribers = @project.subscribers
+    project_subscribers = @project.subscribers
+    @daily_subscribers = project_subscribers.daily
+    @weekly_subscribers = project_subscribers.weekly
     @suggested_members = @project.project_members_all.pending
+    @user_subscription = project_subscribers.where(user: current_user).take
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)

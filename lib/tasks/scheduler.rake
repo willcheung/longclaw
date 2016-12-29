@@ -1,8 +1,8 @@
 desc "Heroku scheduler tasks for periodically retrieving latest emails"
 namespace :projects do
-	
-	desc 'Retrieve latest 300 emails for all projects in all organization'
-	task load_emails: :environment do
+    
+    desc 'Retrieve latest 300 emails for all projects in all organization'
+    task load_emails: :environment do
     puts "\n\n=====Task (load_emails) started at #{Time.now}====="
 
     Organization.all.each do |org|
@@ -14,10 +14,9 @@ namespace :projects do
 	    	end
 	    end
     end
-	end
 
-	desc 'Retrieve latest emails since yesterday for all projects in all organization'
-	task load_emails_since_yesterday: :environment do
+    desc 'Retrieve latest emails since yesterday for all projects in all organization'
+    task load_emails_since_yesterday: :environment do
     if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
     	puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 
@@ -30,7 +29,6 @@ namespace :projects do
 		    	end
 		    end
 	    end
-
 	  end
 	end
 
@@ -47,10 +45,9 @@ namespace :projects do
 	    	end
 	    end
     end
-	end
 
-	desc 'Retrieve latest calendar events since yesterday for all projects in all organization'
-	task load_events_since_yesterday: :environment do
+    desc 'Retrieve latest calendar events since yesterday for all projects in all organization'
+    task load_events_since_yesterday: :environment do
     if [3,9,15,21].include?(Time.now.hour) # Runs once every 6 hours
     	puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 

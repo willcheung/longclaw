@@ -1,3 +1,5 @@
+var checkCounter = 0;
+var URL_PREFIX = "/projects";
 
 jQuery(document).ready(function($) {
 
@@ -5,6 +7,7 @@ jQuery(document).ready(function($) {
   $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
   $('.owner_box').chosen({ allow_single_deselect: true});
   $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+  $('.owner_filter').chosen({ disable_search: true, allow_single_deselect: true});
 
 	$('.switch').on('click', function(e) {
 	    var trigger = $(this);
@@ -54,7 +57,7 @@ jQuery(document).ready(function($) {
   }
 
   /* Selectize for autocompleting possible subscribers */
-  $("#search-subs").selectize({
+  $(".search-subs").selectize({
     closeAfterSelect: true,
     valueField: 'id',
     labelField: 'name',
@@ -132,7 +135,7 @@ jQuery(document).ready(function($) {
 
   $('#bulk-delete').click(function(){
     if(bulkOperation("delete",  null, "/project_bulk")==true){
-      window.location.replace("/projects");
+      window.location.replace(URL_PREFIX);
     }
     else{
       console.log("bulk error");
@@ -141,7 +144,7 @@ jQuery(document).ready(function($) {
 
   $('.category_box').on('change',function(evt,params){
       if(bulkOperation("category",  params["selected"], "/project_bulk")==true){
-        window.location.replace("/projects");
+        window.location.replace(URL_PREFIX);
       }
       else{
         console.log("bulk error");
@@ -150,7 +153,7 @@ jQuery(document).ready(function($) {
 
   $('.owner_box').on('change',function(evt,params){
       if(bulkOperation("owner",  params["selected"], "/project_bulk")==true){
-        window.location.replace("/projects");
+        window.location.replace(URL_PREFIX);
       }
       else{
         console.log("bulk error");
@@ -158,27 +161,83 @@ jQuery(document).ready(function($) {
   });
 
 
-  $('.category_filter').on('change',function(evt,params){
-    var taskType="";
-    if(params){
-        window.location.replace("/projects?type="+params["selected"]);
-    }
-    else{
-      window.location.replace("/projects");
-    }
-  });
+  $('.category_filter').on('change',function(evt, params){
+    var taskType = "";
 
+    if (params) {
+        taskType = "type=" + params["selected"];
+    }
+
+    newURL(window.location.search, "type", taskType);
+  });
+  
+  $('.owner_filter').on('change',function(evt, params){
+    var taskType = "";
+
+    if (params) {
+        taskType = "owner=" + params["selected"];
+    }
+
+    newURL(window.location.search, "owner", taskType);
+  });
 
   $('.filter-group, .bulk-group').hover(function(){
     $('.chosen-container-single').css('cursor', 'pointer');
     $('.chosen-single').css('cursor', 'pointer');
   });
-
-
 });
 
+// Takes the query string and removes a parameter matching 'paramStr', retaining all other params
+function removeParam(queryStr, paramStr) {
+    if (queryStr.length == 0) return queryStr;
 
-var checkCounter = 0;
+    var params = queryStr.split("&");
+    var result = "";
+
+    for (i = 0; i < params.length; i++){
+        var param = params[i].split("=");
+        if(param[0].length > 0 && param[0] !== paramStr){ //don't include if we find param
+            result += params[i] + "&";
+        }
+    }
+
+    if (result[result.length-1] === "&") 
+        return result.substring(0, result.length-1);
+    else 
+        return result;
+
+}
+
+// Sets the browser URL with modified querystring when jQuery detects a change in the filter criteria
+//   e.g., newURL(window.location.search, "type", "type=Other");
+function newURL(fullQueryStr, changedParamStr, newParamValueStr) {
+    var finalURL  = "";
+    var newsearch = "";
+    
+    // always remove ampersand (&) in the front(?) or it will cause an error
+    newQueryString = removeParam(fullQueryStr.substring(1), changedParamStr);
+
+    if (newQueryString.length == 0){   
+        newsearch = newParamValueStr;
+    }
+    else{
+        if(newParamValueStr.length == 0){ // when user presses X, newParamValueStr is ""
+            newsearch = newQueryString;
+        }
+        else{
+            newsearch = newQueryString + "&" + newParamValueStr;
+        }
+    }
+
+    if (newsearch.length == 0){
+        finalURL = URL_PREFIX;
+    }
+    else{
+        finalURL = URL_PREFIX + "/?" + newsearch;
+    }
+
+    window.location.replace(finalURL);
+}
 
 function bulkOperation(operation, value, url){
   var array = [];

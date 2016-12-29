@@ -1,14 +1,18 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-6">
         <h2 class="in-bl"><%= @project.name %></h2>
-        <% if @project.subscribers.map(&:user_id).include?(current_user.id) %>
-            <%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+        <% if @user_subscription.present? && @user_subscription.daily %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following Daily".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-show-unfollow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
         <% else %>
-            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Daily".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-show-follow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+        <% end %>
+        <% if @user_subscription.present? && @user_subscription.weekly %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following Weekly".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-show-unfollow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
+        <% else %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
         <% end %>
         <% if @project.owner_id == current_user.id %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
-            <!--<a href="#share_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Share</a>-->
             <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-primary btn-outline m-t-n-sm", id: "btn-refresh" %>
             <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails and meetings from members."></i>
         <% end %>
@@ -178,7 +182,7 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                         <input type="search" name="email" id="member-search" class="contacts z-top" placeholder="Add members...">
+                         <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add members...">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
                     <%end%>
@@ -191,14 +195,14 @@
                     <% end %>
                 </dd>
             </dl>
-            <!-- PROJECT SUBSCRIBERS SECTION -->
+            <!-- DAILY SUBSCRIBERS SECTION -->
             <div class="row m-t-md toggle-open">
                 <div class="col-sm-2">
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="ps-length"><%= @project_subscribers.length %></span> Followers</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project."></i>
+                    <strong><span id="ps-length"><%= @daily_subscribers.length %></span> Daily Followers</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project every day."></i>
                 </div>
             </div>
             <div class="row">
@@ -207,14 +211,42 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                        <input type="search" name="user_id" id="search-subs" class="contacts" placeholder="Add followers...">
+                        <input type="search" name="user_id" class="contacts search-subs z-2" placeholder="Add followers...">
                         <%= submit_tag "Add subscriber", class: "hide-submit-button" %>
                     <%end%>
                 </div>
             </div>
             <dl class="no-display">
                 <dd class="project-people subs">
-                    <% @project_subscribers.each do |ps| %>
+                    <% @daily_subscribers.each do |ps| %>
+                        <%= render 'project_subscribers/subscriber', ps: ps %>
+                    <% end %>
+                </dd>
+            </dl>
+            <!-- WEEKLY SUBSCRIBERS SECTION -->
+            <div class="row m-t-md toggle-open">
+                <div class="col-sm-2">
+                    <span class="fa fa-caret-right toggle-icon"></span>
+                </div>
+                <div class="col-sm-10">
+                    <strong><span id="ps-length"><%= @weekly_subscribers.length %></span> Weekly Followers</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project every week."></i>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-2">
+                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
+                </div>
+                <div class="col-sm-9 project-team-title">
+                    <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
+                        <input type="search" name="user_id" class="contacts search-subs" placeholder="Add followers...">
+                        <%= submit_tag "Add subscriber", class: "hide-submit-button" %>
+                    <%end%>
+                </div>
+            </div>
+            <dl class="no-display">
+                <dd class="project-people subs">
+                    <% @weekly_subscribers.each do |ps| %>
                         <%= render 'project_subscribers/subscriber', ps: ps %>
                     <% end %>
                 </dd>
