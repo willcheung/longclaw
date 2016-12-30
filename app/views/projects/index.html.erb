@@ -125,16 +125,16 @@
                                             <td style="width: 120px"> 
                                                 <span data-toggle="tooltip" data-placement="left" data-original-title="Follow to receive daily updates and alerts." data-delay='{"show":"300"}'>
                                                 <% if p.daily %>
-                                                    <%= link_to "<i class=\"fa fa-check\"></i> Following Daily".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{p.id}", class: "block m-b-xs" %>
+                                                    <%= link_to "<i class=\"fa fa-check\"></i> Following daily".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{p.id}", class: "block m-b-xs" %>
                                                 <% else %>
-                                                    <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Daily".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{p.id}", class: "block m-b-xs" %>
+                                                    <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow daily".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{p.id}", class: "block m-b-xs" %>
                                                 <% end %>
                                                 </span>
                                                 <span data-toggle="tooltip" data-placement="left" data-original-title="Follow to receive weekly updates and alerts." data-delay='{"show":"300"}'>
                                                 <% if p.weekly %>
-                                                    <%= link_to "<i class=\"fa fa-check\"></i> Following Weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-index-unfollow-weekly-#{p.id}", class: "block" %>
+                                                    <%= link_to "<i class=\"fa fa-check\"></i> Following weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-index-unfollow-weekly-#{p.id}", class: "block" %>
                                                 <% else %>
-                                                    <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{p.id}", class: "block" %>
+                                                    <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{p.id}", class: "block" %>
                                                 <% end %>
                                                 </span>
                                             </td>
