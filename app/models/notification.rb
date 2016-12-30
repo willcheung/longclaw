@@ -69,7 +69,7 @@ class Notification < ActiveRecord::Base
 
     project_inactive_days = Project.where(account_id: organization.accounts.ids).joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).group('projects.id').maximum('activities.last_sent_date')
     project_inactive_days.each { |pid, last_sent_date| project_inactive_days[pid] = Time.current.to_date.mjd - last_sent_date.to_date.mjd } # convert last_sent_date to days inactive
-    project_inactive_days = project_inactive_days.delete_if { |pid, days_inactive| days_inactive < days_inactive_setting.medium_threshold }
+    project_inactive_days.reject! { |pid, days_inactive| days_inactive < days_inactive_setting.medium_threshold }
 
     stale_projects = Project.where(id: project_inactive_days.keys)
     stale_projects.each do |p|
