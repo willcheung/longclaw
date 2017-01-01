@@ -7,7 +7,7 @@ class ReportsController < ApplicationController
 
   def accounts_dashboard
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    risk_scores = Project.new_risk_score(projects.pluck(:id)).sort_by { |pid, score| score }.reverse
+    risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
     total_risk_scores = 0
     @risk_scores = risk_scores.map do |r|
       proj = projects.find { |p| p.id == r[0] }
@@ -27,8 +27,7 @@ class ReportsController < ApplicationController
 
     case @sort
     when "Risk Score"
-      projects = Project.visible_to(current_user.organization_id, current_user.id)
-      risk_scores = Project.new_risk_score(projects.pluck(:id)).sort_by { |pid, score| score }.reverse
+      risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
       total_risk_scores = 0
       @data = risk_scores.map do |r|
         proj = projects.find { |p| p.id == r[0] }
@@ -48,7 +47,7 @@ class ReportsController < ApplicationController
       end
       @average = (total_sentiment_scores.to_f/sentiment_scores.length).round(1)
     when "Days Inactive"
-      last_sent_dates = projects.includes(:activities).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
+      last_sent_dates = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
       @data = last_sent_dates.map do |d|
         proj = projects.find { |p| p.id == d[0] }
         y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
@@ -61,15 +60,15 @@ class ReportsController < ApplicationController
       end
     when "Negative Sentiment / Engagement %"
       project_engagement = Project.find_include_sum_activities(projects.pluck(:id))
-      project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Risk]}'").group("projects.id")
+      project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Alert]}'").group("projects.id")
       @data = project_engagement.map do |e|
         risk = project_risks.find { |r| r.id == e.id }
         Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities*100).round(2), color: 'blue'})
       end
       @data.sort_by! { |d| d.y }.reverse!
-    when "Total Open Risks"
-      open_risk_counts = Project.count_risks_per_project(projects.pluck(:id))
-      @data = open_risk_counts.map do |r|
+    when "Total Open Tasks"
+      open_task_counts = Project.count_tasks_per_project(projects.pluck(:id))
+      @data = open_task_counts.map do |r|
         Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'blue'})
       end
     when "Total Overdue Tasks"
@@ -84,10 +83,10 @@ class ReportsController < ApplicationController
 
   def account_data
     @account = Project.find(params[:id])
-    @risk_score = @account.new_risk_score
-    @open_risks_count = @account.notifications.open.risks.count
-    @last_activity_date = @account.activities.conversations.maximum("activities.last_sent_date")
-    @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
+    @risk_score = @account.new_risk_score(current_user.time_zone)
+    @open_tasks_count = @account.notifications.open.count
+    @last_activity_date = @account.activities.where.not(category: Activity::CATEGORY[:Note]).maximum("activities.last_sent_date")
+    @risk_score_trend = @account.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
     @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
@@ -223,7 +222,7 @@ class ReportsController < ApplicationController
       # Top Risks
       projects_risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse[0...5]
       ### NOT using built in Ruby max_by function due to bug
-      projects_risks_counts = Project.count_risks_per_project(@projects.pluck(:id))
+      projects_risks_counts = Project.count_tasks_per_project(@projects.pluck(:id))
       @top_risks = projects_risk_scores.map do |p|
         rc = projects_risks_counts.find { |r| r.id == p[0] }
         { id: p[0], risk_score: p[1], name: rc.name, open_risks: rc.open_risks }

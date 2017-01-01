@@ -29,7 +29,7 @@ class UserMailer < ApplicationMailer
         temp
       end
       @updates_today.reject! { |proj| proj.activities.blank? && proj.notifications.blank? }
-      @risk_scores = Project.new_risk_score(@updates_today.map(&:id)) unless @updates_today.blank?
+      @risk_scores = Project.new_risk_score(@updates_today.map(&:id), current_user.time_zone) unless @updates_today.blank?
 
       track user: user # ahoy_email tracker
       mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")

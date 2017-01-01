@@ -4,7 +4,7 @@ class AddActivityToNotification < ActiveRecord::Migration
 
   	Notification.all.each do |n|
   		case n.category
-  		when Notification::CATEGORY[:Risk], Notification::CATEGORY[:Action], Notification::CATEGORY[:Opportunity]
+  		when Notification::CATEGORY[:Alert], Notification::CATEGORY[:Action], Notification::CATEGORY[:Opportunity]
   			a = Activity.find_by(category: "Conversation", backend_id: n.conversation_id, project_id: n.project_id)
   			if !a.nil?
   				n.activity_id = a.id

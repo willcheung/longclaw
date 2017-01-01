@@ -13,8 +13,8 @@
                 <select class="category_filter col-lg-8">
                     <% Account::CATEGORY.each{|k,v|    %>
                     <option value="<%=v %>"  <% if params[:type] == v  %> selected   <% end %> ><%=v %></option>
-                     <% } %> 
-                </select> 
+                     <% } %>
+                </select>
             </div>
         </div>
         <div class="col-lg-4 filter-space">
@@ -23,31 +23,31 @@
                 <select class="category_filter col-lg-8">
                     <% Project::CATEGORY.each{|k,v|    %>
                     <option value="<%=v %>"  <% if params[:type] == v  %> selected   <% end %> ><%=v %></option>
-                     <% } %> 
-                </select> 
+                     <% } %>
+                </select>
             </div>
         </div>
         <div class="col-lg-4 filter-space">
         </div>
     </div>
-    
+
     <div class="row border-bottom white-bg dashboard-header">
             <!-- LEFT -->
             <div class="col-lg-5">
-                <h4 class="m-l-md">Sort by: 
+                <h4 class="m-l-md">Sort by:
                 <select class="metric_filter col-lg-8" data-placeholder="Select Type">
                     <option value="1">Days Inactive</option>
                     <option>Negative Sentiment Score</option>
                     <option value="2">Engagement Last 7d</option>
                     <option value="3" selected="true">Risk Score</option>
                     <option value="4">Negative Sentiment / Engagement %</option>
-                    <option value="5">Total Open Risks</option>
+                    <option value="5">Total Open Tasks</option>
                     <option value="6">Total Overdue Tasks</option>
-                  </select>    
-               
+                  </select>
+
                 </h4>
                 <div id="left-chart" class="left-chart" style="height:1200px;"></div>
-                
+
                 <h5><a href="" class="btn btn-outline btn-primary btn-xs m-l-lg">&larr; Previous 25</a>
                 <a href="" class="btn btn-outline btn-primary btn-xs m-l-sm">Next 25 &rarr;</a></h5>
             </div>
@@ -69,7 +69,7 @@
                             <small>Date range: </small><input type="text" name="daterange" class="form-control daterange">
                         </div>
                     </div>
-                    
+
                     <div class="ibox-content">
                         <div class="row">
                             <div class="col-md-4 text-center">
@@ -111,7 +111,7 @@
                     </div>
                 </div>
                 <!-- end id="account-header" -->
-                
+
                 <div id="account-charts" style="display:none;">
                     <div id="charts-container" class="ibox-content">
                         <div class="row m-t-md">
@@ -121,9 +121,9 @@
                         <div class="row m-t-md">
                             <div id="risk-detection-chart" style="height:130px"></div>
                         </div>
-                        
+
                         <div class="row m-t-md">
-                            
+
                             <div id="activities-chart" style="height:240px"></div>
                         </div>
 
@@ -188,7 +188,7 @@
                             }
                         }
                     }
-                }   
+                }
             },
             credits: {
                 enabled: false
@@ -199,14 +199,14 @@
                 data: [ <% @risk_scores.each do |r| %>
                 {
                     y: <%= r %>,
-                    color: "<%= if r >= 80.0 
+                    color: "<%= if r >= 80.0
                             '#ed5565'
                         elsif r >= 60.0
                             '#FFA500'
                         else
                             '#A1C436'
                         end %>",
-                }, 
+                },
                 <% end %> ],
             },
             {
@@ -326,7 +326,7 @@
                     name: 'Sales',
                     y: 56.3,
                     sliced: true,
-                    dataLabels: { 
+                    dataLabels: {
                         enabled: true
                     },
                 }, {
@@ -517,7 +517,7 @@
                 enabled: false
             },
             plotOptions: {
-                
+
             },
             tooltip: {
                 positioner: function () {
@@ -646,4 +646,3 @@
     };
 
 </script>
-
