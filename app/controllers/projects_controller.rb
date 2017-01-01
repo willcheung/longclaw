@@ -30,7 +30,7 @@ class ProjectsController < ApplicationController
     end
 
     # all projects and their accounts, sorted by account name alphabetically
-    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group_by{|e| e.account}.sort_by{|account| account[0].name}
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins(:activities, "LEFT JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
     
     unless projects.empty?  #@projects.empty  should be that?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date") # get last_sent_date
@@ -283,8 +283,11 @@ class ProjectsController < ApplicationController
 
     # project people
     @project_members = @project.project_members
-    @project_subscribers = @project.subscribers
+    project_subscribers = @project.subscribers
+    @daily_subscribers = project_subscribers.daily
+    @weekly_subscribers = project_subscribers.weekly
     @suggested_members = @project.project_members_all.pending
+    @user_subscription = project_subscribers.where(user: current_user).take
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)

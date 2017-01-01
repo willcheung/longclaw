@@ -25,7 +25,7 @@ jQuery(document).ready(function($) {
     responsive: true,
     columnDefs: [
       { searchable: false, targets: [0,4,5,6,7,8,9,10,11,12,13]},
-      { orderable: false, targets: [0,4,5,10,12,13] }
+      { orderable: false, targets: [0,4,5,10,12]}
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -38,7 +38,7 @@ jQuery(document).ready(function($) {
 
   $('input[type=search]').attr('size', '50');
 
-  /* Rendering object for defining how search-subs and member-search displays search results */
+  /* Rendering object for defining how search-*-subs and member-search displays search results */
   var renderContacts = {
     item: function(item, escape) {
       return '<div>' +
@@ -56,8 +56,8 @@ jQuery(document).ready(function($) {
     }
   }
 
-  /* Selectize for autocompleting possible subscribers */
-  $("#search-subs").selectize({
+  /* Selectize for autocompleting possible daily subscribers */
+  $(".search-daily-subs").selectize({
     closeAfterSelect: true,
     valueField: 'id',
     labelField: 'name',
@@ -66,7 +66,30 @@ jQuery(document).ready(function($) {
     render: renderContacts,
     load: function (term, callback) {
       if (!term.length) return callback()
-      $.getJSON( '/search/autocomplete_project_subs.json', { project_id: window.location.pathname.slice(10) } )
+      $.getJSON( '/search/autocomplete_project_subs.json', { project_id: window.location.pathname.slice(10), type: "daily" } )
+        .done( function (data) {
+          callback(data);
+        })
+        .fail( function () {
+          callback();
+        })
+    },
+    onBlur: function () {
+      // Manually prevent input box from being cleared on blur
+      this.setTextboxValue(this.lastQuery);
+    }
+  })
+  /* Now, selectize for autocompleting possible weekly subs */
+  $(".search-weekly-subs").selectize({
+    closeAfterSelect: true,
+    valueField: 'id',
+    labelField: 'name',
+    searchField: ['name', 'email'],
+    create: false,
+    render: renderContacts,
+    load: function (term, callback) {
+      if (!term.length) return callback()
+      $.getJSON( '/search/autocomplete_project_subs.json', { project_id: window.location.pathname.slice(10), type: "weekly" } )
         .done( function (data) {
           callback(data);
         })

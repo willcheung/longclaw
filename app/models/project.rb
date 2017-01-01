@@ -32,7 +32,7 @@ include ContextSmithParser
 
 class Project < ActiveRecord::Base
 
-	belongs_to 	:account
+  belongs_to  :account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
@@ -57,7 +57,7 @@ class Project < ActiveRecord::Base
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
   # v2: "_all" version, ignores status
-  has_many  :project_members, -> { confirmed }, dependent: :destroy
+  has_many  :project_members, -> { confirmed }, dependent: :destroy, class_name: 'ProjectMember'
   has_many  :project_members_all, class_name: "ProjectMember", dependent: :destroy
   has_many  :contacts, through: "project_members"
   has_many  :contacts_all, through: "project_members_all", source: :contact
@@ -66,36 +66,43 @@ class Project < ActiveRecord::Base
 
   has_many  :salesforce_opportunities, foreign_key: "contextsmith_project_id", dependent: :nullify
 
-	scope :visible_to, -> (organization_id, user_id) {
-		select('DISTINCT(projects.*)')
-				.joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
-				.where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
-							 organization_id, user_id, user_id)
-				.group('projects.id')
-	}
+  scope :visible_to, -> (organization_id, user_id) {
+    select('DISTINCT(projects.*)')
+        .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
+        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
+               organization_id, user_id, user_id)
+        .group('projects.id')
+  }
   scope :owner_of, -> (user_id) {
     select('DISTINCT(projects.*)')
       .where("projects.owner_id = ?", user_id)
   }
-	# Only using this for Daily Summaries
-	scope :following, -> (user_id) {
-		joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
-		.where("project_subscribers.user_id = ?", user_id)
-	}
-	scope :is_active, -> {where("projects.status = 'Active'")}
 
-	validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
-	validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
+  # Only using this for Daily Summaries
+  scope :following_daily, -> (user_id) {
+    joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
+    .where("project_subscribers.user_id = ? AND project_subscribers.daily IS TRUE", user_id)
+  }
+  # Only using this for Weekly Summaries
+  scope :following_weekly, -> (user_id) {
+    joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
+    .where("project_subscribers.user_id = ? AND project_subscribers.weekly IS TRUE", user_id)
+  }
+  
+  scope :is_active, -> {where("projects.status = 'Active'")}
 
-	STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
-	CATEGORY = { Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
+  validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
-	attr_accessor :num_activities_prev, :pct_from_prev
+  STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
+  CATEGORY = { Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
 
-	def self.check_existing_from_clusters(data, user_id, organization_id)
-		# Use Dice Coefficient
-		# Everything lives in OnboardingController#confirm_projects right now
-	end
+  attr_accessor :num_activities_prev, :pct_from_prev
+
+  def self.check_existing_from_clusters(data, user_id, organization_id)
+    # Use Dice Coefficient
+    # Everything lives in OnboardingController#confirm_projects right now
+  end
 
   def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, day_range=14)
     start_time_sec = (day_range-1).days.ago.in_time_zone(time_zone).midnight.utc.to_i
@@ -208,19 +215,19 @@ class Project < ActiveRecord::Base
     result = Project.find_by_sql(query)
   end
 
-	def self.find_rag_status_per_project(array_of_project_ids)
-		query = <<-SQL
-			SELECT project_id,
-			rag_score,
-			note,
-			max(last_sent_date)
-			FROM activities
-			WHERE project_id IN ('#{array_of_project_ids.join("','")}') AND category='Note' AND rag_score IS NOT NULL
-			GROUP BY project_id, note, rag_score, last_sent_date
-			ORDER BY last_sent_date ASC;
-		SQL
-		result = Project.find_by_sql(query)
-	end
+  def self.find_rag_status_per_project(array_of_project_ids)
+    query = <<-SQL
+      SELECT project_id,
+      rag_score,
+      note,
+      max(last_sent_date)
+      FROM activities
+      WHERE project_id IN ('#{array_of_project_ids.join("','")}') AND category='Note' AND rag_score IS NOT NULL
+      GROUP BY project_id, note, rag_score, last_sent_date
+      ORDER BY last_sent_date ASC;
+    SQL
+    result = Project.find_by_sql(query)
+  end
 
   # for risk counts, show every risk regardless of private conversation
   def self.open_risk_count(array_of_project_ids)
@@ -335,10 +342,10 @@ class Project < ActiveRecord::Base
     [rag_score_by_day, days_inactive_by_day, pct_neg_sentiment_by_day].transpose.map(&:sum)
   end
 
-	def self.current_rag_score(array_of_project_ids)
-		rag_per_project = Project.find_rag_status_per_project(array_of_project_ids)
-		Hash[rag_per_project.map { |p| [p.project_id, p.rag_score ]}]
-	end
+  def self.current_rag_score(array_of_project_ids)
+    rag_per_project = Project.find_rag_status_per_project(array_of_project_ids)
+    Hash[rag_per_project.map { |p| [p.project_id, p.rag_score ]}]
+  end
 
   # query to generate Account Relationship Graph from DB entries
   def network_map
@@ -583,8 +590,8 @@ class Project < ActiveRecord::Base
   end
 
   # This is the SQL query to get daily activities for multiple projects.  TO DO: get rid of cross join
-	def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
-		query = <<-SQL
+  def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
+    query = <<-SQL
       WITH time_series as (
         SELECT *
           from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1
@@ -594,7 +601,7 @@ class Project < ActiveRecord::Base
       SELECT time_series.project_id as id, date(time_series.days) as date, count(activities.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id
-      					 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}') and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'))
+                 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}') and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'))
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days
@@ -606,7 +613,7 @@ class Project < ActiveRecord::Base
 
   # How Busy Are We? Chart on Home#index
   def self.count_total_activities_by_day(array_of_account_ids, time_zone)
-		query = <<-SQL
+    query = <<-SQL
       WITH time_series AS (
           SELECT *
           FROM (SELECT generate_series(date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') AS days) t1
@@ -642,13 +649,13 @@ class Project < ActiveRecord::Base
   end
 
 # TO-DO: This needs to be deprecated.  Use daily_activities_last_x_days.
-	def self.count_activities_by_day(days_ago, array_of_project_ids)
-		metrics = {}
+  def self.count_activities_by_day(days_ago, array_of_project_ids)
+    metrics = {}
     previous = nil
     arr = []
-		days_ago_sql = "(CURRENT_DATE - INTERVAL '#{days_ago-1} days')"
+    days_ago_sql = "(CURRENT_DATE - INTERVAL '#{days_ago-1} days')"
 
-		query = <<-SQL
+    query = <<-SQL
       WITH time_series as (
         SELECT *
           FROM (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1
@@ -658,11 +665,11 @@ class Project < ActiveRecord::Base
       SELECT time_series.project_id, time_series.days, count(activities.*) as count_activities
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id from
-      							(SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id
-                    	FROM activities
+                    (SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id
+                      FROM activities
                       where project_id in ('#{array_of_project_ids.join("','")}')
                       AND category = 'Conversation'
-                		) t
+                    ) t
                  WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
@@ -672,7 +679,7 @@ class Project < ActiveRecord::Base
 
     activities = Project.find_by_sql(query)
 
-		activities.each_with_index do |p,i|
+    activities.each_with_index do |p,i|
       if previous.nil?
         arr << p.count_activities
         previous = p.project_id
@@ -692,7 +699,7 @@ class Project < ActiveRecord::Base
       end
     end
 
-  	return metrics
+    return metrics
   end
 
   # Top Active Streams/Engagement Last 7d
@@ -721,42 +728,42 @@ class Project < ActiveRecord::Base
   end
 
 
-	# This method should be called *after* all accounts, contacts, and users are processed & inserted.
-	def self.create_from_clusters(data, user_id, organization_id)
-		project_domains = get_project_top_domain(data)
-		accounts = Account.where(domain: project_domains, organization_id: organization_id)
+  # This method should be called *after* all accounts, contacts, and users are processed & inserted.
+  def self.create_from_clusters(data, user_id, organization_id)
+    project_domains = get_project_top_domain(data)
+    accounts = Account.where(domain: project_domains, organization_id: organization_id)
 
-		project_domains.each do |p|
-			external_members, internal_members = get_project_members(data, p)
-			project = Project.new(name: (accounts.find {|a| a.domain == p}).name,
-													 status: "Active",
-													 category: "Opportunity",
-													 created_by: user_id,
-													 updated_by: user_id,
-													 owner_id: user_id,
-													 account_id: (accounts.find {|a| a.domain == p}).id,
-													 is_public: true,
-													 is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
-													)
+    project_domains.each do |p|
+      external_members, internal_members = get_project_members(data, p)
+      project = Project.new(name: (accounts.find {|a| a.domain == p}).name,
+                           status: "Active",
+                           category: "Opportunity",
+                           created_by: user_id,
+                           updated_by: user_id,
+                           owner_id: user_id,
+                           account_id: (accounts.find {|a| a.domain == p}).id,
+                           is_public: true,
+                           is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
+                          )
 
-			if project.save
-				# Project members
-				# assuming contacts and users have already been inserted, we just need to link them
-				contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
-				users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
+      if project.save
+        # Project members
+        # assuming contacts and users have already been inserted, we just need to link them
+        contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
+        users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
 
-				external_members.each do |m|
-					project.project_members.create(contact_id: (contacts.find {|c| c.email == m.address}).id)
-				end
+        external_members.each do |m|
+          project.project_members.create(contact_id: (contacts.find {|c| c.email == m.address}).id)
+        end
 
-				internal_members.each do |m|
-					project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
-				end
+        internal_members.each do |m|
+          project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
+        end
 
-				# Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
-				# project.subscribers.create(user_id: user_id)
+        # Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
+        # project.subscribers.create(user_id: user_id)
 
-				# Project conversations
+        # Project conversations
         Activity.load(get_project_conversations(data, p), project, true, user_id)
 
         # Load Smart Tasks
@@ -769,17 +776,17 @@ class Project < ActiveRecord::Base
         #Notification.load_opportunity_for_stale_projects(project)
 
         # Project meetings
-				# Activity.load_calendar(get_project_conversations(data, p), project, true, user_id)
+        # Activity.load_calendar(get_project_conversations(data, p), project, true, user_id)
         ContextsmithService.load_calendar_from_backend(project, Time.current.to_i, 1.year.ago.to_i, 1000)
-			end
-		end
-	end
+      end
+    end
+  end
 
   # Top Movers
-	def self.calculate_pct_from_prev(projects, projects_prev)
+  def self.calculate_pct_from_prev(projects, projects_prev)
     project_chg_activities = []
 
-		projects.each do |proj|
+    projects.each do |proj|
       proj_prev = projects_prev.find { |p| p.id == proj.id }
       if proj_prev
         proj.pct_from_prev = (((proj.num_activities - proj_prev.num_activities) / proj_prev.num_activities.to_f) * 100).round(1)
@@ -796,9 +803,9 @@ class Project < ActiveRecord::Base
       end
     end
     return project_chg_activities
-	end
+  end
 
-	def self.find_stale_projects_30_days
+  def self.find_stale_projects_30_days
       return project_last_activity_date = Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t
                                                       ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
                                 .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
@@ -807,7 +814,7 @@ class Project < ActiveRecord::Base
   end
 
   def is_stale_project_30_days
-  	Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t
+    Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t
                                                       ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
                                 .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
                                 .where("activities.category = 'Conversation' and projects.status='Active' and projects.id = '#{self.id}' and (t.last_sent_date_epoch::integer + 2592000) < EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)")

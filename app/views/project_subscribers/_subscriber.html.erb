@@ -1,5 +1,5 @@
 <% s = ps.user %>
-<div class="row m-b-sm member <%= ps.id.to_s + ps.user_id %>">
+<div class="row m-b-sm member <%=type%>-<%= ps.id.to_s + ps.user_id %>">
     <div class="col-sm-2">
         <%= get_profile_pic(get_full_name(s), s.email, "message-avatar") %>
     </div>
@@ -8,6 +8,6 @@
         <span><small><%= s.title %> <%= get_short_name_account_path(s) %></small></span>
     </div>
     <div class="col-sm-3 m-t-xs delete-member">
-        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the project?"}, remote: true %>
+        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id, type: type), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the stream?"}, remote: true %>
     </div>
 </div>
