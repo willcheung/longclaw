@@ -10,10 +10,14 @@ class OnboardingController < ApplicationController
     current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
 
     if ENV["RAILS_ENV"] == 'production'
-			# Fire hubspot event to add new user to list
-			s = "http://track.hubspot.com/v1/event?_n=000000617114&_a=2189465&email=#{current_user.email}&firstname=#{url_encode(current_user.first_name)}&lastname=#{url_encode(current_user.last_name)}&lifecyclestage=customer"
-			url = URI.parse(s)
-			req = Net::HTTP.get(url)
+    	if !ENV["HUBSPOT_EVT_ONBRD"].nil? and !ENV["HUBSPOT_EVT_ONBRD"].empty?
+				# Fire hubspot event to add new user to list
+				# This URL is different for every enterprise customer with subdomain (but same for everyone on app.contextsmith.com)
+				# ENV["HUBSPOT_EVT_ONBRD"] looks something like "http://track.hubspot.com/v1/event?_n=000000617114&_a=2189465&lifecyclestage=customer"
+				s = ENV["HUBSPOT_EVT_ONBRD"] + "&_a=2189465&email=#{current_user.email}&firstname=#{url_encode(current_user.first_name)}&lastname=#{url_encode(current_user.last_name)}"
+				url = URI.parse(s)
+				req = Net::HTTP.get(url)
+			end
 		end
 	end
 
