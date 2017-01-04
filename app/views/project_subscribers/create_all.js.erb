@@ -1,12 +1,12 @@
 console.log('create_all: <%= params[:type] %>');
 // Use :type param ("daily" or "weekly") to modify jQuery selectors, id's, path's etc.
-$("#ps-<%= params[:type] %>-subs").text(Number($('#ps-<%= params[:type] %>-subs').text()) + Number("<%= @project_subscribers.length %>"));
-
 $('.search-<%= params[:type] %>-subs')[0].selectize.clear();
 <% @project_subscribers.each do |ps| %>
   $('.project-people.<%= params[:type] %>-subs').append('<%=    escape_javascript(render "project_subscribers/subscriber", ps: ps, type: "#{params[:type]}") %>')
 <% end %>
+$("#ps-<%= params[:type] %>-subs").text(Number($('#ps-<%= params[:type] %>-subs').text()) + Number("<%= @project_subscribers.length %>"));
 
+// Stream projects#show page: update follow -> unfollow button
 <% if @self_subscribe %>
   $('#project-show-follow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-check\"></i> Following #{params[:type]}".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id) + "?type=#{params[:type]}", remote: true, method: :delete, id: "project-show-unfollow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>');
   $("#project-show-unfollow-daily-<%= @project.id %>").addClass("m-l-md");
