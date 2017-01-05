@@ -25,13 +25,11 @@
 #  activity_id       :integer          default(-1)
 #
 
-include ActionView::Helpers::DateHelper
-
 class Notification < ActiveRecord::Base
 
-	belongs_to  :project, foreign_key: "project_id"
+  belongs_to  :project, foreign_key: "project_id"
   belongs_to  :activity, foreign_key: "activity_id"
-	belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
+  belongs_to  :assign_to_user, :class_name => "User", foreign_key: "assign_to"
   belongs_to  :completed_by_user, :class_name => "User", foreign_key: "completed_by"
 
   scope :risks, -> { where category: CATEGORY[:Alert] }
@@ -41,132 +39,146 @@ class Notification < ActiveRecord::Base
 
   CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Alert: 'Alert', Opportunity: 'Opportunity' }
 
-	def self.load(data, project, test=false, day_range=7)
-		data_hash = data.map { |hash| Hashie::Mash.new(hash) }
-
-    current_time = Time.now.utc
-    current_time = Time.new(2012,8,1).utc if test
-
-    data_hash.each do |d|
-	    d.conversations.each do |c|
-	    	c.messages.each do |message|
-
-          #save risk (message score < 0)
-          if !message.sentimentItems.nil?
-            load_risk_for_each_message(project.id, c.conversationId, message, test, day_range)
+  def self.load(data, project, test=false, day_range=7)
+    alert_settings = RiskSetting.where(level: project.account.organization)
+    
+    neg_sentiment_setting = alert_settings.find { |as| as.metric == RiskSetting::METRIC[:NegSentiment] }
+    pct_neg_sentiment_setting = alert_settings.find { |as| as.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    if neg_sentiment_setting.notify_task
+      data_hash = data.map { |hash| Hashie::Mash.new(hash) }
+      data_hash.each do |d|
+        d.conversations.each do |c|
+          c.messages.each do |message|
+            if message.sentimentItems.present?
+              load_alert_for_each_message(project.id, c.conversationId, message, neg_sentiment_setting, test, day_range)
+            end
           end
-      	end
-	    end
-	  end
-	end
-
-  def self.load_opportunity_for_stale_projects(project=nil)
-    if project.nil?
-      stale_projects = Project.find_stale_projects_30_days
-    else
-      stale_projects = project.is_stale_project_30_days
-    end
-
-    stale_projects.each do |p|
-      a = Activity.order(last_sent_date: :desc).limit(1).find_by_project_id(p.id)
-
-      if !a.nil?
-        n = Notification.where(category: CATEGORY[:Opportunity], is_complete: false, project_id: p.id, conversation_id: a.backend_id)
-        if n.empty?
-          notification = Notification.new(category: CATEGORY[:Opportunity],
-                                          name: "Check in with #{p.account.name}",
-                                          description: "Last touch #{time_ago_in_words(Time.at(p.last_sent_date.to_i))} ago by #{p.from[0]['personal']}",
-                                          message_id: '',
-                                          project_id: p.id,
-                                          conversation_id: a.backend_id,
-                                          sent_date: '',
-                                          original_due_date: '',
-                                          remind_date: '',
-                                          is_complete: false,
-                                          assign_to: '',
-                                          content_offset: -1,
-                                          has_time: false,
-                                          activity_id: a.id)
-
-          notification.save
         end
       end
     end
+
+    # % Negative Sentiment Alerts
+    if pct_neg_sentiment_setting.notify_task
+      load_alert_for_pct_neg_sentiment(project, pct_neg_sentiment_setting, neg_sentiment_setting)
+    end
   end
 
-# add new risk(message score below 0)
-  def self.load_risk_for_each_message(project_id, conversation_id, contextMessage, test=false, day_range=7)
-    if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Alert]
-      # avoid redundant
-      return
-    end
+  def self.load_alert_for_days_inactive(organization)
+    days_inactive_setting = RiskSetting.find_by(level: organization, metric: RiskSetting::METRIC[:DaysInactive])
+    return unless days_inactive_setting.notify_task
 
-    score = contextMessage.sentimentItems[0].score.to_s[0,7].to_f
+    project_inactive_days = Project.where(account_id: organization.accounts.ids).joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).group('projects.id').maximum('activities.last_sent_date')
+    project_inactive_days.each { |pid, last_sent_date| project_inactive_days[pid] = Time.current.to_date.mjd - last_sent_date.to_date.mjd } # convert last_sent_date to days inactive
+    project_inactive_days.reject! { |pid, days_inactive| days_inactive < days_inactive_setting.medium_threshold }
 
-    if score >= -0.96
-      # Ignore anything more positive than -0.96.
-      return
+    stale_projects = Project.where(id: project_inactive_days.keys)
+    stale_projects.each do |p|
+      last_activity = p.activities.where.not(category: Activity::CATEGORY[:Note]).first
+      if last_activity.category == Activity::CATEGORY[:Conversation]
+        message_id = last_activity.email_messages.last.messageId
+        conversation_id = last_activity.backend_id
+      else
+        message_id = nil
+        conversation_id = nil
+      end
+
+      days_inactive = project_inactive_days[p.id]
+      level = days_inactive > days_inactive_setting.high_threshold ? "high" : "medium"
+
+      p.notifications.find_or_initialize_by(
+        category: CATEGORY[:Alert],
+        label: "DaysInactive",
+      ).update(
+        name: "Days Inactive threshold exceeded for #{p.account.name}!",
+        description: "Days Inactive for #{p.name} is greater than #{level} threshold at #{days_inactive} days.",
+        is_complete: false,
+        completed_by: nil,
+        complete_date: nil,
+        message_id: message_id,
+        conversation_id: conversation_id,
+        activity_id: last_activity.id
+      )
     end
+  end
+
+  def self.load_alert_for_pct_neg_sentiment(project, alert_setting, sentiment_setting)
+    engagement_volume = project.conversations.sum('jsonb_array_length(email_messages)')
+    neg_sentiments = project.conversations.select(:id, :backend_id, "(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score, jsonb_array_elements(email_messages)->>'messageId' AS message_id")
+      .each { |a| a.sentiment_score = scale_sentiment_score(a.sentiment_score) }.select { |a| a.sentiment_score > sentiment_setting.high_threshold }
+    pct_neg_sentiment = neg_sentiments.count.to_f/engagement_volume
+
+    return if pct_neg_sentiment < alert_setting.medium_threshold
+    level = pct_neg_sentiment < alert_setting.high_threshold ? "medium" : "high"
+
+    last_neg_sentiment_activity = neg_sentiments.first
+    project.notifications.find_or_initialize_by(
+      category: CATEGORY[:Alert],
+      label: "PctNegSentiment",
+    ).update(
+      name: "% Negative Sentiment threshold exceeded for #{project.account.name}!",
+      description: "% Negative Sentiment for #{project.name} is greater than #{level} threshold at #{(pct_neg_sentiment*100).round(1)}%",
+      is_complete: false,
+      completed_by: nil,
+      complete_date: nil,
+      message_id: last_neg_sentiment_activity.message_id,
+      conversation_id: last_neg_sentiment_activity.backend_id,
+      activity_id: last_neg_sentiment_activity.id
+    )
+  end
+
+  def self.load_alert_for_each_message(project_id, conversation_id, contextMessage, alert_setting, test=false, day_range=7)
+    # avoid redundant
+    return if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Alert]
+
+    # get activity id. If no such activity exist in front end(could be caused by users deleting this activity), ignore this risk
+    activity = Activity.find_by(category: Activity::CATEGORY[:Conversation], backend_id: conversation_id, project_id: project_id)
+    return if activity.blank?
+
+    score = contextMessage.sentimentItems[0].score.to_f
+    scaled_score = scale_sentiment_score(score)
+    # Ignore anything less than alert setting high threshold.
+    return if scaled_score < alert_setting.high_threshold 
 
     sent_date = Time.at(contextMessage.sentDate).utc
 
     assign_to = User.find_by email: contextMessage.from[0].address
-    if(assign_to.nil? and !contextMessage.to.nil? )
-      assign_to = User.find_by email: contextMessage.to[0].address
-    end
-
-    assign_id = 0
-    if(!assign_to.nil?)
-        assign_id = assign_to.id
-    end
-
-    # get activity id. If no such activity exist in front end(could be caused by users deleting this activity), ignore this risk
-    activity_id = -1
-    a = Activity.find_by(category: "Conversation", backend_id: conversation_id, project_id: project_id)
-    if !a.nil?
-      activity_id = a.id
-    else
-      return
-    end
+    assign_to = User.find_by email: contextMessage.to[0].address if assign_to.nil? && contextMessage.to
+    assign_to = assign_to.blank? ? nil : assign_to.id
 
     s = contextMessage.sentimentItems[0]
     context_start = s.sentence.beginOffset.to_i
     context_end = s.sentence.endOffset.to_i
-    description = contextMessage.content.body[context_start..context_end]
+    description = s.sentence.text
 
     # check if older than previous two weeks, if true set auto complete
-    current_time = Time.now.utc
-    if test==true
-      current_time = Time.new(2012,8,1).utc
-    end
+    current_time = Time.current.utc
+    current_time = Time.new(2012,8,1).utc if test
 
     is_complete = false
-    completed_by = nil
     complete_date = nil
     sent_date = Time.at(contextMessage.sentDate).utc
-    if (sent_date.utc < (current_time - day_range.day).utc)
+    if (sent_date < (current_time - day_range.day))
       is_complete = true
-      completed_by = "00000000-0000-0000-0000-000000000000"
       complete_date = sent_date
     end
 
-    notification = Notification.new(category: CATEGORY[:Alert],
-        name: contextMessage.subject,
-        description: description,
-        message_id: contextMessage.messageId,
-        project_id: project_id,
-        conversation_id: conversation_id,
-        sent_date: sent_date,
-        original_due_date: '',
-        remind_date: '',
-        is_complete: is_complete,
-        assign_to: assign_id,
-        content_offset: context_start,
-        has_time: false,
-        score: score,
-        completed_by: completed_by,
-        complete_date: complete_date,
-        activity_id: activity_id)
+    notification = Notification.new(
+      category: CATEGORY[:Alert],
+      label: "NegSentiment",
+      name: contextMessage.subject,
+      description: description,
+      message_id: contextMessage.messageId,
+      project_id: project_id,
+      conversation_id: conversation_id,
+      sent_date: sent_date,
+      is_complete: is_complete,
+      assign_to: assign_to,
+      content_offset: context_start,
+      has_time: false,
+      score: scaled_score,
+      complete_date: complete_date,
+      activity_id: activity.id
+    )
 
     notification.save
   end

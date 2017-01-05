@@ -17,13 +17,17 @@ class SettingsController < ApplicationController
 	def alerts
 		@risk_settings = current_user.organization.risk_settings.index_by { |rm| RiskSetting::METRIC.key(rm.metric) }
 
-		# Average PctNegSentiment Last 30d
     projects = Project.visible_to(current_user.organization_id, current_user.id).unscope(:group)
-		total_engagement = projects.joins(:activities).where(activities: { category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]], last_sent_date: 30.days.ago.midnight..Time.current }).sum('jsonb_array_length(activities.email_messages)')
+		# Average Negative Sentiment Score
+		neg_sentiment_scores = Activity.where(project_id: projects.ids, category: Activity::CATEGORY[:Conversation]).select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score").map { |a| a.sentiment_score }.select { |score| score < -0.75 }
+		@avg_neg_sentiment_scores = scale_sentiment_score(neg_sentiment_scores.reduce(0) { |total, score| total + score }.to_f/neg_sentiment_scores.length)
+
+		# Average PctNegSentiment Last 30d
+		total_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current }).sum('jsonb_array_length(activities.email_messages)')
 		if total_engagement.zero?
 			@avg_p_neg_sentiment = 0.0
 		else
-	    total_risks = projects.joins(:notifications).where(notifications: { category: Notification::CATEGORY[:Alert], created_at: 30.days.ago.midnight..Time.current }).count('DISTINCT(notifications.id)')
+			total_risks = Activity.where(project_id: projects.ids, category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current).select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score").map { |a| a.sentiment_score }.select { |score| score < -0.75 }.count
 	    @avg_p_neg_sentiment = (total_risks.to_f/total_engagement*100).round(1)
 	  end
 

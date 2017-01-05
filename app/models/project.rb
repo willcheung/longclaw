@@ -192,8 +192,7 @@ class Project < ActiveRecord::Base
     min_scores.each do |key, value|
       (0..day_range-1).each do |i|
         score = value[i].sort[0]
-        score = (((-score - 0.75) * 4) * 100).floor
-        min_scores[key][i] = score < 0.0 ? 0 : score
+        min_scores[key][i] = scale_sentiment_score(score)
       end
     end
 
@@ -249,10 +248,16 @@ class Project < ActiveRecord::Base
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
+    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
     pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    project_engagement = projects.joins(:activities).where(activities: { category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]] }).sum('jsonb_array_length(activities.email_messages)')
-    project_risks = projects.joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Alert]}'").count('notifications.id')
-    project_p_neg_sentiment = project_engagement.merge(project_risks) { |pid, engagement, risks| calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting) }
+    project_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).sum('jsonb_array_length(activities.email_messages)')
+    project_risks = projects.includes(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).group('activities.id')
+    project_p_neg_sentiment = project_risks.each_with_object({}) do |p, result|
+      risks = p.activities.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+        .map { |a| scale_sentiment_score(a.sentiment_score) }.select{ |score| score > sentiment_setting.high_threshold }.count
+      result[p.id] = calculate_score_by_setting(risks.to_f/project_engagement[p.id], pct_neg_sentiment_setting)
+    end
+      
 
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
@@ -273,12 +278,14 @@ class Project < ActiveRecord::Base
   def new_risk_score(time_zone)
     risk_settings = RiskSetting.where(level: self.account.organization)
     # Risk / Engagement Ratio
+    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
     pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    engagement = self.activities.where(category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]]).sum('jsonb_array_length(activities.email_messages)')
+    engagement = self.conversations.sum('jsonb_array_length(activities.email_messages)')
     if engagement.zero?
       percent_neg_sentiment = 0
     else
-      risks = self.notifications.risks.count
+      risks = self.conversations.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+        .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
       percent_neg_sentiment = Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
     end
 
@@ -301,18 +308,20 @@ class Project < ActiveRecord::Base
     risk_settings = RiskSetting.where(level: self.account.organization)
     
     # Risk / Engagement Ratio
+    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
     pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    engagement_query = self.activities.where(category: [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting]])
-    risks_query = self.notifications.risks
-    if engagement_query.count.zero?
+    total_engagement = self.conversations
+    if total_engagement.count.zero?
       pct_neg_sentiment_by_day = Array.new(day_range, 0)
     else
       pct_neg_sentiment_by_day = ((day_range - 1).days.ago.in_time_zone(time_zone).to_date..Time.current.in_time_zone(time_zone).to_date).map do |date|
-        engagement = engagement_query.where(last_sent_date: Time.at(0)..date).sum('jsonb_array_length(activities.email_messages)')
+        engagement = total_engagement.where(last_sent_date: Time.at(0)..date).sum('jsonb_array_length(activities.email_messages)')
         if engagement.zero?
           0
         else
-          risks = risks_query.where(created_at: Time.at(0)..date).count
+          risks = total_engagement.where(created_at: Time.at(0)..date)
+            .select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+            .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
           Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
         end
       end
@@ -320,9 +329,7 @@ class Project < ActiveRecord::Base
     
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
-    activity_dates = self.activities.where.not(category: Activity::CATEGORY[:Note]).where(last_sent_date: day_range.days.ago..Time.current).pluck(:last_sent_date)
-    activity_dates += [self.activities.where(last_sent_date: Time.at(0)..day_range.days.ago).maximum(:last_sent_date)].compact # last activity before day_range
-    activity_dates = activity_dates.map { |d| d.in_time_zone(time_zone).to_date }.to_set
+    activity_dates = self.activities.where.not(category: Activity::CATEGORY[:Note]).pluck(:last_sent_date).map { |d| d.in_time_zone(time_zone).to_date }.to_set
     days_inactive_by_day = ((day_range - 1).days.ago.in_time_zone(time_zone).to_date..Time.current.in_time_zone(time_zone).to_date).map do |date|
       last_active_date = activity_dates.drop_while { |d| d > date }.first
       days_inactive = last_active_date.nil? ? 0 : date.mjd - last_active_date.mjd
@@ -773,14 +780,12 @@ class Project < ActiveRecord::Base
         # 8/30: Temporarily disable this because it gets too noisy during initial onboarding phase
         # Also removing the rake scheduler for this.  Will need to think of a better solution to surface this.
         # Notification.load_opportunity_for_stale_projects(project)
-        #Notification.load_opportunity_for_stale_projects(project)
 
         # Project meetings
-        # Activity.load_calendar(get_project_conversations(data, p), project, true, user_id)
-        ContextsmithService.load_calendar_from_backend(project, Time.current.to_i, 1.year.ago.to_i, 1000)
-      end
-    end
-  end
+        ContextsmithService.load_calendar_from_backend(project, 1000)
+			end
+		end
+	end
 
   # Top Movers
   def self.calculate_pct_from_prev(projects, projects_prev)
@@ -803,22 +808,6 @@ class Project < ActiveRecord::Base
       end
     end
     return project_chg_activities
-  end
-
-  def self.find_stale_projects_30_days
-      return project_last_activity_date = Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t
-                                                      ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
-                                .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
-                                .where("activities.category = 'Conversation' and projects.status='Active' and (t.last_sent_date_epoch::integer + 2592000) < EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)")
-                                .group("t.last_sent_date_epoch, activities.from, projects.name, projects.id, projects.account_id")
-  end
-
-  def is_stale_project_30_days
-    Project.all.joins([:activities, "INNER JOIN (SELECT project_id, MAX(last_sent_date_epoch) as last_sent_date_epoch FROM activities where category ='Conversation' group by project_id) AS t
-                                                      ON t.project_id=activities.project_id and t.last_sent_date_epoch=activities.last_sent_date_epoch"])
-                                .select("projects.name, projects.id, projects.account_id, t.last_sent_date_epoch as last_sent_date, activities.from")
-                                .where("activities.category = 'Conversation' and projects.status='Active' and projects.id = '#{self.id}' and (t.last_sent_date_epoch::integer + 2592000) < EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)")
-                                .group("t.last_sent_date_epoch, activities.from, projects.name, projects.id, projects.account_id")
   end
 
   ### method to batch update activities in a project by time (in seconds)

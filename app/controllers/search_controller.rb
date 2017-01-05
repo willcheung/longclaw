@@ -1,22 +1,5 @@
 class SearchController < ApplicationController
 
-  # Old SearchController#results for handling multiple projects in search
-	# def results
- #    @activities = []
- #    return @activities if params[:search].empty?
- #    if params[:search].include? ","
- #      project_ids = params[:search].split(",")
- #    else
- #      project_ids = [params[:search]]
- #    end
- #    #@notes = Activity.search_note(params[:query]).where("is_public = true and category='Note'") # TO DO need to filter by project
- #    @projects = []
- #    project_ids.each do |pid|
- #      project = Project.visible_to(current_user.organization_id, current_user.id).find(pid)
- #      @projects << project
- #      @activities += ContextsmithService.load_emails_from_backend(project, nil, 100, params[:query], false)
- #    end
- #  end
   def results
     respond_to do |format|
       if params[:project_id].empty?
@@ -30,7 +13,7 @@ class SearchController < ApplicationController
           format.html { redirect_to @project }
         else
           # respond with search result page
-      	  @activities = ContextsmithService.load_emails_from_backend(@project, nil, 100, params[:query], false)
+      	  @activities = ContextsmithService.load_emails_from_backend(@project, 100, params[:query], false, nil, nil, nil, nil)
           format.html
         end
       end

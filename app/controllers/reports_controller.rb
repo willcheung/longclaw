@@ -36,16 +36,6 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: r[1], color: color })
       end
       @average = (total_risk_scores.to_f/risk_scores.length).round(1)
-    when "Negative Sentiment Score"
-      sentiment_scores = Project.current_risk_score(projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse
-      total_sentiment_scores = 0
-      @data = sentiment_scores.map do |r|
-        proj = projects.find { |p| p.id == r[0] }
-        total_sentiment_scores += r[1]
-        color = r[1] >= 80 ? 'highRisk' : r[1] >= 60 ? 'mediumRisk' : 'lowRisk'
-        Hashie::Mash.new({ id: proj.id, name: proj.name, y: r[1], color: color })
-      end
-      @average = (total_sentiment_scores.to_f/sentiment_scores.length).round(1)
     when "Days Inactive"
       last_sent_dates = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
       @data = last_sent_dates.map do |d|
