@@ -143,7 +143,7 @@ class Notification < ActiveRecord::Base
 
     assign_to = User.find_by email: contextMessage.from[0].address
     assign_to = User.find_by email: contextMessage.to[0].address if assign_to.nil? && contextMessage.to
-    assign_to = assign_to.blank? ? "00000000-0000-0000-0000-000000000000" : assign_to.id
+    assign_to = assign_to.blank? ? nil : assign_to.id
 
     s = contextMessage.sentimentItems[0]
     context_start = s.sentence.beginOffset.to_i
@@ -155,12 +155,10 @@ class Notification < ActiveRecord::Base
     current_time = Time.new(2012,8,1).utc if test
 
     is_complete = false
-    completed_by = nil
     complete_date = nil
     sent_date = Time.at(contextMessage.sentDate).utc
     if (sent_date < (current_time - day_range.day))
       is_complete = true
-      completed_by = "00000000-0000-0000-0000-000000000000"
       complete_date = sent_date
     end
 
@@ -178,7 +176,6 @@ class Notification < ActiveRecord::Base
       content_offset: context_start,
       has_time: false,
       score: scaled_score,
-      completed_by: completed_by,
       complete_date: complete_date,
       activity_id: activity.id
     )

@@ -76,7 +76,7 @@ class ProjectsController < ApplicationController
   end
 
   def insights_tab
-    @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
+    @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
