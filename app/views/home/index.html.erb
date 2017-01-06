@@ -115,7 +115,7 @@
                                     </td>
                                     <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
                                     <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
-                                    <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
+                                    <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888 display:block"></i> <%= (p.activity_count) %></span></td>
                                     <td style="text-align:right;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
                                     <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
                                     <td><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id]%></div></td>
