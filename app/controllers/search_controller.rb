@@ -30,7 +30,12 @@ class SearchController < ApplicationController
   end
 
   def autocomplete_project_subs
-    subs = ProjectSubscriber.all.where(project_id: params[:project_id]).pluck(:user_id)
+    if (params[:type] == "daily")
+      subs = ProjectSubscriber.all.where(project_id: params[:project_id], daily: true).pluck(:user_id)
+      print subs.length
+    elsif (params[:type] == "weekly")
+      subs = ProjectSubscriber.all.where(project_id: params[:project_id], weekly: true).pluck(:user_id)
+    end
     @users = current_user.organization.users.where.not(id: subs)
 
     respond_to do |format|

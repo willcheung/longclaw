@@ -2,14 +2,14 @@
     <div class="col-lg-6">
         <h2 class="in-bl"><%= @project.name %></h2>
         <% if @user_subscription.present? && @user_subscription.daily %>
-            <%= link_to "<i class=\"fa fa-check\"></i> Following Daily".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-show-unfollow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following daily".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id)+"?type=daily", remote: true, method: :delete, id: "project-show-unfollow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
         <% else %>
-            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Daily".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-show-follow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow daily".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=daily", remote: true, method: :post, id: "project-show-follow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
         <% end %>
         <% if @user_subscription.present? && @user_subscription.weekly %>
-            <%= link_to "<i class=\"fa fa-check\"></i> Following Weekly".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-show-unfollow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following weekly".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id)+"?type=weekly", remote: true, method: :delete, id: "project-show-unfollow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
         <% else %>
-            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow Weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
         <% end %>
         <% if @project.owner_id == current_user.id %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
@@ -166,7 +166,7 @@
                     <% end %>
                 </dd>
             </dl>
-            <!-- PROJECT MEMBERS SECTION -->
+            <!-- STREAM MEMBERS SECTION -->
             <div class="row m-t-md toggle-open">
                 <div class="col-sm-2">
                     <span class="fa fa-caret-right toggle-icon"></span>
@@ -201,8 +201,8 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="ps-length"><%= @daily_subscribers.length %></span> Daily Followers</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project every day."></i>
+                    <strong><span id="ps-daily-subs"><%= @daily_subscribers.length %></span> Daily Followers</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this stream every day."></i>
                 </div>
             </div>
             <div class="row">
@@ -210,16 +210,16 @@
                     <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
                 </div>
                 <div class="col-sm-9 project-team-title">
-                    <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                        <input type="search" name="user_id" class="contacts search-subs z-2" placeholder="Add followers...">
+                    <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id)+"?type=daily", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
+                        <input type="search" name="user_id" class="contacts search-daily-subs z-2" placeholder="Add followers...">
                         <%= submit_tag "Add subscriber", class: "hide-submit-button" %>
                     <%end%>
                 </div>
             </div>
             <dl class="no-display">
-                <dd class="project-people subs">
+                <dd class="project-people daily-subs">
                     <% @daily_subscribers.each do |ps| %>
-                        <%= render 'project_subscribers/subscriber', ps: ps %>
+                        <%= render 'project_subscribers/subscriber', ps: ps, type: "daily" %>
                     <% end %>
                 </dd>
             </dl>
@@ -229,8 +229,8 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="ps-length"><%= @weekly_subscribers.length %></span> Weekly Followers</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this project every week."></i>
+                    <strong><span id="ps-weekly-subs"><%= @weekly_subscribers.length %></span> Weekly Followers</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this stream every week."></i>
                 </div>
             </div>
             <div class="row">
@@ -238,16 +238,16 @@
                     <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
                 </div>
                 <div class="col-sm-9 project-team-title">
-                    <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id), :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                        <input type="search" name="user_id" class="contacts search-subs" placeholder="Add followers...">
+                    <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id)+"?type=weekly", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
+                        <input type="search" name="user_id" class="contacts search-weekly-subs" placeholder="Add followers...">
                         <%= submit_tag "Add subscriber", class: "hide-submit-button" %>
                     <%end%>
                 </div>
             </div>
             <dl class="no-display">
-                <dd class="project-people subs">
+                <dd class="project-people weekly-subs">
                     <% @weekly_subscribers.each do |ps| %>
-                        <%= render 'project_subscribers/subscriber', ps: ps %>
+                        <%= render 'project_subscribers/subscriber', ps: ps, type: "weekly"  %>
                     <% end %>
                 </dd>
             </dl>
@@ -337,7 +337,7 @@
     });
 
 
-    /* Toggle Show Project Subs */
+    /* Toggle Show Stream Subs */
     $('.toggle-open').click( function () {
         $(this).find(".toggle-icon").toggleClass("fa-caret-right fa-caret-down");
         $(this).next().next().toggle(400);

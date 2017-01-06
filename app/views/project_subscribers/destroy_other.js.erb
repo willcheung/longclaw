@@ -1,8 +1,13 @@
-$('.<%= @project_subscriber.id.to_s + @project_subscriber.user_id %>').fadeOut(400, function(){
-    $('.<%= @project_subscriber.id.to_s + @project_subscriber.user_id %>').remove();
-    // Get current ps-length, transform to number and decrement
-    $('#ps-length').text(Number($('#ps-length').text()) - 1);
-});
+console.log('destroy_other: <%= params[:type] %>');
+// Use :type param ("daily" or "weekly") to modify jQuery selectors, id's, path's etc.
+$('.<%= params[:type] %>-<%= @project_subscriber.id.to_s + @project_subscriber.user_id %>').fadeOut(400, function(){
+      $('.<%= @project_subscriber.id.to_s + @project_subscriber.user_id %>').remove();
+  });
+// Get current ps-length, transform to number and decrement
+$('#ps-<%= params[:type] %>-subs').text(Number($('#ps-<%= params[:type] %>-subs').text()) - 1);
+
+// Stream projects#show page: update unfollow -> follow button
 <% if @self_unsubscribe %>
-$('#follow-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}" %>');
+  $('#project-show-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow #{params[:type]}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-show-follow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>');
+  $("#project-show-follow-daily-<%= @project.id %>").addClass("m-l-md");
 <% end %>
