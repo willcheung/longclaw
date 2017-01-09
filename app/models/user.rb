@@ -286,6 +286,7 @@ class User < ActiveRecord::Base
         FROM activities,
         LATERAL jsonb_array_elements(email_messages) messages
         WHERE category='Conversation'
+        AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
         AND project_id IN
           (
             SELECT id AS project_id

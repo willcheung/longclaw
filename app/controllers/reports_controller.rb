@@ -136,8 +136,6 @@ class ReportsController < ApplicationController
     end
     @team_usage_report.sort_by!{ |a| a.outbound }
 
-
-
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
     user_num_activities = User.count_activities_by_user_flex([@account.account.id], current_user.organization.domain)
