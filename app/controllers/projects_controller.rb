@@ -215,7 +215,7 @@ class ProjectsController < ApplicationController
           #format.json { render json: @project.errors, status: :unprocessable_entity }
         end
       end
-    else params[:commit] == 'Custom Stream'
+    else params[:commit] == 'Create Empty Stream'
       @project.project_members.new(user: current_user)
       @project.subscribers.new(user: current_user)
       respond_to do |format|
