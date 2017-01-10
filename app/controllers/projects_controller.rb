@@ -192,15 +192,16 @@ class ProjectsController < ApplicationController
                                                 created_by: current_user.id,
                                                 updated_by: current_user.id
                                                 ))
+    @project.project_members.new(user: current_user)
+    @project.subscribers.new(user: current_user)
 
     if params[:commit] == 'Create Stream'
       members = @project.account.contacts
       members.each do |input|
         new_member = @project.project_members.new(contact: input)
       end
-
-      @project.project_members.new(user: current_user)
-      @project.subscribers.new(user: current_user)
+      # @project.project_members.new(user: current_user)
+      # @project.subscribers.new(user: current_user)
       respond_to do |format|
         if @project.save
           #Big First Refresh, potentially won't need big refresh in the refresh method above
@@ -216,8 +217,9 @@ class ProjectsController < ApplicationController
         end
       end
     else params[:commit] == 'Create Empty Stream'
-      @project.project_members.new(user: current_user)
-      @project.subscribers.new(user: current_user)
+      #       @project.project_members.new(user: current_user)
+      # @project.subscribers.new(user: current_user)
+
       respond_to do |format|
         if @project.save
           format.html { redirect_to @project, notice: 'Project was successfully created.' }

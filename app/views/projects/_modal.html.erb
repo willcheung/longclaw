@@ -24,10 +24,10 @@
                 <% if modal_id == 'edit_project_modal' %>
                     <%= f.submit 'Update Stream', class: 'btn btn-primary pull-left form-group' %>
                     <%= link_to "Delete stream", @project, method: :delete, data: {confirm: "All conversations and notes in this Stream will be deleted! Are you sure?"} %>
-                <% else %>
-                  <%= f.submit 'Create Stream', class: 'btn btn-primary pull-left form-group' %>
-                  <%= f.submit 'Create Empty Stream', class: 'btn ' %>
-                <% end %>
+                <% else %>  
+                   <%= f.submit 'Create Stream', class: 'btn btn-primary pull-left form-group' %>
+                  <%= f.submit 'Create Empty Stream', class: 'btn btn-secondary pull-left' %>
+                <% end %>   
               </div>
         <% end %>
     </div>
