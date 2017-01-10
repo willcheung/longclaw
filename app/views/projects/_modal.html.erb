@@ -20,9 +20,13 @@
             </div>
 
               <div class="modal-footer">
-                <%= f.button :submit, class: 'btn-primary pull-left form-group' %>
+                
                 <% if modal_id == 'edit_project_modal' %>
+                    <%= f.submit 'Update Stream', class: 'btn-primary pull-left form-group' %>
                     <%= link_to "Delete stream", @project, method: :delete, data: {confirm: "All conversations and notes in this Stream will be deleted! Are you sure?"} %>
+                <% else %>
+                  <%= f.submit 'Create Stream', class: 'btn-primary pull-left form-group' %>
+                  <%= f.submit 'Custom Stream' %>
                 <% end %>
               </div>
         <% end %>
