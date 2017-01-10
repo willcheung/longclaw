@@ -1,5 +1,7 @@
   <%# Added Bootstrap classes, and help-block container for error messages %>  
-  <span class="help-block" style="color:red"></span>
+
+  <span class="help-block" style="color:red"></span> 
+
   <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
   <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: Project::CATEGORY, selected: Project::CATEGORY%>
   <% if @account.blank? %>
@@ -7,6 +9,7 @@
   <% else %>
     <%= f.input :account_id, as: :hidden, value: @account.id %>
   <% end %>
+
   
   <div class="col-md-4">
     <label class="select optional control-label" for="project_account_id">Open Collaboration &nbsp;&nbsp;<i data-toggle="tooltip" data-placement="top" title="" data-original-title="When enabled, everyone in your organization can view and collaborate." class="fa fa-question-circle"></i></label>
