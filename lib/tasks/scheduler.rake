@@ -1,37 +1,35 @@
 desc "Heroku scheduler tasks for periodically retrieving latest emails"
 namespace :projects do
-	
-	desc 'Retrieve latest 300 emails for all projects in all organization'
-	task load_emails: :environment do
-    puts "\n\n=====Task (load_emails) started at #{Time.now}====="
+    
+  desc 'Retrieve latest 300 emails for all projects in all organization'
+  task load_emails: :environment do
+	  puts "\n\n=====Task (load_emails) started at #{Time.now}====="
 
-    Organization.all.each do |org|
-    	org.accounts.each do |acc| 
+	  Organization.all.each do |org|
+	  	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
 	    		puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_emails_from_backend(proj, nil, 300)
+	    		ContextsmithService.load_emails_from_backend(proj, 300)
 	    		sleep(1)
 	    	end
 	    end
-    end
+	  end
 	end
 
-	desc 'Retrieve latest emails since yesterday for all projects in all organization'
-	task load_emails_since_yesterday: :environment do
+  desc 'Retrieve latest emails since yesterday for all projects in all organization'
+  task load_emails_since_yesterday: :environment do
     if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
     	puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
-	    after = Time.now.to_i - 86400
 
 	    Organization.all.each do |org|
 	    	org.accounts.each do |acc| 
 		    	acc.projects.each do |proj|
 		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-		    		ContextsmithService.load_emails_from_backend(proj, nil, 100)
+		    		ContextsmithService.load_emails_from_backend(proj)
 		    		sleep(1)
 		    	end
 		    end
 	    end
-
 	  end
 	end
 
@@ -43,30 +41,27 @@ namespace :projects do
     	org.accounts.each do |acc| 
 	    	acc.projects.each do |proj|
 	    		puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-	    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 150.days.ago.to_i, 300)
-	    		# 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
+	    		ContextsmithService.load_calendar_from_backend(proj, 300)
 	    		sleep(1)
 	    	end
 	    end
     end
-	end
+  end
 
-	desc 'Retrieve latest calendar events since yesterday for all projects in all organization'
-	task load_events_since_yesterday: :environment do
+  desc 'Retrieve latest calendar events since yesterday for all projects in all organization'
+  task load_events_since_yesterday: :environment do
     if [3,9,15,21].include?(Time.now.hour) # Runs once every 6 hours
     	puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
-	    after = Time.now.to_i - 86400
 
 	    Organization.all.each do |org|
 	    	org.accounts.each do |acc| 
 		    	acc.projects.each do |proj|
 		    		puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-		    		ContextsmithService.load_calendar_from_backend(proj, Time.current.to_i, 1.day.ago.to_i)
+		    		ContextsmithService.load_calendar_from_backend(proj, 100, 1.day.ago.to_i)
 		    		sleep(1)
 		    	end
 		    end
 	    end
-
 	  end
 	end
 
@@ -88,13 +83,12 @@ namespace :projects do
 		end
 	end
 
-	desc 'Get weekly last touch opportunities'
-	task last_touch_weekly: :environment do
-		puts "\n\n=====Task (last_touch_weekly) started at #{Time.now}====="
-
-		if Time.now.sunday?
-    	Notification.load_opportunity_for_stale_projects
-    end
+	desc 'Generate Days Inactive alerts'
+	task alert_for_days_inactive: :environment do
+		puts "\n\n=====Task (alert_for_days_inactive) started at #{Time.now}====="
+		Organization.all.each do |org|
+			Notification.load_alert_for_days_inactive(org)
+		end
 	end
 
 	desc 'Email weekly task summary on Sundays'

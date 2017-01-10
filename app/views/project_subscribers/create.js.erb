@@ -1,6 +1,10 @@
-if (window.location.pathname === '/projects') {
-  $('#follow-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}" %>');
-}
-else {
-  $('#follow-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>');
-}
+console.log('create: <%= params[:type] %>');
+// Use :type param ("daily" or "weekly") to modify jQuery selectors, id's, path's etc.
+$('#project-index-follow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-check\"></i> Following #{params[:type]}".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id) + "?type=#{params[:type]}", remote: true, method: :delete, id: "project-index-unfollow-#{params[:type]}-#{@project.id}", class: "block" %>');
+$('#project-show-follow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-check\"></i> Following #{params[:type]}".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id) + "?type=#{params[:type]}", remote: true, method: :delete, id: "project-show-unfollow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>');
+$("#project-show-unfollow-daily-<%= @project.id %>").addClass("m-l-md");
+
+// Stream projects#show page: update follower/sub count and list
+$('.project-people.<%= params[:type] %>-subs').append('<%=    escape_javascript(render "project_subscribers/subscriber", ps: @project_subscriber, type: "#{params[:type]}")
+	%>')
+$("#ps-<%= params[:type] %>-subs").text(Number($('#ps-<%= params[:type] %>-subs').text()) + 1);

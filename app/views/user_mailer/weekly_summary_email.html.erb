@@ -1,5 +1,13 @@
+<!-- DYNAMIC CONSTANTS -->
+<% @LARGE_CIRCLE_STYLE = "width: 40px; height: 40px; border-radius: 50%; border: 1px solid #737373; opacity: 0.8; " %>
+<% @RAG_CIRCLE1_STYLE  = "background-color:#ED5565; " %>
+<% @RAG_CIRCLE2_STYLE  = "background-color:#FFA500; " %>
+<% @RAG_CIRCLE3_STYLE  = "background-color:#A1C436; " %>
+<% @RAG_NAME_TEXT1  = "Red" %>
+<% @RAG_NAME_TEXT2  = "Amber" %>
+<% @RAG_NAME_TEXT3  = "Green" %>
 
-  <!-- Header -->
+<!-- Header -->
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
   <tr>
   <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
@@ -22,6 +30,7 @@
 <% if @projects_with_tasks.empty? %>
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">No task activity this week</h2>
 <% else %>
+
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You have task activity in <%= pluralize(@projects_with_tasks.length, 'project') %>:</h2>
 
   <% @projects_with_tasks.each do |p| %>
@@ -32,9 +41,26 @@
   <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px;background-color:#ffffff;vertical-align:top;">
     <tbody>
       <tr>
-        <td style="padding-bottom:5px;">
-          <a href="<%= project_url(p) + '/tasks' %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
-          <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
+        <td style="padding-bottom: 5px;">
+          <div style="display: inline-block; padding-top: 19px; height: 100%;">
+            <a href="<%= project_url(p) + '/tasks' %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
+            <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
+          </div>
+          <% case Project.current_rag_score([p.id])[p.id] %>
+            <% when 1 %>
+              <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE1_STYLE %>
+              <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT1 %>
+            <% when 2 %>
+              <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE2_STYLE %>
+              <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT2 %>
+            <% when 3 %>
+              <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE1_STYLE %>
+              <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT1 %>
+            <% else %>
+              <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE %>
+              <% @RAG_NAME_TEXT =  "None" %>
+          <% end %>
+          <div style="display: inline-block; float: right; vertical-align: bottom; <%= @RAG_CIRCLE_STYLE %>" title="<%= @RAG_NAME_TEXT %>"></div>
         </td>
       </tr>
       <tr>

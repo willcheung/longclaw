@@ -55,8 +55,7 @@
                                 <span class="message-date"><%= Time.zone.at(m.sentDate).strftime("%b %d") %></span>
                                 <hr class="message-divider"/>
                                 <span class="message-content">
-                                    <!-- some emails don't even have content -->
-                                    <%= smart_email_body(m) %>
+                                    <%= smart_email_body(m, @users_reverse.present?) %>
                                 </span>
                             </div>
                         </div>

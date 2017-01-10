@@ -30,14 +30,13 @@ class ProjectsController < ApplicationController
     end
 
     # all projects and their accounts, sorted by account name alphabetically
-    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group_by{|e| e.account}.sort_by{|account| account[0].name}
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins(:activities, "LEFT JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
     
     unless projects.empty?  #@projects.empty  should be that?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
       @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
-      @sentiment_scores = Project.current_risk_score(projects.map(&:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
       @rag_status = Project.current_rag_score(projects.map(&:id))
     end
@@ -77,7 +76,7 @@ class ProjectsController < ApplicationController
   end
 
   def insights_tab
-    @risk_score_trend = Project.find_min_risk_score_by_day([params[:id]], current_user.time_zone)
+    @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
@@ -159,12 +158,12 @@ class ProjectsController < ApplicationController
   def refresh
     # big refresh when no activities (normally a new stream), small refresh otherwise
     if @project.activities.count == 0
-      ContextsmithService.load_emails_from_backend(@project, nil, 2000)
-      ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000)
+      ContextsmithService.load_emails_from_backend(@project, 2000)
+      ContextsmithService.load_calendar_from_backend(@project, 1000)
       # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
     else
-      ContextsmithService.load_emails_from_backend(@project, nil, 100)
-      ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 1.day.ago.to_i, 100)
+      ContextsmithService.load_emails_from_backend(@project)
+      ContextsmithService.load_calendar_from_backend(@project, 100, 1.day.ago.to_i)
     end
     redirect_to :back
   end
@@ -280,7 +279,6 @@ class ProjectsController < ApplicationController
   def get_show_data
     # metrics
     @project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_sentiment_score = @project.current_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
     @project_pinned_count = @project.activities.pinned.count
     @project_open_tasks_count = @project.notifications.open.count
@@ -297,8 +295,11 @@ class ProjectsController < ApplicationController
 
     # project people
     @project_members = @project.project_members
-    @project_subscribers = @project.subscribers
+    project_subscribers = @project.subscribers
+    @daily_subscribers = project_subscribers.daily
+    @weekly_subscribers = project_subscribers.weekly
     @suggested_members = @project.project_members_all.pending
+    @user_subscription = project_subscribers.where(user: current_user).take
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)

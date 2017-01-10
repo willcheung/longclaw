@@ -36,16 +36,6 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: r[1], color: color })
       end
       @average = (total_risk_scores.to_f/risk_scores.length).round(1)
-    when "Negative Sentiment Score"
-      sentiment_scores = Project.current_risk_score(projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse
-      total_sentiment_scores = 0
-      @data = sentiment_scores.map do |r|
-        proj = projects.find { |p| p.id == r[0] }
-        total_sentiment_scores += r[1]
-        color = r[1] >= 80 ? 'highRisk' : r[1] >= 60 ? 'mediumRisk' : 'lowRisk'
-        Hashie::Mash.new({ id: proj.id, name: proj.name, y: r[1], color: color })
-      end
-      @average = (total_sentiment_scores.to_f/sentiment_scores.length).round(1)
     when "Days Inactive"
       last_sent_dates = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
       @data = last_sent_dates.map do |d|
@@ -113,7 +103,28 @@ class ReportsController < ApplicationController
         @risk_activity_engagement.push(a/b.to_f * 100)
       end
     end
-
+     #TODO: Query for usage_report finds all the read and write times from internal users
+    # Calculates the RPM(read per min) and WPM(write per min)
+    user_usage_activities = User.usage_report_by_user([@account.account.id])
+    @team_usage_report = []
+    #average reading rate
+    avg_rpm = 100 # words read per min
+    #average typing rate
+    avg_tpm = 15 #words typed per min 
+    user_usage_activities.each do |u|
+      #Check if internal user
+      if get_domain(u.email) == current_user.organization.domain
+        user = User.find_by_email(u.email)
+        u.email = get_full_name(user)
+        if user
+          y = u
+          y.inbound = u.inbound.to_i / avg_rpm
+          y.outbound = u.outbound.to_i / avg_tpm
+          @team_usage_report << y
+        end
+      end
+    end
+    @team_usage_report.sort_by!{ |a| a.outbound }
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team

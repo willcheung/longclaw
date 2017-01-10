@@ -57,7 +57,7 @@ class User < ActiveRecord::Base
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
   # v2: "_all" version, ignores status
-  has_many    :project_members, -> { where "project_members.status = #{ProjectMember::STATUS[:Confirmed]}" }, dependent: :destroy
+  has_many    :project_members, -> { confirmed }, dependent: :destroy, class_name: 'ProjectMember'
   has_many    :project_members_all, class_name: "ProjectMember", dependent: :destroy
   has_many    :projects, through: "project_members"
   has_many    :projects_all, through: "project_members_all", source: :project
@@ -266,6 +266,61 @@ class User < ActiveRecord::Base
 
     User.find_by_sql(query)
   end
+
+  def self.usage_report_by_user(array_of_account_ids, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    
+    query = <<-SQL
+      -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
+      -- shows the conversation between to and from and content.
+    WITH email_activities AS (
+      SELECT  messages ->> 'messageId'::text AS message_id,
+              jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+              CASE
+                WHEN messages -> 'to' IS NULL THEN NULL
+                ELSE jsonb_array_elements(messages -> 'to') ->> 'address' END AS to,
+              CASE
+               WHEN messages -> 'cc' IS NULL THEN NULL
+               ELSE jsonb_array_elements(messages -> 'cc') ->> 'address' END AS cc,
+              (messages::json ->'content') ->> 'body'  AS body,
+              array_length(regexp_split_to_array((messages::json ->'content') ->> 'body',E'[^\\\\w:!.()?//\\\\,-]+'),1) AS word_count
+        FROM activities,
+        LATERAL jsonb_array_elements(email_messages) messages
+        WHERE category='Conversation'
+        AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+        AND project_id IN
+          (
+            SELECT id AS project_id
+            FROM projects
+            WHERE account_id IN ('#{array_of_account_ids.join("','")}')
+          )
+        GROUP BY 1,2,3,4,5
+        )
+        SELECT sender AS email, t.total_words AS outbound, CAST(t2.total_words as bigint) AS inbound
+        FROM ( 
+          SELECT sender, sum(word_count) as total_words, count(*) as rows_count
+          FROM (  SELECT distinct "from" as sender, message_id, word_count
+                  FROM email_activities
+                  WHERE "from" is not null) as t
+          GROUP BY sender) as t
+        INNER JOIN 
+          (SELECT recipient, sum(total_words) total_words 
+              FROM ( SELECT recipient, sum(word_count) as total_words, count(*) as rows_count
+                      FROM ( SELECT distinct "to" as recipient, message_id, word_count 
+                             FROM email_activities
+                             WHERE "to" is not null) as t1
+                      GROUP BY recipient
+              UNION ALL
+                    SELECT recipient, sum(word_count) as total_words, count(*) as rows_count
+                      FROM ( SELECT distinct "cc" as recipient, message_id, word_count 
+                             FROM email_activities
+                             WHERE "cc" is not null) as t2
+                      GROUP BY recipient) as t
+                GROUP BY recipient
+            ) as t2 ON t.sender = t2.recipient;
+  SQL
+    User.find_by_sql(query)
+  end
+
 
   def is_internal_user?
     true

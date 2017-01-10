@@ -3,59 +3,35 @@ include ERB::Util
 
 class ContextsmithService
 
-  def self.load_emails_from_backend(project, after=nil, max=100, query=nil, save_in_db=true, is_time=true, is_test=false, neg_sentiment=0, request=true)
+  def self.load_emails_from_backend(project, max=100, query=nil, save_in_db=true, after=nil, is_time=true, neg_sentiment=0, request=true, is_test=false)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/search"
-
-    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
-    token_emails = get_token_emails(project)
-    return [] if token_emails.empty?
-
-    ex_clusters = project.contacts.map(&:email)
-    final_cluster = format_ex_clusters(ex_clusters)
 
     after = after.nil? ? "" : ("&after=" + after.to_s)
     query = query.nil? ? "" : ("&query=" + url_encode(query.to_s))
     is_time = is_time.nil? ? "" : ("&time=" + is_time.to_s)
     request = request.nil? ? "": ("&request=" + request.to_s)
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
+    params = "&max=" + max.to_s + after + query + is_time + neg_sentiment + request
 
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + after + query + is_time + neg_sentiment + request
-    puts "Calling backend service: " + final_url
-
-    request_backend_service(final_url, project, save_in_db, "conversations", is_test)
+    load_from_backend(project, base_url, params) do |data|
+      puts "Found #{data[0]['conversations'].size} conversations!\n"
+      Contact.load(data, project, save_in_db)
+      # always load activity before notification
+      result = Activity.load(data, project, save_in_db)
+      Notification.load(data, project, is_test)
+      result
+    end
   end
-
-
-  def self.load_calendar_from_backend(project, before, after, max=100, save_in_db=true)
+  
+  # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
+  def self.load_calendar_from_backend(project, max=100, after=150.days.ago.to_i, before=Time.current.to_i, save_in_db=true)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
-
-    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
-    token_emails = get_token_emails(project)
-    return [] if token_emails.empty?
-    ###
-    # TESTING USING REAL TOKENS DUE TO PERMISSIONS
-    ###
-    # if Rails.env.development?
-    #   u = User.find_by_email("indifferenzetester@gmail.com")
-    #   success = true
-    #   if u.token_expired?
-    #     success = u.refresh_token!
-    #   end
-    #   token_emails = []
-    #   token_emails << { token: u.oauth_access_token, email: u.email } if success
-    #   return [] if token_emails.empty?
-    # end
-    ###
-    # TESTING USING ANY EMAIL OTHER THAN TEST ACCOUNT EMAIL FOR EXTERNAL CLUSTER
-    ###
-    # ex_clusters = (project.users + project.contacts).select { |c| c.email != 'indifferenzetester@gmail.com' }.map(&:email)
-    ex_clusters = project.contacts.map(&:email)
-    final_cluster = format_ex_clusters(ex_clusters)
-
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&max=" + max.to_s + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + "&before=" + before.to_s + "&after=" + after.to_s
-    puts "Calling backend service: " + final_url
-
-    request_backend_service(final_url, project, save_in_db, "events")
+    params =  "&max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
+    
+    load_from_backend(project, base_url, params) do |data| 
+      puts "Found #{data[0]['conversations'].size} calendar events!\n"
+      Activity.load_calendar(data, project, save_in_db)
+    end
   end
 
   def self.get_emails_from_backend_with_callback(user)
@@ -91,30 +67,26 @@ class ContextsmithService
 
   private
 
-  def self.get_token_emails(project)
+  def self.load_from_backend(project, base_url, params)
+    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
+
     token_emails = []
-    if Rails.env.production? || Rails.env.test?
+    if Rails.env.development?
+      token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
+    else
       project.users.registered.not_disabled.each do |u|
         success = true
-        if u.token_expired?
-          success = u.refresh_token!
-        end
+        success = u.refresh_token! if u.token_expired?
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
-    else
-      # u = User.find_by_email('indifferenzetester@gmail.com')
-      token_emails << { token: "test", email: 'indifferenzetester@gmail.com'}
     end
-    token_emails
-  end
+    return [] if token_emails.empty?
 
-  # change ex_clusters to abc|def@domain.com format
-  def self.format_ex_clusters(ex_clusters)
-    new_ex_clusters = Hash.new()
+    ex_clusters = project.contacts.pluck(:email)
+    
+    new_ex_clusters = Hash.new { |h,k| h[k] = [] }
     ex_clusters.each do |e|
       result = e.split('@')
-      # avoid ruby 2.2.3 hash bug
-      new_ex_clusters[result[1]] = [] unless new_ex_clusters.has_key?(result[1])
       new_ex_clusters[result[1]] << result[0]
     end
 
@@ -122,12 +94,12 @@ class ContextsmithService
     new_ex_clusters.each do |key, value|
       final_cluster.push(value.join('|') + "@"+ key)
     end
-    final_cluster
-  end
+       
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + params
+    puts "Calling backend service: " + final_url
 
-  def self.request_backend_service(url, project, save_in_db, type, is_test=false)
     begin
-      url = URI.parse(url)
+      url = URI.parse(final_url)
       req = Net::HTTP::Get.new(url.to_s)
       res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
       data = JSON.parse(res.body.to_s)
@@ -140,17 +112,7 @@ class ContextsmithService
       puts "No data or nil returned!\n"
       return []
     elsif data.kind_of?(Array)
-      puts "Found #{data[0]['conversations'].size} #{type}!\n"
-      if type == "conversations"
-        Contact.load(data, project, save_in_db)
-        # always load activity before notification
-        result = Activity.load(data, project, save_in_db)
-        # Activity.load(data, project, save_in_db)
-        Notification.load(data, project, is_test)
-        return result
-      elsif type == "events"
-        return Activity.load_calendar(data, project, save_in_db)
-      end
+      yield data
     elsif data['code'] == 401
       puts "Error: #{data['message']}\n"
       return []

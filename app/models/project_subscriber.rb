@@ -20,5 +20,8 @@ class ProjectSubscriber < ActiveRecord::Base
 	belongs_to :project
 	belongs_to :user
 
+  scope :daily, -> { where daily: true }
+  scope :weekly, -> { where weekly: true }
+
 	validates :project_id, uniqueness: {:scope => [:user_id]}
 end

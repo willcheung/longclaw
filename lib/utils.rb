@@ -122,4 +122,9 @@ module Utils
 		(a & b).size
 	end
 
+  def scale_sentiment_score(score)
+    score = (((-score - 0.75) * 4) * 100).floor
+    score < 0.0 ? 0 : score
+  end
+
 end
