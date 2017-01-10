@@ -18,9 +18,7 @@
                 <%= render 'projects/form', f: f, modal_id: modal_id %>
               </div>
             </div>
-
-              <div class="modal-footer">
-                
+              <div class="modal-footer">            
                 <% if modal_id == 'edit_project_modal' %>
                     <%= f.submit 'Update Stream', class: 'btn btn-primary pull-left form-group' %>
                     <%= link_to "Delete stream", @project, method: :delete, data: {confirm: "All conversations and notes in this Stream will be deleted! Are you sure?"} %>

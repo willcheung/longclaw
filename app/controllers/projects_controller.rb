@@ -195,16 +195,14 @@ class ProjectsController < ApplicationController
     @project.project_members.new(user: current_user)
     @project.subscribers.new(user: current_user)
 
-
-   
       respond_to do |format|
-
         if params[:commit] == 'Create Stream' 
           members = @project.account.contacts
             members.each do |input|
               new_member = @project.project_members.new(contact: input)
             end
           if @project.save
+
             #Big First Refresh, potentially won't need big refresh in the refresh method above
             ContextsmithService.load_emails_from_backend(@project, nil, 2000)
             ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000)
@@ -223,6 +221,7 @@ class ProjectsController < ApplicationController
           format.js
           #format.json { render action: 'show', status: :created, location: @project 
           else
+            puts "Fail project saved"
             format.html { render action: 'new' }
             format.js { render json: @project.errors, status: :unprocessable_entity }
             #format.json { render json: @project.errors, status: :unprocessable_entity }
