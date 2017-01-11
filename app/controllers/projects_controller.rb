@@ -212,7 +212,7 @@ class ProjectsController < ApplicationController
             format.js { render json: @project.errors, status: :unprocessable_entity }
             #format.json { render json: @project.errors, status: :unprocessable_entity }
           end
-        else params[:commit] == 'Create Emptry Stream'
+        else params[:commit] == 'Custom Stream'
           if @project.save
             format.html { redirect_to @project, notice: 'Project was successfully created.' }
             format.js

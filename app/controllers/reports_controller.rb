@@ -105,7 +105,7 @@ class ReportsController < ApplicationController
     end
      #TODO: Query for usage_report finds all the read and write times from internal users
     # Calculates the RPM(read per min) and WPM(write per min)
-    user_usage_activities = User.usage_report_by_user([@account.account.id])
+    user_usage_activities = User.usage_report_by_user([@account.account.id], current_user.organization.domain)
     @team_usage_report = []
     #average reading rate
     avg_rpm = 100 # words read per min
@@ -113,16 +113,16 @@ class ReportsController < ApplicationController
     avg_tpm = 15 #words typed per min 
     user_usage_activities.each do |u|
       #Check if internal user
-      if get_domain(u.email) == current_user.organization.domain
+      puts "#{u.email}////#{u.inbound}////#{u.outbound}"
         user = User.find_by_email(u.email)
         u.email = get_full_name(user)
         if user
           y = u
           y.inbound = u.inbound.to_i / avg_rpm
           y.outbound = u.outbound.to_i / avg_tpm
+          puts "#{y.inbound}////#{y.outbound}"
           @team_usage_report << y
         end
-      end
     end
     @team_usage_report.sort_by!{ |a| a.outbound }
 
