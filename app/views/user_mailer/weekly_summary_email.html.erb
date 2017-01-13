@@ -1,8 +1,8 @@
-<!-- DYNAMIC CONSTANTS for CSS styles -->
-<% @LARGE_CIRCLE_STYLE = "width: 40px; height: 40px; border-radius: 50%; border: 1px solid #737373; opacity: 0.8; " %>
-<% @RAG_CIRCLE1_STYLE  = "background-color:#ED5565; " %>
-<% @RAG_CIRCLE2_STYLE  = "background-color:#FFA500; " %>
-<% @RAG_CIRCLE3_STYLE  = "background-color:#A1C436; " %>
+<!-- DYNAMIC "CONSTANTS" for CSS styles -->
+<% @RAG_STATUS_CIRCLE_STYLE = "width: 40px; height: 40px; border-radius: 50%; border: 1px solid #737373; opacity: 0.8; " %>
+<% @RAG_RED_CIRCLE_STYLE  = "background-color:#ED5565; " %>
+<% @RAG_AMBER_CIRCLE_STYLE  = "background-color:#FFA500; " %>
+<% @RAG_GREEN_CIRCLE_STYLE  = "background-color:#A1C436; " %>
 
 <!-- Header -->
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
@@ -110,20 +110,20 @@
             </div>
             <% case Project.current_rag_score([p.id])[p.id] %>
               <% when 1 %>
-                <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE1_STYLE %>
-                <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT1 %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_RED_CIRCLE_STYLE %>
+                <% @RAG_Status = Project::RAGSTATUS[:Red] %>
               <% when 2 %>
-                <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE2_STYLE %>
-                <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT2 %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_AMBER_CIRCLE_STYLE %>
+                <% @RAG_Status =  Project::RAGSTATUS[:Amber] %>
               <% when 3 %>
-                <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE3_STYLE %>
-                <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT3 %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_GREEN_CIRCLE_STYLE %>
+                <% @RAG_Status =  Project::RAGSTATUS[:Green] %>
               <% else %>
-                <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE %>
-                <% @RAG_NAME_TEXT =  "None" %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE %>
+                <% @RAG_Status =  "None" %>
             <% end %>
             <div style="float:right;color:#FFF">.</div> <!-- to fix Chrome bug on RAG circle-->
-            <div style="display:inline-block;float:right;margin-right:2px; <%= @RAG_CIRCLE_STYLE %>" title="Status: <%= @RAG_NAME_TEXT %>"></div>
+            <div style="display:inline-block;float:right;margin-right:2px; <%= @RAG_CIRCLE_STYLE %>" title="Status: <%= @RAG_Status %>"></div>
           </td>
         </tr>
         <tr>

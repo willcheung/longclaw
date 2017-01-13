@@ -38,13 +38,6 @@ class UserMailer < ApplicationMailer
   end
 
   def weekly_summary_email(user)
-    #constants used in weekly_summary_email.html.erb partial
-    @RAG_NAME_TEXT1 = "Red" 
-    @RAG_NAME_TEXT2 = "Amber"
-    @RAG_NAME_TEXT3 = "Green"
-    @HIGH_RISK_THRESHOLD = 80    #temp; to be set from user settings in future 
-    @MEDIUM_RISK_THRESHOLD = 60  #temp; "     "
-
     open_or_recently_closed = "notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
     
     @subs = user.subscriptions.weekly
