@@ -227,10 +227,11 @@
         <tbody style="width:100%;display:table;">
         <% p.activities.from_lastweek.each do |a| %>
           <tr>
+          <% activity_date = Time.at(a.last_sent_date).strftime("%b %-d, %Y %I:%M%p %Z") %>
           <% if a.category == Activity::CATEGORY[:Note] %>
           <!-- Notes -->
             <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-              <img src="<%= root_url %>/assets/images/icons/note_icon.png" title="Note" alt="Note">
+              <img src="<%= root_url %>/assets/images/icons/note_icon.png" title="Note sent <%= activity_date %>">
             </td>
             <td style="min-width:400px;">
               <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
