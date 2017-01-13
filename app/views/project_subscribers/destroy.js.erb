@@ -1,7 +1,7 @@
 console.log('destroy: <%= params[:type] %>');
 // Use :type param ("daily" or "weekly") to modify jQuery selectors, id's, path's etc.
-$('#project-index-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow #{params[:type]}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-index-follow-#{params[:type]}-#{@project.id}", class: "block" %>');
-$('#project-show-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow #{params[:type]}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-show-follow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>');
+$('#project-index-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i>&nbsp;#{params[:type].titleize}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-index-follow-#{params[:type]}-#{@project.id}", class: "block m-b-xs", title: "Follow #{params[:type]}" %>');
+$('#project-show-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow #{params[:type]}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-show-follow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm", title: "Follow #{params[:type]}" %>');
 $("#project-show-follow-daily-<%= @project.id %>").addClass("m-l-md");
 
 // Stream projects#show page: update follower/sub count and list

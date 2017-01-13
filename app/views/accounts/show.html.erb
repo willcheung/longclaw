@@ -1,156 +1,149 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-	<div class="col-lg-8">
-		<h2><%= @account.name %>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#edit_account_modal" data-toggle="modal" class="btn btn-white btn-xs">Edit Account</a></h2>
-		<ol class="breadcrumb">
-			<li>
-				<a href="<%= root_path %>">Home</a>
-			</li>
-			<li>
-				<a href="<%= accounts_path %>">Accounts</a>
-			</li>
-			<li class="active">
-				<strong><%= @account.name %></strong>
-			</li>
-		</ol>
-	</div>
-  <div class="col-lg-2">
-      <%= link_to '+ New Project', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
-  </div>
-	<div class="col-lg-2">
-		<%= link_to '+ New Contact', '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
-	</div>
+    <div class="col-lg-8">
+        <h2><%= @account.name %>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#edit_account_modal" data-toggle="modal" class="btn btn-white btn-xs">Edit Account</a></h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= accounts_path %>">Accounts</a>
+            </li>
+            <li class="active">
+                <strong><%= @account.name %></strong>
+            </li>
+        </ol>
+    </div>
+    <div class="col-lg-2">
+        <%= link_to '+ New Stream', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+    </div>
+    <div class="col-lg-2">
+        <%= link_to '+ New Contact', '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+    </div>
 </div>
 
 <div class="row">
-	<div class="col-lg-9">
-		<div class="wrapper wrapper-content animated fadeInUp">
-			<div class="ibox">
-				<div class="ibox-content">
-					<div class="m-lg m-t-xs">
-						 <h4><strong>Active Streams</strong></h4>
-						 	<div class="row">
-							 	<div class="col-md-12">
-				          		<ul class="todo-list medium-list m-t">
-					          		<% unless @active_projects.blank? %>
-							        	<% @active_projects.each do |p| %>
-							              	<li>
-							              		<div class="col-lg-6"><h4><a href="<%= project_path(p) %>"><%= p.name %></a> <% if !p.is_public %> &nbsp;<span class="label label-warning">Private</span><% end %></h4></div>
-							              		<div class="col-lg-2"><small><p class="text-center">Last Activity</p> <p class="text-center"><strong><%= @project_last_email_date[p.id].nil? ? "N/A" : time_ago_in_words(@project_last_email_date[p.id]) %></strong></p></small></div>
-							              		<div class="col-lg-2"><small><p class="text-center">Last 7d</p><p class="text-center"> <strong><%= @project_activities_count_last_7d[p.id] ? @project_activities_count_last_7d[p.id].to_s : "0" %></strong> activities</p></small></div>
-							              		<div class="col-lg-2"><small><p class="text-center">Key Activities</p> <p class="text-center"><strong><%= @project_pinned[p.id] ? @project_pinned[p.id] : "0" %></strong></p></small></div>
-		                            <div style="clear:both"></div>
-							              	</li>
-							             <% end %>
-							        <% else %>
-							        	<p class="m-t-md">No active Streams.</p>
-							        <% end %>
-					          	</ul>
-				          	</div>
-		          		</div>
-					</div>
+    <div class="col-lg-9">
+        <div class="wrapper wrapper-content animated fadeInUp">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <div class="m-lg m-t-xs">
+                         <h4><strong>Active Streams</strong></h4>
+                            <div class="row">
+                                <div class="col-md-12">
+                                <ul class="todo-list medium-list m-t">
+                                    <% unless @active_projects.blank? %>
+                                        <% @active_projects.each do |p| %>
+                                            <li>
+                                                <div class="col-lg-6"><h4><a href="<%= project_path(p) %>"><%= p.name %></a> <% if !p.is_public %> &nbsp;<span class="label label-warning">Private</span><% end %></h4></div>
+                                                <div class="col-lg-2"><small><p class="text-center">Last Activity</p> <p class="text-center"><strong><%= @project_last_email_date[p.id].nil? ? "N/A" : time_ago_in_words(@project_last_email_date[p.id]) %></strong></p></small></div>
+                                                <div class="col-lg-2"><small><p class="text-center">Last 7d</p><p class="text-center"> <strong><%= @project_activities_count_last_7d[p.id] ? @project_activities_count_last_7d[p.id].to_s : "0" %></strong> activities</p></small></div>
+                                                <div class="col-lg-2"><small><p class="text-center">Key Activities</p> <p class="text-center"><strong><%= @project_pinned[p.id] ? @project_pinned[p.id] : "0" %></strong></p></small></div>
+                                    <div style="clear:both"></div>
+                                            </li>
+                                         <% end %>
+                                    <% else %>
+                                        <p class="m-t-md">No active Streams.</p>
+                                    <% end %>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
 
-					<div class="row">
-						<div class="col-lg-12">
-							<div class="panel blank-panel">
-								<div class="panel-heading">
-									<div class="panel-options">
-										<ul class="nav nav-tabs">
-											<li class="active"><a href="#contacts" data-toggle="tab">Contacts</a></li>
-										</ul>
-									</div>
-								</div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="panel blank-panel">
+                                <div class="panel-heading">
+                                    <div class="panel-options">
+                                        <ul class="nav nav-tabs">
+                                            <li class="active"><a href="#contacts" data-toggle="tab">Contacts</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="tab-content">
+                                        <div class="tab-pane active" id="contacts">
+                                            <div class="table-responsive">
+                                                <table class="table table-striped table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>First Name</th>
+                                                            <th>Last Name</th>
+                                                            <th>Title</th>
+                                                            <th></th>
+                                                            <th>Email</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% @account_contacts.each do |contact| %>
+                                                        <tr>
+                                                            <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                                            <td class="contact-type"><i class="fa fa-envelope"> </i></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :email, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-email-activator" %><i id="contact-<%= contact.id %>-email-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                                            <td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, contact, method: :delete, data: {confirm: "About to delete this contact. Are you sure?"} %></td>
+                                                        </tr>
+                                                        <% end %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="wrapper wrapper-content project-manager">
+            <div class="m-t-md">
+                <strong>Account Description:</strong>
+                <i id="acc-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+            </div>
+            <small><%= best_in_place @account, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#acc-desc-activator' %></small>
 
-								<div class="panel-body">
+            <ul class="list-group clear-list m-t-sm">
+                <li class="list-group-item first-item">
+                    <strong>Type:</strong>
+                    <span class="pull-right"><%= best_in_place @account, :category, :as => :select, :collection => Account::CATEGORY, :class => 'btn btn-default btn-sm fa-caret-down' %></span>
+                </li>
+                <li class="list-group-item first-item">
+                    <strong>Account Owner:</strong>
+                    <span class="pull-right"><%= get_full_name(@account.user) %></span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Phone:</strong>
+                    <i id="acc-phone-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+                    <span class="pull-right m-r-xs"><%= best_in_place @account, :phone, :as => 'input', :place_holder => '(none)', :activator => '#acc-phone-activator' %></span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Website:</strong>
+                    <i id="acc-website-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+                    <span class="pull-right m-r-xs"><%= best_in_place @account, :website, :as => 'input', :place_holder => '(none)', :activator => '#acc-website-activator' %></span>
+                </li>
+                <li class="list-group-item m-b-sm">
+                    <strong>Address:</strong>
+                    <i id="acc-address-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+                    <span class="pull-right m-r-xs"><%= best_in_place @account, :address, :as => 'textarea', :place_holder => '(none)', :display_with => :simple_format, :activator => '#acc-address-activator' %> </span>
+                </li>
+                    <li class="list-group-item small m-t-md first-item">
+                        <span class="pull-right"><%= @account.updated_at.to_date.to_formatted_s(:long) %></span>
+                        Last Updated:
+                    </li>
+                    <li class="list-group-item small">
+                        <span class="pull-right"><%= @account.created_at.to_date.to_formatted_s(:long) %></span>
+                        Created:
+                    </li>
+                </ul>
 
-									<div class="tab-content">
+            </div>
+        </div>
+    </div>
 
-										<div class="tab-pane active" id="contacts">
-											<div class="table-responsive">
-												<table class="table table-striped table-hover">
-													<thead>
-														<tr>
-															<th>First Name</th>
-															<th>Last Name</th>
-															<th>Title</th>
-															<th></th>
-															<th>Email</th>
-															<th></th>
-														</tr>
-													</thead>
-													<tbody>
-														<% @account_contacts.each do |contact| %>
-														<tr>
-															<td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-															<td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-															<td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-															<td class="contact-type"><i class="fa fa-envelope"> </i></td>
-															<td class="contact-info"><%= best_in_place contact, :email, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-email-activator" %><i id="contact-<%= contact.id %>-email-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-															<td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, contact, method: :delete, data: {confirm: "About to delete this contact. Are you sure?"} %></td>
-														</tr>
-														<% end %>
-													</tbody>
-												</table>
-											</div>
-
-										</div>
-									</div>
-
-								</div>
-
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="col-lg-3">
-		<div class="wrapper wrapper-content project-manager">
-
-			<div class="m-t-md">
-				<strong>Account Description:</strong>
-				<i id="acc-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
-			</div>
-			<small><%= best_in_place @account, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#acc-desc-activator' %></small>
-
-			<ul class="list-group clear-list m-t-sm">
-				<li class="list-group-item first-item">
-					<strong>Type:</strong>
-					<span class="pull-right"><%= best_in_place @account, :category, :as => :select, :collection => Account::CATEGORY, :class => 'btn btn-default btn-sm fa-caret-down' %></span>
-				</li>
-				<li class="list-group-item first-item">
-					<strong>Account Owner:</strong>
-					<span class="pull-right"><%= get_full_name(@account.user) %></span>
-				</li>
-				<li class="list-group-item">
-					<strong>Phone:</strong>
-					<i id="acc-phone-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
-					<span class="pull-right m-r-xs"><%= best_in_place @account, :phone, :as => 'input', :place_holder => '(none)', :activator => '#acc-phone-activator' %></span>
-				</li>
-				<li class="list-group-item">
-					<strong>Website:</strong>
-					<i id="acc-website-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
-					<span class="pull-right m-r-xs"><%= best_in_place @account, :website, :as => 'input', :place_holder => '(none)', :activator => '#acc-website-activator' %></span>
-				</li>
-				<li class="list-group-item m-b-sm">
-					<strong>Address:</strong>
-					<i id="acc-address-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
-					<span class="pull-right m-r-xs"><%= best_in_place @account, :address, :as => 'textarea', :place_holder => '(none)', :display_with => :simple_format, :activator => '#acc-address-activator' %> </span>
-				</li>
-					<li class="list-group-item small m-t-md first-item">
-						<span class="pull-right"><%= @account.updated_at.to_date.to_formatted_s(:long) %></span>
-						Last Updated:
-					</li>
-					<li class="list-group-item small">
-						<span class="pull-right"><%= @account.created_at.to_date.to_formatted_s(:long) %></span>
-						Created:
-					</li>
-				</ul>
-
-			</div>
-		</div>
-	</div>
-
-	<%= render 'modal', modal_id: 'edit_account_modal' %>
-	<%= render 'contacts/modal', modal_id: 'new_contact_modal' %>
-	<%= render 'projects/modal', modal_id: 'new_project_modal' %>
+    <%= render 'modal', modal_id: 'edit_account_modal' %>
+    <%= render 'contacts/modal', modal_id: 'new_contact_modal' %>
+    <%= render 'projects/modal', modal_id: 'new_project_modal' %>

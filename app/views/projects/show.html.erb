@@ -2,14 +2,14 @@
     <div class="col-lg-6">
         <h2 class="in-bl"><%= @project.name %></h2>
         <% if @user_subscription.present? && @user_subscription.daily %>
-            <%= link_to "<i class=\"fa fa-check\"></i> Following daily".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id)+"?type=daily", remote: true, method: :delete, id: "project-show-unfollow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following daily".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id)+"?type=daily", remote: true, method: :delete, id: "project-show-unfollow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm", title: "Following daily" %>
         <% else %>
-            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow daily".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=daily", remote: true, method: :post, id: "project-show-follow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow daily".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=daily", remote: true, method: :post, id: "project-show-follow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm", title: "Follow daily" %>
         <% end %>
         <% if @user_subscription.present? && @user_subscription.weekly %>
-            <%= link_to "<i class=\"fa fa-check\"></i> Following weekly".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id)+"?type=weekly", remote: true, method: :delete, id: "project-show-unfollow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-check\"></i> Following weekly".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id)+"?type=weekly", remote: true, method: :delete, id: "project-show-unfollow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm", title: "Following weekly" %>
         <% else %>
-            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>
+            <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm", title: "Follow weekly" %>
         <% end %>
         <% if @project.owner_id == current_user.id %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>

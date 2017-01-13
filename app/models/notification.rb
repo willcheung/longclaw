@@ -203,5 +203,4 @@ class Notification < ActiveRecord::Base
   def is_visible_to(user)
     activity.blank? || activity.is_visible_to(user)
   end
-
 end
