@@ -41,11 +41,15 @@
 
         <div id="page-wrapper" class="white-bg">
 
+            <%= link_to "Time Spent", extension_time_spent_path %>
+            <%= link_to "Alerts & Tasks", extension_alerts_tasks_path %>
+            <%= link_to "People", extension_people_path %>
+
             <!-- Main view  -->
             <%= yield %>
 
         </div>
-        
+
     </div>
 
 

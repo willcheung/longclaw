@@ -86,8 +86,10 @@ Longclaw::Application.routes.draw do
     scope "extension", controller: :extension, as: 'extension' do
       get 'test'
       get 'time_spent'
+      get 'alerts_tasks'
+      get 'people'
     end
-    
+
   end
 
   devise_scope :user do # Unauthenticated user

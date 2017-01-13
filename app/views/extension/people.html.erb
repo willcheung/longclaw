@@ -1,0 +1,5 @@
+<dd class="project-people members">
+    <% @project.project_members.each do |pm| %>
+        <%= render 'project_members/member', pm: pm %>
+    <% end %>
+</dd>
