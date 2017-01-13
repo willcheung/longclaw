@@ -41,7 +41,7 @@ class Account < ActiveRecord::Base
     validates :name, presence: true, uniqueness: { scope: :organization, message: "There's already an account with the same name." }
 
     STATUS = %w(Active Inactive Dead)
-    CATEGORY = { Customer: 'Customer', Partner: 'Partner', Prospect: 'Prospect', Vendor: 'Vendor', Other: 'Other' }
+    CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
 
     def self.create_from_clusters(external_members, owner_id, organization_id)
         grouped_external_members = external_members.group_by{ |x| get_domain(x.address) }
