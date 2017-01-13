@@ -52,8 +52,6 @@ Longclaw::Application.routes.draw do
       get "salesforce_activities" 
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
-      get "iframe_test"
-      get "chrome_gmail_plugin"
     end
 
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
@@ -85,6 +83,11 @@ Longclaw::Application.routes.draw do
       get 'account_data/:id' => 'reports#account_data'
     end
 
+    scope "extension", controller: :extension, as: 'extension' do
+      get 'test'
+      get 'time_spent'
+    end
+    
   end
 
   devise_scope :user do # Unauthenticated user

@@ -1,0 +1,3 @@
+<% @project.activities.take(5).each do |a| %>
+  <%= render 'activities/timeline_block', a: a %>
+<% end %>
