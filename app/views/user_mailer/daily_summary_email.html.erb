@@ -85,7 +85,7 @@
 
       <% p.activities.each do |a| %>
         <tr>
-
+        <% activity_date = Time.at(a.last_sent_date).strftime("%b %-d, %Y %I:%M%p %Z") %>
         <% if a.category == Activity::CATEGORY[:Conversation] %>
         <!-- Conversation -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
