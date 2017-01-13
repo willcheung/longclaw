@@ -227,10 +227,11 @@
         <tbody style="width:100%;display:table;">
         <% p.activities.from_lastweek.each do |a| %>
           <tr>
+          <% activity_date = Time.at(a.last_sent_date).strftime("%b %-d, %Y %I:%M%p %Z") %>
           <% if a.category == Activity::CATEGORY[:Note] %>
           <!-- Notes -->
             <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-              <img src="<%= root_url %>/assets/images/icons/note_icon.png" title="Note" alt="Note">
+              <img src="<%= root_url %>/assets/images/icons/note_icon.png" title="Note sent <%= activity_date %>">
             </td>
             <td style="min-width:400px;">
               <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
@@ -338,7 +339,7 @@
     <!-- "See more of this Stream" button -->
     <div style="height:40px;width:100%;margin:6px auto;">
       <span style="width:100%;margin-left:<%=16.5-(p.name.length/4)%>em;">
-        <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 8px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream »</a> 
+        <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 8px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream &rarr;</a> 
       </span>
     </div>
 
