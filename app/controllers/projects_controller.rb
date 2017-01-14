@@ -101,6 +101,38 @@ class ProjectsController < ApplicationController
       end
     end
 
+    #Shows the total email usage report
+    user_usage_activities = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
+    @team_usage_report = []
+    @team_name = current_user.organization.domain
+    avg_rpm = 100 # average reading rate
+    avg_tpm = 15 #average typing rate
+    user_usage_activities.each do |u|
+      user = User.find_by_email(u.email)
+      if user
+        y = u
+        y.email = get_full_name(user)
+          if u.inbound
+            if u.inbound / avg_rpm == 0
+              y.inbound = 1
+            else
+              y.inbound = y.inbound / avg_rpm
+            end
+          else
+            y.inbound = 0
+          end
+          if u.outbound
+            if u.outbound / avg_tpm == 0
+              y.outbound = 1
+            else
+              y.outbound = y.outbound / avg_tpm
+            end
+          else
+            y.outbound = 0
+          end
+      @team_usage_report << y
+      end
+    end
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
     user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)

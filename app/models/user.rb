@@ -267,69 +267,207 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
-  def self.usage_report_by_user(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.total_team_usage_report(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
-      -- shows the conversation between to and from and content.
-    WITH email_activities AS (
-      SELECT  messages ->> 'messageId'::text AS message_id,
+      -- shows the total time usage be adding all the inbound emails and outbound emails as inbound and outbound
+  WITH email_activities AS (
+  SELECT  messages ->> 'messageId'::text AS message_id,
           jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
-          CASE
-            WHEN messages -> 'to' IS NULL THEN NULL
-            ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
-          END AS to,
-          CASE
-            WHEN messages -> 'cc' IS NULL THEN NULL
-            ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
-            END AS cc,
-          (messages::json ->'content') ->> 'body'  AS body,
-          array_length(regexp_split_to_array((messages::json ->'content') ->> 'body',E'[^\\w:!.()?//\\,-]+'),1) AS word_count
-        FROM activities,
-        LATERAL jsonb_array_elements(email_messages) messages
-          WHERE category='Conversation'
-          AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
-          AND project_id IN
+    CASE
+       WHEN messages -> 'to' IS NULL THEN NULL
+       ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+    END AS to,
+    CASE
+       WHEN messages -> 'cc' IS NULL THEN NULL
+       ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+    END AS cc,
+    (messages::json ->'content') ->> 'body'  AS body,
+    array_length(regexp_split_to_array((messages::json ->'content') ->> 'body',E'[^\\\\w:!.()?//\\\\,-]+'),1) AS word_count
+  FROM activities,
+  LATERAL jsonb_array_elements(email_messages) messages
+  WHERE category='Conversation'
+    AND project_id IN
           (
             SELECT id AS project_id
             FROM projects
             WHERE account_id IN ('#{array_of_account_ids.join("','")}')
           )
-          GROUP BY 1,2,3,4,5
-          ) 
-
-        SELECT email, outbound, inbound, COALESCE(outbound,0) + COALESCE(inbound,0) AS total
-          FROM (
-            SELECT sender as email, t.total_words AS outbound, CAST(t2.total_words AS bigint) AS inbound
-              FROM ( 
-                SELECT sender, sum(word_count) as total_words, count(*) as rows_count
-                  FROM (
-                  SELECT "from" as sender, message_id, word_count
-                    FROM email_activities
-                    WHERE "from" is not null) as t
-          GROUP BY sender) as t
-        LEFT OUTER JOIN
-        (SELECT recipient, sum(total_words) AS total_words
-            FROM (  
-              SELECT recipient, sum(word_count) as total_words
-                FROM (
-                  SELECT "to" as recipient, message_id, word_count 
-                    FROM email_activities
-                    WHERE "to" is not null) as t1
+  GROUP BY 1,2,3,4,5
+  ) 
+  SELECT email, outbound, inbound, COALESCE(outbound,0) + COALESCE(inbound,0) AS total
+  FROM(
+  SELECT sender as email, cast(t.total_words AS integer) AS outbound, CAST(t2.total_words AS integer) AS inbound
+  FROM ( 
+    SELECT sender, sum(word_count) as total_words, count(*) as rows_count
+    FROM (
+    SELECT distinct "from" as sender, message_id, word_count
+    FROM email_activities
+    WHERE "from" is not null) as t
+    GROUP BY sender) as t
+    LEFT OUTER JOIN
+      (SELECT recipient, sum(total_words) AS total_words
+        FROM (  
+        SELECT recipient, sum(word_count) as total_words
+        FROM (
+            SELECT distinct "to" as recipient, message_id, word_count 
+            FROM email_activities
+            WHERE "to" is not null) as t1
             GROUP BY recipient
             UNION ALL
             SELECT recipient, sum(word_count) as total_words
             FROM (
-            SELECT "cc" as recipient, message_id, word_count 
+            SELECT distinct "cc" as recipient, message_id, word_count 
             FROM email_activities
             WHERE "cc" is not null) as t2
-            GROUP BY recipient) as t
-          GROUP BY recipient
-          ) as t2 ON t.sender = t2.recipient)t3
+        GROUP BY recipient) as t
+  GROUP BY recipient
+    ) as t2 ON t.sender = t2.recipient)t3
+    WHERE email LIKE '%#{domain}'
+    ORDER BY total DESC
+    limit 5;
+  SQL
+    find_by_sql(query)
+  end
+
+  def self.team_usage_email(array_of_account_ids, domain)
+
+    result = total_team_usage_report(array_of_account_ids, domain)
+    t_usage_report = []
+    #average reading rate
+     # words read per hour
+    #average typing rate
+    avg_tpm = 900 #words typed per hour
+    result.each do |u|
+      
+      user = User.find_by_email(u.email)
+      if user
+        y = u
+      t_usage_report << y
+      end
+    end
+    t_usage_report
+  end
+
+  def self.meeting_report(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    query = <<-SQL
+
+      WITH user_meeting AS(
+        SELECT  "to" AS attendees, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch, backend_id
+          FROM activities,
+          LATERAL jsonb_array_elements(email_messages) messages
+          WHERE category='Meeting' 
+          AND project_id IN
+            (
+            SELECT id AS project_id
+            FROM projects
+            WHERE account_id IN ('#{array_of_account_ids.join("','")}')
+            )
+        GROUP BY 1,2,3,4
+      )
+  SELECT email, cast(start_t AS bigint) , cast(end_t AS bigint), backend_id
+    FROM(   
+      SELECT jsonb_array_elements(attendees) ->> 'address' AS email,
+            start_epoch AS start_t,
+            jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t,
+            backend_id
+      FROM user_meeting ) t
+    WHERE email = '#{domain}'
+    GROUP BY backend_id, t.email, t.start_t, t.end_t;
+  SQL
+
+  find_by_sql(query)
+  end
+
+  def self.meeting_team_report(array_of_account_ids, domain)
+    results = meeting_report(array_of_account_ids, domain)
+    n = 0
+    results.each do |m|
+      start = Time.zone.at(m.start_t)
+      end_t = Time.zone.at(m.end_t)
+      #meeting should only last the length of a day.
+      if start.to_date == end_t.to_date
+        n += (m.end_t.to_i - m.start_t.to_i ) / 60
+      end
+    end
+    y = n
+    output = 0
+      if y != 0 
+        while y >= 100
+          y -= 100
+          output +=60
+        end
+        if y < 100
+          output += y
+        end
+      end
+    output / 60
+  end
+
+
+  def self.project_usage_report_by_user(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    query = <<-SQL
+      -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
+      -- limited to the top 5 and outputs user email, inbound and outbound
+      -- shows the conversation between to and from and content.
+       WITH email_activities AS (
+  SELECT  messages ->> 'messageId'::text AS message_id,
+          jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+    CASE
+       WHEN messages -> 'to' IS NULL THEN NULL
+       ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+    END AS to,
+    CASE
+       WHEN messages -> 'cc' IS NULL THEN NULL
+       ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+    END AS cc,
+    (messages::json ->'content') ->> 'body'  AS body,
+    array_length(regexp_split_to_array((messages::json ->'content') ->> 'body',E'[^\\\\w:!.()?//\\\\,-]+'),1) AS word_count
+  FROM activities,
+  LATERAL jsonb_array_elements(email_messages) messages
+  WHERE category='Conversation'
+    AND project_id IN
+          (
+            SELECT id AS project_id
+            FROM projects
+            WHERE account_id IN ('#{array_of_account_ids.join("','")}')
+          )
+  GROUP BY 1,2,3,4,5
+  ) 
+  SELECT email, outbound, inbound, COALESCE(outbound,0) + COALESCE(inbound,0) AS total
+  FROM(
+  SELECT sender as email, t.total_words AS outbound, CAST(t2.total_words AS bigint) AS inbound
+  FROM ( 
+    SELECT sender, sum(word_count) as total_words, count(*) as rows_count
+    FROM (
+    SELECT distinct "from" as sender, message_id, word_count
+    FROM email_activities
+    WHERE "from" is not null) as t
+    GROUP BY sender) as t
+    LEFT OUTER JOIN
+      (SELECT recipient, sum(total_words) AS total_words
+  FROM (  
+        SELECT recipient, sum(word_count) as total_words
+        FROM (
+            SELECT distinct "to" as recipient, message_id, word_count 
+            FROM email_activities
+            WHERE "to" is not null) as t1
+            GROUP BY recipient
+            UNION ALL
+            SELECT recipient, sum(word_count) as total_words
+            FROM (
+            SELECT distinct "cc" as recipient, message_id, word_count 
+            FROM email_activities
+            WHERE "cc" is not null) as t2
+        GROUP BY recipient) as t
+  GROUP BY recipient
+    ) as t2 ON t.sender = t2.recipient)t3
     WHERE email LIKE '%#{domain}'
     ORDER BY total DESC
     LIMIT 5;
-  SQL
+    SQL
+
     User.find_by_sql(query)
   end
 

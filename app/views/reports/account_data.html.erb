@@ -2,6 +2,12 @@
     <div class="row m-b-sm">
         <div class="col-lg-12">
             <h2><%= @account.name %></h2>
+            
+            <% @team_usage_report.each do |u| %>
+                <h3>User:<%=u.email%></h3>
+                <p>Time Usage: Total Read time:[<b><%='%.01f' % u.inbound%></b>]Hrs  | Total Time Sent:[<b><%='%.01f' % u.outbound%></b>]Hrs</p>
+
+            <% end %>
         </div>
     </div>
 
@@ -240,13 +246,19 @@
                 type: 'bar'
             },
             title: {
-                text: 'Email Usage Report',
-                align: 'left',
+                text: 'Interaction Time',
+                align: 'center',
                 margin: 0,
-                x: 35,
                 style: {
                     color: '#555555',
                     fontSize: '15px'
+                }
+            },
+            subtitle: {
+                text: '(Estimated time for last 14 days)',
+                align: 'center',
+                style: {
+                    fontSize: '9px'
                 }
             },
             credits: { enabled: false },
@@ -256,7 +268,7 @@
             yAxis: {
                 min: 0,
                 labels: {
-                    format: '{value} min'
+                    format: '{value} hrs'
                 },
                 title: {
                     enabled: false
@@ -269,27 +281,33 @@
                 enabled: false
             },
             tooltip: {
-                headerFormat: '<b>{point.x}</b><br/>',
-                pointFormat: '{series.name}: {point.y} min<br/>Total: {point.stackTotal} min'
+                headerFormat: '',
+                pointFormat: '<b>{series.name}:</b> {point.y:.1f} hrs<br/><b>Total:</b> {point.stackTotal:.1f} hrs'
             },
             plotOptions: {
                 series: {
                     stacking: 'normal',
                     dataLabels: {
+                        format: '{y.1f}',
                         style: {
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            fontSize: '8px'
                         }
                     }
                 }
             },
-            series: [{
+            series: [ {
+                name: 'Meetings',
+                color: '#ffb833',
+                data: <%= @meeting_usage_report.to_json.html_safe %> 
+            }, {
                 name: 'Sent',
                 color: '#00cccc',
-                data: <%= @team_usage_report.map(&:outbound).to_json.html_safe %>
+                data: <%= @team_outbound_report.to_json.html_safe %>
             }, {
                 name: 'Read',
-                color: '#ffb833',
-                data: <%= @team_usage_report.map(&:inbound).to_json.html_safe %> 
+                color: '#995cd6',
+                data: <%= @team_inbound_report.to_json.html_safe %> 
             }]
         });
 
