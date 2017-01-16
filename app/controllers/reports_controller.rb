@@ -1,4 +1,6 @@
 class ReportsController < ApplicationController
+  before_action :get_owners_in_org, only: [:accounts_dashboard, :dashboard_data]
+  
   def touches_by_team
     # TODO: find way to get number of projects for each user listed here
     @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
@@ -9,6 +11,7 @@ class ReportsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
     risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
     total_risk_scores = 0
+    
     @risk_scores = risk_scores.map do |r|
       proj = projects.find { |p| p.id == r[0] }
       total_risk_scores += r[1]
@@ -23,7 +26,17 @@ class ReportsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
     projects = projects.where(category: params[:category]) if params[:category]
     projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
-    @data = [] and return if projects.blank?
+
+    # Incrementally apply any filters
+    if !params[:owner].nil?
+      if params["owner"]=="none"
+        projects = projects.where(owner_id: nil)
+      elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+        projects = projects.where(owner_id: params[:owner]);
+      end
+    end 
+
+    @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
     case @sort
     when "Risk Score"
@@ -242,5 +255,12 @@ class ReportsController < ApplicationController
   end
 
   def lifecycle
+  end
+
+  #### Private helper functions ####
+  private
+
+  def get_owners_in_org
+    @owners = User.where(organization_id: current_user.organization_id)
   end
 end
