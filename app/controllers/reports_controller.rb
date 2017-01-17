@@ -120,14 +120,14 @@ class ReportsController < ApplicationController
         y = m
           if m.inbound.to_i > 4000
             in_b = m.inbound / 4000.0 #rate words/hour
-          else m.inbound.to_i < 4000
-            in_b = 0.5
+          else m.inbound.to_i <= 400
+            in_b = 0.1
           end
         @team_inbound_report << in_b.round(1)
           if m.outbound.to_i > 900
             out_b = m.outbound / 900.0 #rate words/hour
-          else m.outbound.to_i < 900
-            out_b = 0.5
+          else m.outbound.to_i <= 9
+            out_b = 0.1
           end
         @team_outbound_report << out_b.round(1)
         y.email = get_full_name(user)
