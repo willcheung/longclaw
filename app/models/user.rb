@@ -306,7 +306,7 @@ class User < ActiveRecord::Base
     FROM email_activities
     WHERE "from" is not null) as t
     GROUP BY sender) as t
-    LEFT OUTER JOIN
+    FULL OUTER JOIN
     (SELECT recipient, sum(total_words) AS total_words
       FROM (  
       SELECT recipient, sum(word_count) as total_words
