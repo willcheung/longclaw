@@ -181,10 +181,9 @@
                 type: 'bar'
             },
             title: {
-                text: 'Email Interaction Time',
+                text: 'Interaction Time',
                 align: 'center',
                 margin: 0,
-                
                 style: {
                     color: '#555555',
                     fontSize: '15px'
@@ -193,7 +192,6 @@
             subtitle: {
                 text: '(Estimated time for last 14 days)',
                 align: 'center',
-                
                 style: {
                     fontSize: '9px'
                 }
@@ -205,7 +203,7 @@
             yAxis: {
                 min: 0,
                 labels: {
-                    format: '{value} min'
+                    format: '{value} hrs'
                 },
                 title: {
                     enabled: false
@@ -219,13 +217,13 @@
             },
             tooltip: {
                 headerFormat: '',
-                pointFormat: '{series.name}: {point.y} min<br/>Total: {point.stackTotal} min'
+                pointFormat: '<b>{series.name}:</b> {point.y:.1f} hrs<br/><b>Total:</b> {point.stackTotal:.1f} hrs'
             },
             plotOptions: {
                 series: {
                     stacking: 'normal',
                     dataLabels: {
-                        format: '{y}',
+                        format: '{y.1f}',
                         style: {
                             fontWeight: 'bold',
                             fontSize: '8px'
@@ -233,14 +231,18 @@
                     }
                 }
             },
-            series: [{
+            series: [ {
+                name: 'Meetings',
+                color: '#ffb833',
+                data: <%= @meeting_usage_report.to_json.html_safe %> 
+            }, {
                 name: 'Sent',
                 color: '#00cccc',
-                data: <%= @team_usage_report.map(&:outbound).to_json.html_safe %>
+                data: <%= @team_outbound_report.to_json.html_safe %>
             }, {
                 name: 'Read',
-                color: '#ffb833',
-                data: <%= @team_usage_report.map(&:inbound).to_json.html_safe %> 
+                color: '#995cd6',
+                data: <%= @team_inbound_report.to_json.html_safe %> 
             }]
         });
 

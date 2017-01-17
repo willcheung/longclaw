@@ -105,36 +105,40 @@ class ReportsController < ApplicationController
     end
      #TODO: Query for usage_report finds all the read and write times from internal users
     # Calculates the RPM(read per min) and WPM(write per min)
-    usage_report = User.team_usage_email([@account.account.id], current_user.organization.domain)
+    usage_report = User.total_team_usage_report([@account.account.id], current_user.organization.domain)
+
     @team_usage_report = []
     @team_inbound_report = []
     @team_outbound_report = []
-    team_emails = []
+    team_emails = [] # used to find users meetings
+
     usage_report.each do |m|
       user = User.find_by_email(m.email)
+
         if user
         team_emails << m.email
         y = m
-        in_b = m.inbound / 4000.0
+          if m.inbound.to_i > 4000
+            in_b = m.inbound / 4000.0 #rate words/hour
+          else m.inbound.to_i < 4000
+            in_b = 0.5
+          end
         @team_inbound_report << in_b.round(1)
-        out_b = m.outbound / 900.0
+          if m.outbound.to_i > 900
+            out_b = m.outbound / 900.0 #rate words/hour
+          else m.outbound.to_i < 900
+            out_b = 0.5
+          end
         @team_outbound_report << out_b.round(1)
         y.email = get_full_name(user)
         @team_usage_report << y
         end
     end
-    puts "team_inbound_report#{@team_inbound_report}"
-    puts "team_outbound_report#{@team_outbound_report}"
-    puts "team_outbound_reorts#{@team_usage_report}"
 
     @meeting_usage_report = []
     team_emails.each do |t_email|
-      
       @meeting_usage_report << User.meeting_team_report([@account.account.id], t_email )
     end
-    puts "Meeting_usage_report#{@meeting_usage_report}"
-    
-    puts "========="
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team

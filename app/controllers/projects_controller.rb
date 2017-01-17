@@ -102,36 +102,36 @@ class ProjectsController < ApplicationController
     end
 
     #Shows the total email usage report
-    user_usage_activities = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
+    usage_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
     @team_usage_report = []
-    @team_name = current_user.organization.domain
-    avg_rpm = 100 # average reading rate
-    avg_tpm = 15 #average typing rate
-    user_usage_activities.each do |u|
-      user = User.find_by_email(u.email)
-      if user
-        y = u
+    @team_inbound_report = []
+    @team_outbound_report = []
+    team_emails = [] # used to find users meetings
+    usage_report.each do |m|
+      user = User.find_by_email(m.email)
+        if user
+        team_emails << m.email
+        y = m
+          if m.inbound > 4000
+            in_b = m.inbound / 4000.0 #rate words/hour
+          else m.inbound < 4000
+            in_b = 0.5
+          end
+        @team_inbound_report << in_b.round(1)
+          if m.outbound > 900
+            out_b = m.outbound / 900.0 #rate words/hour
+          else m.outbound < 900
+            out_b = 0.5
+          end
+        @team_outbound_report << out_b.round(1)
         y.email = get_full_name(user)
-          if u.inbound
-            if u.inbound / avg_rpm == 0
-              y.inbound = 1
-            else
-              y.inbound = y.inbound / avg_rpm
-            end
-          else
-            y.inbound = 0
-          end
-          if u.outbound
-            if u.outbound / avg_tpm == 0
-              y.outbound = 1
-            else
-              y.outbound = y.outbound / avg_tpm
-            end
-          else
-            y.outbound = 0
-          end
-      @team_usage_report << y
-      end
+        @team_usage_report << y
+        end
+    end
+
+    @meeting_usage_report = []
+    team_emails.each do |t_email|
+      @meeting_usage_report << User.meeting_team_report([@project.account.id], t_email )
     end
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team

@@ -2,12 +2,6 @@
     <div class="row m-b-sm">
         <div class="col-lg-12">
             <h2><%= @account.name %></h2>
-            
-            <% @team_usage_report.each do |u| %>
-                <h3>User:<%=u.email%></h3>
-                <p>Time Usage: Total Read time:[<b><%='%.01f' % u.inbound%></b>]Hrs  | Total Time Sent:[<b><%='%.01f' % u.outbound%></b>]Hrs</p>
-
-            <% end %>
         </div>
     </div>
 
