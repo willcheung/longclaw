@@ -36,23 +36,35 @@ class Project < ActiveRecord::Base
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
-  has_many  :notifications_for_email, -> {
+  has_many  :notifications_for_daily_email, -> {
     where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc)
     .order(:is_complete, :original_due_date)
   }, class_name: "Notification"
+  #has_many  :notifications_for_weekly_email, -> {
+  #  where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc - 1.weeks, Time.current.yesterday.end_of_day.utc)
+  #  .order(:is_complete, :original_due_date)
+  #}, class_name: "Notification"
 
   has_many  :activities, -> { reverse_chronological }, dependent: :destroy
   has_many  :conversations, -> { conversations.reverse_chronological }, class_name: "Activity"
   has_many  :notes, -> { notes.reverse_chronological }, class_name: "Activity"
   has_many  :meetings, -> { meetings.reverse_chronological }, class_name: "Activity"
-  has_many  :conversations_for_email, -> {
+  has_many  :conversations_for_daily_email, -> {
     from_yesterday.reverse_chronological.conversations
     .select(:category, :title, :from, :to, :cc, :project_id, :last_sent_date, :is_public,
       'jsonb_array_length(email_messages) AS num_messages',
       'email_messages->-1 AS last_msg') }, class_name: "Activity"
-  has_many  :other_activities_for_email, -> {
+  #has_many  :conversations_for_weekly_email, -> {
+  #  from_lastweek.reverse_chronological.conversations
+  #  .select(:category, :title, :from, :to, :cc, :project_id, :last_sent_date, :is_public,
+  #    'jsonb_array_length(email_messages) AS num_messages',
+  #    'email_messages->-1 AS last_msg') }, class_name: "Activity"
+  has_many  :other_activities_for_daily_email, -> {
     from_yesterday.reverse_chronological
     .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
+  #has_many  :other_activities_for_weekly_email, -> {
+  #  from_lastweek.reverse_chronological
+  #  .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
 
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -96,6 +108,7 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
@@ -319,7 +332,7 @@ class Project < ActiveRecord::Base
         if engagement.zero?
           0
         else
-          risks = total_engagement.where(created_at: Time.at(0)..date)
+          risks = total_engagement.where(last_sent_date: Time.at(0)..date)
             .select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
             .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
           Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
@@ -734,7 +747,6 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
@@ -825,6 +837,18 @@ class Project < ActiveRecord::Base
     self.activities.each { |a| a.email_replace_all(email1, email2) }
   end
 
+  # Retreives Alerts in the project's Notifications with a created_at date within the specified range.
+  # days_ago_start: start of created_at date range in number of days ago from today (default:"earliest date possible")
+  # days_ago_end: end of created_at date range in number of days ago from today, non-inclusive! (default:"yesterday")
+  def get_alerts_in_range(time_zone, days_ago_start=nil, days_ago_end=0)
+    if (days_ago_start.nil?)
+      self.notifications.risks.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+    else
+      self.notifications.risks.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+    end
+  end
+
+
   private
 
   def self.calculate_score_by_setting(metric, setting)
@@ -843,5 +867,4 @@ class Project < ActiveRecord::Base
       100*setting.weight
     end
   end
-
 end

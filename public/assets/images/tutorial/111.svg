@@ -102,7 +102,7 @@ hScwywcoKj4+mpqk3wIMAGddgyHfYvx4AAAAAElFTkSuQmCC" transform="matrix(1 0 0 1 660.
 			<rect x="668.372" y="128.792" fill="none" stroke="#69B6E4" stroke-width="2" stroke-miterlimit="10" width="121.332" height="35.917"/>
 	</g>
 </g>
-<text transform="matrix(1 0 0 1 685.3442 150.4136)" fill="#69B6E4" font-family="'Avenir-Medium'" font-size="14">Inactive Days</text>
+<text transform="matrix(1 0 0 1 685.3442 150.4136)" fill="#69B6E4" font-family="'Avenir-Medium'" font-size="14">Days Inactive</text>
 <polygon fill="#69B6E4" points="384.898,179.125 392.068,179.125 388.483,183.619 "/>
 <g>
 	<path fill="none" stroke="#69B6E4" stroke-width="3" stroke-miterlimit="10" d="M729.038,184.083v134c0,2.75-2.25,5-5,5H15.791"/>
