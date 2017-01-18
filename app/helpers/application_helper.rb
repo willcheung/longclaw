@@ -83,11 +83,11 @@ module ApplicationHelper
     if score
       s = "Status set to "
       if score == 3
-        s + "Green"
+        s + Project::RAGSTATUS[:Green]
       elsif score == 2
-        s + "Amber"
+        s + Project::RAGSTATUS[:Amber]
       elsif score == 1
-        s + "Red"
+        s + Project::RAGSTATUS[:Red]
       else
         "Add Text"
       end

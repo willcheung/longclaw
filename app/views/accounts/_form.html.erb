@@ -3,7 +3,7 @@
 
   <%# Added Bootstrap classes, and help-block container for error messages %> 
   <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
-  <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: Account::CATEGORY, selected: Account::CATEGORY%>
+  <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: Account::CATEGORY, selected: @account.category %>
   <%= f.input :website, wrapper_html: { class: 'col-md-12'} %>
   <span class="help-block" style="color:red"></span>      
   
