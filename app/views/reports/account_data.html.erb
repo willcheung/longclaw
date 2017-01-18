@@ -69,8 +69,7 @@
     <div class="ibox-content">
         <div class="row">
             <div class="col-lg-6" id="activities-breakdown" style="height:200px"></div>
-<!--             <div class="col-lg-6" id="top-contributors" style="height:200px;"></div>
- -->            <div class="col-lg-6" id="usage-report" style="height:200px;"></div>
+            <div class="col-lg-6" id="usage-report" style="height:200px;"></div>
         </div>
 
         <div class="row m-t-lg text-center">
@@ -194,47 +193,6 @@
             }]
         });
 
-        // $('#top-contributors').highcharts({
-        //     chart: {
-        //         type: 'bar'
-        //     },
-        //     title: {
-        //         text: 'Most Active Contributors',
-        //         align: 'left',
-        //         margin: 0,
-        //         x: 35,
-        //         style: {
-        //             color: '#555555',
-        //             fontSize: '15px'
-        //         }
-        //     },
-        //     credits: { enabled: false },
-        //     xAxis: {
-        //         categories: <%= @team_leaderboard.map(&:email).to_json.html_safe %>
-        //     },
-        //     yAxis: {
-        //         min: 0,
-        //         title: {
-        //             text: ''
-        //         }
-        //     },
-        //     legend: {
-        //         enabled: false
-        //     },
-        //     plotOptions: {
-        //         series: {
-        //             stacking: 'normal'
-        //         }
-        //     },
-        //     series: [{
-        //         name: 'Inbound',
-        //         data: <%= @team_leaderboard.map(&:inbound_count).to_json.html_safe %>
-        //     }, {
-        //         name: 'Outbound',
-        //         data: <%= @team_leaderboard.map(&:outbound_count).to_json.html_safe %>
-        //     }]
-        // });
-
         $('#usage-report').highcharts({
             chart: {
                 type: 'bar'
@@ -257,7 +215,7 @@
             },
             credits: { enabled: false },
             xAxis: {
-                categories: <%= @team_usage_report.map(&:email).to_json.html_safe %>
+                categories: <%= @in_outbound_report['full_name'].to_json.html_safe %>
             },
             yAxis: {
                 min: 0,
@@ -293,15 +251,15 @@
             series: [ {
                 name: 'Meetings',
                 color: '#ffb833',
-                data: <%= @meeting_usage_report.to_json.html_safe %> 
+                data: <%= @meeting_report.to_json.html_safe %> 
             }, {
                 name: 'Sent',
                 color: '#00cccc',
-                data: <%= @team_outbound_report.to_json.html_safe %>
+                data: <%= @in_outbound_report['outbound'].to_json.html_safe %>
             }, {
                 name: 'Read',
                 color: '#995cd6',
-                data: <%= @team_inbound_report.to_json.html_safe %> 
+                data: <%= @in_outbound_report['inbound'].to_json.html_safe %>
             }]
         });
 

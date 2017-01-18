@@ -103,42 +103,12 @@ class ReportsController < ApplicationController
         @risk_activity_engagement.push(a/b.to_f * 100)
       end
     end
-     #TODO: Query for usage_report finds all the read and write times from internal users
-    # Calculates the RPM(read per min) and WPM(write per min)
-    usage_report = User.total_team_usage_report([@account.account.id], current_user.organization.domain)
-
-    @team_usage_report = []
-    @team_inbound_report = []
-    @team_outbound_report = []
-    team_emails = [] # used to find users meetings
-
-    usage_report.each do |m|
-      user = User.find_by_email(m.email)
-
-        if user
-        team_emails << m.email
-        y = m
-          if m.inbound.to_i > 4000
-            in_b = m.inbound / 4000.0 #rate words/hour
-          else m.inbound.to_i <= 400
-            in_b = 0.1
-          end
-        @team_inbound_report << in_b.round(1)
-          if m.outbound.to_i > 900
-            out_b = m.outbound / 900.0 #rate words/hour
-          else m.outbound.to_i <= 9
-            out_b = 0.1
-          end
-        @team_outbound_report << out_b.round(1)
-        y.email = get_full_name(user)
-        @team_usage_report << y
-        end
-    end
-
-    @meeting_usage_report = []
-    team_emails.each do |t_email|
-      @meeting_usage_report << User.meeting_team_report([@account.account.id], t_email )
-    end
+    #TODO: Query for usage_report finds all the read and write times from internal users
+    #Metric for Interaction Time
+    # Read and Sent times
+    @in_outbound_report = User.total_team_usage_report([@account.account.id], current_user.organization.domain)
+    #Meetings in Interaction Time
+    @meeting_report = User.meeting_team_report([@account.account.id], @in_outbound_report['email'])
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
