@@ -16,6 +16,13 @@
                     <option <% if params[:account] == v %> selected <% end %> ><%= v %></option>
                     <% end %>
                 </select>
+                <!-- Stream Type -->
+                <select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Stream Type">
+                    <option value="All"></option>
+                    <% Project::CATEGORY.each do |k,v|    %>
+                    <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>
+                    <% end %>
+                </select>
                 <!-- Owner -->
                 <select id="owner-filter" class="category_filter col-md-3" data-placeholder="Select Owner">
                     <option value="All"></option>
@@ -28,13 +35,6 @@
                         <% end %>
                     <% end %>
                     <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >Unassigned</option>
-                </select>
-                <!-- Stream Type -->
-                <select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Stream Type">
-                    <option value="All"></option>
-                    <% Project::CATEGORY.each do |k,v|    %>
-                    <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>
-                    <% end %>
                 </select>
                 <!-- <div class="col-md-3"></div> -->
             </div>
