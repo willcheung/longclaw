@@ -9,7 +9,11 @@ class ReportsController < ApplicationController
 
   def accounts_dashboard
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
+    if !projects.nil?
+      risk_scores = []
+    else
+      risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
+    end
     total_risk_scores = 0
     
     @risk_scores = risk_scores.map do |r|
@@ -17,7 +21,12 @@ class ReportsController < ApplicationController
       total_risk_scores += r[1]
       Hashie::Mash.new({ id: proj.id, score: r[1], name: proj.name })
     end
-    @average = (total_risk_scores.to_f/risk_scores.length).round(1)
+    
+    if risk_scores.nil?
+      @average = 0
+    else
+      @average = (total_risk_scores.to_f/risk_scores.length).round(1)
+    end
   end
 
   def dashboard_data
