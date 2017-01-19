@@ -9,7 +9,7 @@ class ReportsController < ApplicationController
 
   def accounts_dashboard
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    if !projects.nil?
+    if projects.nil?
       risk_scores = []
     else
       risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
@@ -31,8 +31,10 @@ class ReportsController < ApplicationController
 
   def dashboard_data
     @sort = params[:sort]
-
     projects = Project.visible_to(current_user.organization_id, current_user.id)
+
+    @data = [] and return if projects.blank?  #quit early if no projects exist
+
     projects = projects.where(category: params[:category]) if params[:category]
     projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
 
@@ -45,7 +47,7 @@ class ReportsController < ApplicationController
       end
     end 
 
-    @data = [] and return if projects.blank?  #quit early if all projects are filtered out
+    @data = [] and return if projects.blank?  #quit if all projects are filtered out
 
     case @sort
     when "Risk Score"

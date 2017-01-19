@@ -258,6 +258,8 @@ class Project < ActiveRecord::Base
 
   def self.new_risk_score(array_of_project_ids, time_zone)
     projects = Project.where(id: array_of_project_ids).group('projects.id')
+    return [] if projects.first.nil?   # fail early if there are no projects
+
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
