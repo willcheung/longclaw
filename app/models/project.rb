@@ -306,6 +306,7 @@ class Project < ActiveRecord::Base
 
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
+    puts "************************************* days_inactive_setting *****************************************", days_inactive_setting
     last_sent_date = self.activities.where.not(category: Activity::CATEGORY[:Note]).maximum(:last_sent_date)
     days_inactive = last_sent_date.nil? ? 0 : Time.current.in_time_zone(time_zone).to_date.mjd - last_sent_date.in_time_zone(time_zone).to_date.mjd
     inactivity_risk = Project.calculate_score_by_setting(days_inactive, days_inactive_setting)
