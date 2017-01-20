@@ -323,6 +323,7 @@ class Project < ActiveRecord::Base
 
   def new_risk_score_trend(time_zone, day_range=14)
     risk_settings = RiskSetting.where(level: self.account.organization)
+    return nil if risk_settings.length == 0  # if settings not yet set
     
     # Risk / Engagement Ratio
     sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
