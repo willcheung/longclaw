@@ -78,6 +78,7 @@ class ContextsmithService
     if Rails.env.development?
       token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
     else
+      print "********** project.users.registered.not_disabled.count ", project.users.registered.not_disabled.count.to_s, "**************\n"
       project.users.registered.not_disabled.each do |u|
         success = true
         success = u.refresh_token! if u.token_expired?
