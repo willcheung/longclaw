@@ -75,19 +75,16 @@ class ContextsmithService
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
     token_emails = []
-    if Rails.env.development?
+    if Rails.env.development? || Rails.env.test?
       token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
     else
-      print "********** project.users ", project.users.count.to_s, "**************\n"
-      print "*** project.users.registered ", project.users.registered.count.to_s, "***\n"
-      print "*** project.users.registered.not_disabled ", project.users.registered.not_disabled.count.to_s, "***\n"
       project.users.registered.not_disabled.each do |u|
         success = true
         success = u.refresh_token! if u.token_expired?
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
     end
-    print "********** token_emails.empty? ", token_emails.empty?, "**************\n"
+    puts "<><><><> token_emails.empty? ", token_emails.empty?, " <><><><>\n"
     return [] if token_emails.empty?
 
     ex_clusters = project.contacts.pluck(:email)
