@@ -1,68 +1,68 @@
 desc "Heroku scheduler tasks for periodically retrieving latest emails"
 namespace :projects do
     
-  desc 'Retrieve latest 300 emails for all projects in all organization'
-  task load_emails: :environment do
-      puts "\n\n=====Task (load_emails) started at #{Time.now}====="
-
-      Organization.all.each do |org|
-        org.accounts.each do |acc| 
-            acc.projects.each do |proj|
-                puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-                ContextsmithService.load_emails_from_backend(proj, 300)
-                sleep(1)
-            end
-        end
-      end
-    end
-
-  desc 'Retrieve latest emails since yesterday for all projects in all organization'
-  task load_emails_since_yesterday: :environment do
-    if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
-        puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
+    desc 'Retrieve latest 300 emails for all projects in all organization'
+    task load_emails: :environment do
+        puts "\n\n=====Task (load_emails) started at #{Time.now}====="
 
         Organization.all.each do |org|
             org.accounts.each do |acc| 
                 acc.projects.each do |proj|
-                    puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-                    ContextsmithService.load_emails_from_backend(proj)
+                    puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
+                    ContextsmithService.load_emails_from_backend(proj, 300)
                     sleep(1)
                 end
             end
         end
-      end
     end
 
-  desc 'Retrieve latest 300 calendar events for all projects in all organization'
-  task load_events: :environment do
-    puts "\n\n=====Task (load_events) started at #{Time.now}====="
+    desc 'Retrieve latest emails since yesterday for all projects in all organization'
+    task load_emails_since_yesterday: :environment do
+        if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
+            puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 
-    Organization.all.each do |org|
-        org.accounts.each do |acc| 
-            acc.projects.each do |proj|
-                puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
-                ContextsmithService.load_calendar_from_backend(proj, 300)
-                sleep(1)
+            Organization.all.each do |org|
+                org.accounts.each do |acc| 
+                    acc.projects.each do |proj|
+                        puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
+                        ContextsmithService.load_emails_from_backend(proj)
+                        sleep(1)
+                    end
+                end
             end
         end
     end
-  end
 
-  desc 'Retrieve latest calendar events since yesterday for all projects in all organization'
-  task load_events_since_yesterday: :environment do
-    if [3,9,15,21].include?(Time.now.hour) # Runs once every 6 hours
-        puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
+    desc 'Retrieve latest 300 calendar events for all projects in all organization'
+    task load_events: :environment do
+        puts "\n\n=====Task (load_events) started at #{Time.now}====="
 
         Organization.all.each do |org|
             org.accounts.each do |acc| 
                 acc.projects.each do |proj|
-                    puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-                    ContextsmithService.load_calendar_from_backend(proj, 100, 1.day.ago.to_i)
+                    puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
+                    ContextsmithService.load_calendar_from_backend(proj, 300)
                     sleep(1)
                 end
             end
         end
-      end
+    end
+
+    desc 'Retrieve latest calendar events since yesterday for all projects in all organization'
+    task load_events_since_yesterday: :environment do
+        if [3,9,15,21].include?(Time.now.hour) # Runs once every 6 hours
+            puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
+
+            Organization.all.each do |org|
+                org.accounts.each do |acc| 
+                    acc.projects.each do |proj|
+                        puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
+                        ContextsmithService.load_calendar_from_backend(proj, 100, 1.day.ago.to_i)
+                        sleep(1)
+                    end
+                end
+            end
+        end
     end
 
     desc 'Email daily project updates on weekdays'
