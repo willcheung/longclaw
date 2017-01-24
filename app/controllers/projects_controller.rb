@@ -158,6 +158,7 @@ class ProjectsController < ApplicationController
   def refresh
     # big refresh when no activities (normally a new stream), small refresh otherwise
     if @project.activities.count == 0
+      puts "Big asynchronous refresh incoming..."
       ContextsmithService.load_emails_from_backend(@project, 2000)
       ContextsmithService.load_calendar_from_backend(@project, 1000)
       # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
