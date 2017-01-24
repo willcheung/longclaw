@@ -20,7 +20,7 @@ $(document).ready(function() {
     });
 
 
-    $(".salesforce-search").selectize({
+    $(".salesforce-account-search").selectize({
         closeAfterSelect: true,
         valueField: 'id',
         labelField: 'name',

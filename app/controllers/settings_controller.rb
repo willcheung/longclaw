@@ -65,11 +65,11 @@ class SettingsController < ApplicationController
 	end
 
 	def salesforce_opportunities
-		@streams = Project.all.is_active # all active projects because "admin" role can see everything
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active # all active projects because "admin" role can see everything
 	end
 
 	def salesforce_activities
-		@streams = Project.all.is_active.includes(:salesforce_opportunities) # all active projects because "admin" role can see everything
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunities, :account).group("salesforce_opportunities.id, accounts.id") # all active projects because "admin" role can see everything
 	end
 
 	def super_user

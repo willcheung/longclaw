@@ -85,6 +85,12 @@ class Project < ActiveRecord::Base
                organization_id, user_id, user_id)
         .group('projects.id')
   }
+  scope :visible_to_admin, -> (organization_id) {
+    select('DISTINCT(projects.*)')
+        .joins(:account)
+        .where('accounts.organization_id = ?', organization_id)
+        .group('projects.id')
+  }
   scope :owner_of, -> (user_id) {
     select('DISTINCT(projects.*)')
       .where("projects.owner_id = ?", user_id)
