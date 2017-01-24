@@ -53,10 +53,10 @@
                           <% if s.account.salesforce_accounts.empty? %>
                             <td class="col-lg-7">Not linked</td>  
                           <% else %>
-                            <td class="col-lg-7">Activities linked to Salesforce Account: <%= s.account.salesforce_accounts.map{|n| n.salesforce_account_name}.join(', ') %></td>
+                            <td class="col-lg-7">Linked to SFDC Account: <%= s.account.salesforce_accounts.map{|n| n.salesforce_account_name}.join(', ') %></td>
                           <% end %>
                         <% else %>
-                          <td class="col-lg-7">Activities linked to Salesforce Opportunity: <%= s.account.salesforce_opportunities.map{|n| n.name}.join(', ') %></td>
+                          <td class="col-lg-7">Linked to SFDC Opportunity: <%= s.salesforce_opportunities.map{|n| n.name}.join(', ') %></td>
                         <% end %>
                       </tr>
                     <% end %>

@@ -113,6 +113,19 @@ class SalesforceController < ApplicationController
     end
   end
 
+  def link_salesforce_opportunity
+    # One CS Stream can link to one Salesforce Opportunity
+    salesforce_opp = SalesforceOpportunity.find_by(id: params[:salesforce_id])
+    if !salesforce_opp.nil?
+      salesforce_opp.project = Project.find_by_id(params[:project_id])
+      salesforce_opp.save
+    end
+
+    respond_to do |format|
+      format.html { redirect_to settings_salesforce_opportunities_path }
+    end
+  end
+
   def refresh_accounts
     SalesforceAccount.load(current_user.organization_id)
     render :text => ' '
