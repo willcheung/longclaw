@@ -43,8 +43,7 @@ class ContextsmithService
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = ""
-    elsif Rails.env.test? # DEBUG
-      max=888 #temp
+    elsif Rails.env.test? # Test / DEBUG 
       callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
@@ -57,7 +56,7 @@ class ContextsmithService
       in_domain = "&in_domain=comprehend.com"
     end
     ### TODO: add "&request=true" to final_url
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&preview=true&time=true&neg_sentiment=0&max=" + max.to_s + "&cluster_method=BY_EMAIL_DOMAIN&callback=" + callback_url + in_domain
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&preview=true&time=true&neg_sentiment=0&cluster_method=BY_EMAIL_DOMAIN&max=" + max.to_s + "&callback=" + callback_url + in_domain
     puts "Calling backend service for clustering: " + final_url
     puts "Callback URL set as: " + callback_url
 

@@ -17,11 +17,11 @@ test:
   google_client_secret: kMCmqlzYF6pYp6L8-SIP8IGY
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
-  #csback_base_url: http://104.198.4.24:80
-  #csback_script_base_url: http://104.198.4.24:80
-  ## new clustering backend service
-  csback_base_url: http://104.198.4.24:8080
-  csback_script_base_url: http://104.198.4.24:8080
+  #csback_base_url: https://104.198.4.24:80
+  #csback_script_base_url: https://104.198.4.24:80
+  # Port 8080 = new clustering backend service
+  csback_base_url: https://104.198.4.24:8080
+  csback_script_base_url: https://104.198.4.24:8080
 
 production:
   google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com

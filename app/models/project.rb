@@ -258,7 +258,8 @@ class Project < ActiveRecord::Base
 
   def self.new_risk_score(array_of_project_ids, time_zone)
     projects = Project.where(id: array_of_project_ids).group('projects.id')
-    return [] if projects.first.nil?   # fail early if there are no projects
+
+    return [] if projects.empty?   # quit early if there are no projects
 
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
@@ -292,8 +293,6 @@ class Project < ActiveRecord::Base
 
   def new_risk_score(time_zone)
     risk_settings = RiskSetting.where(level: self.account.organization)
-    return nil if risk_settings.length == 0  # if settings not yet set
-
     # Risk / Engagement Ratio
     sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
     pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
@@ -323,7 +322,6 @@ class Project < ActiveRecord::Base
 
   def new_risk_score_trend(time_zone, day_range=14)
     risk_settings = RiskSetting.where(level: self.account.organization)
-    return nil if risk_settings.length == 0  # if settings not yet set
     
     # Risk / Engagement Ratio
     sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
@@ -788,10 +786,10 @@ class Project < ActiveRecord::Base
         # project.subscribers.create(user_id: user_id)
 
         # Project conversations
-        Activity.load(get_project_conversations(data, p), project, true, user_id)
+        #Activity.load(get_project_conversations(data, p), project, true, user_id)
 
         # Load Smart Tasks
-        Notification.load(get_project_conversations(data, p), project, false)
+        #Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
         # 8/30: Temporarily disable this because it gets too noisy during initial onboarding phase
@@ -799,7 +797,7 @@ class Project < ActiveRecord::Base
         # Notification.load_opportunity_for_stale_projects(project)
 
         # Project meetings
-        ContextsmithService.load_calendar_from_backend(project, 1000)
+        #ContextsmithService.load_calendar_from_backend(project, 1000)
 			end
 		end
 	end

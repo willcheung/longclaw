@@ -22,7 +22,7 @@ class ReportsController < ApplicationController
       Hashie::Mash.new({ id: proj.id, score: r[1], name: proj.name })
     end
     
-    if risk_scores.nil?
+    if risk_scores.empty?
       @average = 0
     else
       @average = (total_risk_scores.to_f/risk_scores.length).round(1)
@@ -31,10 +31,8 @@ class ReportsController < ApplicationController
 
   def dashboard_data
     @sort = params[:sort]
+
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-
-    @data = [] and return if projects.blank?  #quit early if no projects exist
-
     projects = projects.where(category: params[:category]) if params[:category]
     projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
 
@@ -47,7 +45,7 @@ class ReportsController < ApplicationController
       end
     end 
 
-    @data = [] and return if projects.blank?  #quit if all projects are filtered out
+    @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
     case @sort
     when "Risk Score"
