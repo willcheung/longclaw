@@ -83,20 +83,21 @@ class Notification < ActiveRecord::Base
       end
 
       days_inactive = project_inactive_days[p.id]
-      level = days_inactive > days_inactive_setting.high_threshold ? "high" : "medium"
+      level = days_inactive > days_inactive_setting.high_threshold ? "High" : "Medium"
 
       p.notifications.find_or_initialize_by(
         category: CATEGORY[:Alert],
         label: "DaysInactive",
       ).update(
-        name: "Days Inactive threshold exceeded for #{p.account.name}!",
-        description: "Days Inactive for #{p.name} is greater than #{level} threshold at #{days_inactive} days.",
+        name: "Inactive for #{days_inactive} days.",
+        description: "Days Inactive for #{p.name} is exceeded #{level} Threshold at #{days_inactive} days.",
         is_complete: false,
         completed_by: nil,
         complete_date: nil,
+        assign_to: project.owner_id,
         message_id: message_id,
         conversation_id: conversation_id,
-        activity_id: last_activity.id
+        activity_id: -1
       )
     end
   end
@@ -108,21 +109,22 @@ class Notification < ActiveRecord::Base
     pct_neg_sentiment = neg_sentiments.count.to_f/engagement_volume
 
     return if pct_neg_sentiment < alert_setting.medium_threshold
-    level = pct_neg_sentiment < alert_setting.high_threshold ? "medium" : "high"
+    level = pct_neg_sentiment < alert_setting.high_threshold ? "Medium" : "High"
 
     last_neg_sentiment_activity = neg_sentiments.first
     project.notifications.find_or_initialize_by(
       category: CATEGORY[:Alert],
       label: "PctNegSentiment",
     ).update(
-      name: "% Negative Sentiment threshold exceeded for #{project.account.name}!",
-      description: "% Negative Sentiment for #{project.name} is greater than #{level} threshold at #{(pct_neg_sentiment*100).round(1)}%",
+      name: "% Negative Sentiment threshold exceeded!",
+      description: "% Negative Sentiment for #{project.name} is exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%",
       is_complete: false,
       completed_by: nil,
       complete_date: nil,
+      assign_to: project.owner_id,
       message_id: last_neg_sentiment_activity.message_id,
       conversation_id: last_neg_sentiment_activity.backend_id,
-      activity_id: last_neg_sentiment_activity.id
+      activity_id: -1
     )
   end
 
