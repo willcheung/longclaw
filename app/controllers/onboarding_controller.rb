@@ -86,13 +86,13 @@ class OnboardingController < ApplicationController
 							if dc == 1.0
 								# 100% match in external members. Do not display these projects.
 								same_p << existing_project
-							elsif dc < 1.0 and dc >= 0.35
+							elsif dc < 1.0 and dc >= 0.2
 								# Considered same project. 
 								overlapping_p << existing_project
-							elsif dc < 0.35 and dc > 0.0 and intersect > 1
+							elsif dc < 0.2 and dc > 0.0 and intersect > 1
 								# Considered existing projects because there are more than 1 shared members.
 								overlapping_p << existing_project
-							elsif dc < 0.35 and dc > 0.0 and intersect == 1
+							elsif dc < 0.2 and dc > 0.0 and intersect == 1
 								# This is likely a one-time communication or a typo by email sender.
 
 								# If the existing project already has current user, then likely this conversation is part of that project.
