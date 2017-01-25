@@ -76,7 +76,7 @@
                         <td class="col-lg-4"><%= opp.project.name %></td>
                         <td class="col-lg-4"><%= opp.salesforce_account.salesforce_account_name %></td>
                         <td class="col-lg-4"><%= opp.name %></td>
-                        <td><a href="#"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
+                        <td><a href="/delete_salesforce_opportunity/<%=opp.id%>" data-method="delete"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
                       </tr>
                     <% end %>
                   </tbody>

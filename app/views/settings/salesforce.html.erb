@@ -84,7 +84,7 @@
                         <td class="col-lg-2"><%= a.account.name %></td>
                         <td class="col-lg-5"><%= a.salesforce_account_name %></td>
                         <td class="col-lg-5"><ul><%= a.salesforce_opportunities.limit(10).sort { |a,b| b.close_date <=> a.close_date  }.map { |o| "<li> <strong>" + o.name + "</strong>, " + number_to_currency(o.amount, unit: "$", precision: 0) + ", " + o.stage_name + ", isClosed: #{o.is_closed}, isWon: #{o.is_won}, close_date: #{o.close_date}" + "</li>"}.join("").html_safe %></ul></td>
-                        <td><a href="/delete_salesforce_account/<%=a.id%>"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
+                        <td><a href="/delete_salesforce_account/<%=a.id%>" data-method="delete"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
                       </tr>
                     <% end %>
                   </tbody>

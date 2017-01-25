@@ -41,7 +41,8 @@ Longclaw::Application.routes.draw do
     post "/salesforce_refresh" => 'salesforce#refresh_accounts'
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
     post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
-    get "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
+    delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
+    delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
 
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"

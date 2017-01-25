@@ -185,11 +185,11 @@ class Activity < ActiveRecord::Base
   end
 
 
-  def self.load_salesforce_activities(project, organization_id, account_name, limit=200)
+  def self.load_salesforce_activities(project, organization_id, sfdc_account_id, limit=200)
     val = []
 
     client = SalesforceService.connect_salesforce(organization_id)
-    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Name='#{account_name}'"
+    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Id='#{sfdc_account_id}'"
 
     activities = SalesforceService.query_salesforce(client, query_statement)
 
