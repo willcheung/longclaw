@@ -85,16 +85,31 @@ class Notification < ActiveRecord::Base
       days_inactive = project_inactive_days[p.id]
       level = days_inactive > days_inactive_setting.high_threshold ? "High" : "Medium"
 
+      # Create an event in Timeline
+      a = Activity.find_or_initialize_by(
+        posted_by: p.owner_id,
+        project_id: p.id,
+        category: Activity::CATEGORY[:Alert],
+        is_public: true,
+        backend_id: nil
+      ).update(
+        title: "Inactive for #{days_inactive} days.",
+        note: "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days.",
+        last_sent_date: Time.now.utc,
+        last_sent_date_epoch: Time.now.utc.to_i
+      )
+
+      # Create/Update the notification with appropriate Activity id
       p.notifications.find_or_initialize_by(
         category: CATEGORY[:Alert],
         label: "DaysInactive",
-      ).update(
-        name: "Inactive for #{days_inactive} days.",
-        description: "Days Inactive for #{p.name} is exceeded #{level} Threshold at #{days_inactive} days.",
         is_complete: false,
         completed_by: nil,
-        complete_date: nil,
-        assign_to: project.owner_id,
+        complete_date: nil
+      ).update(
+        name: "Inactive for #{days_inactive} days.",
+        description: "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days.",
+        assign_to: p.owner_id,
         message_id: message_id,
         conversation_id: conversation_id,
         activity_id: -1
@@ -112,15 +127,30 @@ class Notification < ActiveRecord::Base
     level = pct_neg_sentiment < alert_setting.high_threshold ? "Medium" : "High"
 
     last_neg_sentiment_activity = neg_sentiments.first
+
+    # Create an event in Timeline
+    a = Activity.find_or_initialize_by(
+      posted_by: project.owner_id,
+      project_id: project.id,
+      category: Activity::CATEGORY[:Alert],
+      is_public: true,
+      backend_id: nil
+    ).update(
+      title: "% Negative Sentiment threshold exceeded!",
+      note: "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%",
+      last_sent_date: Time.now.utc,
+      last_sent_date_epoch: Time.now.utc.to_i
+    )
+
     project.notifications.find_or_initialize_by(
       category: CATEGORY[:Alert],
       label: "PctNegSentiment",
-    ).update(
-      name: "% Negative Sentiment threshold exceeded!",
-      description: "% Negative Sentiment for #{project.name} is exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%",
       is_complete: false,
       completed_by: nil,
-      complete_date: nil,
+      complete_date: nil
+    ).update(
+      name: "% Negative Sentiment threshold exceeded!",
+      description: "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%",
       assign_to: project.owner_id,
       message_id: last_neg_sentiment_activity.message_id,
       conversation_id: last_neg_sentiment_activity.backend_id,
