@@ -20,7 +20,8 @@ class SettingsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id).unscope(:group)
 		# Average Negative Sentiment Score
 		neg_sentiment_scores = Activity.where(project_id: projects.ids, category: Activity::CATEGORY[:Conversation]).select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score").map { |a| a.sentiment_score }.select { |score| score < -0.75 }
-		@avg_neg_sentiment_scores = scale_sentiment_score(neg_sentiment_scores.reduce(0) { |total, score| total + score }.to_f/neg_sentiment_scores.length)
+		tmp_score = neg_sentiment_scores.reduce(0) { |total, score| total + score }.to_f/neg_sentiment_scores.length
+		@avg_neg_sentiment_scores = tmp_score.nan? ? 0 : scale_sentiment_score(tmp_score)
 
 		# Average PctNegSentiment Last 30d
 		total_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current }).sum('jsonb_array_length(activities.email_messages)')
