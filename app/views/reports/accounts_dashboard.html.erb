@@ -79,6 +79,7 @@
             var accountTypeFilter = $('#account-filter').val().length == 0 ? "" : "account=" + $('#account-filter').val();
             var streamTypeFilter = $('#category-filter').val().length == 0 ? "" : "category=" + $('#category-filter').val();
             var ownerFilter = $('#owner-filter').val().length == 0 ? "" : "owner=" + $('#owner-filter').val();
+
             // Determine queryString (filter) part of URL
             if (accountTypeFilter || streamTypeFilter || ownerFilter) {
                 url += "?" + accountTypeFilter;

@@ -85,6 +85,12 @@ class Project < ActiveRecord::Base
                organization_id, user_id, user_id)
         .group('projects.id')
   }
+  scope :visible_to_admin, -> (organization_id) {
+    select('DISTINCT(projects.*)')
+        .joins(:account)
+        .where('accounts.organization_id = ?', organization_id)
+        .group('projects.id')
+  }
   scope :owner_of, -> (user_id) {
     select('DISTINCT(projects.*)')
       .where("projects.owner_id = ?", user_id)
@@ -258,7 +264,8 @@ class Project < ActiveRecord::Base
 
   def self.new_risk_score(array_of_project_ids, time_zone)
     projects = Project.where(id: array_of_project_ids).group('projects.id')
-    return [] if projects.first.nil?   # fail early if there are no projects
+
+    return [] if projects.empty?   # quit early if there are no projects
 
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
@@ -306,8 +313,6 @@ class Project < ActiveRecord::Base
 
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
-    puts "************************************* days_inactive_setting *****************************************"
-    print "days_inactive_setting=", days_inactive_setting , " nil?=", days_inactive_setting.nil? , "\n" 
     last_sent_date = self.activities.where.not(category: Activity::CATEGORY[:Note]).maximum(:last_sent_date)
     days_inactive = last_sent_date.nil? ? 0 : Time.current.in_time_zone(time_zone).to_date.mjd - last_sent_date.in_time_zone(time_zone).to_date.mjd
     inactivity_risk = Project.calculate_score_by_setting(days_inactive, days_inactive_setting)
@@ -751,7 +756,7 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # This method should be called *after* all accounts, contacts, and users are processed & inserted.
+  # Called during onboarding process. This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
@@ -786,10 +791,10 @@ class Project < ActiveRecord::Base
         # Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
         # project.subscribers.create(user_id: user_id)
 
-        # Project conversations
+        # Upsert project conversations.
         Activity.load(get_project_conversations(data, p), project, true, user_id)
 
-        # Load Smart Tasks
+        # Unsert/load Smart Tasks.
         Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
@@ -797,7 +802,7 @@ class Project < ActiveRecord::Base
         # Also removing the rake scheduler for this.  Will need to think of a better solution to surface this.
         # Notification.load_opportunity_for_stale_projects(project)
 
-        # Project meetings
+        # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
 			end
 		end

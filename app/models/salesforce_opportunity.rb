@@ -29,8 +29,8 @@
 #
 
 class SalesforceOpportunity < ActiveRecord::Base
-	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id"
-  belongs_to  :projects, foreign_key: "contextsmith_project_id"
+	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id", primary_key: "salesforce_account_id"
+  belongs_to  :project, foreign_key: "contextsmith_project_id"
 
 	def self.load(organization_id, query_range=500)
   	val = []
