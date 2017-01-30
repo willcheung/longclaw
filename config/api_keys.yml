@@ -14,6 +14,7 @@ development:
   basecamp_client_secret: efd66e0c5c0ad9b43d5332646d994bf6eb4334a6
   basecamp_authorization_url: https://launchpad.37signals.com/authorization/new
   basecamp_token_url: https://launchpad.37signals.com/authorization/token
+  basecamp_redirect_uri: http://localhost:3000/users/auth/37signals/callback
   BASE_URL: http://localhost:3000
 
 test:

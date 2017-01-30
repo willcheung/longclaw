@@ -76,9 +76,9 @@ class SettingsController < ApplicationController
 	def basecamp
 
 		puts "basecamp settings controller"
-		pin = params[:code]
-		output = BaseCampService.basecamp2_token(pin)
-		@climber = output
+		token = params[:code]
+		@climber = OauthUser.basecamp2_user_projects(token)
+		# projects = BaseCampService.basecamp2_user_projects(token)
 	end
 
 	def super_user
