@@ -50,11 +50,16 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   end
 
+  def basecamp2
+    puts "Hellow from basecamp2 in Omniauth-callbackcontroller"
+  end
+
   def failure
   	reset_session
   	logger.error "Can't verify Google!"
     ahoy.track("Error logging in", message: "Can't verify Google!")
   	redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
   end
+
 
 end

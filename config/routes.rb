@@ -1,5 +1,7 @@
 Longclaw::Application.routes.draw do
 
+ 
+
   devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
   # You can have the root of your site routed with "root"
 
@@ -42,6 +44,9 @@ Longclaw::Application.routes.draw do
     post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
     get "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
 
+    resources :basecamp, only: [:index]
+    get 'basecamp_controller/index'
+
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"
       get "users"
@@ -50,6 +55,7 @@ Longclaw::Application.routes.draw do
       get "salesforce" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 
+      get "basecamp"
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
       get "iframe_test"
@@ -88,9 +94,17 @@ Longclaw::Application.routes.draw do
   end
 
   devise_scope :user do # Unauthenticated user
-  	root to: "sessions#new"
-    get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
+  	# root to: "sessions#new"
+    root to: redirect('/auth/basecamp')
+    get '/auth/:provider/callback' => 'setting#basecamp'
+    # get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
   end
+
+  get '/users/auth/basecamp2' => 'basecamps#basecamp2'
+  get '/users/auth/37signals/callback' => 'settings#basecamp'
+
+
+
 
   # Cluster callback
   post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'

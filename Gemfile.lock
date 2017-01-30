@@ -275,7 +275,9 @@ DEPENDENCIES
   jbuilder (~> 1.2)
   jquery-rails
   letter_opener
+  oauth2 (~> 1.0)
   omniauth-google-oauth2!
+  omniauth-oauth2 (~> 1.4)
   omniauth-salesforce
   paranoia (~> 2.1, >= 2.1.5)
   pg

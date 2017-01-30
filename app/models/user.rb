@@ -53,6 +53,7 @@ class User < ActiveRecord::Base
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
   has_many    :notifications, foreign_key: "assign_to"
+  has_many    :oauth_user
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -98,6 +99,10 @@ class User < ActiveRecord::Base
         oauth_user.save
       end
     end
+  end
+
+  def self.find_basecamp
+    
   end
 
   def self.find_for_google_oauth2(auth, time_zone='UTC')

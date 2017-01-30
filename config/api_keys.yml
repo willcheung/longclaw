@@ -10,6 +10,10 @@ development:
   salesforce_url_instance: https://na30.salesforce.com
   salesforce_sandbox_client_id: 3MVG982oBBDdwyHiqGsOXQz6wLLinqrWyAUQRz19HeA2MWIjX0iGa6PfE1LbD8x98nmuNETFb1_.0YyxfaIPo
   salesforce_sandbox_client_secret: 9048492794353274691
+  basecamp_client_id: a708737faac642403a3b8fb000585ace49fd1935
+  basecamp_client_secret: efd66e0c5c0ad9b43d5332646d994bf6eb4334a6
+  basecamp_authorization_url: https://launchpad.37signals.com/authorization/new
+  basecamp_token_url: https://launchpad.37signals.com/authorization/token
   BASE_URL: http://localhost:3000
 
 test:

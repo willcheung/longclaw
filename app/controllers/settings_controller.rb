@@ -1,3 +1,4 @@
+require_dependency "app/services/basecamp_service.rb"
 class SettingsController < ApplicationController
 	before_filter :get_salesforce_user, only: ['salesforce', 'salesforce_opportunities', 'salesforce_activities']
 
@@ -70,6 +71,14 @@ class SettingsController < ApplicationController
 
 	def salesforce_activities
 		@streams = Project.all.is_active.includes(:salesforce_opportunities) # all active projects because "admin" role can see everything
+	end
+
+	def basecamp
+
+		puts "basecamp settings controller"
+		pin = params[:code]
+		output = BaseCampService.basecamp2_token(pin)
+		@climber = output
 	end
 
 	def super_user
