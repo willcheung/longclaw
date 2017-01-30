@@ -9,6 +9,7 @@ class BasecampsController < ApplicationController
 
 	def basecamp2
 		puts "Hello Basecamp Controller basecamp2"
+		OauthUser.oauth_basecamp2
 
 		redirect_to BaseCampService.connect_basecamp2
 	end

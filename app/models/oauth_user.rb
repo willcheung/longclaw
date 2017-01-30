@@ -20,4 +20,9 @@
 
 class OauthUser < ActiveRecord::Base
 	belongs_to 	:organization
+	belongs_to :user
+
+	def oauth_basecamp2
+		puts "Hello from OauthUser modal"
+	end
 end
