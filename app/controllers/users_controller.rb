@@ -30,7 +30,7 @@ class UsersController < ApplicationController
     end
   end
 
-  # POST from onboarding#fill_in_form page
+  # POST from completing onboarding's fill_in_form
   def fill_in_info_update
     respond_to do |format|
       if @user.update(user_params)

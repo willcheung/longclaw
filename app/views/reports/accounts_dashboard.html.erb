@@ -11,14 +11,21 @@
             <div class="col-md-12 m-t-sm filter-space">
                 <!-- Account Type -->
                 <select id="account-filter" class="category_filter col-md-3" data-placeholder="Select Account Type">
-                    <option value="All"></option>
+                    <option value=""></option> <!-- no filter -->
                     <% Account::CATEGORY.each do |k,v| %>
-                    <option <% if params[:account] == v %> selected <% end %> ><%= v %></option>
+                      <option <% if params[:account] == v %> selected <% end %> ><%= v %></option>
+                    <% end %>
+                </select>
+                <!-- Stream Type -->
+                <select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Stream Type">
+                    <option value=""></option> <!-- no filter -->
+                    <% Project::CATEGORY.each do |k,v|    %>
+                      <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>
                     <% end %>
                 </select>
                 <!-- Owner -->
                 <select id="owner-filter" class="category_filter col-md-3" data-placeholder="Select Owner">
-                    <option value="All"></option>
+                    <option value=""></option> <!-- no filter -->
                     <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >Owner: Me</option>
                     <% @owners.each do |u| %>
                         <% if u.id != current_user.id %>
@@ -28,13 +35,6 @@
                         <% end %>
                     <% end %>
                     <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >Unassigned</option>
-                </select>
-                <!-- Stream Type -->
-                <select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Stream Type">
-                    <option value="All"></option>
-                    <% Project::CATEGORY.each do |k,v|    %>
-                    <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>
-                    <% end %>
                 </select>
                 <!-- <div class="col-md-3"></div> -->
             </div>
@@ -69,27 +69,28 @@
 </div>
 
 <script>
-    $(function () {
+    $(document).ready(function() {
         $('#sort-type, #account-filter, #owner-filter, #category-filter').change( function () {
             // Clear stream data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
 
             // Build URL for AJAX call for filtered data
             var url = "dashboard_data/" + encodeURIComponent($('#sort-type').val());
-            var accountFilter = $('#account-filter').val() === "All" ? "" : "account=" + $('#account-filter').val();
-            var ownerFilter = $('#owner-filter').val() === "All" ? "" : "owner=" + $('#owner-filter').val();
-            var categoryFilter = $('#category-filter').val() === "All" ? "" : "category=" + $('#category-filter').val();
+            var accountTypeFilter = $('#account-filter').val().length == 0 ? "" : "account=" + $('#account-filter').val();
+            var streamTypeFilter = $('#category-filter').val().length == 0 ? "" : "category=" + $('#category-filter').val();
+            var ownerFilter = $('#owner-filter').val().length == 0 ? "" : "owner=" + $('#owner-filter').val();
+
             // Determine queryString (filter) part of URL
-            if (accountFilter || ownerFilter || categoryFilter) {
-                url += "?" + accountFilter;
-                if (accountFilter && (ownerFilter || categoryFilter))
+            if (accountTypeFilter || streamTypeFilter || ownerFilter) {
+                url += "?" + accountTypeFilter;
+                if (accountTypeFilter && (streamTypeFilter || ownerFilter))
+                    url += "&";
+
+                url += streamTypeFilter;
+                if ((accountTypeFilter || streamTypeFilter) && ownerFilter)
                     url += "&";
 
                 url += ownerFilter;
-                if ((accountFilter || ownerFilter) && categoryFilter)
-                    url += "&";
-
-                url += categoryFilter;
             }
             $.getScript(url)
         });
