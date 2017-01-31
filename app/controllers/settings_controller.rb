@@ -9,6 +9,8 @@ class SettingsController < ApplicationController
     if(@salesforce_user.nil?)
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
     end
+
+
 	end
 
 	def users
@@ -74,11 +76,17 @@ class SettingsController < ApplicationController
 	end
 
 	def basecamp
+		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+    # @basecamp2_user is Nil
 
 		puts "basecamp settings controller"
-		token = params[:code]
-		@climber = OauthUser.basecamp2_user_projects(token)
-		# projects = BaseCampService.basecamp2_user_projects(token)
+		pin = params[:code]
+		# Check if Oauth_user has been created
+		if @basecamp2_user == nil && pin
+			# Check if User exist in our database
+			# This Creates a new Oauth_user
+			OauthUser.basecamp2_create_user(pin, current_user.organization_id)
+		end
 	end
 
 	def super_user
