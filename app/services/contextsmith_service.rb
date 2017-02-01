@@ -75,7 +75,7 @@ class ContextsmithService
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
     token_emails = []
-    if Rails.env.development? || Rails.env.test?
+    if Rails.env.development?
       token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
     else
       project.users.registered.not_disabled.each do |u|
