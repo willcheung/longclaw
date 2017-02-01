@@ -47,9 +47,9 @@
                 </div>
                 <div class="salesforce_account col-lg-3" style="margin-right:0px; margin-left:15px; padding:0px; display: inline;">
                   
-                  <%= form_tag("/link_salesforce/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
+                  <%= form_tag("/link_salesforce_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
                     <div class="col-lg-11">
-                      <input type="search" name="salesforce_id" id="salesforce-search" class="contacts z-top salesforce-search" placeholder="Link to a Salesforce Account">
+                      <input type="search" name="salesforce_id" id="salesforce-account-search" class="contacts z-top salesforce-search" placeholder="Link to a Salesforce Account">
                     </div>
                     <input name="account_id" type="hidden" value="">     
                     <div class="col-lg-1" style="margin:0px; padding-left:0px; padding-top:3px;">                      
@@ -84,7 +84,7 @@
                         <td class="col-lg-2"><%= a.account.name %></td>
                         <td class="col-lg-5"><%= a.salesforce_account_name %></td>
                         <td class="col-lg-5"><ul><%= a.salesforce_opportunities.limit(10).sort { |a,b| b.close_date <=> a.close_date  }.map { |o| "<li> <strong>" + o.name + "</strong>, " + number_to_currency(o.amount, unit: "$", precision: 0) + ", " + o.stage_name + ", isClosed: #{o.is_closed}, isWon: #{o.is_won}, close_date: #{o.close_date}" + "</li>"}.join("").html_safe %></ul></td>
-                        <td><a href="/delete_salesforce_account/<%=a.id%>"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
+                        <td><a href="/delete_salesforce_account/<%=a.id%>" data-method="delete"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
                       </tr>
                     <% end %>
                   </tbody>

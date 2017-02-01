@@ -38,11 +38,13 @@ Longclaw::Application.routes.draw do
     resources :notifications, only: [:index, :update, :create]
     resources :salesforce, only: [:index]
     get "salesforce/disconnect/:id" => 'salesforce#disconnect'
-    post "/link_salesforce" => 'salesforce#link_salesforce_account'
+    post "/link_salesforce_account" => 'salesforce#link_salesforce_account'
+    post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
     post "/salesforce_refresh" => 'salesforce#refresh_accounts'
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
     post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
-    get "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
+    delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
+    delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
 
     resources :basecamp, only: [:index]
     get 'basecamp_controller/index'
@@ -79,6 +81,7 @@ Longclaw::Application.routes.draw do
       get "autocomplete_project_subs"
       get "autocomplete_project_member"
       get "autocomplete_salesforce_account_name"
+      get "autocomplete_salesforce_opportunity_name"
     end
     get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects", "onboarding/fill_in_info"
     post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'

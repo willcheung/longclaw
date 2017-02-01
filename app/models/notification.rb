@@ -83,17 +83,48 @@ class Notification < ActiveRecord::Base
       end
 
       days_inactive = project_inactive_days[p.id]
-      level = days_inactive > days_inactive_setting.high_threshold ? "high" : "medium"
+      level = days_inactive > days_inactive_setting.high_threshold ? "High" : "Medium"
 
+      # Create an event in Timeline. 
+      if last_activity.category == Activity::CATEGORY[:Alert]
+        # If last activity is an "Inactivity Alert", then update
+        p.activities.find_or_create_by(
+          posted_by: p.owner_id,
+          category: Activity::CATEGORY[:Alert],
+          is_public: true,
+          backend_id: nil,
+          title: "LIKE 'Inactive%'"
+        ).update(
+          title: "Inactive for #{days_inactive} days.",
+          note: "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days.",
+          last_sent_date: Time.now.utc,
+          last_sent_date_epoch: Time.now.utc.to_i
+        )
+      else
+        # Otherwise, create new alert
+        p.activities.create(
+          posted_by: p.owner_id,
+          category: Activity::CATEGORY[:Alert],
+          is_public: true,
+          backend_id: nil,
+          title: "Inactive for #{days_inactive} days.",
+          note: "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days.",
+          last_sent_date: Time.now.utc,
+          last_sent_date_epoch: Time.now.utc.to_i
+        )
+      end
+
+      # Create/Update the notification with appropriate Activity id
       p.notifications.find_or_initialize_by(
         category: CATEGORY[:Alert],
         label: "DaysInactive",
-      ).update(
-        name: "Days Inactive threshold exceeded for #{p.account.name}!",
-        description: "Days Inactive for #{p.name} is greater than #{level} threshold at #{days_inactive} days.",
         is_complete: false,
-        completed_by: nil,
-        complete_date: nil,
+        completed_by: nil, # so we don't overwrite completed tasks
+        complete_date: nil # same here
+      ).update(
+        name: "Inactive for #{days_inactive} days.",
+        description: "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days.",
+        assign_to: p.owner_id,
         message_id: message_id,
         conversation_id: conversation_id,
         activity_id: last_activity.id
@@ -108,21 +139,36 @@ class Notification < ActiveRecord::Base
     pct_neg_sentiment = neg_sentiments.count.to_f/engagement_volume
 
     return if pct_neg_sentiment < alert_setting.medium_threshold
-    level = pct_neg_sentiment < alert_setting.high_threshold ? "medium" : "high"
+    level = pct_neg_sentiment < alert_setting.high_threshold ? "Medium" : "High"
 
     last_neg_sentiment_activity = neg_sentiments.first
+
+    # Create an event in Timeline
+    project.activities.find_or_initialize_by(
+      posted_by: project.owner_id,
+      category: Activity::CATEGORY[:Alert],
+      is_public: true,
+      backend_id: nil
+    ).update(
+      title: "% Negative Sentiment threshold exceeded!",
+      note: "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%",
+      last_sent_date: Time.now.utc,
+      last_sent_date_epoch: Time.now.utc.to_i
+    )
+
     project.notifications.find_or_initialize_by(
       category: CATEGORY[:Alert],
       label: "PctNegSentiment",
-    ).update(
-      name: "% Negative Sentiment threshold exceeded for #{project.account.name}!",
-      description: "% Negative Sentiment for #{project.name} is greater than #{level} threshold at #{(pct_neg_sentiment*100).round(1)}%",
       is_complete: false,
       completed_by: nil,
-      complete_date: nil,
-      message_id: last_neg_sentiment_activity.message_id,
-      conversation_id: last_neg_sentiment_activity.backend_id,
-      activity_id: last_neg_sentiment_activity.id
+      complete_date: nil
+    ).update(
+      name: "% Negative Sentiment threshold exceeded!",
+      description: "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%",
+      assign_to: project.owner_id,
+      message_id: nil,
+      conversation_id: nil,
+      activity_id: -1
     )
   end
 

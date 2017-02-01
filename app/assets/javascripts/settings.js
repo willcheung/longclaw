@@ -19,8 +19,7 @@ $(document).ready(function() {
 
     });
 
-
-    $(".salesforce-search").selectize({
+    $("#salesforce-account-search").selectize({
         closeAfterSelect: true,
         valueField: 'id',
         labelField: 'name',
@@ -47,6 +46,58 @@ $(document).ready(function() {
           // use # to search for projects by name
           // console.log(callback);
           $.getJSON( '/search/autocomplete_salesforce_account_name.json', { term: encodeURIComponent(term) } )
+            .done( function (data) {
+              // console.log(data);
+              callback(data);
+            })
+            .fail( function () {
+              console.log("fail");
+              callback();
+            })
+          
+        },
+        onDropdownOpen: function ($dropdown) {
+          // Manually prevent dropdown from opening when:
+          // 1. There is no search term, or
+          // 2. The search term does not begin with #
+          // 3. At least one project has been selected already
+          if (!this.lastQuery.length || this.items.length) {
+            this.close();
+          }
+        },
+        onBlur: function () {
+          // Manually prevent input box from being cleared on blur
+          this.setTextboxValue(this.lastQuery);
+        }
+    });
+
+    $("#salesforce-opportunity-search").selectize({
+        closeAfterSelect: true,
+        valueField: 'id',
+        labelField: 'name',
+        searchField: ['name'],
+        create: false,
+        render: {
+          item: function(item, escape) {
+            return '<div>' +
+                (item.name ? '<span class="name">' + escape(item.name) + '</span>' : '') +
+                (item.account ? '<span class="account">' + escape(item.account) + '</span>' : '') +
+            '</div>';
+          },
+          option: function(item, escape) {
+            var label = item.name || item.account;
+            var caption = item.name ? item.account : null;
+            return '<div>' +
+                '<span class="label">' + escape(label) + '</span>' +
+                (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
+            '</div>';
+          }
+        },
+        load: function (term, callback) {
+          if (!term.length) return callback()
+          // use # to search for projects by name
+          // console.log(callback);
+          $.getJSON( '/search/autocomplete_salesforce_opportunity_name.json', { term: encodeURIComponent(term) } )
             .done( function (data) {
               // console.log(data);
               callback(data);

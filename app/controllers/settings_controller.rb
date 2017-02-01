@@ -23,7 +23,8 @@ class SettingsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id).unscope(:group)
 		# Average Negative Sentiment Score
 		neg_sentiment_scores = Activity.where(project_id: projects.ids, category: Activity::CATEGORY[:Conversation]).select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score").map { |a| a.sentiment_score }.select { |score| score < -0.75 }
-		@avg_neg_sentiment_scores = scale_sentiment_score(neg_sentiment_scores.reduce(0) { |total, score| total + score }.to_f/neg_sentiment_scores.length)
+		tmp_score = neg_sentiment_scores.reduce(0) { |total, score| total + score }.to_f/neg_sentiment_scores.length
+		@avg_neg_sentiment_scores = tmp_score.nan? ? 0 : scale_sentiment_score(tmp_score)
 
 		# Average PctNegSentiment Last 30d
 		total_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current }).sum('jsonb_array_length(activities.email_messages)')
@@ -68,11 +69,12 @@ class SettingsController < ApplicationController
 	end
 
 	def salesforce_opportunities
-		@streams = Project.all.is_active # all active projects because "admin" role can see everything
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active # all active projects because "admin" role can see everything
+		@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
 	end
 
 	def salesforce_activities
-		@streams = Project.all.is_active.includes(:salesforce_opportunities) # all active projects because "admin" role can see everything
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunities, :account).group("salesforce_opportunities.id, accounts.id") # all active projects because "admin" role can see everything
 	end
 
 	def basecamp
