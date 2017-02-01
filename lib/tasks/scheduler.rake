@@ -91,7 +91,7 @@ namespace :projects do
     end
 
     desc 'Email weekly task summary on Sundays'
-    task :email_weekly_summary, [:test] => [:environment] do |t, args|
+    task :email_weekly_summary, [:test] => :environment do |t, args|
         puts "\n\n=====Task (email_weekly_summary) started at #{Time.now}====="
 
         args.with_defaults(:test => false)
@@ -102,6 +102,9 @@ namespace :projects do
                         UserMailer.weekly_summary_email(usr).deliver_later
                         sleep(0.5)
                     end
+                    print "usr=", get_full_name(usr) , "  current.hour==", Time.current.hour, " current.sunday?=", Time.current.sunday?, "\n"
+                    print "args[:test]", args[:test], " "
+                    print "!Rails.env.production?", !Rails.env.production?, "\n"
                 end
             end
         end
