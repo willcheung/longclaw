@@ -2,24 +2,32 @@
 #
 # Table name: projects
 #
-#  id             :uuid             not null, primary key
-#  name           :string           default(""), not null
-#  account_id     :uuid
-#  project_code   :string
-#  is_public      :boolean          default(TRUE)
-#  status         :string           default("Active")
-#  description    :text
-#  start_date     :date
-#  end_date       :date
-#  budgeted_hours :integer
-#  created_by     :uuid
-#  updated_by     :uuid
-#  owner_id       :uuid
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  is_confirmed   :boolean
-#  category       :string           default("Implementation")
-#  deleted_at     :datetime
+#  id                  :uuid             not null, primary key
+#  name                :string           default(""), not null
+#  account_id          :uuid
+#  project_code        :string
+#  is_public           :boolean          default(TRUE)
+#  status              :string           default("Active")
+#  description         :text
+#  start_date          :date
+#  end_date            :date
+#  budgeted_hours      :integer
+#  created_by          :uuid
+#  updated_by          :uuid
+#  owner_id            :uuid
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  is_confirmed        :boolean
+#  category            :string           default("Implementation")
+#  deleted_at          :datetime
+#  renewal_date        :date
+#  contract_start_date :date
+#  contract_end_date   :date
+#  contract_arr        :decimal(14, 2)
+#  contract_mrr        :decimal(12, 2)
+#  renewal_count       :integer
+#  has_case_study      :boolean          default(FALSE), not null
+#  is_referenceable    :boolean          default(FALSE), not null
 #
 # Indexes
 #
@@ -76,7 +84,7 @@ class Project < ActiveRecord::Base
   has_many  :users, through: "project_members"
   has_many  :users_all, through: "project_members_all", source: :user
 
-  has_many  :salesforce_opportunities, foreign_key: "contextsmith_project_id", dependent: :nullify
+  has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify
 
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
