@@ -17,6 +17,3 @@
 # 	end
 # end
 
-# Rails.application.config.middleware.use OmniAuth::Builder do 
-# 	provider :basecamp2, ENV['basecamp_client_id'], ENV['basecamp_client_secret']
-# end

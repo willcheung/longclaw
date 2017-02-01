@@ -84,24 +84,27 @@ class SettingsController < ApplicationController
 		if @basecamp2_user == nil && pin
 			# Check if User exist in our database
 			# This Creates a new Oauth_user
-			begin
-				OauthUser.basecamp2_create_user(pin, current_user.organization_id)
-			rescue
-				#code that deals with some exception
-				flash[:warning] = "Has not been registered succesfully"
-			else
-				#code that runs only if (no) excpetion was raised
-				flash[:notice] = "Basecamp is enabled!"
-			end
+			OauthUser.basecamp2_create_user(pin, current_user.organization_id)
+			# begin
+				
+			# rescue
+			# 	#code that deals with some exception
+			# 	flash[:warning] = "Has not been registered succesfully"
+			# else
+			# 	#code that runs only if (no) excpetion was raised
+			# 	flash[:notice] = "Basecamp is enabled!"
+			# end
 		end
 
-		# if @basecamp2_user
+		if @basecamp2_user
 
-		# 	puts "settings controller:======#{@basecamp2_user['oauth_access_token']}"
-		# 	response = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
-		# 	puts "#{response}"
-
-		# end
+			begin
+			response1 = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
+			@climber = response1
+			response2 = OauthUser.basecamp2_topics(@basecamp2_user['oauth_access_token'])
+			@hiker = response2
+			end
+		end
 
 	end
 
