@@ -25,8 +25,6 @@ class SalesforceService
       begin
         client.user_info
       rescue
-        # salesforce refresh token expires when different app use it for 5 times
-        salesforce_user.destroy
         client = nil
         puts "Error: salesforce connection error"
       end      
