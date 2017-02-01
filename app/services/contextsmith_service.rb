@@ -13,6 +13,7 @@ class ContextsmithService
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
     params = "&max=" + max.to_s + after + query + is_time + neg_sentiment + request
 
+    puts "~~~~~~~~~~~~~~~ ContextsmithService will now call load_from_backend()... ~~~~~~~~~~~~~~~ "
     load_from_backend(project, base_url, params) do |data|
       puts "Found #{data[0]['conversations'].size} conversations!\n"
       Contact.load(data, project, save_in_db)
@@ -21,6 +22,7 @@ class ContextsmithService
       Notification.load(data, project, is_test)
       result
     end
+    puts "~~~~~~~~~~~~~~~ load_from_backend() processing complete! ~~~~~~~~~~~~~~~ "
   end
   
   # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
@@ -43,7 +45,7 @@ class ContextsmithService
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
       in_domain = ""
-    elsif Rails.env.test? # DEBUG
+    elsif Rails.env.test? # Test / DEBUG 
       callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
       user.refresh_token! if user.token_expired?
       token_emails = [{ token: user.oauth_access_token, email: user.email }]
@@ -56,8 +58,9 @@ class ContextsmithService
       in_domain = "&in_domain=comprehend.com"
     end
     ### TODO: add "&request=true" to final_url
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&preview=true&time=true&neg_sentiment=0&max=" + max.to_s + "&callback=" + callback_url + in_domain
+    final_url = base_url + "?token_emails=" + token_emails.to_json + "&preview=true&time=true&neg_sentiment=0&cluster_method=BY_EMAIL_DOMAIN&max=" + max.to_s + "&callback=" + callback_url + in_domain
     puts "Calling backend service for clustering: " + final_url
+    puts "Callback URL set as: " + callback_url
 
     url = URI.parse(final_url)
     req = Net::HTTP::Get.new(url.to_s)
@@ -68,6 +71,7 @@ class ContextsmithService
   private
 
   def self.load_from_backend(project, base_url, params)
+    puts "********** testing... we are in load_from_backend() ! ************"
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
     token_emails = []
@@ -80,6 +84,7 @@ class ContextsmithService
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
     end
+    puts "<><><><> token_emails.empty? ", token_emails.empty?, " <><><><>\n"
     return [] if token_emails.empty?
 
     ex_clusters = project.contacts.pluck(:email)

@@ -272,6 +272,9 @@ class Project < ActiveRecord::Base
 
   def self.new_risk_score(array_of_project_ids, time_zone)
     projects = Project.where(id: array_of_project_ids).group('projects.id')
+
+    return [] if projects.empty?   # quit early if there are no projects
+
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
@@ -761,7 +764,7 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # This method should be called *after* all accounts, contacts, and users are processed & inserted.
+  # Called during onboarding process. This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
@@ -796,10 +799,10 @@ class Project < ActiveRecord::Base
         # Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
         # project.subscribers.create(user_id: user_id)
 
-        # Project conversations
+        # Upsert project conversations.
         Activity.load(get_project_conversations(data, p), project, true, user_id)
 
-        # Load Smart Tasks
+        # Unsert/load Smart Tasks.
         Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
@@ -807,7 +810,7 @@ class Project < ActiveRecord::Base
         # Also removing the rake scheduler for this.  Will need to think of a better solution to surface this.
         # Notification.load_opportunity_for_stale_projects(project)
 
-        # Project meetings
+        # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
 			end
 		end

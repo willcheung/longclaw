@@ -21,7 +21,11 @@ class SettingsController < ApplicationController
 		# Average Negative Sentiment Score
 		neg_sentiment_scores = Activity.where(project_id: projects.ids, category: Activity::CATEGORY[:Conversation]).select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score").map { |a| a.sentiment_score }.select { |score| score < -0.75 }
 		tmp_score = neg_sentiment_scores.reduce(0) { |total, score| total + score }.to_f/neg_sentiment_scores.length
-		@avg_neg_sentiment_scores = tmp_score.nan? ? 0 : scale_sentiment_score(tmp_score)
+    if neg_sentiment_scores.empty?
+      @avg_neg_sentiment_scores = 0
+    else
+      @avg_neg_sentiment_scores = tmp_score.nan? ? 0 : scale_sentiment_score(tmp_score)
+    end
 
 		# Average PctNegSentiment Last 30d
 		total_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current }).sum('jsonb_array_length(activities.email_messages)')
@@ -29,16 +33,24 @@ class SettingsController < ApplicationController
 			@avg_p_neg_sentiment = 0.0
 		else
 			total_risks = Activity.where(project_id: projects.ids, category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current).select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score").map { |a| a.sentiment_score }.select { |score| score < -0.75 }.count
-	    @avg_p_neg_sentiment = (total_risks.to_f/total_engagement*100).round(1)
+			@avg_p_neg_sentiment = (total_risks.to_f/total_engagement*100).round(1)
 	  end
 
-	  # Average Days Inactive
-	  projects_inactivity = projects.group('projects.id').joins(:activities).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
-    projects_inactivity.each { |pid, last_sent_date| projects_inactivity[pid] = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
-    @avg_inactivity = (projects_inactivity.reduce(0) { |total, days_inactive| total + days_inactive[1] }.to_f/projects.count).round(1) # get average of days inactive
+    # Average Days Inactive
+    projects_inactivity = projects.group('projects.id').joins(:activities).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
+    if projects_inactivity.empty?  # if projects is empty, inactivity should be too
+      @avg_inactivity = 0
+    else
+      projects_inactivity.each { |pid, last_sent_date| projects_inactivity[pid] = last_sent_date.nil? ? 0 : Date.current.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
+      @avg_inactivity = (projects_inactivity.reduce(0) { |total, days_inactive| total + days_inactive[1] }.to_f/projects.count).round(1) # get average of days inactive
+    end
 
-    # Average Risk Score
-    @avg_risk_score = (Project.new_risk_score(projects.ids, current_user.time_zone).reduce(0) { |total, risk_score| total + risk_score[1] }.to_f/projects.count).round(1)
+    # "Total Risk Score"
+    if projects.empty?
+      @avg_risk_score = 0
+    else
+      @avg_risk_score = (Project.new_risk_score(projects.ids, current_user.time_zone).reduce(0) { |total, risk_score| total + risk_score[1] }.to_f/projects.count).round(1)
+    end
 	end
 
 	def create_for_alerts
