@@ -163,8 +163,8 @@ class OnboardingController < ApplicationController
 					new_p.each { |p| @new_projects << p }
 					same_p.each { |p| @same_projects << p }
 				end #if account.id == new_project.account.id
-			end
-		end
+			end #all_accounts.each do | account |
+		end #new_user_projects.each do |new_project|
 
 		@project_last_email_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")
 		
@@ -249,97 +249,18 @@ class OnboardingController < ApplicationController
        	puts("Sending onboarding email to #{user.email}")
         url = Rails.env.development? ? "http://#{request.host}:3000/onboarding/confirm_projects": "https://#{request.host}/onboarding/confirm_projects"
         UserMailer.welcome_email(user, num_of_projects, url).deliver_later
-        
-        # Change user onboarding flag
-        current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
-    end
+             
+        format.json { render json: 'Email sent to ' + user.email, status: 200 }
 
-    #########################################################################
-    # Callback method from backend to create clusters for a particular user 
-    #
-    # Example:   curl -H "Content-Type: application/json" --data @/Users/willcheung/Downloads/contextsmith-json-3.txt http://localhost:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
-    # Example 2: http://64.201.248.178/:8888/newsfeed/cluster?email=indifferenzetester@gmail.com&token=test&max=300&before=1408695712&in_domain=comprehend.com&callback=http://24.130.10.244:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
-    #
-    #########################################################################
+      rescue => e
+        format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
+        logger.error "ERROR: Something went wrong: " + e.message
+        logger.error e.backtrace.join("\n")
+        ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
+      else
+        format.json { render json: 'Clusters created for user ' + user.email, status: 200}
+      end
 
-    def create_clusters
-        user = User.find_by_id(params[:user_id])
-        data = params["_json"]
-
-        respond_to do |format|
-            if user and data.kind_of?(Array)   
-                puts("Creating Streams for #{user.email}")
-
-                uniq_external_members, uniq_internal_members = get_all_members(data)
-
-                ############## Needs to be called in order -> Account (Contacts), User, Project ##########
-
-                puts "Create accounts and contacts..."
-                Account.create_from_clusters(uniq_external_members, user.id, user.organization.id)
-
-                puts "Create internal users..."
-                User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
-
-                puts "Create projects, project members, and activities..."
-                Project.create_from_clusters(data, user.id, user.organization.id)
-
-                ##########################################################################################
-
-            elsif user.nil?
-                format.json { render json: 'User not found.', status: 500}
-                logger.error "ERROR: User not found: " + params[:user_id]
-                ahoy.track("Error Create Cluster", message: "User not found: #{params[:user_id]}")
-                raise "ERROR: User not found during callback: " + params[:user_id]
-                return nil
-
-            elsif data.nil? or data.empty?
-
-                if params['code'] == 401 # Invalid credentials
-                  puts "Error: #{params['message']}\n"
-                  logger.error "ERROR: #{params['message']}\n"
-                    ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{params['message']}")
-                    raise "ERROR: Invalid credential during callback: " + params[:user_id]
-                    return nil
-
-                elsif params['code'] == 404 # No external cluster found
-                  puts "#{params['message']}\n"
-                  logger.error "ERROR: #{params['message']}"
-                  ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{params['message']}")
-                end
-            else
-                puts "Unhandled backend response."
-                logger.error("Unhandled backend response #{params['message']}")
-                    ahoy.track("Error Create Cluster for " + params[:user_id], message: "Unhandled backend response #{params['message']}.")
-                    raise "ERROR: Unhandled backend response during callback: " + params[:user_id]
-                return nil
-
-            end # if user and data
-
-          begin
-            # Update flag indicating cluster creation is complete
-            if user.cluster_create_date.nil?
-                user.update_attributes(cluster_create_date: Time.now, cluster_update_date: Time.now)
-            else
-                user.update_attributes(cluster_update_date: Time.now)
-            end
-
-            # Send welcome email with confirm_projects link
-            num_of_projects = Project.where(created_by: user.id, is_confirmed: false).includes(:users, :contacts, :account).count(:projects)
-            puts("Sending onboarding email to #{user.email}")
-            url = Rails.env.development? ? "http://#{request.host}:3000/onboarding/confirm_projects": "https://#{request.host}/onboarding/confirm_projects"
-            UserMailer.welcome_email(user, num_of_projects, url).deliver_later
-            
-            format.json { render json: 'Email sent to ' + user.email, status: 200 }
-
-          rescue => e
-            format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
-            logger.error "ERROR: Something went wrong: " + e.message
-            logger.error e.backtrace.join("\n")
-            ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
-          else
-            format.json { render json: 'Clusters created for user ' + user.email, status: 200}
-          end
-
-        end # respond_to do |format|
-    end # END: create_clusters
+    end # respond_to do |format|
+  end # END: create_clusters
 end
