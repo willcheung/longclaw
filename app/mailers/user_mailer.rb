@@ -15,6 +15,7 @@ class UserMailer < ApplicationMailer
     sub = user.subscriptions.daily
 
     unless sub.blank?
+      puts "Checking daily subscription for #{user.email}"
       @current_user_timezone = user.time_zone
       @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email)
       @updates_today = @updates_today.map do |proj|
@@ -33,6 +34,7 @@ class UserMailer < ApplicationMailer
       @risk_scores = Project.new_risk_score(@updates_today.map(&:id), user.time_zone) unless @updates_today.blank?
 
       track user: user # ahoy_email tracker
+      puts "Emailing daily summary to #{user.email}"
       mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
     end
   end
@@ -43,11 +45,13 @@ class UserMailer < ApplicationMailer
     @subs = user.subscriptions.weekly
 
     if !@subs.nil? and !@subs.empty?
+      puts "Checking weekly subscription for #{user.email}"
       @current_user_timezone = user.time_zone
       @projects = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
       # @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
 
       track user: user # ahoy_email tracker
+      puts "Emailing weekly summary to #{user.email}"
       mail(to: user.email, subject: "Weekly Summary for #{1.week.ago.strftime('%A, %B %d')} - #{Time.current.yesterday.strftime('%A, %B %d')}")
     end
   end

@@ -58,7 +58,7 @@ class Activity < ActiveRecord::Base
                   }
 
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert'}
 
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
