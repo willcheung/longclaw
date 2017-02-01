@@ -12,14 +12,19 @@
 #  is_won                    :boolean
 #  stage_name                :string
 #  close_date                :date
+#  renewal_date              :date
+#  contract_start_date       :date
+#  contract_end_date         :date
+#  contract_arr              :decimal(8, 2)
+#  contract_mrr              :decimal(8, 2)
+#  custom_fields             :hstore
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  contextsmith_project_id   :uuid
-#  probability               :decimal(5, 2)
-#  expected_revenue          :decimal(14, 2)
 #
 # Indexes
 #
+#  index_salesforce_opportunities_on_custom_fields              (custom_fields)
 #  index_salesforce_opportunities_on_salesforce_opportunity_id  (salesforce_opportunity_id) UNIQUE
 #
 

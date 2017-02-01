@@ -11,7 +11,7 @@
 #  title           :string           default(""), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
-#  source          :string
+#  alt_email       :string
 #  mobile          :string(32)
 #  background_info :text
 #  department      :string

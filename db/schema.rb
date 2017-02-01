@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170201043326) do
+ActiveRecord::Schema.define(version: 20161214020049) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -19,23 +19,22 @@ ActiveRecord::Schema.define(version: 20170201043326) do
   enable_extension "hstore"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",                                                  default: "",         null: false
-    t.text     "description",                                           default: ""
+    t.string   "name",                       default: "",         null: false
+    t.text     "description",                default: ""
     t.string   "website"
     t.uuid     "owner_id"
     t.string   "phone"
     t.text     "address"
     t.uuid     "created_by"
     t.uuid     "updated_by"
-    t.datetime "created_at",                                                                 null: false
-    t.datetime "updated_at",                                                                 null: false
+    t.datetime "created_at",                                      null: false
+    t.datetime "updated_at",                                      null: false
     t.uuid     "organization_id"
     t.text     "notes"
-    t.string   "status",                                                default: "Active"
-    t.string   "domain",            limit: 64,                          default: "",         null: false
-    t.string   "category",                                              default: "Customer"
+    t.string   "status",                     default: "Active"
+    t.string   "domain",          limit: 64, default: "",         null: false
+    t.string   "category",                   default: "Customer"
     t.datetime "deleted_at"
-    t.decimal  "revenue_potential",            precision: 14, scale: 2
   end
 
   add_index "accounts", ["deleted_at"], name: "index_accounts_on_deleted_at", using: :btree
@@ -118,7 +117,7 @@ ActiveRecord::Schema.define(version: 20170201043326) do
     t.string   "title",                      default: "", null: false
     t.datetime "created_at",                              null: false
     t.datetime "updated_at",                              null: false
-    t.string   "source"
+    t.string   "alt_email"
     t.string   "mobile",          limit: 32
     t.text     "background_info"
     t.string   "department"
@@ -198,11 +197,11 @@ ActiveRecord::Schema.define(version: 20170201043326) do
   add_index "project_subscribers", ["user_id"], name: "index_project_subscribers_on_email", using: :btree
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",                                         default: "",               null: false
+    t.string   "name",           default: "",               null: false
     t.uuid     "account_id"
     t.string   "project_code"
-    t.boolean  "is_public",                                    default: true
-    t.string   "status",                                       default: "Active"
+    t.boolean  "is_public",      default: true
+    t.string   "status",         default: "Active"
     t.text     "description"
     t.date     "start_date"
     t.date     "end_date"
@@ -210,19 +209,11 @@ ActiveRecord::Schema.define(version: 20170201043326) do
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
-    t.datetime "created_at",                                                              null: false
-    t.datetime "updated_at",                                                              null: false
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
     t.boolean  "is_confirmed"
-    t.string   "category",                                     default: "Implementation"
+    t.string   "category",       default: "Implementation"
     t.datetime "deleted_at"
-    t.date     "renewal_date"
-    t.date     "contract_start_date"
-    t.date     "contract_end_date"
-    t.decimal  "contract_arr",        precision: 14, scale: 2
-    t.decimal  "contract_mrr",        precision: 12, scale: 2
-    t.integer  "renewal_count"
-    t.boolean  "has_case_study",                               default: false,            null: false
-    t.boolean  "is_referenceable",                             default: false,            null: false
   end
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
@@ -252,8 +243,10 @@ ActiveRecord::Schema.define(version: 20170201043326) do
     t.uuid     "contextsmith_organization_id",              null: false
     t.datetime "created_at",                                null: false
     t.datetime "updated_at",                                null: false
+    t.hstore   "custom_fields"
   end
 
+  add_index "salesforce_accounts", ["custom_fields"], name: "index_salesforce_accounts_on_custom_fields", using: :gin
   add_index "salesforce_accounts", ["salesforce_account_id"], name: "index_salesforce_accounts_on_salesforce_account_id", unique: true, using: :btree
 
   create_table "salesforce_opportunities", force: :cascade do |t|
@@ -266,13 +259,18 @@ ActiveRecord::Schema.define(version: 20170201043326) do
     t.boolean  "is_won"
     t.string   "stage_name"
     t.date     "close_date"
+    t.date     "renewal_date"
+    t.date     "contract_start_date"
+    t.date     "contract_end_date"
+    t.decimal  "contract_arr",              precision: 8,  scale: 2
+    t.decimal  "contract_mrr",              precision: 8,  scale: 2
+    t.hstore   "custom_fields"
     t.datetime "created_at",                                                      null: false
     t.datetime "updated_at",                                                      null: false
     t.uuid     "contextsmith_project_id"
-    t.decimal  "probability",               precision: 5,  scale: 2
-    t.decimal  "expected_revenue",          precision: 14, scale: 2
   end
 
+  add_index "salesforce_opportunities", ["custom_fields"], name: "index_salesforce_opportunities_on_custom_fields", using: :gin
   add_index "salesforce_opportunities", ["salesforce_opportunity_id"], name: "index_salesforce_opportunities_on_salesforce_opportunity_id", unique: true, using: :btree
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
@@ -307,6 +305,7 @@ ActiveRecord::Schema.define(version: 20170201043326) do
     t.string   "title"
     t.string   "time_zone",              default: "UTC"
     t.boolean  "mark_private",           default: false, null: false
+    t.string   "role"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree

@@ -12,8 +12,6 @@
 #  organization_id     :uuid             not null
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
-#  oauth_refresh_date  :integer
-#  oauth_issue_date    :datetime
 #
 # Indexes
 #

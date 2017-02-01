@@ -10,9 +10,11 @@
 #  contextsmith_organization_id :uuid             not null
 #  created_at                   :datetime         not null
 #  updated_at                   :datetime         not null
+#  custom_fields                :hstore
 #
 # Indexes
 #
+#  index_salesforce_accounts_on_custom_fields          (custom_fields)
 #  index_salesforce_accounts_on_salesforce_account_id  (salesforce_account_id) UNIQUE
 #
 
