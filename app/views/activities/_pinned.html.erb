@@ -25,6 +25,10 @@
             <div class="vertical-timeline-icon salesforce-bg pinned">
                 <i class="salesforce-logo"></i>
             </div>
+        <% elsif a.category == Activity::CATEGORY[:Alert] %>
+            <div class="vertical-timeline-icon danger-bg pinned">
+                <i class="fa fa-exclamation"></i>
+            </div>
         <% end %>
     </td>
     <td <% if a.category == Activity::CATEGORY[:Note] %>style="background-color: #fff7db; margin-left=-3px;"<% end %> class="pinned-content rag-bar<%=a['rag_score']%>">
@@ -208,6 +212,21 @@
               &sdot; <a href="<%= a.email_messages.first.link %>" target="_blank">View in JIRA <i class="fa fa-external-link"></i></a>
             </div>
         </div>
+
+        <% elsif a.category == Activity::CATEGORY[:Alert] %>
+            <h3 class="font-bold">
+                Alert: <%= a.title %>
+           </h3>
+
+            <div class="chat-discussion">
+                <div> <%= a.note %></div>
+
+                <div class="action-links">
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                </div>
+            </div>
+
         <% end %>
 
         <div class="content-footer footer-<%= a.id %>">
