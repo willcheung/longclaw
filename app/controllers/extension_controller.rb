@@ -7,13 +7,16 @@ class ExtensionController < ApplicationController
     render layout: "empty"
   end
 
-  def time_spent
+  def account
   end
 
   def alerts_tasks
   end
 
   def people
+  end
+
+  def metrics
   end
 
   private
