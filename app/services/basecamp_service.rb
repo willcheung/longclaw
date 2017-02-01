@@ -1,28 +1,24 @@
 require 'oauth2'
 class BaseCampService
 
-	def self.connect_basecamp2
-	# Establish a connection with Basecamp2
 	client_id = ENV['basecamp_client_id']
 	client_secret = ENV['basecamp_client_secret']
-	redirect_uri = ENV['basecamp_redirect_uri']
+	@redirect_uri = ENV['basecamp_redirect_uri']
 	basecamp_authorization_url = ENV['basecamp_authorization_url']
 	basecamp_token_url = ENV['basecamp_token_url']
 	site = 'https://launchpad.37signals.com/authorization/new?type=web_server'
-	# Create a Client
-	# Checks if the user is registered with BaseCamp 2
-	@client = OAuth2::Client.new( client_id, client_secret, :authorize_url => basecamp_authorization_url, :token_url => basecamp_token_url, :site => site)
-	
-	# Link to the site for Users to Authorize Access to ContextSmith
-	@client.auth_code.authorize_url(redirect_uri: redirect_uri)
-	# Verfication code can be obtained through params[:id]
 
+	@client = OAuth2::Client.new( client_id, client_secret, :authorize_url => basecamp_authorization_url, :token_url => basecamp_token_url, :site => site)
+
+	def self.connect_basecamp2
+		@client.auth_code.authorize_url(redirect_uri: @redirect_uri)
 	end
 
 	def self.basecamp2_create_user(pin)
 		
 		if @client != nil
 			token = @client.auth_code.get_token(pin, redirect_uri: ENV['basecamp_redirect_uri'], :headers => {'Authorization' => 'Basic some_password'})
+			puts "token:======#{token}"
 			call = token.get('https://launchpad.37signals.com/authorization.json', :params => {'query_foo' => 'bar'})
 			response = JSON.parse(call.body)
 
@@ -36,7 +32,7 @@ class BaseCampService
 					"oauth_refresh_date" => token.expires_at
 				}
 		end
-		new_user
+		puts "#{new_user}"
 	end
 
 	def self.basecamp2_user(pin) 
@@ -54,14 +50,10 @@ class BaseCampService
 		# end
 	end
 
-	def self.basecamp2_user_projects(pin)
-		# redirect_uri = ENV['basecamp_redirect_uri']
-		# if @client != nil
-		# 	token = @client.auth_code.get_token(pin, redirect_uri: redirect_uri, :headers => {'Authorization' => 'Basic some_password'})
-		# 	response1 = token.get("https://basecamp.com/3643958/api/v1/projects.json", :params => {'query_foo' => 'bar'})
-		# 	# First request returns up to 50 records
-		# 	JSON.parse(response1.body)
-		# end
+	def self.basecamp2_user_projects(token)
+			response1 = token.get("https://basecamp.com/3643958/api/v1/projects.json", :params => {'query_foo' => 'bar'})
+			# First request returns up to 50 records
+			JSON.parse(response1.body)
 	end
 
 	def self.basecamp2_user_todos(pin)

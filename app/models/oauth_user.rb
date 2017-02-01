@@ -29,23 +29,30 @@ class OauthUser < ActiveRecord::Base
 	def self.basecamp2_create_user(pin, organization_id)
 
 		result = BaseCampService.basecamp2_create_user(pin)
-		if result
-			user = OauthUser.new(
-				oauth_provider: result['oauth_provider'],
-				oauth_provider_uid: result['oauth_provider_uid'],
-				oauth_access_token: result['oauth_access_token'],
-				oauth_refresh_token: result['oauth_refresh_token'],
-				oauth_instance_url: result['oauth_instance_url'],
-				oauth_user_name: result['oauth_user_name'],
-				organization_id: organization_id,
-				oauth_refresh_date: result['oauth_refresh_date']
-				)
+		# if result
+		# 	user = OauthUser.new(
+		# 		oauth_provider: result['oauth_provider'],
+		# 		oauth_provider_uid: result['oauth_provider_uid'],
+		# 		oauth_access_token: result['oauth_access_token'],
+		# 		oauth_refresh_token: result['oauth_refresh_token'],
+		# 		oauth_instance_url: result['oauth_instance_url'],
+		# 		oauth_user_name: result['oauth_user_name'],
+		# 		organization_id: organization_id,
+		# 		oauth_refresh_date: result['oauth_refresh_date'],
+		# 		oauth_issue_date: Time.now
+		# 		)
 
-			if user.valid?
-				user.save
-				redirect_to "/settings/basecamp"
-			end
-		end
+		# 	if user.valid?
+		# 		user.save
+		# 	else
+		# 		#failed to save
+		# 	end
+		# end
+	end
+
+	def self.basecamp2_projects(token)
+		puts "oauth modal =======#{token}"
+		# BaseCampService.basecamp2_user_projects(token)
 	end
 
 

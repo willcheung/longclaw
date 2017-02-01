@@ -77,16 +77,30 @@ class SettingsController < ApplicationController
 
 	def basecamp
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-    # @basecamp2_user is Nil
-
-		puts "basecamp settings controller"
 		pin = params[:code]
 		# Check if Oauth_user has been created
 		if @basecamp2_user == nil && pin
 			# Check if User exist in our database
 			# This Creates a new Oauth_user
-			OauthUser.basecamp2_create_user(pin, current_user.organization_id)
+			begin
+				OauthUser.basecamp2_create_user(pin, current_user.organization_id)
+			rescue
+				#code that deals with some exception
+				flash[:warning] = "Has not been registered succesfully"
+			else
+				#code that runs only if (no) excpetion was raised
+				flash[:notice] = "Basecamp is enabled!"
+			end
 		end
+
+		# if @basecamp2_user
+
+		# 	puts "settings controller:======#{@basecamp2_user['oauth_access_token']}"
+		# 	response = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
+		# 	puts "#{response}"
+
+		# end
+
 	end
 
 	def super_user

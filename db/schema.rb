@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170131223910) do
+ActiveRecord::Schema.define(version: 20161214020049) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -158,8 +158,6 @@ ActiveRecord::Schema.define(version: 20170131223910) do
     t.uuid     "organization_id",                  null: false
     t.datetime "created_at",                       null: false
     t.datetime "updated_at",                       null: false
-    t.integer  "oauth_refresh_date"
-    t.datetime "oauth_issue_date"
   end
 
   add_index "oauth_users", ["oauth_provider", "oauth_user_name", "oauth_instance_url"], name: "oauth_per_user", unique: true, using: :btree
