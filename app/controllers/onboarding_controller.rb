@@ -170,7 +170,7 @@ class OnboardingController < ApplicationController
 		
 		# Change user onboarding flag
 		current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
-	end
+	end  # END: confirm_projects
 
 	#########################################################################
 	# Callback method from backend to create clusters for a particular user 
@@ -341,5 +341,5 @@ class OnboardingController < ApplicationController
           end
 
         end # respond_to do |format|
-    end
+    end # END: create_clusters
 end
