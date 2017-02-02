@@ -101,12 +101,12 @@ namespace :projects do
                     if Time.current.hour == 17 && Time.current.sunday? || (args[:test] && !Rails.env.production?) # In the hour of 5pm on Sundays
                         #UserMailer.weekly_summary_email(usr).deliver_later
                         sleep(0.5)
+                        print "user=", get_full_name(usr), "\n"
+                        print "   Time.current.hour=", Time.current.hour, " (17? ", Time.current.hour == 17, ")\n"
+                        print "   Time.current.sunday?=", Time.current.sunday?, "\n"
+                        print "   args[:test]=", args[:test], "\n"
+                        print "   Rails.env.production?=", Rails.env.production?, "\n"
                     end
-                    print "user=", get_full_name(usr), "\n"
-                    print "   Time.current.hour=", Time.current.hour, " (17? ", Time.current.hour == 17, ")\n"
-                    print "   Time.current.sunday?=", Time.current.sunday?, "\n"
-                    print "   args[:test]=", args[:test], "\n"
-                    print "   Rails.env.production?=", Rails.env.production?, "\n"
                 end
             end
         end
