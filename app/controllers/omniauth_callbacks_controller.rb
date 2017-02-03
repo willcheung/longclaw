@@ -10,7 +10,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
 	def google_oauth2
-    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com sdyong88@gmail.com)
+    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com)
     auth = request.env["omniauth.auth"]
 
     if auth.info.email.include?('gmail.com') and !allowed_emails.include?(auth.info.email)
@@ -51,10 +51,16 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
   def failure
-  	reset_session
-  	logger.error "Can't verify Google!"
-    ahoy.track("Error logging in", message: "Can't verify Google!")
-  	redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
+    if request.env["omniauth.auth"].provider == "salesforce" or request.env["omniauth.auth"].provider == "salesforcesandbox"
+      logger.error "Salesforce Oauth verification failure!"
+      ahoy.track("Error with salesforce", message: "Salesforce Oauth verification failure!")
+      redirect_to settings_salesforce_path, :flash => { :error => "Can't login using your Salesforce account. Your administrator may need to grant access for you."}
+    else
+  		reset_session
+  		logger.error "Oauth verification failure!"
+    	ahoy.track("Error logging in", message: "Oauth verification failure!")
+  		redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
+  	end
   end
 
 end
