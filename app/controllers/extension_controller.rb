@@ -1,10 +1,13 @@
 class ExtensionController < ApplicationController
   layout "extension", except: [:test]
 
-  before_action :set_project, except: [:test]
+  before_action :set_project, except: [:test, :index]
 
   def test
     render layout: "empty"
+  end
+
+  def index
   end
 
   def account
@@ -13,7 +16,7 @@ class ExtensionController < ApplicationController
   def alerts_tasks
   end
 
-  def people
+  def contacts
   end
 
   def metrics

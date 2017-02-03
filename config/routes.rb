@@ -84,6 +84,7 @@ Longclaw::Application.routes.draw do
     end
 
     scope "extension", controller: :extension, as: 'extension' do
+      get '/' => 'extension#index'
       get 'test'
       get 'account'
       get 'alerts_tasks'
