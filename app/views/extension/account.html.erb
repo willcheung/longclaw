@@ -1,3 +1,14 @@
+<p><h3>Employees:</h3> 5</p>
+<p><h3>Type:</h3> Private</p>
+<p><h3>Tags:</h3> SaaS, B2B, Technology, Software</p>
+
+
 <% @project.activities.take(5).each do |a| %>
   <%= render 'activities/timeline_block', a: a %>
 <% end %>
+
+<a href="">Filter timeline and add notes >></a>
+
+<p>Email summaries to me: [box] weekly [box] daily</p>
+
+<button class="btn btn-primary">Sync Activites with Salesforce</button>
