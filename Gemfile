@@ -21,7 +21,7 @@ gem 'pg_search'
 # gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
 # gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
 gem 'omniauth-salesforce'
-gem 'restforce', '~> 2.4.2'  #saleforce REST gem
+gem 'restforce', '~> 2.5.0'  #saleforce REST gem
 gem 'd3-rails', '~> 3.5'          # Use D3 for cool data visualizations
 gem 'slack-notifier'
 
