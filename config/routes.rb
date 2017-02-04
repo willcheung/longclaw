@@ -48,6 +48,7 @@ Longclaw::Application.routes.draw do
 
     resources :basecamp, only: [:index]
     get 'basecamp_controller/index'
+    post '/link_basecamp2_account' => 'basecamps#link_basecamp2_account'
 
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"

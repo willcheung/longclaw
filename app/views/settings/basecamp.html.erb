@@ -18,33 +18,125 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="ibox float-e-margins">
         <div class="ibox-content">
+          
           <% if @basecamp2_user %>
-            <h3>Hello <%=@basecamp2_user['oauth_user_name'] %></h3>
-            <p>Basecamp is Enabled in your Streams!</p>
-            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="#">Disconnect BaseCamp2</a><br>
+            <i class="fa fa-check " aria-hidden='true' style='color:green; display:inline-block;'></i><p style='display:inline-block;'>Basecamp is Enabled in your Streams!</p>
           <% else %>
-            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/basecamp2">Connect BaseCamp2</a><br>
+            <p>ContextSmith needs your access token to connect to your Basecamp Account.</p>
+            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/basecamp2">Connect to BaseCamp2</a><br>
           <% end %>
-            Must be a BaseCamp admin. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
-            <div><p><%=@climber%></p></div>
-            <div><p><%=@hiker%></p></div>
-            
+            <div>
+            Currently only supporting BaseCamp2. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
+            </div>
 
-              <!-- Salesforce nav to Account / Opportunities -->
-          <nav class="navbar navbar-default">
-  
-              <!-- Collect the nav links, forms, and other content for toggling -->
-              <!-- <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav">
-                  <li class="active"><a href="#">Step 1: Map Accounts</a></li>
-                  <li><a href="#">Step 2: Map Opportunities</a></li>
-                  <li><a href="#">Step 3: Map Activities</a></li>
-                </ul> -->
-              <!-- </div> -->
-          </nav>
+              <nav class="navbar navbar-default">
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                  <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">Step 1: Map Accounts</a></li>
+                    <li><a href="#">Step 2: Map Activities</a></li>
+                  </ul>
+                </div>
+              </nav>
+
+              <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; padding:0px; display: inline;"> 
+
+                <div class="contextsmith_account col-lg-3" style="margin-right:0px; margin-left:0px; padding:0px; display: inline;">
+
+                  <select class="contextsmith_account_box" data-placeholder="Select Contextsmith Account">
+                    <option value="0"></option>
+                    <% if !@accounts.nil?  %>
+                      <% @accounts.each do |a| %>
+                        <option value="<%=a.id %>"><%=a.name %></option>
+                      <% end %>
+                    <% end  %>
+                  </select>
+
+                </div>
+                <div class="basecamp2_account col-lg-3" style="margin-right:0px; margin-left:15px; padding:0px; display: inline;">
+                  
+                  
+                    <div class="col-lg-11">
+                      
+                      <select class="basecamp2_account_box" data-placeholder='Select BaseCamp2 Account'>
+                        <option value="0"></option>
+                            <% if !@basecamp_projects.nil?  %>
+                              <% @basecamp_projects.each do |a| %>
+                                <option value="<%=a['id'] %>"><%=a['name'] %></option>
+                              <% end %>
+                            <% end  %>
+                      </select>
+<!--                       <input type="search" name="basecamp2_id" id="basecamp2-account-search" class="contacts z-top salesforce-search" placeholder="Link to a Basecamp2 Account">
+ -->                    </div>
+                    <%= form_tag("/link_basecamp2_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
+                    <input name="basecamp_account_id" type="hidden" value="">
+                    <input name="account_id" type="hidden" value="">     
+                    <div class="col-lg-1" style="margin:0px; padding-left:0px; padding-top:3px;">                      
+                      <input type="submit" name="commit" value="Link" class="btn btn-primary btn-sm">            
+                    </div>                  
+                  <%end%>
+                </div>
+
+                <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/<%=@basecamp2_user.id %>">Disconnect </a></span>
+              </div>
+
+               <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
+                  <thead>
+                      <tr>
+                          <th style="padding-top:15px;">ContextSmith Account</th>
+                          <th>
+                                <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Account</div>                              
+                                <div id="basecamp2-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Accounts</div>
+                                <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Basecamp2."></i>
+                          </th>
+                          <th></th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                    <% @basecamp_projects.each do |b| %>
+                      <tr>
+                        <td class="col-lg-2">Ex.testing account name</td>
+                        <td class="col-lg-2"><%=b['name']%></td>
+                        <td class="col-lg-2"><input type="/" name="edit" value="Update" class="btn btn-primary btn-sm center"><span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="#">Remove</a></span></td>
+                      </tr>
+                      <% end %>
+                  </tbody>
+              </table>
+
+
+          
         </div>
     </div>
 </div>
+
+<script>
+    
+    $('.contextsmith_account_box').on('change',function(evt,params){
+  if(params){
+    $(".basecamp2_account").show();
+    $('input[name=account_id]').val(params["selected"]);
+  }   
+});
+
+        $('.basecamp2_account_box').on('change',function(evt,params){
+  if(params){
+    $('input[name=basecamp_account_id]').val(params["selected"]);
+  }   
+});
+
+
+    $('#basecamp2-refresh').click(function(){
+    $.ajax('/salesforce_refresh', {
+        async: true,
+        method: "POST",
+        beforeSend: function () {
+            $('#salesforce-refresh .fa.fa-refresh').addClass('fa-spin');
+        },
+        complete: function() {
+            $('#salesforce-refresh .fa.fa-refresh').removeClass('fa-spin');
+        }
+    });
+});
+</script>
 
     
         

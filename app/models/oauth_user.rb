@@ -26,10 +26,13 @@ class OauthUser < ActiveRecord::Base
 	belongs_to 	:organization
 	belongs_to :user
 
-	def self.basecamp2_create_user(pin, organization_id)
+	has_many :activity
+
+	def self.basecamp2_create_user(pin, organization_id, current_id)
 
 		result = BaseCampService.basecamp2_create_user(pin)
 		if result
+			puts "Creating Oauth User"
 			user = OauthUser.new(
 				oauth_provider: result['oauth_provider'],
 				oauth_provider_uid: result['oauth_provider_uid'],
@@ -44,18 +47,34 @@ class OauthUser < ActiveRecord::Base
 
 			if user.valid?
 				user.save
+				puts "User is valid" 
+				projects = basecamp2_projects(result['oauth_access_token'])
+				projects.each do |p|
+					Activity.load_basecamp2_activities(BaseCampService.basecamp2_user_project_events(result['oauth_access_token'], p['id']), p, current_id)
+				end
 			else
 				#failed to save
 			end
 		end
+
+
+
 	end
 
 	def self.basecamp2_projects(token)
 		BaseCampService.basecamp2_user_projects(token)
 	end
 
-	def self.basecamp2_topics(token)
+	def self.basecamp2_topics(token, project_id=nil)
 		BaseCampService.basecamp2_user_topics(token)
+	end
+
+	def self.basecamp2_user_info(token, project_id = nil)
+		BaseCampService.basecamp2_user_info(token)
+	end
+
+	def self.basecamp2_user_todos(token)
+		BaseCampService.basecamp2_user_todos(token)
 	end
 
 

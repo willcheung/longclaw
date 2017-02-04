@@ -35,6 +35,7 @@ class Activity < ActiveRecord::Base
 
   belongs_to :user, class_name: "User", foreign_key: "posted_by"
   belongs_to :project
+  belongs_to :oauth_user
   has_many :comments, dependent: :destroy
   has_many :notifications, dependent: :destroy
 
@@ -58,7 +59,7 @@ class Activity < ActiveRecord::Base
                   }
 
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
 
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
@@ -219,6 +220,26 @@ class Activity < ActiveRecord::Base
         Activity.connection.execute([insert,values,on_conflict].join(' '))
       end
     end
+  end
+
+  def self.load_basecamp2_activities(event, project, user, project_id='00000000-0000-0000-0000-000000000000')
+
+    event = Activity.new(
+              posted_by: user,
+              project_id: project_id,
+              category: CATEGORY[:Basecamp2],
+              title: project['name'],
+              note: '',
+              is_public: true,
+              backend_id: project['id'],
+              email_messages: event
+        )
+    if event.valid?
+      event.save
+    else
+      puts "Error: Event was unable to be saved in activity table"
+    end
+
   end
 
   def self.copy_email_activities(source_project, target_project)

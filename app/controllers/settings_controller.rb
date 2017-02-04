@@ -9,6 +9,7 @@ class SettingsController < ApplicationController
     if(@salesforce_user.nil?)
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
     end
+    @basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 
 
 	end
@@ -79,30 +80,31 @@ class SettingsController < ApplicationController
 
 	def basecamp
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
+
+
 		pin = params[:code]
 		# Check if Oauth_user has been created
 		if @basecamp2_user == nil && pin
 			# Check if User exist in our database
 			# This Creates a new Oauth_user
-			OauthUser.basecamp2_create_user(pin, current_user.organization_id)
-			# begin
-				
-			# rescue
-			# 	#code that deals with some exception
-			# 	flash[:warning] = "Has not been registered succesfully"
-			# else
-			# 	#code that runs only if (no) excpetion was raised
-			# 	flash[:notice] = "Basecamp is enabled!"
-			# end
+			begin
+				OauthUser.basecamp2_create_user(pin, current_user.organization_id, current_user.id)
+			rescue
+				#code that deals with some exception
+				flash[:warning] = "Sorry something went wrong"
+			else
+				#code that runs only if (no) excpetion was raised
+				flash[:notice] = "Connected to BaseCamp2"
+			end
 		end
 
 		if @basecamp2_user
-
 			begin
-			response1 = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
-			@climber = response1
-			response2 = OauthUser.basecamp2_topics(@basecamp2_user['oauth_access_token'])
-			@hiker = response2
+			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
+			# @basecamp_topics = OauthUser.basecamp2_topics(@basecamp2_user['oauth_access_token'])
+			# @basecamp_user = OauthUser.basecamp2_user_info(@basecamp2_user['oauth_access_token'])
+			# @basecamp_todos = OauthUser.basecamp2_user_todos(@basecamp2_user['oauth_access_token']) 
 			end
 		end
 
