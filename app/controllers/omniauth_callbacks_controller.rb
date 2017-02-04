@@ -22,13 +22,13 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     if @user.persisted?
     	session["devise.google_data"] = auth
-      logger.info "Google devise.omniauth_callbacks.success for user " + @user.email
+      puts "Google devise.omniauth_callbacks.success for user " + @user.email
       flash[:notice] = "Welcome, #{@user.first_name}!"
 
       sign_in_and_redirect @user, :event => :authentication
     else
       reset_session
-  		logger.error "Can't persist user!"
+  		puts "Can't persist user!"
       ahoy.track("Error logging in", message: "Can't persist user!")
   		redirect_to new_user_registration_path
     end
@@ -51,16 +51,10 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
   def failure
-    if request.env["omniauth.auth"].provider == "salesforce" or request.env["omniauth.auth"].provider == "salesforcesandbox"
-      logger.error "Salesforce Oauth verification failure!"
-      ahoy.track("Error with salesforce", message: "Salesforce Oauth verification failure!")
-      redirect_to settings_salesforce_path, :flash => { :error => "Can't login using your Salesforce account. Your administrator may need to grant access for you."}
-    else
-  		reset_session
-  		logger.error "Oauth verification failure!"
-    	ahoy.track("Error logging in", message: "Oauth verification failure!")
-  		redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
-  	end
+  	reset_session
+  	puts "Error: Oauth verification failure!"
+    ahoy.track("Error logging in", message: "Oauth verification failure!")
+  	redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
   end
 
 end
