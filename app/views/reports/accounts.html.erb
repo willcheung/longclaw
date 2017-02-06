@@ -112,29 +112,15 @@
                                         <h4>ARR</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:32px;">$1,150k</h2>
+                                        <h2 style="font-weight:600;font-size:32px;">$1.15M</h2>
                                     </div>
                                 </div>
-                                <div class="m-t-sm"><h5>Account Potential<br/><strong>32% of $3,560k</strong></h5></div>
+                                <div class="m-t-sm"><h5><strong>32% of $3.56M</strong><br/>account potential</h5></div>
                             </div>
                         </div>
 
-                        <div class="row m-t-md">
-                            <div class="col-md-3 text-center">
-                                <div class="metric"><h4>Referenceable<br/><strong> No</strong></h4></div>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <div class="metric"><h4>Case Study<br/><strong> No</strong></h4></div>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <div class="metric"><h4>Last Renewal<br/><strong>Feb 1, 2016</strong></h4></div>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <div class="metric"><h4>Renewal Count<br/><strong>2</strong></h4></div>
-                            </div>
-                        </div>
-                        <div class="row text-center m-t-lg">
-                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/tasks" class="btn btn-outline btn-primary btn-xs">See alerts and tasks &rarr;</a></h3>
+                        <div class="row text-center m-t-md">
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/tasks" class="btn btn-outline btn-primary btn-xs">See Alerts and Next Steps &rarr;</a></h3>
                         </div>
                     </div>
                 </div>
@@ -147,7 +133,7 @@
                         </div>
 
                         <div class="row m-t-md">
-                            <div id="risk-detection-chart" style="height:130px"></div>
+                            <div id="risk-detection-chart" style="height:300px;overflow:visible"></div>
                         </div>
 
                         <div class="row m-t-md">
@@ -501,7 +487,7 @@
                     {
                     pointInterval: <%= 1.day * 1000 %>,
                     pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                    data: [30,30,60,60,65,75,75,75,90,90,80,80,80,80]
+                    data: [30,30,60,60,65,75,90,90,90,80,80,80,80,75]
                     }
                 ]
 
@@ -515,15 +501,17 @@
                     this.yAxis[0].setExtremes(0, extremes.dataMax);
                     }
                 },
+                spacingLeft:48,
+                marginLeft:48
             },
             credits: {
                 enabled: false
             },
             title: {
-                text: "Negative Sentiment %",
+                text: "Alerts",
                     align: 'left',
                     margin: 0,
-                    x: 35,
+                    x: 0,
                     style: {
                         color: '#555555',
                         fontSize: '16px'
@@ -537,12 +525,27 @@
                 }
             },
             yAxis: {
-                title: { text: '' },
-                labels: { enabled: true },
-                minorGridLineWidth: 0
+                categories: ['Days Inactive','% Neg Sentiment','Neg Sentiment','Support Vol','Engagement Vol','Days to Renewal'],
+                tickLength:3,
+                tickColor:'#000',
+                gridLineWidth:.5,
+                labels: { 
+                    enabled: true,
+                    align: 'left',
+                    x: -30
+                },
+                minorGridLineWidth: 0,
+                title: {                
+                    text: ''
+                }
             },
+            // yAxis: {
+            //     title: { text: '' },
+            //     labels: { enabled: true },
+            //     minorGridLineWidth: 0
+            // },
             legend: {
-                enabled: false
+                enabled: true
             },
             plotOptions: {
 
@@ -551,12 +554,11 @@
                 positioner: function () {
                     return {
                         x: this.chart.chartWidth - this.label.width, // right aligned
-                        y: -15 // align to title
                     };
                 },
                 borderWidth: 0,
                 backgroundColor: 'none',
-                pointFormat: '{point.y}%',
+                pointFormat: '{point.y}',
                 xDateFormat: '%b %e',
                 shadow: false,
                 style: {
@@ -565,12 +567,22 @@
                 }
             },
             series: [{
-                type: 'column',
-                name: 'New Risks',
+                type: 'scatter',
+                name: 'Exceeded High Threshold',
                 color: '#FF5050',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: [0, 0, 4, 10, 15, 12, 0, 0, 5, 2, 0, 0, 2, 0]
+                data: [[<%=8.days.ago.at_midnight.to_i * 1000%>,1],[<%=8.days.ago.at_midnight.to_i * 1000%>,2],[<%=11.days.ago.at_midnight.to_i * 1000%>,3],[<%=11.days.ago.at_midnight.to_i * 1000%>,4],[<%=1.day.ago.at_midnight.to_i * 1000%>,1],[<%=6.days.ago.at_midnight.to_i * 1000%>,2]],
+                marker : {symbol : 'square', radius: 6 }
+            },
+            {
+                type: 'scatter',
+                name: 'Exceeded Medium Threshold',
+                color: '#FFA500',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [[<%=11.days.ago.at_midnight.to_i * 1000%>,1], [<%=14.days.ago.at_midnight.to_i * 1000%>,5]],
+                marker : {symbol : 'square', radius: 6 }
             }]
         });
 
@@ -587,7 +599,7 @@
                 enabled: false
             },
             title: {
-                text: "Engagement Volume",
+                text: "Engagement",
                     align: 'left',
                     margin: 0,
                     x: 35,
@@ -638,7 +650,7 @@
                 name: 'Email',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: [3,6,6,5,6,7,12,15,10,10,12,8,5,1]
+                data: [0,0,6,5,6,7,12,15,10,10,12,8,5,1]
             },
             {
                 type: 'column',
@@ -652,7 +664,7 @@
                 name: 'Support Ticket',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: [1,2,2,1,1,0,1,5,6,6,8,5,2,1]
+                data: [0,0,2,1,1,0,1,5,6,6,8,5,2,1]
             },
             {
                 type: 'column',
@@ -660,6 +672,18 @@
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'spline',
+                name: '30-day Average',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [5,6.8,7,7,7,6.9,9,10.2,12.3,13.5,14.1,12,10,8],
+                marker: {
+                    lineWidth: 2,
+                    lineColor: Highcharts.getOptions().colors[4],
+                    fillColor: 'white'
+                }
             }
             ]
         });

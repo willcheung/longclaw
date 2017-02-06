@@ -24,7 +24,7 @@
 
 <!-- Summary -->
 <div style="margin-bottom:30px; min-width:590px;">
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following <%= pluralize(@projects.length, 'stream') %>:</h2>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following account <%= pluralize(@projects.length, 'stream') %>:</h2>
 
   <!-- Project/stream detail -->
   <% @projects.each.with_index do |p,i| %>
@@ -288,7 +288,7 @@
         <tbody style="width:100%;display:table;">
           <tr>
             <td style="vertical-align:middle;">
-              <span style="font-size:15px;font-weight:bold;">Open Alerts & Tasks:</span>
+              <span style="font-size:15px;font-weight:bold;">Open Alerts & Next Steps:</span>
             </td>
             <td class="expander"></td>
             <td style="padding:6px;text-align:right;">
