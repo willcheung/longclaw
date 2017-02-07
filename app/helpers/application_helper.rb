@@ -34,6 +34,8 @@ module ApplicationHelper
       "#1798c1"
     elsif category == Activity::CATEGORY[:Zendesk]
       "#78a300"
+    elsif category == Activity::CATEGORY[:Alert]
+      "#ed5565"
     end
   end
 

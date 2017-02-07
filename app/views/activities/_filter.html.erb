@@ -137,7 +137,18 @@ $(function () {
       minorGridLineWidth: 0
     },
     legend: {
-      enabled: false
+      enabled: true,
+      y: -20,
+      floating: true,
+      verticalAlign: 'top',
+      itemStyle: {
+         color: '#555555',
+         fontSize: 9,
+         fontWeight: 300
+      },
+      symbolHeight: 8,
+      symbolPadding: 0,
+      itemDistance: 10
     },
     plotOptions: {
       series: {
