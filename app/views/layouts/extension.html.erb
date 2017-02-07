@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        <div id="page-wrapper" class="white-bg">
+        <div id="page-wrapper" class="white-bg extension-sidebar">
 
         <% if @project %>
 
@@ -47,10 +47,10 @@
         <h3 class="text-mute-gray">Account: <%= @account.name %></h3>
 
 
-            <%= link_to "Account", extension_account_path %>
-            <%= link_to "Alerts & Tasks", extension_alerts_tasks_path %>
-            <%= link_to "Contacts", extension_contacts_path %>
-            <%= link_to "Metrics", extension_metrics_path %>
+            <%= link_to "Account", extension_account_path(email_addresses: params[:email_addresses]) %>
+            <%= link_to "Alerts & Tasks", extension_alerts_tasks_path(email_addresses: params[:email_addresses]) %>
+            <%= link_to "Contacts", extension_contacts_path(email_addresses: params[:email_addresses]) %>
+            <%= link_to "Metrics", extension_metrics_path(email_addresses: params[:email_addresses]) %>
 
         <% end %>
 

@@ -11,7 +11,7 @@ class ExtensionController < ApplicationController
   end
 
   def no_account
-    @domain = params[:domain]
+    @domain = URI.unescape(params[:domain], '%2E')
   end
 
   def account
@@ -34,7 +34,7 @@ class ExtensionController < ApplicationController
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
     domain = addresses.group_by { |a| a[1] }.values.max_by(&:size).first[1] # get most common domain
     @account = Account.find_by_domain(domain) # use most common domain to find account
-    redirect_to extension_no_account_path(domain) and return unless @account # if no account, redirect to new "this acct not in contextsmith" page
+    redirect_to extension_no_account_path(URI.escape(domain, '.')) and return unless @account # if no account, redirect to new "this acct not in contextsmith" page
     projects = @account.projects
     @project = projects.first # TODO: find best fit project from this account
   end
