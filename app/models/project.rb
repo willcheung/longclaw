@@ -39,6 +39,7 @@ include Utils
 include ContextSmithParser
 
 class Project < ActiveRecord::Base
+  after_create  :create_custom_fields
 
   belongs_to  :account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
@@ -85,6 +86,7 @@ class Project < ActiveRecord::Base
   has_many  :users_all, through: "project_members_all", source: :user
 
   has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify
+  has_many :custom_fields, -> { where(customizable_type: "Project") }, foreign_key: "customizable_uuid", dependent: :destroy
 
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
@@ -865,7 +867,6 @@ class Project < ActiveRecord::Base
     end
   end
 
-
   private
 
   def self.calculate_score_by_setting(metric, setting)
@@ -882,6 +883,13 @@ class Project < ActiveRecord::Base
       50*setting.weight
     else
       100*setting.weight
+    end
+  end
+
+  # Create all custom fields for a new Streamg
+  def create_custom_fields
+    CustomFieldsMetadatum.where(organization:self.account.organization, entity_type: "Project").each do |cfm|
+       CustomField.create(organization:self.account.organization, custom_fields_metadatum:cfm, customizable_uuid:self.id, customizable_type:"Project")
     end
   end
 end

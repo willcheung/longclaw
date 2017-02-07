@@ -30,6 +30,7 @@ include Utils
 include ContextSmithParser
 
 class Account < ActiveRecord::Base
+    after_create  :create_custom_fields
 
     has_many    :projects, -> { where is_confirmed: true }, dependent: :destroy
     has_many  :contacts, dependent: :destroy
@@ -38,6 +39,7 @@ class Account < ActiveRecord::Base
     belongs_to  :user, foreign_key: "owner_id"
 
     has_many :salesforce_accounts, foreign_key: "contextsmith_account_id", dependent: :nullify
+    has_many :custom_fields, -> { where(customizable_type: "Account") }, foreign_key: "customizable_uuid", dependent: :destroy
 
     validates :name, presence: true, uniqueness: { scope: :organization, message: "There's already an account with the same name." }
 
@@ -84,6 +86,15 @@ class Account < ActiveRecord::Base
                                     email: c.address)
                 end
             end
+        end
+    end
+
+    private
+
+    # Create all custom fields for a new account
+    def create_custom_fields
+        CustomFieldsMetadatum.where(organization:self.organization, entity_type: "Account").each do |cfm|
+            CustomField.create(organization:self.organization, custom_fields_metadatum:cfm, customizable_uuid:self.id, customizable_type:"Account")
         end
     end
 end

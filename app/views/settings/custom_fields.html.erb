@@ -1,0 +1,111 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Custom Fields Settings</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= settings_path%>">Settings</a>
+            </li>
+            <li class="active">
+                <strong>Custom Fields</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox">
+        <div class="ibox-content">
+            <h1>Custom Fields</h1>
+            <%= form_for :custom_field_settings, html: { id: "custom-fields-form" } do %>
+            <div class="form-inline">
+                <label>Entity Type:</label>
+                <select id="select-entity-type" class="form-control" name="entity_type" form="custom-fields-form">
+                    <% CustomFieldsMetadatum::ENTITY_TYPE.each do |t| %>
+                        <option<%if t[0].to_s == @entity_type %> selected<%end%>>
+                            <%= t[1] %>
+                        </option>
+                    <% end %>
+                </select>
+                <!--<button id="edit-btn" class="btn btn-info" style="display: none;">Edit</button>-->
+                <!--<button id="save-btn" form="custom-fields-form" class="btn btn-primary">Save</button>-->
+            </div>
+            <table class="table table-condensed responsive no-wrap m-t-sm">
+                <thead>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Data Type</th>
+                        <th><i class="fa fa-lock fa-lg">&nbsp;</i>Edit Permission</th>
+                        <th><i class="fa fa-cogs">&nbsp;</i>External Column Mapping</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Example row &nbsp;<i class="fa fa-pencil text-mute-gray"></td>
+                        <td>
+                          <select id="select-customfield1-type" class="form-control">
+                            <% CustomFieldsMetadatum::DATA_TYPE.each.with_index do |t, i| %>
+                              <option> <%=t[1]%> </option>
+                            <% end %>
+                          </select>
+                        </td>
+                        <td>
+                          <select id="select-customfield1-updatepermission" class="form-control">
+                            <% User::ROLE.each.with_index do |t, i| %>
+                              <option <% if i == 2%> selected <%end%>> <%=t[1]%> </option>
+                            <% end %>
+                          </select>
+                        </td>
+                        <td>-</td>
+                        <td><a href="" class="trash" attr="Example row"><i class="fa fa-trash-o fa-lg" id="delete-customfield1" attr="Region"></i> Delete</a></td>
+                    </tr>
+                    <% if !@custom_fields.nil? %>
+                    <% @custom_fields.each do |f|  %>
+                        <tr>
+                            <td><%= best_in_place f, :name, :as => 'input', :place_holder => '(none)', :activator => "#customfield-#{f.id}-name-activator" %><i id="customfield-<%= f.id %>-name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
+                            <td>
+                              <!--<select id="select-customfield-type1" class="form-control" name="level_type">
+                                <% CustomFieldsMetadatum::DATA_TYPE.each do |dtype| %>
+                                    <option <option<%if dtype[0].to_s == f.data_type %> selected<%end%>>
+                                        <%= dtype[1] %>
+                                    </option>
+                                <% end %>
+                              </select>-->
+                              <%= best_in_place f, :data_type, :as => :select, :collection => CustomFieldsMetadatum::DATA_TYPE, :class => 'btn btn-default btn-sm fa-caret-down' %>
+                            </td>
+                            <td>
+                              <%= best_in_place f, :update_permission_level, :as => :select, :collection => User::ROLE, :class => 'btn btn-default btn-sm fa-caret-down' %>
+                            </td>
+                            <td>-</td>
+                            <td>
+                              <%= link_to "<i class=\"fa fa-minus-square fa-2x\"></i>".html_safe, f, method: :delete, style: "color:#F66", data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %>
+                            </td>
+                            <!--<td><a href=""><i class="fa fa-trash-o fa-lg" id="delete-customfield1" attr="Region"></i> Delete</a></td>-->
+                        </tr>
+                    <% end %>
+                    <% end %>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe,custom_fields_metadatum_index_path(entity_type: "#{@entity_type}"), method: :post, style: "color:#A1C436",title: "Add new field" %></td>
+                        <!--<td><button id="add-btn" class="btn btn-success"><i class="fa fa-plus"></i></button></td>-->
+                    </tr>
+                </tbody>
+            </table>
+            <% end %>  <!-- End: 'custom-fields-form' -->
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $('.trash').click(function () {
+        alert("When you delete column '" + $(this).attr("attr") + "', all existing data will be lost! Deleting data...");
+    });
+    $('#select-entity-type').change( function() {
+        window.location.replace("custom_fields?entity_type=" + $(this).val());
+    });
+</script>

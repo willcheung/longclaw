@@ -1,4 +1,5 @@
 class SettingsController < ApplicationController
+	before_action :get_current_user_org, only: ['custom_fields', 'create_for_custom_fields']
 	before_filter :get_salesforce_user, only: ['salesforce', 'salesforce_opportunities', 'salesforce_activities']
 
 	def index
@@ -72,6 +73,14 @@ class SettingsController < ApplicationController
 		redirect_to :back
 	end
 
+  # An index of all the custom fields for the current user's organization, by entity type
+	def custom_fields
+		@entity_type = CustomFieldsMetadatum.validateAndReturnValidEntityType(params[:entity_type], false)
+		@entity_type = CustomFieldsMetadatum::ENTITY_TYPE[:Account] if @entity_type.nil?
+
+		@custom_fields = CustomFieldsMetadatum.where(organization: @current_user_org, entity_type: @entity_type)
+	end
+
 	def salesforce
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 		@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("lower(accounts.name)")
@@ -114,6 +123,10 @@ class SettingsController < ApplicationController
 	end
 
 	private
+
+	def get_current_user_org
+		@current_user_org = current_user.organization
+	end
 
 	def get_salesforce_user
 		# try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
