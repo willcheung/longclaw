@@ -149,9 +149,7 @@ class SalesforceController < ApplicationController
         end
       else # Stream linked to Opportunity
         # If Stream is linked in Opportunity, then save on Opportunity level
-        # s.salesforce_opportunity.each do |sf_o|
-          Activity.load_salesforce_activities(s, current_user.organization_id, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity")
-        # end
+        Activity.load_salesforce_activities(s, current_user.organization_id, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity")
       end
     end
 
