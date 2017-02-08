@@ -15,9 +15,18 @@ class BasecampsController < ApplicationController
 	end
 
 	def link_basecamp2_account
-		
+		puts "hello--------"
 		# links the Contextsmith Accounts with the Basecamp2 Projects
 	    # One CS Account can link to many BaseCamp2 Accounts
+	    if params[:basecamp_account_id] && params[:account_id]
+	    	begin
+	    		# Intergration.link_basecamp2(params[:basecamp_account_id], params[:account_id], params[:external_name], current_user)
+
+	    	else
+	    		flash[:error] = "parameters were not met!"
+	    	end
+	    	
+	    end
 	    # basecamp2_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
 	    # if !basecamp2_account.nil?
 	    #   salesforce_account.account = Account.find_by_id(params[:account_id])
@@ -27,6 +36,8 @@ class BasecampsController < ApplicationController
 	    # respond_to do |format|
 	    #   format.html { redirect_to settings_salesforce_path }
 	    # end
+
+	    puts "------end"
 	    redirect_to :back
  
 	end

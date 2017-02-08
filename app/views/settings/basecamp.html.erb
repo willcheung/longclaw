@@ -54,7 +54,6 @@
                 </div>
                 <div class="basecamp2_account col-lg-3" style="margin-right:0px; margin-left:15px; padding:0px; display: inline;">
                   
-                  
                     <div class="col-lg-11">
                       
                       <select class="basecamp2_account_box" data-placeholder='Select BaseCamp2 Account'>
@@ -65,18 +64,18 @@
                               <% end %>
                             <% end  %>
                       </select>
-<!--                       <input type="search" name="basecamp2_id" id="basecamp2-account-search" class="contacts z-top salesforce-search" placeholder="Link to a Basecamp2 Account">
- -->                    </div>
+                    </div>
                     <%= form_tag("/link_basecamp2_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
                     <input name="basecamp_account_id" type="hidden" value="">
-                    <input name="account_id" type="hidden" value="">     
-                    <div class="col-lg-1" style="margin:0px; padding-left:0px; padding-top:3px;">                      
+                    <input name="account_id" type="hidden" value="">  
+                    <input type="hidden" name="external_name" value="BaseCamp2">   
+                    <div class="col-lg-1" style="margin:0px; padding-left:0px; padding-top:3px;">  
                       <input type="submit" name="commit" value="Link" class="btn btn-primary btn-sm">            
                     </div>                  
                   <%end%>
                 </div>
 
-                <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/<%=@basecamp2_user.id %>">Disconnect </a></span>
+                <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/">Disconnect </a></span>
               </div>
 
                <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
@@ -92,13 +91,15 @@
                       </tr>
                   </thead>
                   <tbody>
-                    <% @basecamp_projects.each do |b| %>
-                      <tr>
-                        <td class="col-lg-2">Ex.testing account name</td>
-                        <td class="col-lg-2"><%=b['name']%></td>
-                        <td class="col-lg-2"><input type="/" name="edit" value="Update" class="btn btn-primary btn-sm center"><span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="#">Remove</a></span></td>
-                      </tr>
-                      <% end %>
+                    <% if @basecamp_projects %>
+                      <% @basecamp_projects.each do |b| %>
+                        <tr>
+                          <td class="col-lg-2">Ex.testing account name</td>
+                          <td class="col-lg-2"><%=b['name']%></td>
+                          <td class="col-lg-2"><input type="/" name="edit" value="Update" class="btn btn-primary btn-sm center"><span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="#">Remove</a></span></td>
+                        </tr>
+                        <% end %>
+                    <% end %>
                   </tbody>
               </table>
 

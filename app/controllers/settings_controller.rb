@@ -81,8 +81,6 @@ class SettingsController < ApplicationController
 	def basecamp
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
-
-
 		pin = params[:code]
 		# Check if Oauth_user has been created
 		if @basecamp2_user == nil && pin
