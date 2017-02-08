@@ -138,21 +138,19 @@ class SalesforceController < ApplicationController
   end
 
   def refresh_activities
-    @streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunities) # all active projects because "admin" role can see everything
+    @streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
     @streams.each do |s|
 
-      if s.salesforce_opportunities.empty? # Stream not linked to SF Opportunity
+      if s.salesforce_opportunity.nil? # Stream not linked to SF Opportunity
         if !s.account.salesforce_accounts.empty? # Stream linked to SF Account
           s.account.salesforce_accounts.each do |sf_a|
-            Activity.load_salesforce_activities(s, current_user.organization_id, sf_a.salesforce_account_id)
+            Activity.load_salesforce_activities(s, current_user.organization_id, sf_a.salesforce_account_id, type="Account")
           end
         end
       else # Stream linked to Opportunity
-        # Not supporting this at the moment.  I suspect most SFDC activities are logged in Account level.
-        # s.salesforce_opportunities.each do |sf_o|
-        #   Activity.load_salesforce_activities(s, current_user.organization_id, sf_o.salesforce_opportunity_id)
-        # end
+        # If Stream is linked in Opportunity, then save on Opportunity level
+        Activity.load_salesforce_activities(s, current_user.organization_id, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity")
       end
     end
 

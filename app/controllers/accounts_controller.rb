@@ -47,7 +47,6 @@ class AccountsController < ApplicationController
                                                 updated_by: current_user.id,
                                                 organization_id: current_user.organization.id,
                                                 status: 'Active'))
-
     respond_to do |format|
       if @account.save
         format.html { redirect_to @account, notice: 'Account was successfully created.' }

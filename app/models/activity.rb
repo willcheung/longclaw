@@ -186,11 +186,15 @@ class Activity < ActiveRecord::Base
   end
 
 
-  def self.load_salesforce_activities(project, organization_id, sfdc_account_id, limit=200)
+  def self.load_salesforce_activities(project, organization_id, sfdc_id, type="Account", limit=200)
     val = []
 
     client = SalesforceService.connect_salesforce(organization_id)
-    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Id='#{sfdc_account_id}'"
+    if type == "Account"
+      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Id='#{sfdc_id}'"
+    elsif type == "Opportunity"
+      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Opportunity where Id='#{sfdc_id}'"
+    end
 
     activities = SalesforceService.query_salesforce(client, query_statement)
 
@@ -203,6 +207,7 @@ class Activity < ActiveRecord::Base
                      '[#{owner.to_json}]',
                      '[]',
                      '[]',
+                     #{Activity.sanitize([c].to_json)},
                      #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)},
                      '#{Time.now}', '#{Time.now}')"
           end
@@ -210,8 +215,8 @@ class Activity < ActiveRecord::Base
       end
     end
 
-    insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "note", "created_at", "updated_at") VALUES'
-    on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note'
+    insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "note", "created_at", "updated_at") VALUES'
+    on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages'
     values = val.join(', ')
 
     if !val.empty?

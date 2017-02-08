@@ -39,6 +39,7 @@ include Utils
 include ContextSmithParser
 
 class Project < ActiveRecord::Base
+  after_create  :create_custom_fields
 
   belongs_to  :account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
@@ -85,6 +86,7 @@ class Project < ActiveRecord::Base
   has_many  :users_all, through: "project_members_all", source: :user
 
   has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify
+  has_many :custom_fields, as: :customizable, foreign_key: "customizable_uuid", dependent: :destroy
 
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
@@ -117,7 +119,7 @@ class Project < ActiveRecord::Base
   
   scope :is_active, -> {where("projects.status = 'Active'")}
 
-  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
+  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
   validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
@@ -272,6 +274,9 @@ class Project < ActiveRecord::Base
 
   def self.new_risk_score(array_of_project_ids, time_zone)
     projects = Project.where(id: array_of_project_ids).group('projects.id')
+
+    return [] if projects.empty?   # quit early if there are no projects
+
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
@@ -534,6 +539,17 @@ class Project < ActiveRecord::Base
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
       )
+      UNION ALL
+      (
+      -- Zendesk
+      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:Alert]}' as category,
+            count(*) as activity_count
+      FROM activities
+      WHERE category = '#{Activity::CATEGORY[:Alert]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      )
     SQL
 
     Activity.find_by_sql(query)
@@ -761,7 +777,7 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # This method should be called *after* all accounts, contacts, and users are processed & inserted.
+  # Called during onboarding process. This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
@@ -796,10 +812,10 @@ class Project < ActiveRecord::Base
         # Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
         # project.subscribers.create(user_id: user_id)
 
-        # Project conversations
+        # Upsert project conversations.
         Activity.load(get_project_conversations(data, p), project, true, user_id)
 
-        # Load Smart Tasks
+        # Unsert/load Smart Tasks.
         Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
@@ -807,7 +823,7 @@ class Project < ActiveRecord::Base
         # Also removing the rake scheduler for this.  Will need to think of a better solution to surface this.
         # Notification.load_opportunity_for_stale_projects(project)
 
-        # Project meetings
+        # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
 			end
 		end
@@ -862,7 +878,6 @@ class Project < ActiveRecord::Base
     end
   end
 
-
   private
 
   def self.calculate_score_by_setting(metric, setting)
@@ -880,5 +895,10 @@ class Project < ActiveRecord::Base
     else
       100*setting.weight
     end
+  end
+
+  # Create all custom fields for a new Stream
+  def create_custom_fields
+    CustomFieldsMetadatum.where(organization:self.account.organization, entity_type: "Project").each { |cfm| CustomField.create(organization:self.account.organization, custom_fields_metadatum:cfm, customizable:self) }
   end
 end

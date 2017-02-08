@@ -11,12 +11,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170201215027) do
+
+ActiveRecord::Schema.define(version: 20170203222106) do
+
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "uuid-ossp"
   enable_extension "hstore"
+  enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                                  default: "",         null: false
@@ -125,6 +127,30 @@ ActiveRecord::Schema.define(version: 20170201215027) do
   end
 
   add_index "contacts", ["account_id"], name: "index_contacts_on_account_id", using: :btree
+
+  create_table "custom_fields", force: :cascade do |t|
+    t.uuid     "organization_id",           null: false
+    t.integer  "custom_fields_metadata_id", null: false
+    t.string   "customizable_type",         null: false
+    t.uuid     "customizable_uuid",         null: false
+    t.string   "value"
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
+  end
+
+  add_index "custom_fields", ["organization_id", "custom_fields_metadata_id", "customizable_uuid"], name: "custom_fields_idx", using: :btree
+
+  create_table "custom_fields_metadata", force: :cascade do |t|
+    t.uuid     "organization_id",         null: false
+    t.string   "entity_type",             null: false
+    t.string   "name",                    null: false
+    t.string   "data_type",               null: false
+    t.string   "update_permission_level", null: false
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+  end
+
+  add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", using: :btree
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false

@@ -47,7 +47,7 @@
                       <span style="font-size:14px;display:block;"><%= risk_level(risk_score) %></span>
                     </td>
                     <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
-                      <% open_alerts_count = p.notifications.select { |n| n.category == Notification::CATEGORY[:Alert] && !n.is_complete }.count %> <!-- # workaround for weird "notifications.risks" bug -->
+                      <% open_alerts_count = p.notifications.select { |n| n.category == Notification::CATEGORY[:Alert] && !n.is_complete }.count %> <!-- # workaround for weird "notifications.risks" bug that selects ["project_id", nil] -->
                       <span style="display:block;"><%= open_alerts_count %></span>
                       <span style="font-size:14px;display:block;">Open <%= 'Alert'.pluralize(open_alerts_count) %></span>
                     </td>
@@ -261,7 +261,7 @@
       <tbody style="width:100%;display:table;">
         <tr>
           <td style="vertical-align:middle;">
-            <span style="font-size:15px;font-weight:bold;">Alerts & Tasks:</span>
+            <span style="font-size:15px;font-weight:bold;">Alerts & Next Steps:</span>
           </td>
           <td class="expander"></td>
           <td style="padding:6px;text-align:right;">

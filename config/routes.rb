@@ -55,6 +55,7 @@ Longclaw::Application.routes.draw do
       get "users"
       get "alerts"
       post "alerts" => "settings#create_for_alerts"
+      get "custom_fields"
       get "salesforce" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 
@@ -95,6 +96,8 @@ Longclaw::Application.routes.draw do
       get 'account_data/:id' => 'reports#account_data'
     end
 
+    resources :custom_fields, only: [:update]
+    resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
   end
 
   devise_scope :user do # Unauthenticated user
