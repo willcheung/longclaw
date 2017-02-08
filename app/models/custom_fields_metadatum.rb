@@ -13,7 +13,7 @@
 #
 # Indexes
 #
-#  custom_fields_metadata_idx  (organization_id,entity_type) UNIQUE
+#  custom_fields_metadata_idx  (organization_id,entity_type)
 #
 
 class CustomFieldsMetadatum < ActiveRecord::Base
@@ -26,15 +26,15 @@ class CustomFieldsMetadatum < ActiveRecord::Base
 	ENTITY_TYPE = { Account: 'Account', Project: 'Stream', User: 'User (coming soon)' }
 	DATA_TYPE = { Text: 'Text', Number: 'Number', List: 'List (coming soon)' }
 
-	# Checks the passed type 'typeStr' to see if it is a valid ENTITY_TYPE's (use matchKey=false if you want to match the mapped value and not the key itself) and returns the *key* value, otherwise returns nil 
-	# (e.g., passing validateAndReturnValidEntityType("Project") or validateAndReturnValidEntityType("Stream",false) will both return CustomFieldsMetadatum::ENTITY_TYPE[:Project])
-	def self.validateAndReturnValidEntityType(typeStr, matchKey=true)
-		return nil if typeStr == nil
+	# Checks the string 'type' to see if it is a valid ENTITY_TYPE.  If 'type' is valid, returns the ENTITY_TYPE (key); otherwise, returns nil. Use match_external_value=true to validate 'type' with the mapped value (the external value the user sees) instead of the key.
+	# e.g., Calling validate_and_return_entity_type("Project") or validate_and_return_entity_type("Stream",true) will both return CustomFieldsMetadatum::ENTITY_TYPE[:Project]
+	def self.validate_and_return_entity_type(type, match_external_value=false)
+		return nil if type == nil
 		ENTITY_TYPE.each do |t|
-			if matchKey
-				return t[0].to_s if t[0].to_s == typeStr.to_s
+			if match_external_value
+				return t[0].to_s if type.to_s == t[1].to_s
 			else
-				return t[0].to_s if t[1].to_s == typeStr.to_s
+				return t[0].to_s if type.to_s == t[0].to_s
 			end
 		end
 		return nil
@@ -42,7 +42,7 @@ class CustomFieldsMetadatum < ActiveRecord::Base
 
 	private
 
-	# Create a new custom field for an existing accounts, or create all custom fields for a new account
+	# Create a new custom field for all existing entities of the appropriate entity type
 	def create_custom_fields
 		_accounts = self.organization.accounts
 		if self.entity_type == "Account"

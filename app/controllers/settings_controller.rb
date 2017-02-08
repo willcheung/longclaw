@@ -1,5 +1,4 @@
 class SettingsController < ApplicationController
-	before_action :get_current_user_org, only: ['custom_fields', 'create_for_custom_fields']
 	before_filter :get_salesforce_user, only: ['salesforce', 'salesforce_opportunities', 'salesforce_activities']
 
 	def index
@@ -75,10 +74,9 @@ class SettingsController < ApplicationController
 
   # An index of all the custom fields for the current user's organization, by entity type
 	def custom_fields
-		@entity_type = CustomFieldsMetadatum.validateAndReturnValidEntityType(params[:entity_type], false)
-		@entity_type = CustomFieldsMetadatum::ENTITY_TYPE[:Account] if @entity_type.nil?
+		@entity_type = CustomFieldsMetadatum.validate_and_return_entity_type(params[:entity_type], true) || CustomFieldsMetadatum::ENTITY_TYPE[:Account]
 
-		@custom_fields = CustomFieldsMetadatum.where(organization: @current_user_org, entity_type: @entity_type)
+		@custom_fields = CustomFieldsMetadatum.where(organization:current_user.organization, entity_type:@entity_type)
 	end
 
 	def salesforce
@@ -123,10 +121,6 @@ class SettingsController < ApplicationController
 	end
 
 	private
-
-	def get_current_user_org
-		@current_user_org = current_user.organization
-	end
 
 	def get_salesforce_user
 		# try to get salesforce production. if not connect, check if it is connected to salesforce sandbox

@@ -136,7 +136,7 @@ ActiveRecord::Schema.define(version: 20170203222106) do
     t.datetime "updated_at",                null: false
   end
 
-  add_index "custom_fields", ["organization_id", "custom_fields_metadata_id", "customizable_uuid"], name: "custom_fields_idx", unique: true, using: :btree
+  add_index "custom_fields", ["organization_id", "custom_fields_metadata_id", "customizable_uuid"], name: "custom_fields_idx", using: :btree
 
   create_table "custom_fields_metadata", force: :cascade do |t|
     t.uuid     "organization_id",         null: false
@@ -148,7 +148,7 @@ ActiveRecord::Schema.define(version: 20170203222106) do
     t.datetime "updated_at",              null: false
   end
 
-  add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", unique: true, using: :btree
+  add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", using: :btree
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false

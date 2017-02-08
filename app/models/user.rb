@@ -61,7 +61,6 @@ class User < ActiveRecord::Base
   has_many    :project_members_all, class_name: "ProjectMember", dependent: :destroy
   has_many    :projects, through: "project_members"
   has_many    :projects_all, through: "project_members_all", source: :project
-  #has_many    :custom_fields, -> { where(customizable_type: "User") }, foreign_key: "customizable_uuid", dependent: :destroy
 
   scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
   scope :not_disabled, -> {where("users.is_disabled = false")}

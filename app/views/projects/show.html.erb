@@ -152,7 +152,7 @@
                         <strong>Account:</strong>
                         <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
                     </li>
-                    <!-- Custom field -->
+                    <!-- Custom fields -->
                     <% @project.custom_fields.order(:created_at).each.with_index do |cf, i| %>
                         <li class="list-group-item">
                         <strong><%= cf.custom_fields_metadatum.name %>:</strong>

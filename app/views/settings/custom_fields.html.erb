@@ -43,27 +43,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Example row &nbsp;<i class="fa fa-pencil text-mute-gray"></td>
-                        <td>
-                          <select id="select-customfield1-type" class="form-control">
-                            <% CustomFieldsMetadatum::DATA_TYPE.each.with_index do |t, i| %>
-                              <option> <%=t[1]%> </option>
-                            <% end %>
-                          </select>
-                        </td>
-                        <td>
-                          <select id="select-customfield1-updatepermission" class="form-control">
-                            <% User::ROLE.each.with_index do |t, i| %>
-                              <option <% if i == 2%> selected <%end%>> <%=t[1]%> </option>
-                            <% end %>
-                          </select>
-                        </td>
-                        <td>-</td>
-                        <td><a href="" class="trash" attr="Example row"><i class="fa fa-trash-o fa-lg" id="delete-customfield1" attr="Region"></i> Delete</a></td>
-                    </tr>
-                    <% if !@custom_fields.nil? %>
-                    <% @custom_fields.each do |f|  %>
+                    <% if @custom_fields.empty? %>
+                    <tr><th class="text-mute-gray" style="font-weight:normal;">No custom fields yet!&nbsp;&nbsp;Add one by clicking '+' below.</th></tr>
+                    <% else %>
+                    <% @custom_fields.order(:created_at).each do |f|  %>
                         <tr>
                             <td><%= best_in_place f, :name, :as => 'input', :place_holder => '(none)', :activator => "#customfield-#{f.id}-name-activator" %><i id="customfield-<%= f.id %>-name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
                             <td>
@@ -81,9 +64,9 @@
                             </td>
                             <td>-</td>
                             <td>
-                              <%= link_to "<i class=\"fa fa-minus-square fa-2x\"></i>".html_safe, f, method: :delete, style: "color:#F66", data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %>
+                              <%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, f, method: :delete, data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %>
                             </td>
-                            <!--<td><a href=""><i class="fa fa-trash-o fa-lg" id="delete-customfield1" attr="Region"></i> Delete</a></td>-->
+                            <!--< %= link_to "<i class=\"fa fa-minus-square fa-2x\"></i>".html_safe, f, method: :delete, style: "color:#F66", data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %>-->
                         </tr>
                     <% end %>
                     <% end %>
@@ -102,9 +85,6 @@
     </div>
 </div>
 <script type="text/javascript">
-    $('.trash').click(function () {
-        alert("When you delete column '" + $(this).attr("attr") + "', all existing data will be lost! Deleting data...");
-    });
     $('#select-entity-type').change( function() {
         window.location.replace("custom_fields?entity_type=" + $(this).val());
     });

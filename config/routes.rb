@@ -89,7 +89,7 @@ Longclaw::Application.routes.draw do
       get 'account_data/:id' => 'reports#account_data'
     end
 
-    resources :custom_fields, only: [:create, :update, :destroy]
+    resources :custom_fields, only: [:update]
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]
   end
 

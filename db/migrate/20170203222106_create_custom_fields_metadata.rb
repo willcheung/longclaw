@@ -10,6 +10,6 @@ class CreateCustomFieldsMetadata < ActiveRecord::Migration
       t.timestamps null: false
     end
 
-    add_index :custom_fields_metadata, [:organization_id, :entity_type], unique: true, name: 'custom_fields_metadata_idx'
+    add_index :custom_fields_metadata, [:organization_id, :entity_type], name: 'custom_fields_metadata_idx'
   end
 end

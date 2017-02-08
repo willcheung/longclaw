@@ -13,7 +13,7 @@
 #
 # Indexes
 #
-#  custom_fields_idx  (organization_id,custom_fields_metadata_id,customizable_uuid) UNIQUE
+#  custom_fields_idx  (organization_id,custom_fields_metadata_id,customizable_uuid)
 #
 
 class CustomField < ActiveRecord::Base
@@ -21,7 +21,6 @@ class CustomField < ActiveRecord::Base
 	belongs_to :custom_fields_metadatum, foreign_key: "custom_fields_metadata_id"
 	belongs_to :account, foreign_key: "customizable_uuid"
 	belongs_to :project, foreign_key: "customizable_uuid"
-	#belongs_to :user,    foreign_key: "customizable_uuid"
  
 	# Returns associated entity to this custom field; mimics polymorphic behavior "belongs_to :customizable, :polymorphic => true"
 	def customizable
