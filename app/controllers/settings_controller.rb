@@ -72,6 +72,13 @@ class SettingsController < ApplicationController
 		redirect_to :back
 	end
 
+  # An index of all the custom fields for the current user's organization, by entity type
+	def custom_fields
+		@entity_type = CustomFieldsMetadatum.validate_and_return_entity_type(params[:entity_type], true) || CustomFieldsMetadatum::ENTITY_TYPE[:Account]
+
+		@custom_fields = CustomFieldsMetadatum.where(organization:current_user.organization, entity_type:@entity_type)
+	end
+
 	def salesforce
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 		@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("lower(accounts.name)")
