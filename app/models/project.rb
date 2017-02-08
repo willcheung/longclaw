@@ -86,7 +86,7 @@ class Project < ActiveRecord::Base
   has_many  :users_all, through: "project_members_all", source: :user
 
   has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify
-  has_many :custom_fields, -> { where(customizable_type: "Project") }, foreign_key: "customizable_uuid", dependent: :destroy
+  has_many :custom_fields, as: :customizable, foreign_key: "customizable_uuid", dependent: :destroy
 
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
@@ -119,7 +119,7 @@ class Project < ActiveRecord::Base
   
   scope :is_active, -> {where("projects.status = 'Active'")}
 
-  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
+  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
   validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
@@ -897,10 +897,8 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Create all custom fields for a new Streamg
+  # Create all custom fields for a new Stream
   def create_custom_fields
-    CustomFieldsMetadatum.where(organization:self.account.organization, entity_type: "Project").each do |cfm|
-       CustomField.create(organization:self.account.organization, custom_fields_metadatum:cfm, customizable_uuid:self.id, customizable_type:"Project")
-    end
+    CustomFieldsMetadatum.where(organization:self.account.organization, entity_type: "Project").each { |cfm| CustomField.create(organization:self.account.organization, custom_fields_metadatum:cfm, customizable:self) }
   end
 end

@@ -37,14 +37,14 @@
                     <tr>
                         <th>Field Name</th>
                         <th>Data Type</th>
-                        <th><i class="fa fa-lock fa-lg">&nbsp;</i>Edit Permission</th>
-                        <th><i class="fa fa-cogs">&nbsp;</i>External Column Mapping</th>
+                        <!--<th><i class="fa fa-lock fa-lg">&nbsp;</i>Edit Permission</th>-->
+                        <!--<th><i class="fa fa-cogs">&nbsp;</i>External Column Mapping</th>-->
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     <% if @custom_fields.empty? %>
-                    <tr><th class="text-mute-gray" style="font-weight:normal;">No custom fields yet!&nbsp;&nbsp;Add one by clicking '+' below.</th></tr>
+                    <tr><th class="text-mute-gray" style="font-weight:normal;">No custom fields yet!&nbsp;&nbsp;Click the '+' below to add one.</th></tr>
                     <% else %>
                     <% @custom_fields.order(:created_at).each do |f|  %>
                         <tr>
@@ -59,10 +59,10 @@
                               </select>-->
                               <%= best_in_place f, :data_type, :as => :select, :collection => CustomFieldsMetadatum::DATA_TYPE, :class => 'btn btn-default btn-sm fa-caret-down' %>
                             </td>
-                            <td>
+                            <!--<td>
                               <%= best_in_place f, :update_permission_level, :as => :select, :collection => User::ROLE, :class => 'btn btn-default btn-sm fa-caret-down' %>
-                            </td>
-                            <td>-</td>
+                            </td>-->
+                            <!--<td>-</td>-->
                             <td>
                               <%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, f, method: :delete, data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %>
                             </td>
@@ -73,10 +73,9 @@
                     <tr>
                         <td></td>
                         <td></td>
-                        <td></td>
-                        <td></td>
+                        <!--<td></td>
+                        <td></td>-->
                         <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe,custom_fields_metadatum_index_path(entity_type: "#{@entity_type}"), method: :post, style: "color:#A1C436",title: "Add new field" %></td>
-                        <!--<td><button id="add-btn" class="btn btn-success"><i class="fa fa-plus"></i></button></td>-->
                     </tr>
                 </tbody>
             </table>

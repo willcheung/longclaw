@@ -3,7 +3,6 @@ class CreateCustomFields < ActiveRecord::Migration
     create_table :custom_fields do |t|
       t.uuid    :organization_id, null:false
       t.belongs_to :custom_fields_metadata, null:false
-      #t.uuid    :customizable, polymorphic: true, index : true
       t.string  :customizable_type, null:false
       t.uuid    :customizable_uuid, null:false  # FK
       t.string  :value      # character varying ("varchar")

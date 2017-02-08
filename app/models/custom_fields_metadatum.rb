@@ -44,12 +44,12 @@ class CustomFieldsMetadatum < ActiveRecord::Base
 
 	# Create a new custom field for all existing entities of the appropriate entity type
 	def create_custom_fields
-		_accounts = self.organization.accounts
+		accounts = self.organization.accounts
 		if self.entity_type == "Account"
-			_accounts.each { |a| CustomField.create(organization:self.organization, custom_fields_metadatum:self, customizable_uuid:a.id, customizable_type:"Account") }
+			accounts.each { |a| CustomField.create(organization:self.organization, custom_fields_metadatum:self, customizable:a) }
 		elsif self.entity_type == "Project"
-			_accounts.each do |a|
-				a.projects.each { |p| CustomField.create(organization:self.organization, custom_fields_metadatum:self, customizable_uuid:p.id, customizable_type:"Project") }
+			accounts.each do |a|
+				a.projects.each { |p| CustomField.create(organization:self.organization, custom_fields_metadatum:self, customizable:p) }
 			end
 		else
 			print "Error! Unknown entity_type; cannot create new custom fields."

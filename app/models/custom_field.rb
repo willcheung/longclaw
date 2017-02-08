@@ -19,15 +19,5 @@
 class CustomField < ActiveRecord::Base
 	belongs_to :organization
 	belongs_to :custom_fields_metadatum, foreign_key: "custom_fields_metadata_id"
-	belongs_to :account, foreign_key: "customizable_uuid"
-	belongs_to :project, foreign_key: "customizable_uuid"
- 
-	# Returns associated entity to this custom field; mimics polymorphic behavior "belongs_to :customizable, :polymorphic => true"
-	def customizable
-		if self.customizable_type == "Account"
-			return Account.joins(:custom_fields).where("custom_fields.id = ? and custom_fields.customizable_type = 'Account' and accounts.id = ?", self.id, self.customizable_uuid)
-		elsif self.customizable_type == "Project" 
-			return Project.joins(:custom_fields).where("custom_fields.id = ? and custom_fields.customizable_type = 'Project' and projects.id = ?", self.id, self.customizable_uuid)
-		end
-	end
+	belongs_to :customizable, polymorphic: true, foreign_key: "customizable_uuid"
 end
