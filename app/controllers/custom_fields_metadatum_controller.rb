@@ -29,7 +29,6 @@ class CustomFieldsMetadatumController < ApplicationController
   end
 
   def destroy
-    print "----> Deleting a custom field metadata rec id=", params[:id], "!\n"
     custom_fields_metadata = CustomFieldsMetadatum.find(params[:id])
     custom_fields_metadata.destroy if custom_fields_metadata and custom_fields_metadata.organization == current_user.organization  
 
