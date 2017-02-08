@@ -98,12 +98,27 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong>Stream Details</strong>
+                    <strong>Details</strong>
                 </div>
             </div>
             <!-- empty span here for proper toggle-open event handler traversal -->
             <span></span>
             <div class="no-display">
+                <div class="m-t-md">
+                    <strong>Linked to SFDC:</strong>
+                    <span class="pull-right">
+                        <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
+                            Not linked
+                        <% else %>
+                            <% if @project.salesforce_opportunity.nil? %>
+                                <%= @project.account.salesforce_accounts.map{ |n| n.salesforce_account_name }.join(', ') %>
+                            <% else %>
+                                <%= @project.salesforce_opportunity.name %>
+                            <% end %>
+                        <% end %>
+                    </span>
+                </div>
+
                 <div class="m-t-md">
                     <strong>Description:</strong>
                     <i id="proj-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
@@ -137,6 +152,18 @@
                         <strong>Account:</strong>
                         <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
                     </li>
+                    <!-- Custom fields -->
+                    <% @project.custom_fields.order(:created_at).each.with_index do |cf, i| %>
+                        <li class="list-group-item">
+                        <strong><%= cf.custom_fields_metadatum.name %>:</strong>
+                        <i id="acct-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+                        <span class="pull-right m-r-xs">
+                            <%= best_in_place cf, :value, :as => :input, :place_holder => '(no value)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#acct-customfield#{i}-activator" %>
+                            <!-- , :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' -->
+                        </span>
+                        </li>
+                    <% end %>  
+                    <!-- End: custom field -->
                     <li class="list-group-item small m-t-md first-item">
                         <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
                         Last Updated:

@@ -47,7 +47,6 @@ class AccountsController < ApplicationController
                                                 updated_by: current_user.id,
                                                 organization_id: current_user.organization.id,
                                                 status: 'Active'))
-
     respond_to do |format|
       if @account.save
         format.html { redirect_to @account, notice: 'Account was successfully created.' }
@@ -134,6 +133,6 @@ class AccountsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def account_params
-      params.require(:account).permit(:name, :website, :phone, :description, :address, :category)
+      params.require(:account).permit(:name, :website, :phone, :description, :address, :category, :revenue_potential)
     end
 end

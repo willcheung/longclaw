@@ -2,24 +2,32 @@
 #
 # Table name: projects
 #
-#  id             :uuid             not null, primary key
-#  name           :string           default(""), not null
-#  account_id     :uuid
-#  project_code   :string
-#  is_public      :boolean          default(TRUE)
-#  status         :string           default("Active")
-#  description    :text
-#  start_date     :date
-#  end_date       :date
-#  budgeted_hours :integer
-#  created_by     :uuid
-#  updated_by     :uuid
-#  owner_id       :uuid
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  is_confirmed   :boolean
-#  category       :string           default("Implementation")
-#  deleted_at     :datetime
+#  id                  :uuid             not null, primary key
+#  name                :string           default(""), not null
+#  account_id          :uuid
+#  project_code        :string
+#  is_public           :boolean          default(TRUE)
+#  status              :string           default("Active")
+#  description         :text
+#  start_date          :date
+#  end_date            :date
+#  budgeted_hours      :integer
+#  created_by          :uuid
+#  updated_by          :uuid
+#  owner_id            :uuid
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  is_confirmed        :boolean
+#  category            :string           default("Implementation")
+#  deleted_at          :datetime
+#  renewal_date        :date
+#  contract_start_date :date
+#  contract_end_date   :date
+#  contract_arr        :decimal(14, 2)
+#  contract_mrr        :decimal(12, 2)
+#  renewal_count       :integer
+#  has_case_study      :boolean          default(FALSE), not null
+#  is_referenceable    :boolean          default(FALSE), not null
 #
 # Indexes
 #
@@ -31,6 +39,7 @@ include Utils
 include ContextSmithParser
 
 class Project < ActiveRecord::Base
+  after_create  :create_custom_fields
 
   belongs_to  :account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
@@ -76,7 +85,8 @@ class Project < ActiveRecord::Base
   has_many  :users, through: "project_members"
   has_many  :users_all, through: "project_members_all", source: :user
 
-  has_many  :salesforce_opportunities, foreign_key: "contextsmith_project_id", dependent: :nullify
+  has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify
+  has_many :custom_fields, as: :customizable, foreign_key: "customizable_uuid", dependent: :destroy
 
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
@@ -109,7 +119,7 @@ class Project < ActiveRecord::Base
   
   scope :is_active, -> {where("projects.status = 'Active'")}
 
-  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
+  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
   validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
@@ -529,6 +539,17 @@ class Project < ActiveRecord::Base
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
       )
+      UNION ALL
+      (
+      -- Zendesk
+      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:Alert]}' as category,
+            count(*) as activity_count
+      FROM activities
+      WHERE category = '#{Activity::CATEGORY[:Alert]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      )
     SQL
 
     Activity.find_by_sql(query)
@@ -857,7 +878,6 @@ class Project < ActiveRecord::Base
     end
   end
 
-
   private
 
   def self.calculate_score_by_setting(metric, setting)
@@ -875,5 +895,10 @@ class Project < ActiveRecord::Base
     else
       100*setting.weight
     end
+  end
+
+  # Create all custom fields for a new Stream
+  def create_custom_fields
+    CustomFieldsMetadatum.where(organization:self.account.organization, entity_type: "Project").each { |cfm| CustomField.create(organization:self.account.organization, custom_fields_metadatum:cfm, customizable:self) }
   end
 end

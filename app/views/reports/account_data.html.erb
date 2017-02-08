@@ -41,7 +41,7 @@
             </div>
         </div>
         <div class="row text-center">
-            <h3><%= link_to "See risks &rarr;".html_safe, project_path(@account)+"/tasks", class: "btn btn-outline btn-primary btn-xs" %></h3>
+            <h3><%= link_to "See Alerts & Next Steps &rarr;".html_safe, project_path(@account)+"/tasks", class: "btn btn-outline btn-primary btn-xs" %></h3>
         </div>
     </div>
 </div>
@@ -371,13 +371,13 @@
                       }
 
                     }
-                },
+                }
             },
             credits: {
                 enabled: false
             },
             title: {
-                text: "% Negative Sentiment / Engagement Volume",
+                text: "% Negative Sentiment / Engagement",
                     align: 'left',
                     margin: 0,
                     x: 35,
@@ -448,13 +448,13 @@
                       this.yAxis[0].setExtremes(0, extremes.dataMax);
                     }
                     }
-                },
+                }
             },
             credits: {
                 enabled: false
             },
             title: {
-                text: "Engagement Volume",
+                text: "Engagement",
                     align: 'left',
                     margin: 0,
                     x: 35,

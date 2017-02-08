@@ -71,11 +71,11 @@ class ContextsmithService
   private
 
   def self.load_from_backend(project, base_url, params)
-    puts "********** testing... we are in load_from_backend() ! ************"
+    puts "********** We are in load_from_backend() ! ************"
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
     token_emails = []
-    if Rails.env.development? || Rails.env.test?
+    if Rails.env.development?
       token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
     else
       project.users.registered.not_disabled.each do |u|
@@ -84,7 +84,6 @@ class ContextsmithService
         token_emails << { token: u.oauth_access_token, email: u.email } if success
       end
     end
-    puts "<><><><> token_emails.empty? ", token_emails.empty?, " <><><><>\n"
     return [] if token_emails.empty?
 
     ex_clusters = project.contacts.pluck(:email)
