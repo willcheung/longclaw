@@ -105,6 +105,21 @@
             <span></span>
             <div class="no-display">
                 <div class="m-t-md">
+                    <strong>Linked to SFDC:</strong>
+                    <span class="pull-right">
+                        <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
+                            Not linked
+                        <% else %>
+                            <% if @project.salesforce_opportunity.nil? %>
+                                <%= @project.account.salesforce_accounts.map{ |n| n.salesforce_account_name }.join(', ') %>
+                            <% else %>
+                                <%= @project.salesforce_opportunity.name %>
+                            <% end %>
+                        <% end %>
+                    </span>
+                </div>
+
+                <div class="m-t-md">
                     <strong>Description:</strong>
                     <i id="proj-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                 </div>
