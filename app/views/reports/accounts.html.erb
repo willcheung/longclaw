@@ -133,7 +133,7 @@
                         </div>
 
                         <div class="row m-t-md">
-                            <div id="risk-detection-chart" style="height:300px;overflow:visible"></div>
+                            <div id="risk-detection-chart" style="height:220px;overflow:visible"></div>
                         </div>
 
                         <div class="row m-t-md">
@@ -525,14 +525,17 @@
                 }
             },
             yAxis: {
-                categories: ['Days Inactive','% Neg Sentiment','Neg Sentiment','Support Vol','Engagement Vol','Days to Renewal'],
-                tickLength:3,
+                categories: ['Neg Sentiment','Support Vol','Engagement Vol','Days to Renewal','Days Inactive'],
+                tickLength: 3,
                 tickColor:'#000',
                 gridLineWidth:.5,
                 labels: { 
                     enabled: true,
                     align: 'left',
-                    x: -30
+                    x: -30,
+                    formatter: function() {
+                        return '<span title="My custom title">' + this.value + '</span>';
+                    },
                 },
                 minorGridLineWidth: 0,
                 title: {                
@@ -545,24 +548,19 @@
             //     minorGridLineWidth: 0
             // },
             legend: {
-                enabled: true
+                enabled: true,
+                floating: true,
+                verticalAlign: 'top',
+                y: -5,
             },
             plotOptions: {
-
+                type: 'scatter'
             },
             tooltip: {
-                positioner: function () {
-                    return {
-                        x: this.chart.chartWidth - this.label.width, // right aligned
-                    };
-                },
-                borderWidth: 0,
-                backgroundColor: 'none',
-                pointFormat: '{point.y}',
+                pointFormat: '{}',
                 xDateFormat: '%b %e',
-                shadow: false,
                 style: {
-                    fontSize: '16px',
+                    fontSize: '12px',
                     color: '#555555'
                 }
             },
@@ -572,7 +570,7 @@
                 color: '#FF5050',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: [[<%=8.days.ago.at_midnight.to_i * 1000%>,1],[<%=8.days.ago.at_midnight.to_i * 1000%>,2],[<%=11.days.ago.at_midnight.to_i * 1000%>,3],[<%=11.days.ago.at_midnight.to_i * 1000%>,4],[<%=1.day.ago.at_midnight.to_i * 1000%>,1],[<%=6.days.ago.at_midnight.to_i * 1000%>,2]],
+                data: [[<%=8.days.ago.at_midnight.to_i * 1000%>,2],[<%=10.days.ago.at_midnight.to_i * 1000%>,3],[<%=1.day.ago.at_midnight.to_i * 1000%>,1],[<%=6.days.ago.at_midnight.to_i * 1000%>,2]],
                 marker : {symbol : 'square', radius: 6 }
             },
             {
@@ -581,7 +579,7 @@
                 color: '#FFA500',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: [[<%=11.days.ago.at_midnight.to_i * 1000%>,1], [<%=14.days.ago.at_midnight.to_i * 1000%>,5]],
+                data: [[<%=11.days.ago.at_midnight.to_i * 1000%>,1], [<%=14.days.ago.at_midnight.to_i * 1000%>,4]],
                 marker : {symbol : 'square', radius: 6 }
             }]
         });
