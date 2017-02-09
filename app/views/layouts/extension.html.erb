@@ -43,13 +43,14 @@
 
         <% if @project %>
 
-        <h3><%= @project.name %></h3>
-        <h3 class="text-mute-gray">Account: <%= @account.name %></h3>
+            <h3><%= @project.name %></h3>
+            <h3 class="text-mute-gray">Account: <%= @account.name %></h3>
 
+            <hr>
 
-            <%= link_to "Account", extension_account_path(email_addresses: params[:email_addresses]) %>
-            <%= link_to "Alerts & Tasks", extension_alerts_tasks_path(email_addresses: params[:email_addresses]) %>
-            <%= link_to "Contacts", extension_contacts_path(email_addresses: params[:email_addresses]) %>
+            <%= link_to "Account", extension_account_path(email_addresses: params[:email_addresses]) %>&nbsp;&nbsp;&nbsp;
+            <%= link_to "Alerts & Tasks", extension_alerts_tasks_path(email_addresses: params[:email_addresses]) %>&nbsp;&nbsp;&nbsp;
+            <%= link_to "Contacts", extension_contacts_path(email_addresses: params[:email_addresses]) %>&nbsp;&nbsp;&nbsp;
             <%= link_to "Metrics", extension_metrics_path(email_addresses: params[:email_addresses]) %>
 
         <% end %>

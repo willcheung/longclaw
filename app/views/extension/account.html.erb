@@ -1,11 +1,12 @@
-<p><h3>Employees:</h3> 5</p>
-<p><h3>Type:</h3> Private</p>
-<p><h3>Tags:</h3> SaaS, B2B, Technology, Software</p>
+<!-- <h3><span class="text-muted">EMPLOYEES:</span> 5</h3>
+<h3><span class="text-muted">TYPE:</span> Private</h3>
+<h3><span class="text-muted">TAGS:</span> SaaS, B2B, Technology, Software</h3> -->
 
-
-<% @project.activities.take(5).each do |a| %>
-  <%= render 'activities/timeline_block', a: a %>
-<% end %>
+<div id="extension-timeline">
+  <% @activities.each do |a| %>
+    <%= render 'activities/extension_block', a: a %>
+  <% end %>
+</div>
 
 <a href="">Filter timeline and add notes >></a>
 
