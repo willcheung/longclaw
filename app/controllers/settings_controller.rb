@@ -99,7 +99,10 @@ class SettingsController < ApplicationController
 
 	def basecamp
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+		# Filter only the users Accounts
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
+		
+
 		pin = params[:code]
 		# Check if Oauth_user has been created
 		if @basecamp2_user == nil && pin
@@ -119,13 +122,31 @@ class SettingsController < ApplicationController
 		if @basecamp2_user
 			begin
 			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
-			# @basecamp_topics = OauthUser.basecamp2_topics(@basecamp2_user['oauth_access_token'])
-			# @basecamp_user = OauthUser.basecamp2_user_info(@basecamp2_user['oauth_access_token'])
-			# @basecamp_todos = OauthUser.basecamp2_user_todos(@basecamp2_user['oauth_access_token']) 
 			end
 		end
-
 	end
+
+
+
+	def basecamp2_projects
+		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+
+		if @basecamp2_user
+			begin
+			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
+			end
+		end
+		@accounts = Project.where(account_id: params[:account_id])
+	end
+
+	def basecamp2_activity
+		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+		
+	end
+
+
+
+
 
 	def super_user
 		@super_admin = %w(wcheung@contextsmith.com rcwang@contextsmith.com)

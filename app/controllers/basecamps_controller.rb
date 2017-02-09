@@ -14,19 +14,37 @@ class BasecampsController < ApplicationController
 		redirect_to BaseCampService.connect_basecamp2
 	end
 
+
+	@account_id = []
+
+	def map_projects
+		puts "Hello this is the maps_projects"
+		if params[:account_id]
+			puts "this is the account_id: #{params[:account_id]}"
+			@account_id = params[:account_id]
+		end
+
+		redirect_to settings_basecamp2_projects_path(:account_id => params[:account_id])
+	end
+
+
+
+
 	def link_basecamp2_account
-		puts "hello--------"
 		# links the Contextsmith Accounts with the Basecamp2 Projects
 	    # One CS Account can link to many BaseCamp2 Accounts
-	    if params[:basecamp_account_id] && params[:account_id]
+	    if params[:basecamp_account_id] && params[:account_id] && params[:project_id]
 	    	begin
-	    		# Intergration.link_basecamp2(params[:basecamp_account_id], params[:account_id], params[:external_name], current_user)
-
-	    	else
-	    		flash[:error] = "parameters were not met!"
-	    	end
-	    	
-	    end
+	    		Integration.link_basecamp2(params[:basecamp_account_id], params[:account_id], params[:external_name], current_user, params[:project_id])
+	    	rescue
+				#code that deals with some exception
+				flash[:warning] = "Sorry something went wrong"
+				else
+				#code that runs only if (no) excpetion was raised
+				flash[:notice] = "Project Synced!"
+				end
+			end
+	    # end
 	    # basecamp2_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
 	    # if !basecamp2_account.nil?
 	    #   salesforce_account.account = Account.find_by_id(params[:account_id])
@@ -37,10 +55,10 @@ class BasecampsController < ApplicationController
 	    #   format.html { redirect_to settings_salesforce_path }
 	    # end
 
-	    puts "------end"
 	    redirect_to :back
- 
 	end
+
+
 
 
 	def refresh_token

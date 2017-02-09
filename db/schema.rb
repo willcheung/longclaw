@@ -11,14 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-
-ActiveRecord::Schema.define(version: 20170203222106) do
-
+ActiveRecord::Schema.define(version: 20170209185437) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "hstore"
   enable_extension "uuid-ossp"
+  enable_extension "hstore"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                                  default: "",         null: false
@@ -151,6 +149,15 @@ ActiveRecord::Schema.define(version: 20170203222106) do
   end
 
   add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", using: :btree
+
+  create_table "integrations", force: :cascade do |t|
+    t.uuid     "contextsmith_account_id"
+    t.integer  "external_account_id"
+    t.uuid     "project_id"
+    t.string   "external_source"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+  end
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false

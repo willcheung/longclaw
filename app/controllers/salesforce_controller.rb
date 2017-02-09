@@ -52,7 +52,6 @@ class SalesforceController < ApplicationController
             activities = Activity.get_activity_by_filter(p, params)
             @project_risk_score = p.current_risk_score(current_user.time_zone)
             @project = p
-    				break
     			end
     		end
   		else
@@ -103,7 +102,6 @@ class SalesforceController < ApplicationController
   def link_salesforce_account
     # One CS Account can link to many Salesforce Accounts
     salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
-    break
     if !salesforce_account.nil?
       salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save

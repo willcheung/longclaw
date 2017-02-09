@@ -48,6 +48,7 @@ Longclaw::Application.routes.draw do
 
     resources :basecamp, only: [:index]
     get 'basecamp_controller/index'
+    post '/map_projects' => 'basecamps#map_projects'
     post '/link_basecamp2_account' => 'basecamps#link_basecamp2_account'
 
     scope "settings", controller: :settings, as: 'settings' do
@@ -60,6 +61,8 @@ Longclaw::Application.routes.draw do
       get "salesforce_opportunities" 
       get "salesforce_activities" 
       get "basecamp"
+      get "basecamp2_projects"
+      get "basecamp2_activity"
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
       get "iframe_test"

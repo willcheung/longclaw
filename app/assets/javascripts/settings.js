@@ -124,8 +124,11 @@ $(document).ready(function() {
     });
 
     $(".salesforce_account").hide();
+    $(".contextsmith_project_box").hide();
+
 
     $('.contextsmith_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'}); 
-    $('.basecamp2_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});   
+    $('.basecamp2_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});
+    $('.contextsmith_project_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});     
 
 } );

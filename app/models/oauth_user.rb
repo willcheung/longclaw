@@ -25,8 +25,7 @@ require_dependency "app/services/basecamp_service.rb"
 class OauthUser < ActiveRecord::Base
 	belongs_to 	:organization
 	belongs_to :user
-
-	has_many :activity
+	
 
 	def self.basecamp2_create_user(pin, organization_id, current_id)
 

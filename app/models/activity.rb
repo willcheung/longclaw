@@ -38,6 +38,7 @@ class Activity < ActiveRecord::Base
   belongs_to :oauth_user
   has_many :comments, dependent: :destroy
   has_many :notifications, dependent: :destroy
+  has_many :intergrations
 
   scope :pinned, -> { where is_pinned: true }
   scope :last_active_on, -> { maximum "last_sent_date" }
