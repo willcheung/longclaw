@@ -777,7 +777,8 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # Called during onboarding process. This method should be called *after* all accounts, contacts, and users are processed & inserted.
+  # Currently this is no longer called during the onboarding process; user must manually create streams. 
+  # This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
@@ -815,7 +816,7 @@ class Project < ActiveRecord::Base
         # Upsert project conversations.
         Activity.load(get_project_conversations(data, p), project, true, user_id)
 
-        # Unsert/load Smart Tasks.
+        # Upsert/load Smart Tasks.
         Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
@@ -825,9 +826,9 @@ class Project < ActiveRecord::Base
 
         # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
-			end
-		end
-	end
+      end
+    end
+  end  #End: self.create_from_clusters()
 
   # Top Movers
   def self.calculate_pct_from_prev(projects, projects_prev)
