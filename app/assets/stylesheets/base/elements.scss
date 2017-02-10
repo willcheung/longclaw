@@ -1679,12 +1679,12 @@ a.forum-item-title:hover {
   clear: both;
 }
 
-#vertical-timeline {
+#vertical-timeline, #extension-timeline {
   position: relative;
   padding: 0;
 }
 
-#vertical-timeline::before {
+#vertical-timeline::before, #extension-timeline::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1750,7 +1750,6 @@ a.forum-item-title:hover {
   text-align: left;
   margin-left: -25px;
 }
-
 
 .vertical-timeline-icon {
   position: absolute;
@@ -1826,6 +1825,10 @@ a.forum-item-title:hover {
   background-color: #fff;
 }
 
+.extension-timeline-content {
+  margin-left: 35px;
+}
+
 .vertical-timeline-content h3 {
   font-weight: 500;
   margin-top: 4px;
@@ -1888,7 +1891,7 @@ a.forum-item-title:hover {
     width: 100%;
     right:0;
   }
-  .vertical-timeline-icon {
+  .vertical-timeline-block:not(.extension-block) .vertical-timeline-icon {
     display: none;
   }
   .vertical-timeline-content {

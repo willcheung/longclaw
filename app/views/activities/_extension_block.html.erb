@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>">
+<div class="vertical-timeline-block extension-block">
 
     <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon secondary-bg">
@@ -30,7 +30,7 @@
         <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span> -->
 
-    <div class="" <% if a.category == Activity::CATEGORY[:Note] %> style="background-color: #fff7db" <% end %> >
+    <div class="extension-timeline-content" <% if a.category == Activity::CATEGORY[:Note] %> style="background-color: #fff7db" <% end %> >
         <% if a.category == Activity::CATEGORY[:Conversation] %>
             <h4 class="in-bl"><strong><%= truncate(a.title, length: 25, separator: ' ') %></strong> (<%= a.email_messages.size %>)</h4>
             <small class="pull-right"><%= get_conversation_member_names(a.from, a.to, a.cc, 'other', 2) %></small>
@@ -41,9 +41,9 @@
                     <span class="message-content">
                         <%# smart_email_body(m, @users_reverse.present?) %>
                         <%= if m.content.nil? || m.content.is_a?(String)
-                          truncate(m.content, length: 70, separator: ' ')
+                          truncate(m.content, length: 80, separator: ' ')
                         else
-                          truncate(m.content.body, length: 70, separator: ' ')
+                          truncate(m.content.body, length: 80, separator: ' ')
                         end %>
                     </span>
                 </div>
@@ -53,7 +53,7 @@
         <% elsif a.category == Activity::CATEGORY[:Note] %>
             <div class="chat-discussion rag-bar<%=a['rag_score']%>">
                 <p class="m-b-xs"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
-                <%= truncate(a.note, length: 70, separator: ' ') %>
+                <%= truncate(a.note, length: 80, separator: ' ') %>
             </div>
 
         <% elsif a.category == Activity::CATEGORY[:Meeting] %>
