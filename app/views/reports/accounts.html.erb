@@ -32,21 +32,25 @@
     </div>
 
     <div class="row border-bottom white-bg dashboard-header">
+            <div class="row">
+                <div class="col-lg-5">
+                    <h4 class="m-l-md">Sort by:
+                    <select class="metric_filter col-lg-8" data-placeholder="Select Type">
+                        <option>Revenue</option>
+                        <option>Stage</option>
+                        <option>Days Inactive</option>
+                        <option>Days to Renewal</option>
+                        <option value="2">Engagement Last 7d</option>
+                        <option value="3" selected="true">Risk Score</option>
+                        <option value="4">Negative Sentiment</option>
+                        <option value="5">Total Open Alerts</option>
+                        <option value="6">Total Overdue Tasks</option>
+                    </select>
+                    </h4>
+                </div>
+            </div>
             <!-- LEFT -->
             <div class="col-lg-5">
-                <h4 class="m-l-md">Sort by:
-                <select class="metric_filter col-lg-8" data-placeholder="Select Type">
-                    <option value="1">Days Inactive</option>
-                    <option>Days to Renewal</option>
-                    <option value="2">Engagement Last 7d</option>
-                    <option>Negative Sentiment Score</option>
-                    <option value="3" selected="true">Risk Score</option>
-                    <option value="4">Negative Sentiment %</option>
-                    <option value="5">Total Open Tasks</option>
-                    <option value="6">Total Overdue Tasks</option>
-                  </select>
-
-                </h4>
                 <div id="left-chart" class="left-chart" style="height:1200px;"></div>
 
                 <h5><a href="" class="btn btn-outline btn-primary btn-xs m-l-lg">&larr; Previous 25</a>
@@ -129,16 +133,16 @@
                 <div id="account-charts" style="display:none;">
                     <div id="charts-container" class="ibox-content">
                         <div class="row m-t-md">
-                            <div id="risk-chart" style="height:240px;padding-right:15px;padding-left:5px;"></div>
+                            <div id="risk-chart" style="height:220px;padding-right:15px;padding-left:5px;"></div>
                         </div>
 
                         <div class="row m-t-md">
-                            <div id="risk-detection-chart" style="height:300px;overflow:visible"></div>
+                            <div id="risk-detection-chart" style="height:220px;overflow:visible"></div>
                         </div>
 
                         <div class="row m-t-md">
 
-                            <div id="activities-chart" style="height:240px"></div>
+                            <div id="activities-chart" style="height:220px"></div>
                         </div>
 
                         <div class="row m-t-lg text-center">
@@ -361,7 +365,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Most Active Contributors',
+                text: 'Recent Engagement',
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -525,14 +529,17 @@
                 }
             },
             yAxis: {
-                categories: ['Days Inactive','% Neg Sentiment','Neg Sentiment','Support Vol','Engagement Vol','Days to Renewal'],
-                tickLength:3,
+                categories: ['Neg Sentiment','Support Vol','Engagement Vol','Days to Renewal','Days Inactive'],
+                tickLength: 3,
                 tickColor:'#000',
                 gridLineWidth:.5,
                 labels: { 
                     enabled: true,
                     align: 'left',
-                    x: -30
+                    x: -30,
+                    formatter: function() {
+                        return '<span title="My custom title">' + this.value + '</span>';
+                    },
                 },
                 minorGridLineWidth: 0,
                 title: {                
@@ -545,24 +552,19 @@
             //     minorGridLineWidth: 0
             // },
             legend: {
-                enabled: true
+                enabled: true,
+                floating: true,
+                verticalAlign: 'top',
+                y: -5,
             },
             plotOptions: {
-
+                type: 'scatter'
             },
             tooltip: {
-                positioner: function () {
-                    return {
-                        x: this.chart.chartWidth - this.label.width, // right aligned
-                    };
-                },
-                borderWidth: 0,
-                backgroundColor: 'none',
-                pointFormat: '{point.y}',
+                pointFormat: '{}',
                 xDateFormat: '%b %e',
-                shadow: false,
                 style: {
-                    fontSize: '16px',
+                    fontSize: '12px',
                     color: '#555555'
                 }
             },
@@ -572,7 +574,7 @@
                 color: '#FF5050',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: [[<%=8.days.ago.at_midnight.to_i * 1000%>,1],[<%=8.days.ago.at_midnight.to_i * 1000%>,2],[<%=11.days.ago.at_midnight.to_i * 1000%>,3],[<%=11.days.ago.at_midnight.to_i * 1000%>,4],[<%=1.day.ago.at_midnight.to_i * 1000%>,1],[<%=6.days.ago.at_midnight.to_i * 1000%>,2]],
+                data: [[<%=10.days.ago.at_midnight.to_i * 1000%>,3],[<%=1.day.ago.at_midnight.to_i * 1000%>,1],[<%=6.days.ago.at_midnight.to_i * 1000%>,2]],
                 marker : {symbol : 'square', radius: 6 }
             },
             {
@@ -581,7 +583,7 @@
                 color: '#FFA500',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: [[<%=11.days.ago.at_midnight.to_i * 1000%>,1], [<%=14.days.ago.at_midnight.to_i * 1000%>,5]],
+                data: [[<%=11.days.ago.at_midnight.to_i * 1000%>,1], [<%=14.days.ago.at_midnight.to_i * 1000%>,4],[<%=8.days.ago.at_midnight.to_i * 1000%>,2]],
                 marker : {symbol : 'square', radius: 6 }
             }]
         });
