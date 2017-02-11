@@ -14,51 +14,77 @@ class BasecampsController < ApplicationController
 		redirect_to BaseCampService.connect_basecamp2
 	end
 
-
-	@account_id = []
-
-	def map_projects
-		puts "Hello this is the maps_projects"
-		if params[:account_id]
-			puts "this is the account_id: #{params[:account_id]}"
-			@account_id = params[:account_id]
-		end
-
-		redirect_to settings_basecamp2_projects_path(:account_id => params[:account_id])
-	end
-
-
-
-
 	def link_basecamp2_account
-		# links the Contextsmith Accounts with the Basecamp2 Projects
+			# links the Contextsmith Accounts with the Basecamp2 Projects
 	    # One CS Account can link to many BaseCamp2 Accounts
-	    if params[:basecamp_account_id] && params[:account_id] && params[:project_id]
-	    	begin
+    if params[:basecamp_account_id] && params[:account_id] && params[:project_id]
+    	# Check if row already exists in our table
+    	tier = Integration.where(:external_account_id=>params[:basecamp_account_id]).where(:project_id=>params[:project_id])
+    	if tier.exists?
+    		# if ContextSmith Row is Empty fill it with an account_id
+    		if tier.first['contextsmith_account_id'] == nil
+    			# Check if Activity is already occupied by another project_id
+    			if update_activity_project_id(params[:basecamp_account_id], params[:project_id])
+    				# Insert account_id into Contextsmith_account_id
+    				tier.first['contextsmith_account_id'] = params[:account_id]
+    				tier.first.save
+    			else
+    				#flash if occupied
+    				flash[:warning] = "Connection is Occupied"
+    			end
+    		else
+    			# error when link exists
+    			flash[:warning] = "Link Already Exists"
+    		end
+    	else
+    		# If there are no existing records that match a basecamp_account and project_id than execute code below
+    		begin
+    			# Create a new row
 	    		Integration.link_basecamp2(params[:basecamp_account_id], params[:account_id], params[:external_name], current_user, params[:project_id])
+	    		update_activity_project_id(params[:basecamp_account_id], params[:project_id])
 	    	rescue
-				#code that deals with some exception
-				flash[:warning] = "Sorry something went wrong"
+					#code that deals with some exception
+					flash[:error] = "Failed to Create Connection!"
 				else
-				#code that runs only if (no) excpetion was raised
-				flash[:notice] = "Project Synced!"
+					#code that runs only if (no) excpetion was raised
+					flash[:notice] = "Project Synced!"
 				end
 			end
-	    # end
-	    # basecamp2_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
-	    # if !basecamp2_account.nil?
-	    #   salesforce_account.account = Account.find_by_id(params[:account_id])
-	    #   salesforce_account.save
-	    # end
-
-	    # respond_to do |format|
-	    #   format.html { redirect_to settings_salesforce_path }
-	    # end
-
-	    redirect_to :back
+		end
+    redirect_to settings_basecamp2_activity_path
 	end
 
+	def update_activity_project_id(basecamp_account_id, project_id)
+		tier = Activity.where(:backend_id=>params[:basecamp_account_id]).where(:posted_by => current_user.id)
+		unless tier.empty?
+			if tier.first['project_id'] == '00000000-0000-0000-0000-000000000000'
+				tier.first['project_id'] = params[:project_id]
+				tier.first.save
+			else tier.first['project_id']
+				false
+			end
+		end
+	end
 
+	def remove_basecamp2_account
+		basecamp_link = Integration.find_by(id: params["id"])
+		basecamp_link.contextsmith_account_id =  nil
+		if !basecamp_link.nil?
+			tier2 = Activity.where(:project_id => basecamp_link['project_id']).where(:backend_id => basecamp_link['external_account_id'])
+			unless tier2.empty?
+				if tier2.first['project_id']
+					tier2.first['project_id'] = '00000000-0000-0000-0000-000000000000'
+					if tier2.first.valid?
+						tier2.first.save
+					end
+				end
+			end
+			basecamp_link.save
+		end
+		respond_to do |format|
+      format.html { redirect_to settings_basecamp_path }
+    end
+	end
 
 
 	def refresh_token
@@ -81,6 +107,10 @@ class BasecampsController < ApplicationController
 		BaseCampService.basecamp2_user_todos(token)
 	end
 
+	def self.disconnect
+		puts "this is the disconnect basecamp button"
+		redirect_to settings_basecamp_path
+	end
 
 
 end

@@ -1,6 +1,7 @@
 require_dependency "app/services/basecamp_service.rb"
 class SettingsController < ApplicationController
 	before_filter :get_salesforce_user, only: ['salesforce', 'salesforce_opportunities', 'salesforce_activities']
+	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
 
 	def index
 		@user_count = current_user.organization.users.count
@@ -97,12 +98,14 @@ class SettingsController < ApplicationController
 		@streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id") # all active projects because "admin" role can see everything
 	end
 
+
+
+
+
+
 	def basecamp
-		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 		# Filter only the users Accounts
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
-		
-
 		pin = params[:code]
 		# Check if Oauth_user has been created
 		if @basecamp2_user == nil && pin
@@ -118,35 +121,17 @@ class SettingsController < ApplicationController
 				flash[:notice] = "Connected to BaseCamp2"
 			end
 		end
-
-		if @basecamp2_user
-			begin
-			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
-			end
-		end
 	end
 
-
-
 	def basecamp2_projects
-		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-
-		if @basecamp2_user
-			begin
-			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
-			end
+		if params[:account_id]
+			@accounts = Project.where(account_id: params[:account_id])
 		end
-		@accounts = Project.where(account_id: params[:account_id])
 	end
 
 	def basecamp2_activity
-		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-		
+
 	end
-
-
-
-
 
 	def super_user
 		@super_admin = %w(wcheung@contextsmith.com rcwang@contextsmith.com)
@@ -184,4 +169,18 @@ class SettingsController < ApplicationController
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
     end
   end
+
+  def get_basecamp2_user
+		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+		# @basecamp2_user = nil
+		if @basecamp2_user
+			# Look to find only the current users connections
+			# @basecamp_connections = current_user.integration.find_basecamp_connections
+			@basecamp_connections = Integration.find_basecamp_connections
+			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
+		end
+	end
+
+
+
 end

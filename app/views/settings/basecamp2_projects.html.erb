@@ -24,27 +24,27 @@
 
             <i class="fa fa-check " aria-hidden='true' style='color:green; display:inline-block;'></i><p style='display:inline-block;'>Basecamp is Enabled in your Streams!</p>
           <% else %>
-            <p>ContextSmith needs your access token to connect to your Basecamp Account.</p>
+            <p>ContextSmith requires permission to connect to Basecamp.</p>
             <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/basecamp2">Connect to BaseCamp2</a><br>
           <% end %>
             <div>
-            Currently only supporting BaseCamp2. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
+            Currently only supporting single ContextSmith Stream per BaseCamp2 Project Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
             </div>
 
               <nav class="navbar navbar-default">
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                   <ul class="nav navbar-nav">
                     <li ><a href="/settings/basecamp">Step 1: Map Account</a></li>
-                    <li class="active"><a href="#">Step 2: Sync Project</a></li>
+                    <li class="active"><a href="#">Step 2: Sync Stream</a></li>
                     <li><a href="/settings/basecamp2_activity">Step 3: Manage Activity</a></li>
                   </ul>
                 </div>
               </nav>
+            <% if params[:account_id]%>
 
-              <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; padding:0px; display: inline;"> 
-
+              <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; margin-top:15px; padding:0px; display: inline;">        
                 <div class="contextsmith_account col-lg-3" style="margin-right:0px; margin-left:0px; padding:0px; display: inline;">
-                  <select class="contextsmith_project_box" data-placeholder="Select Contextsmith Project">
+                  <select class="contextsmith_project_box" data-placeholder="Select Contextsmith Stream">
                     <option value="0"></option>
                     <% if !@accounts.nil?  %>
                       <% @accounts.each do |a| %>
@@ -65,40 +65,45 @@
                       </select>
                 </div>
               
-                    <%= form_tag("/link_basecamp2_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
-                    <input name="basecamp_account_id" type="hidden" value="">
-                    <input name="account_id" type="hidden" value="<%=params[:account_id]%>">
-                    <input name="project_id" type="hidden" value="">  
-                    <input type="hidden" name="external_name" value="BaseCamp2">  
+                  <%= form_tag("/link_basecamp2_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
+                  <input name="basecamp_account_id" type="hidden" value="">
+                  <input name="account_id" type="hidden" value="<%=params[:account_id]%>">
+                  <input name="project_id" type="hidden" value="">  
+                  <input type="hidden" name="external_name" value="BaseCamp2">  
 
-                    <div class="col-lg-3" style="margin:0px; margin-left:15px; padding-left:0px; padding-top:3px;">  
-                      <input type="submit" name="commit" value="Sync" class="btn btn-primary btn-sm">
-            
-                    </div>                  
-                  <%end%>
+                  <div class="col-lg-3" style="margin:0px; margin-left:15px; padding-left:0px; padding-top:3px;">  
+                    <input type="submit" name="commit" value="Sync" class="btn btn-primary btn-sm">
+          
+                  </div>
+                  
+                  <%end%><!-- ends the form_tag -->
                 </div>
+              <% else %>
+                <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; margin-top:15px; padding:0px; display: inline;"> 
+                  <!-- <p style="color: red;"> *Current No Account Selected </p> -->
+                </div>
+
+              <%end%><!-- ends the params[:account_id] -->
+
               
 
                <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
                   <thead>
                       <tr>
-                          <th style="padding-top:15px;">ContextSmith Account</th>
+                          <th>ContextSmith Streams</th>
                           <th>
-                                <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Account</div>                              
+                                <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Accounts</div>                              
                                 <!-- <div id="basecamp2-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Accounts</div>
                                 <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Basecamp2."></i> -->
                           </th>
-                          <th></th>
                       </tr>
                   </thead>
                   <tbody>
-                    <% if @basecamp_projects %>
-                      <% @basecamp_projects.each do |b| %>
+                    <% if @basecamp_connections %>
+                      <% @basecamp_connections.each do |b| %>
                         <tr>
-                          <td class="col-lg-2">Ex.testing account name</td>
-                          <td class="col-lg-2"><%=b['name']%></td>
-                          <td class="col-lg-2"><input type="/" name="edit" value="Update" class="btn btn-primary btn-sm center"><span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="#">Remove</a></span></td>
-                        </tr>
+                          <td class="col-lg-2"><%=b['context_project_name']%></td>
+                          <td class="col-lg-2"><%=b['basecamp_project_name']%></td>
                         <% end %>
                     <% end %>
                   </tbody>
@@ -110,16 +115,16 @@
 <script>
     
 
-        $('.basecamp2_account_box').on('change',function(evt,params){
-  if(params){
-    $('input[name=basecamp_account_id]').val(params["selected"]);
-  }   
+    $('.basecamp2_account_box').on('change',function(evt,params){
+      if(params){
+        $('input[name=basecamp_account_id]').val(params["selected"]);
+      }   
 });
 
-  $('.contextsmith_project_box').on('change',function(evt,params){
-  if(params){
-    $('input[name=project_id]').val(params["selected"]);
-  }   
+    $('.contextsmith_project_box').on('change',function(evt,params){
+      if(params){
+        $('input[name=project_id]').val(params["selected"]);
+      }   
 });
 
 

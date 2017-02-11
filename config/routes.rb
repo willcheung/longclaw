@@ -47,9 +47,11 @@ Longclaw::Application.routes.draw do
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
 
     resources :basecamp, only: [:index]
-    get 'basecamp_controller/index'
-    post '/map_projects' => 'basecamps#map_projects'
-    post '/link_basecamp2_account' => 'basecamps#link_basecamp2_account'
+    get "basecamp_controller/index"
+    get "/basecamps/disconnect/:id" => 'basecamps#disconnect'
+    post "/sync_stream" => 'settings#basecamp2_projects'
+    post "/link_basecamp2_account" => 'basecamps#link_basecamp2_account'
+    delete "/delete_basecamp2_account/:id" => 'basecamps#remove_basecamp2_account'
 
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"
