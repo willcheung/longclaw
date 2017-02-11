@@ -269,6 +269,7 @@ DEPENDENCIES
   devise (~> 3.4.1)
   exception_notification
   ffaker
+  hashie (~> 3.4.3)
   jbuilder (~> 1.2)
   jquery-rails
   letter_opener
