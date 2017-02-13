@@ -91,8 +91,8 @@ namespace :projects do
     end
 
     desc 'Email weekly task summary on Sundays'
-    task :email_weekly_summary, [:test] => :environment do |t, args|  
-   #task :email_weekly_summary, [:test] => [:environment] do |t, args|
+    #task :email_weekly_summary, [:test] => :environment do |t, args|  
+    task :email_weekly_summary, [:test] => [:environment] do |t, args|
         puts "\n\n=====Task (email_weekly_summary) started at #{Time.now}====="
         print "   args[:test]=", args[:test], "\n"
         print "   !Rails.env.production?=", !Rails.env.production?, "\n"
