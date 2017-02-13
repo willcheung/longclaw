@@ -1827,6 +1827,19 @@ a.forum-item-title:hover {
 
 .extension-timeline-content {
   margin-left: 35px;
+
+  h4 {
+    display: inline-block;
+  }
+
+  h4, p {
+    margin-bottom: 5px;
+  }
+
+  small:not(.text-muted) {
+    float: right;
+    margin-top: 5px;
+  }
 }
 
 .vertical-timeline-content h3 {
