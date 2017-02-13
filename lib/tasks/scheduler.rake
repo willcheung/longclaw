@@ -91,18 +91,15 @@ namespace :projects do
     end
 
     desc 'Email weekly task summary on Sundays'
-    #task :email_weekly_summary, [:test] => :environment do |t, args|  
-    task :email_weekly_summary, [:test] => [:environment] do |t, args|
+    task :email_weekly_summary, [:test] => :environment do |t, args|
         puts "\n\n=====Task (email_weekly_summary) started at #{Time.now}====="
-        print "   args[:test]=", args[:test], "\n"
-        print "   !Rails.env.production?=", !Rails.env.production?, "\n"
 
         args.with_defaults(:test => false)
         Organization.all.each do |org|
             org.users.each do |usr|
                 Time.use_zone(usr.time_zone) do
                     if Time.current.hour == 17 && Time.current.sunday? || (args[:test] && !Rails.env.production?) # In the hour of 5pm on Sundays
-                        #UserMailer.weekly_summary_email(usr).deliver_later
+                        UserMailer.weekly_summary_email(usr).deliver_later
                         sleep(0.5)
                         print "user=", get_full_name(usr), "\n"
                         print "   Time.current.hour=", Time.current.hour, " (17? ", Time.current.hour == 17, ")\n"
