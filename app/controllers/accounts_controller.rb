@@ -15,7 +15,10 @@ class AccountsController < ApplicationController
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? and (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
 
-    @owners = User.where(organization_id: current_user.organization_id) 
+    @owners = User.where(organization_id: current_user.organization_id)
+
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
   end
 
   # GET /accounts/1
@@ -28,6 +31,10 @@ class AccountsController < ApplicationController
 
     @account_contacts = @account.contacts
     @project = Project.new(account: @account)
+
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
   # GET /accounts/new

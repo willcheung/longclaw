@@ -129,9 +129,7 @@
                 <ul class="list-group clear-list m-t-sm">
                     <li class="list-group-item first-item">
                         <strong>Type:</strong>
-                        <span class="pull-right">
-                            <%= best_in_place @project, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-sm fa-caret-down' %>
-                        </span>
+                        <span class="pull-right"><%= best_in_place @project, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                     </li>
                     <li class="list-group-item first-item">
                         <strong>Open Collaboration:</strong>
@@ -158,7 +156,7 @@
                         <strong><%= cf.custom_fields_metadatum.name %>:</strong>
                         <i id="acct-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                         <span class="pull-right m-r-xs">
-                            <%= best_in_place cf, :value, :as => :input, :place_holder => '(no value)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#acct-customfield#{i}-activator" %>
+                            <%= best_in_place cf, :value, :as => :input, :place_holder => '(none)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#acct-customfield#{i}-activator" %>
                             <!-- , :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' -->
                         </span>
                         </li>

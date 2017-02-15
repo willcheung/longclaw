@@ -2,31 +2,35 @@
 #
 # Table name: custom_fields_metadata
 #
-#  id                      :integer          not null, primary key
-#  organization_id         :uuid             not null
-#  entity_type             :string           not null
-#  name                    :string           not null
-#  data_type               :string           not null
-#  update_permission_level :string           not null
-#  created_at              :datetime         not null
-#  updated_at              :datetime         not null
+#  id                       :integer          not null, primary key
+#  organization_id          :uuid             not null
+#  entity_type              :string           not null
+#  name                     :string           not null
+#  data_type                :string           not null
+#  update_permission_level  :string           not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  custom_lists_metadata_id :integer
 #
 # Indexes
 #
-#  custom_fields_metadata_idx  (organization_id,entity_type)
+#  custom_fields_metadata_idx                                (organization_id,entity_type)
+#  index_custom_fields_metadata_on_custom_lists_metadata_id  (custom_lists_metadata_id)
 #
 
 class CustomFieldsMetadatum < ActiveRecord::Base
 	after_create  :create_custom_fields
 
 	belongs_to :organization
-	has_many :custom_fields, class_name: "CustomField", foreign_key: "custom_fields_metadata_id", dependent: :destroy
-	validates :name, presence: true
+	has_many :custom_fields, foreign_key: "custom_fields_metadata_id", dependent: :destroy
+	belongs_to :custom_lists_metadatum, class_name: "CustomListsMetadatum", foreign_key: "custom_lists_metadata_id"
 
-	ENTITY_TYPE = { Account: 'Account', Project: 'Stream', User: 'User (coming soon)' }
-	DATA_TYPE = { Text: 'Text', Number: 'Number', List: 'List (coming soon)' }
+	validates :name, presence: true, length: { maximum: 30 }
 
-	# Checks the string 'type' to see if it is a valid ENTITY_TYPE.  If 'type' is valid, returns the ENTITY_TYPE (key); otherwise, returns nil. Use match_external_value=true to validate 'type' with the mapped value (the external value the user sees) instead of the key.
+	ENTITY_TYPE = { Account: 'Account', Project: 'Stream' }
+	DATA_TYPE = { Text: 'Text', Number: 'Number', List: 'List' } # Possible future types: Lookup("User"), Date/Time, Checkbox
+
+	# Checks the string 'type' to see if it is a valid ENTITY_TYPE.  If 'type' is valid, returns the ENTITY_TYPE (key); otherwise, returns nil. Use match_external_value=true to validate 'type' with the mapped value (the external value displayed to the user) instead of the key.
 	# e.g., Calling validate_and_return_entity_type("Project") or validate_and_return_entity_type("Stream",true) will both return CustomFieldsMetadatum::ENTITY_TYPE[:Project]
 	def self.validate_and_return_entity_type(type, match_external_value=false)
 		return nil if type == nil

@@ -50,6 +50,8 @@ Longclaw::Application.routes.draw do
       get "alerts"
       post "alerts" => "settings#create_for_alerts"
       get "custom_fields"
+      get "custom_lists"
+      get "custom_list/:id" => 'settings#custom_list_show'
       get "salesforce" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 
@@ -91,6 +93,8 @@ Longclaw::Application.routes.draw do
 
     resources :custom_fields, only: [:update]
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
+    resources :custom_lists, only: [:create, :update, :destroy]
+    resources :custom_lists_metadata, only: [:create, :update, :destroy]  #for /settings/custom_lists
   end
 
   devise_scope :user do # Unauthenticated user

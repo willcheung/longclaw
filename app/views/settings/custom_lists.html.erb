@@ -1,0 +1,75 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Custom Lists Settings</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= settings_path%>">Settings</a>
+            </li>
+            <li class="active">
+                <strong>Custom Lists</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox">
+        <div class="ibox-content">
+            <h1>Custom Lists</h1>
+            <%= form_for :custom_list_settings, html: { id: "custom-lists-form" } do %>
+            <div class="form-inline">
+                <!-- <label>Entity Type:</label> -->
+                <!-- -->
+                <!--<button id="edit-btn" class="btn btn-info" style="display: none;">Edit</button>-->
+                <!--<button id="save-btn" form="custom-lists-form" class="btn btn-primary">Save</button>-->
+            </div>
+            <span title="locked"><i class="fa fa-lock"></i> = System list<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="These are system custom lists that cannot be renamed or deleted, and must have at least one option."></i></span>
+            <table class="table table-condensed responsive no-wrap m-t-sm" style="width:80%">
+                <thead>
+                    <tr>
+                        <th style="width:30%;">List Name</th>
+                        <th style="width:55%;">Options</th>
+                        <th style="width:15%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if @custom_lists.empty? %>
+                        <tr><th class="text-mute-gray" style="font-weight:normal;">No custom lists yet!&nbsp;&nbsp;Click the '+' below to add one.</th></tr>
+                    <% else %>
+                        <% @custom_lists.order(:created_at).each do |l|  %>
+                            <tr>
+                                <td id="customlist-<%= l.id %>-name-activator">
+                                    <% if l.cs_app_list %>
+                                        <span style="color:#333"><%= l.name %>&nbsp;<i class="fa fa-lock"></i></span>
+                                    <% else %>
+                                        <%= best_in_place l, :name, :as => 'input', :place_holder => '(none)', :activator => "#customlist-#{l.id}-name-activator" %><i class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i>
+                                    <% end %>
+                                </td>
+                                <td><a href="/settings/custom_list/<%= l.id %>" title="click to edit"><%= l.get_list_options(128) %>&nbsp;<i class="fa fa-pencil-square-o"></i></a></td>
+                                <td>
+                                    <% if not l.cs_app_list %>
+                                        <%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, l, method: :delete, data: {confirm: "Deleting this list will cause you to lose all existing values! Are you sure you want to delete '#{l.name}'?"}, title: "Delete '#{l.name}'" %>
+                                    <% end %>
+                                </td>
+                            </tr>
+                        <% end %>
+                    <% end %>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe, custom_lists_metadata_path, method: :post, style: "color:#A1C436",title: "Add a new list" %></td>
+                    </tr>
+                </tbody>
+            </table>
+            <% end %>  <!-- End: 'custom-lists-form' -->
+        </div>
+    </div>
+</div>
+<!-- <script type="text/javascript">
+    $('#select-entity-type').change( function() {
+        window.location.replace("custom_lists?entity_type=" + $(this).val());
+    });
+</script> -->

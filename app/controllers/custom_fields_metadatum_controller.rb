@@ -3,20 +3,18 @@ class CustomFieldsMetadatumController < ApplicationController
   def create
     entity_type = CustomFieldsMetadatum.validate_and_return_entity_type(params[:entity_type])
 
-    if (current_user.organization and entity_type)
-      # Creating a metadata row will call the after_create callback and automatically create custom-field records for all existing entities
-      CustomFieldsMetadatum.create(organization:current_user.organization, entity_type:entity_type, name:"New field", data_type:"Text", update_permission_level:User::ROLE[:Contributor])
-    end
-
+    # Creating a metadata row will call the after_create callback and automatically create custom-field records for all existing entities
+    current_user.organization.custom_fields_metadatum.create(entity_type:entity_type, name:"New field", data_type:"Text", update_permission_level:User::ROLE[:Contributor]) if entity_type
+    
     redirect_to :back  #reload page
   end
 
   def update
-    custom_fields_metadata = CustomFieldsMetadatum.find(params[:id])
-    if custom_fields_metadata and custom_fields_metadata.organization == current_user.organization  
+    custom_fields_metadata = current_user.organization.custom_fields_metadatum.find(params[:id])
+    if custom_fields_metadata  
       respond_to do |format|
         if custom_fields_metadata.update(custom_fields_metadatum_params)
-          format.html { redirect_to custom_fields_metadata, notice: 'CustomField was successfully updated.' }
+          format.html { redirect_to custom_fields_metadata, notice: 'CustomFieldsMetadatum was successfully updated.' }
           format.js
           format.json { respond_with_bip(custom_fields_metadata) }
         else
@@ -29,8 +27,8 @@ class CustomFieldsMetadatumController < ApplicationController
   end
 
   def destroy
-    custom_fields_metadata = CustomFieldsMetadatum.find(params[:id])
-    custom_fields_metadata.destroy if custom_fields_metadata and custom_fields_metadata.organization == current_user.organization  
+    custom_fields_metadata = current_user.organization.custom_fields_metadatum.find(params[:id])
+    custom_fields_metadata.destroy if custom_fields_metadata
 
     redirect_to :back  #reload page
   end
@@ -38,6 +36,6 @@ class CustomFieldsMetadatumController < ApplicationController
   private
 
   def custom_fields_metadatum_params
-    params.require(:custom_fields_metadatum).permit(:name, :data_type, :update_permission_level)
+    params.require(:custom_fields_metadatum).permit(:name, :data_type, :update_permission_level, :custom_lists_metadata_id)
   end
 end

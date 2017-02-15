@@ -41,6 +41,9 @@ class ProjectsController < ApplicationController
       @rag_status = Project.current_rag_score(projects.map(&:id))
     end
 
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+
     # new project modal
     @project = Project.new
   end
@@ -52,6 +55,9 @@ class ProjectsController < ApplicationController
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
     @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
+    
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
   def filter_timeline
