@@ -127,13 +127,11 @@
                 <small><%= best_in_place @project, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#proj-desc-activator' %></small>
 
                 <ul class="list-group clear-list m-t-sm">
-                    <li class="list-group-item first-item">
+                    <li class="list-group-item m-b-sm first-item">
                         <strong>Type:</strong>
-                        <span class="pull-right">
-                            <%= best_in_place @project, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-sm fa-caret-down' %>
-                        </span>
+                        <span class="pull-right"><%= best_in_place @project, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                     </li>
-                    <li class="list-group-item first-item">
+                    <li class="list-group-item m-b-sm">
                         <strong>Open Collaboration:</strong>
                         <% if @project.is_public %>
                             <span class="label label-default pull-right" style="font-size:12px">Public</span>
@@ -141,29 +139,33 @@
                             <span class="label label-warning pull-right" style="font-size:12px">Private</span>
                         <% end %>
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item m-b-sm">
                         <strong>Owner:</strong>
                         <span class="pull-right">
                             <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>
                             <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                         </span>
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item m-b-sm">
                         <strong>Account:</strong>
                         <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
                     </li>
                     <!-- Custom fields -->
                     <% @project.custom_fields.order(:created_at).each.with_index do |cf, i| %>
-                        <li class="list-group-item">
-                        <strong><%= cf.custom_fields_metadatum.name %>:</strong>
-                        <i id="acct-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
-                        <span class="pull-right m-r-xs">
-                            <%= best_in_place cf, :value, :as => :input, :place_holder => '(no value)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#acct-customfield#{i}-activator" %>
-                            <!-- , :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' -->
-                        </span>
+                        <li class="list-group-item m-b-sm">
+                            <strong><%= cf.custom_fields_metadatum.name %>:</strong>
+                            <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and not cf.custom_fields_metadatum.custom_lists_metadatum.nil? and not cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty? %>
+                                <span class="pull-right md-m-0"><%= best_in_place cf, :value, :as => :select, :place_holder => '(none)', :collection => @custom_lists[cf.custom_fields_metadatum.custom_lists_metadatum.name], :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
+                            <% else %>
+                                <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and (cf.custom_fields_metadatum.custom_lists_metadatum.nil? or cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty?) %>
+                                    <i class="fa fa-exclamation-circle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="This field's data type='List', but no list is assigned or the list specified has no options."></i>
+                                <% end %>
+                                <i id="proj-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+                                <span class="pull-right m-r-xs"><%= best_in_place cf, :value, :as => :input, :place_holder => '(none)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#proj-customfield#{i}-activator" %></span>
+                            <% end %>
                         </li>
                     <% end %>  
-                    <!-- End: custom field -->
+                    <!-- End: custom fields -->
                     <li class="list-group-item small m-t-md first-item">
                         <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
                         Last Updated:
@@ -375,4 +377,9 @@
         $('.fa.fa-refresh').addClass('fa-spin');
     })
 
+    // Fix best_in_place bug/side-effect that adds paragraph tags to the .html of custom field dropdown lists, causing the value to be displayed awkwardly
+    $('.best_in_place').bind('ajax:success', function(){ 
+        this.innerHTML = this.innerHTML.replace('\<p\>', '').replace('\<\/p\>', '');
+        $(this).blur();
+    });
 </script>

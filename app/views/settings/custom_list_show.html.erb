@@ -1,0 +1,59 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Custom Lists Settings</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= settings_path %>">Settings</a>
+            </li>
+            <li>
+                <a href="<%= settings_custom_lists_path %>">Custom Lists</a>
+            </li>
+            <li class="active">
+                <strong>Custom List: "<%= @custom_list_metadata.name %>"</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox">
+        <div class="ibox-content">
+            <h1 style="display:inline-block">Custom List:&nbsp;<span style="color:#3C8DC5;"><%= @custom_list_metadata.name %></span></h1>
+            <h3 style="display:inline-block"><% if @custom_list_metadata.cs_app_list %><i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="right" data-original-title="'<%= @custom_list_metadata.name %>' is a system list that must have at least one option."></i><% end %></h3>
+            
+            <table class="table table-condensed responsive no-wrap m-t-sm" style="width:45%">
+                <thead>
+                    <tr>
+                        <th style="width:75%;min-width:15em">Option value</th>
+                        <th style="width:25%;min-width:7em"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                <% if @custom_list_metadata.custom_lists.empty? %>
+                    <tr><th class="text-mute-gray" style="font-weight:normal;">No options for this list yet!&nbsp;&nbsp;Click the '+' below to add one.</th></tr>
+                <% else %>
+                    <% @custom_list_metadata.custom_lists.order(:created_at).each do |li|  %>
+                        <tr>
+                            <td id="customlistoption-<%= li.id %>-name-activator">
+                                <%= best_in_place li, :option_value, :as => 'input', :place_holder => '(none)', :activator => "#customlistoption-#{li.id}-name-activator" %><i class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i>
+                            </td>
+                            <td>
+                                <% if (not @custom_list_metadata.cs_app_list or @custom_list_metadata.custom_lists.count > 1) %>
+                                    <%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, li, method: :delete, title: "Delete '#{li.option_value}'" %>
+                                <% end %>
+                            </td>
+                        </tr>
+                    <% end %>
+                <% end %>
+                    <tr>
+                        <td></td>
+                        <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe, custom_lists_path(custom_lists_metadatum_id: "#{@custom_list_metadata.id}"), method: :post, style: "color:#A1C436",title: "Add a new option" %></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -140,16 +140,38 @@ ActiveRecord::Schema.define(version: 20170209000101) do
   add_index "custom_fields", ["organization_id", "custom_fields_metadata_id"], name: "custom_fields_idx", using: :btree
 
   create_table "custom_fields_metadata", force: :cascade do |t|
-    t.uuid     "organization_id",         null: false
-    t.string   "entity_type",             null: false
-    t.string   "name",                    null: false
-    t.string   "data_type",               null: false
-    t.string   "update_permission_level", null: false
-    t.datetime "created_at",              null: false
-    t.datetime "updated_at",              null: false
+    t.uuid     "organization_id",          null: false
+    t.string   "entity_type",              null: false
+    t.string   "name",                     null: false
+    t.string   "data_type",                null: false
+    t.string   "update_permission_level",  null: false
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
+    t.string   "default"
+    t.integer  "custom_lists_metadata_id"
   end
 
+  add_index "custom_fields_metadata", ["custom_lists_metadata_id"], name: "index_custom_fields_metadata_on_custom_lists_metadata_id", using: :btree
   add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", using: :btree
+
+  create_table "custom_lists", force: :cascade do |t|
+    t.integer  "custom_lists_metadata_id", null: false
+    t.string   "option_value",             null: false
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
+  end
+
+  add_index "custom_lists", ["custom_lists_metadata_id"], name: "index_custom_lists_on_custom_lists_metadata_id", using: :btree
+
+  create_table "custom_lists_metadata", force: :cascade do |t|
+    t.uuid     "organization_id",                 null: false
+    t.string   "name",                            null: false
+    t.boolean  "cs_app_list",     default: false, null: false
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
+  end
+
+  add_index "custom_lists_metadata", ["organization_id", "name"], name: "index_custom_lists_metadata_on_organization_id_and_name", using: :btree
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false

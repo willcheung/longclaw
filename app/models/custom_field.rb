@@ -21,4 +21,6 @@ class CustomField < ActiveRecord::Base
 	belongs_to :organization
 	belongs_to :custom_fields_metadatum, foreign_key: "custom_fields_metadata_id"
 	belongs_to :customizable, polymorphic: true, foreign_key: "customizable_uuid"
+
+	validates :custom_fields_metadatum, presence: true
 end

@@ -21,7 +21,7 @@
           <div class="font-bold m-b-xs">Filter:</div>
           <select class="category_filter col-sm-3" data-placeholder="Select Type">
             <option value="0"></option>
-            <% Project::CATEGORY.each do |k,v| %>
+            <% @stream_types.each do |k,v| %>
             <option value="<%= v %>" <% if params[:type] == v %>selected<% end %> >
               <%= v %>
             </option>
@@ -51,7 +51,7 @@
             <button type="button" class="btn btn-sm btn-white" id="bulk-delete" disabled> Delete </button>
             <select class="category_box col-sm-3" data-placeholder="Change Type" id="bulk-type" disabled>
               <option value="0"></option>
-              <% Project::CATEGORY.each do |k,v| %>
+              <% @stream_types.each do |k,v| %>
               <option value="<%=v %>" ><%=v %></option>
               <% end %>
             </select>
@@ -99,7 +99,7 @@
                                             <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                             <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a><small></div>
                                         </td>
-                                        <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
+                                        <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
                                         <td>
                                             <div><%= get_full_name(p.project_owner) %></div>
                                         </td>

@@ -50,6 +50,9 @@ class OnboardingController < ApplicationController
 		@new_projects = []
 		@same_projects = []
 
+		custom_lists = current_user.organization.get_custom_lists_with_options
+		@account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+		
 		new_user_projects = Project.where(created_by: current_user.id, is_confirmed: false).includes(:users, :contacts, :account)
 		all_accounts = current_user.organization.accounts.includes(projects: [:users, :contacts])
 

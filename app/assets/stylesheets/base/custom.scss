@@ -548,3 +548,8 @@ a.suggested-action:hover, a.suggested-action:focus {
   height:24px;
   width: 24px;
 }
+
+.disabled {
+        opacity: 0.1;
+        pointer-events: none;
+}
