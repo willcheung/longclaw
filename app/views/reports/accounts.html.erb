@@ -7,27 +7,31 @@
 <div class="wrapper wrapper-content animated fadeInRight">
 
     <div class="row">
-        <div class="col-lg-4">
-            <div class="">
-                <div class="font-bold col-lg-4">Account Type:</div>
+        <div class="col-lg-4 filter-space">
+            <div>
+                <div class="font-bold col-lg-3 m-t-sm">Region:</div>
                 <select class="category_filter col-lg-8">
                     <% Account::CATEGORY.each{|k,v|    %>
-                    <option value="<%=v %>"  <% if params[:type] == v  %> selected   <% end %> ><%=v %></option>
+                    <option>Northeast</option>
+                    <option>West</option>
+                    <option>South</option>
+                    <option>APAC</option>
+                    <option>Europe</option>
                      <% } %>
                 </select>
             </div>
         </div>
         <div class="col-lg-4 filter-space">
             <div class="">
-                <div class="font-bold col-lg-4">Stream Type:</div>
+                <div class="font-bold col-lg-3 m-t-sm">Stage:</div>
                 <select class="category_filter col-lg-8">
-                    <% Project::CATEGORY.each{|k,v|    %>
-                    <option value="<%=v %>"  <% if params[:type] == v  %> selected   <% end %> ><%=v %></option>
-                     <% } %>
+                    <option>Implementation</option>
+                    <option>Onboarding</option>
+                    <option>Closing</option>
+                    <option>Negotiation</option>
+                    <option>Support</option>
                 </select>
             </div>
-        </div>
-        <div class="col-lg-4 filter-space">
         </div>
     </div>
 
@@ -36,8 +40,7 @@
                 <div class="col-lg-5">
                     <h4 class="m-l-md">Sort by:
                     <select class="metric_filter col-lg-8" data-placeholder="Select Type">
-                        <option>Revenue</option>
-                        <option>Stage</option>
+                        <option>Account Potential</option>
                         <option>Days Inactive</option>
                         <option>Days to Renewal</option>
                         <option value="2">Engagement Last 7d</option>
@@ -113,7 +116,7 @@
                             <div class="col-md-3 text-center">
                                 <div class="metric">
                                     <div class="metric-title">
-                                        <h4>ARR</h4>
+                                        <h4>Revenue</h4>
                                     </div>
                                     <div class="metric-content">
                                         <h2 style="font-weight:600;font-size:32px;">$1.15M</h2>
