@@ -26,13 +26,13 @@
                 <!--<button id="edit-btn" class="btn btn-info" style="display: none;">Edit</button>-->
                 <!--<button id="save-btn" form="custom-lists-form" class="btn btn-primary">Save</button>-->
             </div>
-            <span title="locked"><i class="fa fa-lock"></i> = System list<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="These are system custom lists that cannot be renamed or deleted, and must have at least one option."></i></span>
+            <span title="locked" style="color:black;"><i class="fa fa-lock"></i> = System list<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="right" data-original-title="These custom lists cannot be renamed or deleted, and must have at least one option."></i></span>
             <table class="table table-condensed responsive no-wrap m-t-sm" style="width:80%">
                 <thead>
                     <tr>
-                        <th style="width:30%;">List Name</th>
-                        <th style="width:55%;">Options</th>
-                        <th style="width:15%;"></th>
+                        <th style="width:30%;min-width:10em">List Name</th>
+                        <th style="width:55%">Options</th>
+                        <th style="width:15%;min-width:7em"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,7 +48,7 @@
                                         <%= best_in_place l, :name, :as => 'input', :place_holder => '(none)', :activator => "#customlist-#{l.id}-name-activator" %><i class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i>
                                     <% end %>
                                 </td>
-                                <td><a href="/settings/custom_list/<%= l.id %>" title="click to edit"><%= l.get_list_options(128) %>&nbsp;<i class="fa fa-pencil-square-o"></i></a></td>
+                                <td><a href="/settings/custom_list/<%= l.id %>" title="Click to edit options."><%= l.get_list_options(128) %>&nbsp;<i class="fa fa-pencil-square-o"></i></a></td>
                                 <td>
                                     <% if not l.cs_app_list %>
                                         <%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, l, method: :delete, data: {confirm: "Deleting this list will cause you to lose all existing values! Are you sure you want to delete '#{l.name}'?"}, title: "Delete '#{l.name}'" %>

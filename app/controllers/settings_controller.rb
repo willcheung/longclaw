@@ -87,7 +87,11 @@ class SettingsController < ApplicationController
 
 	# An index of all the custom fields for the current user's organization, by entity type
 	def custom_list_show
-		@custom_list_metadata = current_user.organization.custom_lists_metadatum.find(params[:id]) || nil
+		begin
+			@custom_list_metadata = current_user.organization.custom_lists_metadatum.find(params[:id])
+		rescue ActiveRecord::RecordNotFound
+			redirect_to root_url, :flash => { :error => "Custom List not found or is private." }
+		end
 	end
 
 	def salesforce

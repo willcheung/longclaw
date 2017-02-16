@@ -22,13 +22,13 @@
     <div class="ibox">
         <div class="ibox-content">
             <h1 style="display:inline-block">Custom List:&nbsp;<span style="color:#3C8DC5;"><%= @custom_list_metadata.name %></span></h1>
-            <h3 style="display:inline-block"><% if @custom_list_metadata.cs_app_list %><i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="'<%= @custom_list_metadata.name %>' is a system custom list that must have at least one option."></i><% end %></h3>
+            <h3 style="display:inline-block"><% if @custom_list_metadata.cs_app_list %><i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="right" data-original-title="'<%= @custom_list_metadata.name %>' is a system list that must have at least one option."></i><% end %></h3>
             
             <table class="table table-condensed responsive no-wrap m-t-sm" style="width:45%">
                 <thead>
                     <tr>
-                        <th style="width:75%;">Option value</th>
-                        <th style="width:25%;"></th>
+                        <th style="width:75%;min-width:15em">Option value</th>
+                        <th style="width:25%;min-width:7em"></th>
                     </tr>
                 </thead>
                 <tbody>

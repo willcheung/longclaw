@@ -58,6 +58,9 @@ class ProjectsController < ApplicationController
     
     custom_lists = current_user.organization.get_custom_lists_with_options
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+
+    @custom_lists = current_user.organization.get_custom_lists_with_options
+    @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}
   end
 
   def filter_timeline

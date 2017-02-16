@@ -14,6 +14,9 @@ class CustomFieldsMetadatumController < ApplicationController
     if custom_fields_metadata  
       respond_to do |format|
         if custom_fields_metadata.update(custom_fields_metadatum_params)
+          if not custom_fields_metadata.custom_lists_metadatum.nil? and custom_fields_metadata.data_type != CustomFieldsMetadatum::DATA_TYPE[:List]
+            custom_fields_metadata.update(custom_lists_metadatum: nil)
+          end
           format.html { redirect_to custom_fields_metadata, notice: 'CustomFieldsMetadatum was successfully updated.' }
           format.js
           format.json { respond_with_bip(custom_fields_metadata) }

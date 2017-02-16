@@ -32,9 +32,8 @@ class AccountsController < ApplicationController
     @account_contacts = @account.contacts
     @project = Project.new(account: @account)
 
-    custom_lists = current_user.organization.get_custom_lists_with_options
-    @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
-    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    @custom_lists = current_user.organization.get_custom_lists_with_options
+    @account_types = !@custom_lists.blank? ? @custom_lists["Account Type"] : {}
   end
 
   # GET /accounts/new

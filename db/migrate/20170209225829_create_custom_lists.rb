@@ -8,5 +8,17 @@ class CreateCustomLists < ActiveRecord::Migration
     end
 
     add_index :custom_lists, [:custom_lists_metadata_id]
+
+    # Create default system Custom Lists for all existing organizations
+    reversible do |dir|
+      dir.up do
+        Organization.all.each do |org|
+          CustomListsMetadatum.create_default_for(org)
+        end
+      end
+      dir.down do
+        CustomListsMetadatum.delete_all
+      end
+    end
   end
 end

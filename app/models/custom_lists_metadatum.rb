@@ -17,11 +17,11 @@
 class CustomListsMetadatum < ActiveRecord::Base
 	belongs_to :organization
 	has_many :custom_lists, foreign_key: "custom_lists_metadata_id", dependent: :destroy
-	has_many :custom_fields, class_name: "CustomFieldsMetadatum", foreign_key: "custom_lists_metadata_id"
+	has_many :custom_fields, class_name: "CustomFieldsMetadatum", foreign_key: "custom_lists_metadata_id", dependent: :nullify
 	
 	validates :name, presence: true, length: { maximum: 30 }
 
-	# Set default (special) application custom lists for a new organization
+	# Create default application Custom Lists for a new organization
 	def self.create_default_for(organization)
 		clm1 = create(organization: organization, name:"Account Type", cs_app_list: true)
 		clm1.custom_lists.create(option_value: "Competitor")
@@ -43,7 +43,7 @@ class CustomListsMetadatum < ActiveRecord::Base
 		clm2.custom_lists.create(option_value: "Pilot")
 		clm2.custom_lists.create(option_value: "Support")
 		clm2.custom_lists.create(option_value: "Other")
-		clm3 = create(organization: organization, name:"Region", cs_app_list: true)
+		clm3 = create(organization: organization, name:"Region")
 		clm3.custom_lists.create(option_value: "East")
 		clm3.custom_lists.create(option_value: "Mid-Atlantic")
 		clm3.custom_lists.create(option_value: "North")
@@ -55,22 +55,25 @@ class CustomListsMetadatum < ActiveRecord::Base
 		clm3.custom_lists.create(option_value: "Southwest")
 		clm3.custom_lists.create(option_value: "West")
 		clm3.custom_lists.create(option_value: "Africa")
-		clm3.custom_lists.create(option_value: "Americas")
+		clm3.custom_lists.create(option_value: "North America")
+		clm3.custom_lists.create(option_value: "South America")
+		clm3.custom_lists.create(option_value: "Asia")
 		clm3.custom_lists.create(option_value: "EMEA")
+		clm3.custom_lists.create(option_value: "Europe")
 		clm3.custom_lists.create(option_value: "Oceania")
 	end
 
-	# Get (preview) options for this custom list as a string. If no options exist, returns "(No options)". Use length_limit parameter to limit the length of the string returned
+	# Get (preview) options for this Custom List as a string. If no options exist, returns "(No options)". Use length_limit parameter to limit the length of the string returned
 	def get_list_options(length_limit=nil)
 		values = ""
 		self.custom_lists.each { |l| values += l.option_value + ", " }
 		values = values[0, values.length-2] # be sure to remove extra trailing comma+sp
-		return "(None)" if values.nil?
+		return "(No options)" if values.nil?
 
 		if length_limit && length_limit < values.length
-			values[0, length_limit.to_i] + "..."
+			"[" + values[0, length_limit.to_i] + "...]"
 		else
-			values
+			"[" + values + "]"
 		end
 	end
 end
