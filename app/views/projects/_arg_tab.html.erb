@@ -573,9 +573,51 @@
 </script>
 <% else %>
   <div class="p-m m-l white-bg header-box">
-    <h4 class="text-center">You don't have any activities in this Stream!</h4>
+    <h4 class="text-center">Nothing to graph because there are no activities!</h4>
   </div>
 <% end %>
+
+<!-- Hardcoding data for demo purposes -->
+<% if ENV['RACK_ENV'] == 'development' or @project.id == '502b8160-0536-48da-9021-1561b957434e' %>
+<div id="contacts">
+    <div class="panel blank-panel">
+        <div class="panel-body">
+            <div class="ibox-content">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Title</th>
+                                <th>Email</th>
+                                <th style="text-align: center;">Salesforce Lead</th>
+                                <th style="text-align: center;">Salesforce Contact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% (@suggested_members + @project_members).each do |pm| %>
+                                <tr>
+                                    <% if !pm.contact.nil? %>
+                                        <% contact = pm.contact %>
+                                        <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                        <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                        <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                        <td class="contact-info"><%= contact.email %></td>
+                                        <td style="text-align: center;"><% if contact.first_name == 'Christopher' %><i class="fa fa-check"><% end %></td>
+                                        <td style="text-align: center;"><% if !contact.first_name == 'Paul' or !contact.first_name == 'Xavier' or !contact.first_name == 'Emmanuel' or !contact.first_name == 'Tom' %><i class="fa fa-check"><% end %></td>
+                                    <% end %>
+                                </tr>
+                            <% end %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<% end %>
+
 <script type="text/javascript">
     $("#arg-link").parent().addClass("active");
 </script>

@@ -11,12 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170203222106) do
+ActiveRecord::Schema.define(version: 20170209000101) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "hstore"
   enable_extension "uuid-ossp"
+  enable_extension "hstore"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                                  default: "",         null: false
@@ -136,7 +136,8 @@ ActiveRecord::Schema.define(version: 20170203222106) do
     t.datetime "updated_at",                null: false
   end
 
-  add_index "custom_fields", ["organization_id", "custom_fields_metadata_id", "customizable_uuid"], name: "custom_fields_idx", using: :btree
+  add_index "custom_fields", ["customizable_type", "customizable_uuid"], name: "index_custom_fields_on_customizable_type_and_customizable_uuid", using: :btree
+  add_index "custom_fields", ["organization_id", "custom_fields_metadata_id"], name: "custom_fields_idx", using: :btree
 
   create_table "custom_fields_metadata", force: :cascade do |t|
     t.uuid     "organization_id",         null: false

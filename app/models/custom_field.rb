@@ -13,7 +13,8 @@
 #
 # Indexes
 #
-#  custom_fields_idx  (organization_id,custom_fields_metadata_id,customizable_uuid)
+#  custom_fields_idx                                               (organization_id,custom_fields_metadata_id)
+#  index_custom_fields_on_customizable_type_and_customizable_uuid  (customizable_type,customizable_uuid)
 #
 
 class CustomField < ActiveRecord::Base
