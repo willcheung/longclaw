@@ -48,7 +48,7 @@
                                         <%= best_in_place l, :name, :as => 'input', :place_holder => '(none)', :activator => "#customlist-#{l.id}-name-activator" %><i class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i>
                                     <% end %>
                                 </td>
-                                <td><a href="/settings/custom_list/<%= l.id %>" title="Click to edit options."><%= l.get_list_options(128) %>&nbsp;<i class="fa fa-pencil-square-o"></i></a></td>
+                                <td><a href="/settings/custom_list/<%= l.id %>" title="Click to edit options."><%= l.get_list_options(128) %>&nbsp;<i class="fa fa-link"></i></a></td>
                                 <td>
                                     <% if not l.cs_app_list %>
                                         <%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, l, method: :delete, data: {confirm: "Deleting this list will cause you to lose all existing values! Are you sure you want to delete '#{l.name}'?"}, title: "Delete '#{l.name}'" %>

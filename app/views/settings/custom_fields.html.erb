@@ -19,7 +19,7 @@
     <div class="ibox">
         <div class="ibox-content">
             <h1>Custom Fields</h1>
-            <h4><a href='<%= settings_custom_lists_path %>'>Edit Custom Lists <i class="fa fa-pencil-square-o"></i></a></h4>
+            <h4><a href='<%= settings_custom_lists_path %>'>Edit Custom Lists <i class="fa fa-link"></i></a></h4>
             <%= form_for :custom_field_settings, html: { id: "custom-fields-form" } do %>
             <div class="form-inline">
                 <label>Entity Type:</label>
@@ -34,7 +34,7 @@
                     <tr>
                         <th style="width:25%;min-width:10em">Field Name</th>
                         <th style="width:10%;min-width:10em">Data Type</th>
-                        <th style="width:45%;min-width:30em"></th>
+                        <th style="width:45%"></th>
                         <!--<th><i class="fa fa-lock fa-lg">&nbsp;</i>Edit Permission</th>-->
                         <!--<th><i class="fa fa-cogs">&nbsp;</i>External Column Mapping</th>-->
                         <th style="width:15%;min-width:7em"></th>
@@ -81,12 +81,6 @@
         </div>
     </div>
 </div>
-<style type="text/css">
-    .disabled {
-        opacity: 0.1;
-        pointer-events: none;
-    }
-</style>
 <script type="text/javascript">
     $('[data-toggle="tooltip"]').tooltip();
 

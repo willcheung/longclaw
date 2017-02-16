@@ -63,15 +63,15 @@ class CustomListsMetadatum < ActiveRecord::Base
 		clm3.custom_lists.create(option_value: "Oceania")
 	end
 
-	# Get (preview) options for this Custom List as a string. If no options exist, returns "(No options)". Use length_limit parameter to limit the length of the string returned
-	def get_list_options(length_limit=nil)
+	# Get (a preview of) options for this Custom List as a string. If no options exist, returns "(No options)". Use the optional list_strlen_limit parameter to truncate and limit the length of the string (length = the options portion, square brackets and ellipsis excluded) returned; the string with have ellipsis (...) appended if it has been truncated.
+	def get_list_options(list_strlen_limit=nil)
 		values = ""
 		self.custom_lists.each { |l| values += l.option_value + ", " }
 		values = values[0, values.length-2] # be sure to remove extra trailing comma+sp
 		return "(No options)" if values.nil?
 
-		if length_limit && length_limit < values.length
-			"[" + values[0, length_limit.to_i] + "...]"
+		if list_strlen_limit && list_strlen_limit < values.length
+			"[" + values[0, list_strlen_limit.to_i] + "...]"
 		else
 			"[" + values + "]"
 		end

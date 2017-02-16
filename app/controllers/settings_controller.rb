@@ -77,10 +77,10 @@ class SettingsController < ApplicationController
 		@entity_type = CustomFieldsMetadatum.validate_and_return_entity_type(params[:entity_type], true) || CustomFieldsMetadatum::ENTITY_TYPE[:Account]
 
 		@custom_fields = current_user.organization.custom_fields_metadatum.where(entity_type:@entity_type) 
-		@custom_lists = current_user.organization.get_custom_lists
+		@custom_lists = current_user.organization.get_custom_lists(25)
 	end
 
-	# An index of all the custom lists for the current user's organization, by entity type
+	# An index of all the Custom Lists for the current user's organization, by entity type
 	def custom_lists
 		@custom_lists = current_user.organization.custom_lists_metadatum
 	end

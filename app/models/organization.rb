@@ -53,11 +53,11 @@ class Organization < ActiveRecord::Base
     return customlists_w_options
   end
 
-  # Gets a hash of Custom List ids for this organization mapped to a short string of the list name and options, to be used in a Custom Lists dropdown.
+  # Gets a hash of Custom List ids for this organization mapped to a short string of the list name and options, to be used in a Custom Lists dropdown. Use the optional options_list_strlen_limit parameter to truncate and limit the length of the options string (note: the length = the options portion; square brackets and ellipsis are excluded).
   # e.g., { list1_id=>"list1_name: [list1option1, list1option2...", list2_id=>"list2_name: [list2option1, list2option2..." }
-  def get_custom_lists(options_max_len=45)
+  def get_custom_lists(options_list_strlen_limit=nil)
     customlists = {}
-    self.custom_lists_metadatum.order(:cs_app_list, :created_at).index_by { |clm| customlists[clm.id] = clm.name + ": " + clm.get_list_options(options_max_len) }
+    self.custom_lists_metadatum.order(:cs_app_list, :created_at).index_by { |clm| customlists[clm.id] = clm.name + ": " + clm.get_list_options(options_list_strlen_limit) }
     return customlists
   end
 end
