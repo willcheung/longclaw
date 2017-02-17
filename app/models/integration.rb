@@ -4,7 +4,7 @@
 #
 #  id                      :integer          not null, primary key
 #  contextsmith_account_id :uuid
-#  external_account_id     :integer
+#  external_account_id     :string
 #  project_id              :uuid
 #  external_source         :string
 #  created_at              :datetime         not null
@@ -33,11 +33,14 @@ class Integration < ActiveRecord::Base
 
 	 def self.find_basecamp_connections
     query = <<-SQL
-      SELECT projects.name AS context_project_name, activities.title AS basecamp_project_name ,integrations.id AS int_id
+       SELECT integrations.contextsmith_account_id AS project_id,
+       		  projects.name AS context_project_name,
+       		  integrations.external_source AS basecamp_project_name,
+       		  integrations.id AS int_id,
+       		  integrations.external_account_id AS basecamp_project_id
 			FROM integrations
-				LEFT JOIN activities ON integrations.external_account_id = activities.backend_id
-				LEFT JOIN projects ON integrations.project_id = projects.id
-				WHERE contextsmith_account_id IS NOT NULL;
+				LEFT JOIN projects ON integrations.contextsmith_account_id = projects.id
+				;
       SQL
     result = Project.find_by_sql(query)
   end

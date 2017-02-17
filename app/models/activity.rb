@@ -228,24 +228,27 @@ class Activity < ActiveRecord::Base
     end
   end
 
-  def self.load_basecamp2_activities(event, project, user, project_id='00000000-0000-0000-0000-000000000000')
+  def self.load_basecamp2_activities(e, project, user, project_id)
+    # reoganize for load_Basecamp2_activities: 
+    update = e.first['updated_at']
 
     event = Activity.new(
               posted_by: user,
               project_id: project_id,
               category: CATEGORY[:Basecamp2],
-              title: project['name'],
+              title: e.first['target'],
               note: '',
               is_public: true,
-              backend_id: project['id'],
-              email_messages: event
+              backend_id: e.first['eventable']['id'],
+              last_sent_date: update.to_datetime,
+              last_sent_date_epoch: update.to_datetime.to_i,
+              email_messages: e.to_json
         )
-    if event.valid?
-      event.save
-    else
-      puts "Error: Event was unable to be saved in activity table"
-    end
 
+    if event.valid?
+      event.save  
+      puts "Event is Saved"
+    end
   end
 
   def self.copy_email_activities(source_project, target_project)

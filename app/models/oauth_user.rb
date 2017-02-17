@@ -31,9 +31,14 @@ class OauthUser < ActiveRecord::Base
 	def self.basecamp2_create_user(pin, organization_id, current_id)
 
 		result = BaseCampService.basecamp2_create_user(pin)
+
 		if result
-			puts "Creating Oauth User"
-			user = OauthUser.new(
+			# Find if the client already saved in Oauthuser exists
+			client = OauthUser.find_by(:organization_id => organization_id, oauth_provider_uid: result['oauth_provider_uid'] )
+			if !client.nil?
+				
+			else
+				user = OauthUser.new(
 				oauth_provider: result['oauth_provider'],
 				oauth_provider_uid: result['oauth_provider_uid'],
 				oauth_access_token: result['oauth_access_token'],
@@ -45,24 +50,18 @@ class OauthUser < ActiveRecord::Base
 				oauth_issued_date: Time.now
 				)
 
-			if user.valid?
-				user.save
-				puts "User is valid" 
-				projects = basecamp2_projects(result['oauth_access_token'])
-				projects.each do |p|
-					Activity.load_basecamp2_activities(BaseCampService.basecamp2_user_project_events(result['oauth_access_token'], p['id']), p, current_id)
+				if user.valid?
+					user.save
 				end
-			else
-				#failed to save
 			end
-		end
+		else
+			flash[:error] = "User Not Found at BaseCamp2"
+		end # If !client.nil?
 
+	end # Ends method
 
-
-	end
-
-	def self.basecamp2_projects(token)
-		BaseCampService.basecamp2_user_projects(token)
+	def self.basecamp2_projects(token, url)
+		BaseCampService.basecamp2_user_projects(token, url)
 	end
 
 	def self.basecamp2_topics(token, project_id=nil)

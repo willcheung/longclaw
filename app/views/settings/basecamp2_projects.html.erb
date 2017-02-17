@@ -20,7 +20,8 @@
     <div class="ibox float-e-margins">
         <div class="ibox-content">
           <% if @basecamp2_user %>
-            <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/">Disconnect From Basecamp2 </a></span>
+              <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/<%=@basecamp2_user.id%>" data-method= "delete">Disconnect From Basecamp2 </a></span>
+
 
             <i class="fa fa-check " aria-hidden='true' style='color:green; display:inline-block;'></i><p style='display:inline-block;'>Basecamp is Enabled in your Streams!</p>
           <% else %>
@@ -35,9 +36,9 @@
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                   <ul class="nav navbar-nav">
                     <li ><a href="/settings/basecamp">Step 1: Map Account</a></li>
-                    <li class="active"><a href="#">Step 2: Sync Stream</a></li>
-                    <li><a href="/settings/basecamp2_activity">Step 3: Manage Activity</a></li>
-                  </ul>
+                    <li class="active"><a href="#">Step 2: Map Stream</a></li>
+<!--                     <li><a href="/settings/basecamp2_activity">Step 3: Manage Activity</a></li>
+ -->                  </ul>
                 </div>
               </nav>
             <% if params[:account_id]%>
@@ -105,8 +106,12 @@
                           <td class="col-lg-2"><%=b['context_project_name']%></td>
                           <td class="col-lg-2"><%=b['basecamp_project_name']%></td>
                         <% end %>
+
                     <% end %>
+                      </tr>
                   </tbody>
+
+
               </table>
         </div>
     </div>

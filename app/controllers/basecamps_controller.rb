@@ -15,71 +15,52 @@ class BasecampsController < ApplicationController
 	end
 
 	def link_basecamp2_account
-			# links the Contextsmith Accounts with the Basecamp2 Projects
-	    # One CS Account can link to many BaseCamp2 Accounts
-    if params[:basecamp_account_id] && params[:account_id] && params[:project_id]
+
+		basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+		basecamp_project_name = BaseCampService.basecamp2_find_project(basecamp2_user['oauth_access_token'], params[:basecamp_account_id] )
+    if params[:basecamp_account_id] && params[:account_id]
     	# Check if row already exists in our table
-    	tier = Integration.where(:external_account_id=>params[:basecamp_account_id]).where(:project_id=>params[:project_id])
-    	if tier.exists?
-    		# if ContextSmith Row is Empty fill it with an account_id
-    		if tier.first['contextsmith_account_id'] == nil
-    			# Check if Activity is already occupied by another project_id
-    			if update_activity_project_id(params[:basecamp_account_id], params[:project_id])
-    				# Insert account_id into Contextsmith_account_id
-    				tier.first['contextsmith_account_id'] = params[:account_id]
-    				tier.first.save
-    			else
-    				#flash if occupied
+    	# tier = Integration.where(:external_account_id=>params[:basecamp_account_id]).where(:project_id=>params[:project_id])
+    	tier = Integration.where(:contextsmith_account_id => params[:account_id])
+    	tier2 = Integration.where(:external_account_id => params[:basecamp_account_id])
+
+    	if tier.any? || tier2.any?
     				flash[:warning] = "Connection is Occupied"
-    			end
-    		else
-    			# error when link exists
-    			flash[:warning] = "Link Already Exists"
-    		end
     	else
-    		# If there are no existing records that match a basecamp_account and project_id than execute code below
     		begin
     			# Create a new row
-	    		Integration.link_basecamp2(params[:basecamp_account_id], params[:account_id], params[:external_name], current_user, params[:project_id])
-	    		update_activity_project_id(params[:basecamp_account_id], params[:project_id])
+	    		Integration.link_basecamp2(params[:basecamp_account_id], params[:account_id], basecamp_project_name['name'], current_user, params[:project_id])
+	    		# update_activity_project_id(params[:basecamp_account_id], params[:project_id])
 	    	rescue
 					#code that deals with some exception
 					flash[:error] = "Failed to Create Connection!"
 				else
 					#code that runs only if (no) excpetion was raised
-					flash[:notice] = "Project Synced!"
+					flash[:notice] = "Projects Linked!"
 				end
 			end
 		end
-    redirect_to settings_basecamp2_activity_path
+    respond_to do |format|
+      format.html { redirect_to settings_basecamp_path }
+    end
 	end
 
-	def update_activity_project_id(basecamp_account_id, project_id)
-		tier = Activity.where(:backend_id=>params[:basecamp_account_id]).where(:posted_by => current_user.id)
-		unless tier.empty?
-			if tier.first['project_id'] == '00000000-0000-0000-0000-000000000000'
-				tier.first['project_id'] = params[:project_id]
-				tier.first.save
-			else tier.first['project_id']
-				false
-			end
-		end
-	end
+	
 
 	def remove_basecamp2_account
 		basecamp_link = Integration.find_by(id: params["id"])
-		basecamp_link.contextsmith_account_id =  nil
-		if !basecamp_link.nil?
-			tier2 = Activity.where(:project_id => basecamp_link['project_id']).where(:backend_id => basecamp_link['external_account_id'])
-			unless tier2.empty?
-				if tier2.first['project_id']
-					tier2.first['project_id'] = '00000000-0000-0000-0000-000000000000'
-					if tier2.first.valid?
-						tier2.first.save
-					end
+		if basecamp_link.valid?
+			begin
+			act_list = Activity.where(:category => "Basecamp2").where(:project_id => basecamp_link['contextsmith_account_id'])
+			if act_list
+				act_list.each do |a|
+					a.destroy
 				end
 			end
-			basecamp_link.save
+			basecamp_link.destroy
+		else
+			flash[:notice] = "Link Removed!"
+		end
 		end
 		respond_to do |format|
       format.html { redirect_to settings_basecamp_path }
@@ -107,8 +88,61 @@ class BasecampsController < ApplicationController
 		BaseCampService.basecamp2_user_todos(token)
 	end
 
-	def self.disconnect
-		puts "this is the disconnect basecamp button"
+	def refresh_accounts
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
+	end
+
+	def refresh_stream
+		if params[:project_id]
+			@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+			if @basecamp2_user
+				begin 
+					events = BaseCampService.basecamp2_user_project_events(@basecamp2_user['oauth_access_token'], params[:basecamp_project_id], @basecamp2_user['oauth_instance_url'])
+					arr1 = events
+					arr2 = events
+					if events
+						events.each {|d| puts d['eventable']['id'] }
+						h = Hash.new(0)
+						events.each { |e| h[e['eventable']['id']] += 1 }
+						puts "these are the eventable target ids: #{h}"
+						# Activity.load_basecamp2_activities( e, params[:basecamp_project_id], current_user.id, params[:project_id] )
+						arr1.each do |el1|
+							mrg = []
+							mrg << el1
+							record = Activity.find_by(:backend_id => el1['eventable']['id'])
+							unless record
+								arr2.each do |el2|
+									if el1['id'] != el2['id'] # This is ment to skip the identical object
+										if el1['eventable']['id'] == el2['eventable']['id'] # We want to find the object that share the same eventable id
+											mrg << el2
+										end
+									end
+								end # <-----Ends arr2 Loop
+								if !mrg.nil?
+									Activity.load_basecamp2_activities( mrg, params[:basecamp_project_id], current_user.id, params[:project_id] )
+								# else # if nothing was merged then save the single object
+								end
+							end # ends unless record
+						end # <-------Ends arr1 Loop
+					end # If event is valid
+				# rescue
+				# 	flash[:error] = "Error"
+				# else
+				# 	flash[:notice] = "Activities Sync"
+				end
+			end # If @Basecamp_user
+		end
+		respond_to do |format|
+      		format.html { redirect_to settings_basecamp_path }
+    end
+	end
+
+	def disconnect
+		basecamp_user = OauthUser.find_by(id: params[:id])
+		# destroy all integrations and activities;
+		if basecamp_user
+			basecamp_user.destroy
+		end
 		redirect_to settings_basecamp_path
 	end
 

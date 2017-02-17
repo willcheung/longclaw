@@ -104,15 +104,17 @@ class SettingsController < ApplicationController
 
 
 	def basecamp
+		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 		# Filter only the users Accounts
-		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
-		pin = params[:code]
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active
+		# @accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
+		callback_pin = params[:code]
 		# Check if Oauth_user has been created
-		if @basecamp2_user == nil && pin
+		if @basecamp2_user == nil && callback_pin
 			# Check if User exist in our database
 			# This Creates a new Oauth_user
 			begin
-				OauthUser.basecamp2_create_user(pin, current_user.organization_id, current_user.id)
+				OauthUser.basecamp2_create_user(callback_pin, current_user.organization_id, current_user.id)
 			rescue
 				#code that deals with some exception
 				flash[:warning] = "Sorry something went wrong"
@@ -124,13 +126,7 @@ class SettingsController < ApplicationController
 	end
 
 	def basecamp2_projects
-		if params[:account_id]
 			@accounts = Project.where(account_id: params[:account_id])
-		end
-	end
-
-	def basecamp2_activity
-
 	end
 
 	def super_user
@@ -177,7 +173,7 @@ class SettingsController < ApplicationController
 			# Look to find only the current users connections
 			# @basecamp_connections = current_user.integration.find_basecamp_connections
 			@basecamp_connections = Integration.find_basecamp_connections
-			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'])
+			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'], @basecamp2_user['oauth_instance_url'])
 		end
 	end
 

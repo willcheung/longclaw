@@ -20,7 +20,7 @@
     <div class="ibox float-e-margins">
         <div class="ibox-content">
           <% if @basecamp2_user %>
-            <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/">Disconnect From Basecamp2 </a></span>
+            <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/<%=@basecamp2_user.id%>" data-method= "delete">Disconnect From Basecamp2 </a></span>
 
             <i class="fa fa-check " aria-hidden='true' style='color:green; display:inline-block;'></i><p style='display:inline-block;'>Basecamp is Enabled in your Streams!</p>
           <% else %>
@@ -36,8 +36,8 @@
                   <ul class="nav navbar-nav">
                     <li ><a href="/settings/basecamp">Step 1: Map Account</a></li>
                     <li ><a href="/settings/basecamp2_projects">Step 2: Sync Stream</a></li>
-                    <li class="active"><a href="#">Step 3: Manage Activity</a></li>
-                  </ul>
+<!--                     <li class="active"><a href="#">Step 3: Manage Activity</a></li>
+ -->                  </ul>
                 </div>
               </nav>
 
@@ -84,9 +84,9 @@
                       <tr>
                           <th>ContextSmith Streams</th>
                           <th>
-                                <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Accounts</div>                              
-                                <!-- <div id="basecamp2-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Accounts</div>
-                                <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Basecamp2."></i> -->
+                                <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Accounts</div>
+                                <div id="basecamp2-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Accounts</div>
+                                <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Basecamp2."></i>
                           </th>
                           <th></th>
                       </tr>
@@ -100,6 +100,13 @@
                           <td class="col-lg-2"><input type="/" name="edit" value="Update" class="btn btn-primary btn-sm center"><span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="/delete_basecamp2_account/<%=b['int_id']%>" data-method="delete">Remove</a></span></td>
                         </tr>
                         <% end %>
+                      <tr>
+                        <td></td>
+                        <td></td>
+                        <!--<td></td>
+                        <td></td>-->
+                        <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe,settings_basecamp_path, method: :get, style: "color:#A1C436",title: "Add new field" %></td>
+                    </tr>
                     <% end %>
                   </tbody>
               </table>
@@ -124,15 +131,33 @@
 
 
     $('#basecamp2-refresh').click(function(){
-    $.ajax('/salesforce_refresh', {
+    $.ajax('/basecamp2_refresh', {
         async: true,
         method: "POST",
         beforeSend: function () {
-            $('#salesforce-refresh .fa.fa-refresh').addClass('fa-spin');
+            $('#basecamp2-refresh .fa.fa-refresh').addClass('fa-spin');
         },
         complete: function() {
-            $('#salesforce-refresh .fa.fa-refresh').removeClass('fa-spin');
+            $('#basecamp2-refresh .fa.fa-refresh').removeClass('fa-spin');
         }
     });
 });
+
+  $('#basecamp2-activity-refresh').click(function(){
+    $.ajax('/basecamp2_activities_refresh', {
+        async: true,
+        method: "POST",
+        beforeSend: function () {
+            $('#basecamp2-activity-refresh .fa.fa-refresh').addClass('fa-spin');
+        },
+        complete: function() {
+            $('#basecamp2-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
+        }
+    });
+});
+
+
+
+
+
 </script>

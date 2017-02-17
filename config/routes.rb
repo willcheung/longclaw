@@ -48,10 +48,11 @@ Longclaw::Application.routes.draw do
 
     resources :basecamp, only: [:index]
     get "basecamp_controller/index"
-    get "/basecamps/disconnect/:id" => 'basecamps#disconnect'
-    post "/sync_stream" => 'settings#basecamp2_projects'
+    post "/sync_stream" => 'basecamps#link_basecamp2_account'
+    post "/refresh_stream" => 'basecamps#refresh_stream'
     post "/link_basecamp2_account" => 'basecamps#link_basecamp2_account'
     delete "/delete_basecamp2_account/:id" => 'basecamps#remove_basecamp2_account'
+    delete "/basecamp2/disconnect/:id" => 'basecamps#disconnect'
 
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"

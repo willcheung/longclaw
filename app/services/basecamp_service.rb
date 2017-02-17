@@ -49,15 +49,14 @@ class BaseCampService
 		JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/people/me.json", :params => {'query_foo' => 'bar'}).body)
 	end
 
-
-	def self.basecamp2_user_projects(oauth2_token)
-		JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/projects.json", :params => {'query_foo' => 'bar'}).body)
+	def self.basecamp2_user_projects(oauth2_token, instance_url)
+		req = "#{instance_url}/projects.json"
+		JSON.parse(set_access_token(oauth2_token).get(req, :params => {'query_foo' => 'bar'}).body)
 	end
 
 	def self.basecamp2_user_todos(oauth2_token)
-		
+
 			JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/todolists.json", :params => {'query_foo' => 'bar'}).body)
-		
 	end
 
 	def self.basecamp2_user_topics(oauth2_token, project_id=nil)
@@ -69,7 +68,7 @@ class BaseCampService
 
 	end
 
-	def self.get_events(oauth2_token)
+	def self.get_events(oauth2_token, instance_url)
 		# All actions in Basecamp generate an event for the progress log.
 		# If you start a new to-do list, there's an event. 
 		# If you give someone access to a project, there's an event. If you add a comment. You get the drill.
@@ -77,23 +76,27 @@ class BaseCampService
 		#  Use the created_at time of the first item on the list for subsequent polls. If there's nothing new since that date, you'll get [] back.
 
 		JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/projects.json", :params => {'query_foo' => 'bar'}).body)
-
 	end
 
-	def self.basecamp2_user_project_events(oauth2_token, user_id)
-		JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/projects/#{user_id}/events.json", :params => {'query_foo' => 'bar'}).body)
+	def self.basecamp2_user_project_events(oauth2_token,project_id, instance_url)
+		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/events.json", :params => {'query_foo' => 'bar'}).body)
+		# JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{user_id}/events.json?page=2", :params => {'query_foo' => 'bar'}).body)
+	end
+
+	def self.basecamp2_user_topics(oauth2_token, project_id, instance_url)
+		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/topics.json", :params => {'query_foo' => 'bar'}).body)
+		# JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{user_id}/events.json?page=2", :params => {'query_foo' => 'bar'}).body)
 	end
 
 
-	# take in a current user.
-	# save in basecamp user information(tokens/refresh)
-	# get user infromation
-	# get user projects
-	# save each users projects in activities modal labeled "basecamp2"
-	# create 1 to 1 relationship 
+	def self.basecamp2_find_project(oauth2_token, user_id)
+		JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/projects/#{user_id}.json", :params => {'query_foo' => 'bar'}).body)
+	end
+
 
 	def self.expired?
-		
+		# Has the refresh token expired?
+		# If the access token needs to be updated...do something...
 	end
 
 
