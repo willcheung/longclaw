@@ -23,6 +23,8 @@ class ExtensionController < ApplicationController
   end
 
   def contacts
+    @project_members = @project.project_members
+    @suggested_members = @project.project_members_all.pending
   end
 
   def metrics
