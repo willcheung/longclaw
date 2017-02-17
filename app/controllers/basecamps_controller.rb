@@ -125,10 +125,10 @@ class BasecampsController < ApplicationController
 							end # ends unless record
 						end # <-------Ends arr1 Loop
 					end # If event is valid
-				# rescue
-				# 	flash[:error] = "Error"
-				# else
-				# 	flash[:notice] = "Activities Sync"
+				rescue
+					flash[:error] = "Error"
+				else
+					flash[:notice] = "Activities Sync"
 				end
 			end # If @Basecamp_user
 		end

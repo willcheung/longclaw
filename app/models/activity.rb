@@ -230,7 +230,7 @@ class Activity < ActiveRecord::Base
 
   def self.load_basecamp2_activities(e, project, user, project_id)
     # reoganize for load_Basecamp2_activities: 
-    update = e.first['updated_at']
+    update = e.last['updated_at']
 
     event = Activity.new(
               posted_by: user,
@@ -242,7 +242,7 @@ class Activity < ActiveRecord::Base
               backend_id: e.first['eventable']['id'],
               last_sent_date: update.to_datetime,
               last_sent_date_epoch: update.to_datetime.to_i,
-              email_messages: e.to_json
+              email_messages: e
         )
 
     if event.valid?

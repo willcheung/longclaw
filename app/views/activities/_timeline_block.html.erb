@@ -159,30 +159,36 @@
             </div> <!-- chat discussion -->
         <% elsif a.category == Activity::CATEGORY[:Basecamp2] %>
             <h3><%= a.title %>
-<!--                 <span class="label pull-right"><%= a.email_messages.first["ActivitySubtype"] %></span>
- -->                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
+                <span class="label pull-right"><%= a.email_messages.first["ActivitySubtype"] %></span>                
+                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
                 <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
             </h3>
+
             <div class="chat-discussion">
-              <div class="row">
-                <h4><%= a.email_messages.first['creator']['name'] %>:  <%= a.email_messages  %></h4>
-              </div>
 
-
-
-              <% a.email_messages.each do |m| %>
-            <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% if a.email_messages.last != m %> style="display:none;" <% end %>>
-                <p><%=m.excerpt%></p>
-            </div>
+                 <% if a.email_messages.length > 1 %>
+                    <div class="more-messages">
+                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize(a.email_messages.length - 1, 'older comment') %> on BaseCamp2</a>
+                    </div>
+                <% end %>
+            
+               <% a.email_messages.each_with_index do |c, i| %>
+                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% unless a.email_messages.size - 1 == i %> style="display:none;" <% end %> >
+                        <div class="chat-message left">
+                            <%= get_profile_pic(c.creator.name, nil , "message-avatar") %>
+                            <div class="message">
+                                <span class="message-author" href="#"> <%=c.creator.name %> </span> added a comment - <%=time_ago_in_words(c.updated_at.to_time) %> ago
+                                <span class="message-content"><%= simple_format(c.excerpt) %></span>
+                            </div>
+                        </div>
+                    </div>
                 <% end %>
 
+             
 
-
-
-
+            
             </div> <!-- chat discussion -->
-
-              <div class="action-links">
+            <div class="action-links">
                 <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                 &sdot;
                   <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
@@ -191,10 +197,9 @@
                   }  %>
                 &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 &sdot; <a href="https://basecamp.com/2" target="_blank">View in BaseCamp2 <i class="fa fa-external-link"></i></a>
-              </div><!-- action-links -->
+            </div><!-- action-links -->
 
-
-
+         
 
         <% elsif a.category == Activity::CATEGORY[:JIRA] %>
             <h3>

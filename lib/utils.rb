@@ -43,7 +43,9 @@ module Utils
 	end
 
 	def get_domain(email)
-		email.split("@").last
+    	if email.nil?
+			email.split("@").last
+		end
 	end
 
 	def get_local_part(email)
