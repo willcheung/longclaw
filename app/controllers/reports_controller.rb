@@ -27,6 +27,10 @@ class ReportsController < ApplicationController
     else
       @average = (total_risk_scores.to_f/risk_scores.length).round(1)
     end
+
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
   def dashboard_data

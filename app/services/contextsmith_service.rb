@@ -13,7 +13,7 @@ class ContextsmithService
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
     params = "&max=" + max.to_s + after + query + is_time + neg_sentiment + request
 
-    puts "~~~~~~~~~~~~~~~ ContextsmithService will now call load_from_backend()... ~~~~~~~~~~~~~~~ "
+    puts "~~~~~~ ContextsmithService will now call load_from_backend(). ~~~~~~"
     load_from_backend(project, base_url, params) do |data|
       puts "Found #{data[0]['conversations'].size} conversations!\n"
       Contact.load(data, project, save_in_db)
@@ -22,7 +22,7 @@ class ContextsmithService
       Notification.load(data, project, is_test)
       result
     end
-    puts "~~~~~~~~~~~~~~~ load_from_backend() processing complete! ~~~~~~~~~~~~~~~ "
+    puts "~~~~~~ load_from_backend() processing exited! ~~~~~~"
   end
   
   # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.

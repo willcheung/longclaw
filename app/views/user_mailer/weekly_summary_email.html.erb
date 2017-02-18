@@ -23,8 +23,8 @@
 
 
 <!-- Summary -->
-<div style="margin-bottom:30px; min-width:590px;">
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following account <%= pluralize(@projects.length, 'stream') %>:</h2>
+<div style="margin-bottom:30px;min-width:350px;max-width:540px;">
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following <%= pluralize(@projects.length, 'stream') %>:</h2>
 
   <!-- Project/stream detail -->
   <% @projects.each.with_index do |p,i| %>
@@ -132,25 +132,23 @@
                <tbody>
                   <tr>
                     <td>
-                      <!-- Risk monitoring 3-metric summary -->
-                      <table style="border-style:solid;border-width:1px;border-color:#c1c1c1;margin:10px 15px;padding:0.6em;border-radius:15px;display:inline-block;"> 
+                      <!-- 3-metric summary -->
+                      <table style="border-style:solid;border-width:1px;border-color:#c1c1c1;margin:10px 15px;padding:0.4em;border-radius:15px;display:inline-block;"> 
                         <tbody>
                           <tr>
-                            <td style="text-align:center;padding-bottom:6px;color:#999;text-overflow:ellipsis;font-size:19px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;border-bottom:solid;border-bottom-width:1px;">
-                              Risk Monitoring
-                            </td>
+                            <td style="text-align:center;padding-bottom:6px;color:#999;text-overflow:ellipsis;font-size:19px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;border-bottom:solid;border-bottom-width:1px;">Status Summary</td>
                           </tr>
                           <tr>  <!-- Risks/Alerts data row -->
                             <td> 
-                              <div style="padding:0 30px;">
-                                <!-- Left element -->
-                                <div style="margin:0em 1em;display:inline-block;">
+                              <div style="padding:0 10px;">
+                                <!-- Left metric -->
+                                <div style="margin:0 0.4em;display:inline-block">
                                   <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;w">
                                     <tr>
                                       <!-- Risk Score -->
                                       <td>
-                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:40px;font-weight:bold;vertical-align:middle; line-height:initial;display:inline-block;"><%= risk_score_today %></span>
-                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:16px;padding:4px;min-width:30px;vertical-align:middle;display:inline-block;"><%= risk_level(risk_score_today) %></span>
+                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= risk_score_today %></span>
+                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:16px;padding:4px;max-width:60px;height:40px;vertical-align:middle;display:inline-block;"><%= risk_level(risk_score_today) %></span>
                                       </td>
                                     </tr>
                                     <tr>
@@ -170,14 +168,14 @@
                                     </tr>
                                   </table>
                                 </div>
-                                <!-- Middle element -->
-                                <div style="margin:0em 0.5em;display:inline-block;">
+                                <!-- Center metric -->
+                                <div style="margin:0 0.4em;display:inline-block">
                                   <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
                                     <tr>
                                       <!-- Open Alerts -->
                                       <td>
-                                        <span style="color:#666;font-size:40px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_alerts.count %></span>
-                                        <span style="color:#666;font-size:16px;padding:4px;min-width:30px;vertical-align:middle;display:inline-block;">Open <%= 'Alert'.pluralize(open_alerts.count) %></span>
+                                        <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_alerts.count %></span>
+                                        <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Alert'.pluralize(open_alerts.count) %></span>
                                       </td>
                                     </tr>
                                     <tr>
@@ -195,14 +193,14 @@
                                     </tr>
                                   </table>
                                 </div>
-                                <!-- Right element -->
-                                <div style="margin:0em 1em;display:inline-block;">
+                                <!-- Right metric -->
+                                <div style="margin:0 0.4em;display:inline-block">
                                   <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
                                     <tr>
                                       <!-- Open Tasks -->
                                       <td>
-                                        <span style="color:#666;font-size:40px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_tasks.length %></span>
-                                        <span style="color:#666;font-size:16px;padding:4px;min-width:30px;vertical-align:middle;display:inline-block;">Open <%= 'Task'.pluralize(open_tasks.length) %></span>
+                                        <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_tasks.length %></span>
+                                        <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Task'.pluralize(open_tasks.length) %></span>
                                       </td>
                                     </tr>
                                   </table>
@@ -278,12 +276,12 @@
       </table>
     </div> <!-- END: Stream Updates -->
 
-    <!-- Open Alerts & Tasks -->
+    <!-- "Open Alerts & Next Steps" (Tasks) -->
     <div style="margin:0;font-size:14px;">
     <% if open_tasks.empty? %>
-      <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No Open Alerts or Tasks.</span>
+      <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No Open Alerts or Next Steps.</span>
     <% else %>
-      <!-- List title -->
+      <!-- List title/header -->
       <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
         <tbody style="width:100%;display:table;">
           <tr>
@@ -309,6 +307,16 @@
                 <span style="font-weight:normal;font-size:14px;line-height:19px;">
                   <%= n.name %>
                 </span>
+                <% if n.category == Notification::CATEGORY[:Alert] %>
+                <!-- Alert notification detail -->
+                <div style="font-size:10px;color:grey;line-height:12px;margin-top:-15px">
+                <% if n.description.length > 135 %>
+                  <br><%= n.description[0,134] %>&#8230;
+                <% else %>
+                  <br><%= n.description %>
+                <% end %>
+                </div>
+              <% end %>
               </td>
               <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:75px;max-width:80px;padding:3px;">
                 <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
@@ -319,7 +327,7 @@
                 <% elsif n.category == Notification::CATEGORY[:Todo] %>
                   background-color:#3cc5b9">
                 <% else %>
-                  background-color:#ed5565">
+                  background-color:#ed5565"> <!-- Category: Alert -->
                 <% end %>
                   <%= n.category%>
                 </span>

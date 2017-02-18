@@ -40,7 +40,7 @@
                                 <p>Account: <%= best_in_place p.account, :name, :as => 'input', :activator => "#proj-#{p.id}-acc-activator" %><i id="proj-<%= p.id %>-acc-activator" class="fa fa-pencil m-l-xs text-mute-gray"></i></p>
                             </div>
                             <div class="col-sm-3 text-left">
-                                <p>Type: <%= best_in_place p.account, :category, :as => :select, :collection => Account::CATEGORY, :class => 'btn btn-sm btn-default fa-caret-down', :style => 'font-size:12px;' %></p>
+                                <p>Type: <%= best_in_place p.account, :category, :as => :select, :collection => @account_types, :class => 'btn btn-sm btn-default fa-caret-down', :style => 'font-size:12px;' %></p>
                             </div> 
                         </div>
                         
