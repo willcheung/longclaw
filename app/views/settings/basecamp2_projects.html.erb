@@ -41,50 +41,19 @@
  -->                  </ul>
                 </div>
               </nav>
-            <% if params[:account_id]%>
+            
 
               <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; margin-top:15px; padding:0px; display: inline;">        
-                <div class="contextsmith_account col-lg-3" style="margin-right:0px; margin-left:0px; padding:0px; display: inline;">
-                  <select class="contextsmith_project_box" data-placeholder="Select Contextsmith Stream">
-                    <option value="0"></option>
-                    <% if !@accounts.nil?  %>
-                      <% @accounts.each do |a| %>
-                        <option value="<%=a.id %>"><%=a.name %></option>
-                      <% end %>
-                    <% end  %>
-                  </select>
-                </div>
-
-                <div class="basecamp2_account col-lg-3" style="margin-right:0px; margin-left:15px; padding:0px; display: inline;">
-                      <select class="basecamp2_account_box" data-placeholder='Select BaseCamp2 Account'>
-                        <option value="0"></option>
-                            <% if !@basecamp_projects.nil?  %>
-                              <% @basecamp_projects.each do |a| %>
-                                <option value="<%=a['id'] %>"><%=a['name'] %></option>
-                              <% end %>
-                            <% end  %>
-                      </select>
-                </div>
-              
-                  <%= form_tag("/link_basecamp2_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
-                  <input name="basecamp_account_id" type="hidden" value="">
-                  <input name="account_id" type="hidden" value="<%=params[:account_id]%>">
-                  <input name="project_id" type="hidden" value="">  
-                  <input type="hidden" name="external_name" value="BaseCamp2">  
-
-                  <div class="col-lg-3" style="margin:0px; margin-left:15px; padding-left:0px; padding-top:3px;">  
-                    <input type="submit" name="commit" value="Sync" class="btn btn-primary btn-sm">
-          
-                  </div>
+            
                   
-                  <%end%><!-- ends the form_tag -->
+                  
                 </div>
-              <% else %>
+           
                 <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; margin-top:15px; padding:0px; display: inline;"> 
                   <!-- <p style="color: red;"> *Current No Account Selected </p> -->
                 </div>
 
-              <%end%><!-- ends the params[:account_id] -->
+              
 
               
 
@@ -93,10 +62,11 @@
                       <tr>
                           <th>ContextSmith Streams</th>
                           <th>
-                                <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Accounts</div>                              
-                                <!-- <div id="basecamp2-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Accounts</div>
-                                <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Basecamp2."></i> -->
+                              <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Account</div>
+                              <div id="basecamp2-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Sync All Accounts</div>
+                              <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Basecamp2."></i>                             
                           </th>
+                          <th></th>
                       </tr>
                   </thead>
                   <tbody>
@@ -105,14 +75,14 @@
                         <tr>
                           <td class="col-lg-2"><%=b['context_project_name']%></td>
                           <td class="col-lg-2"><%=b['basecamp_project_name']%></td>
+                          <td class="col-lg-2"> 
+                          <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="/delete_basecamp2_account/<%=b['int_id']%>" data-method="delete">Remove</a></span></td>                          
+                        </tr>
                         <% end %>
-
                     <% end %>
-                      </tr>
                   </tbody>
-
-
               </table>
+
         </div>
     </div>
 </div>

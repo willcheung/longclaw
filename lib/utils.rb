@@ -43,9 +43,7 @@ module Utils
 	end
 
 	def get_domain(email)
-    	if email.nil?
 			email.split("@").last
-		end
 	end
 
 	def get_local_part(email)
@@ -57,11 +55,11 @@ module Utils
 	end
 
 	def get_short_name_account_path(member)
-		if member.is_internal_user?
-			"@"+get_short_name(get_domain(member.email))
-		else
-			link_to("@"+get_short_name(get_domain(member.email)), account_path(member.account))
-		end
+			if member.is_internal_user?
+				"@"+get_short_name(get_domain(member.email))
+			else
+				link_to("@"+get_short_name(get_domain(member.email)), account_path(member.account))
+			end
 	end
 
 	def get_value_or_na(val)

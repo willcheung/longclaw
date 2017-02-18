@@ -11,38 +11,35 @@ class BasecampsController < ApplicationController
 	end
 
 	def basecamp2
-		redirect_to BaseCampService.connect_basecamp2
+		respond_to do |format|
+		format.html { redirect_to BaseCampService.connect_basecamp2}
+		end
 	end
 
 	def link_basecamp2_account
+		if params[:basecamp_account_id] && params[:account_id] && params[:basecamp_account_id] != "" && params[:account_id] != ""
 
-		basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-		basecamp_project_name = BaseCampService.basecamp2_find_project(basecamp2_user['oauth_access_token'], params[:basecamp_account_id] )
-    if params[:basecamp_account_id] && params[:account_id]
-    	# Check if row already exists in our table
-    	# tier = Integration.where(:external_account_id=>params[:basecamp_account_id]).where(:project_id=>params[:project_id])
+			basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
+			basecamp_project_name = BaseCampService.basecamp2_find_project(basecamp2_user['oauth_access_token'], params[:basecamp_account_id] )
     	tier = Integration.where(:contextsmith_account_id => params[:account_id])
     	tier2 = Integration.where(:external_account_id => params[:basecamp_account_id])
 
     	if tier.any? || tier2.any?
-    				flash[:warning] = "Connection is Occupied"
+    		flash[:warning] = "Connection is Occupied"
     	else
     		begin
-    			# Create a new row
 	    		Integration.link_basecamp2(params[:basecamp_account_id], params[:account_id], basecamp_project_name['name'], current_user, params[:project_id])
-	    		# update_activity_project_id(params[:basecamp_account_id], params[:project_id])
 	    	rescue
-					#code that deals with some exception
 					flash[:error] = "Failed to Create Connection!"
 				else
-					#code that runs only if (no) excpetion was raised
 					flash[:notice] = "Projects Linked!"
 				end
 			end
 		end
     respond_to do |format|
       format.html { redirect_to settings_basecamp_path }
-    end
+    end 
+
 	end
 
 	
@@ -118,6 +115,7 @@ class BasecampsController < ApplicationController
 										end
 									end
 								end # <-----Ends arr2 Loop
+
 								if !mrg.nil?
 									Activity.load_basecamp2_activities( mrg, params[:basecamp_project_id], current_user.id, params[:project_id] )
 								# else # if nothing was merged then save the single object

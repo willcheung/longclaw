@@ -36,8 +36,7 @@
                   <ul class="nav navbar-nav">
                     <li class="active"><a href="#">Step 1: Map Account</a></li>
                     <li><a href="/settings/basecamp2_projects">Step 2: Map Streams</a></li>
-<!--                     <li><a href="/settings/basecamp2_projects">Step 3: Manage Activity</a></li>
- -->                  </ul>
+                 </ul>
                 </div>
               </nav>
 
@@ -75,8 +74,6 @@
                   <%end%>
                  <%end%>
                 </div>
-                
-
               </div>
 
                <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
@@ -97,10 +94,10 @@
                         <tr>
                           <td class="col-lg-2"><%=b['context_project_name']%></td>
                           <td class="col-lg-2"><%=b['basecamp_project_name']%></td>
-                          <%= form_tag("/refresh_stream", :method => "post", id:"search-form", class: "fix-height", remote:false) do %>
+                          <%= form_tag("/refresh_stream", :method => "post", id:"search-form", class: "fix-height" , remote:false) do %>
                           <input name="project_id" type="hidden" value="<%=b['project_id']%>">
                           <input name="basecamp_project_id" type="hidden" value="<%=b['basecamp_project_id']%>">
-                          <td class="col-lg-2"><input type="submit" name="refresh" value="Sync" class="btn btn-primary btn-sm center">
+                          <td class="col-lg-2"><input type="submit" name="refresh" value="Sync" class="btn btn-primary btn-sm center" data-disable-with='Sync' disable_with="Sync" >
                            <%end%>    
                           <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="/delete_basecamp2_account/<%=b['int_id']%>" data-method="delete">Remove</a></span></td>                          
                         </tr>
@@ -158,6 +155,7 @@
         }
     });
 });
+
 
 
 </script>
