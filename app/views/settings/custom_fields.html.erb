@@ -48,17 +48,16 @@
                             <tr>
                                 <td id="customfield-<%= f.id %>-name-activator"><%= best_in_place f, :name, :as => 'input', :place_holder => '(none)', :activator => "#customfield-#{f.id}-name-activator" %><i class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
                                 <td><%= best_in_place f, :data_type, :as => :select, :collection => CustomFieldsMetadatum::DATA_TYPE, :class => 'btn btn-default btn-sm fa-caret-down customfield-datatype', :style => "color:#DDD;", :customfield_id => "#{f.id}" %></td>
-                                <% if f.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] %>
-                                    <td id="customfield-<%= f.id %>-customlist" class="data_type">
+                                <td id="customfield-<%= f.id %>-customlist" class="data_type">
+                                    <% if f.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] %>
                                         List: <%= best_in_place f, :custom_lists_metadata_id, :as => :select, :place_holder => '(unassigned)', :collection => @custom_lists, :class => 'btn btn-default btn-sm fa-caret-down customfield-customlist', :style => "color:black; background-color:#3C8DC5" %>
                                         <% if f.custom_lists_metadata_id.nil? %>
                                             <i class="fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" data-original-title="You must assign a List to this field!"></i>
                                         <% end %>
-                                    </td>
-                                <% else %>
-                                    <td id="customfield-<%= f.id %>-customlist" class="data_type disabled">
-                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class='btn btn-default btn-sm' style='width:5.5em;background-color:#3C8DC5'>&nbsp;</span></td>
-                                <% end %>
+                                    <% else %>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class='btn btn-default btn-sm element-disabled' style='width:5.5em;background-color:#3C8DC5'>&nbsp;</span>
+                                    <% end %>
+                                </td>
                                 <!--<td>
                                   <%= best_in_place f, :update_permission_level, :as => :select, :collection => User::ROLE, :class => 'btn btn-default btn-sm fa-caret-down' %>
                                 </td>-->

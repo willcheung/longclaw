@@ -158,7 +158,7 @@
                                 <span class="pull-right md-m-0"><%= best_in_place cf, :value, :as => :select, :place_holder => '(none)', :collection => @custom_lists[cf.custom_fields_metadatum.custom_lists_metadatum.name], :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                             <% else %>
                                 <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and (cf.custom_fields_metadatum.custom_lists_metadatum.nil? or cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty?) %>
-                                    <i class="fa fa-exclamation-circle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="This field's data type='List', but no list is assigned or the list specified has no options."></i>
+                                    <i class="fa fa-exclamation-circle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="This field's data type='List', but no list is assigned or the list assigned has no options."></i>
                                 <% end %>
                                 <i id="proj-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                                 <span class="pull-right m-r-xs"><%= best_in_place cf, :value, :as => :input, :place_holder => '(none)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#proj-customfield#{i}-activator" %></span>
@@ -380,6 +380,5 @@
     // Fix best_in_place bug/side-effect that adds paragraph tags to the .html of custom field dropdown lists, causing the value to be displayed awkwardly
     $('.best_in_place').bind('ajax:success', function(){ 
         this.innerHTML = this.innerHTML.replace('\<p\>', '').replace('\<\/p\>', '');
-        $(this).blur();
     });
 </script>
