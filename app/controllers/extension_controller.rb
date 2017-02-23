@@ -55,20 +55,22 @@ class ExtensionController < ApplicationController
         emails = params[:emails].split(',')
         names = params[:names].split(',')
         emails.zip(names) do |person|
-          contact = @account.contacts.create(
-            first_name: get_first_name(person[1]),
-            last_name: get_last_name(person[1]),
-            email: person[0]
-          )
+          unless person[1] == 'me' && get_domain(person[0]) == get_domain(current_user.email)
+            contact = @account.contacts.create(
+              first_name: get_first_name(person[1]),
+              last_name: get_last_name(person[1]),
+              email: person[0]
+            )
 
-          @project.project_members.new(contact: contact)
+            @project.project_members.new(contact: contact)
+          end
         end
 
         if @project.save
           ContextsmithService.load_emails_from_backend(@project, 2000)
           ContextsmithService.load_calendar_from_backend(@project, 1000)
           format.html { redirect_to extension_account_path(emails: params[:emails]), notice: 'Account Stream was successfully created.' }
-          format.js { render action: 'account', status: :created, location: extension_account_path(emails: params[:emails]) }
+          format.js
         else
           format.html { render action: 'no_account' }
           format.js { render json: @project.errors, status: :unprocessable_entity }
@@ -87,7 +89,7 @@ class ExtensionController < ApplicationController
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
     domain = addresses.group_by { |a| a[1] }.values.max_by(&:size).first[1] # get most common domain
     @account = Account.find_by_domain(domain) # use most common domain to find account
-    redirect_to extension_no_account_path(domain: URI.escape(domain, '.'), emails: params[:emails], names: params[:names]) and return unless @account # if no account, redirect to new "this acct not in contextsmith" page
+    redirect_to extension_no_account_path(URI.escape(domain, "."))+"\?emails="+params[:emails]+'&names='+params[:names] and return unless @account # if no account, redirect to new "this acct not in contextsmith" page
     projects = @account.projects
     @project = projects.first # TODO: find best fit project from this account
   end

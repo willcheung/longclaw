@@ -7,8 +7,9 @@
   <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: Account::CATEGORY, selected: Account::CATEGORY%>
   <%= f.input :website, wrapper_html: { class: 'col-md-12'} %>
   <% if @domain %>
-    <%= f.input :domain, as: :hidden, value: @domain %> 
-    <input type="hidden" name="email_addresses" value="<%= @email_addresses %>">
+    <%= f.input :domain, as: :hidden, input_html: { value: @domain } %> 
+    <input type="hidden" name="emails" value="<%= params[:emails] %>">
+    <input type="hidden" name="names" value="<%= params[:names] %>">
   <% end %>
   <span class="help-block" style="color:red"></span>      
   
