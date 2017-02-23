@@ -1,10 +1,15 @@
 <% remote ||= false %>
-<%= simple_form_for @account, remote: remote, html: {role: :form, 'data-model' => 'account'} do |f| %>
+<% url = @domain ? extension_create_account_path : accounts_path %>
+<%= simple_form_for @account, remote: remote, html: {role: :form, 'data-model' => 'account'}, url: url do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %> 
   <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
   <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: Account::CATEGORY, selected: Account::CATEGORY%>
   <%= f.input :website, wrapper_html: { class: 'col-md-12'} %>
+  <% if @domain %>
+    <%= f.input :domain, as: :hidden, value: @domain %> 
+    <input type="hidden" name="email_addresses" value="<%= @email_addresses %>">
+  <% end %>
   <span class="help-block" style="color:red"></span>      
   
   <%# Added Bootstrap classes %>

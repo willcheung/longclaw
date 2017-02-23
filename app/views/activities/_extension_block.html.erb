@@ -57,6 +57,7 @@
         <% elsif a.category == Activity::CATEGORY[:JIRA] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
             <% c = a.email_messages.first.issue.fields.comment.comments.last %>
+            <!-- TODO: if JIRA has no comments, display a.note instead -->
             <p><%= truncate(c.body, length: 80, separator: ' ') %></p>
             <p class="text-muted"><%= time_ago_in_words(c.updated.to_time) %> ago by <%= c.author.displayName %></p>
 

@@ -91,6 +91,7 @@ Longclaw::Application.routes.draw do
       get 'alerts_tasks'
       get 'contacts'
       get 'metrics'
+      post 'create_account'
     end
 
   end
