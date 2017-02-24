@@ -176,11 +176,12 @@
                     <% if c.eventable %>
                         <div class="chat-message left">
                             <%= get_profile_pic(c.creator.name, c.creator.name, "message-avatar") %>
+
                             <div class="message">
                               <% if c.action == 'commented on'%>
                                 <span class="message-author" href="#"> <%=c.creator.name %> </span> added a comment - <%=c.updated_at.to_date %>
                                 <span class="message-content"><%= simple_format(c.excerpt) %></span>
-                              <% else c.action == 'completed a to-do<span>:</span>'%>
+                              <% else %>
                                 <span class="message-author" href="#"> <%=c.creator.name %> </span> created action - <%=c.updated_at.to_date %>
                                 <span class="message-content"><%= simple_format(c.summary) %></span>
                                 <%end%>
@@ -188,21 +189,20 @@
                         </div>
                     <%end%>
                     </div>
-                <% end %>    
+
+                <% end %>
+                    
+                    <div class="action-links">
+                        <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                        &sdot;
+                          <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
+                            false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
+                            true: raw('<a>Mark Private</a>')
+                          }  %>
+                        &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                        &sdot; <a href="<%=a.email_messages.first.html_url%>" target="_blank">View in BaseCamp2 <i class="fa fa-external-link"></i></a>
+                    </div><!-- action-links -->
             </div> <!-- chat discussion -->
-
-            <div class="action-links">
-                <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
-                &sdot;
-                  <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
-                    false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
-                    true: raw('<a>Mark Private</a>')
-                  }  %>
-                &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
-                &sdot; <a href="https://basecamp.com/2" target="_blank">View in BaseCamp2 <i class="fa fa-external-link"></i></a>
-            </div><!-- action-links -->
-
-         
 
         <% elsif a.category == Activity::CATEGORY[:JIRA] %>
             <h3>

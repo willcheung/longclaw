@@ -11,9 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-
 ActiveRecord::Schema.define(version: 20170209225829) do
-
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -156,7 +154,6 @@ ActiveRecord::Schema.define(version: 20170209225829) do
   add_index "custom_fields_metadata", ["custom_lists_metadata_id"], name: "index_custom_fields_metadata_on_custom_lists_metadata_id", using: :btree
   add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", using: :btree
 
-
   create_table "custom_lists", force: :cascade do |t|
     t.integer  "custom_lists_metadata_id", null: false
     t.string   "option_value",             null: false
@@ -176,6 +173,14 @@ ActiveRecord::Schema.define(version: 20170209225829) do
 
   add_index "custom_lists_metadata", ["organization_id", "name"], name: "index_custom_lists_metadata_on_organization_id_and_name", using: :btree
 
+  create_table "integrations", force: :cascade do |t|
+    t.uuid     "contextsmith_account_id"
+    t.string   "external_account_id"
+    t.uuid     "project_id"
+    t.string   "external_source"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+  end
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false

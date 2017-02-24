@@ -46,8 +46,8 @@ class BaseCampService
 	end
 
 
-	def self.basecamp2_user_info(oauth2_token)
-		JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/people/me.json", :params => {'query_foo' => 'bar'}).body)
+	def self.basecamp2_user_info(id,oauth2_token, instance_url)
+		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/people/#{id}.json", :params => {'query_foo' => 'bar'}).body)
 	end
 
 	def self.basecamp2_user_projects(oauth2_token, instance_url)
@@ -83,7 +83,6 @@ class BaseCampService
 		num = 1
 		while num != 41
 		req = JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/topics.json?page=#{num}", :params => {'query_foo' => 'bar'}).body)
-
 		req.each { |a| result << a }
 		num += 1
 			if req.empty? then break

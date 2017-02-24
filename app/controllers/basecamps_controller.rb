@@ -94,7 +94,8 @@ class BasecampsController < ApplicationController
 
 			@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 			if @basecamp2_user
-				begin 
+
+				# begin 
 					
 					events = BaseCampService.basecamp2_user_project_events(@basecamp2_user['oauth_access_token'], params[:basecamp_project_id], @basecamp2_user['oauth_instance_url'])
 					arr1 = events
@@ -108,24 +109,32 @@ class BasecampsController < ApplicationController
 							result = arr1.select { |b| b['eventable']['id'] == a }
 							result.sort_by { |hash| hash['updated_at'].to_i }
 							record = Activity.find_by(:backend_id => a)
+
 							if record.nil?
-								Activity.load_basecamp2_activities( result , params[:basecamp_project_id], current_user.id, params[:project_id] )
+
+							creator = []
+							result.each {|x| creator << x['creator']['id']}
+							creator.uniq!
+							from = []
+							creator.each {|c| from << BaseCampService.basecamp2_user_info(c,@basecamp2_user['oauth_access_token'],@basecamp2_user['oauth_instance_url'] )}
+								# record.email_messages.size >1 to filter out created Todos and Discussion
+									Activity.load_basecamp2_activities( result , params[:basecamp_project_id], current_user.id, params[:project_id] )
 							else
 								if record.email_messages.size < result.size
-										record.email_messages = result
-										record.last_sent_date = result.first['updated_at'].to_datetime
-										record.last_sent_date_epoch = result.first['updated_at'].to_datetime.to_i
-										record.save
+									record.email_messages = result
+									record.last_sent_date = result.first['updated_at'].to_datetime
+									record.last_sent_date_epoch = result.first['updated_at'].to_datetime.to_i
+									record.save
 								end 
 							end
 						end
 					end # End list
 
-				rescue
-					flash[:error] = "Error"
-				else
-					flash[:notice] = "Activities Sync"
-				end
+				# rescue
+				# 	flash[:error] = "Error"
+				# else
+				# 	flash[:notice] = "Activities Sync"
+				# end
 
 			end # If @Basecamp_user
 		end
