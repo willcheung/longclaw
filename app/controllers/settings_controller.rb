@@ -171,7 +171,6 @@ class SettingsController < ApplicationController
 		# @basecamp2_user = nil
 		if @basecamp2_user
 			# Look to find only the current users connections
-			# @basecamp_connections = current_user.integration.find_basecamp_connections
 			@basecamp_connections = Integration.find_basecamp_connections
 			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'], @basecamp2_user['oauth_instance_url'])
 		end

@@ -95,6 +95,7 @@ class BasecampsController < ApplicationController
 			@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 			if @basecamp2_user
 				begin 
+					
 					events = BaseCampService.basecamp2_user_project_events(@basecamp2_user['oauth_access_token'], params[:basecamp_project_id], @basecamp2_user['oauth_instance_url'])
 					arr1 = events
 					arr2 = events

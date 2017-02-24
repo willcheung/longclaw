@@ -68,16 +68,6 @@ class BaseCampService
 
 	end
 
-	# def self.get_events(oauth2_token, instance_url)
-		# All actions in Basecamp generate an event for the progress log.
-		# If you start a new to-do list, there's an event. 
-		# If you give someone access to a project, there's an event. If you add a comment. You get the drill.
-		# If you're using this API for polling, please make sure that you're using the since parameter to limit the result set.
-		#  Use the created_at time of the first item on the list for subsequent polls. If there's nothing new since that date, you'll get [] back.
-
-	# 	JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/projects.json", :params => {'query_foo' => 'bar'}).body)
-	# end
-
 	def self.basecamp2_user_project_events(oauth2_token, project_id, instance_url)
 		result = []
 		(1..40).each do |num|
@@ -88,17 +78,10 @@ class BaseCampService
 		result
 	end
 
-	def self.basecamp2_user_projects_events_last(oauth2_token,project_id, instance_url)
-		last = DateTime.now - 2
-		puts "this is the date #{last}"
-		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/events.json?since=#{last}", :params => {'query_foo' => 'bar'}).body)
-	end
-
 	def self.basecamp2_user_project_topics(oauth2_token, project_id, instance_url)
 		result = []
 		num = 1
 		while num != 41
-		# req = JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/topics.json?page=#{num}&sort=newest", :params => {'query_foo' => 'bar'}).body)
 		req = JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/topics.json?page=#{num}", :params => {'query_foo' => 'bar'}).body)
 
 		req.each { |a| result << a }

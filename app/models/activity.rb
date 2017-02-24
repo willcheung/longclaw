@@ -246,7 +246,6 @@ class Activity < ActiveRecord::Base
 
     if event.valid?
       event.save
-      puts "even is saved"  
     end
   end
 

@@ -173,7 +173,7 @@
                 <% end %>
                <% a.email_messages.reverse.each_with_index do |c, i| %>
                     <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% unless a.email_messages.size - 1 == i %> style="display:none;" <% end %> >
-                    <% if c.eventable && c.summary %>
+                    <% if c.eventable %>
                         <div class="chat-message left">
                             <%= get_profile_pic(c.creator.name, c.creator.name, "message-avatar") %>
                             <div class="message">
@@ -186,20 +186,6 @@
                                 <%end%>
                             </div>
                         </div>
-                    <% else c.topicable && c.summary %>
-                        <div class="chat-message left">
-                                <%= get_profile_pic(c.last_updater.name, c.last_updater.name, "message-avatar") %>
-                                <div class="message">
-                                  <% if c.action == 'commented on'%>
-                                    <span class="message-author" href="#"> <%=c.last_updater.name %> </span> added a comment - <%=c.updated_at.to_date %>
-                                    <span class="message-content"><%= simple_format(c.excerpt) %></span>
-                                  <% else c.action == 'completed a to-do<span>:</span>'%>
-                                    <span class="message-author" href="#"> <%=c.last_updater.name %> </span> created action - <%=c.updated_at.to_date %>
-                                    <span class="message-content"><%= simple_format(c.summary) %></span>
-                                    <%end%>
-                                </div>
-                        </div>
-
                     <%end%>
                     </div>
                 <% end %>    
