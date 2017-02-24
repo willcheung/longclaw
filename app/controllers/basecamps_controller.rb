@@ -91,48 +91,46 @@ class BasecampsController < ApplicationController
 
 	def refresh_stream
 		if params[:project_id]
+
 			@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 			if @basecamp2_user
 				begin 
 					events = BaseCampService.basecamp2_user_project_events(@basecamp2_user['oauth_access_token'], params[:basecamp_project_id], @basecamp2_user['oauth_instance_url'])
 					arr1 = events
 					arr2 = events
-					if events
-						events.each {|d| puts d['eventable']['id'] }
-						h = Hash.new(0)
-						events.each { |e| h[e['eventable']['id']] += 1 }
-						puts "these are the eventable target ids: #{h}"
-						# Activity.load_basecamp2_activities( e, params[:basecamp_project_id], current_user.id, params[:project_id] )
-						arr1.each do |el1|
-							mrg = []
-							mrg << el1
-							record = Activity.find_by(:backend_id => el1['eventable']['id'])
-							unless record
-								arr2.each do |el2|
-									if el1['id'] != el2['id'] # This is ment to skip the identical object
-										if el1['eventable']['id'] == el2['eventable']['id'] # We want to find the object that share the same eventable id
-											mrg << el2
-										end
-									end
-								end # <-----Ends arr2 Loop
+					list = []
+					arr2.each{ |x| list << x['eventable']['id'] }
+					list.uniq!
+					
+					if list
+						list.each do |a|
+							result = arr1.select { |b| b['eventable']['id'] == a }
+							result.sort_by { |hash| hash['updated_at'].to_i }
+							record = Activity.find_by(:backend_id => a)
+							if record.nil?
+								Activity.load_basecamp2_activities( result , params[:basecamp_project_id], current_user.id, params[:project_id] )
+							else
+								if record.email_messages.size < result.size
+										record.email_messages = result
+										record.last_sent_date = result.first['updated_at'].to_datetime
+										record.last_sent_date_epoch = result.first['updated_at'].to_datetime.to_i
+										record.save
+								end 
+							end
+						end
+					end # End list
 
-								if !mrg.nil?
-									Activity.load_basecamp2_activities( mrg, params[:basecamp_project_id], current_user.id, params[:project_id] )
-								# else # if nothing was merged then save the single object
-								end
-							end # ends unless record
-						end # <-------Ends arr1 Loop
-					end # If event is valid
 				rescue
 					flash[:error] = "Error"
 				else
 					flash[:notice] = "Activities Sync"
 				end
+
 			end # If @Basecamp_user
 		end
 		respond_to do |format|
       		format.html { redirect_to settings_basecamp_path }
-    end
+    	end
 	end
 
 	def disconnect

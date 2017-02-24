@@ -1,4 +1,4 @@
-# == Schema Information
+ # == Schema Information
 #
 # Table name: activities
 #
@@ -50,6 +50,7 @@ class Activity < ActiveRecord::Base
   scope :reverse_chronological, -> { order last_sent_date: :desc }
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
+
 
   acts_as_commentable
 
@@ -229,9 +230,7 @@ class Activity < ActiveRecord::Base
   end
 
   def self.load_basecamp2_activities(e, project, user, project_id)
-    # reoganize for load_Basecamp2_activities: 
-    update = e.last['updated_at']
-
+    update = e.first['updated_at']
     event = Activity.new(
               posted_by: user,
               project_id: project_id,
@@ -242,11 +241,12 @@ class Activity < ActiveRecord::Base
               backend_id: e.first['eventable']['id'],
               last_sent_date: update.to_datetime,
               last_sent_date_epoch: update.to_datetime.to_i,
-              email_messages: e
+              email_messages: e.to_json
         )
 
     if event.valid?
-      event.save  
+      event.save
+      puts "even is saved"  
     end
   end
 
