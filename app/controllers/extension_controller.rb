@@ -55,14 +55,25 @@ class ExtensionController < ApplicationController
         emails = params[:emails].split(',')
         names = params[:names].split(',')
         emails.zip(names) do |person|
-          unless person[1] == 'me' && get_domain(person[0]) == get_domain(current_user.email)
-            contact = @account.contacts.create(
-              first_name: get_first_name(person[1]),
-              last_name: get_last_name(person[1]),
-              email: person[0]
-            )
-
-            @project.project_members.new(contact: contact)
+          unless person[1] == 'me'
+            if get_domain(person[0]) == get_domain(current_user.email)
+              user = User.find_by(email: person[0], organization: current_user.organization)
+              user = current_user.organization.users.create(
+                first_name: get_first_name(person[1]),
+                last_name: get_last_name(person[1]),
+                email: person[0],
+                invited_by_id: current_user.id,
+                invitation_created_at: Time.current
+              ) unless user
+              @project.project_members.new(user: user)
+            else
+              contact = @account.contacts.create(
+                first_name: get_first_name(person[1]),
+                last_name: get_last_name(person[1]),
+                email: person[0]
+              )
+              @project.project_members.new(contact: contact)
+            end
           end
         end
 
