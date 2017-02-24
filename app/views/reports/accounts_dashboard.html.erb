@@ -12,14 +12,14 @@
                 <!-- Account Type -->
                 <select id="account-filter" class="category_filter col-md-3" data-placeholder="Select Account Type">
                     <option value=""></option> <!-- no filter -->
-                    <% Account::CATEGORY.each do |k,v| %>
+                    <% @account_types.each do |k,v| %>
                       <option <% if params[:account] == v %> selected <% end %> ><%= v %></option>
                     <% end %>
                 </select>
                 <!-- Stream Type -->
                 <select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Stream Type">
                     <option value=""></option> <!-- no filter -->
-                    <% Project::CATEGORY.each do |k,v|    %>
+                    <% @stream_types.each do |k,v|    %>
                       <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>
                     <% end %>
                 </select>
@@ -50,7 +50,7 @@
                         <option>Days Inactive</option>
                         <option>Engagement Last 7d</option>
                         <option>Negative Sentiment / Engagement %</option>
-                        <option>Total Open Tasks</option>
+                        <option>Total Open Alerts</option>
                         <option>Total Overdue Tasks</option>
                     </select>
                 </h4>

@@ -77,11 +77,26 @@ class SettingsController < ApplicationController
 		redirect_to :back
 	end
 
-  # An index of all the custom fields for the current user's organization, by entity type
+	# An index of all the custom fields for the current user's organization, by entity type
 	def custom_fields
 		@entity_type = CustomFieldsMetadatum.validate_and_return_entity_type(params[:entity_type], true) || CustomFieldsMetadatum::ENTITY_TYPE[:Account]
 
-		@custom_fields = CustomFieldsMetadatum.where(organization:current_user.organization, entity_type:@entity_type)
+		@custom_fields = current_user.organization.custom_fields_metadatum.where(entity_type:@entity_type) 
+		@custom_lists = current_user.organization.get_custom_lists(25)
+	end
+
+	# An index of all the Custom Lists for the current user's organization, by entity type
+	def custom_lists
+		@custom_lists = current_user.organization.custom_lists_metadatum
+	end
+
+	# An index of all the custom fields for the current user's organization, by entity type
+	def custom_list_show
+		begin
+			@custom_list_metadata = current_user.organization.custom_lists_metadatum.find(params[:id])
+		rescue ActiveRecord::RecordNotFound
+			redirect_to root_url, :flash => { :error => "Custom List not found or is private." }
+		end
 	end
 
 	def salesforce

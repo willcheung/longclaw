@@ -5,6 +5,7 @@ class ProjectsController < ApplicationController
   before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
+  before_action :get_custom_fields_and_lists, only: [:index, :show, :pinned_tab, :tasks_tab, :arg_tab, :insights_tab]
 
   # GET /projects
   # GET /projects.json
@@ -30,9 +31,10 @@ class ProjectsController < ApplicationController
     end
 
     # all projects and their accounts, sorted by account name alphabetically
-    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins(:activities, "LEFT JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN activities ON projects.id = activities.project_id LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+
     
-    unless projects.empty?  #@projects.empty  should be that?
+    unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
@@ -162,7 +164,7 @@ class ProjectsController < ApplicationController
   def refresh
     # big refresh when no activities (normally a new stream), small refresh otherwise
     if @project.activities.count == 0
-      puts "<><><> Big asynchronous refresh incoming... <><><>"
+      puts "<><> Big asynchronous refresh incoming... <><>"
       ContextsmithService.load_emails_from_backend(@project, 2000)
       ContextsmithService.load_calendar_from_backend(@project, 1000)
       # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work
@@ -207,8 +209,10 @@ class ProjectsController < ApplicationController
             end
           if @project.save
             #Big First Refresh, potentially won't need big refresh in the refresh method above
-            ContextsmithService.load_emails_from_backend(@project, nil, 2000)
-            ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000)
+            #ContextsmithService.load_emails_from_backend(@project, nil, 2000)
+            #ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000)
+            ContextsmithService.load_emails_from_backend(@project, 2000)
+            ContextsmithService.load_calendar_from_backend(@project, 1000)
             format.html { redirect_to @project, notice: 'Project was successfully created.' }
             format.js
             #format.json { render action: 'show', status: :created, location: @project }
@@ -391,4 +395,10 @@ class ProjectsController < ApplicationController
     params.slice(:status, :location, :starts_with)
   end
 
+  def get_custom_fields_and_lists
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    @custom_lists = current_user.organization.get_custom_lists_with_options
+    @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}
+  end
 end

@@ -27,6 +27,10 @@ class ReportsController < ApplicationController
     else
       @average = (total_risk_scores.to_f/risk_scores.length).round(1)
     end
+
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
   def dashboard_data
@@ -78,7 +82,7 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities*100).round(2), color: 'blue'})
       end
       @data.sort_by! { |d| d.y }.reverse!
-    when "Total Open Tasks"
+    when "Total Open Alerts"
       open_task_counts = Project.count_tasks_per_project(projects.pluck(:id))
       @data = open_task_counts.map do |r|
         Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'blue'})

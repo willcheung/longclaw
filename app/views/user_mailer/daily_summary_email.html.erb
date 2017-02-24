@@ -1,5 +1,4 @@
-
-  <!-- Header -->
+<!-- Header -->
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
   <tr>
   <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
@@ -42,16 +41,16 @@
                <tbody>
                   <tr style="">
                     <% risk_score = @risk_scores[p.id] %>
-                    <td style="color:<%= risk_color(risk_score, true) %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                    <td style="color:<%= risk_color(risk_score, true) %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;min-width:95px;max-width:100px;">
                       <span style="display:block;"><%= risk_score %></span>
                       <span style="font-size:14px;display:block;"><%= risk_level(risk_score) %></span>
                     </td>
-                    <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:100px;min-width:95px;">
+                    <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;min-width:95px;max-width:100px;">
                       <% open_alerts_count = p.notifications.select { |n| n.category == Notification::CATEGORY[:Alert] && !n.is_complete }.count %> <!-- # workaround for weird "notifications.risks" bug that selects ["project_id", nil] -->
                       <span style="display:block;"><%= open_alerts_count %></span>
                       <span style="font-size:14px;display:block;">Open <%= 'Alert'.pluralize(open_alerts_count) %></span>
                     </td>
-                    <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;max-width:130px;min-width:125px;">
+                    <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;min-width:125px;max-width:130px;">
                       <% open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
                       <span style="display:block;"><%= open_notification_count %></span>
                       <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(open_notification_count) %></span>
@@ -257,6 +256,7 @@
   <% unless p.notifications.empty? %>
   <div style="margin:0;font-size:14px;">
 
+    <!-- List title/header -->
     <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
       <tbody style="width:100%;display:table;">
         <tr>
@@ -271,39 +271,60 @@
       </tbody>
     </table>
 
+    <!-- List alerts -->
     <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
       <tbody>
         <% p.notifications.each do |n| %>
-          <tr>
-            <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
-              <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;line-height:15px;font-size:18px;"><%= '✔' if n.is_complete %></div>
+          <tr style="margin-bottom:10em;">
+            <td style="text-align:left;font-size:15px;line-height:15px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20px;min-width:20px;max-width:20px;padding:3px;">
+              <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;font-size:18px;"><%= '✔' if n.is_complete %></div>
             </td>
-            <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
-              <span style="font-weight:normal;font-size:14px;line-height:19px;">
-                <%= n.name %>
-              </span>
-            </td>
-            <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:75px;max-width:80px;padding:3px;">
-              <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
-              <% if n.category == Notification::CATEGORY[:Action] %>
-                background-color:#3C8DC5">
-              <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
-                background-color:#A1C436">
-              <% elsif n.category == Notification::CATEGORY[:Todo] %>
-                background-color:#3cc5b9">
-              <% else %>
-                background-color:#ed5565">
-              <% end %>
-                <%= n.category%>
-              </span>
-            </td>
-            <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px;padding:3px;">
-              <span style="font-weight:normal;font-size:12px;line-height:19px;">
-                Assigned to: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
-              </span>
+            <td>
+              <table>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:14px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                    <span style="font-weight:normal;font-size:14px;line-height:15px;">
+                      <%= n.name %>
+                    </span>
+                    <% if n.created_at.between?(Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc) %>
+                      <span style="font-size:9px;font-weight:600;padding:0px 2px;text-shadow:none;color:green;background-color:white;border:2px green solid;border-radius:0.25em;">New</span>
+                    <% end %>
+                    <% if n.category == Notification::CATEGORY[:Alert] %>
+                      <!-- Alert notification detail -->
+                      <div style="font-size:10px;color:grey;line-height:12px;margin-top:-11px">
+                      <% if n.description.length > 230 %>
+                        <br><%= n.description[0,229] %>&#8230;
+                      <% else %>
+                        <br><%= n.description %>
+                      <% end %>
+                      </div>
+                    <% end %>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="line-height:12px;padding-bottom:12px;border-collapse:collapse;">
+                    <span style="text-align:left;border-spacing:0;vertical-align:top;width:85px;min-width:80px;max-width:85px;padding:0 3px;">
+                      <span style="font-size:10px;font-weight:600;padding:1px 5px;text-shadow:none;background-color:white;border-radius:0.25em;min-width:80px;max-width:80px;color:
+                      <% if n.category == Notification::CATEGORY[:Action] %>
+                        #3C8DC5;border:2px #3C8DC5
+                      <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                        #A1C436;border:2px #A1C436
+                      <% elsif n.category == Notification::CATEGORY[:Todo] %>
+                        #3CC5B9;border:2px #3CC5B9
+                      <% else #n.category == Notification::CATEGORY[:Alert] %> 
+                        #ED5565;border:2px #ED5565 
+                      <% end %> solid">
+                        <%= n.category %></span>
+                    </span>
+                    <span style="color:#999;font-weight:normal;text-align:right;font-size:12px;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px;padding:3px;">
+                      Assigned to: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
+                    </span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
-        <% end %>
+        <% end %>  <!-- End: p.notifications.each do |n| -->
       </tbody>
     </table>
 
