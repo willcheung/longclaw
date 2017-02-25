@@ -20,7 +20,7 @@ class ExtensionController < ApplicationController
   end
 
   def alerts_tasks
-    @notifications = @project.notifications.take(10)
+    @notifications = @project.notifications.take(20)
   end
 
   def contacts

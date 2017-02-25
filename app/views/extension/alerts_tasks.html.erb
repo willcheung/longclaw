@@ -1,3 +1,9 @@
+<div class="m-t-sm">
+  <%= render 'notifications/form_extension' %>
+</div>
+
 <% @notifications.each do |n| %>
   <%= render 'notifications/extension', n: n %>
 <% end %>
+
+<%= javascript_include_tag "notifications_extension" %>
