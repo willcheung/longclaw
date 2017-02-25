@@ -24,6 +24,10 @@
         <div class="vertical-timeline-icon salesforce-bg">
             <i class="salesforce-logo"></i>
         </div>
+    <% elsif a.category == Activity::CATEGORY[:Alert] %>
+        <div class="vertical-timeline-icon danger-bg">
+            <i class="fa fa-exclamation"></i>
+        </div>
     <% end %>
 
     <span class="vertical-date left"><%= Time.zone.at(a.last_sent_date).strftime("%b %d") %><br />
@@ -127,7 +131,7 @@
         <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= a.from[0].personal ? a.from[0].personal : a.from[0].address %></small>
-                <span class="label pull-right">Task</span>
+                <span class="label pull-right"><%= a.email_messages.first["ActivitySubtype"] %></span>
                 <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
                 <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
             </h3>
@@ -228,6 +232,21 @@
                   &sdot; <a href="<%= a.email_messages.first.link %>" target="_blank">View in Zendesk <i class="fa fa-external-link"></i></a>
                 </div>
             </div>
+        
+        <% elsif a.category == Activity::CATEGORY[:Alert] %>
+            <h3>
+                Alert: <%= a.title %>
+           </h3>
+
+            <div class="chat-discussion">
+                <div> <%= a.note %></div>
+
+                <div class="action-links">
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                </div>
+            </div>
+            
         <% end %>
 
         <div class="content-footer footer-<%= a.id %>" style="display: none;">

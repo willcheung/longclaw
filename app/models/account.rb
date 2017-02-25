@@ -2,23 +2,24 @@
 #
 # Table name: accounts
 #
-#  id              :uuid             not null, primary key
-#  name            :string           default(""), not null
-#  description     :text             default("")
-#  website         :string
-#  owner_id        :uuid
-#  phone           :string
-#  address         :text
-#  created_by      :uuid
-#  updated_by      :uuid
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  organization_id :uuid
-#  notes           :text
-#  status          :string           default("Active")
-#  domain          :string(64)       default(""), not null
-#  category        :string           default("Customer")
-#  deleted_at      :datetime
+#  id                :uuid             not null, primary key
+#  name              :string           default(""), not null
+#  description       :text             default("")
+#  website           :string
+#  owner_id          :uuid
+#  phone             :string
+#  address           :text
+#  created_by        :uuid
+#  updated_by        :uuid
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  organization_id   :uuid
+#  notes             :text
+#  status            :string           default("Active")
+#  domain            :string(64)       default(""), not null
+#  category          :string           default("Customer")
+#  deleted_at        :datetime
+#  revenue_potential :decimal(14, 2)
 #
 # Indexes
 #
@@ -29,6 +30,7 @@ include Utils
 include ContextSmithParser
 
 class Account < ActiveRecord::Base
+    after_create  :create_custom_fields
 
     has_many    :projects, -> { where is_confirmed: true }, dependent: :destroy
     has_many  :contacts, dependent: :destroy
@@ -37,11 +39,12 @@ class Account < ActiveRecord::Base
     belongs_to  :user, foreign_key: "owner_id"
 
     has_many :salesforce_accounts, foreign_key: "contextsmith_account_id", dependent: :nullify
+    has_many :custom_fields, as: :customizable, foreign_key: "customizable_uuid", dependent: :destroy
 
     validates :name, presence: true, uniqueness: { scope: :organization, message: "There's already an account with the same name." }
 
     STATUS = %w(Active Inactive Dead)
-    CATEGORY = { Customer: 'Customer', Partner: 'Partner', Prospect: 'Prospect', Vendor: 'Vendor', Other: 'Other' }
+    CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
 
     def self.create_from_clusters(external_members, owner_id, organization_id)
         grouped_external_members = external_members.group_by{ |x| get_domain(x.address) }
@@ -84,5 +87,12 @@ class Account < ActiveRecord::Base
                 end
             end
         end
+    end
+
+    private
+
+    # Create all custom fields for a new account
+    def create_custom_fields
+        CustomFieldsMetadatum.where(organization:self.organization, entity_type: "Account").each { |cfm| CustomField.create(organization:self.organization, custom_fields_metadatum:cfm, customizable:self) }
     end
 end

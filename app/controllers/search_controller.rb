@@ -78,4 +78,12 @@ class SearchController < ApplicationController
     end
   end
 
+  def autocomplete_salesforce_opportunity_name
+    @salesforce_opportunities = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("lower(name) like ? AND salesforce_accounts.contextsmith_organization_id=?", "%#{params[:term]}%", "#{current_user.organization_id}")
+  
+    respond_to do |format|
+      format.json { render json: @salesforce_opportunities.map { |x| { :id => x.id, :name => x.salesforce_account_name + ": " + x.name } }.to_json.html_safe }
+    end
+  end
+
 end

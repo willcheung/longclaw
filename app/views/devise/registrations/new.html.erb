@@ -3,42 +3,59 @@
         <div class="pull-right"><a href="/users/sign_in">Already have an account?</a></div>
         <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
         <div class="col-md-6">
-            <h1><big>Sign up for ContextSmith free trial</big></h1>
+            <% if params[:c] %>
+                <h1><big><%= params[:c] %> team, welcome to ContextSmith!</big></h1>
+            <% else %>
+                <h1><big>Sign up for ContextSmith free trial</big></h1>
+            <% end %>
             <br/>
-            <p>
-                ContextSmith is a smarter way to manage your time and customers. Our 14-day free trial includes:
-            </p>
+
+            <% if params[:c] %>
+                <p>ContextSmith is a smarter way to manage your key accounts and expansion.</p>
+            <% else %>
+                <p>ContextSmith is a smarter way to manage your time and customers. Our 14-day free trial includes:</p>
+            <% end %>
             <ul style="line-height: 25px" class="m-t-md">
                 <li>Track account touch points in a single timeline.</li>
-                <li>Discover actionable insights about your accounts.</li>
+                <li>Discover actionable insights about your key accounts.</li>
                 <li>Manage customer relationship with zero data entry.</li>
-                <li>Automatic status reports of your customers.</li>
+                <li>Automatic status reports so you know who has the ball.</li>
             </ul>
 
             <p class="m-t-md">
-                ContextSmith works in the background of the email client you already use, so you can get started quickly and stay focused on your customers. Start your free trial today!
+                ContextSmith works in the background of the email client you already use, so you can get started quickly and stay ahead of your customers. <% unless params[:c] %>Start your free trial today!<% end %>
             </p>
 
         </div>
         <div class="col-md-6 m-t-xl">
             <div class="ibox-content">
                 <% if params[:invited_by] %>
-                  <p class="logo-name oauth"><%= params[:invited_by] %> welcomes you to ContextSmith</p>
+                    <p class="logo-name oauth"><%= params[:invited_by] %> welcomes you to ContextSmith</p>
                 <% end %>
-            
-                <p class="oauth text-center"><small>No credit card required. </small></p>
+
+                <% unless params[:c] %>
+                    <p class="oauth text-center"><small>14-day free trial. No credit card required. </small></p>
+                <% end %>
+
                 <div class="text-center">
                   <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google-plus oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
                 </div>
-                <p style="font-size:12px" class="text-center"><small>By clicking this button you are agreeing to our <a href="https://www.contextsmith.com/terms/">Terms of Service</a>.</small></p>
 
-                <p class="text-muted text-center m-t-xl">
-                    <small>Microsoft Outlook customer?</small>
-                </p>
-                <div class="text-center"><a class="btn btn-sm btn-white" href="http://resources.contextsmith.com/exchange">Sign up on our waitlist</a></div>
+                <% if params[:c] %>
+                    <p style="font-size:14px" class="text-center m-t-md">Please contact your system admin or email <a href="mailto:support@contextsmith.com">support@contextsmith.com</a> if you have any questions.</p>
+                <% else %>
+                    <p style="font-size:12px" class="text-center"><small>By clicking this button you are agreeing to our <a href="https://www.contextsmith.com/terms/">Terms of Service</a>.</small></p>
+
+                    <p class="text-muted text-center m-t-xl">
+                        <small>Microsoft Outlook customer?</small>
+                    </p>
+                    <div class="text-center"><a class="btn btn-sm btn-white" href="http://resources.contextsmith.com/exchange">Sign up on our waitlist</a></div>
+                <% end %>
             </div>
         </div>
     </div>
+
+    <% unless params[:c] %>
     <hr class="m-t-xl m-b-xl"/>
     <div class="row">
       <h2 class="m-b-md"> Frequently Asked Questions</h2>
@@ -58,10 +75,11 @@
         <p>Absolutely not. We protect the privacy of customer data. Your contact information and email data are yours alone and safe with us. We send out emails about product updates and helpful content, but you can opt out at any time. Here’s our <a href="https://www.contextsmith.com/privacy/">privacy policy</a>.</p>
       </div>
     </div>
+    <% end %>
 
     <hr />
     <div class="row text-center">
-        <p class="m-t"><small><a href="http://www.contextsmith.com">ContextSmith.com</a> &nbsp;&nbsp;Made in Mountain View, California</small> </p>
+        <p class="m-t"><small><a href="http://www.contextsmith.com">ContextSmith.com</a></small> </p>
       <p><a href="https://www.contextsmith.com/privacy/">Privacy</a> | <a href="https://www.contextsmith.com/terms/">Terms</a></p>
     </div>
 </div>

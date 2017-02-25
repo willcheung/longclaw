@@ -113,6 +113,19 @@ class SalesforceController < ApplicationController
     end
   end
 
+  def link_salesforce_opportunity
+    # One CS Stream can link to one Salesforce Opportunity
+    salesforce_opp = SalesforceOpportunity.find_by(id: params[:salesforce_id])
+    if !salesforce_opp.nil?
+      salesforce_opp.project = Project.find_by_id(params[:project_id])
+      salesforce_opp.save
+    end
+
+    respond_to do |format|
+      format.html { redirect_to settings_salesforce_opportunities_path }
+    end
+  end
+
   def refresh_accounts
     SalesforceAccount.load(current_user.organization_id)
     render :text => ' '
@@ -124,18 +137,19 @@ class SalesforceController < ApplicationController
   end
 
   def refresh_activities
-    @streams = Project.all.is_active.includes(:salesforce_opportunities) # all active projects because "admin" role can see everything
+    @streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
     @streams.each do |s|
 
-      if s.salesforce_opportunities.empty? # Stream not linked to SF Opportunity
+      if s.salesforce_opportunity.nil? # Stream not linked to SF Opportunity
         if !s.account.salesforce_accounts.empty? # Stream linked to SF Account
           s.account.salesforce_accounts.each do |sf_a|
-            Activity.load_salesforce_activities(s, current_user.organization_id, sf_a.salesforce_account_name)
+            Activity.load_salesforce_activities(s, current_user.organization_id, sf_a.salesforce_account_id, type="Account")
           end
         end
       else # Stream linked to Opportunity
-
+        # If Stream is linked in Opportunity, then save on Opportunity level
+        Activity.load_salesforce_activities(s, current_user.organization_id, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity")
       end
     end
 
@@ -153,6 +167,20 @@ class SalesforceController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to settings_salesforce_path }
+    end
+
+  end
+
+  def remove_opportunity_link
+    salesforce_opp = SalesforceOpportunity.find_by(id: params[:id])
+
+    if !salesforce_opp.nil?
+      salesforce_opp.contextsmith_project_id = nil
+      salesforce_opp.save
+    end
+
+    respond_to do |format|
+      format.html { redirect_to settings_salesforce_opportunities_path }
     end
 
   end

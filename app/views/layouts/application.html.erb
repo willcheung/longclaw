@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ContextSmith | Enterprise Account Intelligence Platform</title>
+    <title>ContextSmith | Account Based Intelligence Platform</title>
 
     <!-- Include style per-controller - vendor plugins -->
     <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" %>
@@ -24,13 +24,13 @@
 
 
 </head>
-<body>
+<body class="top-navigation">
 
     <!-- Wrapper-->
     <div id="wrapper" class="<%= params[:controller] %>.<%= params[:action] %>">
 
         <!-- Navigation -->
-        <%= render 'layouts/navigation' %>
+        
 
         <!-- Page wraper -->
         <div id="page-wrapper" class="gray-bg <%= @extra_class %>">

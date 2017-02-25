@@ -15,18 +15,19 @@ class SalesforceService
     end
 
     client = nil
-    if(!salesforce_user.nil?)         
-      client = Restforce.new :host => hostURL,
-                             :client_id => salesforce_client_id,
-                             :client_secret => salesforce_client_secret,
-                             :oauth_token => salesforce_user.oauth_access_token,
-                             :refresh_token => salesforce_user.oauth_refresh_token,
-                             :instance_url => salesforce_user.oauth_instance_url
+    if(!salesforce_user.nil?)  
+      # Restforce gem automatically refresh access token if expired       
+      client = Restforce.new(host: hostURL,
+                             client_id: salesforce_client_id,
+                             client_secret: salesforce_client_secret,
+                             oauth_token: salesforce_user.oauth_access_token,
+                             refresh_token: salesforce_user.oauth_refresh_token,
+                             authentication_callback: Proc.new { |x| puts x.to_s },
+                             instance_url: salesforce_user.oauth_instance_url,
+                             api_version: '38.0')
       begin
         client.user_info
       rescue
-        # salesforce refresh token expires when different app use it for 5 times
-        salesforce_user.destroy
         client = nil
         puts "Error: salesforce connection error"
       end      

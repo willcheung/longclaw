@@ -1,11 +1,9 @@
-<!-- DYNAMIC CONSTANTS -->
-<% @LARGE_CIRCLE_STYLE = "width: 40px; height: 40px; border-radius: 50%; border: 1px solid #737373; opacity: 0.8; " %>
-<% @RAG_CIRCLE1_STYLE  = "background-color:#ED5565; " %>
-<% @RAG_CIRCLE2_STYLE  = "background-color:#FFA500; " %>
-<% @RAG_CIRCLE3_STYLE  = "background-color:#A1C436; " %>
-<% @RAG_NAME_TEXT1  = "Red" %>
-<% @RAG_NAME_TEXT2  = "Amber" %>
-<% @RAG_NAME_TEXT3  = "Green" %>
+<!-- DYNAMIC "CONSTANTS" for CSS styles -->
+<% @RAG_STATUS_CIRCLE_STYLE = "width: 36px; height: 36px; border-radius: 50%; border: 1px solid #737373; opacity: 0.8; " %>
+<% @RAG_RED_CIRCLE_STYLE    = "background-color:#ED5565; " %>
+<% @RAG_AMBER_CIRCLE_STYLE  = "background-color:#FFA500; " %>
+<% @RAG_GREEN_CIRCLE_STYLE  = "background-color:#A1C436; " %>
+<% @RAG_WHITE_CIRCLE_STYLE  = "background-color:#FFF; " %>
 
 <!-- Header -->
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
@@ -14,8 +12,8 @@
     <th class="center" style="width:2%;padding:0 10px;white-space:nowrap;vertical-align:middle">
       <center>
         <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">
-          Weekly Task Summary<br>
-          <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= 1.week.ago.strftime('%A, %B %d') + ' - ' + Time.current.strftime('%A, %B %d') %></span>
+          Weekly Summary<br>
+          <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= 1.week.ago.strftime('%A, %B %d') + ' - ' + Time.current.yesterday.strftime('%A, %B %d') %></span>
         </h1>
       <center>
     </th>
@@ -26,162 +24,349 @@
 
 
 <!-- Summary -->
-<div style="margin-bottom:30px">
-<% if @projects_with_tasks.empty? %>
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">No task activity this week</h2>
-<% else %>
+<div style="margin-bottom:30px;min-width:360px;max-width:540px;">
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following <%= pluralize(@projects.length, 'stream') %>:</h2>
 
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You have task activity in <%= pluralize(@projects_with_tasks.length, 'project') %>:</h2>
+  <!-- Project/stream detail -->
+  <% @projects.each.with_index do |p,i| %>
 
-  <% @projects_with_tasks.each do |p| %>
-    <% open = p.notifications.reject {|n| n.is_complete } %>
-    <% closed = p.notifications.length - open.length %>
-    <% assigned = open.select {|n| n.assign_to == @user.id }.length %>
+    <!-- Stream divider (horizontal bar) -->
+    <div style="margin:0;<% unless i == 0 %>padding:12px 0px;border-top:2px dotted #DDD;<% end %>"></div>
 
-  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px;background-color:#ffffff;vertical-align:top;">
-    <tbody>
-      <tr>
-        <td style="padding-bottom: 5px;">
-          <div style="display: inline-block; padding-top: 19px; height: 100%;">
-            <a href="<%= project_url(p) + '/tasks' %>" style="color:#179dba;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
-            <span style="margin-left:10px;font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
-          </div>
-          <% case Project.current_rag_score([p.id])[p.id] %>
-            <% when 1 %>
-              <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE1_STYLE %>
-              <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT1 %>
-            <% when 2 %>
-              <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE2_STYLE %>
-              <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT2 %>
-            <% when 3 %>
-              <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE + @RAG_CIRCLE1_STYLE %>
-              <% @RAG_NAME_TEXT =  @RAG_NAME_TEXT1 %>
-            <% else %>
-              <% @RAG_CIRCLE_STYLE = @LARGE_CIRCLE_STYLE %>
-              <% @RAG_NAME_TEXT =  "None" %>
-          <% end %>
-          <div style="display: inline-block; float: right; vertical-align: bottom; <%= @RAG_CIRCLE_STYLE %>" title="<%= @RAG_NAME_TEXT %>"></div>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
-             <tbody>
-                <tr style="border-top:1px solid #c1c1c1;width:100%">
-                 <td style="color:#37c597;font-size:40px;font-weight:bold;padding-right:8px;min-width:70px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= closed %></td>
-                 <td style="color:#37c597;font-size:16px;padding-right:10px;min-width:80px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;"><%= 'Task'.pluralize(closed) %> Completed</td>
-                 <td style="color:#898e95;font-size:40px;font-weight:bold;padding-right:8px;min-width:70px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= open.length %></td>
-                 <td style="color:#898e95;font-size:16px;padding-right:10px;min-width:50px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;"><%= 'Task'.pluralize(open.length) %> Open</td>
-                 <td style="color:#e58646;font-size:40px;font-weight:bold;padding-right:8px;min-width:70px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-align:right;line-height:initial;vertical-align:middle;"><%= assigned %></td>
-                 <td style="color:#e58646;font-size:16px;padding-right:10px;min-width:120px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;vertical-align:middle;">Open <%= 'Task'.pluralize(assigned) %> Assigned To You</td>
-                </tr>
-             </tbody>
-          </table>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div style="margin-bottom:25px;"></div>
-
-  <% end %>
-
-  <table class="row" style="margin-top:-10px;margin-bottom:25px;">
-      <tr>
-         <td style="padding: 6px; margin: 15px;">
-            <a href="<%= notifications_url %>" style="background-color:#ffffff;border:1px solid #5cb85c;border-radius:4px;color:#5cb85c;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks</a>
-         </td>
-         <td class="expander"></td>
-      </tr>
-  </table>
-<% end %>
-</div>
-
-<!-- Project Details -->
-<% unless @your_soon_tasks_count.zero? %>
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You have <%= pluralize(@your_soon_tasks_count, 'task') %> due this week:</h2>
-  <% @projects_with_tasks.each do |p| %>
-    <!-- Recent Open Notifications -->
-    <% tasks = p.notifications.select { |n| !n.is_complete && !n.original_due_date.nil? && !n.assign_to.nil? && n.original_due_date > Time.current && n.original_due_date < 7.days.from_now && n.assign_to == @user.id } %>
-    <% unless tasks.empty? %>
-
-  <div style="padding:0;margin:0;">
+    <!-- Stream Name & Metrics -->
+    <% risk_score_today = p.new_risk_score(@current_user_timezone) %>
+    <% risk_score_trend = p.new_risk_score_trend(@current_user_timezone, 7) %>
+    <% risk_score_lastweek = risk_score_trend[0].to_i %>
     
-    <!-- Project Header -->
-    <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;width:100%;text-align:left;border-collapse:collapse;border-spacing:0">
-       <tbody>
-          <tr>
-             <th style="width:1%;padding:0;white-space:nowrap;vertical-align:middle">
-                <h2 style="line-height:24px;font-weight:bold;display:inline;font-size:20px;color:black;padding-bottom:15px;padding-right:10px;margin:0"><span style="color:#525456;text-decoration:none"><%= p.name %></span></h2>
-             </th>
-             <td style="text-align:left;font-size:15px;line-height:19px;color:#000000;border-collapse:collapse;border-spacing:0;padding:0;width:49%;vertical-align:middle"></td>
-          </tr>
-       </tbody>
-    </table>
-
-    <div style="margin-top:5px;padding:0"></div>
-
-      <div style="font-size:14px;padding:0 0 6px 0;">
-            
-                <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
-                   <tbody>
-
-    <% tasks.each do |n| %>
-
-                      <tr style="padding:3px 0 3px 0;border-top:1px solid #c1c1c1;">
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
-                          <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;"></div>
-                        </td>
-                        <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
-                          <span style="font-weight:normal;font-size:14px;line-height:19px;">
-                            <%= n.name %>
-                          </span>
-                        </td>
-                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:70px;max-width:75px;padding:3px;">         
-                          <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
-                          <% if n.category == Notification::CATEGORY[:Action] %>
-                            background-color:#3C8DC5">
-                          <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
-                            background-color:#A1C436">
-                          <% elsif n.category == Notification::CATEGORY[:Todo] %>  
-                            background-color:#3cc5b9">
-                          <% else %>
-                            background-color:#e58646">
-                          <% end %>
-                            <%= n.category%>
-                          </span>
-                        </td>
-                        <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:170px;max-width:175px;padding:3px;">
-                          <span style="font-weight:normal;font-size:14px;line-height:19px;">
-                            Due: <%= n.original_due_date.strftime('%B %d, %Y') %>
-                          </span>               
-                        </td>
-                      </tr>
-
-      <% end %>
-
-                    </tbody>
-                </table>
-
-      </div>
-
-  </div>
-    
-  <table class="row" style="margin-top:-10px;margin-bottom:25px;">
-      <tr>
-         <td style="padding: 6px; margin: 15px;">
-            <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #5cb85c;border-radius:4px;color:#5cb85c;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:35px;text-align:center;text-decoration:none;width:150px;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks</a>
-         </td>
-         <td class="expander"></td>
-      </tr>
-  </table>
+    <% if risk_score_today > risk_score_lastweek %>
+      <% risk_score_chg_arrow = "Up" %>
+      <% risk_score_chg_color = "#ed5565" %>
+      <% risk_score_chg_msg   = risk_score_lastweek.to_s + " Last Week" %>
+    <% elsif risk_score_today < risk_score_lastweek %>
+      <% risk_score_chg_arrow = "Down" %>
+      <% risk_score_chg_color = "#a1c436" %>
+      <% risk_score_chg_msg   = risk_score_lastweek.to_s + " Last Week" %>
+    <% elsif risk_score_today == risk_score_lastweek %>
+      <% risk_score_chg_arrow = "-" %>
+      <% risk_score_chg_color = "#999" %>
+      <% risk_score_chg_msg   = "No change" %>
     <% end %>
 
-  <% end %>
+    <% open_tasks = p.notifications.reject { |n| n.is_complete || (n.category != Notification::CATEGORY[:Alert] && n.category != Notification::CATEGORY[:Todo])} %>
+    <% open_alerts = p.notifications.risks.reject {|n| n.is_complete } %>
+    <% open_alerts_last_week_count = p.get_alerts_in_range(@current_user_timezone,nil,7).reject {|n| n.is_complete }.count %>
+    <% alerts_pct_chg = nil %>
+    <% alerts_pct_chg = ((open_alerts.count-open_alerts_last_week_count)/open_alerts_last_week_count.to_f * 100).to_i  if open_alerts_last_week_count != 0 %>
 
-<% end %>
+    <% if alerts_pct_chg.nil? %>
+      <% if open_alerts.count == 0 %>  <!-- 0 alerts this week and last -->
+        <% alerts_chg_arrow = "-" %>
+        <% alerts_chg_color = "#999" %>
+        <% alerts_chg_msg = "No change" %>
+      <% else %>
+        <% alerts_chg_arrow = "Up" %>
+        <% alerts_chg_color = "#ed5565" %>
+        <% alerts_chg_msg = "0 Last Week" %>
+      <% end %>
+    <% elsif alerts_pct_chg > 0 %>
+      <% alerts_chg_arrow = "Up" %>
+      <% alerts_chg_color = "#ed5565" %>
+      <% alerts_chg_msg = alerts_pct_chg.to_s + "% Last Week" %>
+    <% elsif alerts_pct_chg < 0 %>
+      <% alerts_chg_arrow = "Down" %>
+      <% alerts_chg_color = "#a1c436" %>
+      <% alerts_chg_msg = (alerts_pct_chg * -1).to_s + "% Last Week" %>
+    <% elsif alerts_pct_chg == 0 %>
+      <% alerts_chg_arrow = "-" %>
+      <% alerts_chg_color = "#999" %>
+      <% alerts_chg_msg = "No change" %>
+    <% end %>
 
+    <!--  ### temp! ###
+      <% alerts_last_week = p.get_alerts_in_range(@current_user_timezone,nil,7).reject {|n| n.is_complete } %> 
+      
+      risk score trend: *[
+      <% risk_score_trend.collect do |s| %>
+        <%= s.to_i %>
+      <% end %>]*<br>
+      open alerts - this week: 
+      <% open_alerts.collect do |n| %>
+        <%= n.id %> ,
+      <% end %><br>
+      open alerts - last_week: 
+      <% alerts_last_week.collect do |n| %>
+        <%= n.id %> ,
+      <% end %><br>
+    ### temp! ### -->
 
+    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px;background-color:#FFF;vertical-align:top;">
+      <tbody>
+        <tr style="border-bottom:1px solid #c1c1c1;">
+          <td style="padding-bottom: 5px;">
+            <div style="display: inline-block; padding-top: 19px; height: 100%;">
+              <span style="color:#666;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %> stream</span>
+              <!-- ## account name-->
+              <span style="margin:0 0.4em;font-size:24px;border-left:1px solid #CCC;"></span>
+              <span style="font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
+            </div>
+            <% case Project.current_rag_score([p.id])[p.id] %>
+              <% when 1 %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_RED_CIRCLE_STYLE %>
+                <% @RAG_Status = Project::RAGSTATUS[:Red] %>
+              <% when 2 %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_AMBER_CIRCLE_STYLE %>
+                <% @RAG_Status =  Project::RAGSTATUS[:Amber] %>
+              <% when 3 %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_GREEN_CIRCLE_STYLE %>
+                <% @RAG_Status =  Project::RAGSTATUS[:Green] %>
+              <% else %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_WHITE_CIRCLE_STYLE %>
+                <% @RAG_Status =  "None" %>
+            <% end %>
+            <div style="float:right;color:#FFF">.</div> <!-- to fix Chrome bug on RAG circle-->
+            <div style="display:inline-block;float:right;margin-right:2px; <%= @RAG_CIRCLE_STYLE %>" title="Status: <%= @RAG_Status %>"></div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <table border="0" cellspacing="0" cellpadding="0">
+               <tbody>
+                  <tr>
+                    <td>
+                      <!-- 3-metric summary -->
+                      <table style="border-style:solid;border-width:1px;border-color:#c1c1c1;margin:10px 15px;padding:0.4em;border-radius:15px;display:inline-block;"> 
+                        <tbody>
+                          <tr>
+                            <td style="text-align:center;padding-bottom:6px;color:#999;text-overflow:ellipsis;font-size:19px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;border-bottom:solid;border-bottom-width:1px;">Status Summary</td>
+                          </tr>
+                          <tr>  <!-- Risks/Alerts data row -->
+                            <td> 
+                              <div style="padding:0 10px;margin:0 0.1em;">
+                                <!-- Left metric -->
+                                <span>
+                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;w">
+                                    <tr>
+                                      <!-- Risk Score -->
+                                      <td>
+                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= risk_score_today %></span>
+                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:16px;padding:4px;width:60px;height:40px;vertical-align:middle;display:inline-block;"><%= risk_level(risk_score_today) %></span>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <!-- Risk Score Last Week -->
+                                      <td style="color:<%= risk_score_chg_color %>;font-size:14px;padding-right:0px;min-width:140px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial;w">
+                                        <div>
+                                        <% if risk_score_chg_arrow == 'Up' %> 
+                                          <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
+                                        <% elsif risk_score_chg_arrow == 'Down' %>
+                                          <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
+                                        <% else %>
+                                          <%= risk_score_chg_arrow %>
+                                        <% end %>
+                                        &nbsp;&nbsp;<%=risk_score_chg_msg %>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  </table>
+                                </span>
+                                <!-- Center metric -->
+                                <span>
+                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
+                                    <tr>
+                                      <!-- Open Alerts -->
+                                      <td>
+                                        <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_alerts.count %></span>
+                                        <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Alert'.pluralize(open_alerts.count) %></span>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <!-- Open Alerts Last Week -->
+                                      <td style="color:<%= alerts_chg_color %>;font-size:14px;padding-right:0px;min-width:150px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial;w">
+                                      <% if alerts_chg_arrow == 'Up' %> 
+                                          <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
+                                        <% elsif alerts_chg_arrow == 'Down' %>
+                                          <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
+                                        <% else %>
+                                          <%= alerts_chg_arrow %>
+                                        <% end %> 
+                                        &nbsp;&nbsp;<%=alerts_chg_msg %> 
+                                      </td>
+                                    </tr>
+                                  </table>
+                                </span>
+                                <!-- Right metric -->
+                                <span>
+                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
+                                    <tr>
+                                      <!-- Open Tasks -->
+                                      <td>
+                                        <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_tasks.length %></span>
+                                        <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Task'.pluralize(open_tasks.length) %></span>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <!-- Placeholder -->
+                                      <td>&nbsp;</td>
+                                    </tr> 
+                                  </table>
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+               </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Stream updates -->
+    <div style="margin:0;">
+      <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+        <tbody style="width:100%;display:table;">
+        <% p.activities.from_lastweek.each do |a| %>
+          <tr>
+          <% activity_date = Time.at(a.last_sent_date).strftime("%b %-d, %Y %I:%M%p %Z") %>
+          <% if a.category == Activity::CATEGORY[:Note] %>
+          <!-- Notes -->
+            <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
+              <img src="<%= root_url %>/assets/images/icons/note_icon.png" title="Note sent <%= activity_date %>">
+            </td>
+            <td style="min-width:400px;">
+              <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
+              <% if a['rag_score'] == 3 %>
+                <tbody style="border-left:4px solid #A1C436">
+              <% elsif a['rag_score'] == 2 %>
+                <tbody style="border-left:4px solid #FFA500">
+              <% elsif a['rag_score'] == 1 %>
+                <tbody style="border-left:4px solid #e7182d">
+              <% else %>
+                <tbody>
+              <% end %>
+                    <tr>
+                      <td style="font-size:13px;text-align:left;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px 8px 0;">
+                        <strong><%= get_full_name(a.user) %></strong> wrote a note:
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;text-align:left;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px;">
+                        <% if a.note.length != 0 %>
+                          <%= a.note %>
+                        <% else %> 
+                          <%= rag_note(a['rag_score']) %> <!--placeholder-->
+                        <% end %>
+                      </td>
+                    </tr>
+                  </tbody>
+              </table>
+            </td>
+          <% elsif a.category == Activity::CATEGORY[:Conversation] %>
+          <!-- Conversations (not included) -->
+          <% elsif a.category == Activity::CATEGORY[:Meeting] %>
+          <!-- Meetings (not included) -->
+          <% elsif a.category == Activity::CATEGORY[:JIRA] %>
+          <!-- JIRA (not included) -->
+          <% elsif a.category == Activity::CATEGORY[:Zendesk] %>
+          <!-- Zendesk (not included) -->
+          <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
+          <!-- Salesforce (not included) -->
+          <% end %>
+          </tr>
+        <% end %>  <!-- END: do p.activities.from_lastweek.each -->
+        </tbody>
+      </table>
+    </div> <!-- END: Stream Updates -->
+
+    <!-- "Open Alerts & Next Steps" (Tasks) -->
+    <div style="margin:0;font-size:14px;">
+    <% if open_tasks.empty? %>
+      <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No Open Alerts or Next Steps.</span>
+    <% else %>
+      <!-- List title/header -->
+      <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+        <tbody style="width:100%;display:table;">
+          <tr>
+            <td style="vertical-align:middle;">
+              <span style="font-size:15px;font-weight:bold;">Open Alerts & Next Steps:</span>
+            </td>
+            <td class="expander"></td>
+            <td style="padding:6px;text-align:right;">
+              <a href="<%= project_url(p.id) + '/tasks' %>" style="display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks »</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- List alerts -->
+      <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
+        <tbody>
+          <% open_tasks.each do |n| %>
+            <tr style="margin-bottom:10em;">
+              <td style="text-align:left;font-size:15px;line-height:15px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20px;min-width:20px;max-width:20px;padding:3px;">
+                <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;font-size:18px;"><%= '✔' if n.is_complete %></div>
+              </td>
+              <td>
+                <table>
+                  <tr>
+                    <td style="text-align:left;font-size:15px;line-height:14px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                      <span style="font-weight:normal;font-size:14px;line-height:15px;">
+                        <%= n.name %>
+                      </span>
+                      <% if n.category == Notification::CATEGORY[:Alert] %>
+                        <!-- Alert notification detail -->
+                        <div style="font-size:10px;color:grey;line-height:12px;margin-top:-11px">
+                        <% if n.description.length > 230 %>
+                          <br><%= n.description[0,229] %>&#8230;
+                        <% else %>
+                          <br><%= n.description %>
+                        <% end %>
+                        </div>
+                      <% end %>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="line-height:12px;padding-bottom:12px;border-collapse:collapse;">
+                      <span style="text-align:left;border-spacing:0;vertical-align:top;width:85px;min-width:80px;max-width:85px;padding:0 3px;">
+                        <span style="font-size:10px;font-weight:600;padding:1px 5px;text-shadow:none;background-color:white;border-radius:0.25em;min-width:80px;max-width:80px;color:
+                        <% if n.category == Notification::CATEGORY[:Action] %>
+                          #3C8DC5;border:2px #3C8DC5
+                        <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                          #A1C436;border:2px #A1C436
+                        <% elsif n.category == Notification::CATEGORY[:Todo] %>
+                          #3CC5B9;border:2px #3CC5B9
+                        <% else #n.category == Notification::CATEGORY[:Alert] %> 
+                          #ED5565;border:2px #ED5565 
+                        <% end %> solid">
+                          <%= n.category %></span>
+                      </span>
+                      <span style="color:#999;font-weight:normal;text-align:right;font-size:12px;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px;padding:3px;">
+                        Assigned to: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          <% end %> <!-- End: open_tasks.each do |n| -->
+        </tbody>
+      </table>
+    <% end %>  <!-- End: Open Alerts & Tasks  -->
+    </div>
+
+    <!-- "See more of this Stream" button -->
+    <div style="height:40px;width:100%;margin:2px auto;">
+      <span style="margin-left:<%=12-(p.name.length/4)%>em;">
+        <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 7px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream &rarr;</a> 
+      </span>
+    </div>
+
+  <% end %> <!-- End: Do @projects.each (Project/stream detail) -->
+</div>
+
+<!-- Customer Feedback request -->
 <table class="row callout" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px; margin-bottom: 20px;">
   <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
      <td class="wrapper last" align="left" valign="top">
@@ -192,7 +377,7 @@
                   Want to receive your team's task summary in this email? 
                   <a href="<%= settings_url %>" style="background-color:#3C8DC5;border-radius:4px;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;width:90px;-webkit-text-size-adjust:none;">Invite team</a>
                   <br/><br/>
-                  We'd love to hear your feedback! Please email us at <a style="color: #2ba6cb; text-decoration: none;" href="mailto:support@contextsmith.com?subject=Feedback!">support@contextsmith.com</a> or follow us on <a style="color: #2ba6cb; text-decoration: none;" href="https://twitter.com/ContextSmith" target="_blank">Twitter</a> for updates.
+                  How can we make ContextSmith more useful for you? We'd love to hear your feedback! Please send us a note at <a style="color: #2ba6cb; text-decoration: none;" href="mailto:support@contextsmith.com?subject=Feedback!">support@contextsmith.com</a> or follow us on <a style="color: #2ba6cb; text-decoration: none;" href="https://twitter.com/ContextSmith" target="_blank">Twitter</a> for updates.
                 </p>
               </td>
               <td class="expander"></td>
@@ -204,5 +389,5 @@
 
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
 <tr><td><p style="color:#333;font-weight: normal; text-align: left; line-height: 20px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="center">
-<a target="_blank" href="<%= projects_url %>">You can "Follow" or "Unfollow" Streams here</a>.
+Click <a target="_blank" href="<%= projects_url %>"><span style="text-decoration:underline">here to Subscribe or Unsubscribe</span></a> to weekly and daily stream alerts.
 </p></td></tr></table>

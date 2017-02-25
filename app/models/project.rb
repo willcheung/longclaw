@@ -2,24 +2,32 @@
 #
 # Table name: projects
 #
-#  id             :uuid             not null, primary key
-#  name           :string           default(""), not null
-#  account_id     :uuid
-#  project_code   :string
-#  is_public      :boolean          default(TRUE)
-#  status         :string           default("Active")
-#  description    :text
-#  start_date     :date
-#  end_date       :date
-#  budgeted_hours :integer
-#  created_by     :uuid
-#  updated_by     :uuid
-#  owner_id       :uuid
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  is_confirmed   :boolean
-#  category       :string           default("Implementation")
-#  deleted_at     :datetime
+#  id                  :uuid             not null, primary key
+#  name                :string           default(""), not null
+#  account_id          :uuid
+#  project_code        :string
+#  is_public           :boolean          default(TRUE)
+#  status              :string           default("Active")
+#  description         :text
+#  start_date          :date
+#  end_date            :date
+#  budgeted_hours      :integer
+#  created_by          :uuid
+#  updated_by          :uuid
+#  owner_id            :uuid
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  is_confirmed        :boolean
+#  category            :string           default("Implementation")
+#  deleted_at          :datetime
+#  renewal_date        :date
+#  contract_start_date :date
+#  contract_end_date   :date
+#  contract_arr        :decimal(14, 2)
+#  contract_mrr        :decimal(12, 2)
+#  renewal_count       :integer
+#  has_case_study      :boolean          default(FALSE), not null
+#  is_referenceable    :boolean          default(FALSE), not null
 #
 # Indexes
 #
@@ -31,28 +39,41 @@ include Utils
 include ContextSmithParser
 
 class Project < ActiveRecord::Base
+  after_create  :create_custom_fields
 
   belongs_to  :account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
-  has_many  :notifications_for_email, -> {
+  has_many  :notifications_for_daily_email, -> {
     where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc)
     .order(:is_complete, :original_due_date)
   }, class_name: "Notification"
+  #has_many  :notifications_for_weekly_email, -> {
+  #  where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc - 1.weeks, Time.current.yesterday.end_of_day.utc)
+  #  .order(:is_complete, :original_due_date)
+  #}, class_name: "Notification"
 
   has_many  :activities, -> { reverse_chronological }, dependent: :destroy
   has_many  :conversations, -> { conversations.reverse_chronological }, class_name: "Activity"
   has_many  :notes, -> { notes.reverse_chronological }, class_name: "Activity"
   has_many  :meetings, -> { meetings.reverse_chronological }, class_name: "Activity"
-  has_many  :conversations_for_email, -> {
+  has_many  :conversations_for_daily_email, -> {
     from_yesterday.reverse_chronological.conversations
     .select(:category, :title, :from, :to, :cc, :project_id, :last_sent_date, :is_public,
       'jsonb_array_length(email_messages) AS num_messages',
       'email_messages->-1 AS last_msg') }, class_name: "Activity"
-  has_many  :other_activities_for_email, -> {
+  #has_many  :conversations_for_weekly_email, -> {
+  #  from_lastweek.reverse_chronological.conversations
+  #  .select(:category, :title, :from, :to, :cc, :project_id, :last_sent_date, :is_public,
+  #    'jsonb_array_length(email_messages) AS num_messages',
+  #    'email_messages->-1 AS last_msg') }, class_name: "Activity"
+  has_many  :other_activities_for_daily_email, -> {
     from_yesterday.reverse_chronological
     .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
+  #has_many  :other_activities_for_weekly_email, -> {
+  #  from_lastweek.reverse_chronological
+  #  .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
 
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -64,13 +85,20 @@ class Project < ActiveRecord::Base
   has_many  :users, through: "project_members"
   has_many  :users_all, through: "project_members_all", source: :user
 
-  has_many  :salesforce_opportunities, foreign_key: "contextsmith_project_id", dependent: :nullify
+  has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify
+  has_many :custom_fields, as: :customizable, foreign_key: "customizable_uuid", dependent: :destroy
 
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
         .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
         .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
                organization_id, user_id, user_id)
+        .group('projects.id')
+  }
+  scope :visible_to_admin, -> (organization_id) {
+    select('DISTINCT(projects.*)')
+        .joins(:account)
+        .where('accounts.organization_id = ?', organization_id)
         .group('projects.id')
   }
   scope :owner_of, -> (user_id) {
@@ -91,11 +119,12 @@ class Project < ActiveRecord::Base
   
   scope :is_active, -> {where("projects.status = 'Active'")}
 
-  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an project with the same name." }
+  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
   validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
-  CATEGORY = { Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
@@ -245,6 +274,9 @@ class Project < ActiveRecord::Base
 
   def self.new_risk_score(array_of_project_ids, time_zone)
     projects = Project.where(id: array_of_project_ids).group('projects.id')
+
+    return [] if projects.empty?   # quit early if there are no projects
+
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
@@ -319,7 +351,7 @@ class Project < ActiveRecord::Base
         if engagement.zero?
           0
         else
-          risks = total_engagement.where(created_at: Time.at(0)..date)
+          risks = total_engagement.where(last_sent_date: Time.at(0)..date)
             .select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
             .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
           Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
@@ -504,6 +536,17 @@ class Project < ActiveRecord::Base
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      )
+      UNION ALL
+      (
+      -- Zendesk
+      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:Alert]}' as category,
+            count(*) as activity_count
+      FROM activities
+      WHERE category = '#{Activity::CATEGORY[:Alert]}' and project_id = '#{self.id}'
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
       )
@@ -734,7 +777,7 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-
+  # Currently this is no longer called during the onboarding process; user must manually create streams. 
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
@@ -770,10 +813,10 @@ class Project < ActiveRecord::Base
         # Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
         # project.subscribers.create(user_id: user_id)
 
-        # Project conversations
+        # Upsert project conversations.
         Activity.load(get_project_conversations(data, p), project, true, user_id)
 
-        # Load Smart Tasks
+        # Upsert/load Smart Tasks.
         Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
@@ -781,11 +824,11 @@ class Project < ActiveRecord::Base
         # Also removing the rake scheduler for this.  Will need to think of a better solution to surface this.
         # Notification.load_opportunity_for_stale_projects(project)
 
-        # Project meetings
+        # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
-			end
-		end
-	end
+      end
+    end
+  end  #End: self.create_from_clusters()
 
   # Top Movers
   def self.calculate_pct_from_prev(projects, projects_prev)
@@ -825,6 +868,17 @@ class Project < ActiveRecord::Base
     self.activities.each { |a| a.email_replace_all(email1, email2) }
   end
 
+  # Retreives Alerts in the project's Notifications with a created_at date within the specified range.
+  # days_ago_start: start of created_at date range in number of days ago from today (default:"earliest date possible")
+  # days_ago_end: end of created_at date range in number of days ago from today, non-inclusive! (default:"yesterday")
+  def get_alerts_in_range(time_zone, days_ago_start=nil, days_ago_end=0)
+    if (days_ago_start.nil?)
+      self.notifications.risks.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+    else
+      self.notifications.risks.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+    end
+  end
+
   private
 
   def self.calculate_score_by_setting(metric, setting)
@@ -844,4 +898,8 @@ class Project < ActiveRecord::Base
     end
   end
 
+  # Create all custom fields for a new Stream
+  def create_custom_fields
+    CustomFieldsMetadatum.where(organization:self.account.organization, entity_type: "Project").each { |cfm| CustomField.create(organization:self.account.organization, custom_fields_metadatum:cfm, customizable:self) }
+  end
 end

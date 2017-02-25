@@ -44,6 +44,7 @@ class Activity < ActiveRecord::Base
   scope :notes, -> { where category: CATEGORY[:Note] }
   scope :meetings, -> { where category: CATEGORY[:Meeting] }
   scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
+  scope :from_lastweek, -> { where last_sent_date: (Time.current.yesterday.midnight - 1.weeks)..Time.current.yesterday.end_of_day }
   scope :reverse_chronological, -> { order last_sent_date: :desc }
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
@@ -57,7 +58,7 @@ class Activity < ActiveRecord::Base
                   }
 
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert'}
 
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
@@ -184,11 +185,15 @@ class Activity < ActiveRecord::Base
   end
 
 
-  def self.load_salesforce_activities(project, organization_id, account_name, limit=200)
+  def self.load_salesforce_activities(project, organization_id, sfdc_id, type="Account", limit=200)
     val = []
 
     client = SalesforceService.connect_salesforce(organization_id)
-    query_statement = "select Name, (select Id, ActivityDate, ActivityType, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Name='#{account_name}'"
+    if type == "Account"
+      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Id='#{sfdc_id}'"
+    elsif type == "Opportunity"
+      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Opportunity where Id='#{sfdc_id}'"
+    end
 
     activities = SalesforceService.query_salesforce(client, query_statement)
 
@@ -201,6 +206,7 @@ class Activity < ActiveRecord::Base
                      '[#{owner.to_json}]',
                      '[]',
                      '[]',
+                     #{Activity.sanitize([c].to_json)},
                      #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)},
                      '#{Time.now}', '#{Time.now}')"
           end
@@ -208,8 +214,8 @@ class Activity < ActiveRecord::Base
       end
     end
 
-    insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "note", "created_at", "updated_at") VALUES'
-    on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note'
+    insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "note", "created_at", "updated_at") VALUES'
+    on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages'
     values = val.join(', ')
 
     if !val.empty?

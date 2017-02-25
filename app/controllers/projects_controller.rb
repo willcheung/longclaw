@@ -5,6 +5,7 @@ class ProjectsController < ApplicationController
   before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
+  before_action :get_custom_fields_and_lists, only: [:index, :show, :pinned_tab, :tasks_tab, :arg_tab, :insights_tab]
 
   # GET /projects
   # GET /projects.json
@@ -30,9 +31,10 @@ class ProjectsController < ApplicationController
     end
 
     # all projects and their accounts, sorted by account name alphabetically
-    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins(:activities, "LEFT JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN activities ON projects.id = activities.project_id LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+
     
-    unless projects.empty?  #@projects.empty  should be that?
+    unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @metrics = Project.count_activities_by_day(7, projects.map(&:id))
@@ -101,6 +103,10 @@ class ProjectsController < ApplicationController
       end
     end
 
+    #Shows the total email usage report
+    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
+    @meeting_report = User.meeting_team_report([@project.account.id], @in_outbound_report['email'])
+    
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
     user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)
@@ -158,9 +164,10 @@ class ProjectsController < ApplicationController
   def refresh
     # big refresh when no activities (normally a new stream), small refresh otherwise
     if @project.activities.count == 0
+      puts "<><> Big asynchronous refresh incoming... <><>"
       ContextsmithService.load_emails_from_backend(@project, 2000)
       ContextsmithService.load_calendar_from_backend(@project, 1000)
-      # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
+      # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work
     else
       ContextsmithService.load_emails_from_backend(@project)
       ContextsmithService.load_calendar_from_backend(@project, 100, 1.day.ago.to_i)
@@ -191,29 +198,43 @@ class ProjectsController < ApplicationController
                                                 created_by: current_user.id,
                                                 updated_by: current_user.id
                                                 ))
-
-    members = @project.account.contacts
-    members.each do |input|
-      new_member = @project.project_members.new(contact: input)
-    end
     @project.project_members.new(user: current_user)
     @project.subscribers.new(user: current_user)
-    respond_to do |format|
-      if @project.save
-        # Big First Refresh, potentially won't need big refresh in the refresh method above
-        ContextsmithService.load_emails_from_backend(@project, 2000)
-        ContextsmithService.load_calendar_from_backend(@project, 1000)
-        format.html { redirect_to @project, notice: 'Project was successfully created.' }
-        format.js
-        #format.json { render action: 'show', status: :created, location: @project }
-      else
-        format.html { render action: 'new' }
-        format.js { render json: @project.errors, status: :unprocessable_entity }
-        #format.json { render json: @project.errors, status: :unprocessable_entity }
-      end
-    end
-  end
 
+      respond_to do |format|
+        if params[:commit] == 'Create Stream' 
+          members = @project.account.contacts
+            members.each do |input|
+              new_member = @project.project_members.new(contact: input)
+            end
+          if @project.save
+            #Big First Refresh, potentially won't need big refresh in the refresh method above
+            #ContextsmithService.load_emails_from_backend(@project, nil, 2000)
+            #ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000)
+            ContextsmithService.load_emails_from_backend(@project, 2000)
+            ContextsmithService.load_calendar_from_backend(@project, 1000)
+            format.html { redirect_to @project, notice: 'Project was successfully created.' }
+            format.js
+            #format.json { render action: 'show', status: :created, location: @project }
+          else
+            format.html { render action: 'new' }
+            format.js { render json: @project.errors, status: :unprocessable_entity }
+            #format.json { render json: @project.errors, status: :unprocessable_entity }
+          end
+        else params[:commit] == 'Custom Stream'
+          if @project.save
+            format.html { redirect_to @project, notice: 'Project was successfully created.' }
+            format.js
+            #format.json { render action: 'show', status: :created, location: @project 
+          else
+            puts "Fail project saved"
+            format.html { render action: 'new' }
+            format.js { render json: @project.errors, status: :unprocessable_entity }
+            #format.json { render json: @project.errors, status: :unprocessable_entity }
+          end
+        end
+      end 
+  end
 
   # PATCH/PUT /projects/1
   # PATCH/PUT /projects/1.json
@@ -366,7 +387,7 @@ class ProjectsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def project_params
-    params.require(:project).permit(:name, :description, :is_public, :project_code, :account_id, :budgeted_hours, :owner_id, :category)
+    params.require(:project).permit(:name, :description, :is_public, :project_code, :account_id, :budgeted_hours, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :contract_mrr, :renewal_count, :has_case_study, :is_referenceable)
   end
 
   # A list of the param names that can be used for filtering the Project list
@@ -374,4 +395,10 @@ class ProjectsController < ApplicationController
     params.slice(:status, :location, :starts_with)
   end
 
+  def get_custom_fields_and_lists
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    @custom_lists = current_user.organization.get_custom_lists_with_options
+    @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}
+  end
 end

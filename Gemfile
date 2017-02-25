@@ -11,19 +11,20 @@ gem 'sass-rails', '~>5.0.4'       # Use SCSS for stylesheets
 gem 'jbuilder', '~> 1.2' 					# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'devise', '~> 3.4.1' 					# User Authentication
 gem "omniauth-google-oauth2", :git => 'https://github.com/zquestz/omniauth-google-oauth2', :branch => 'master'
+gem 'hashie', '~> 3.4.3'
 gem "jquery-rails"
 gem 'best_in_place', '~> 3.1.0'
 gem 'ahoy_email'
 gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankane/ahoy
 gem 'puma'                        # Web server
-gem 'whois'
 gem 'acts_as_commentable'
 gem 'pg_search'
 # gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
-gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
+# gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
 gem 'omniauth-salesforce'
-gem 'restforce', '~> 2.4.2'  #saleforce REST gem
+gem 'restforce', '~> 2.5.0'  #saleforce REST gem
 gem 'd3-rails', '~> 3.5'          # Use D3 for cool data visualizations
+gem 'slack-notifier'
 
 # Gems used only for assets and not required
 # in production environments by default.

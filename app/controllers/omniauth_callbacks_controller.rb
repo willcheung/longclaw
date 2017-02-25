@@ -10,7 +10,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
 	def google_oauth2
-    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com rcwang@gmail.com sdyong88@gmail.com)
+    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com)
     auth = request.env["omniauth.auth"]
 
     if auth.info.email.include?('gmail.com') and !allowed_emails.include?(auth.info.email)
@@ -22,13 +22,13 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     if @user.persisted?
     	session["devise.google_data"] = auth
-      logger.info "Google devise.omniauth_callbacks.success for user " + @user.email
+      puts "Google devise.omniauth_callbacks.success for user " + @user.email
       flash[:notice] = "Welcome, #{@user.first_name}!"
 
       sign_in_and_redirect @user, :event => :authentication
     else
       reset_session
-  		logger.error "Can't persist user!"
+  		puts "Can't persist user!"
       ahoy.track("Error logging in", message: "Can't persist user!")
   		redirect_to new_user_registration_path
     end
@@ -52,8 +52,8 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   def failure
   	reset_session
-  	logger.error "Can't verify Google!"
-    ahoy.track("Error logging in", message: "Can't verify Google!")
+  	puts "Error: Oauth verification failure!"
+    ahoy.track("Error logging in", message: "Oauth verification failure!")
   	redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
   end
 

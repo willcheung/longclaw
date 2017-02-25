@@ -12,25 +12,20 @@
 #  is_won                    :boolean
 #  stage_name                :string
 #  close_date                :date
-#  renewal_date              :date
-#  contract_start_date       :date
-#  contract_end_date         :date
-#  contract_arr              :decimal(8, 2)
-#  contract_mrr              :decimal(8, 2)
-#  custom_fields             :hstore
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  contextsmith_project_id   :uuid
+#  probability               :decimal(5, 2)
+#  expected_revenue          :decimal(14, 2)
 #
 # Indexes
 #
-#  index_salesforce_opportunities_on_custom_fields              (custom_fields)
 #  index_salesforce_opportunities_on_salesforce_opportunity_id  (salesforce_opportunity_id) UNIQUE
 #
 
 class SalesforceOpportunity < ActiveRecord::Base
-	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id"
-  belongs_to  :projects, foreign_key: "contextsmith_project_id"
+	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id", primary_key: "salesforce_account_id"
+  belongs_to  :project, foreign_key: "contextsmith_project_id"
 
 	def self.load(organization_id, query_range=500)
   	val = []

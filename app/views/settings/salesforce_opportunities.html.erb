@@ -47,11 +47,11 @@
                 </div>
                 <div class="salesforce_account col-lg-4" style="margin-right:0px; margin-left:15px; padding:0px; display: inline;">
                   
-                  <%= form_tag("/link_salesforce/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
+                  <%= form_tag("/link_salesforce_opportunity/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
                     <div class="col-lg-11">
-                      <input type="search" name="salesforce_id" id="salesforce-search" class="contacts z-top salesforce-search" placeholder="Link to a Salesforce Opportunity">
+                      <input type="search" name="salesforce_id" id="salesforce-opportunity-search" class="contacts z-top salesforce-search" placeholder="Link to a Salesforce Opportunity">
                     </div>
-                    <input name="account_id" type="hidden" value="">     
+                    <input name="project_id" type="hidden" value="">     
                     <div class="col-lg-1" style="margin:0px; padding-left:0px; padding-top:3px;">                      
                       <input type="submit" name="commit" value="Link" class="btn btn-primary btn-sm">            
                     </div>                  
@@ -65,20 +65,20 @@
                   <thead>
                       <tr>
                           <th>ContextSmith Stream</th>
+                          <th>Salesforce Account</th>
                           <th>Salesforce Opportunity</th>
-                          <th>Additional settings</th>
                           <th></th>
                       </tr>
                   </thead>
                   <tbody>
-
+                    <% @salesforce_link_opps.each do |opp| %>
                       <tr>
-                        <td class="col-lg-4"></td>
-                        <td class="col-lg-4"></td>
-                        <td class="col-lg-4"></td>
-                        <td><a href="#"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
+                        <td class="col-lg-4"><%= opp.project.name %></td>
+                        <td class="col-lg-4"><%= opp.salesforce_account.salesforce_account_name %></td>
+                        <td class="col-lg-4"><%= opp.name %></td>
+                        <td><a href="/delete_salesforce_opportunity/<%=opp.id%>" data-method="delete"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
                       </tr>
-
+                    <% end %>
                   </tbody>
               </table>
             <%end%>
@@ -91,10 +91,10 @@
 $('.contextsmith_account_box').on('change',function(evt,params){
   if(params){
     $(".salesforce_account").show();
-    $('input[name=account_id]').val(params["selected"]);
+    $('input[name=project_id]').val(params["selected"]);
   }
   else{
-    $('input[name=account_id]').val('');
+    $('input[name=project_id]').val('');
     $(".salesforce_account").hide();
   }    
 });

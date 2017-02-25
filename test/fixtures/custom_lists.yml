@@ -1,0 +1,15 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  organization: 
+  custom_list_metadata_id: 1
+  name: MyString
+  option_id: 1
+  option_value: MyString
+
+two:
+  organization: 
+  custom_list_metadata_id: 1
+  name: MyString
+  option_id: 1
+  option_value: MyString

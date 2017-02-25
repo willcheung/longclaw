@@ -8,6 +8,6 @@ $('#ps-<%= params[:type] %>-subs').text(Number($('#ps-<%= params[:type] %>-subs'
 
 // Stream projects#show page: update unfollow -> follow button
 <% if @self_unsubscribe %>
-  $('#project-show-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow #{params[:type]}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-show-follow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm" %>');
+  $('#project-show-unfollow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-bell-o\"></i> Follow #{params[:type]}".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id) + "&type=#{params[:type]}", remote: true, method: :post, id: "project-show-follow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm", title: "Follow #{params[:type]}" %>');
   $("#project-show-follow-daily-<%= @project.id %>").addClass("m-l-md");
 <% end %>

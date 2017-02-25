@@ -1,5 +1,6 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: [:show, :edit, :update, :destroy, :set_salesforce_account] 
+  before_action :get_custom_fields_and_lists, only: [:index, :show]
 
   # GET /accounts
   # GET /accounts.json
@@ -15,7 +16,7 @@ class AccountsController < ApplicationController
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? and (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
 
-    @owners = User.where(organization_id: current_user.organization_id) 
+    @owners = User.where(organization_id: current_user.organization_id)
   end
 
   # GET /accounts/1
@@ -28,6 +29,8 @@ class AccountsController < ApplicationController
 
     @account_contacts = @account.contacts
     @project = Project.new(account: @account)
+
+    @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}  #need this for New Stream modal
   end
 
   # GET /accounts/new
@@ -47,7 +50,6 @@ class AccountsController < ApplicationController
                                                 updated_by: current_user.id,
                                                 organization_id: current_user.organization.id,
                                                 status: 'Active'))
-
     respond_to do |format|
       if @account.save
         format.html { redirect_to @account, notice: 'Account was successfully created.' }
@@ -134,6 +136,11 @@ class AccountsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def account_params
-      params.require(:account).permit(:name, :website, :phone, :description, :address, :category)
+      params.require(:account).permit(:name, :website, :phone, :description, :address, :category, :revenue_potential)
+    end
+
+    def get_custom_fields_and_lists
+      @custom_lists = current_user.organization.get_custom_lists_with_options
+      @account_types = !@custom_lists.blank? ? @custom_lists["Account Type"] : {}
     end
 end

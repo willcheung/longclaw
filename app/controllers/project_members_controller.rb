@@ -46,7 +46,7 @@ class ProjectMembersController < ApplicationController
       if project_member.save
         @project_members.push(project_member)
       else
-        logger.error("Add project member fail!")
+        puts "Error: Add project member fail!"
         ahoy.track("Error add project member", message: project_member.errors.full_messages)
         # puts project_member.errors.full_messages
       end

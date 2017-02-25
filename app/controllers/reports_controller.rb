@@ -1,4 +1,6 @@
 class ReportsController < ApplicationController
+  before_action :get_owners_in_org, only: [:accounts_dashboard, :dashboard_data]
+  
   def touches_by_team
     # TODO: find way to get number of projects for each user listed here
     @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
@@ -7,14 +9,28 @@ class ReportsController < ApplicationController
 
   def accounts_dashboard
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
+    if projects.nil?
+      risk_scores = []
+    else
+      risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
+    end
     total_risk_scores = 0
+    
     @risk_scores = risk_scores.map do |r|
       proj = projects.find { |p| p.id == r[0] }
       total_risk_scores += r[1]
       Hashie::Mash.new({ id: proj.id, score: r[1], name: proj.name })
     end
-    @average = (total_risk_scores.to_f/risk_scores.length).round(1)
+    
+    if risk_scores.empty?
+      @average = 0
+    else
+      @average = (total_risk_scores.to_f/risk_scores.length).round(1)
+    end
+
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
   def dashboard_data
@@ -23,7 +39,17 @@ class ReportsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
     projects = projects.where(category: params[:category]) if params[:category]
     projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
-    @data = [] and return if projects.blank?
+
+    # Incrementally apply any filters
+    if !params[:owner].nil?
+      if params["owner"]=="none"
+        projects = projects.where(owner_id: nil)
+      elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+        projects = projects.where(owner_id: params[:owner]);
+      end
+    end 
+
+    @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
     case @sort
     when "Risk Score"
@@ -56,7 +82,7 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities*100).round(2), color: 'blue'})
       end
       @data.sort_by! { |d| d.y }.reverse!
-    when "Total Open Tasks"
+    when "Total Open Alerts"
       open_task_counts = Project.count_tasks_per_project(projects.pluck(:id))
       @data = open_task_counts.map do |r|
         Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'blue'})
@@ -103,28 +129,12 @@ class ReportsController < ApplicationController
         @risk_activity_engagement.push(a/b.to_f * 100)
       end
     end
-     #TODO: Query for usage_report finds all the read and write times from internal users
-    # Calculates the RPM(read per min) and WPM(write per min)
-    user_usage_activities = User.usage_report_by_user([@account.account.id])
-    @team_usage_report = []
-    #average reading rate
-    avg_rpm = 100 # words read per min
-    #average typing rate
-    avg_tpm = 15 #words typed per min 
-    user_usage_activities.each do |u|
-      #Check if internal user
-      if get_domain(u.email) == current_user.organization.domain
-        user = User.find_by_email(u.email)
-        u.email = get_full_name(user)
-        if user
-          y = u
-          y.inbound = u.inbound.to_i / avg_rpm
-          y.outbound = u.outbound.to_i / avg_tpm
-          @team_usage_report << y
-        end
-      end
-    end
-    @team_usage_report.sort_by!{ |a| a.outbound }
+    #TODO: Query for usage_report finds all the read and write times from internal users
+    #Metric for Interaction Time
+    # Read and Sent times
+    @in_outbound_report = User.total_team_usage_report([@account.account.id], current_user.organization.domain)
+    #Meetings in Interaction Time
+    @meeting_report = User.meeting_team_report([@account.account.id], @in_outbound_report['email'])
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
@@ -242,5 +252,12 @@ class ReportsController < ApplicationController
   end
 
   def lifecycle
+  end
+
+  #### Private helper functions ####
+  private
+
+  def get_owners_in_org
+    @owners = User.where(organization_id: current_user.organization_id)
   end
 end
