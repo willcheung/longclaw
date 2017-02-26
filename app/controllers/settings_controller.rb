@@ -127,14 +127,6 @@ class SettingsController < ApplicationController
 		end
 	end
 
-	def iframe_test
-		render layout: "empty"
-	end
-
-	def chrome_gmail_plugin
-		render layout: "empty"
-	end
-
 	private
 
 	def get_salesforce_user
