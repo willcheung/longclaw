@@ -135,95 +135,87 @@
         </tr>
         <tr>
           <td>
-            <table border="0" cellspacing="0" cellpadding="0">
-               <tbody>
-                  <tr>
-                    <td>
-                      <!-- 3-metric summary -->
-                      <table style="border:solid 1px #c1c1c1;margin-top:10px;padding:0.3em;border-radius:15px;display:inline-block;"> 
-                        <tbody>
+            <!-- 3-metric summary -->
+            <table style="border:solid 1px #c1c1c1;margin-top:10px;padding:0.3em;border-radius:15px;display:inline-block;"> 
+              <tbody>
+                <tr>
+                  <td style="text-align:center;padding-bottom:6px;color:#999;text-overflow:ellipsis;font-size:19px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;border-bottom:solid;border-bottom-width:1px;">Status Summary</td>
+                </tr>
+                <tr>  <!-- Risks/Alerts data row -->
+                  <td> 
+                    <div style="padding:0 10px;margin:0 0.1em;">
+                      <!-- Left metric -->
+                      <span>
+                        <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;w">
                           <tr>
-                            <td style="text-align:center;padding-bottom:6px;color:#999;text-overflow:ellipsis;font-size:19px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;border-bottom:solid;border-bottom-width:1px;">Status Summary</td>
+                            <!-- Risk Score -->
+                            <td>
+                              <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= risk_score_today %></span>
+                              <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:16px;padding:4px;width:60px;height:40px;vertical-align:middle;display:inline-block;"><%= risk_level(risk_score_today) %></span>
+                            </td>
                           </tr>
-                          <tr>  <!-- Risks/Alerts data row -->
-                            <td> 
-                              <div style="padding:0 10px;margin:0 0.1em;">
-                                <!-- Left metric -->
-                                <span>
-                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;w">
-                                    <tr>
-                                      <!-- Risk Score -->
-                                      <td>
-                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= risk_score_today %></span>
-                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:16px;padding:4px;width:60px;height:40px;vertical-align:middle;display:inline-block;"><%= risk_level(risk_score_today) %></span>
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <!-- Risk Score Last Week -->
-                                      <td style="color:<%= risk_score_chg_color %>;font-size:14px;padding-right:0px;min-width:140px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial;w">
-                                        <div>
-                                        <% if risk_score_chg_arrow == 'Up' %> 
-                                          <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
-                                        <% elsif risk_score_chg_arrow == 'Down' %>
-                                          <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
-                                        <% else %>
-                                          <%= risk_score_chg_arrow %>
-                                        <% end %>
-                                        &nbsp;&nbsp;<%=risk_score_chg_msg %>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  </table>
-                                </span>
-                                <!-- Center metric -->
-                                <span>
-                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
-                                    <tr>
-                                      <!-- Open Alerts -->
-                                      <td>
-                                        <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_alerts.count %></span>
-                                        <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Alert'.pluralize(open_alerts.count) %></span>
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <!-- Open Alerts Last Week -->
-                                      <td style="color:<%= alerts_chg_color %>;font-size:14px;padding-right:0px;min-width:150px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial;w">
-                                      <% if alerts_chg_arrow == 'Up' %> 
-                                          <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
-                                        <% elsif alerts_chg_arrow == 'Down' %>
-                                          <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
-                                        <% else %>
-                                          <%= alerts_chg_arrow %>
-                                        <% end %> 
-                                        &nbsp;&nbsp;<%=alerts_chg_msg %> 
-                                      </td>
-                                    </tr>
-                                  </table>
-                                </span>
-                                <!-- Right metric -->
-                                <span>
-                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
-                                    <tr>
-                                      <!-- Open Tasks -->
-                                      <td>
-                                        <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_tasks.length %></span>
-                                        <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Task'.pluralize(open_tasks.length) %></span>
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <!-- Placeholder -->
-                                      <td>&nbsp;</td>
-                                    </tr> 
-                                  </table>
-                                </span>
+                          <tr>
+                            <!-- Risk Score Last Week -->
+                            <td style="color:<%= risk_score_chg_color %>;font-size:14px;padding-right:0px;min-width:140px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial;w">
+                              <div>
+                              <% if risk_score_chg_arrow == 'Up' %> 
+                                <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
+                              <% elsif risk_score_chg_arrow == 'Down' %>
+                                <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
+                              <% else %>
+                                <%= risk_score_chg_arrow %>
+                              <% end %>
+                              &nbsp;&nbsp;<%=risk_score_chg_msg %>
                               </div>
                             </td>
                           </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-               </tbody>
+                        </table>
+                      </span>
+                      <!-- Center metric -->
+                      <span>
+                        <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
+                          <tr>
+                            <!-- Open Alerts -->
+                            <td>
+                              <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_alerts.count %></span>
+                              <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Alert'.pluralize(open_alerts.count) %></span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <!-- Open Alerts Last Week -->
+                            <td style="color:<%= alerts_chg_color %>;font-size:14px;padding-right:0px;min-width:150px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial;w">
+                            <% if alerts_chg_arrow == 'Up' %> 
+                                <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
+                              <% elsif alerts_chg_arrow == 'Down' %>
+                                <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
+                              <% else %>
+                                <%= alerts_chg_arrow %>
+                              <% end %> 
+                              &nbsp;&nbsp;<%=alerts_chg_msg %> 
+                            </td>
+                          </tr>
+                        </table>
+                      </span>
+                      <!-- Right metric -->
+                      <span>
+                        <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
+                          <tr>
+                            <!-- Open Tasks -->
+                            <td>
+                              <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_tasks.length %></span>
+                              <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Task'.pluralize(open_tasks.length) %></span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <!-- Placeholder -->
+                            <td>&nbsp;</td>
+                          </tr> 
+                        </table>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
             </table>
           </td>
         </tr>
