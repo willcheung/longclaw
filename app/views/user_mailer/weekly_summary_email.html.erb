@@ -5,6 +5,12 @@
 <% @RAG_GREEN_CIRCLE_STYLE  = "background-color:#A1C436; " %>
 <% @RAG_WHITE_CIRCLE_STYLE  = "background-color:#FFF; " %>
 
+<style>
+  .alert-detail::first-line {
+    line-height: 0;
+  }
+</style>
+
 <!-- Header -->
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
   <tr>
@@ -24,7 +30,7 @@
 
 
 <!-- Summary -->
-<div style="margin-bottom:30px;min-width:360px;max-width:540px;">
+<div style="margin-bottom:30px;min-width:560px;max-width:100%;">
   <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following <%= pluralize(@projects.length, 'stream') %>:</h2>
 
   <!-- Project/stream detail -->
@@ -99,7 +105,7 @@
       <% end %><br>
     ### temp! ### -->
 
-    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px;background-color:#FFF;vertical-align:top;">
+    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;background-color:#FFF;vertical-align:top;">
       <tbody>
         <tr style="border-bottom:1px solid #c1c1c1;">
           <td style="padding-bottom: 5px;">
@@ -134,7 +140,7 @@
                   <tr>
                     <td>
                       <!-- 3-metric summary -->
-                      <table style="border-style:solid;border-width:1px;border-color:#c1c1c1;margin:10px 15px;padding:0.4em;border-radius:15px;display:inline-block;"> 
+                      <table style="border:solid 1px #c1c1c1;margin-top:10px;padding:0.3em;border-radius:15px;display:inline-block;"> 
                         <tbody>
                           <tr>
                             <td style="text-align:center;padding-bottom:6px;color:#999;text-overflow:ellipsis;font-size:19px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;border-bottom:solid;border-bottom-width:1px;">Status Summary</td>
@@ -317,13 +323,13 @@
                       </span>
                       <% if n.category == Notification::CATEGORY[:Alert] %>
                         <!-- Alert notification detail -->
-                        <div style="font-size:10px;color:grey;line-height:12px;margin-top:-11px">
+                        <p class="alert-detail" style="font-size:10px;color:grey;line-height:12px;margin-top:0px">
                         <% if n.description.length > 230 %>
                           <br><%= n.description[0,229] %>&#8230;
                         <% else %>
                           <br><%= n.description %>
                         <% end %>
-                        </div>
+                        </p>
                       <% end %>
                     </td>
                   </tr>
@@ -358,7 +364,7 @@
 
     <!-- "See more of this Stream" button -->
     <div style="height:40px;width:100%;margin:2px auto;">
-      <span style="margin-left:<%=12-(p.name.length/4)%>em;">
+      <span style="margin-left:<%=16-(p.name.length/4)%>em;">
         <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 7px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream &rarr;</a> 
       </span>
     </div>
