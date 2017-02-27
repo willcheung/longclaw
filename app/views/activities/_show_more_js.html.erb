@@ -13,7 +13,7 @@ $(document).ready(function() {
     });
 
 
-  <% if a.category == Activity::CATEGORY[:Conversation] && params[:action] != "daily_summary" %>
+  <% if a.category == Activity::CATEGORY[:Conversation] && params[:action] == "show" %>
   
     $(".tasks-link-<%= a.id %>").click(function() {
         $(".tasks-footer-<%= a.id %>").toggle();

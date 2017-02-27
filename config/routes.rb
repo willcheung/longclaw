@@ -57,8 +57,6 @@ Longclaw::Application.routes.draw do
       get "salesforce_activities" 
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
-      get "iframe_test"
-      get "chrome_gmail_plugin"
     end
 
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
@@ -89,6 +87,17 @@ Longclaw::Application.routes.draw do
       get 'accounts_dashboard'
       get 'dashboard_data/:sort' => 'reports#dashboard_data'
       get 'account_data/:id' => 'reports#account_data'
+    end
+
+    scope "extension", controller: :extension, as: 'extension' do
+      get '/' => 'extension#index'
+      get 'test'
+      get 'account'
+      get 'alerts_tasks'
+      get 'contacts'
+      get 'metrics'
+      get 'no_account/:domain', to: 'extension#no_account', as: :no_account
+      post 'create_account'
     end
 
     resources :custom_fields, only: [:update]

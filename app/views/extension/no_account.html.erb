@@ -1,0 +1,9 @@
+<h3><%= @domain %></h3>
+<h3 class="text-mute-gray">Account: <%= @domain %></h3>
+
+<hr class="m-t-xs m-b-sm">
+
+<h3>This account is not in ContextSmith.</h3>
+<%= link_to "Create #{@domain}", '#new_account_modal', 'data-toggle' => 'modal', class: 'btn btn-primary' %>
+
+<%= render 'accounts/modal', modal_id: 'new_account_modal' %>
