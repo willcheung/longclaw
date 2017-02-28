@@ -5,12 +5,6 @@
 <% @RAG_GREEN_CIRCLE_STYLE  = "background-color:#A1C436; " %>
 <% @RAG_WHITE_CIRCLE_STYLE  = "background-color:#FFF; " %>
 
-<style>
-  .alert-detail::first-line {
-    line-height: 0;
-  }
-</style>
-
 <!-- Header -->
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
   <tr>
@@ -286,9 +280,9 @@
     <% else %>
       <!-- List title/header -->
       <table class="row" style="font-size:14px;padding:0;margin:0;width:100%;border-collapse:collapse;">
-        <tbody style="width:100%;display:table;">
+        <tbody style="width:100%;display:table;margin-top:2em">
           <tr>
-            <td style="font-weight:bold;color:green;vertical-align:middle;">
+            <td style="font-weight:bold;color:green;vertical-align:middle">
               <span>Open Alerts & Next Steps:</span>
             </td>
             <td class="expander"></td>
@@ -315,7 +309,7 @@
                       </span>
                       <% if n.category == Notification::CATEGORY[:Alert] %>
                         <!-- Alert notification detail -->
-                        <p class="alert-detail" style="font-size:11px;color:grey;line-height:1.2;margin-top:0px">
+                        <p style="font-size:11px;color:grey;line-height:1.2;margin-top:0px">
                         <% if n.description.length > 230 %>
                           <br><%= n.description[0,229] %>&#8230;
                         <% else %>
@@ -355,8 +349,8 @@
     </div>
 
     <!-- "See more of this Stream" button -->
-    <div style="height:40px;width:100%;margin:2px auto;">
-      <span style="margin-left:<%=15-(p.name.length/4)%>em;">
+    <div style="height:40px;width:100%;margin:2em auto">
+      <span style="margin-left:<%=15-(p.name.length/4)%>em">
         <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 7px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream &rarr;</a> 
       </span>
     </div>
