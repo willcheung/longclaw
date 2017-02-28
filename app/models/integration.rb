@@ -12,6 +12,7 @@
 #
 
 class Integration < ActiveRecord::Base
+	belongs_to  :organization, foreign_key: "contextsmith_organization_id"
 	belongs_to :oauth_user
 	belongs_to :users
 

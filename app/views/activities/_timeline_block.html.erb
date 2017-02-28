@@ -164,44 +164,36 @@
               <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
               <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
             </h3>
-
             <div class="chat-discussion">
                 <% if a.email_messages.length > 1 %>
-                    <div class="more-messages">
-                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize(a.email_messages.length - 1, 'older comment') %> on BaseCamp2</a>
-                    </div>
+                  <div class="more-messages">
+                    <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize(a.email_messages.length - 1, 'older comment') %> on BaseCamp2</a>
+                  </div>
                 <% end %>
-               <% a.email_messages.reverse.each_with_index do |c, i| %>
-                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% unless a.email_messages.size - 1 == i %> style="display:none;" <% end %> >
-                    <% if c.eventable %>
-                        <div class="chat-message left">
-                            <%= get_profile_pic(c.creator.name, c.creator.name, "message-avatar") %>
-
-                            <div class="message">
-                              <% if c.action == 'commented on'%>
-                                <span class="message-author" href="#"> <%=c.creator.name %> </span> added a comment - <%=c.updated_at.to_date %>
-                                <span class="message-content"><%= simple_format(c.excerpt) %></span>
-                              <% else %>
-                                <span class="message-author" href="#"> <%=c.creator.name %> </span> created action - <%=c.updated_at.to_date %>
-                                <span class="message-content"><%= simple_format(c.summary) %></span>
-                                <%end%>
-                            </div>
-                        </div>
-                    <%end%>
-                    </div>
-
-                <% end %>
-                    
-                    <div class="action-links">
+                <% a.email_messages.reverse.each_with_index do |c, i| %>
+                  <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% unless a.email_messages.size - 1 == i %> style="display:none;" <% end %> >
+                      <% if c.eventable %>
+                      <div class="chat-message <%= is_internal_domain?(c.email_address) ? "left" : "right" %>">
+                          <%= get_profile_pic(c.creator.name, c.creator.name, "message-avatar") %>
+                          <div class="message">
+                            <% if c.action == 'commented on'%>
+                              <span class="message-author" href="#"> <%=c.creator.name %> </span> added a comment - <%=c.updated_at.to_date %>
+                              <span class="message-content"><%= simple_format(c.excerpt) %></span>
+                            <% else %>
+                              <span class="message-author" href="#"> <%=c.creator.name %> </span> created action - <%=c.updated_at.to_date %>
+                              <span class="message-content"><%= simple_format(c.summary) %></span>
+                              <%end%>
+                          </div>
+                      </div>
+                      <%end%>
+                  </div>
+                  <% end %>
+                  <div class="action-links">
                         <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
-                        &sdot;
-                          <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
-                            false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
-                            true: raw('<a>Mark Private</a>')
-                          }  %>
+                      
                         &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                         &sdot; <a href="<%=a.email_messages.first.html_url%>" target="_blank">View in BaseCamp2 <i class="fa fa-external-link"></i></a>
-                    </div><!-- action-links -->
+                  </div><!-- action-links -->
             </div> <!-- chat discussion -->
 
         <% elsif a.category == Activity::CATEGORY[:JIRA] %>

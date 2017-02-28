@@ -10,9 +10,7 @@ module ApplicationHelper
   end
 
   def is_internal_domain?(email)
-    if email.nil? 
       current_user.organization.domain.downcase == get_domain(email).downcase 
-    end
   end
 
   def green_or_red(num)
