@@ -107,8 +107,8 @@
 
     <table cellpadding="0" cellspacing="0" border="0" style="width:90%;background-color:#FFF;vertical-align:top;">
       <tbody>
-        <tr style="border-bottom:1.5px solid #c1c1c1;">
-          <td style="padding-bottom: 5px;">
+        <tr>
+          <div style="border-bottom:1px solid #c1c1c1;padding-bottom: 5px;">
             <div style="display: inline-block; padding-top: 19px; height: 100%;">
               <span style="color:#666;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %> stream</span>
               <!-- ## account name-->
@@ -131,7 +131,7 @@
             <% end %>
             <div style="float:right;color:#FFF">.</div> <!-- to fix Chrome bug on RAG circle-->
             <div style="display:inline-block;float:right;margin-right:2px; <%= @RAG_CIRCLE_STYLE %>" title="Status: <%= @RAG_Status %>"></div>
-          </td>
+          </div>
         </tr>
         <tr>
           <td>
@@ -208,7 +208,7 @@
                           </tr>
                           <tr>
                             <!-- Placeholder -->
-                            <td>&nbsp;</td>
+                            <td style="line-height:initial;">&nbsp;</td>
                           </tr> 
                         </tbody>
                       </table>
@@ -356,7 +356,7 @@
 
     <!-- "See more of this Stream" button -->
     <div style="height:40px;width:100%;margin:2px auto;">
-      <span style="margin-left:<%=16-(p.name.length/4)%>em;">
+      <span style="margin-left:<%=15-(p.name.length/4)%>em;">
         <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 7px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream &rarr;</a> 
       </span>
     </div>
