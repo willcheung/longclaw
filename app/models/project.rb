@@ -879,6 +879,31 @@ class Project < ActiveRecord::Base
     end
   end
 
+  # Updates all mapped custom fields (for the organization) of a single SF opportunity -> CS stream
+  def self.load_salesforce_fields(salesforce_client, project_id, sfdc_opportunity_id, stream_custom_fields)
+    unless (salesforce_client.nil? or project_id.nil? or sfdc_opportunity_id.nil? or stream_custom_fields.nil? or stream_custom_fields.empty?)
+      stream_custom_field_names = []
+      stream_custom_fields.each { |cf| stream_custom_field_names << cf.salesforce_field }
+
+      query_statement = "SELECT " + stream_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
+      sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
+
+      unless sObjects_result.nil?
+        sObj = sObjects_result.first
+        stream_custom_fields.each do |cf|
+          #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
+          #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
+          #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
+        end
+        
+      else
+        print "load_salesforce_fields Salesforce query error: Attempted to load fields from SF Opportunity sfdc_opportunity_id=", sfdc_opportunity_id, " to CS Stream project_id=", project_id, ". stream_custom_field_names=", stream_custom_field_names, "\n"
+        return
+      end
+    end
+  end
+
   private
 
   def self.calculate_score_by_setting(metric, setting)

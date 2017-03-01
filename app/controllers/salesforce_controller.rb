@@ -114,7 +114,7 @@ class SalesforceController < ApplicationController
   end
 
   def link_salesforce_opportunity
-    # One CS Stream can link to one Salesforce Opportunity
+    # One CS Stream can link to many Salesforce Opportunities
     salesforce_opp = SalesforceOpportunity.find_by(id: params[:salesforce_id])
     if !salesforce_opp.nil?
       salesforce_opp.project = Project.find_by_id(params[:project_id])
@@ -136,6 +136,7 @@ class SalesforceController < ApplicationController
     render :text => ' '
   end
 
+  # Activities are loaded into native CS Streams, depending on the explicit mapping of a SF opportunity to a CS stream, or the implicit (stream) mapping of a SF account mapped to a CS account.
   def refresh_activities
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
@@ -154,6 +155,92 @@ class SalesforceController < ApplicationController
     end
 
     render :text => ' '
+  end
+
+  # Native CS fields are refreshed (updated) according to the explicit mapping of a SF opportunity to a CS stream, or a SF account to a CS account. 
+  # Parameters: entity_type: = "accounts" or "projects".
+  # Note: If multiple SF accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SF opportunities are mapped to the same CS stream, an update will be carried out for each mapping.
+  def refresh_fields
+    if params[:entity_type] == "accounts"
+      account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
+
+      unless account_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
+        client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+        unless client.nil?  #connection error
+          active_accounts = Account.where("accounts.organization_id = ? and status = 'Active'", current_user.organization_id)
+          active_accounts.each do |a|
+            unless a.salesforce_accounts.first.nil? 
+              #print "***** SF account:\"", a.salesforce_accounts.first.salesforce_account_name, "\" --> CS account:\"", a.name, "\" *****\n"
+              Account.load_salesforce_fields(client, a.id, a.salesforce_accounts.first.salesforce_account_id, account_custom_fields)
+            end
+          end
+        end
+      end
+    elsif params[:entity_type] == "projects"
+      stream_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+
+      unless stream_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
+        client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+        unless client.nil?  #connection error
+          active_streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity)
+          active_streams.each do |s|
+            if not s.salesforce_opportunity.nil?
+              #print "***** SF stream:\"", s.salesforce_opportunity.name, "\" --> CS opportunity:\"", s.name, "\" *****\n"
+              Project.load_salesforce_fields(client, s.id, s.salesforce_opportunity.salesforce_opportunity_id, stream_custom_fields)
+            end
+          end
+        end
+      end
+    else
+      print "Invalid parameter passed to refresh_fields().  entity_type=", params[:entity_type], "!\n"
+    end
+
+    render :text => ' '
+  end
+
+  # Returns a hash of:
+  # :sf_account_fields -- a list of Salesforce account field names in the form of [["acctfield1", "acctfield1"], ["acctfield2", "acctfield2"], ...]
+  # :sf_account_fields_metadata -- a hash of Salesforce account field names with metadata info in the form of {"acctfield1" => {type: acctfield1datatype} }
+  # :sf_opportunity_fields -- a list of Salesforce opportunity field names in the form of [["oppfield1", "oppfield1"], ["oppfield2", "oppfield2"], ...]
+  # :sf_opportunity_fields_metadata -- similar to sf_account_fields_metadata for sf_opportunity_fields
+  def self.get_salesforce_fields(organization_id, custom_fields_only=false)
+    client = SalesforceService.connect_salesforce(organization_id)
+
+    unless client.nil?
+      sf_account_fields = {}
+      sf_account_fields_metadata = {}
+      sf_opportunity_fields = {}
+      sf_opportunity_fields_metadata = {}
+
+      account_describe = client.describe('Account')
+      account_describe.fields.each do |f|
+        #print "######### field name=", f.name, " custom?=", f.custom, "############\n"
+        sf_account_fields[f.name] = f.name if (!custom_fields_only or f.custom)
+        metadata = {}
+        metadata["type"] = f.type
+        metadata["custom"] = f.custom
+        metadata["updateable"] = f.updateable
+        metadata["nillable"] = f.nillable
+        sf_account_fields_metadata[f.name] = metadata
+      end
+      account_describe = client.describe('Opportunity')
+      account_describe.fields.each do |f|
+        sf_opportunity_fields[f.name] = f.name if (!custom_fields_only or f.custom)
+        metadata = {}
+        metadata["type"] = f.type
+        metadata["custom"] = f.custom
+        metadata["updateable"] = f.updateable
+        metadata["nillable"] = f.nillable
+        sf_opportunity_fields_metadata[f.name] = metadata
+      end
+
+      sf_account_fields = sf_account_fields.sort_by { |k,v| k.upcase }
+      sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| k.upcase }
+    end
+
+    return {sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata}
   end
 
   def remove_account_link
