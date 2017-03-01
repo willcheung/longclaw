@@ -40,7 +40,8 @@ Longclaw::Application.routes.draw do
     post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
     post "/salesforce_refresh" => 'salesforce#refresh_accounts'
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
-    post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
+    post "/salesforce_activities_refresh/:entity_type" => 'salesforce#refresh_activities'
+    post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
 
@@ -50,13 +51,14 @@ Longclaw::Application.routes.draw do
       get "alerts"
       post "alerts" => "settings#create_for_alerts"
       get "custom_fields"
+      get "custom_lists"
+      get "custom_list/:id" => 'settings#custom_list_show'
       get "salesforce" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 
+      get "salesforce_fields" 
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
-      get "iframe_test"
-      get "chrome_gmail_plugin"
     end
 
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
@@ -89,8 +91,21 @@ Longclaw::Application.routes.draw do
       get 'account_data/:id' => 'reports#account_data'
     end
 
+    scope "extension", controller: :extension, as: 'extension' do
+      get '/' => 'extension#index'
+      get 'test'
+      get 'account'
+      get 'alerts_tasks'
+      get 'contacts'
+      get 'metrics'
+      get 'no_account/:domain', to: 'extension#no_account', as: :no_account
+      post 'create_account'
+    end
+
     resources :custom_fields, only: [:update]
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
+    resources :custom_lists, only: [:create, :update, :destroy]
+    resources :custom_lists_metadata, only: [:create, :update, :destroy]  #for /settings/custom_lists
   end
 
   devise_scope :user do # Unauthenticated user

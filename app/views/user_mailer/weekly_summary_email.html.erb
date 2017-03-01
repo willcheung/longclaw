@@ -1,8 +1,9 @@
 <!-- DYNAMIC "CONSTANTS" for CSS styles -->
-<% @RAG_STATUS_CIRCLE_STYLE = "width: 40px; height: 40px; border-radius: 50%; border: 1px solid #737373; opacity: 0.8; " %>
-<% @RAG_RED_CIRCLE_STYLE  = "background-color:#ED5565; " %>
+<% @RAG_STATUS_CIRCLE_STYLE = "width: 36px; height: 36px; border-radius: 50%; border: 1px solid #737373; opacity: 0.8; " %>
+<% @RAG_RED_CIRCLE_STYLE    = "background-color:#ED5565; " %>
 <% @RAG_AMBER_CIRCLE_STYLE  = "background-color:#FFA500; " %>
 <% @RAG_GREEN_CIRCLE_STYLE  = "background-color:#A1C436; " %>
+<% @RAG_WHITE_CIRCLE_STYLE  = "background-color:#FFF; " %>
 
 <!-- Header -->
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
@@ -23,8 +24,8 @@
 
 
 <!-- Summary -->
-<div style="margin-bottom:30px; min-width:590px;">
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following account <%= pluralize(@projects.length, 'stream') %>:</h2>
+<div style="margin-bottom:30px;min-width:560px;max-width:100%;">
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following <%= pluralize(@projects.length, 'stream') %>:</h2>
 
   <!-- Project/stream detail -->
   <% @projects.each.with_index do |p,i| %>
@@ -98,10 +99,10 @@
       <% end %><br>
     ### temp! ### -->
 
-    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px;background-color:#FFF;vertical-align:top;">
+    <table cellpadding="0" cellspacing="0" border="0" style="width:90%;background-color:#FFF;vertical-align:top;">
       <tbody>
-        <tr style="border-bottom:1px solid #c1c1c1;">
-          <td style="padding-bottom: 5px;">
+        <tr>
+          <div style="border-bottom:1px solid #c1c1c1;padding-bottom: 5px;">
             <div style="display: inline-block; padding-top: 19px; height: 100%;">
               <span style="color:#666;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %> stream</span>
               <!-- ## account name-->
@@ -119,102 +120,96 @@
                 <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_GREEN_CIRCLE_STYLE %>
                 <% @RAG_Status =  Project::RAGSTATUS[:Green] %>
               <% else %>
-                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE %>
+                <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_WHITE_CIRCLE_STYLE %>
                 <% @RAG_Status =  "None" %>
             <% end %>
             <div style="float:right;color:#FFF">.</div> <!-- to fix Chrome bug on RAG circle-->
             <div style="display:inline-block;float:right;margin-right:2px; <%= @RAG_CIRCLE_STYLE %>" title="Status: <%= @RAG_Status %>"></div>
-          </td>
+          </div>
         </tr>
         <tr>
           <td>
-            <table border="0" cellspacing="0" cellpadding="0">
-               <tbody>
-                  <tr>
-                    <td>
-                      <!-- Risk monitoring 3-metric summary -->
-                      <table style="border-style:solid;border-width:1px;border-color:#c1c1c1;margin:10px 15px;padding:0.6em;border-radius:15px;display:inline-block;"> 
+            <!-- 3-metric summary -->
+            <table style="border:solid 1px #c1c1c1;margin-top:10px;padding:0.3em;border-radius:15px;display:inline-block;"> 
+              <tbody>
+                <tr>
+                  <td style="text-align:center;padding-bottom:6px;color:#999;text-overflow:ellipsis;font-size:19px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;border-bottom:solid;border-bottom-width:1px;">Status Summary</td>
+                </tr>
+                <tr>  <!-- Risks/Alerts data row -->
+                  <td> 
+                    <div style="padding:0 10px;margin:0 0.1em">
+                      <!-- Left metric -->
+                      <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block">
                         <tbody>
                           <tr>
-                            <td style="text-align:center;padding-bottom:6px;color:#999;text-overflow:ellipsis;font-size:19px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;border-bottom:solid;border-bottom-width:1px;">
-                              Risk Monitoring
+                            <!-- Risk Score -->
+                            <td>
+                              <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= risk_score_today %></span>
+                              <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:16px;padding:4px;width:60px;height:40px;vertical-align:middle;display:inline-block;"><%= risk_level(risk_score_today) %></span>
                             </td>
                           </tr>
-                          <tr>  <!-- Risks/Alerts data row -->
-                            <td> 
-                              <div style="padding:0 30px;">
-                                <!-- Left element -->
-                                <div style="margin:0em 1em;display:inline-block;">
-                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;w">
-                                    <tr>
-                                      <!-- Risk Score -->
-                                      <td>
-                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:40px;font-weight:bold;vertical-align:middle; line-height:initial;display:inline-block;"><%= risk_score_today %></span>
-                                        <span style="color:<%= risk_color(risk_score_today,true) %>;font-size:16px;padding:4px;min-width:30px;vertical-align:middle;display:inline-block;"><%= risk_level(risk_score_today) %></span>
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <!-- Risk Score Last Week -->
-                                      <td style="color:<%= risk_score_chg_color %>;font-size:14px;padding-right:0px;min-width:140px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial;w">
-                                        <div>
-                                        <% if risk_score_chg_arrow == 'Up' %> 
-                                          <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
-                                        <% elsif risk_score_chg_arrow == 'Down' %>
-                                          <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
-                                        <% else %>
-                                          <%= risk_score_chg_arrow %>
-                                        <% end %>
-                                        &nbsp;&nbsp;<%=risk_score_chg_msg %>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  </table>
-                                </div>
-                                <!-- Middle element -->
-                                <div style="margin:0em 0.5em;display:inline-block;">
-                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
-                                    <tr>
-                                      <!-- Open Alerts -->
-                                      <td>
-                                        <span style="color:#666;font-size:40px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_alerts.count %></span>
-                                        <span style="color:#666;font-size:16px;padding:4px;min-width:30px;vertical-align:middle;display:inline-block;">Open <%= 'Alert'.pluralize(open_alerts.count) %></span>
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <!-- Open Alerts Last Week -->
-                                      <td style="color:<%= alerts_chg_color %>;font-size:14px;padding-right:0px;min-width:150px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial;w">
-                                      <% if alerts_chg_arrow == 'Up' %> 
-                                          <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
-                                        <% elsif alerts_chg_arrow == 'Down' %>
-                                          <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
-                                        <% else %>
-                                          <%= alerts_chg_arrow %>
-                                        <% end %> 
-                                        &nbsp;&nbsp;<%=alerts_chg_msg %> 
-                                      </td>
-                                    </tr>
-                                  </table>
-                                </div>
-                                <!-- Right element -->
-                                <div style="margin:0em 1em;display:inline-block;">
-                                  <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block;">
-                                    <tr>
-                                      <!-- Open Tasks -->
-                                      <td>
-                                        <span style="color:#666;font-size:40px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_tasks.length %></span>
-                                        <span style="color:#666;font-size:16px;padding:4px;min-width:30px;vertical-align:middle;display:inline-block;">Open <%= 'Task'.pluralize(open_tasks.length) %></span>
-                                      </td>
-                                    </tr>
-                                  </table>
-                                </div>
+                          <tr>
+                            <!-- Risk Score Last Week -->
+                            <td style="color:<%= risk_score_chg_color %>;font-size:14px;padding-right:0px;min-width:140px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial">
+                              <div>
+                              <% if risk_score_chg_arrow == 'Up' %> 
+                                <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
+                              <% elsif risk_score_chg_arrow == 'Down' %>
+                                <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
+                              <% else %>
+                                <%= risk_score_chg_arrow %>
+                              <% end %>
+                              &nbsp;&nbsp;<%=risk_score_chg_msg %>
                               </div>
                             </td>
                           </tr>
                         </tbody>
                       </table>
-                    </td>
-                  </tr>
-               </tbody>
+                      <!-- Center metric -->
+                      <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block">
+                        <tbody>
+                          <tr>
+                            <!-- Open Alerts -->
+                            <td>
+                              <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_alerts.count %></span>
+                              <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Alert'.pluralize(open_alerts.count) %></span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <!-- Open Alerts Last Week -->
+                            <td style="color:<%= alerts_chg_color %>;font-size:14px;padding-right:0px;min-width:150px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial">
+                            <% if alerts_chg_arrow == 'Up' %> 
+                                <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
+                              <% elsif alerts_chg_arrow == 'Down' %>
+                                <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
+                              <% else %>
+                                <%= alerts_chg_arrow %>
+                              <% end %> 
+                              &nbsp;&nbsp;<%=alerts_chg_msg %> 
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <!-- Right metric -->
+                      <table style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:inline-block">
+                        <tbody>
+                          <tr>
+                            <!-- Open Tasks -->
+                            <td>
+                              <span style="color:#666;font-size:36px;font-weight:bold;vertical-align:middle;line-height:initial;display:inline-block;"><%= open_tasks.length %></span>
+                              <span style="color:#666;font-size:16px;padding:4px;max-width:70px;height:40px;vertical-align:middle;display:inline-block;">Open <%= 'Task'.pluralize(open_tasks.length) %></span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <!-- Placeholder -->
+                            <td style="line-height:initial;">&nbsp;</td>
+                          </tr> 
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
             </table>
           </td>
         </tr>
@@ -278,21 +273,21 @@
       </table>
     </div> <!-- END: Stream Updates -->
 
-    <!-- Open Alerts & Tasks -->
+    <!-- "Open Alerts & Next Steps" (Tasks) -->
     <div style="margin:0;font-size:14px;">
     <% if open_tasks.empty? %>
-      <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No Open Alerts or Tasks.</span>
+      <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No Open Alerts or Next Steps.</span>
     <% else %>
-      <!-- List title -->
-      <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
-        <tbody style="width:100%;display:table;">
+      <!-- List title/header -->
+      <table class="row" style="font-size:14px;padding:0;margin:0;width:100%;border-collapse:collapse;">
+        <tbody style="width:100%;display:table;margin-top:2em">
           <tr>
-            <td style="vertical-align:middle;">
-              <span style="font-size:15px;font-weight:bold;">Open Alerts & Next Steps:</span>
+            <td style="font-weight:bold;color:green;vertical-align:middle">
+              <span>Open Alerts & Next Steps:</span>
             </td>
             <td class="expander"></td>
-            <td style="padding:6px;text-align:right;">
-              <a href="<%= project_url(p.id) + '/tasks' %>" style="display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks »</a>
+            <td style="font-weight:bold;padding:6px;text-align:right;">
+              <a href="<%= project_url(p.id) + '/tasks' %>" style="display:inline-block;font-family:sans-serif;line-height:25px;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">Go to Smart Tasks »</a>
             </td>
           </tr>
         </tbody>
@@ -301,45 +296,62 @@
       <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
         <tbody>
           <% open_tasks.each do |n| %>
-            <tr>
-              <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
-                <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;line-height:15px;font-size:18px;"><%= '✔' if n.is_complete %></div>
+            <tr style="margin-bottom:10em;">
+              <td style="text-align:left;font-size:15px;line-height:15px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20px;min-width:20px;max-width:20px;padding:3px;">
+                <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;font-size:18px;"><%= '✔' if n.is_complete %></div>
               </td>
-              <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
-                <span style="font-weight:normal;font-size:14px;line-height:19px;">
-                  <%= n.name %>
-                </span>
-              </td>
-              <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:75px;max-width:80px;padding:3px;">
-                <span style="font-size:10px;font-weight:600;padding:3px 8px;text-shadow:none;color:white;border-radius:0.25em;
-                <% if n.category == Notification::CATEGORY[:Action] %>
-                  background-color:#3C8DC5">
-                <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
-                  background-color:#A1C436">
-                <% elsif n.category == Notification::CATEGORY[:Todo] %>
-                  background-color:#3cc5b9">
-                <% else %>
-                  background-color:#ed5565">
-                <% end %>
-                  <%= n.category%>
-                </span>
-              </td>
-              <td style="text-align:right;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px;padding:3px;">
-                <span style="font-weight:normal;font-size:12px;line-height:19px;">
-                  Assigned to: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
-                </span>
+              <td>
+                <table>
+                  <tr>
+                    <td style="text-align:left;font-size:15px;line-height:14px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                      <span style="font-weight:bold;font-size:14px;line-height:15px;">
+                        <%= n.name %>
+                      </span>
+                      <% if n.category == Notification::CATEGORY[:Alert] %>
+                        <!-- Alert notification detail -->
+                        <p style="font-size:11px;color:grey;line-height:1.2;margin-top:0px">
+                        <% if n.description.length > 230 %>
+                          <br><%= n.description[0,229] %>&#8230;
+                        <% else %>
+                          <br><%= n.description %>
+                        <% end %>
+                        </p>
+                      <% end %>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="line-height:12px;padding-bottom:12px;border-collapse:collapse;">
+                      <span style="color:#999;font-weight:normal;text-align:right;font-size:12px;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px;padding:3px;">
+                        Assigned to: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
+                      </span>
+                      <span style="text-align:left;border-spacing:0;vertical-align:top;width:85px;min-width:80px;max-width:85px;padding:0 3px;">
+                        <span style="font-size:10px;font-weight:600;padding:1px 5px;text-shadow:none;background-color:white;border-radius:0.25em;min-width:80px;max-width:80px;color:
+                        <% if n.category == Notification::CATEGORY[:Action] %>
+                          #3C8DC5;border:2px #3C8DC5
+                        <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                          #A1C436;border:2px #A1C436
+                        <% elsif n.category == Notification::CATEGORY[:Todo] %>
+                          #3CC5B9;border:2px #3CC5B9
+                        <% else #n.category == Notification::CATEGORY[:Alert] %> 
+                          #ED5565;border:2px #ED5565 
+                        <% end %> solid">
+                          <%= n.category %></span>
+                      </span>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
-          <% end %>
+          <% end %> <!-- End: open_tasks.each do |n| -->
         </tbody>
       </table>
     <% end %>  <!-- End: Open Alerts & Tasks  -->
     </div>
 
     <!-- "See more of this Stream" button -->
-    <div style="height:40px;width:100%;margin:6px auto;">
-      <span style="width:100%;margin-left:<%=16.5-(p.name.length/4)%>em;">
-        <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 8px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream &rarr;</a> 
+    <div style="height:40px;width:100%;margin:2em auto">
+      <span style="margin-left:<%=15-(p.name.length/4)%>em">
+        <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 7px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream &rarr;</a> 
       </span>
     </div>
 

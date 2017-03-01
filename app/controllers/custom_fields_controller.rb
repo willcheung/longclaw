@@ -1,10 +1,10 @@
 class CustomFieldsController < ApplicationController
   def update
     #Project.visible_to(current_user.organization_id, current_user.id)
-    custom_field = CustomField.find(params[:id])
-    if custom_field and custom_field.organization == current_user.organization  
+    custom_field = current_user.organization.custom_fields.find(params[:id])
+    if custom_field
       respond_to do |format|
-        if custom_field.update(custom_field_params)
+        if custom_field.update(custom_fields_params)
           format.html { redirect_to custom_field, notice: 'CustomField was successfully updated.' }
           format.js
           format.json { respond_with_bip(custom_field) }
@@ -19,7 +19,7 @@ class CustomFieldsController < ApplicationController
 
   private
 
-  def custom_field_params
+  def custom_fields_params
     params.require(:custom_field).permit(:value)
   end
 end

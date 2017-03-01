@@ -1,6 +1,6 @@
 class SalesforceService
 
-	  def self.connect_salesforce(organization_id)
+  def self.connect_salesforce(organization_id)
     salesforce_client_id = ENV['salesforce_client_id']
     salesforce_client_secret = ENV['salesforce_client_secret'] 
     hostURL = 'login.salesforce.com'  

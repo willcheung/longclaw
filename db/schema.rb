@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170203222106) do
+ActiveRecord::Schema.define(version: 20170228015415) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -136,19 +136,44 @@ ActiveRecord::Schema.define(version: 20170203222106) do
     t.datetime "updated_at",                null: false
   end
 
-  add_index "custom_fields", ["organization_id", "custom_fields_metadata_id", "customizable_uuid"], name: "custom_fields_idx", using: :btree
+  add_index "custom_fields", ["customizable_type", "customizable_uuid"], name: "index_custom_fields_on_customizable_type_and_customizable_uuid", using: :btree
+  add_index "custom_fields", ["organization_id", "custom_fields_metadata_id"], name: "custom_fields_idx", using: :btree
 
   create_table "custom_fields_metadata", force: :cascade do |t|
-    t.uuid     "organization_id",         null: false
-    t.string   "entity_type",             null: false
-    t.string   "name",                    null: false
-    t.string   "data_type",               null: false
-    t.string   "update_permission_level", null: false
-    t.datetime "created_at",              null: false
-    t.datetime "updated_at",              null: false
+    t.uuid     "organization_id",          null: false
+    t.string   "entity_type",              null: false
+    t.string   "name",                     null: false
+    t.string   "data_type",                null: false
+    t.string   "update_permission_level",  null: false
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
+    t.string   "default_value"
+    t.integer  "custom_lists_metadata_id"
+    t.string   "salesforce_field"
   end
 
+  add_index "custom_fields_metadata", ["custom_lists_metadata_id"], name: "index_custom_fields_metadata_on_custom_lists_metadata_id", using: :btree
+  add_index "custom_fields_metadata", ["organization_id", "entity_type", "salesforce_field"], name: "idx_custom_fields_metadata_on_sf_field_and_entity_unique", unique: true, using: :btree
   add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", using: :btree
+
+  create_table "custom_lists", force: :cascade do |t|
+    t.integer  "custom_lists_metadata_id", null: false
+    t.string   "option_value",             null: false
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
+  end
+
+  add_index "custom_lists", ["custom_lists_metadata_id"], name: "index_custom_lists_on_custom_lists_metadata_id", using: :btree
+
+  create_table "custom_lists_metadata", force: :cascade do |t|
+    t.uuid     "organization_id",                 null: false
+    t.string   "name",                            null: false
+    t.boolean  "cs_app_list",     default: false, null: false
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
+  end
+
+  add_index "custom_lists_metadata", ["organization_id", "name"], name: "index_custom_lists_metadata_on_organization_id_and_name", using: :btree
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false

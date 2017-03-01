@@ -1,0 +1,13 @@
+<% remote ||= false %>
+<%= simple_form_for Notification.new, remote: remote do |f| %>
+  <%= f.input :name, label: false, input_html: { class: "input-border input-sm" }, placeholder: "Add a To-Do. (Press Enter to save)" %>
+  <%= f.input :project_id, label: false, as: :hidden, input_html: { value: @project.id } %>
+<% end %>
+<script type="text/javascript">
+  $("#new_notification").on('keyup keydown keypress', function (e) {
+    if (e.which == 13) { e.preventDefault(); } // prevent normal form submission on Enter
+  }).keyup(function (e) {
+    if (e.which == 13 && $('#notification_name').val()) { $(this).submit(); } // submit form on Enter when value is entered
+  });
+</script>
+

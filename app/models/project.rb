@@ -777,7 +777,8 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # Called during onboarding process. This method should be called *after* all accounts, contacts, and users are processed & inserted.
+  # Currently this is no longer called during the onboarding process; user must manually create streams. 
+  # This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
@@ -815,7 +816,7 @@ class Project < ActiveRecord::Base
         # Upsert project conversations.
         Activity.load(get_project_conversations(data, p), project, true, user_id)
 
-        # Unsert/load Smart Tasks.
+        # Upsert/load Smart Tasks.
         Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
@@ -825,9 +826,9 @@ class Project < ActiveRecord::Base
 
         # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
-			end
-		end
-	end
+      end
+    end
+  end  #End: self.create_from_clusters()
 
   # Top Movers
   def self.calculate_pct_from_prev(projects, projects_prev)
@@ -875,6 +876,31 @@ class Project < ActiveRecord::Base
       self.notifications.risks.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
     else
       self.notifications.risks.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+    end
+  end
+
+  # Updates all mapped custom fields (for the organization) of a single SF opportunity -> CS stream
+  def self.load_salesforce_fields(salesforce_client, project_id, sfdc_opportunity_id, stream_custom_fields)
+    unless (salesforce_client.nil? or project_id.nil? or sfdc_opportunity_id.nil? or stream_custom_fields.nil? or stream_custom_fields.empty?)
+      stream_custom_field_names = []
+      stream_custom_fields.each { |cf| stream_custom_field_names << cf.salesforce_field }
+
+      query_statement = "SELECT " + stream_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
+      sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
+
+      unless sObjects_result.nil?
+        sObj = sObjects_result.first
+        stream_custom_fields.each do |cf|
+          #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
+          #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
+          #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
+        end
+        
+      else
+        print "load_salesforce_fields Salesforce query error: Attempted to load fields from SF Opportunity sfdc_opportunity_id=", sfdc_opportunity_id, " to CS Stream project_id=", project_id, ". stream_custom_field_names=", stream_custom_field_names, "\n"
+        return
+      end
     end
   end
 

@@ -15,6 +15,9 @@ class HomeController < ApplicationController
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
     @users_reverse = get_current_org_users
 
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+
     unless @projects.empty?
       #@project_last_activity_date = Project.owner_of(current_user.id).includes(:activities).maximum("activities.last_sent_date")
       @metrics = Project.count_activities_by_day(7, @projects.map(&:id))

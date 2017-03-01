@@ -11,6 +11,7 @@ gem 'sass-rails', '~>5.0.4'       # Use SCSS for stylesheets
 gem 'jbuilder', '~> 1.2' 					# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'devise', '~> 3.4.1' 					# User Authentication
 gem "omniauth-google-oauth2", :git => 'https://github.com/zquestz/omniauth-google-oauth2', :branch => 'master'
+gem 'hashie', '~> 3.4.3'
 gem "jquery-rails"
 gem 'best_in_place', '~> 3.1.0'
 gem 'ahoy_email'
@@ -45,6 +46,7 @@ group :development do
   gem 'ffaker'                    # generate fake data
   gem "letter_opener"             # email preview
   gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]  # Time zone info required for running app on Windows environment
+  gem 'thin'
 end
 
 group :production do

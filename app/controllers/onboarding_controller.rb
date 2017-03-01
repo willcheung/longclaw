@@ -50,6 +50,9 @@ class OnboardingController < ApplicationController
 		@new_projects = []
 		@same_projects = []
 
+		custom_lists = current_user.organization.get_custom_lists_with_options
+		@account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+		
 		new_user_projects = Project.where(created_by: current_user.id, is_confirmed: false).includes(:users, :contacts, :account)
 		all_accounts = current_user.organization.accounts.includes(projects: [:users, :contacts])
 
@@ -173,7 +176,7 @@ class OnboardingController < ApplicationController
 	end  # END: confirm_projects
 
 	#########################################################################
-	# Callback method from backend to create clusters for a particular user 
+	# Callback method from backend during onboarding process to create clusters for a particular user 
 	#
 	# Example: 	 curl -H "Content-Type: application/json" --data @/Users/willcheung/Downloads/contextsmith-json-3.txt http://localhost:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
 	# Example 2: http://64.201.248.178/:8888/newsfeed/cluster?email=indifferenzetester@gmail.com&token=test&max=300&before=1408695712&in_domain=comprehend.com&callback=http://24.130.10.244:3000/onboarding/64eb67f6-3ed1-4678-84ab-618d348cdf3a/create_clusters.json
@@ -198,8 +201,9 @@ class OnboardingController < ApplicationController
             puts "Create internal users..."
             User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
 
-            puts "Create projects, project members, and activities..."
-            Project.create_from_clusters(data, user.id, user.organization.id)
+            # Do not automatically create streams
+            #puts "Create projects, project members, and activities..."
+            #Project.create_from_clusters(data, user.id, user.organization.id)
 
             ##########################################################################################
 

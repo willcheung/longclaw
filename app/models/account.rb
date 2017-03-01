@@ -89,6 +89,31 @@ class Account < ActiveRecord::Base
         end
     end
 
+    # Updates all mapped custom fields of a single SF account -> CS account
+    def self.load_salesforce_fields(salesforce_client, account_id, sfdc_account_id, account_custom_fields)
+        unless (salesforce_client.nil? or account_id.nil? or sfdc_account_id.nil? or account_custom_fields.nil? or account_custom_fields.empty?)
+            account_custom_field_names = []
+            account_custom_fields.each { |cf| account_custom_field_names << cf.salesforce_field}
+
+            query_statement = "SELECT " + account_custom_field_names.join(", ") + " FROM Account WHERE Id = '#{sfdc_account_id}' LIMIT 1"
+            sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
+
+            unless sObjects_result.nil?
+                sObj = sObjects_result.first
+                account_custom_fields.each do |cf|
+                    #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id)
+                    #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
+                    #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+                    CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id).update(value: sObj[cf.salesforce_field])
+                end
+
+            else
+                print "load_salesforce_fields Salesforce query error: Attempted to load fields from SF Account sfdc_account_id=", sfdc_account_id, " to CS Account account_id=", account_id, ". account_custom_field_names=", account_custom_field_names, "\n"
+                return
+            end
+        end
+    end
+
     private
 
     # Create all custom fields for a new account

@@ -1,43 +1,66 @@
-<div class="row border-bottom">
-    <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+<div class="row border-bottom white-bg">
+    <nav class="navbar navbar-static-top" role="navigation">
         <div class="navbar-header">
-            <a class="navbar-minimalize minimalize-style-2 btn btn-primary btn-outline" href="#"><i class="fa fa-bars"></i> </a>
-            
-            <%= form_tag(search_results_path, :method => "get", id: "search-form", class: "navbar-form-custom", remote: true, style: "display: none;") do %>
-                <span class="fa fa-search z-top"></span> <input type="search" name="project_id" id="search" class="main-search" placeholder="#project-stream search something...">
-                <input id="query-term" type="hidden" name="query" value="">
-                <%= submit_tag "Search", style: 'display:none;' %>
-                <p id="search-error" style="margin-left: 65px; color: red;"></p>
-            <%end%>
-        
+            <button aria-controls="navbar" aria-expanded="false" data-target="#navbar" data-toggle="collapse" class="navbar-toggle collapsed" type="button">
+                <i class="fa fa-reorder"></i>
+            </button>
+
+            <a href="<%= root_path %>" class="navbar-brand" style="width:150px">
+                <span class="clear">
+                    <div class="block logo">&nbsp;</div>
+                </span>
+            </a>
         </div>
-        <ul class="nav navbar-top-links navbar-right">
+        <div class="navbar-collapse collapse" id="navbar">
+            <ul class="nav navbar-nav">
             
-            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%= settings_users_path %>">Invite team</a>
-            
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="fa fa-question-circle fa-lg"></i>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="<%= onboarding_tutorial_path %>">Learn the Basics</a></li>
-                    <li><a href="https://contextsmith.zendesk.com/hc/en-us" target="_blank">Knowledge Base</a></li>
-                    <li class="divider"></li>
-                    <li><a href="mailto:support@contextsmith.com">Contact Support</a></li>
-                </ul>
-            </li>
-            <li class="divider"></li>
-            <li class="dropdown">
-                <a data-toggle="dropdown" class="dropdown-toggle" href="#">  
-                    <span class="m-r-xs"><img alt="image" class="img-circle" style="width:30px;height:30px;" src="<%= current_user.image_url %>"/></span> 
-                    <strong class="font-bold"><%= get_full_name(current_user) %></strong><b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="<%= settings_path %>">Settings</a></li>
-                    <li class="divider"></li>
-                    <li><a href="<%= destroy_user_session_path %>">Logout</a></li>
-                </ul>
-            </li>
-        </ul>
+                <li class="<%= is_active_controller('home') and is_active_action('index') %>">
+                    <a href="<%= root_path %>"><i class="fa fa-home"></i> <span class="nav-label">Home</span></a>
+                </li>
+                <li class="<%= is_active_controller('projects') %>">
+                    <a href="<%= projects_path %>/?owner=<%= current_user.id %>"><i class="fa fa-comments"></i> <span class="nav-label">Streams</span></a>
+                </li>
+                <li class="<%= is_active_controller('notifications') %>">
+                    <a href="<%= notifications_path %>/?type=incomplete&assignee=me"><i class="fa fa-list-ul"></i> <span class="nav-label">Smart Tasks</span></a>
+                </li>
+                <li class="<%= is_active_controller('reports') %>">
+                    <a href="<%= reports_accounts_dashboard_path %>"><i class="fa fa-bar-chart"></i> <span class="nav-label">Dashboard</span></a>
+                </li>
+                <li class="<%= is_active_controller('accounts') %>">
+                    <a href="<%= accounts_path %>"><i class="fa fa-users"></i> <span class="nav-label">Accounts</span></a>
+                </li>
+
+            </ul>
+
+            <!-- Top Right Nav -->
+            <ul class="nav navbar-top-links navbar-right">
+                
+                <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%= settings_users_path %>">Invite team</a>
+                
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="fa fa-question-circle fa-lg"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="<%= onboarding_tutorial_path %>">Learn the Basics</a></li>
+                        <li><a href="https://contextsmith.zendesk.com/hc/en-us" target="_blank">Knowledge Base</a></li>
+                        <li class="divider"></li>
+                        <li><a href="mailto:support@contextsmith.com">Contact Support</a></li>
+                    </ul>
+                </li>
+                <li class="divider"></li>
+                <li class="dropdown" style="max-height:50px">
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">  
+                        <span class="m-r-xs"><img alt="image" class="img-circle" style="width:23px;height:23px;" src="<%= current_user.image_url %>"/></span> 
+                        <strong class="font-bold"><%= get_full_name(current_user) %></strong><b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="<%= settings_path %>">Settings</a></li>
+                        <li class="divider"></li>
+                        <li><a href="<%= destroy_user_session_path %>">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
     </nav>
 </div>

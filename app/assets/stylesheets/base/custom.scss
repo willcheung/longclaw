@@ -44,9 +44,9 @@ a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn
   background-color: $primary;
 }
 
-.nav-header .logo {
+.navbar-header .logo {
   height: auto;
-  background: url('/assets/logo-white.png') center no-repeat;
+  background: url('/assets/logo.png') center no-repeat;
   background-size: 100px;
 }
 
@@ -547,4 +547,9 @@ a.suggested-action:hover, a.suggested-action:focus {
   margin-top:-12px;
   height:24px;
   width: 24px;
+}
+
+.element-disabled {
+  opacity: 0.1;
+  pointer-events: none;
 }
