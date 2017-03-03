@@ -1,7 +1,12 @@
 <head>
   <style>
-    .highlight {
-      background-color:greenyellow;"
+    .success_highlight {
+      background-color: #0FB;
+    }
+
+    .error_highlight {
+      color: white;
+      background-color: red;
     }
 
     .switch {
@@ -104,8 +109,8 @@
                   <input type="checkbox" onclick="javascript:handle_SF_Custom_Fields_Only_filter_switch_click(this);" <% if params[:sf_custom_fields_only] == "true" %> checked <% end %>
                   />
                   <div class="slider round"></div>
-                  <span style="font-weight:normal;position:absolute;top:3px;left:48px;">Salesforce&nbsp;custom&nbsp;fields&nbsp;filter&nbsp;<% if params[:sf_custom_fields_only] == "true" %>(on)<% else %>(off)<% end %></span>
-                  <i id="filter_switch_refresh" class='fa fa-refresh' style='display:none;font-weight:normal;position:absolute;top:5px;left:255px'></i>
+                  <span style="font-weight:normal;position:absolute;top:3px;left:48px;width:256px">Only list custom Salesforce fields <% if params[:sf_custom_fields_only] == "true" %>(filter on)<% else %>(filter off)<% end %></span>
+                  <i id="filter_switch_refresh" class='fa fa-refresh' style='display:none;font-weight:normal;position:absolute;top:5px;left:304px'></i>
                 </label>
               </div>
               <div class="row col-lg-12" style="margin-right:0; margin-left:0; padding:0px; display: inline"> 
@@ -114,10 +119,10 @@
                     <tr>
                       <td><h2 style="display:inline">Account</h2></td>
                       <td style="margin-right:-1em;padding:0;float:right">
-                        <a href="#" style="border-bottom:2px solid red"><i class="fa fa-exclamation"></i> Clear all account mapping</a>&nbsp;&nbsp;
-                        <div style="min-width:18em;width:18em; padding:0px;margin:0px;display:inline-block">
+                        <a href="#" style="border-bottom:2px solid red;display:none"><i class="fa fa-exclamation"></i> Clear account mapping</a>&nbsp;&nbsp;
+                        <div style="min-width:18em;width:18em;padding:0px;display:inline-block">
                           <span id="salesforce-refresh-accounts" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Accounts</span>
-                          <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
+                          <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
                         </div>
                       </td>
                     </tr>
@@ -144,12 +149,13 @@
                           <td><%= cf.name %></td>
                           <td><%= cf.data_type %></td>
                           <td> <!-- salesforce_field_name -->
-                            <%= best_in_place cf, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_account_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-account-field-name', :style => "color:#DDD;", :customfield_id => "#{cf.id}" %>
+                            <%= best_in_place cf, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_account_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-account-field-name', :style => "color:#DDD;", :cf_id => "#{cf.id}" %>
+                            <% if !cf.salesforce_field.nil? and @sf_fields[:sf_account_fields_metadata][cf.salesforce_field].nil? %>
+                              <i id="exclamation-triangle-warning-cfid<%=cf.id%>" style="color:#3d8dc5" class="fa fa-exclamation-triangle text-primary" data-toggle="tooltip" data-placement="right" data-original-title='Invalid Salesforce field mapping detected! Please pick a valid field from the list.'></i>
+                            <% end %>
                           </td>
                           <td>
-                             <!-- <% if not @sf_fields[:sf_account_fields_metadata][cf.salesforce_field].nil? %>
-                                <%= @sf_fields[:sf_account_fields_metadata][cf.salesforce_field]["type"] %>
-                              <% end %> -->
+                             <!-- -->
                           </td>
                         </tr>
                       <% end %>
@@ -163,10 +169,10 @@
                     <tr>
                     <td><h2 style="display:inline">Stream</h2></td>
                     <td style="margin-right:-1.5em;padding:0;float:right">
-                      <a href="#" style="border-bottom:2px solid red"><i class="fa fa-exclamation"></i> Clear all stream mapping</a>&nbsp;&nbsp;
-                      <div style="min-width:18em;width:18em; padding:0px;margin:0px;display:inline-block">
+                      <a href="#" style="border-bottom:2px solid red;display:none"><i class="fa fa-exclamation"></i> Clear all stream mapping</a>&nbsp;&nbsp;
+                      <div style="min-width:18em;width:18em;padding:0px;display:inline-block">
                         <span id="salesforce-refresh-projects" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Streams</span>
-                        <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
+                        <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
                       </div>
                     </td>
                     </tr>
@@ -193,12 +199,15 @@
                           <td><%= cf.name %></td>
                           <td><%= cf.data_type %></td>
                           <td> <!-- salesforce_field_name -->
-                            <%= best_in_place cf, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_opportunity_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-opportunity-field-name', :style => "color:#DDD;", :customfield_id => "#{cf.id}" %>
+                            <%= best_in_place cf, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_opportunity_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-opportunity-field-name', :style => "color:#DDD;", :cf_id => "#{cf.id}" %>
+                            <% if !cf.salesforce_field.nil? and @sf_fields[:sf_opportunity_fields_metadata][cf.salesforce_field].nil? %>
+                              <i id="exclamation-triangle-warning-cfid<%=cf.id%>" style="color:#3d8dc5" class="fa fa-exclamation-triangle text-primary" data-toggle="tooltip" data-placement="right" data-original-title='Invalid Salesforce field mapping detected! Please pick a valid field from the list.'></i>
+                            <% end %>
                           </td>
                           <td>
-                            <!-- <% if not @sf_fields[:sf_opportunity_fields_metadata][cf.salesforce_field].nil? %>
-                              <%= @sf_fields[:sf_opportunity_fields_metadata][cf.salesforce_field]["type"] %>
-                            <% end %> -->
+                            <!--< % if not @sf_fields[:sf_opportunity_fields_metadata][cf.salesforce_field].nil? %>
+                              <span id="salesforce-field-datatype-cfid< %=cf.id%>">< %= @sf_fields[:sf_opportunity_fields_metadata][cf.salesforce_field]["type"] %></span>
+                            < % end %>-->
                           </td>
                         </tr>
                       <% end %>
@@ -212,9 +221,9 @@
 
 <script>
   function handle_SF_Custom_Fields_Only_filter_switch_click(checkbox) {
-      $("#filter_switch").css("pointer-events", "none");  //disable extra clicks on toggle switch
+      $("#filter_switch").css("pointer-events", "none");  //disable clicks on toggle switch
 
-      document.getElementById('filter_switch_refresh').style.display = "inline";
+      document.getElementById('filter_switch_refresh').style.display = "inline";  // show fa-refresh icon
       document.getElementById('filter_switch_refresh').className = document.getElementById('filter_switch_refresh').className + " fa-spin";
 
       if (checkbox.checked)
@@ -223,49 +232,70 @@
           window.location.replace("/settings/salesforce_fields");
   };
 
-  $('#salesforce-refresh-accounts').click(function() {
-      $.ajax('/salesforce_fields_refresh?entity_type=accounts', {
+  $('#salesforce-refresh-accounts,#salesforce-refresh-projects').click(function() {
+      var entity_type_str, entity_type_btn_str;
+      var self = $(this);
+      if (self.attr("id").includes("salesforce-refresh-accounts")) {
+          entity_type_str = "accounts";
+          entity_type_btn_str = "Accounts";
+      } 
+      else {
+          entity_type_str = "projects";
+          entity_type_btn_str = "Streams";
+      }
+
+      $.ajax('/salesforce_fields_refresh?entity_type=' + entity_type_str, {
           async: true,
           method: "POST",
+          data: "",
           beforeSend: function () {
-              $('#salesforce-refresh-accounts').removeClass('highlight');
-              $('#salesforce-refresh-accounts').html("<i class='fa fa-refresh'></i> Refresh ContextSmith Accounts")
-              $('#salesforce-refresh-accounts .fa.fa-refresh').addClass('fa-spin');
+              self.css("margin-left","0px");
+              self.removeClass('success_highlight error_highlight');
+              self.addClass('btn-outline');
+              self.html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str);
+              $("#salesforce-refresh-" + entity_type_str + " .fa.fa-refresh").addClass('fa-spin');
           },
-          complete: function() {
-              $('#salesforce-refresh-accounts .fa.fa-refresh').removeClass('fa-spin');
-              $('#salesforce-refresh-accounts').addClass('highlight');
-              $('#salesforce-refresh-accounts').html("✓ Refresh ContextSmith Accounts");
+          error: function(data) {
+              var res = JSON.parse(data.responseText);
+              self.removeClass('btn-outline');
+              self.addClass('error_highlight');
+
+              alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n" + res.error);
+          },
+          statusCode: {
+              500: function() {
+                  self.css("margin-left","60px");
+                  self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+              },
+              503: function() {
+                  self.css("margin-left","30px");
+                  self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+              },
+          },
+          success: function() {
+              self.addClass('success_highlight');
+              self.html("✓ Refresh ContextSmith " + entity_type_btn_str);
           }
       });
   });
 
-  $('#salesforce-refresh-projects').click(function() {
-      $.ajax('/salesforce_fields_refresh?entity_type=projects', {
-          async: true,
-          method: "POST",
-          beforeSend: function () {
-              $('#salesforce-refresh-projects').removeClass('highlight');
-              $('#salesforce-refresh-projects').html("<i class='fa fa-refresh'></i> Refresh ContextSmith Accounts")
-              $('#salesforce-refresh-projects .fa.fa-refresh').addClass('fa-spin');
-          },
-          complete: function() {
-              $('#salesforce-refresh-projects .fa.fa-refresh').removeClass('fa-spin');
-              $('#salesforce-refresh-projects').addClass('highlight');
-              $('#salesforce-refresh-projects').html("✓ Refresh ContextSmith Streams");
-          }
-      });
+  $('.salesforce-account-field-name,.salesforce-opportunity-field-name').change(function() {
+      var selectorStr, entity_type_btn_str;
+      if ($(this).attr("class").includes("salesforce-account-field-name")) {
+        selectorStr = "#salesforce-refresh-accounts";
+        entity_type_btn_str = "Accounts";
+      } 
+      else {
+        selectorStr = "#salesforce-refresh-projects";
+        entity_type_btn_str = "Streams";
+      }
+
+      $(selectorStr).css("margin-left","0px")
+      $(selectorStr).removeClass('success_highlight error_highlight');
+      $(selectorStr).addClass('btn-outline');
+      $(selectorStr).html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str)
+      
+      document.getElementById("exclamation-triangle-warning-cfid"+ $(this).attr("cf_id")).style.display = "none"; // remove warning
   });
 
-  $('.salesforce-account-field-name').change(function() {
-      $('#salesforce-refresh-accounts').removeClass('highlight');
-      $('#salesforce-refresh-accounts').html("<i class='fa fa-refresh'></i> Refresh ContextSmith Accounts")
-      //console.log("Salesforce-account-field-name for customfield id=" + $(this).attr("customfield_id") + " was changed.");
-  });
-
-  $('.salesforce-opportunity-field-name').change(function() {
-      $('#salesforce-refresh-projects').removeClass('highlight');
-      $('#salesforce-refresh-projects').html("<i class='fa fa-refresh'></i> Refresh ContextSmith Streams")
-      //console.log("Salesforce-account-field-name for customfield id=" + $(this).attr("customfield_id") + " was changed.");
-  });
 </script>

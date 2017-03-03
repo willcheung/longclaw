@@ -879,7 +879,7 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all mapped custom fields (for the organization) of a single SF opportunity -> CS stream
+  # Updates all mapped custom fields of a single SF opportunity -> CS stream
   def self.load_salesforce_fields(salesforce_client, project_id, sfdc_opportunity_id, stream_custom_fields)
     unless (salesforce_client.nil? or project_id.nil? or sfdc_opportunity_id.nil? or stream_custom_fields.nil? or stream_custom_fields.empty?)
       stream_custom_field_names = []
@@ -896,12 +896,11 @@ class Project < ActiveRecord::Base
           #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
           CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
         end
-        
       else
-        print "load_salesforce_fields Salesforce query error: Attempted to load fields from SF Opportunity sfdc_opportunity_id=", sfdc_opportunity_id, " to CS Stream project_id=", project_id, ". stream_custom_field_names=", stream_custom_field_names, "\n"
-        return
+        return "stream_custom_field_names=" + stream_custom_field_names.to_s # proprogate list of field names to caller
       end
     end
+    nil # successful request
   end
 
   private

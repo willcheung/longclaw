@@ -52,7 +52,7 @@
                                     <% if f.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] %>
                                         List: <%= best_in_place f, :custom_lists_metadata_id, :as => :select, :place_holder => '(unassigned)', :collection => @custom_lists, :class => 'btn btn-default btn-sm fa-caret-down customfield-customlist', :style => "color:black; background-color:#3C8DC5" %>
                                         <% if f.custom_lists_metadata_id.nil? %>
-                                            <i class="fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" data-original-title="You must assign a List to this field!"></i>
+                                            <i style="color:#3d8dc5" class="fa fa-exclamation-triangle" data-toggle="tooltip" data-placement="right" data-original-title="You must assign a List to this field!"></i>
                                         <% end %>
                                     <% else %>
                                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class='btn btn-default btn-sm element-disabled' style='width:5.5em;background-color:#3C8DC5'>&nbsp;</span>
