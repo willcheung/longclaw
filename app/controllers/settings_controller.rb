@@ -1,5 +1,5 @@
 class SettingsController < ApplicationController
-	before_filter :get_salesforce_user, only: ['salesforce', 'salesforce_opportunities', 'salesforce_activities']
+	before_filter :get_salesforce_user, only: ['salesforce', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
 
 	def index
 		@user_count = current_user.organization.users.count
@@ -72,7 +72,8 @@ class SettingsController < ApplicationController
 		redirect_to :back
 	end
 
-	# An index of all the custom fields for the current user's organization, by entity type
+	# An index of all the Custom Fields for the current user's organization, by entity type.
+	# Parameters: entity_type: = "Account" by default
 	def custom_fields
 		@entity_type = CustomFieldsMetadatum.validate_and_return_entity_type(params[:entity_type], true) || CustomFieldsMetadatum::ENTITY_TYPE[:Account]
 
@@ -80,12 +81,12 @@ class SettingsController < ApplicationController
 		@custom_lists = current_user.organization.get_custom_lists(25)
 	end
 
-	# An index of all the Custom Lists for the current user's organization, by entity type
+	# An index of all the Custom Lists for the current user's organization
 	def custom_lists
 		@custom_lists = current_user.organization.custom_lists_metadatum
 	end
 
-	# An index of all the custom fields for the current user's organization, by entity type
+	# An index of all the Custom Fields for the current user's organization
 	def custom_list_show
 		begin
 			@custom_list_metadata = current_user.organization.custom_lists_metadatum.find(params[:id])
@@ -94,18 +95,33 @@ class SettingsController < ApplicationController
 		end
 	end
 
+	# Map CS Accounts with Salesforce accounts: "One CS Account can link to many Salesforce Accounts"
 	def salesforce
 		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 		@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("lower(accounts.name)")
 	end
 
+	# Map CS Streams with Salesforce Opportunities: "One CS Stream can link to many Salesforce Opportunities"
 	def salesforce_opportunities
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active # all active projects because "admin" role can see everything
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed # all active projects because "admin" role can see everything
 		@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
 	end
 
 	def salesforce_activities
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id") # all active projects because "admin" role can see everything
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id") # all active projects because "admin" role can see everything
+	end
+
+	def salesforce_fields
+		cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
+		@cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
+		@cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+
+		if (params[:sf_custom_fields_only] == "true")
+			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, true)
+		else
+			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
+		end
+		#puts "************** @sf_fields **************", @sf_fields, "******************************"
 	end
 
 	def super_user
