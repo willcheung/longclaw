@@ -8,71 +8,49 @@ class BaseCampService
 	basecamp_authorization_url = ENV['basecamp_authorization_url']
 	basecamp_token_url = ENV['basecamp_token_url']
 	site = 'https://launchpad.37signals.com/authorization/new?type=web_server'
-	refresh_endpoint = 'https://launchpad.37signals.com/authorization/token'
 	@redirect_uri = ENV['basecamp_redirect_uri']
-
 	@client = OAuth2::Client.new( client_id, client_secret, :authorize_url => basecamp_authorization_url, :token_url => basecamp_token_url, :site => site)
-
-	oauth_access_tok = "BAhbB0kiAbB7ImNsaWVudF9pZCI6ImE3MDg3MzdmYWFjNjQyNDAzYTNiOGZiMDAwNTg1YWNlNDlmZDE5MzUiLCJleHBpcmVzX2F0IjoiMjAxNy0wMy0xNVQxOToyODozOVoiLCJ1c2VyX2lkcyI6WzMxNDU0MTI3XSwidmVyc2lvbiI6MSwiYXBpX2RlYWRib2x0IjoiNzQwMGQ4ZDM5Y2UwMmFlYTU0MTA5YzZlNzNmMTZlYjYifQY6BkVUSXU6CVRpbWUN80kdwMG3fHIJOg1uYW5vX251bWkCSgI6DW5hbm9fZGVuaQY6DXN1Ym1pY3JvIgdYYDoJem9uZUkiCFVUQwY7AEY=--7c48e98e159d8b33896f31639e1ca9db6253b92a"
-	oauth_refresh_tok = "BAhbB0kiAbB7ImNsaWVudF9pZCI6ImE3MDg3MzdmYWFjNjQyNDAzYTNiOGZiMDAwNTg1YWNlNDlmZDE5MzUiLCJleHBpcmVzX2F0IjoiMjAyNy0wMy0wMVQxOToyODozOVoiLCJ1c2VyX2lkcyI6WzMxNDU0MTI3XSwidmVyc2lvbiI6MSwiYXBpX2RlYWRib2x0IjoiNzQwMGQ4ZDM5Y2UwMmFlYTU0MTA5YzZlNzNmMTZlYjYifQY6BkVUSXU6CVRpbWUNM8gfwOLIfHIJOg1uYW5vX251bWkVOg1uYW5vX2RlbmkGOg1zdWJtaWNybyIHAWA6CXpvbmVJIghVVEMGOwBG--eb9a25fde7336ac85293c075655363a42bdf3576"
-
-	# puts "https://launchpad.37signals.com/authorization/token?type=refresh&refresh_token=#{refresh_token}&client_id=#{client_id}&redirect_uri=#{redirect_uri}&client_secret=#{client_secret}"
 	
+	# def self.get_events_from_backend_with_callback(user)
+ #    max=10000
+ #    base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
 
-	# puts "Running Basecamp Refresh Check==============================="
+ #    if Rails.env.production?
+ #      callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
+ #      user.refresh_token! if user.token_expired?
+ #      token_emails = [{ token: user.oauth_access_token, email: user.email }]
+ #      in_domain = ""
+ #    elsif Rails.env.test? # Test / DEBUG 
+ #      callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
+ #      user.refresh_token! if user.token_expired?
+ #      token_emails = [{ token: user.oauth_access_token, email: user.email }]
+ #      in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
+ #    else # Dev environment
+ #      callback_url = "http://localhost:3000/onboarding/#{user.id}/create_clusters.json"
+ #      u = OauthUser.find_by(oauth_provider_uid: user.oauth_provider_uid)
 
-	# 	puts "hello"
-	# 	puts "attempting to get a new refresh token...."
-	# 	def self.to_params
-	# 		{
- #    'client_id' => ENV['google_client_id'],
- #    'client_secret' => ENV['google_client_secret'],
- #    'grant_type' => 'refresh_token'}
-	# 	end
+ #      u.refresh_token! if u.token_expired?
 
-	# 	client = OAuth2::Client.new( ENV['basecamp_client_id'],
-	# 									ENV['basecamp_client_secret'], 
-	# 									:authorize_url => ENV['basecamp_authorization_url'], 
-	# 									:token_url => ENV['basecamp_token_url'], 
-	# 									:site => 'https://launchpad.37signals.com/authorization/new?type=web_server')
+ #      token_emails = [{ token: u.oauth_access_token, email: u.email }]
+ #      in_domain = "&in_domain=comprehend.com"
+ #    end
+    ### TODO: add "&request=true" to final_url
+    # final_url = base_url + "?token_emails=" + token_emails.to_json + "&preview=true&time=true&neg_sentiment=0&cluster_method=BY_EMAIL_DOMAIN&max=" + max.to_s + "&callback=" + callback_url + in_domain
+    # puts "Calling backend service for clustering: " + final_url
+    #puts "Callback URL set as: " + callback_url
 
-	# 	token = OAuth2::AccessToken.from_hash client, {:access_token => oauth_access_tok, :refresh_token => oauth_refresh_tok, :client_id => "a708737faac642403a3b8fb000585ace49fd1935", :client_secret =>"efd66e0c5c0ad9b43d5332646d994bf6eb4334a6" }
-	# 	response  = token.post('https://launchpad.37signals.com/authorization/token?type=web_server',
-	# 						 :type => 'refresh',
-	# 						 :refresh_token => oauth_refresh_tok,
-	# 						 :client_id => 'a708737faac642403a3b8fb000585ace49fd1935',
-	# 						 :client_secret => client_secret)
+    # url = URI.parse(final_url)
+    # req = Net::HTTP::Get.new(url.to_s)
+    # res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
+  # end
 
- #    refreshhash = JSON.parse(response.body)
- #    puts refreshhash
-
-		# puts "https://launchpad.37signals.com/authorization/token?type=refresh&refresh_token=(1)&client_id=(2)&redirect_uri=(3)&client_secret=(4)"
-
-		
-
-		
-		# Sleep until the Token is expired
-		# sleep token.expires_at - Time.new.to_i
-		# Expect this to return true
-		# puts token.expired? # Prints false
-		# puts token.expires_at
-		# token = token.refresh! if token.expired?
-
-		# This request fails due to expired Token
-		puts " Concludes Refresh Test"
-		puts "Good bye========================="
-
-
-	def self.refresh_token(oauth2_token)
-		puts "attempting to get a new access token token...."
-		token = OAuth2::AccessToken.from_hash(@client, {:access_token => oauth2_token})
-		
-		if token.expired?
-			new_token = token.to_hash
-		else
-			puts "Token is not expired..."
-		end
-		new_token
+	def self.set_access_token(oauth2_token)
+		client = OAuth2::Client.new( ENV['basecamp_client_id'],
+												ENV['basecamp_client_secret'], 
+												:authorize_url => ENV['basecamp_authorization_url'], 
+												:token_url => ENV['basecamp_token_url'], 
+												:site => 'https://launchpad.37signals.com/authorization/new?type=web_server')
+		OAuth2::AccessToken.from_hash client, {:access_token => oauth2_token}
 	end
 	
 	# Returns a authentication url site
@@ -98,18 +76,47 @@ class BaseCampService
 		new_user
 	end
 
+	def self.basecamp2_user_project_events(basecamp_user, project_id)
 
-	def self.set_access_token(oauth2_token)
-		client = OAuth2::Client.new( ENV['basecamp_client_id'],
-												ENV['basecamp_client_secret'], 
-												:authorize_url => ENV['basecamp_authorization_url'], 
-												:token_url => ENV['basecamp_token_url'], 
-												:site => 'https://launchpad.37signals.com/authorization/new?type=web_server')
-		OAuth2::AccessToken.from_hash client, {:access_token => oauth2_token}
+		basecamp_user = basecamp_user.refresh_token! if basecamp_user.token_expired?
+
+		token = set_access_token(basecamp_user['oauth_access_token'])
+			result = []
+			(1..40).each do |num|
+				req = JSON.parse(token.get("#{basecamp_user['oauth_instance_url']}/projects/#{project_id}/events.json?page=#{num}", :params => {'query_foo' => 'bar'}).body)
+				req.each { |a| result << a }
+				break if req.size < 50
+			end
+		# end
+		result
 	end
 
+	def self.basecamp2_user_project_topics(oauth2_token, project_id, instance_url)
+		result = []
+		num = 1
+		while num != 41
+		req = JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/topics.json?page=#{num}", :params => {'query_foo' => 'bar'}).body)
+		req.each { |a| result << a }
+		num += 1
+			if req.empty? then break
+			end
+		end
+		result
+	end
 
-	def self.basecamp2_user_info(id,oauth2_token, instance_url)
+	def self.basecamp2_find_project(oauth2_token, user_id)
+		JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/projects/#{user_id}.json", :params => {'query_foo' => 'bar'}).body)
+	end
+
+	def self.basecamp2_user_messages(oauth2_token, project_id, instance_url, message_id)
+		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/messages/#{message_id}.json", :params => {'query_foo' => 'bar'}).body)
+	end
+
+	def self.basecamp2_user_project_todo(oauth2_token, project_id, instance_url, message_id)
+		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/messages/#{message_id}.json", :params => {'query_foo' => 'bar'}).body)
+	end
+
+		def self.basecamp2_user_info(id,oauth2_token, instance_url)
 		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/people/#{id}.json", :params => {'query_foo' => 'bar'}).body)
 	end
 
@@ -127,49 +134,7 @@ class BaseCampService
 		else  oauth2_token && project_id
 			JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/projects/#{project_id}/topics.json", :params => {'query_foo' => 'bar'}).body)
 		end
-
 	end
-
-	def self.basecamp2_user_project_events(oauth2_token, project_id, instance_url)
-		token = set_access_token(oauth2_token)
-		result = []
-		(1..40).each do |num|
-			req = JSON.parse(token.get("#{instance_url}/projects/#{project_id}/events.json?page=#{num}", :params => {'query_foo' => 'bar'}).body)
-			req.each { |a| result << a }
-			break if req.size < 50
-		end
-		result
-	end
-
-	def self.basecamp2_user_project_topics(oauth2_token, project_id, instance_url)
-		result = []
-		num = 1
-		while num != 41
-		req = JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/topics.json?page=#{num}", :params => {'query_foo' => 'bar'}).body)
-		req.each { |a| result << a }
-		num += 1
-			if req.empty? then break
-			end
-		end
-		result
-	end
-
-
-	def self.basecamp2_find_project(oauth2_token, user_id)
-		JSON.parse(set_access_token(oauth2_token).get("https://basecamp.com/3643958/api/v1/projects/#{user_id}.json", :params => {'query_foo' => 'bar'}).body)
-	end
-
-	def self.basecamp2_user_messages(oauth2_token, project_id, instance_url, message_id)
-		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/messages/#{message_id}.json", :params => {'query_foo' => 'bar'}).body)
-	end
-
-	def self.basecamp2_user_project_todo(oauth2_token, project_id, instance_url, message_id)
-		JSON.parse(set_access_token(oauth2_token).get("#{instance_url}/projects/#{project_id}/messages/#{message_id}.json", :params => {'query_foo' => 'bar'}).body)
-	end
-
-
-
-
 
 end
 

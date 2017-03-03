@@ -141,7 +141,7 @@ class SettingsController < ApplicationController
 	end
 
 	def basecamp2_projects
-			@accounts = Project.where(account_id: params[:account_id])
+			@accounts = Project.where(account_id: params[:account_id]).where(organization_id:current_user.organization_id)
 	end
 
 	def super_user

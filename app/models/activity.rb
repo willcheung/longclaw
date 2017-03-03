@@ -230,7 +230,7 @@ class Activity < ActiveRecord::Base
   end
 
   def self.load_basecamp2_activities(e, project, user, project_id)
-    update = e.first['updated_at']
+    update = e.first['created_at']
     event = Activity.new(
               posted_by: user,
               project_id: project_id,

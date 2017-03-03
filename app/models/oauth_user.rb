@@ -21,6 +21,8 @@
 #
 
 require_dependency "app/services/basecamp_service.rb"
+require "Time"
+require 'net/http'
 
 class OauthUser < ActiveRecord::Base
 	belongs_to 	:organization
@@ -77,12 +79,47 @@ class OauthUser < ActiveRecord::Base
 	end
 
 
-	def refresh_token
-	end
+	# BaseCamp2 Refresh methods
+	def to_params    
+    {'refresh_token' => oauth_refresh_token,
+    'client_id' => ENV['basecamp_client_id'],
+    'client_secret' => ENV['basecamp_client_secret'],
+    'type' => 'refresh',
+    'redirect_uri' => ENV['basecamp_redirect_uri']
+  	}
+  end
 
+  def request_token_from_basecamp2
+    url = URI("https://launchpad.37signals.com/authorization/token?type=refresh")
+    Net::HTTP.post_form(url, self.to_params)
+  end
 
+  def refresh_token!
+  	puts "this token is expired and refreshing!!!!!"
+    response = request_token_from_basecamp2
+    data = JSON.parse(response.body)
 
+    if data['access_token'].nil?
+      puts "Access_token nil while refreshing token for user #{oauth_user_name}"
+      return false
+    else
+      update_attributes(
+        oauth_access_token: data['access_token'],
+        oauth_refresh_date: Time.now.to_i + data['expires_in']
+        )
+      return self
+    end
+  end
 
+  def token_expired?
+  	puts "this this token expired?"
+    oauth_refresh_date < Time.now.to_i
+  end
+
+  def fresh_token
+    refresh_token! if token_expired?
+    oauth_access_token
+  end
 
 end
 

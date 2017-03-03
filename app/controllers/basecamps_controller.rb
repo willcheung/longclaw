@@ -1,7 +1,10 @@
 require_dependency "app/services/basecamp_service.rb"
+require 'oauth2'
+require 'Time'
 
 class BasecampsController < ApplicationController
 	layout "empty", only: [:index]
+
 
 	def index
 	end
@@ -73,10 +76,8 @@ class BasecampsController < ApplicationController
 
 			@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 			if @basecamp2_user
-
 				begin 
-					
-					events = BaseCampService.basecamp2_user_project_events(@basecamp2_user['oauth_access_token'], params[:basecamp_project_id], @basecamp2_user['oauth_instance_url'])
+					events = BaseCampService.basecamp2_user_project_events(@basecamp2_user, params[:basecamp_project_id])					
 					object_info = events
 					eventable_id_list = events
 					list = []
@@ -153,6 +154,11 @@ class BasecampsController < ApplicationController
 	def self.basecamp2_user_todos(token)
 		BaseCampService.basecamp2_user_todos(token)
 	end
+
+	def self.refresh(token)
+		BaseCampServices.refresh_token(token)
+	end
+
 
 
 end
