@@ -1,72 +1,3 @@
-<head>
-  <style>
-    .success_highlight {
-      background-color: #0FB;
-    }
-
-    .error_highlight {
-      color: white;
-      background-color: red;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 42px;
-      height: 23px;
-    }
-
-    .switch input {display:none;}
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      -webkit-transition: .4s;
-      transition: .4s;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 19px;
-      width: 19px;
-      left: 2px;
-      top: 2px;
-      background-color: white;
-      -webkit-transition: .4s;
-      transition: .4s;
-    }
-
-    input:checked + .slider {
-      background-color: #3c8dc5;
-    }
-
-    input:focus + .slider {
-      box-shadow: 0 0 2px #666;
-    }
-
-    input:checked + .slider:before {
-      -webkit-transform: translateX(19px);
-      -ms-transform: translateX(19px);
-      transform: translateX(19px);
-    }
-
-    /* Rounded sliders - solid base */
-    .slider.round {
-      border-radius: 24px;
-    }
-
-    .slider.round:before {
-      border-radius: 50%;
-    }
-  </style>
-</head>
-
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
         <h2>Salesforce Integration</h2>
@@ -104,13 +35,13 @@
                     </ul>
                   </div>
               </nav>
-              <div id="filter_switch" style="padding:0.5em 0 0;margin-bottom:1em;border-bottom:1px dotted grey;">
-                <label class="switch">
-                  <input type="checkbox" onclick="javascript:handle_SF_Custom_Fields_Only_filter_switch_click(this);" <% if params[:sf_custom_fields_only] == "true" %> checked <% end %>
+              <div id="filter_toggle" style="padding:0.5em 0 0;margin-bottom:1em;border-bottom:1px dotted grey;">
+                <label class="filter-switch">
+                  <input type="checkbox" onclick="javascript:handle_SF_Custom_Fields_Only_filter_toggle_click(this);" <% if params[:sf_custom_fields_only] == "true" %> checked <% end %>
                   />
-                  <div class="slider round"></div>
+                  <div class="filter-slider round"></div>
                   <span style="font-weight:normal;position:absolute;top:3px;left:48px;width:256px">Only list custom Salesforce fields <% if params[:sf_custom_fields_only] == "true" %>(filter on)<% else %>(filter off)<% end %></span>
-                  <i id="filter_switch_refresh" class='fa fa-refresh' style='display:none;font-weight:normal;position:absolute;top:5px;left:304px'></i>
+                  <i id="filter_toggle_refresh" class='fa fa-refresh' style='display:none;font-weight:normal;position:absolute;top:5px;left:304px'></i>
                 </label>
               </div>
               <div class="row col-lg-12" style="margin-right:0; margin-left:0; padding:0px; display: inline"> 
@@ -121,7 +52,7 @@
                       <td style="margin-right:-1em;padding:0;float:right">
                         <a href="#" style="border-bottom:2px solid red;display:none"><i class="fa fa-exclamation"></i> Clear account mapping</a>&nbsp;&nbsp;
                         <div style="min-width:18em;width:18em;padding:0px;display:inline-block">
-                          <span id="salesforce-refresh-accounts" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Accounts</span>
+                          <span id="salesforce-refresh-accounts-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Accounts</span>
                           <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
                         </div>
                       </td>
@@ -171,7 +102,7 @@
                     <td style="margin-right:-1.5em;padding:0;float:right">
                       <a href="#" style="border-bottom:2px solid red;display:none"><i class="fa fa-exclamation"></i> Clear all stream mapping</a>&nbsp;&nbsp;
                       <div style="min-width:18em;width:18em;padding:0px;display:inline-block">
-                        <span id="salesforce-refresh-projects" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Streams</span>
+                        <span id="salesforce-refresh-projects-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Streams</span>
                         <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
                       </div>
                     </td>
@@ -220,82 +151,15 @@
 </div>
 
 <script>
-  function handle_SF_Custom_Fields_Only_filter_switch_click(checkbox) {
-      $("#filter_switch").css("pointer-events", "none");  //disable clicks on toggle switch
+    function handle_SF_Custom_Fields_Only_filter_toggle_click(checkbox) {
+        $("#filter_toggle").css("pointer-events", "none");  //disable clicks on filter toggle switch
 
-      document.getElementById('filter_switch_refresh').style.display = "inline";  // show fa-refresh icon
-      document.getElementById('filter_switch_refresh').className = document.getElementById('filter_switch_refresh').className + " fa-spin";
+        document.getElementById('filter_toggle_refresh').style.display = "inline";  // show fa-refresh icon
+        document.getElementById('filter_toggle_refresh').className = document.getElementById('filter_toggle_refresh').className + " fa-spin";
 
-      if (checkbox.checked)
-          window.location.replace("/settings/salesforce_fields?sf_custom_fields_only=true");
-      else
-          window.location.replace("/settings/salesforce_fields");
-  };
-
-  $('#salesforce-refresh-accounts,#salesforce-refresh-projects').click(function() {
-      var entity_type_str, entity_type_btn_str;
-      var self = $(this);
-      if (self.attr("id").includes("salesforce-refresh-accounts")) {
-          entity_type_str = "accounts";
-          entity_type_btn_str = "Accounts";
-      } 
-      else {
-          entity_type_str = "projects";
-          entity_type_btn_str = "Streams";
-      }
-
-      $.ajax('/salesforce_fields_refresh?entity_type=' + entity_type_str, {
-          async: true,
-          method: "POST",
-          data: "",
-          beforeSend: function () {
-              self.css("margin-left","0px");
-              self.removeClass('success_highlight error_highlight');
-              self.addClass('btn-outline');
-              self.html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str);
-              $("#salesforce-refresh-" + entity_type_str + " .fa.fa-refresh").addClass('fa-spin');
-          },
-          error: function(data) {
-              var res = JSON.parse(data.responseText);
-              self.removeClass('btn-outline');
-              self.addClass('error_highlight');
-
-              alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n" + res.error);
-          },
-          statusCode: {
-              500: function() {
-                  self.css("margin-left","60px");
-                  self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
-              },
-              503: function() {
-                  self.css("margin-left","30px");
-                  self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
-              },
-          },
-          success: function() {
-              self.addClass('success_highlight');
-              self.html("✓ Refresh ContextSmith " + entity_type_btn_str);
-          }
-      });
-  });
-
-  $('.salesforce-account-field-name,.salesforce-opportunity-field-name').change(function() {
-      var selectorStr, entity_type_btn_str;
-      if ($(this).attr("class").includes("salesforce-account-field-name")) {
-        selectorStr = "#salesforce-refresh-accounts";
-        entity_type_btn_str = "Accounts";
-      } 
-      else {
-        selectorStr = "#salesforce-refresh-projects";
-        entity_type_btn_str = "Streams";
-      }
-
-      $(selectorStr).css("margin-left","0px")
-      $(selectorStr).removeClass('success_highlight error_highlight');
-      $(selectorStr).addClass('btn-outline');
-      $(selectorStr).html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str)
-      
-      document.getElementById("exclamation-triangle-warning-cfid"+ $(this).attr("cf_id")).style.display = "none"; // remove warning
-  });
-
+        if (checkbox.checked)
+            window.location.replace("/settings/salesforce_fields?sf_custom_fields_only=true");
+        else
+            window.location.replace("/settings/salesforce_fields");
+    };
 </script>
