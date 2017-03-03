@@ -91,7 +91,7 @@ class Project < ActiveRecord::Base
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
         .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
-        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
+        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND projects.is_confirmed = true AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
                organization_id, user_id, user_id)
         .group('projects.id')
   }
@@ -118,6 +118,7 @@ class Project < ActiveRecord::Base
   }
   
   scope :is_active, -> {where("projects.status = 'Active'")}
+  scope :is_confirmed, -> {where("projects.is_confirmed = true")}
 
   validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
   validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
@@ -817,7 +818,7 @@ class Project < ActiveRecord::Base
         Activity.load(get_project_conversations(data, p), project, true, user_id)
 
         # Upsert/load Smart Tasks.
-        Notification.load(get_project_conversations(data, p), project, false)
+        #Notification.load(get_project_conversations(data, p), project, false)
 
         # Load Opportunities
         # 8/30: Temporarily disable this because it gets too noisy during initial onboarding phase

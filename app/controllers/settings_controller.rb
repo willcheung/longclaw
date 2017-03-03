@@ -103,12 +103,12 @@ class SettingsController < ApplicationController
 
 	# Map CS Streams with Salesforce Opportunities: "One CS Stream can link to many Salesforce Opportunities"
 	def salesforce_opportunities
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active # all active projects because "admin" role can see everything
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed # all active projects because "admin" role can see everything
 		@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
 	end
 
 	def salesforce_activities
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id") # all active projects because "admin" role can see everything
+		@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id") # all active projects because "admin" role can see everything
 	end
 
 	def salesforce_fields
@@ -121,7 +121,6 @@ class SettingsController < ApplicationController
 		else
 			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
 		end
-		
 		#puts "************** @sf_fields **************", @sf_fields, "******************************"
 	end
 

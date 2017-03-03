@@ -138,7 +138,7 @@ class SalesforceController < ApplicationController
 
   # Activities are loaded into native CS Streams, depending on the explicit mapping of a SFDC opportunity to a CS stream, or the implicit (stream) mapping of a SFDC account mapped to a CS account.
   def refresh_activities
-    @streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
+    @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
     @streams.each do |s|
 
@@ -168,8 +168,8 @@ class SalesforceController < ApplicationController
         client = SalesforceService.connect_salesforce(current_user.organization_id)
 
         unless client.nil?  #connection error
-          active_accounts = Account.where("accounts.organization_id = ? and status = 'Active'", current_user.organization_id)
-          active_accounts.each do |a|
+          accounts = Account.where("accounts.organization_id = ? and status = 'Active'", current_user.organization_id)
+          accounts.each do |a|
             unless a.salesforce_accounts.first.nil? 
               #print "***** SFDC account:\"", a.salesforce_accounts.first.salesforce_account_name, "\" --> CS account:\"", a.name, "\" *****\n"
               result = Account.load_salesforce_fields(client, a.id, a.salesforce_accounts.first.salesforce_account_id, account_custom_fields)
@@ -193,8 +193,8 @@ class SalesforceController < ApplicationController
         client = SalesforceService.connect_salesforce(current_user.organization_id)
 
         unless client.nil?  #connection error
-          active_streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity)
-          active_streams.each do |s|
+          streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity)
+          streams.each do |s|
             unless s.salesforce_opportunity.nil?
               #print "***** SFDC stream:\"", s.salesforce_opportunity.name, "\" --> CS opportunity:\"", s.name, "\" *****\n"
               result = Project.load_salesforce_fields(client, s.id, s.salesforce_opportunity.salesforce_opportunity_id, stream_custom_fields)
