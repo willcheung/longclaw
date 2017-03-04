@@ -17,4 +17,6 @@ class CustomList < ActiveRecord::Base
 	belongs_to :custom_lists_metadatum, foreign_key: "custom_lists_metadata_id"
 	
 	validates :custom_lists_metadatum, presence: true
+
+	default_scope -> { order :created_at }  # strong default ordering of value options
 end
