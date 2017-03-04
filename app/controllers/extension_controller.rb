@@ -16,7 +16,7 @@ class ExtensionController < ApplicationController
   end
 
   def account
-    @activities = @project.activities.take(5)
+    @activities = @project.activities.take(8)
   end
 
   def alerts_tasks
@@ -42,44 +42,7 @@ class ExtensionController < ApplicationController
 
     respond_to do |format|
       if @account.save
-        @project = @account.projects.new(
-          name: @account.name,
-          description: "Default stream for #{@account.name}",
-          created_by: current_user.id,
-          updated_by: current_user.id,
-          owner_id: current_user.id,
-          is_confirmed: true,
-        )
-        @project.project_members.new(user: current_user)
-
-        emails = params[:emails].split(',')
-        names = params[:names].split(',')
-        emails.zip(names) do |person|
-          unless person[1] == 'me'
-            if get_domain(person[0]) == get_domain(current_user.email)
-              user = User.find_by(email: person[0], organization: current_user.organization)
-              user = current_user.organization.users.create(
-                first_name: get_first_name(person[1]),
-                last_name: get_last_name(person[1]),
-                email: person[0],
-                invited_by_id: current_user.id,
-                invitation_created_at: Time.current
-              ) unless user
-              @project.project_members.new(user: user)
-            else
-              contact = @account.contacts.create(
-                first_name: get_first_name(person[1]),
-                last_name: get_last_name(person[1]),
-                email: person[0]
-              )
-              @project.project_members.new(contact: contact)
-            end
-          end
-        end
-
-        if @project.save
-          ContextsmithService.load_emails_from_backend(@project, 2000)
-          ContextsmithService.load_calendar_from_backend(@project, 1000)
+        if create_project
           format.html { redirect_to extension_account_path(emails: params[:emails]), notice: 'Account Stream was successfully created.' }
           format.js
         else
@@ -94,15 +57,89 @@ class ExtensionController < ApplicationController
   end
 
   private
+  # def set_account_and_project
+  #   addresses = params[:emails].split(',').map { |a| a.split('@') }
+  #   addresses.reject! { |a| a[1] == get_domain(current_user.email) }
+  #   redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
+  #   domain = addresses.group_by { |a| a[1] }.values.max_by(&:size).first[1] # get most common domain
+  #   @account = Account.find_by_domain(domain) # use most common domain to find account
+  #   redirect_to extension_no_account_path(URI.escape(domain, "."))+"\?emails="+params[:emails]+'&names='+params[:names] and return unless @account # if no account, redirect to new "this acct not in contextsmith" page
+  #   projects = @account.projects
+  #   @project = projects.first # TODO: find best fit project from this account
+  # end
+
   def set_account_and_project
-    addresses = params[:emails].split(',').map { |a| a.split('@') }
-    addresses.reject! { |a| a[1] == get_domain(current_user.email) }
+    # TODO: blacklist gmail, yahoo, hotmail, etc.
+    addresses = params[:emails].split(',').reject { |a| get_domain(a) == get_domain(current_user.email) }
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
-    domain = addresses.group_by { |a| a[1] }.values.max_by(&:size).first[1] # get most common domain
-    @account = Account.find_by_domain(domain) # use most common domain to find account
-    redirect_to extension_no_account_path(URI.escape(domain, "."))+"\?emails="+params[:emails]+'&names='+params[:names] and return unless @account # if no account, redirect to new "this acct not in contextsmith" page
-    projects = @account.projects
-    @project = projects.first # TODO: find best fit project from this account
+    addresses = addresses.group_by { |a| get_domain(a) }.values.sort_by(&:size).flatten
+    order_addresses_by_domain_freq = addresses.map { |a| "email = #{a} DESC" }.join(',')
+    contacts = Contact.joins(:account).where(email: addresses, accounts: { organization_id: current_user.organization_id}).order(order_addresses_by_domain_freq) #.includes(:projects, :account)
+    if contacts.present?
+      projects = contacts.includes(:projects).map(&:projects).flatten
+      if projects.present?
+        @project = projects.group_by(&:id).values.max_by(&:size).first.first
+        @account = @project.account
+      end
+    else
+      domains = addresses.map { |a| get_domain(a) }.uniq
+      where_domain_matches = domains.map { |domain| "email LIKE '%#{domain}'"}.join(" OR ")
+      order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
+      contacts = Contact.joins(:account).where(accounts: { organization_id: current_user.organization_id }).where(where_domain_matches).order(order_domain_frequency)
+      if contacts.blank?
+        order_domain_frequency = domains.map { |domain| "domain = #{domain} DESC" }.join(',')
+        accounts = Account.where(domain: domains, organization: current_user.organization).order(order_domain_frequency)
+        redirect_to extension_no_account_path(URI.escape(domains.first, ".")) + "\?" + { emails: params[:emails], names: params[:names] }.to_param and return if @accounts.blank?
+        @account = accounts.first
+      end
+    end
+    @account ||= contacts.first.account
+    @project ||= @account.projects.first
+    create_project if @project.blank?
+  end
+
+  def create_project
+    @project = @account.projects.new(
+      name: @account.name,
+      description: "Default stream for #{@account.name}",
+      created_by: current_user.id,
+      updated_by: current_user.id,
+      owner_id: current_user.id,
+      is_confirmed: true,
+    )
+    @project.project_members.new(user: current_user)
+
+    emails = params[:emails].split(',')
+    names = params[:names].split(',')
+    emails.zip(names) do |person|
+      unless person[1] == 'me' || person[0] == current_user.email
+        if get_domain(person[0]) == get_domain(current_user.email)
+          user = User.find_by(email: person[0], organization: current_user.organization)
+          user = current_user.organization.users.create(
+            first_name: get_first_name(person[1]),
+            last_name: get_last_name(person[1]),
+            email: person[0],
+            invited_by_id: current_user.id,
+            invitation_created_at: Time.current
+          ) unless user
+          @project.project_members.new(user: user)
+        else
+          contact = @account.contacts.create(
+            first_name: get_first_name(person[1]),
+            last_name: get_last_name(person[1]),
+            email: person[0]
+          )
+          @project.project_members.new(contact: contact)
+        end
+      end
+    end
+
+    success = @project.save
+    if success
+      ContextsmithService.load_emails_from_backend(@project, 2000)
+      ContextsmithService.load_calendar_from_backend(@project, 1000)
+    end
+    success
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
