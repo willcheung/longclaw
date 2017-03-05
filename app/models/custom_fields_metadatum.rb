@@ -10,12 +10,14 @@
 #  update_permission_level  :string           not null
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
-#  default                  :string
+#  default_value            :string
 #  custom_lists_metadata_id :integer
+#  salesforce_field         :string
 #
 # Indexes
 #
 #  custom_fields_metadata_idx                                (organization_id,entity_type)
+#  idx_custom_fields_metadata_on_sf_field_and_entity_unique  (organization_id,entity_type,salesforce_field) UNIQUE
 #  index_custom_fields_metadata_on_custom_lists_metadata_id  (custom_lists_metadata_id)
 #
 

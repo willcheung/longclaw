@@ -3,7 +3,7 @@ class CreateCustomListsMetadata < ActiveRecord::Migration
     create_table :custom_lists_metadata do |t|
       t.uuid      :organization_id, null: false
       t.string    :name, null: false
-      t.boolean   :cs_app_list, null: false, default: false  # special application list: user may not rename or delete this list, and is not allowed to remove all options available to it
+      t.boolean   :cs_app_list, null: false, default: false  # special system custom list: user may not rename or delete this list, and is not allowed to remove all options available to it
       
       t.timestamps null: false
     end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170209225829) do
+ActiveRecord::Schema.define(version: 20170228015415) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -147,11 +147,13 @@ ActiveRecord::Schema.define(version: 20170209225829) do
     t.string   "update_permission_level",  null: false
     t.datetime "created_at",               null: false
     t.datetime "updated_at",               null: false
-    t.string   "default"
+    t.string   "default_value"
     t.integer  "custom_lists_metadata_id"
+    t.string   "salesforce_field"
   end
 
   add_index "custom_fields_metadata", ["custom_lists_metadata_id"], name: "index_custom_fields_metadata_on_custom_lists_metadata_id", using: :btree
+  add_index "custom_fields_metadata", ["organization_id", "entity_type", "salesforce_field"], name: "idx_custom_fields_metadata_on_sf_field_and_entity_unique", unique: true, using: :btree
   add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", using: :btree
 
   create_table "custom_lists", force: :cascade do |t|

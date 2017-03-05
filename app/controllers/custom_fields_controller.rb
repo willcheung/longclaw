@@ -1,6 +1,5 @@
 class CustomFieldsController < ApplicationController
   def update
-    #Project.visible_to(current_user.organization_id, current_user.id)
     custom_field = current_user.organization.custom_fields.find(params[:id])
     if custom_field
       respond_to do |format|

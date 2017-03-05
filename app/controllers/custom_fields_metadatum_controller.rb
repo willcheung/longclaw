@@ -39,6 +39,6 @@ class CustomFieldsMetadatumController < ApplicationController
   private
 
   def custom_fields_metadatum_params
-    params.require(:custom_fields_metadatum).permit(:name, :data_type, :update_permission_level, :custom_lists_metadata_id)
+    params.require(:custom_fields_metadatum).permit(:name, :data_type, :update_permission_level, :custom_lists_metadata_id, :salesforce_field)
   end
 end

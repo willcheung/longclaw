@@ -26,7 +26,7 @@
                 <!--<button id="edit-btn" class="btn btn-info" style="display: none;">Edit</button>-->
                 <!--<button id="save-btn" form="custom-lists-form" class="btn btn-primary">Save</button>-->
             </div>
-            <span title="locked" style="color:black;"><i class="fa fa-lock"></i> = System list<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="right" data-original-title="These custom lists cannot be renamed or deleted, and must have at least one option."></i></span>
+            <span title="locked" style="color:black;"><i class="fa fa-lock"></i> = System list</span><i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="right" data-original-title="System custom lists cannot be renamed or deleted, and must have at least one option."></i>
             <table class="table table-condensed responsive no-wrap m-t-sm" style="width:80%">
                 <thead>
                     <tr>
@@ -60,7 +60,7 @@
                     <tr>
                         <td></td>
                         <td></td>
-                        <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe, custom_lists_metadata_path, method: :post, style: "color:#A1C436",title: "Add a new list" %></td>
+                        <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe, custom_lists_metadata_path, method: :post, style: "color:#A1C436",title: "Add a new custom list" %></td>
                     </tr>
                 </tbody>
             </table>
