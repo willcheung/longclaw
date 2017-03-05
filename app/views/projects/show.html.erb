@@ -182,7 +182,7 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested Members</strong>
+                    <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested People</strong>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be involved in this stream. Click the ✔ or X to confirm or reject our suggestions."></i>
                 </div>
             </div>
@@ -201,7 +201,7 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="pm-length"><%= @project_members.length %></span> Members</strong>
+                    <strong><span id="pm-length"><%= @project_members.length %></span> People</strong>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
                 </div>
             </div>
@@ -211,7 +211,7 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                         <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add members...">
+                         <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add people...">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
                     <%end%>
