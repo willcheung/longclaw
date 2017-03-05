@@ -82,8 +82,12 @@ Longclaw::Application.routes.draw do
     post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
     
     scope "reports", controller: :reports, as: 'reports' do
-      get 'accounts'
-      get 'team'
+      get 'd_account_success'
+      get 'd_account_sales'
+      get 'd_team_success'
+      get 'd_team_sales'
+      get 'd_executive'
+      get 'd_competitors'
       get 'accounts_dashboard'
       get 'dashboard_data/:sort' => 'reports#dashboard_data'
       get 'account_data/:id' => 'reports#account_data'
