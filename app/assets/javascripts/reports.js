@@ -14,22 +14,21 @@ $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true
 $('input[name="daterange"]').daterangepicker({
     "alwaysShowCalendars": true,
     "opens": "left",
-    "startDate": moment().subtract(7, "days").format("l"),
+    "startDate": moment().subtract(180, "days").format("l"),
     "ranges": {
-        "Today": [
-            moment().format("l"),
-            moment().format("l")
-        ],
-        "Last 7 Days": [
-            moment().subtract(7, "days").format("l"),
-            moment().format("l")
-        ],
-
         "Last 30 Days": [
             moment().subtract(30, "days").format("l"),
             moment().format("l")
         ],
-        "Last 90 Days": [
+        "Last 180 days": [
+            moment().subtract(180, "days").format("l"),
+            moment().format("l")
+        ],
+        "Year 2016": [
+            moment().subtract(90, "days").format("l"),
+            moment().format("l")
+        ],
+        "Year 2015": [
             moment().subtract(90, "days").format("l"),
             moment().format("l")
         ]
