@@ -173,14 +173,14 @@
                 <% a.email_messages.reverse.each_with_index do |c, i| %>
                   <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% unless a.email_messages.size - 1 == i %> style="display:none;" <% end %> >
                       <% if c.eventable %>
-                      <div class="chat-message <%= is_internal_domain?(c.email_address) ? "left" : "right" %>">
+                      <div class="chat-message <%= is_internal_domain?(c.user_email) ? "left" : "right" %>">
                           <%= get_profile_pic(c.creator.name, c.creator.name, "message-avatar") %>
                           <div class="message">
                             <% if c.action == 'commented on'%>
-                              <span class="message-author" href="#"> <%=c.creator.name %> </span> added a comment - <%=c.updated_at.to_date %>
+                              <span class="message-author" href="#"> <%=c.creator.name %> </span> added a comment - <%=c.created_at.to_date %>
                               <span class="message-content"><%= simple_format(c.excerpt) %></span>
                             <% else %>
-                              <span class="message-author" href="#"> <%=c.creator.name %> </span> created action - <%=c.updated_at.to_date %>
+                              <span class="message-author" href="#"> <%=c.creator.name %> </span> created action - <%=c.created_at.to_date %>
                               <span class="message-content"><%= simple_format(c.summary) %></span>
                               <%end%>
                           </div>

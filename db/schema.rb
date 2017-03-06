@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170209225829) do
+ActiveRecord::Schema.define(version: 20170305212057) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -180,7 +180,10 @@ ActiveRecord::Schema.define(version: 20170209225829) do
     t.string   "external_source"
     t.datetime "created_at",              null: false
     t.datetime "updated_at",              null: false
+    t.integer  "oauth_user_id"
   end
+
+  add_index "integrations", ["oauth_user_id"], name: "index_integrations_on_oauth_user_id", using: :btree
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false
@@ -401,4 +404,5 @@ ActiveRecord::Schema.define(version: 20170209225829) do
 
   add_index "visits", ["user_id"], name: "index_visits_on_user_id", using: :btree
 
+  add_foreign_key "integrations", "oauth_users"
 end

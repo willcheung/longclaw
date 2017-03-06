@@ -27,7 +27,11 @@ require 'net/http'
 class OauthUser < ActiveRecord::Base
 	belongs_to 	:organization
 	belongs_to :user
-	has_many :integrations
+	has_many :integrations, dependent: :destroy
+
+	scope :basecamp_user, -> {where oauth_provider: CATEGORY[:basecamp2] }
+	
+	CATEGORY = { basecamp2: 'basecamp2', salesforce: 'salesforce' }
 	
 
 	def self.basecamp2_create_user(pin, organization_id, current_id)
@@ -95,7 +99,6 @@ class OauthUser < ActiveRecord::Base
   end
 
   def refresh_token!
-  	puts "this token is expired and refreshing!!!!!"
     response = request_token_from_basecamp2
     data = JSON.parse(response.body)
 
@@ -112,7 +115,7 @@ class OauthUser < ActiveRecord::Base
   end
 
   def token_expired?
-  	puts "this this token expired?"
+  	puts "Checking if token expired?"
     oauth_refresh_date < Time.now.to_i
   end
 
