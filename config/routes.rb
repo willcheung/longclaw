@@ -42,7 +42,8 @@ Longclaw::Application.routes.draw do
     post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
     post "/salesforce_refresh" => 'salesforce#refresh_accounts'
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
-    post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
+    post "/salesforce_activities_refresh/:entity_type" => 'salesforce#refresh_activities'
+    post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
 
@@ -68,10 +69,9 @@ Longclaw::Application.routes.draw do
       get "basecamp"
       get "basecamp2_projects"
       get "basecamp2_activity"
+      get "salesforce_fields" 
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
-      get "iframe_test"
-      get "chrome_gmail_plugin"
     end
 
     get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
@@ -97,11 +97,26 @@ Longclaw::Application.routes.draw do
     post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
     
     scope "reports", controller: :reports, as: 'reports' do
-      get 'accounts'
-      get 'team'
+      get 'd_account_success'
+      get 'd_account_sales'
+      get 'd_team_success'
+      get 'd_team_sales'
+      get 'd_executive'
+      get 'd_competitors'
       get 'accounts_dashboard'
       get 'dashboard_data/:sort' => 'reports#dashboard_data'
       get 'account_data/:id' => 'reports#account_data'
+    end
+
+    scope "extension", controller: :extension, as: 'extension' do
+      get '/' => 'extension#index'
+      get 'test'
+      get 'account'
+      get 'alerts_tasks'
+      get 'contacts'
+      get 'metrics'
+      get 'no_account/:domain', to: 'extension#no_account', as: :no_account
+      post 'create_account'
     end
 
     resources :custom_fields, only: [:update]

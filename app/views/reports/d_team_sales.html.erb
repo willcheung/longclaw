@@ -34,10 +34,14 @@
     
     <div class="row border-bottom white-bg dashboard-header">
             <!-- LEFT -->
-            <div class="col-lg-5">
+            <div class="col-md-5">
                 <h4 class="m-l-md">Sort by: 
                 <select class="metric_filter col-lg-8" data-placeholder="Select Type">
-                    <option value="2">Account Revenue</option>
+                    <option value="2">Opportunities</option>
+                    <option value="2">Opportunity Revenue</option>
+                    <option value="2">Revenue per Hour Spent (Last 7d)</option>
+                    <option value="2">Time Spent (Last 7d)</option>
+                    <option value="2">On Target</option>
                     <option value="1" selected="true">Activities (Last 7d)</option>
                     <option value="2">New Alerts & Tasks (Last 7d)</option>
                     <option value="2">Closed Alerts & Tasks (Last 7d)</option>
@@ -45,14 +49,12 @@
                   </select>    
                
                 </h4>
-                <div id="left-chart" class="left-chart" style="height:1200px;"></div>
+                <div id="left-chart" class="left-chart" style="height:800px;"></div>
                 
-                <h5><a href="" class="btn btn-outline btn-primary btn-xs m-l-lg">&larr; Previous 25</a>
-                <a href="" class="btn btn-outline btn-primary btn-xs m-l-sm">Next 25 &rarr;</a></h5>
             </div>
 
             <!-- RIGHT -->
-            <div class="col-lg-7" style="margin-top:45px;">
+            <div class="col-md-7" style="margin-top:45px;">
                 <div id="intro-account-header">
                     <div class="row" style="margin-top:50px;">
                         <h3>&larr; Click on a bar to see details about the account stream.</h3>
@@ -96,10 +98,10 @@
                             <div class="col-md-3 text-center">
                                 <div class="metric">
                                     <div class="metric-title">
-                                        <h4>Accounts</h4>
+                                        <h4>Opportunities</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">5</h2>
+                                        <h2 style="font-weight:600;font-size:46px">8</h2>
                                     </div>
                                 </div>
                             </div>
@@ -107,7 +109,7 @@
                             <div class="col-md-3 text-center">
                                 <div class="metric">
                                     <div class="metric-title">
-                                        <h4>Revenue</h4>
+                                        <h4>Opportunity Revenue</h4>
                                     </div>
                                     <div class="metric-content">
                                         <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
@@ -129,7 +131,7 @@
                         </div>
 
                         <div class="row m-t-md">
-                            <div id="customers-volume-chart" style="height:340px"></div>
+                            <div id="customers-volume-chart" style="height:280px"></div>
                         </div>
 
                     </div>
@@ -137,7 +139,7 @@
                     <div class="ibox-content">
                         <div class="row">
                             <h2>Alerts, Tasks, and Goals</h2>
-                            <div id="tasks-trend" style="height:300px"></div>
+                            <div id="tasks-trend" style="height:280px"></div>
                         </div>
                     </div>
 
@@ -258,14 +260,11 @@
                 }
             },
             series: [{
-                name: 'Read',
-                data: [1, 2.2, 0.5, 0.8, 3]
-            }, {
-                name: 'Sent',
-                data: [0.2, 0.2, 0, 2.1, 2]
+                name: 'Emails',
+                data: [0.5, 1, 2.2, 2.8, 3]
             }, {
                 name: 'Meetings',
-                data: [1, 0, 0, 3, 2]
+                data: [0, 1, 0, 0.5, 2]
             }]
         });
 

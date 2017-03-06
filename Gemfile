@@ -48,6 +48,7 @@ group :development do
   gem 'ffaker'                    # generate fake data
   gem "letter_opener"             # email preview
   gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]  # Time zone info required for running app on Windows environment
+  gem 'thin'
 end
 
 group :production do

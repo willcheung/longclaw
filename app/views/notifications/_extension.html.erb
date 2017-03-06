@@ -1,0 +1,4 @@
+<div>
+  <input type="checkbox" name="" <%= "checked" if n.is_complete %> >
+  <p class="in-bl"><%= n.name %> <small><%= n.original_due_date.strftime("%a, %b %-d") if n.original_due_date %></small></p>  
+</div>
