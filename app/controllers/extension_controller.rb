@@ -73,12 +73,12 @@ class ExtensionController < ApplicationController
     addresses = params[:emails].split(',').reject { |a| get_domain(a) == get_domain(current_user.email) }
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
     addresses = addresses.group_by { |a| get_domain(a) }.values.sort_by(&:size).flatten
-    order_addresses_by_domain_freq = addresses.map { |a| "email = #{a} DESC" }.join(',')
+    order_addresses_by_domain_freq = addresses.map { |a| "email = '#{a}' DESC" }.join(',')
     contacts = Contact.joins(:account).where(email: addresses, accounts: { organization_id: current_user.organization_id}).order(order_addresses_by_domain_freq) #.includes(:projects, :account)
     if contacts.present?
       projects = contacts.includes(:projects).map(&:projects).flatten
       if projects.present?
-        @project = projects.group_by(&:id).values.max_by(&:size).first.first
+        @project = projects.group_by(&:id).values.max_by(&:size).first
         @account = @project.account
       end
     else
@@ -87,7 +87,7 @@ class ExtensionController < ApplicationController
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
       contacts = Contact.joins(:account).where(accounts: { organization_id: current_user.organization_id }).where(where_domain_matches).order(order_domain_frequency)
       if contacts.blank?
-        order_domain_frequency = domains.map { |domain| "domain = #{domain} DESC" }.join(',')
+        order_domain_frequency = domains.map { |domain| "domain = '#{domain}' DESC" }.join(',')
         accounts = Account.where(domain: domains, organization: current_user.organization).order(order_domain_frequency)
         redirect_to extension_no_account_path(URI.escape(domains.first, ".")) + "\?" + { emails: params[:emails], names: params[:names] }.to_param and return if @accounts.blank?
         @account = accounts.first
