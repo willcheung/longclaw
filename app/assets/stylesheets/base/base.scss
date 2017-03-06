@@ -184,6 +184,17 @@ video {
 
 #page-wrapper.extension-sidebar {
   padding: 5px;
+
+  .navbar-header {
+    display: block;
+    float: none;
+    text-align: center;
+
+    .navbar-brand {
+      float: none;
+      line-height: 14px;
+    }
+  }
 }
 
 @media (min-width: 768px) {
