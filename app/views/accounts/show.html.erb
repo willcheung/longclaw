@@ -136,7 +136,7 @@
                     <span class="pull-right m-r-xs"><%= best_in_place @account, :address, :as => 'textarea', :place_holder => '(none)', :display_with => :simple_format, :activator => '#acc-address-activator' %> </span>
                 </li>
                 <!-- Custom fields -->
-                <% @account.custom_fields.order(:custom_fields_metadata_id).each.with_index do |cf, i| %>
+                <% @account.custom_fields.each.with_index do |cf, i| %>
                     <li class="list-group-item m-b-sm">
                         <strong><%= cf.custom_fields_metadatum.name %>:</strong>
                         <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and not cf.custom_fields_metadatum.custom_lists_metadatum.nil? and not cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty? %>

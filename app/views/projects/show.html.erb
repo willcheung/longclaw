@@ -27,7 +27,7 @@
                 <a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a>
             </li>
             <li class="active">
-                <%= @project.name %>
+                <strong><%= @project.name %></strong>
             </li>
         </ol>
     </div>
@@ -151,7 +151,7 @@
                         <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
                     </li>
                     <!-- Custom fields -->
-                    <% @project.custom_fields.order(:custom_fields_metadata_id).each.with_index do |cf, i| %>
+                    <% @project.custom_fields.each.with_index do |cf, i| %>
                         <li class="list-group-item m-b-sm">
                             <strong><%= cf.custom_fields_metadatum.name %>:</strong>
                             <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and not cf.custom_fields_metadatum.custom_lists_metadatum.nil? and not cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty? %>
