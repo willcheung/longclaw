@@ -7,13 +7,12 @@ class SettingsController < ApplicationController
 	def index
 		@user_count = current_user.organization.users.count
 		@registered_user_count = current_user.organization.users.registered.count
+		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 		@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
     if(@salesforce_user.nil?)
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
     end
-    @basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-
-
+    
 	end
 
 	def users
@@ -129,11 +128,6 @@ class SettingsController < ApplicationController
 		end
 		#puts "************** @sf_fields **************", @sf_fields, "******************************"
 	end
-
-
-
-
-
 
 	def basecamp
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
