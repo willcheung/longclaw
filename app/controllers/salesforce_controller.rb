@@ -52,7 +52,6 @@ class SalesforceController < ApplicationController
             activities = Activity.get_activity_by_filter(p, params)
             @project_risk_score = p.current_risk_score(current_user.time_zone)
             @project = p
-    				break
     			end
     		end
   		else

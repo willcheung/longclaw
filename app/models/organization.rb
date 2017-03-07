@@ -9,12 +9,12 @@
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #  owner_id   :uuid
-#
+
 
 class Organization < ActiveRecord::Base
   has_many :users
   has_many :accounts
-  has_many :oauth_users
+  has_many :oauth_users, foreign_key: "organization_id"
   has_many :salesforce_accounts, foreign_key: "contextsmith_organization_id"
   has_many :risk_settings, as: :level
   has_many :custom_fields_metadatum, dependent: :destroy

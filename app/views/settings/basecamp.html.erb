@@ -1,0 +1,166 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>BaseCamp2 Integration</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= settings_path%>">Settings</a>
+            </li>
+            <li class="active">
+                <strong>BaseCamp Integration</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox float-e-margins">
+        <div class="ibox-content">
+          
+          <% if @basecamp2_user %>
+            <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/<%=@basecamp2_user.id%>" data-method= "delete">Disconnect From Basecamp2 </a></span>
+
+            <i class="fa fa-check " aria-hidden='true' style='color:green; display:inline-block;'></i><p style='display:inline-block;'> Connected to BaseCamp2!</p>
+          <% else %>
+            <p>ContextSmith requires permission to connect to Basecamp.</p>
+            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/basecamp2">Connect to BaseCamp2</a><br>
+          <% end %>
+            <div>
+            Currently only supporting BaseCamp2. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
+            </div>
+
+              <nav class="navbar navbar-default">
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                  <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">Step 1: Map Account</a></li>
+                    <li><a href="/settings/basecamp2_projects">Step 2: Map Streams</a></li>
+                 </ul>
+                </div>
+              </nav>
+
+              <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; margin-top:15px; padding:0px; display: inline;"> 
+
+                <div class="contextsmith_account col-lg-3" style="margin-right:0px; margin-left:0px; padding:0px; display: inline;">
+                <% if @basecamp2_user %>
+                  <select class="contextsmith_account_box" data-placeholder="Select Contextsmith Stream">
+                    <option value="0"></option>
+                    <% if !@streams.nil?  %>
+                      <% @streams.each do |a| %>
+                        <option value="<%=a.id %>"><%=a.name %></option>
+                      <% end %>
+                    <% end  %>
+                  </select>
+                </div>
+                <div class="basecamp2_account col-lg-3" style="margin-right:0px; margin-left:15px; padding:0px; display: inline;">
+                  <select class="basecamp2_account_box" data-placeholder='Select BaseCamp2 Account'>
+                    <option value="0"></option>
+                        <% if !@basecamp_projects.nil?  %>
+                          <% @basecamp_projects.each do |a| %>
+                            <option value="<%=a['id'] %>"><%=a['name'] %></option>
+                          <% end %>
+                        <% end  %>
+                  </select>
+                </div>
+                <div class="basecamp2_account col-lg-3" style="margin-right:0px; margin-left:15px; padding:0px; display: inline;">     
+                    <%= form_tag("/sync_stream/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
+                    <input name="basecamp_account_id" type="hidden" value="">
+                    <input name"project_id" type="hidden" value"">
+                    <input name="account_id" type="hidden" value="">  
+                    <div class="col-lg-1" style="margin:0px; padding-left:0px; padding-top:3px;">  
+                      <input type="submit" name="commit" value="Link" class="btn btn-primary btn-sm">            
+                    </div> 
+                  <%end%>
+                 <%end%>
+                </div>
+              </div>
+
+               <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
+                  <thead>
+                      <tr>
+                          <th>ContextSmith Streams</th>
+                          <th>
+                              <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Account</div>
+                              <!-- <div id="basecamp2-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Sync All Accounts</div>
+                              <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Basecamp2."></i>  -->                            
+                          </th>
+                          <th></th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                    <% if @basecamp_connections %>
+                      <% @basecamp_connections.each do |b| %>
+                        <tr>
+                          <td class="col-lg-2"><%=b['context_project_name']%></td>
+                          <td class="col-lg-2"><%=b['basecamp_project_name']%></td>
+                          <%= form_tag("/refresh_stream", :method => "post", id:"search-form", class: "fix-height" , remote:false) do %>
+                          <input name="project_id" type="hidden" value="<%=b['project_id']%>">
+                          <input name="basecamp_project_id" type="hidden" value="<%=b['basecamp_project_id']%>">
+                          <td class="col-lg-2"><input type="submit" name="refresh" value="Sync" class="btn btn-primary btn-sm center" data-disable-with='Sync' disable_with="Sync" >
+                           <%end%>    
+                          <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="/delete_basecamp2_account/<%=b['int_id']%>" data-method="delete">Remove</a></span></td>                          
+                        </tr>
+                        <% end %>
+                    <% end %>
+                  </tbody>
+              </table>
+              * Sync may take a few minutes.
+
+          
+        </div>
+    </div>
+</div>
+
+<script>
+    
+    $('.contextsmith_account_box').on('change',function(evt,params){
+      if(params){
+        $(".contextsmith_project_box").show();
+        $('input[name=account_id]').val(params["selected"]);
+      } 
+      else
+         $(".contextsmith_project_box").hide();  
+});
+
+    $('.basecamp2_account_box').on('change',function(evt,params){
+      if(params){
+        $('input[name=basecamp_account_id]').val(params["selected"]);
+      }   
+});
+
+
+    
+    $('#basecamp2-refresh').click(function(){
+    $.ajax('/basecamp2_refresh', {
+        async: true,
+        method: "POST",
+        beforeSend: function () {
+            $('#basecamp2-refresh .fa.fa-refresh').addClass('fa-spin');
+        },
+        complete: function() {
+            $('#basecamp2-refresh .fa.fa-refresh').removeClass('fa-spin');
+        }
+    });
+});
+
+  $('#basecamp2-activity-refresh').click(function(){
+    $.ajax('/basecamp2_activities_refresh', {
+        async: true,
+        method: "POST",
+        beforeSend: function () {
+            $('#basecamp2-activity-refresh .fa.fa-refresh').addClass('fa-spin');
+        },
+        complete: function() {
+            $('#basecamp2-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
+        }
+    });
+});
+
+
+
+</script>
+
+    
+        
+

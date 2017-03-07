@@ -1,4 +1,4 @@
-# == Schema Information
+ # == Schema Information
 #
 # Table name: activities
 #
@@ -35,6 +35,7 @@ class Activity < ActiveRecord::Base
 
   belongs_to :user, class_name: "User", foreign_key: "posted_by"
   belongs_to :project
+  belongs_to :oauth_user
   has_many :comments, dependent: :destroy
   has_many :notifications, dependent: :destroy
 
@@ -49,6 +50,7 @@ class Activity < ActiveRecord::Base
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
 
+
   acts_as_commentable
 
   pg_search_scope :search_note,
@@ -58,7 +60,7 @@ class Activity < ActiveRecord::Base
                   }
 
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
 
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
@@ -223,6 +225,26 @@ class Activity < ActiveRecord::Base
         # Insert activities into database
         Activity.connection.execute([insert,values,on_conflict].join(' '))
       end
+    end
+  end
+
+  def self.load_basecamp2_activities(e, project, user, project_id)
+    update = e.first['created_at']
+    event = Activity.new(
+              posted_by: user,
+              project_id: project_id,
+              category: CATEGORY[:Basecamp2],
+              title: e.first['target'],
+              note: '',
+              is_public: true,
+              backend_id: e.first['eventable']['id'],
+              last_sent_date: update.to_datetime,
+              last_sent_date_epoch: update.to_datetime.to_i,
+              email_messages: e.to_json
+        )
+
+    if event.valid?
+      event.save
     end
   end
 
