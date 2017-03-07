@@ -20,7 +20,6 @@
 #  oauth_per_user  (oauth_provider,oauth_user_name,oauth_instance_url) UNIQUE
 #
 
-require_dependency "app/services/basecamp_service.rb"
 require 'net/http'
 
 class OauthUser < ActiveRecord::Base
