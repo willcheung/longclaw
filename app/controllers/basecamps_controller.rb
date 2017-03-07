@@ -1,6 +1,3 @@
-require_dependency "app/services/basecamp_service.rb"
-require 'oauth2'
-require 'Time'
 
 class BasecampsController < ApplicationController
 	layout "empty", only: [:index]
@@ -132,27 +129,5 @@ class BasecampsController < ApplicationController
 		end
 		redirect_to settings_basecamp_path
 	end
-
-	def self.basecamp2_projects(token)
-		BaseCampService.basecamp2_user_projects(token)
-	end
-
-	def self.basecamp2_topics(token, project_id=nil)
-		BaseCampService.basecamp2_user_topics(token)
-	end
-
-	def self.basecamp2_user_info(token, project_id = nil)
-		BaseCampService.basecamp2_user_info(token)
-	end
-
-	def self.basecamp2_user_todos(token)
-		BaseCampService.basecamp2_user_todos(token)
-	end
-
-	def self.refresh(token)
-		BaseCampServices.refresh_token(token)
-	end
-
-
 
 end

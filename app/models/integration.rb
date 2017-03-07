@@ -17,7 +17,6 @@
 #
 
 class Integration < ActiveRecord::Base
-	belongs_to  :organization, foreign_key: "contextsmith_organization_id"
 	belongs_to :oauth_user
 
 	def self.link_basecamp2(basecamp_account_id, account_id, external_name, current_user, project_id)

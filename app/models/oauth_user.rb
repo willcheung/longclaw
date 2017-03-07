@@ -21,7 +21,6 @@
 #
 
 require_dependency "app/services/basecamp_service.rb"
-require "Time"
 require 'net/http'
 
 class OauthUser < ActiveRecord::Base
@@ -68,18 +67,6 @@ class OauthUser < ActiveRecord::Base
 
 	def self.basecamp2_projects(token, url)
 		BaseCampService.basecamp2_user_projects(token, url)
-	end
-
-	def self.basecamp2_topics(token, project_id=nil)
-		BaseCampService.basecamp2_user_topics(token)
-	end
-
-	def self.basecamp2_user_info(token, project_id = nil)
-		BaseCampService.basecamp2_user_info(token)
-	end
-
-	def self.basecamp2_user_todos(token)
-		BaseCampService.basecamp2_user_todos(token)
 	end
 
 
