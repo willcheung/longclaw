@@ -1,4 +1,4 @@
-require_dependency "app/services/basecamp_service.rb"
+
 class SettingsController < ApplicationController
 
 	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
