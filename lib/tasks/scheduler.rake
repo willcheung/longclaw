@@ -73,7 +73,7 @@ namespace :projects do
             Organization.all.each do |org|
                 org.oauth_users.basecamp_user.each do |user| 
                     user.integrations.each do |integ|
-                        BaseCampService.load_basecamp2_events_from_backend(user, integ)
+                        BasecampService.load_basecamp2_events_from_backend(user, integ)
                         sleep(1)
                     end
                 end

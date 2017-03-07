@@ -13,14 +13,14 @@ class BasecampsController < ApplicationController
 	def basecamp2
 
 		respond_to do |format|
-		format.html { redirect_to BaseCampService.connect_basecamp2}
+		format.html { redirect_to BasecampService.connect_basecamp2}
 		end
 	end
 
 	def link_basecamp2_account
 		if params[:basecamp_account_id] && params[:account_id] && params[:basecamp_account_id] != "" && params[:account_id] != ""
 			basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-			basecamp_project_name = BaseCampService.basecamp2_find_project(basecamp2_user['oauth_access_token'], params[:basecamp_account_id] )
+			basecamp_project_name = BasecampService.basecamp2_find_project(basecamp2_user['oauth_access_token'], params[:basecamp_account_id] )
     	tier = Integration.where(:contextsmith_account_id => params[:account_id])
     	tier2 = Integration.where(:external_account_id => params[:basecamp_account_id])
 
@@ -74,13 +74,13 @@ class BasecampsController < ApplicationController
 			@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 			if @basecamp2_user
 				begin 
-					events = BaseCampService.basecamp2_user_project_events(@basecamp2_user, params[:basecamp_project_id])
+					events = BasecampService.basecamp2_user_project_events(@basecamp2_user, params[:basecamp_project_id])
 					object_info = events
 					eventable_id_list = events
 					list = []
 
 					object_info.each do |y|
-						creator_info = BaseCampService.basecamp2_user_info( y['creator']['id'],@basecamp2_user['oauth_access_token'],@basecamp2_user['oauth_instance_url'] )
+						creator_info = BasecampService.basecamp2_user_info( y['creator']['id'],@basecamp2_user['oauth_access_token'],@basecamp2_user['oauth_instance_url'] )
 						user_email = Hash.new
 						user_email['user_email'] = creator_info['email_address']
 						y.merge!(user_email)

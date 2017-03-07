@@ -1,7 +1,6 @@
 require 'oauth2'
-require 'Time'
 
-class BaseCampService
+class BasecampService
 
 	client_id = ENV['basecamp_client_id']
 	client_secret = ENV['basecamp_client_secret']
@@ -66,7 +65,7 @@ class BaseCampService
 		eventable_id_list = response
 		list = []
 		object_info.each do |y|
-			creator_info = BaseCampService.basecamp2_user_info( y['creator']['id'],oauth_user['oauth_access_token'],oauth_user['oauth_instance_url'] )
+			creator_info = BasecampService.basecamp2_user_info( y['creator']['id'],oauth_user['oauth_access_token'],oauth_user['oauth_instance_url'] )
 			user_email = Hash.new
 			user_email['user_email'] = creator_info['email_address']
 			y.merge!(user_email)
