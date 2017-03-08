@@ -18,9 +18,12 @@
             </li>
         </ol>
     </div>
+
+    <% if current_user.power_user? %>
     <div class="col-lg-2">
         <%= link_to '+ New Stream', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>
+    <% end %>
     <div class="col-lg-2">
         <%= link_to '+ New Contact', '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>

@@ -140,6 +140,7 @@ class User < ActiveRecord::Base
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:fill_in_info],
+          role: User::ROLE[:Observer],
           is_disabled: false,
           time_zone: time_zone
         )
@@ -158,6 +159,7 @@ class User < ActiveRecord::Base
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:fill_in_info],
+          role: User::ROLE[:Observer],
           is_disabled: false,
           time_zone: time_zone
         )
@@ -417,6 +419,26 @@ class User < ActiveRecord::Base
     output
   end
 
+  ######### Basic ACL ##########
+  # Roles have cascading effect, eg. if you're an "admin", then you also have access to what other roles have.
+
+  def admin?
+    self.role == User::ROLE[:Admin]
+  end
+
+  def power_user?
+    self.role == User::ROLE[:Poweruser] or self.admin?
+  end
+
+  def contributor?
+    self.role == User::ROLE[:Contributor] or self.admin? or self. power_user?
+  end
+
+  def observer?
+    self.role == User::ROLE[:Observer] or self.admin? or self. power_user? or self.contributor?
+  end
+
+  ######### End Basic ACL ##########
 
   def is_internal_user?
     true

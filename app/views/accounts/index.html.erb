@@ -26,6 +26,8 @@
              <% } %> 
           </select>    
         </div>
+
+        <% if current_user.admin? %>
         <div class="col-lg-6 bulk-group">
             <div class="font-bold m-b-xs">Bulk Operation:</div>
             <button type="button" class="btn btn-sm btn-white" id="bulk-delete" disabled> Delete </button>
@@ -42,6 +44,8 @@
                <% end %> 
             </select>
         </div>
+        <% end %>
+
     </div>
 
     <div class="row">
@@ -56,7 +60,9 @@
                         <table class="table table-hover responsive no-wrap" id="accounts-table" cellspacing="0" width="100%">
                             <thead>
                                 <tr>
+                                    <% if current_user.admin? %>
                                     <th></th>
+                                    <% end %>
                                     <th>Account Name</th>
                                     <th style="width:65px">Type</th>
                                     <th>Owner</th>
@@ -68,9 +74,11 @@
                             <tbody>
                                 <% @accounts.each do |a| %>
                                 <tr style="height:45px;">
-                                    <td><input type="checkbox" class="bulk-account" value="<%=a.id  %>"</td>
+                                    <% if current_user.admin? %>
+                                    <td><input type="checkbox" class="bulk-account" value="<%=a.id  %>"></td>
+                                    <% end %>
                                     <td><a href="<%= account_path(a.id) %>"><%= a.name %></a><a class="pull-right edit" href="<%= edit_account_path(a) %>" style="display: none;"><i class="fa fa-pencil"></i></a></td>
-                                    <td style="width:65px"><%= best_in_place a, :category, :as => :select, :collection => @account_types, :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></td>
+                                    <td style="width:65px"><%= a.category %></td>
                                     <td><%= get_full_name(a.user) %></td>
                                     <td style="text-align:center"><%= a.projects.size %></td>
                                     <td style="text-align:center"><%= @account_last_activity[a.id].nil? ? "" : ((Time.current - @account_last_activity[a.id])/86400).to_i %></td>
