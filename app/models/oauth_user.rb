@@ -34,7 +34,7 @@ class OauthUser < ActiveRecord::Base
 
 	def self.basecamp2_create_user(pin, organization_id, current_id)
 
-		result = BaseCampService.basecamp2_create_user(pin)
+		result = BasecampService.basecamp2_create_user(pin)
 
 		if result
 			# Find if the client already saved in Oauthuser exists
@@ -65,7 +65,7 @@ class OauthUser < ActiveRecord::Base
 	end # Ends method
 
 	def self.basecamp2_projects(token, url)
-		BaseCampService.basecamp2_user_projects(token, url)
+		BasecampService.basecamp2_user_projects(token, url)
 	end
 
 
