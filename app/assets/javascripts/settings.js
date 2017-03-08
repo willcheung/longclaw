@@ -131,9 +131,29 @@ $(document).ready(function() {
     $('.basecamp2_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});
     $('.contextsmith_project_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});     
 
-    //////////////////////////////////////////////////////////////////////////
-    // ../settings/salesforce_fields Javascript:
-    //////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////
+    // ../settings/salesforce_activities
+    ////////////////////////////////////////
+
+    $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keyup(update_SOQL_query_preview);
+
+    $('#salesforce-activity-refresh').click(function(){
+        $.ajax('/salesforce_activities_refresh?entity_pred=' + document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim() + '&activityhistory_pred=' + document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim(), {
+            async: true,
+            method: "POST",
+            beforeSend: function () {
+                $('#salesforce-activity-refresh .fa.fa-refresh').addClass('fa-spin');
+            },
+            complete: function() {
+                $('#salesforce-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
+            }
+        });
+    });
+
+    ////////////////////////////////////////
+    // ../settings/salesforce_fields
+    ////////////////////////////////////////
     $('#salesforce-refresh-accounts-btn,#salesforce-refresh-projects-btn').click(function() {
         var entity_type_str, entity_type_btn_str;
         var self = $(this);

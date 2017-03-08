@@ -40,7 +40,8 @@ class SalesforceOpportunity < ActiveRecord::Base
 
     	opportunities = SalesforceService.query_salesforce(client, query_statement)
 
-    	opportunities.each do |opp|
+    	# TODO: Catch SalesforceService.query_salesforce.nil? error
+      opportunities.each do |opp|
     		val << "('#{opp.Id}', 
     						'#{opp.AccountId}', 
     						#{SalesforceOpportunity.sanitize(opp.Name)}, 
