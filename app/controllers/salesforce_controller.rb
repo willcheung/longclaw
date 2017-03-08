@@ -135,8 +135,12 @@ class SalesforceController < ApplicationController
     render :text => ' '
   end
 
-  # Activities are loaded into native CS Streams, depending on the explicit mapping of a SFDC opportunity to a CS stream, or the implicit (stream) mapping of a SFDC account mapped to a CS account.
+  # Activities are loaded into native CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
   def refresh_activities
+    filter_predicate_str = {}
+    filter_predicate_str["entity"] = params[:entity_pred].strip
+    filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
+
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
     @streams.each do |s|
@@ -144,12 +148,12 @@ class SalesforceController < ApplicationController
       if s.salesforce_opportunity.nil? # Stream not linked to SF Opportunity
         if !s.account.salesforce_accounts.empty? # Stream linked to SF Account
           s.account.salesforce_accounts.each do |sf_a|
-            Activity.load_salesforce_activities(s, current_user.organization_id, sf_a.salesforce_account_id, type="Account")
+            Activity.load_salesforce_activities(s, current_user.organization_id, sf_a.salesforce_account_id, type="Account", filter_predicate_str)
           end
         end
       else # Stream linked to Opportunity
         # If Stream is linked in Opportunity, then save on Opportunity level
-        Activity.load_salesforce_activities(s, current_user.organization_id, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity")
+        Activity.load_salesforce_activities(s, current_user.organization_id, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
       end
     end
 
