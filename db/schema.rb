@@ -15,8 +15,8 @@ ActiveRecord::Schema.define(version: 20170305212057) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "uuid-ossp"
   enable_extension "hstore"
+  enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                                  default: "",         null: false
@@ -177,7 +177,7 @@ ActiveRecord::Schema.define(version: 20170305212057) do
 
   create_table "integrations", force: :cascade do |t|
     t.uuid     "contextsmith_account_id"
-    t.string   "external_account_id"
+    t.integer  "external_account_id"
     t.uuid     "project_id"
     t.string   "external_source"
     t.datetime "created_at",              null: false
