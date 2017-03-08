@@ -65,6 +65,22 @@ namespace :projects do
         end
     end
 
+    desc 'Retrieve latest BaseCamp2 Events for all projects in all organization'
+    task load_basecamp2_events: :environment do
+        if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
+            puts "\n\n=====Task (load_basecamp2_eventsload_basecamp2_events) started at #{Time.now}====="
+
+            Organization.all.each do |org|
+                org.oauth_users.basecamp_user.each do |user| 
+                    user.integrations.each do |integ|
+                        BasecampService.load_basecamp2_events_from_backend(user, integ)
+                        sleep(1)
+                    end
+                end
+            end
+        end
+    end
+
     desc 'Email daily project updates on weekdays'
     task :email_daily_summary, [:test] => :environment do |t, args|
         puts "\n\n=====Task (email_daily_summary) started at #{Time.now}====="

@@ -75,6 +75,7 @@ class SalesforceAccount < ActiveRecord::Base
       
       salesforce_accounts = SalesforceService.query_salesforce(client, query_statement)
 
+      # TODO: Catch SalesforceService.query_salesforce.nil? error
       # puts query_statement 
       # puts "salesforce_accounts.length => #{salesforce_accounts.length}"
 

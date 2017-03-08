@@ -11,8 +11,7 @@
     <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" %>
 
     <!-- Main css styles -->
-    <%# stylesheet_link_tag 'application', media: 'all' %>
-    <%= stylesheet_link_tag 'style', media: 'all' %>
+    <%= stylesheet_link_tag 'application', media: 'all' %>
 
     <!-- Main javascript files -->
     <%= javascript_include_tag 'application' %>
@@ -26,34 +25,29 @@
     <!-- Wrapper-->
     <div id="wrapper" class="<%= params[:controller] %>.<%= params[:action] %>">
 
-        <!-- Navigation -->
-        <div class="nav-header">
-            <div class="dropdown profile-element">
-                <a href="#">
+        <div id="page-wrapper" class="white-bg extension-sidebar">
+
+            <!-- Navigation -->
+            <div class="navbar-header border-bottom">
+                <a href="<%= root_path %>" target="MainApp" class="navbar-brand" style="width:150px">
                     <span class="clear">
-                        <div class="block logo"><img/></div>
+                        <div class="block logo">&nbsp;</div>
                     </span>
                 </a>
             </div>
-            <div class="logo-element">
-                <span style="font-weight:300">C</span>S
-            </div>
-        </div>
 
-        <div id="page-wrapper" class="white-bg extension-sidebar">
+            <% if @project %>
 
-        <% if @project %>
+                <h3><%= @project.name %></h3>
+                <h3 class="text-mute-gray">Account: <%= @account.name %></h3>
 
-            <h3><%= @project.name %></h3>
-            <h3 class="text-mute-gray">Account: <%= @account.name %></h3>
+                <hr class="m-t-xs m-b-sm">
 
-            <hr class="m-t-xs m-b-sm">
+                <%= link_to_unless_current("Account", extension_account_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Account", class: 'm-r-lg font-bold' } %>
+                <%= link_to_unless_current("Alerts & Tasks", extension_alerts_tasks_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Alerts & Tasks", class: 'm-r-lg font-bold' } %>
+                <%= link_to_unless_current("Contacts", extension_contacts_path(emails: params[:emails])) { content_tag :span, "Contacts", class: 'font-bold' } %>
 
-            <%= link_to_unless_current("Account", extension_account_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Account", class: 'm-r-lg font-bold' } %>
-            <%= link_to_unless_current("Alerts & Tasks", extension_alerts_tasks_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Alerts & Tasks", class: 'm-r-lg font-bold' } %>
-            <%= link_to_unless_current("Contacts", extension_contacts_path(emails: params[:emails])) { content_tag :span, "Contacts", class: 'font-bold' } %>
-
-        <% end %>
+            <% end %>
 
             <!-- Main view  -->
             <%= yield %>

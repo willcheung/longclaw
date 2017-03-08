@@ -1,4 +1,4 @@
-# == Schema Information
+ # == Schema Information
 #
 # Table name: activities
 #
@@ -35,6 +35,7 @@ class Activity < ActiveRecord::Base
 
   belongs_to :user, class_name: "User", foreign_key: "posted_by"
   belongs_to :project
+  belongs_to :oauth_user
   has_many :comments, dependent: :destroy
   has_many :notifications, dependent: :destroy
 
@@ -49,6 +50,7 @@ class Activity < ActiveRecord::Base
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
 
+
   acts_as_commentable
 
   pg_search_scope :search_note,
@@ -58,7 +60,7 @@ class Activity < ActiveRecord::Base
                   }
 
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
 
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
@@ -184,45 +186,83 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-
-  def self.load_salesforce_activities(project, organization_id, sfdc_id, type="Account", limit=200)
+  # Parameters:  filter_predicates is a hash that contains several keys -- "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL query.
+  def self.load_salesforce_activities(project, organization_id, sfdc_id, type="Account", filter_predicates = nil, limit=200)
     val = []
+    if filter_predicates["entity"] == ""
+      entity_predicate = ""
+    else
+      entity_predicate = "AND (" + filter_predicates["entity"] + ")"
+    end
+    if filter_predicates["activityhistory"] == ""
+      activityhistory_predicate = ""
+    else
+      activityhistory_predicate = "WHERE (" + filter_predicates["activityhistory"] + ")"
+    end
 
     client = SalesforceService.connect_salesforce(organization_id)
     if type == "Account"
-      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Account where Id='#{sfdc_id}'"
+      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories #{activityhistory_predicate} limit #{limit}) from Account where Id='#{sfdc_id}' #{entity_predicate}"
     elsif type == "Opportunity"
-      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories limit #{limit}) from Opportunity where Id='#{sfdc_id}'"
+      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories #{activityhistory_predicate} limit #{limit}) from Opportunity where Id='#{sfdc_id}' #{entity_predicate}"
     end
-
+    
     activities = SalesforceService.query_salesforce(client, query_statement)
 
-    activities.first.each do |a|
-      if a.first == "ActivityHistories"
-        if !a.second.nil?
-          a.second.each do |c|
-            owner = { "address": c.Owner.Email, "personal": c.Owner.Name }
-            val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
-                     '[#{owner.to_json}]',
-                     '[]',
-                     '[]',
-                     #{Activity.sanitize([c].to_json)},
-                     #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)},
-                     '#{Time.now}', '#{Time.now}')"
+    unless activities.nil?  # Salesforce Error
+      unless activities.first.nil?  # in case custom filters results in no record being selected
+        activities.first.each do |a|
+          if a.first == "ActivityHistories"
+            if !a.second.nil?
+              a.second.each do |c|
+                owner = { "address": c.Owner.Email, "personal": c.Owner.Name }
+                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                         '[#{owner.to_json}]',
+                         '[]',
+                         '[]',
+                         #{Activity.sanitize([c].to_json)},
+                         #{c.Description.nil? ? '\'\'' : Activity.sanitize(c.Description)},
+                         '#{Time.now}', '#{Time.now}')"
+              end
+            end
           end
         end
+
+        insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "note", "created_at", "updated_at") VALUES'
+        on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages'
+        values = val.join(', ')
+
+        if !val.empty?
+          Activity.transaction do
+            # Insert activities into database
+            Activity.connection.execute([insert,values,on_conflict].join(' '))
+          end
+        end
+        #puts "************* Result of:", query_statement
+        #print "-> # of rows UPSERTed into Activities = ", val.count, " total *************\n"
       end
+    else
+      #TODO: Handle error
     end
+  end
 
-    insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "note", "created_at", "updated_at") VALUES'
-    on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages'
-    values = val.join(', ')
+  def self.load_basecamp2_activities(e, project, user, project_id)
+    update = e.first['created_at']
+    event = Activity.new(
+              posted_by: user,
+              project_id: project_id,
+              category: CATEGORY[:Basecamp2],
+              title: e.first['target'],
+              note: '',
+              is_public: true,
+              backend_id: e.first['eventable']['id'],
+              last_sent_date: update.to_datetime,
+              last_sent_date_epoch: update.to_datetime.to_i,
+              email_messages: e.to_json
+        )
 
-    if !val.empty?
-      Activity.transaction do
-        # Insert activities into database
-        Activity.connection.execute([insert,values,on_conflict].join(' '))
-      end
+    if event.valid?
+      event.save
     end
   end
 

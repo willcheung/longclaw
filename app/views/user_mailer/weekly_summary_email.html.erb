@@ -296,35 +296,36 @@
       <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
         <tbody>
           <% open_tasks.each do |n| %>
-            <tr style="margin-bottom:10em;">
+            <tr>
               <td style="text-align:left;font-size:15px;line-height:15px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20px;min-width:20px;max-width:20px;padding:3px;">
                 <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;font-size:18px;"><%= '✔' if n.is_complete %></div>
               </td>
-              <td>
+              <td style="padding:5px 5px 8px 5px">
                 <table>
                   <tr>
-                    <td style="text-align:left;font-size:15px;line-height:14px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:3px;">
+                    <td style="text-align:left;font-size:15px;line-height:14px;border-collapse:collapse;border-spacing:0;vertical-align:top">
                       <span style="font-weight:bold;font-size:14px;line-height:15px;">
                         <%= n.name %>
                       </span>
+                      <br>
                       <% if n.category == Notification::CATEGORY[:Alert] %>
                         <!-- Alert notification detail -->
-                        <p style="font-size:11px;color:grey;line-height:1.2;margin-top:0px">
+                        <span style="font-size:11px;color:grey;line-height:1">
                         <% if n.description.length > 230 %>
-                          <br><%= n.description[0,229] %>&#8230;
+                          <%= n.description[0,229] %>&#8230;
                         <% else %>
-                          <br><%= n.description %>
+                          <%= n.description %>
                         <% end %>
-                        </p>
+                        </span>
                       <% end %>
                     </td>
                   </tr>
                   <tr>
-                    <td style="line-height:12px;padding-bottom:12px;border-collapse:collapse;">
-                      <span style="color:#999;font-weight:normal;text-align:right;font-size:12px;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px;padding:3px;">
+                    <td style="border-collapse:collapse;padding:5px 0px">
+                      <span style="color:#999;font-weight:normal;text-align:right;font-size:12px;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px">
                         Assigned to: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
                       </span>
-                      <span style="text-align:left;border-spacing:0;vertical-align:top;width:85px;min-width:80px;max-width:85px;padding:0 3px;">
+                      <span style="text-align:left;border-spacing:0;vertical-align:top;width:85px;min-width:80px;max-width:85px">
                         <span style="font-size:10px;font-weight:600;padding:1px 5px;text-shadow:none;background-color:white;border-radius:0.25em;min-width:80px;max-width:80px;color:
                         <% if n.category == Notification::CATEGORY[:Action] %>
                           #3C8DC5;border:2px #3C8DC5

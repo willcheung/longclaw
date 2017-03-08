@@ -1837,8 +1837,8 @@ a.forum-item-title:hover {
   }
 
   small:not(.text-muted) {
-    float: right;
-    margin-top: 5px;
+    display: block;
+    margin-bottom: 5px;
   }
 }
 

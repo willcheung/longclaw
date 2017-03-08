@@ -549,7 +549,21 @@ a.suggested-action:hover, a.suggested-action:focus {
   width: 24px;
 }
 
+
+.vertical-timeline-icon.basecamp2-bg .basecamp2-logo{
+  background-image: url("images/basecamp2.png");
+  background-size: 24px;
+  background-repeat: no-repeat;
+  background-color: #fff;
+  background-position: center;
+  border-radius: 50%;
+  margin-top:-12px;
+  height:24px;
+  width: 24px;
+}
+
 .element-disabled {
   opacity: 0.1;
   pointer-events: none;
 }
+

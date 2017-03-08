@@ -201,9 +201,8 @@ class OnboardingController < ApplicationController
             puts "Create internal users..."
             User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
 
-            # Do not automatically create streams
-            #puts "Create projects, project members, and activities..."
-            #Project.create_from_clusters(data, user.id, user.organization.id)
+            puts "Create projects, project members, and activities..."
+            Project.create_from_clusters(data, user.id, user.organization.id)
 
             ##########################################################################################
 
