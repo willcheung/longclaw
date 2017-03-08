@@ -37,8 +37,13 @@
                     <tr>
                         <td><%= get_full_name(u) %></td>
                         <td><%= u.email %></td>
-                        <td style="text-align:center"><%= best_in_place u, :title, :as => 'input', :place_holder => '(none)', :activator => "#user-#{u.id}-title-activator" %><i id="user-<%= u.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
-                        <td style="text-align:center"><%= best_in_place u, :department, :as => 'input', :place_holder => '(none)', :activator => "#user-#{u.id}-dept-activator" %><i id="user-<%= u.id %>-dept-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
+                        <% if current_user.admin? %>
+                            <td style="text-align:center"><%= best_in_place u, :title, :as => 'input', :place_holder => '(none)', :activator => "#user-#{u.id}-title-activator" %><i id="user-<%= u.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
+                            <td style="text-align:center"><%= best_in_place u, :department, :as => 'input', :place_holder => '(none)', :activator => "#user-#{u.id}-dept-activator" %><i id="user-<%= u.id %>-dept-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
+                        <% else %>
+                            <td style="text-align:center"><%= u.title %></td>
+                            <td style="text-align:center"><%= u.department %></td>
+                        <% end %>
                         <td style="text-align:center">
                             <% if u.onboarding_step == -1 and !u.cluster_create_date.nil?%>
                                 <%= u.cluster_create_date.to_date %>
@@ -47,8 +52,13 @@
                             <% end %>
                         </td>
                         <td><%= u.time_zone %></td>
-                        <td><%= best_in_place u, :mark_private, :as => 'checkbox', :data => {:user => u}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%></td>
-                        <td style="width:100px"><%= best_in_place u, :role, :as => :select, :collection => User::ROLE, :place_holder => '(none)', :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></td>
+                        <% if current_user.admin? %>
+                            <td><%= best_in_place u, :mark_private, :as => 'checkbox', :data => {:user => u}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%></td>
+                            <td style="width:100px"><%= best_in_place u, :role, :as => :select, :collection => User::ROLE, :place_holder => '(none)', :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></td>
+                        <% else %>
+                            <td></td>
+                            <td><%= u.role %></td>
+                        <% end %>
                     </tr>
                     <% end %>
             </table>
