@@ -1,2 +1,10 @@
-<h1>Welcome to ContextSmith</h1>
-<h3 class="text-info">Click on an email to see more info on that account.</h3>
+<h2>Welcome to ContextSmith</h2>
+<h3>Click on an email to see more info on that account.</h3>
+
+<% if params[:login] %>
+<!-- if params[:login] is set, redirected here after signing in successfully from extension -->
+<script type="text/javascript">
+// Close this window, extension sidebar will refresh
+  window.close();
+</script>
+<% end %>

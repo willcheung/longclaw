@@ -43,9 +43,9 @@
 
                 <hr class="m-t-xs m-b-sm">
 
-                <%= link_to_unless_current("Account", extension_account_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Account", class: 'm-r-lg font-bold' } %>
+                <%= link_to_unless_current("Activities", extension_account_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Activities", class: 'm-r-lg font-bold' } %>
                 <%= link_to_unless_current("Alerts & Tasks", extension_alerts_tasks_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Alerts & Tasks", class: 'm-r-lg font-bold' } %>
-                <%= link_to_unless_current("Contacts", extension_contacts_path(emails: params[:emails])) { content_tag :span, "Contacts", class: 'font-bold' } %>
+                <%= link_to_unless_current("People", extension_contacts_path(emails: params[:emails])) { content_tag :span, "People", class: 'font-bold' } %>
 
             <% end %>
 
