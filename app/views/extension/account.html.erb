@@ -1,6 +1,6 @@
-<h4><span class="font-bold">Type:</span> <%= @project.category %></h4>
-<h4><span class="font-bold">Owner:</span> <%= @project.owner_id ? get_full_name(@project.project_owner) : '(no owner)' %></h4>
-<h4><span class="font-bold">Description:</span> <%= @project.description ? @project.description : '(no description)' %></h4>
+<!-- <h4><span class="font-bold">Type:</span> <%= @project.category %></h4> -->
+<!-- <h4><span class="font-bold">Owner:</span> <%= @project.owner_id ? get_full_name(@project.project_owner) : '(no owner)' %></h4> -->
+<!-- <h4><span class="font-bold">Description:</span> <%= @project.description ? @project.description : '(no description)' %></h4> -->
 
 <div id="extension-timeline">
   <% @activities.each do |a| %>
@@ -8,8 +8,8 @@
   <% end %>
 </div>
 
-<%= link_to "Filter timeline and add notes >>", project_path(@project), target: "_blank" %>
+<%= link_to "Filter timeline and add notes >>", project_path(@project), target: "MainApp" %>
 
-<p>Email me: <input type="checkbox" name=""> weekly <input type="checkbox" name=""> daily</p>
+<!-- <p>Email me: <input type="checkbox" name=""> weekly <input type="checkbox" name=""> daily</p> -->
 
-<button class="btn btn-primary">Sync Activites with Salesforce</button>
+<!-- <button class="btn btn-primary">Sync Activites with Salesforce</button> -->
