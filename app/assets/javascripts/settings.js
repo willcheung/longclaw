@@ -139,7 +139,10 @@ $(document).ready(function() {
     $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keyup(update_SOQL_query_preview);
 
     $('#salesforce-activity-refresh').click(function(){
-        $.ajax('/salesforce_activities_refresh?entity_pred=' + document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim() + '&activityhistory_pred=' + document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim(), {
+        //Use encodeURI to escape '%' in 'like' predicates!
+        var GETRequestURL = encodeURI( "/salesforce_activities_refresh?entity_pred=" + document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim() + '&activityhistory_pred=' + document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() );
+        
+        $.ajax(GETRequestURL, {
             async: true,
             method: "POST",
             beforeSend: function () {
@@ -154,10 +157,10 @@ $(document).ready(function() {
     ////////////////////////////////////////
     // ../settings/salesforce_fields
     ////////////////////////////////////////
-    $('#salesforce-refresh-accounts-btn,#salesforce-refresh-projects-btn').click(function() {
+    $('#salesforce-fields-refresh-accounts-btn,#salesforce-fields-refresh-projects-btn').click(function() {
         var entity_type_str, entity_type_btn_str;
         var self = $(this);
-        if (self.attr("id").includes("salesforce-refresh-accounts-btn")) {
+        if (self.attr("id").includes("salesforce-fields-refresh-accounts-btn")) {
             entity_type_str = "accounts";
             entity_type_btn_str = "Accounts";
         } 
@@ -175,7 +178,7 @@ $(document).ready(function() {
                 self.removeClass('success-btn-highlight error-btn-highlight');
                 self.addClass('btn-primary btn-outline');
                 self.html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str);
-                $("#salesforce-refresh-" + entity_type_str + "-btn .fa.fa-refresh").addClass('fa-spin');
+                $("#salesforce-fields-refresh-" + entity_type_str + "-btn .fa.fa-refresh").addClass('fa-spin');
             },
             error: function(data) {
                 var res = JSON.parse(data.responseText);
@@ -205,11 +208,11 @@ $(document).ready(function() {
     $('.salesforce-account-field-name,.salesforce-opportunity-field-name').change(function() {
         var selectorStr, entity_type_btn_str;
         if ($(this).attr("class").includes("salesforce-account-field-name")) {
-          selectorStr = "#salesforce-refresh-accounts-btn";
+          selectorStr = "#salesforce-fields-refresh-accounts-btn";
           entity_type_btn_str = "Accounts";
         } 
         else {
-          selectorStr = "#salesforce-refresh-projects-btn";
+          selectorStr = "#salesforce-fields-refresh-projects-btn";
           entity_type_btn_str = "Streams";
         }
 

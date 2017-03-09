@@ -52,7 +52,7 @@
                       <td style="margin-right:-1em;padding:0;float:right">
                         <a href="#" style="border-bottom:2px solid red;display:none"><i class="fa fa-exclamation"></i> Clear account mapping</a>&nbsp;&nbsp;
                         <div style="min-width:18em;width:18em;padding:0px;display:inline-block">
-                          <span id="salesforce-refresh-accounts-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Accounts</span>
+                          <span id="salesforce-fields-refresh-accounts-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Accounts</span>
                           <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
                         </div>
                       </td>
@@ -72,7 +72,7 @@
                   <tbody>
                     <% if @cs_account_custom_fields.empty? %>
                       <tr>
-                        <td>No ContextSmith Account custom fields.  <a href='settings_custom_fields_path'>Click here to add some!</a></td><td></td><td></td><td></td><td></td><td></td>
+                        <td>No ContextSmith Account custom fields.  <a href='<%= settings_custom_fields_path %>'>Click here to add some!</a></td><td></td><td></td><td></td>
                       </tr>
                     <% else %>
                       <% @cs_account_custom_fields.each.with_index do |cf,i| %>
@@ -102,7 +102,7 @@
                     <td style="margin-right:-1.5em;padding:0;float:right">
                       <a href="#" style="border-bottom:2px solid red;display:none"><i class="fa fa-exclamation"></i> Clear all stream mapping</a>&nbsp;&nbsp;
                       <div style="min-width:18em;width:18em;padding:0px;display:inline-block">
-                        <span id="salesforce-refresh-projects-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Streams</span>
+                        <span id="salesforce-fields-refresh-projects-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Streams</span>
                         <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
                       </div>
                     </td>
@@ -122,7 +122,7 @@
                   <tbody>
                     <% if @cs_stream_custom_fields.empty? %>
                       <tr>
-                        <td>No ContextSmith Stream custom fields.  <a href='/settings/custom_fields?entity_type=Stream'>Click here to add some!</a></td><td></td><td></td><td></td><td></td><td></td>
+                        <td>No ContextSmith Stream custom fields.  <a href='<%= settings_custom_fields_path %>?entity_type=Stream'>Click here to add some!</a></td><td></td><td></td><td></td>
                       </tr>
                     <% else %>
                       <% @cs_stream_custom_fields.each.with_index do |cf,i| %>
