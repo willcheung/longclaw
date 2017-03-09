@@ -44,7 +44,7 @@ class Organization < ActiveRecord::Base
   # Gets a hash of names of Custom Lists for this organization mapped to all options corresponding to each list, to be used in a Custom Lists options dropdown.  e.g., { "list1_name"=>{ "list1option1"=>"list1option1", "list1option2"=>"list1option2", ... }, "list2"=>{ "list2option1"=>"list2option1", "list2option2"=>"list2option2", ... } }
   def get_custom_lists_with_options
     customlists_w_options = {}
-    self.custom_lists_metadatum.order(:cs_app_list, :created_at).each do |clm|
+    self.custom_lists_metadatum.order(:name).each do |clm|
       list = {}
       clm.custom_lists.select(:option_value).index_by { |o| list[o.option_value.to_s] = o.option_value.to_s }
       customlists_w_options[clm.name] = list
@@ -56,7 +56,7 @@ class Organization < ActiveRecord::Base
   # Parameters:  (optional) options_list_strlen_limit -- truncate and limit the length of the options string (note: the length = the options portion; square brackets and ellipsis are excluded).
   def get_custom_lists(options_list_strlen_limit=nil)
     customlists = {}
-    self.custom_lists_metadatum.order(:cs_app_list, :created_at).index_by { |clm| customlists[clm.id] = clm.name + ": " + clm.get_list_options(options_list_strlen_limit) }
+    self.custom_lists_metadatum.order(:name).index_by { |clm| customlists[clm.id] = clm.name + ": " + clm.get_list_options(options_list_strlen_limit) }
     return customlists
   end
 end

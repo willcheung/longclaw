@@ -141,6 +141,7 @@ class SalesforceController < ApplicationController
     filter_predicate_str["entity"] = params[:entity_pred].strip
     filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
 
+    #puts "******************** refresh_activities()   ...  filter_predicate_str=", filter_predicate_str
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
     @streams.each do |s|
