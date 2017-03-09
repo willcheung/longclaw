@@ -40,12 +40,15 @@
                 <div class="col-lg-5">
                     <h4 class="m-l-md">Sort by:
                     <select class="metric_filter col-lg-8" data-placeholder="Select Type">
-                        <option>Account Potential</option>
                         <option>Days Inactive</option>
-                        <option>Days to Renewal</option>
-                        <option value="2">Engagement Last 7d</option>
+                        <option value="2">Time Spent (Last 7d)</option>
+                        <option value="2">Revenue per Hour Spent (Last 7d)</option>
+                        <option value="1">Engagement (Last 7d)</option>
                         <option value="3" selected="true">Risk Score</option>
+                        <!--<option>Days to Renewal</option>-->
+                        <option>Days to Renewal</option>
                         <option value="4">Negative Sentiment</option>
+                        <option>Account Potential</option>
                         <option value="5">Total Open Alerts</option>
                         <option value="6">Total Overdue Tasks</option>
                     </select>
@@ -334,9 +337,13 @@
                     allowPointSelect: true,
                     cursor: 'pointer',
                     dataLabels: {
-                        enabled: false,
-                        distance: -25,
-                        format: '{point.name}',
+                        enabled: true,
+                        distance: 10,
+                        style: {
+                            fontSize: 10,
+                            fontWeight: 'normal'
+                        },
+                        format: '{point.name}'
                     }
                 }
             },
@@ -346,15 +353,12 @@
                 data: [{
                     name: 'Sales',
                     y: 56.3,
-                    sliced: true,
-                    dataLabels: {
-                        enabled: true
-                    },
+                    sliced: true
                 }, {
                     name: 'Marketing',
                     y: 24
                 }, {
-                    name: 'Account Managment',
+                    name: 'Customer Success',
                     y: 10.3
                 }, {
                     name: 'Support',
@@ -532,7 +536,7 @@
                 }
             },
             yAxis: {
-                categories: ['Neg Sentiment','Support Vol','Engagement Vol','Days to Renewal','Days Inactive'],
+                categories: ['Negative Sentiment','Support Vol','Engagement Vol','Days to Renewal','Days Inactive'],
                 tickLength: 3,
                 tickColor:'#000',
                 gridLineWidth:.5,
@@ -555,10 +559,7 @@
             //     minorGridLineWidth: 0
             // },
             legend: {
-                enabled: true,
-                floating: true,
-                verticalAlign: 'top',
-                y: -5,
+                enabled: true
             },
             plotOptions: {
                 type: 'scatter'

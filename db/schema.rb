@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170209225829) do
+ActiveRecord::Schema.define(version: 20170305212057) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -147,11 +147,13 @@ ActiveRecord::Schema.define(version: 20170209225829) do
     t.string   "update_permission_level",  null: false
     t.datetime "created_at",               null: false
     t.datetime "updated_at",               null: false
-    t.string   "default"
+    t.string   "default_value"
     t.integer  "custom_lists_metadata_id"
+    t.string   "salesforce_field"
   end
 
   add_index "custom_fields_metadata", ["custom_lists_metadata_id"], name: "index_custom_fields_metadata_on_custom_lists_metadata_id", using: :btree
+  add_index "custom_fields_metadata", ["organization_id", "entity_type", "salesforce_field"], name: "idx_custom_fields_metadata_on_sf_field_and_entity_unique", unique: true, using: :btree
   add_index "custom_fields_metadata", ["organization_id", "entity_type"], name: "custom_fields_metadata_idx", using: :btree
 
   create_table "custom_lists", force: :cascade do |t|
@@ -172,6 +174,18 @@ ActiveRecord::Schema.define(version: 20170209225829) do
   end
 
   add_index "custom_lists_metadata", ["organization_id", "name"], name: "index_custom_lists_metadata_on_organization_id_and_name", using: :btree
+
+  create_table "integrations", force: :cascade do |t|
+    t.uuid     "contextsmith_account_id"
+    t.integer  "external_account_id"
+    t.uuid     "project_id"
+    t.string   "external_source"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+    t.integer  "oauth_user_id"
+  end
+
+  add_index "integrations", ["oauth_user_id"], name: "index_integrations_on_oauth_user_id", using: :btree
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false
@@ -206,6 +220,8 @@ ActiveRecord::Schema.define(version: 20170209225829) do
     t.uuid     "organization_id",                  null: false
     t.datetime "created_at",                       null: false
     t.datetime "updated_at",                       null: false
+    t.integer  "oauth_refresh_date"
+    t.datetime "oauth_issued_date"
   end
 
   add_index "oauth_users", ["oauth_provider", "oauth_user_name", "oauth_instance_url"], name: "oauth_per_user", unique: true, using: :btree
@@ -390,4 +406,5 @@ ActiveRecord::Schema.define(version: 20170209225829) do
 
   add_index "visits", ["user_id"], name: "index_visits_on_user_id", using: :btree
 
+  add_foreign_key "integrations", "oauth_users"
 end

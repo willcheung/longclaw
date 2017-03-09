@@ -53,6 +53,7 @@ class User < ActiveRecord::Base
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
   has_many    :notifications, foreign_key: "assign_to"
+  has_many    :oauth_users
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -100,6 +101,10 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.find_basecamp
+    
+  end
+
   def self.find_for_google_oauth2(auth, time_zone='UTC')
     info = auth.info
     credentials = auth.credentials
@@ -135,6 +140,7 @@ class User < ActiveRecord::Base
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:fill_in_info],
+          role: User::ROLE[:Observer],
           is_disabled: false,
           time_zone: time_zone
         )
@@ -153,6 +159,7 @@ class User < ActiveRecord::Base
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:fill_in_info],
+          role: User::ROLE[:Observer],
           is_disabled: false,
           time_zone: time_zone
         )
@@ -412,6 +419,26 @@ class User < ActiveRecord::Base
     output
   end
 
+  ######### Basic ACL ##########
+  # Roles have cascading effect, eg. if you're an "admin", then you also have access to what other roles have.
+
+  def admin?
+    self.role == User::ROLE[:Admin]
+  end
+
+  def power_user?
+    self.role == User::ROLE[:Poweruser] or self.admin?
+  end
+
+  def contributor?
+    self.role == User::ROLE[:Contributor] or self.admin? or self. power_user?
+  end
+
+  def observer?
+    self.role == User::ROLE[:Observer] or self.admin? or self. power_user? or self.contributor?
+  end
+
+  ######### End Basic ACL ##########
 
   def is_internal_user?
     true

@@ -9,12 +9,12 @@
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #  owner_id   :uuid
-#
+
 
 class Organization < ActiveRecord::Base
   has_many :users
   has_many :accounts
-  has_many :oauth_users
+  has_many :oauth_users, foreign_key: "organization_id"
   has_many :salesforce_accounts, foreign_key: "contextsmith_organization_id"
   has_many :risk_settings, as: :level
   has_many :custom_fields_metadatum, dependent: :destroy
@@ -41,11 +41,10 @@ class Organization < ActiveRecord::Base
     end
   end
 
-  # Gets a hash of names of Custom Lists for this organization mapped to all options corresponding to each list, to be used in a Custom Lists options dropdown. 
-  # e.g., { "list1_name"=>{ "list1option1"=>"list1option1", "list1option2"=>"list1option2", ... }, "list2"=>{ "list2option1"=>"list2option1", "list2option2"=>"list2option2", ... } }
+  # Gets a hash of names of Custom Lists for this organization mapped to all options corresponding to each list, to be used in a Custom Lists options dropdown.  e.g., { "list1_name"=>{ "list1option1"=>"list1option1", "list1option2"=>"list1option2", ... }, "list2"=>{ "list2option1"=>"list2option1", "list2option2"=>"list2option2", ... } }
   def get_custom_lists_with_options
     customlists_w_options = {}
-    self.custom_lists_metadatum.order(:cs_app_list, :created_at).each do |clm|
+    self.custom_lists_metadatum.order(:name).each do |clm|
       list = {}
       clm.custom_lists.select(:option_value).index_by { |o| list[o.option_value.to_s] = o.option_value.to_s }
       customlists_w_options[clm.name] = list
@@ -53,11 +52,11 @@ class Organization < ActiveRecord::Base
     return customlists_w_options
   end
 
-  # Gets a hash of Custom List ids for this organization mapped to a short string of the list name and options, to be used in a Custom Lists dropdown. Use the optional options_list_strlen_limit parameter to truncate and limit the length of the options string (note: the length = the options portion; square brackets and ellipsis are excluded).
-  # e.g., { list1_id=>"list1_name: [list1option1, list1option2...", list2_id=>"list2_name: [list2option1, list2option2..." }
+  # Gets a hash of Custom List ids for this organization mapped to a short string of the list name and options, to be used in a Custom Lists dropdown.  e.g., { list1_id=>"list1_name: [list1option1, list1option2...", list2_id=>"list2_name: [list2option1, list2option2..." }
+  # Parameters:  (optional) options_list_strlen_limit -- truncate and limit the length of the options string (note: the length = the options portion; square brackets and ellipsis are excluded).
   def get_custom_lists(options_list_strlen_limit=nil)
     customlists = {}
-    self.custom_lists_metadatum.order(:cs_app_list, :created_at).index_by { |clm| customlists[clm.id] = clm.name + ": " + clm.get_list_options(options_list_strlen_limit) }
+    self.custom_lists_metadatum.order(:name).index_by { |clm| customlists[clm.id] = clm.name + ": " + clm.get_list_options(options_list_strlen_limit) }
     return customlists
   end
 end

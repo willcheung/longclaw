@@ -90,21 +90,21 @@ class OnboardingController < ApplicationController
 							if dc == 1.0
 								# 100% match in external members. Do not display these projects.
 								same_p << existing_project
-							elsif dc < 1.0 and dc >= 0.2
+							elsif dc < 1.0 and dc > 0.0
 								# Considered same project. 
 								overlapping_p << existing_project
-							elsif dc < 0.2 and dc > 0.0 and intersect > 1
-								# Considered existing projects because there are more than 1 shared members.
-								overlapping_p << existing_project
-							elsif dc < 0.2 and dc > 0.0 and intersect == 1
-								# This is likely a one-time communication or a typo by email sender.
+							# elsif dc < 0.2 and dc > 0.0 and intersect > 1
+							# 	# Considered existing projects because there are more than 1 shared members.
+							# 	overlapping_p << existing_project
+							# elsif dc < 0.2 and dc > 0.0 and intersect == 1
+							# 	# This is likely a one-time communication or a typo by email sender.
 
-								# If the existing project already has current user, then likely this conversation is part of that project.
-								if existing_project.users.map(&:email).include?(current_user.email)
-									overlapping_p << existing_project
-								else
-									new_p << new_project if !new_p.include?(new_project)
-								end
+							# 	# If the existing project already has current user, then likely this conversation is part of that project.
+							# 	if existing_project.users.map(&:email).include?(current_user.email)
+							# 		overlapping_p << existing_project
+							# 	else
+							# 		new_p << new_project if !new_p.include?(new_project)
+							# 	end
 							else dc == 0.0 
 								# Definitely new project.  Modify new project into confirmed project.
 								new_p << new_project if !new_p.include?(new_project)
@@ -201,9 +201,8 @@ class OnboardingController < ApplicationController
             puts "Create internal users..."
             User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
 
-            # Do not automatically create streams
-            #puts "Create projects, project members, and activities..."
-            #Project.create_from_clusters(data, user.id, user.organization.id)
+            puts "Create projects, project members, and activities..."
+            Project.create_from_clusters(data, user.id, user.organization.id)
 
             ##########################################################################################
 

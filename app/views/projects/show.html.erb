@@ -11,7 +11,7 @@
         <% else %>
             <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm", title: "Follow weekly" %>
         <% end %>
-        <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) %>
+        <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) or current_user.admin? %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
             <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-primary btn-outline m-t-n-sm", id: "btn-refresh" %>
             <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails and meetings from members."></i>
@@ -27,7 +27,7 @@
                 <a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a>
             </li>
             <li class="active">
-                <%= @project.name %>
+                <strong><%= @project.name %></strong>
             </li>
         </ol>
     </div>
@@ -142,8 +142,12 @@
                     <li class="list-group-item m-b-sm">
                         <strong>Owner:</strong>
                         <span class="pull-right">
-                            <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>
-                            <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                            <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) or current_user.admin? %>
+                                <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>
+                                <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                            <% else %>
+                                <%= @project.project_owner.first_name + ' ' +  @project.project_owner.last_name %>
+                            <% end %>
                         </span>
                     </li>
                     <li class="list-group-item m-b-sm">
@@ -151,14 +155,14 @@
                         <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
                     </li>
                     <!-- Custom fields -->
-                    <% @project.custom_fields.order(:created_at).each.with_index do |cf, i| %>
+                    <% @project.custom_fields.each.with_index do |cf, i| %>
                         <li class="list-group-item m-b-sm">
                             <strong><%= cf.custom_fields_metadatum.name %>:</strong>
                             <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and not cf.custom_fields_metadatum.custom_lists_metadatum.nil? and not cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty? %>
                                 <span class="pull-right md-m-0"><%= best_in_place cf, :value, :as => :select, :place_holder => '(none)', :collection => @custom_lists[cf.custom_fields_metadatum.custom_lists_metadatum.name], :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                             <% else %>
                                 <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and (cf.custom_fields_metadatum.custom_lists_metadatum.nil? or cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty?) %>
-                                    <i class="fa fa-exclamation-circle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="This field's data type='List', but no list is assigned or the list assigned has no options."></i>
+                                    <i style="color:#3d8dc5" class="fa fa-exclamation-triangle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="This field's data type='List', but no list is assigned or the list assigned has no options."></i>
                                 <% end %>
                                 <i id="proj-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                                 <span class="pull-right m-r-xs"><%= best_in_place cf, :value, :as => :input, :place_holder => '(none)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#proj-customfield#{i}-activator" %></span>
@@ -182,7 +186,7 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested Members</strong>
+                    <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested People</strong>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be involved in this stream. Click the ✔ or X to confirm or reject our suggestions."></i>
                 </div>
             </div>
@@ -201,7 +205,7 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="pm-length"><%= @project_members.length %></span> Members</strong>
+                    <strong><span id="pm-length"><%= @project_members.length %></span> People</strong>
                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
                 </div>
             </div>
@@ -211,7 +215,7 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                         <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add members...">
+                         <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add people...">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
                     <%end%>

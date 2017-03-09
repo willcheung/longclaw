@@ -98,7 +98,7 @@ class ReportsController < ApplicationController
   end
 
   def account_data
-    @account = Project.find(params[:id])
+    @account = Project.find(params[:id])   ### why does Project.find get set to an "account"??
     @risk_score = @account.new_risk_score(current_user.time_zone)
     @open_tasks_count = @account.notifications.open.count
     @last_activity_date = @account.activities.where.not(category: Activity::CATEGORY[:Note]).maximum("activities.last_sent_date")

@@ -4,7 +4,7 @@ class HomeController < ApplicationController
 
   def index
     # Load all projects visible to user
-    @projects = Project.owner_of(current_user.id).preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
+    @projects = Project.owner_of(current_user.id).is_active.is_confirmed.preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
     #@projects = Project.owner_of(current_user.id)
     project_tasks = Notification.where(project_id: @projects.pluck(:id))
     @open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)

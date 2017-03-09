@@ -17,7 +17,7 @@
 #
 
 class SalesforceAccount < ActiveRecord::Base
-	belongs_to  :organiztion, foreign_key: "contextsmith_organization_id"
+	belongs_to  :organization, foreign_key: "contextsmith_organization_id"
 	belongs_to :account, foreign_key: "contextsmith_account_id"
   has_many :salesforce_opportunities, -> { order("close_date desc") }, primary_key: "salesforce_account_id", dependent: :destroy
 
@@ -75,6 +75,7 @@ class SalesforceAccount < ActiveRecord::Base
       
       salesforce_accounts = SalesforceService.query_salesforce(client, query_statement)
 
+      # TODO: Catch SalesforceService.query_salesforce.nil? error
       # puts query_statement 
       # puts "salesforce_accounts.length => #{salesforce_accounts.length}"
 

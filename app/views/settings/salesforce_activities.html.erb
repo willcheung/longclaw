@@ -18,8 +18,8 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="ibox float-e-margins">
         <div class="ibox-content">
-            <% if @salesforce_user.nil?%> <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%> ">Login to Salesforce</a>
-            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/salesforcesandbox">Login to Salesforce Sandbox</a> <br>
+            <% if @salesforce_user.nil?%> <a class="btn btn-primary btn-sm" style="font-size:12px" href="<%=user_omniauth_authorize_url(:salesforce)%> ">Login to Salesforce</a>
+            <a class="btn btn-primary btn-sm" style="font-size:12px" href="/users/auth/salesforcesandbox">Login to Salesforce Sandbox</a> <br>
             Must be a Salesforce admin. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
             <% else %>
               <!-- Salesforce nav to Account / Opportunities -->
@@ -30,56 +30,94 @@
                       <li><a href="<%= settings_salesforce_path %>">Step 1: Map Accounts</a></li>
                       <li><a href="<%= settings_salesforce_opportunities_path %>">Step 2: Map Opportunities</a></li>
                       <li class="active"><a href="<%= settings_salesforce_activities_path %>">Step 3: Map Activities</a></li>
+                      <li><a href="<%= settings_salesforce_fields_path %>">Step 4: Map Fields</a></li>
                     </ul>
                   </div>
               </nav>
 
-              <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
-                  <thead>
+              
+              <div style="margin:5px 0">
+                <span style="font-size:15px;font-weight:bold;padding-right:1em">Salesforce Activities Filter</span>
+                <span>
+                  <table class="table table-striped table-bordered table-hover responsive no-wrap">
+                    <thead>
                       <tr>
-                          <th style="padding-top:15px;">ContextSmith Stream</th>
-                          <th>
-                            <div style="padding-top:15px; display: inline; margin-right:5px;">Salesforce Activities</div>                              
-                            <div id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Activities</div>
-                            <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Activities from Salesforce."></i>
-                          </th>
+                        <th>Salesforce Entity</th>
+                        <th style="width:85%">Predicate (SOQL)&nbsp;<i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Directly injected into the Salesforce query when retrieving Activities."></i></th>
                       </tr>
-                  </thead>
-                  <tbody>
-                    <% @streams.each do |s| %>
+                    </thead>
+                    <tbody>
                       <tr>
-                        <td class="col-lg-5"><a href="<%= project_path(s) %>"><%= s.name %></a></td>
-                        <% if s.salesforce_opportunity.nil? %>
-                          <% if s.account.salesforce_accounts.empty? %>
-                            <td class="col-lg-7">Not linked</td>  
+                        <td><label style="font-weight:normal" for="salesforce-activity-entity-predicate-textarea">Account / Opportunity</label></td>
+                        <td><textarea id="salesforce-activity-entity-predicate-textarea" rows="2" cols="80" placeholder="e.g., Id = '0099900000A0aAwAAA'" /></textarea></td>
+                      </tr>
+                      <tr>
+                        <td><label style="font-weight:normal" for="salesforce-activity-activityhistory-predicate-textarea">ActivityHistory</label></td>
+                        <td><textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., ActivitySubtype != 'Email' or NOT(Subject like '%email%')" />NOT(ActivitySubtype = 'Email' OR Subject like '%email%')</textarea></td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td>Preview</td>
+                        <td><p id="salesforce-activity-query-preview">.</p></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </span>
+              </div>
+              <div style="width:97.5%;margin:0 auto">
+                <p style="border-bottom:2px dotted #CCC"></p>
+              </div>
+              <div>
+                <span style="font-size:15px;font-weight:bold;padding-right:1em">Stream and Activities Mapping</span>
+                <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th style="padding-top:15px">ContextSmith Stream</th>
+                            <th>
+                              <div style="padding-top:15px; display: inline; margin-right:5px">Salesforce Activities</div>
+
+                              <div id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Activities</div>
+                              <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Activities from Salesforce."></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <% @streams.each do |s| %>
+                        <tr>
+                          <td class="col-lg-5"><a href="<%= project_path(s) %>"><%= s.name %></a></td>
+                          <% if s.salesforce_opportunity.nil? %>
+                            <% if s.account.salesforce_accounts.empty? %>
+                              <td class="col-lg-7">Not linked</td>  
+                            <% else %>
+                              <td class="col-lg-7">Linked to SFDC Account: <%= s.account.salesforce_accounts.map{|n| n.salesforce_account_name}.join(', ') %></td>
+                            <% end %>
                           <% else %>
-                            <td class="col-lg-7">Linked to SFDC Account: <%= s.account.salesforce_accounts.map{|n| n.salesforce_account_name}.join(', ') %></td>
+                            <td class="col-lg-7">Linked to SFDC Opportunity: <%= s.salesforce_opportunity.name %></td>
                           <% end %>
-                        <% else %>
-                          <td class="col-lg-7">Linked to SFDC Opportunity: <%= s.salesforce_opportunity.name %></td>
-                        <% end %>
-                      </tr>
-                    <% end %>
-                  </tbody>
-              </table>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                </table>
+              </div>
             <%end%>
         </div>
     </div>
 </div>
 
 <script>
+    function update_SOQL_query_preview() {
+        entity_predicate = document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim();
+        activityhistory_predicate = document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim();
 
-$('#salesforce-activity-refresh').click(function(){
-    $.ajax('/salesforce_activities_refresh', {
-        async: true,
-        method: "POST",
-        beforeSend: function () {
-            $('#salesforce-activity-refresh .fa.fa-refresh').addClass('fa-spin');
-        },
-        complete: function() {
-            $('#salesforce-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
-        }
-    });
-});
+        if (entity_predicate != "")
+          entity_predicate = "AND (" + entity_predicate + ")";
 
+        if (activityhistory_predicate != "")
+          activityhistory_predicate = " WHERE (" + activityhistory_predicate + ")";
+        
+        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id' " + entity_predicate);
+    }
+    
+    update_SOQL_query_preview(); //update initial preview
 </script>

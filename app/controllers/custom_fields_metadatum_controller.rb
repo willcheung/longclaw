@@ -14,6 +14,7 @@ class CustomFieldsMetadatumController < ApplicationController
     if custom_fields_metadata  
       respond_to do |format|
         if custom_fields_metadata.update(custom_fields_metadatum_params)
+          # You cannot have a custom list specified if the data_type != "List"
           if not custom_fields_metadata.custom_lists_metadatum.nil? and custom_fields_metadata.data_type != CustomFieldsMetadatum::DATA_TYPE[:List]
             custom_fields_metadata.update(custom_lists_metadatum: nil)
           end
@@ -39,6 +40,6 @@ class CustomFieldsMetadatumController < ApplicationController
   private
 
   def custom_fields_metadatum_params
-    params.require(:custom_fields_metadatum).permit(:name, :data_type, :update_permission_level, :custom_lists_metadata_id)
+    params.require(:custom_fields_metadatum).permit(:name, :data_type, :update_permission_level, :custom_lists_metadata_id, :salesforce_field)
   end
 end

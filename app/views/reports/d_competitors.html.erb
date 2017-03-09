@@ -1,0 +1,549 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Executive Report</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li class="active">
+                <strong>Competitive Intelligence</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Industry:</div>
+                <select class="category_filter col-lg-9">
+                    <option value="Sales">Communications</option>
+                    <option value="Sales">Energy and Resources</option>
+                    <option value="Sales">Financial Services</option>
+                    <option value="Sales">Government</option>
+                    <option value="Sales" selected="true">Healthcare</option>
+                    <option value="Sales">Hospitality</option>
+                    <option value="Sales">Insurance</option>
+                    <option value="Sales">K-12</option>
+                    <option value="Sales">Life Sciences</option>
+                    <option value="Sales">Manufacturing</option>
+                    <option value="Sales">Nonprofit</option>
+                    <option value="Sales">Professional and Business Services</option>
+                    <option value="Sales">Retail</option>
+                    <option value="Sales">Technology</option>
+                </select> 
+            </div>
+        </div>
+        <div class="col-lg-4 filter-space">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Product:</div>
+                <select class="category_filter col-lg-8">
+                    <option value="Sales">HCM</option>
+                    <option value="Sales">Financials</option>
+                </select> 
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="font-bold col-lg-4 m-t-sm">Date Range:</div>
+            <input type="text" name="daterange" class="form-control daterange">
+        </div>
+    </div>
+
+    <div class="row m-t-lg">
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h2>Who is our top 5 competitors?</h2>
+                </div>
+                <div class="ibox-content">
+                    <div id="top-competitors" class="customer-chart"class="customer-chart" style="height:300px">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h2>How much do we Win / Lost against them?</h2>
+                </div>
+                <div class="ibox-content">
+                    <div id="win-lost-ratio" class="customer-chart" style="height:300px">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> 
+
+    <div class="row m-t-lg">
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h2>What are top 5 reasons we lose to them?</h2>
+                </div>
+                <div class="ibox-content">
+                    <div id="industry-lost-reasons" class="customer-chart"class="customer-chart" style="">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h2>What is median ACV and industries on Lost deals?</h2>
+                    <div class="text-center">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="" >
+                            <button type="button" class="btn btn-primary">Median ACV</button>
+                            <button type="button" class="btn btn-white">Cumulative Amount</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div id="competitor-lost-reasons-matrix" class="customer-chart" style="">
+                      <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>   
+
+    <div class="row m-t-lg">
+        <div class="col-lg-12">
+            <div class="text-center row m-b-lg">
+                <div class="btn-group" role="group" aria-label="">
+                    <button type="button" class="btn btn-primary">&nbsp;&nbsp;&nbsp;&nbsp;Win Deals&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                    <button type="button" class="btn btn-white">Lost to Competitors</button>
+                    <button type="button" class="btn btn-white">Lost to Do Nothing</button>
+                </div>
+            </div>
+            <div class="ibox float-e-margins">
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h2>Over time, how are we winning against top competitors?</h2>
+
+                            <div id="win-competitors-trend" class="customer-chart"class="customer-chart" style="">
+                              <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                             <h2>And who else usually shows up during these deals?</h2>
+                            <div id="competitor-drilldown" class="customer-chart" style="">
+                              <h2 class="text-center" style="padding-top:70px;">No data</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /* Highcharts */
+
+    
+        var competitor_drilldown_chart;
+
+        $('#top-competitors').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['Oracle', 'SAP', 'ADP', 'Ceridian', 'Netsuite']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Opportunities'
+                },
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        fontWeight: 'normal',
+                        color:'gray'
+                    }
+                 }
+            },
+            legend: {
+                reversed: true
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Open Opportunities',
+                data: [44, 30, 28, 27, 10]
+            }, {
+                name: 'Lost',
+                data: [139, 101, 90, 84, 90]
+            }, {
+                name: 'Win',
+                data: [239, 201, 150, 156, 135]
+            }]
+        });
+
+        $('#win-lost-ratio').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['Oracle', 'SAP', 'ADP', 'Ceridian', 'Netsuite']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Win/Lost'
+                },
+                plotLines: [{
+                    label: { 
+                        text: 'Average (1.12)',
+                        style: {
+                            fontWeight: 'normal',
+                            fontSize: 10
+                        }
+                    },
+                    zIndex: 5,
+                    color: 'red', // Color value
+                    dashStyle: 'solid', // Style of the plot line. Default to solid
+                    value: 1.12, // Value of where the line will appear
+                    width: 1 // Width of the line    
+                }]
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Win/Lost Ratio',
+                data: [1.35, 1.11, 1.03, 1.1, 1.23],
+                dataLabels: {
+                    enabled: true,
+                    align: 'right',
+                    color: '#FFFFFF'
+                }
+            }]
+        });
+
+        competitor_drilldown_chart = Highcharts.chart('competitor-drilldown',{
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['ADP', 'Netsuite', 'Microsoft Dynamics', 'Ceridian', 'Ultimate Software']
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            credits: {
+              enabled: false
+            },
+            plotOptions: {
+              series: {
+                stacking: 'normal',
+                cursor: 'pointer',
+                point: {
+                  events: {
+                    click: function () {
+                      location.pathname = this.options.path;
+                    }
+                  }
+                }
+              }
+            },
+            series: [{
+                name: 'Number of deals',
+                data: [389, 300, 270, 250, 150],
+                dataLabels: {
+                    enabled: true,
+                    align: 'right',
+                    color: '#FFFFFF'
+                }
+                }]
+        });
+
+        $('#win-competitors-trend').highcharts({
+            title: {
+                text: ''
+            },
+
+            subtitle: {
+                text: ''
+            },
+            credits: {
+                enabled: false
+            },
+            yAxis: {
+                title: {
+                    text: 'Opportunities'
+                }
+            },
+            xAxis: {
+                crosshair: true
+            },
+            legend: {
+                align: 'center'
+            },
+            tooltip: {
+                pointFormat: '<span style="color:{series.color};">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+                shared: true
+            },
+            plotOptions: {
+                series: {
+                    pointStart: 2010,
+                    lineWidth: 4,
+                    marker: {
+                        enabled: false
+                    },
+                    events: {
+                        click: function (event) {
+                            data = [Math.floor(Math.random() * (350 - 271) + 271), 271, Math.floor(Math.random() * (271 - 210) + 210), 210, Math.floor(Math.random() * (210 - 150) + 150)]
+                            competitor_drilldown_chart.series[0].setData(data,true);
+                            competitor_drilldown_chart.redraw();
+
+                            if (!this.visible)
+                                return false;
+
+                            var seriesIndex = this.index;
+                            var series = this.chart.series;
+
+                            for (var i = 0; i < series.length; i++)
+                            {
+                                if (series[i].index != seriesIndex)
+                                {
+                                    series[i].visible ? series[i].hide() : series[i].show();
+                                } 
+                            }
+                            return false;
+                        }
+                    }
+                }
+            },
+
+            series: [{
+                name: 'Oracle',
+                data: [439, 525, 571, 696, 970, 1099, 1171, { dataLabels: {
+                    enabled: true,
+                    align: 'right',
+                    x: 0,
+                    verticalAlign: 'bottom',
+                    overflow: true,
+                    crop: false,
+                    format: '{series.name}'
+                }, y: 1241 }]
+            }, {
+                name: 'SAP',
+                data: [249, 240, 297, 298, 324, 302, 401, { dataLabels: {
+                    enabled: true,
+                    align: 'right',
+                    x: 0,
+                    verticalAlign: 'bottom',
+                    overflow: true,
+                    crop: false,
+                    format: '{series.name}'
+                }, y: 525 }]
+            }, {
+                name: 'Ultimate Software',
+                data: [117, 177, 160, 197, 201, 243, 321, { dataLabels: {
+                    enabled: true,
+                    align: 'right',
+                    x: 0,
+                    verticalAlign: 'bottom',
+                    overflow: true,
+                    crop: false,
+                    format: '{series.name}'
+                }, y: 393 }]
+            }, {
+                name: 'Netsuite',
+                data: [null, null, 79, 121, 151, 224, 344, { dataLabels: {
+                    enabled: true,
+                    align: 'right',
+                    x: 0,
+                    verticalAlign: 'bottom',
+                    overflow: true,
+                    crop: false,
+                    format: '{series.name}'
+                }, y: 342 }]
+            }, {
+                name: 'ADP',
+                data: [129, 59, 81, 112, 89, 118, 182, { dataLabels: {
+                    enabled: true,
+                    align: 'right',
+                    x: 0,
+                    verticalAlign: 'bottom',
+                    overflow: true,
+                    crop: false,
+                    format: '{series.name}'
+                }, y: 181 }]
+            }]
+        });
+
+
+        $('#industry-lost-reasons').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['Oracle', 'SAP', 'ADP', 'Ceridian', 'Netsuite']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '% Opportunities'
+                },
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        fontWeight: 'normal',
+                        color:'gray'
+                    }
+                 }
+            },
+            legend: {
+                reversed: true
+            },
+            tooltip: {
+                pointFormat: '<span style="color:{series.color};">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+                shared: false
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'percent',
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function () { return Math.round(this.percentage)+'%' },
+                        style: {
+                            fontWeight: 'normal'
+                        }
+                    },
+                }
+            },
+            series: [{
+                name: 'No Budget',
+                data: [35, 44, 12, 15, 33]
+            }, {
+                name: 'Product',
+                data: [39, 50, 43, 39, 40]
+            }, {
+                name: 'Too Expensive',
+                data: [190, 101, 90, 84, 90]
+            }, {
+                name: 'Lack IT Support',
+                data: [169, 231, 120, 130, 135]
+            }, {
+                name: 'Lack Exec Sponsor',
+                data: [239, 164, 111, 111, 101]
+            }]
+        });
+
+        $('#competitor-lost-reasons-matrix').highcharts({
+            chart: {
+                type: 'heatmap',
+                marginTop: 40,
+                marginBottom: 80,
+                plotBorderWidth: 1
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: ''
+            },
+
+            xAxis: {
+                categories: ['Lack Exec Sponsor', 'Lack IT Support', 'No Budget', 'Too Expensive', 'Not Responsive', 'Seek Point Solution', 'Product Gap', 'Industry Req'],
+                labels: {
+                    style: {
+                        fontSize: 10
+                    }
+                }
+            },
+            yAxis: {
+                categories: ['Retail', 'Technology', 'Financial Services', 'Professional Services', 'Healthcare'],
+                title: null,
+                labels: {
+                    style: {
+                        fontSize: 10
+                    }
+                }
+            },
+
+            colorAxis: {
+                min: 0,
+                minColor: '#FFFFFF',
+                maxColor: Highcharts.getOptions().colors[0]
+            },
+
+            legend: {
+                align: 'right',
+                layout: 'vertical',
+                margin: 0,
+                verticalAlign: 'top',
+                y: 25,
+                symbolHeight: 280
+            },
+
+            tooltip: {
+                formatter: function () {
+                    
+                    return '<b>$' + this.point.value + 'k</b> is median ACV that we LOST in <br><b>' +
+                        this.series.yAxis.categories[this.point.y] + '</b> because of <b>' + this.series.xAxis.categories[this.point.x] + '</b>';
+                }
+            },
+
+            series: [{
+                name: '',
+                borderWidth: 1,
+                data: [[0, 0, 120], [0, 1, 390], [0, 2, 350], [0, 3, 345], [0, 4, 370], [1, 0, 394], [1, 1, 581], [1, 2, 274], [1, 3, 117], [1, 4, 112], [2, 0, 256], [2, 1, 158], [2, 2, 123], [2, 3, 90], [2, 4, 52], [3, 0, 72], [3, 1, 132], [3, 2, 114], [3, 3, 198], [3, 4, 163], [4, 0, 389], [4, 1, 203], [4, 2, 88], [4, 3, 117], [4, 4, 115], [5, 0, 88], [5, 1, 325], [5, 2, 127], [5, 3, 587], [5, 4, 120], [6, 0, 134], [6, 1, 348], [6, 2, 88], [6, 3, 98], [6, 4, 96], [7, 0, 314], [7, 1, 1], [7, 2, 123], [7, 3, 121], [7, 4, 520]],
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000',
+                    style: { 
+                        fontSize: 10,
+                        fontWeight: 'normal',
+                        textShadow: false 
+                    },
+                    format: '{point.value}k'
+                }
+            }]
+        });
+    
+</script>
+
