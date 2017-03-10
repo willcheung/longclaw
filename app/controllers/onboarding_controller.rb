@@ -42,138 +42,16 @@ class OnboardingController < ApplicationController
 
 	# Allow user to confirm processed clusters (in the form of streams/projects)
 	def confirm_projects
-		if current_user.onboarding_step == Utils::ONBOARDING[:onboarded]
-			redirect_to root_path and return
-		end
+		return_vals = User.confirm_projects_for_user(current_user)
 
-		@overlapping_projects = []
-		@new_projects = []
-		@same_projects = []
+		redirect_to root_path and return if return_vals[:result] == -1 
 
-		custom_lists = current_user.organization.get_custom_lists_with_options
-		@account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
-		
-		new_user_projects = Project.where(created_by: current_user.id, is_confirmed: false).includes(:users, :contacts, :account)
-		all_accounts = current_user.organization.accounts.includes(projects: [:users, :contacts])
-
-		new_user_projects.each do |new_project|
-			new_project_members = new_project.contacts.map(&:email).map(&:downcase).map(&:strip)
-			
-			all_accounts.each do | account |
-				if account.id == new_project.account.id
-					overlapping_p = []
-					new_p = []
-					same_p = []
-
-					# puts "---Account is " + account.name + "---\n"
-					# puts "Projects in this account: " + account.projects.size.to_s
-
-					if account.projects.empty?
-						# This account has no project, so new_project is considered first project.
-						new_p << new_project if !new_p.include?(new_project)
-					else
-						account.projects.each do |existing_project|
-							existing_project_members = existing_project.contacts.map(&:email).map(&:downcase).map(&:strip)
-							
-							# DEBUG MSG
-							# puts existing_project_members
-							# puts "----"
-							# puts new_project_members
-
-							dc = dice_coefficient(existing_project_members, new_project_members)
-							intersect = intersect(existing_project_members, new_project_members)
-							logger.info("Dice Coefficient #{dc}, Intersect #{intersect}")
-							ahoy.track("Project Confirmation", dice_coefficient: dc, intersect: intersect, existing_project_members: existing_project_members, new_project_members: new_project_members)
-
-							# puts "\n\n\n\n"
-
-							if dc == 1.0
-								# 100% match in external members. Do not display these projects.
-								same_p << existing_project
-							elsif dc < 1.0 and dc > 0.0
-								# Considered same project. 
-								overlapping_p << existing_project
-							# elsif dc < 0.2 and dc > 0.0 and intersect > 1
-							# 	# Considered existing projects because there are more than 1 shared members.
-							# 	overlapping_p << existing_project
-							# elsif dc < 0.2 and dc > 0.0 and intersect == 1
-							# 	# This is likely a one-time communication or a typo by email sender.
-
-							# 	# If the existing project already has current user, then likely this conversation is part of that project.
-							# 	if existing_project.users.map(&:email).include?(current_user.email)
-							# 		overlapping_p << existing_project
-							# 	else
-							# 		new_p << new_project if !new_p.include?(new_project)
-							# 	end
-							else dc == 0.0 
-								# Definitely new project.  Modify new project into confirmed project.
-								new_p << new_project if !new_p.include?(new_project)
-							end
-						end #account.projects.each do |existing_project|
-					end #if account.projects.empty?
-
-					# Take action on the unconfirmed projects
-					if account.projects.size == 0
-						# Add project into account.  Modify new project into confirmed project
-						new_project.update_attributes(is_confirmed: true)
-						# Subscribe to existing project
-						new_project.subscribers.create(user_id: current_user.id)
-					elsif overlapping_p.size > 0
-						overlapping_p.each do |p|
-							p.project_members.create(user_id: current_user.id)
-							
-							# Copy new_project contacts and users
-							new_project.contacts.each do |c|
-								p.project_members.create(contact_id: c.id)
-							end
-
-							new_project.users.each do |u|
-								p.project_members.create(user_id: u.id)
-							end
-
-							# Copy new_project activities
-							Activity.copy_email_activities(new_project, p)
-
-							# Subscribe to existing project
-							p.subscribers.create(user_id: current_user.id)
-						end
-
-						new_project.destroy # Delete unconfirmed project
-
-					else # No overlapping projects
-						if same_p.size > 0
-							same_p.each do |p|
-								p.project_members.create(user_id: current_user.id)
-
-								# Copy new_project activities
-								Activity.copy_email_activities(new_project, p)
-
-								# Subscribe to existing project
-								p.subscribers.create(user_id: current_user.id)
-							end
-							
-							new_project.destroy # Delete unconfirmed project
-							
-						elsif new_p.size > 0
-							new_project.update_attributes(is_confirmed: true)
-							# Subscribe to existing project
-							new_project.subscribers.create(user_id: current_user.id)
-						end
-					end
-
-					# Prepare projects for View
-					overlapping_p.each { |p| @overlapping_projects << p }
-					new_p.each { |p| @new_projects << p }
-					same_p.each { |p| @same_projects << p }
-				end #if account.id == new_project.account.id
-			end #all_accounts.each do | account |
-		end #new_user_projects.each do |new_project|
-
-		@project_last_email_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")
-		
-		# Change user onboarding flag
-		current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
-	end  # END: confirm_projects
+    @overlapping_projects = return_vals[:overlapping_projects]
+    @new_projects = return_vals[:new_projects]
+    @same_projects = return_vals[:same_projects]
+    @account_types = return_vals[:account_types]
+    @project_last_email_date = return_vals[:project_last_email_date]
+	end
 
 	#########################################################################
 	# Callback method from backend during onboarding process to create clusters for a particular user 
