@@ -142,16 +142,16 @@ namespace :scheduler do
 
     desc 'Confirm all non-onboarded users in an organization'
     # Parameters: organization_id (via variable name injection into Environment)
-    # Usage: rake scheduler:confirm_projects_for_users org=<organization_id> step=<min_onboarding_step_value>
-    task confirm_projects_for_users: :environment do
-        puts "\n\n=====Task (confirm_projects_for_users) started at #{Time.now}====="
+    # Usage: rake scheduler:confirm_projects_for_org org=<organization_id> step=<min_onboarding_step_value>
+    # Utils::ONBOARDING = { "onboarded": -1, "fill_in_info": 0, "tutorial": 1, "confirm_projects": 2 }
+    task confirm_projects_for_org: :environment do
+        puts "\n\n=====Task (confirm_projects_for_org) started at #{Time.now}====="
 
         if ENV['org'].nil? and ENV['step'].nil?
-            puts 'Usage: rake scheduler:confirm_projects_for_users org=<organization_id> step=<min_onboarding_step_value>'
+            puts 'Usage: rake scheduler:confirm_projects_for_org org=<organization_id> step=<min_onboarding_step_value>'
         else
             org =  Organization.find(ENV['org'])
             selected_users = org.users.select { |u| (!(u.onboarding_step.nil? or u.onboarding_step == Utils::ONBOARDING[:onboarded]) and u.onboarding_step >= ENV['step'].to_i) }
-            puts selected_users
             print "Running confirm_projects_for_user() for unconfirmed users in '", org.name, "'.\n"
             if selected_users.count == 0
                 puts "No selected users."
@@ -160,7 +160,7 @@ namespace :scheduler do
             end
             selected_users.each_with_index do |u,i| 
                 print (i+1), ". ", get_full_name(u), ": onboarding_step=", u.onboarding_step, "\n"
-                #User.confirm_projects_for_user(u) 
+                User.confirm_projects_for_user(u) 
             end
         end
     end
