@@ -567,3 +567,85 @@ a.suggested-action:hover, a.suggested-action:focus {
   pointer-events: none;
 }
 
+/** Chrome Extenstion **/
+.extension-sidebar ul.nav.nav-tabs li a {
+  font-size: 11px;
+  padding: 8px 12px;
+}
+
+.vertical-timeline-block.extension-block {
+  margin-bottom: 2em;
+}
+
+.extension-timeline-content {
+  margin-left: 35px;
+
+  h4 {
+    display: inline-block;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  p {
+    font-weight:300;
+    margin: 6px 0;
+    color: #333;
+  }
+
+  p.time-ago {
+    font-size: 85%;
+    color: #888;
+    margin-top:10px;
+  }
+
+  small {
+    display: block;
+    margin-bottom: 5px;
+    color: #aaa;
+  }
+}
+
+#extension-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 11px;
+  height: 100%;
+  width: 3px;
+  background: #e7eaec;
+}
+
+#extension-timeline .vertical-timeline-icon {
+  width: 25px;
+  height: 25px;
+  border: 2px solid #f1f1f1;
+}
+
+.extension-sidebar .tasks {
+  margin: 7px 0;
+
+  .icheckbox_square-green {
+    float: left;
+  }
+
+  p {
+    margin-bottom: 0px;
+    line-height: 15px;
+  }
+
+  p, small {
+    margin-left:28px
+  }
+
+  small {
+    color: #aaa;
+  }
+}
+
+.extension-sidebar .task-form {
+  input {
+    width: 85%;
+    margin-left: 28px;
+    padding-top: 0;
+  }
+}

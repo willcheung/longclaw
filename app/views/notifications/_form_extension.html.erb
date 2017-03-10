@@ -1,5 +1,6 @@
 <% remote ||= false %>
 <%= simple_form_for Notification.new, remote: remote do |f| %>
+<div class="icheckbox_square-green" style="position: relative;float: left"></div>
   <%= f.input :name, label: false, input_html: { class: "input-border input-sm" }, placeholder: "Add a To-Do. (Press Enter to save)" %>
   <%= f.input :project_id, label: false, as: :hidden, input_html: { value: @project.id } %>
 <% end %>
