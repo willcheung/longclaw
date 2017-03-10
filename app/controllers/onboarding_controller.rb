@@ -44,7 +44,7 @@ class OnboardingController < ApplicationController
 	def confirm_projects
 		return_vals = User.confirm_projects_for_user(current_user)
 
-		redirect_to root_path and return if return_vals[:result] == -1 
+		redirect_to root_path and return if return_vals == -1 
 
     @overlapping_projects = return_vals[:overlapping_projects]
     @new_projects = return_vals[:new_projects]

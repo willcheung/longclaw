@@ -188,13 +188,9 @@ class User < ActiveRecord::Base
   end
 
   def self.confirm_projects_for_user(user)
+    return -1 if user.onboarding_step == Utils::ONBOARDING[:onboarded]
+
     return_vals = {}
-
-    if user.onboarding_step == Utils::ONBOARDING[:onboarded]
-      return_vals[:result] = -1 
-      return return_vals
-    end
-
     overlapping_projects = []
     new_projects = []
     same_projects = []
