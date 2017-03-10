@@ -189,6 +189,7 @@ class User < ActiveRecord::Base
 
   def self.confirm_projects_for_user(user)
     return_vals = {}
+
     if user.onboarding_step == Utils::ONBOARDING[:onboarded]
       return_vals[:result] = -1 
       return return_vals
@@ -206,7 +207,7 @@ class User < ActiveRecord::Base
 
     new_user_projects.each do |new_project|
       new_project_members = new_project.contacts.map(&:email).map(&:downcase).map(&:strip)
-      
+
       all_accounts.each do | account |
         if account.id == new_project.account.id
           overlapping_p = []
@@ -269,7 +270,7 @@ class User < ActiveRecord::Base
           elsif overlapping_p.size > 0
             overlapping_p.each do |p|
               p.project_members.create(user_id: user.id)
-              
+
               # Copy new_project contacts and users
               new_project.contacts.each do |c|
                 p.project_members.create(contact_id: c.id)
@@ -299,7 +300,7 @@ class User < ActiveRecord::Base
                 # Subscribe to existing project
                 p.subscribers.create(user_id: user.id)
               end
-              
+
               new_project.destroy # Delete unconfirmed project
               
             elsif new_p.size > 0
