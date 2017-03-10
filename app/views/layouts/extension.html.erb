@@ -29,7 +29,7 @@
 
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
-                <a href="<%= root_path %>" target="MainApp" class="navbar-brand" style="width:150px">
+                <a href="<%= root_path %>" target="_blank" class="navbar-brand">
                     <span class="clear">
                         <div class="block logo">&nbsp;</div>
                     </span>
@@ -38,14 +38,14 @@
 
             <% if @project %>
 
-                <h3><%= @project.name %></h3>
+                <h3 class="m-t-sm"><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
                 <h3 class="text-mute-gray">Account: <%= @account.name %></h3>
 
-                <hr class="m-t-xs m-b-sm">
-
-                <%= link_to_unless_current("Activities", extension_account_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Activities", class: 'm-r-lg font-bold' } %>
-                <%= link_to_unless_current("Alerts & Tasks", extension_alerts_tasks_path(emails: params[:emails]), class: 'm-r-lg') { content_tag :span, "Alerts & Tasks", class: 'm-r-lg font-bold' } %>
-                <%= link_to_unless_current("People", extension_contacts_path(emails: params[:emails])) { content_tag :span, "People", class: 'font-bold' } %>
+                <ul class="nav nav-tabs m-b-sm m-t-md">
+                    <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(emails: params[:emails]) %>">Activities</a></li>
+                    <li role="presentation" class="<%= is_active_action('alerts_tasks') %>"><a href="<%= extension_alerts_tasks_path(emails: params[:emails]) %>"> Alerts & Tasks</a></li>
+                    <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(emails: params[:emails]) %>">People</a></li>
+                </ul>
 
             <% end %>
 

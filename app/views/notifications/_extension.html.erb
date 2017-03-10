@@ -1,4 +1,5 @@
-<div>
+<div class="tasks">
   <input type="checkbox" class="i-checks" id="<%= n.id %>" <%= "checked" if n.is_complete %> >
-  <p class="in-bl"><%= n.name %> <small><%= n.original_due_date.strftime("%a, %b %-d") if n.original_due_date %></small></p>  
+  <p><%= n.name %></p>  
+  <small><%= n.original_due_date.strftime("%a, %b %-d") if n.original_due_date %></small>
 </div>
