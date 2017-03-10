@@ -40,7 +40,7 @@
                 else
                   truncate(m.content.body, length: 100, separator: ' ')
                 end %></p>
-            <p class="time-ago"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago by <%= m.from.first.personal %></p>
+            <p class="time-ago">By <%= m.from.first.personal %> <%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</p>
 
         <% elsif a.category == Activity::CATEGORY[:Note] %>
             <div class="rag-bar<%=a['rag_score']%> p-xxs">
@@ -64,10 +64,10 @@
             <% c = a.email_messages.first.issue.fields.comment.comments.last %>
             <% if c.present? %>
                 <p><%= truncate(c.body, length: 80, separator: ' ') %></p>
-                <p class="time-ago"><%= time_ago_in_words(c.updated.to_time) %> ago by <%= c.author.displayName %></p>
+                <p class="time-ago">By <%= c.author.displayName %> <%= time_ago_in_words(c.updated.to_time) %> ago</p>
             <% else %>
                 <p><%= truncate(a.note, length: 80, separator: ' ') %></p>
-                <p class="time-ago"><%= time_ago_in_words(a.last_sent_date) %> ago by <%= a.from.first.personal %></p>
+                <p class="time-ago">By <%= a.from.first.personal %> <%= time_ago_in_words(a.last_sent_date) %> ago</p>
             <% end %>
 
         <% elsif a.category == Activity::CATEGORY[:Zendesk] %>
