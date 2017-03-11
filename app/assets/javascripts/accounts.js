@@ -36,7 +36,7 @@ $(document).ready(function(){
 
   $('.category_box').on('change',function(evt,params){
     if(bulkOperation("category",  params["selected"], "/account_bulk")==true){
-      window.location.replace("/accounts");
+      window.location.replace(document.location.href); //reload page, keep filter params
     }
     else{
       console.log("bulk error");
@@ -46,7 +46,7 @@ $(document).ready(function(){
 
   $('.owner_box').on('change',function(evt,params){
     if(bulkOperation("owner",  params["selected"], "/account_bulk")==true){
-      window.location.replace("/accounts");
+      window.location.replace(document.location.href); //reload page, keep filter params
     }
     else{
       console.log("bulk error");
@@ -89,8 +89,7 @@ $(document).ready(function(){
 
   $('#bulk-delete').click(function(){  
     if(bulkOperation("delete",  null, "/account_bulk")==true){
-      window.location.replace("/accounts");
-
+      window.location.replace(document.location.href); //reload page, keep filter params
     }
     else{
       console.log("bulk error");
