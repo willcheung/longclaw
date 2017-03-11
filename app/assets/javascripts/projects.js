@@ -161,7 +161,7 @@ jQuery(document).ready(function($) {
 
   $('#bulk-delete').click(function(){
     if(bulkOperation("delete",  null, "/project_bulk")==true){
-      window.location.replace(URL_PREFIX);
+      window.location.replace(document.location.href); //reload page, keep filter params
     }
     else{
       console.log("bulk error");
@@ -170,7 +170,7 @@ jQuery(document).ready(function($) {
 
   $('.category_box').on('change',function(evt,params){
       if(bulkOperation("category",  params["selected"], "/project_bulk")==true){
-        window.location.replace(URL_PREFIX);
+        window.location.replace(document.location.href); //reload page, keep filter params
       }
       else{
         console.log("bulk error");
@@ -179,7 +179,7 @@ jQuery(document).ready(function($) {
 
   $('.owner_box').on('change',function(evt,params){
       if(bulkOperation("owner",  params["selected"], "/project_bulk")==true){
-        window.location.replace(URL_PREFIX);
+        window.location.replace(document.location.href); //reload page, keep filter params
       }
       else{
         console.log("bulk error");
@@ -188,7 +188,7 @@ jQuery(document).ready(function($) {
 
   $('.status_box').on('change',function(evt,params){
       if(bulkOperation("status",  params["selected"], "/project_bulk")==true){
-        window.location.replace(URL_PREFIX);
+        window.location.replace(document.location.href); //reload page, keep filter params
       }
       else{
         console.log("bulk error");
