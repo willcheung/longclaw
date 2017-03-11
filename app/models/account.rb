@@ -32,7 +32,7 @@ include ContextSmithParser
 class Account < ActiveRecord::Base
     after_create  :create_custom_fields
 
-    has_many    :projects, -> { where is_confirmed: true }, dependent: :destroy
+    has_many    :projects, -> { where is_confirmed: true }, dependent: :destroy  #also want is_active:true ?
     has_many  :contacts, dependent: :destroy
     has_many  :activities, :through => :projects
     belongs_to  :organization
@@ -106,12 +106,12 @@ class Account < ActiveRecord::Base
                     #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
                     CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id).update(value: sObj[cf.salesforce_field])
                 end
-
             else
-                print "load_salesforce_fields Salesforce query error: Attempted to load fields from SF Account sfdc_account_id=", sfdc_account_id, " to CS Account account_id=", account_id, ". account_custom_field_names=", account_custom_field_names, "\n"
-                return
+                return "account_custom_field_names=" + account_custom_field_names.to_s # proprogate list of field names to caller
             end
         end
+
+        nil # successful request
     end
 
     private

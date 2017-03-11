@@ -6,6 +6,7 @@ jQuery(document).ready(function($) {
   $("#search-account-projects").chosen();
   $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
   $('.owner_box').chosen({ allow_single_deselect: true});
+  $('.status_box').chosen({ allow_single_deselect: true});
   $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
   $('.owner_filter').chosen({ disable_search: true, allow_single_deselect: true});
 
@@ -142,17 +143,19 @@ jQuery(document).ready(function($) {
     {
       // $('.bulk-group').css('visibility','visible');
       $('#bulk-delete').prop("disabled",false);
-      $('#bulk-owner').prop("disabled",false).trigger("chosen:updated");
       $('#bulk-type').prop("disabled",false).trigger("chosen:updated");
+      $('#bulk-owner').prop("disabled",false).trigger("chosen:updated");
+      $('#bulk-status').prop("disabled",false).trigger("chosen:updated");
     }
     else
     {
       // $('.bulk-group').css('visibility','hidden');
       $('#bulk-delete').prop("disabled",true);
-      $('#bulk-owner').prop("disabled",true).trigger("chosen:updated");
       $('#bulk-type').prop("disabled",true).trigger("chosen:updated");
+      $('#bulk-owner').prop("disabled",true).trigger("chosen:updated");
+      $('#bulk-status').prop("disabled",true).trigger("chosen:updated");
     }
-    // console.log(checkCounter);
+    // console.log("checkCounter" + checkCounter);
 
   });
 
@@ -176,6 +179,15 @@ jQuery(document).ready(function($) {
 
   $('.owner_box').on('change',function(evt,params){
       if(bulkOperation("owner",  params["selected"], "/project_bulk")==true){
+        window.location.replace(URL_PREFIX);
+      }
+      else{
+        console.log("bulk error");
+      }
+  });
+
+  $('.status_box').on('change',function(evt,params){
+      if(bulkOperation("status",  params["selected"], "/project_bulk")==true){
         window.location.replace(URL_PREFIX);
       }
       else{

@@ -1684,7 +1684,7 @@ a.forum-item-title:hover {
   padding: 0;
 }
 
-#vertical-timeline::before, #extension-timeline::before {
+#vertical-timeline::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1823,23 +1823,6 @@ a.forum-item-title:hover {
   border-color: #ecedef #e8e9ec #dedee1;
   border-radius: 3px;
   background-color: #fff;
-}
-
-.extension-timeline-content {
-  margin-left: 35px;
-
-  h4 {
-    display: inline-block;
-  }
-
-  h4, p {
-    margin-bottom: 5px;
-  }
-
-  small:not(.text-muted) {
-    float: right;
-    margin-top: 5px;
-  }
 }
 
 .vertical-timeline-content h3 {

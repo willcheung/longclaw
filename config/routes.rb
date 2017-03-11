@@ -1,5 +1,10 @@
 Longclaw::Application.routes.draw do
 
+  unauthenticated do
+    get "extension" => "extension#new"
+    get "extension/account" => "extension#new"
+  end
+
   devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
   # You can have the root of your site routed with "root"
 
@@ -40,10 +45,18 @@ Longclaw::Application.routes.draw do
     post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
     post "/salesforce_refresh" => 'salesforce#refresh_accounts'
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
-    post "/salesforce_activities_refresh/:entity_type" => 'salesforce#refresh_activities'
+    post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
     post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
+
+    resources :basecamp, only: [:index]
+    get "basecamp_controller/index"
+    post "/sync_stream" => 'basecamps#link_basecamp2_account'
+    post "/refresh_stream" => 'basecamps#refresh_stream'
+    post "/link_basecamp2_account" => 'basecamps#link_basecamp2_account'
+    delete "/delete_basecamp2_account/:id" => 'basecamps#remove_basecamp2_account'
+    delete "/basecamp2/disconnect/:id" => 'basecamps#disconnect'
 
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"
@@ -56,6 +69,9 @@ Longclaw::Application.routes.draw do
       get "salesforce" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 
+      get "basecamp"
+      get "basecamp2_projects"
+      get "basecamp2_activity"
       get "salesforce_fields" 
       get "super_user"
       post "invite_user/:user_id" => 'settings#invite_user'
@@ -84,8 +100,12 @@ Longclaw::Application.routes.draw do
     post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
     
     scope "reports", controller: :reports, as: 'reports' do
-      get 'accounts'
-      get 'team'
+      get 'd_account_success'
+      get 'd_account_sales'
+      get 'd_team_success'
+      get 'd_team_sales'
+      get 'd_executive'
+      get 'd_competitors'
       get 'accounts_dashboard'
       get 'dashboard_data/:sort' => 'reports#dashboard_data'
       get 'account_data/:id' => 'reports#account_data'
@@ -109,9 +129,17 @@ Longclaw::Application.routes.draw do
   end
 
   devise_scope :user do # Unauthenticated user
-  	root to: "sessions#new"
-    get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
+  	# root to: "sessions#new"
+    root to: redirect('/auth/basecamp')
+    get '/auth/:provider/callback' => 'setting#basecamp'
+    # get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
   end
+
+  get '/users/auth/basecamp2' => 'basecamps#basecamp2'
+  get '/users/auth/37signals/callback' => 'settings#basecamp'
+
+
+
 
   # Cluster callback
   post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'

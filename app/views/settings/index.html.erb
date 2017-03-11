@@ -22,6 +22,7 @@
               <p><a href="<%= settings_users_path %>">See details</a></p>
             </div>
 
+            <% if current_user.admin? %>
             <div class="col-lg-12 m-t-md">
               <h2>Alerts</h2>
               <p><a href="<%= settings_alerts_path %>">See details</a></p>
@@ -32,8 +33,11 @@
               <p><a href="<%= settings_custom_fields_path %>">Edit Custom Fields</a></p>
               <p><a href="<%= settings_custom_lists_path %>">Edit Custom Lists</a></p>
             </div>
+            <% end %>
         </div>
     </div>
+
+    <% if current_user.admin? %>
     <div class="ibox">
         <div class="ibox-content row">
             <h1>Integrations</h1>
@@ -46,6 +50,16 @@
                 <p>Connected</p>
               <% end %>
               <p><a href="<%= settings_salesforce_path %>">See details</a></p>
+            </div>
+            <div class="col-lg-12 m-t-md">
+              <h2>BaseCamp2 Settings</h2>
+              <% if @basecamp2_user.nil?%>
+                <p>Not Connected</p>
+              <% else %>
+                <p>Connected</p>
+              <% end %>
+              <p><a href="<%=settings_basecamp_path%>">See details</a></p>
+                
             </div>
             
             <div class="col-lg-12 m-t-md">
@@ -61,6 +75,7 @@
             </div>
         </div>
     </div>
+    <% end %>
 </div>
 
 

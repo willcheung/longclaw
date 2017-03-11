@@ -280,7 +280,9 @@ DEPENDENCIES
   jbuilder (~> 1.2)
   jquery-rails
   letter_opener
+  oauth2 (~> 1.0)
   omniauth-google-oauth2!
+  omniauth-oauth2 (~> 1.4)
   omniauth-salesforce
   pg
   pg_search
@@ -296,6 +298,9 @@ DEPENDENCIES
   thin
   tzinfo-data
   uglifier (>= 1.3.0)
+
+RUBY VERSION
+   ruby 2.2.3p173
 
 RUBY VERSION
    ruby 2.2.3p173

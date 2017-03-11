@@ -124,7 +124,107 @@ $(document).ready(function() {
     });
 
     $(".salesforce_account").hide();
+    $(".contextsmith_project_box").hide();
 
-    $('.contextsmith_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});  
+
+    $('.contextsmith_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'}); 
+    $('.basecamp2_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});
+    $('.contextsmith_project_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});     
+
+
+    ////////////////////////////////////////
+    // ../settings/salesforce_activities
+    ////////////////////////////////////////
+    $('#salesforce-activity-refresh').click(function(){
+        //Use encodeURI to escape '%' in 'like' predicates!
+        var GETRequestURL = encodeURI( "/salesforce_activities_refresh?entity_pred=" + document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim() + '&activityhistory_pred=' + document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() );
+
+        $.ajax(GETRequestURL, {
+            async: true,
+            method: "POST",
+            beforeSend: function () {
+                $("#salesforce-activity-refresh").css("pointer-events", "none");
+                $('#salesforce-activity-refresh .fa.fa-refresh').addClass('fa-spin');
+            },
+            complete: function() {
+                $("#salesforce-activity-refresh").css("pointer-events", "auto");
+                $('#salesforce-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
+            }
+        });
+    });
+
+    ////////////////////////////////////////
+    // ../settings/salesforce_fields
+    ////////////////////////////////////////
+    $('#salesforce-fields-refresh-accounts-btn,#salesforce-fields-refresh-projects-btn').click(function() {
+        var entity_type_str, entity_type_btn_str;
+        var self = $(this);
+        if (self.attr("id").includes("salesforce-fields-refresh-accounts-btn")) {
+            entity_type_str = "accounts";
+            entity_type_btn_str = "Accounts";
+        } 
+        else {
+            entity_type_str = "projects";
+            entity_type_btn_str = "Streams";
+        }
+
+        $.ajax('/salesforce_fields_refresh?entity_type=' + entity_type_str, {
+            async: true,
+            method: "POST",
+            data: "",
+            beforeSend: function () {
+                self.css("pointer-events", "none");
+                self.css("margin-left","0px");
+                self.removeClass('success-btn-highlight error-btn-highlight');
+                self.addClass('btn-primary btn-outline');
+                self.html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str);
+                $("#salesforce-fields-refresh-" + entity_type_str + "-btn .fa.fa-refresh").addClass('fa-spin');
+            },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ Refresh ContextSmith " + entity_type_btn_str);
+            },
+            error: function(data) {
+                var res = JSON.parse(data.responseText);
+                self.addClass('error-btn-highlight');
+                alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n" + res.error);
+            },
+            statusCode: {
+                500: function() {
+                    self.css("margin-left","60px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                },
+                503: function() {
+                    self.css("margin-left","30px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                },
+            },
+            complete: function() {
+                self.css("pointer-events", "auto");
+                self.removeClass('btn-primary btn-outline');
+            }
+        });
+    });
+
+    $('.salesforce-account-field-name,.salesforce-opportunity-field-name').change(function() {
+        var selectorStr, entity_type_btn_str;
+        if ($(this).attr("class").includes("salesforce-account-field-name")) {
+          selectorStr = "#salesforce-fields-refresh-accounts-btn";
+          entity_type_btn_str = "Accounts";
+        } 
+        else {
+          selectorStr = "#salesforce-fields-refresh-projects-btn";
+          entity_type_btn_str = "Streams";
+        }
+
+        $(selectorStr).css("margin-left","0px")
+        $(selectorStr).removeClass('success-btn-highlight error-btn-highlight');
+        $(selectorStr).addClass('btn-primary btn-outline');
+        $(selectorStr).html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str)
+        
+        var exclamation_triangle_warning = document.getElementById("exclamation-triangle-warning-cfid"+ $(this).attr("cf_id"));
+        if (exclamation_triangle_warning != undefined)
+            exclamation_triangle_warning.style.display = "none"; // remove warning
+    });
 
 } );

@@ -23,4 +23,6 @@ class CustomField < ActiveRecord::Base
 	belongs_to :customizable, polymorphic: true, foreign_key: "customizable_uuid"
 
 	validates :custom_fields_metadatum, presence: true
+
+	default_scope -> { order :custom_fields_metadata_id }  # strong default ordering of custom fields; row can be created "out of order"
 end

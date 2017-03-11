@@ -53,6 +53,7 @@ class User < ActiveRecord::Base
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
   has_many    :notifications, foreign_key: "assign_to"
+  has_many    :oauth_users
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -100,6 +101,10 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.find_basecamp
+    
+  end
+
   def self.find_for_google_oauth2(auth, time_zone='UTC')
     info = auth.info
     credentials = auth.credentials
@@ -135,6 +140,7 @@ class User < ActiveRecord::Base
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:fill_in_info],
+          role: User::ROLE[:Observer],
           is_disabled: false,
           time_zone: time_zone
         )
@@ -153,6 +159,7 @@ class User < ActiveRecord::Base
           oauth_refresh_token: credentials["refresh_token"],
           oauth_expires_at: Time.at(credentials["expires_at"]),
           onboarding_step: Utils::ONBOARDING[:fill_in_info],
+          role: User::ROLE[:Observer],
           is_disabled: false,
           time_zone: time_zone
         )
@@ -178,6 +185,147 @@ class User < ActiveRecord::Base
         invitation_created_at: Time.now
       )
     end
+  end
+
+  def self.confirm_projects_for_user(user)
+    return -1 if user.onboarding_step == Utils::ONBOARDING[:onboarded]
+
+    return_vals = {}
+    overlapping_projects = []
+    new_projects = []
+    same_projects = []
+
+    custom_lists = user.organization.get_custom_lists_with_options
+    return_vals[:account_types] = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+    
+    new_user_projects = Project.where(created_by: user.id, is_confirmed: false).includes(:users, :contacts, :account)
+    all_accounts = user.organization.accounts.includes(projects: [:users, :contacts])
+
+    new_user_projects.each do |new_project|
+      new_project_members = new_project.contacts.map(&:email).map(&:downcase).map(&:strip)
+
+      all_accounts.each do | account |
+        if account.id == new_project.account.id
+          overlapping_p = []
+          new_p = []
+          same_p = []
+
+          # puts "---Account is " + account.name + "---\n"
+          # puts "Projects in this account: " + account.projects.size.to_s
+
+          if account.projects.empty?
+            # This account has no project, so new_project is considered first project.
+            new_p << new_project if !new_p.include?(new_project)
+          else
+            account.projects.each do |existing_project|
+              existing_project_members = existing_project.contacts.map(&:email).map(&:downcase).map(&:strip)
+              
+              # DEBUG MSG
+              # puts existing_project_members
+              # puts "----"
+              # puts new_project_members
+
+              dc = dice_coefficient(existing_project_members, new_project_members)
+              intersect = intersect(existing_project_members, new_project_members)
+              logger.info("Dice Coefficient #{dc}, Intersect #{intersect}")
+              ahoy.track("Project Confirmation", dice_coefficient: dc, intersect: intersect, existing_project_members: existing_project_members, new_project_members: new_project_members)
+
+              # puts "\n\n\n\n"
+
+              if dc == 1.0
+                # 100% match in external members. Do not display these projects.
+                same_p << existing_project
+              elsif dc < 1.0 and dc > 0.0
+                # Considered same project. 
+                overlapping_p << existing_project
+              # elsif dc < 0.2 and dc > 0.0 and intersect > 1
+              #   # Considered existing projects because there are more than 1 shared members.
+              #   overlapping_p << existing_project
+              # elsif dc < 0.2 and dc > 0.0 and intersect == 1
+              #   # This is likely a one-time communication or a typo by email sender.
+
+              #   # If the existing project already has current user, then likely this conversation is part of that project.
+              #   if existing_project.users.map(&:email).include?(user.email)
+              #     overlapping_p << existing_project
+              #   else
+              #     new_p << new_project if !new_p.include?(new_project)
+              #   end
+              else dc == 0.0 
+                # Definitely new project.  Modify new project into confirmed project.
+                new_p << new_project if !new_p.include?(new_project)
+              end
+            end #account.projects.each do |existing_project|
+          end #if account.projects.empty?
+
+          # Take action on the unconfirmed projects
+          if account.projects.size == 0
+            # Add project into account.  Modify new project into confirmed project
+            new_project.update_attributes(is_confirmed: true)
+            # Subscribe to existing project
+            new_project.subscribers.create(user_id: user.id)
+          elsif overlapping_p.size > 0
+            overlapping_p.each do |p|
+              p.project_members.create(user_id: user.id)
+
+              # Copy new_project contacts and users
+              new_project.contacts.each do |c|
+                p.project_members.create(contact_id: c.id)
+              end
+
+              new_project.users.each do |u|
+                p.project_members.create(user_id: u.id)
+              end
+
+              # Copy new_project activities
+              Activity.copy_email_activities(new_project, p)
+
+              # Subscribe to existing project
+              p.subscribers.create(user_id: user.id)
+            end
+
+            new_project.destroy # Delete unconfirmed project
+
+          else # No overlapping projects
+            if same_p.size > 0
+              same_p.each do |p|
+                p.project_members.create(user_id: user.id)
+
+                # Copy new_project activities
+                Activity.copy_email_activities(new_project, p)
+
+                # Subscribe to existing project
+                p.subscribers.create(user_id: user.id)
+              end
+
+              new_project.destroy # Delete unconfirmed project
+              
+            elsif new_p.size > 0
+              new_project.update_attributes(is_confirmed: true)
+              # Subscribe to existing project
+              new_project.subscribers.create(user_id: user.id)
+            end
+          end
+
+          # Prepare projects for View
+          overlapping_p.each { |p| overlapping_projects << p }
+          new_p.each { |p| new_projects << p }
+          same_p.each { |p| same_projects << p }
+        end #if account.id == new_project.account.id
+      end #all_accounts.each do | account |
+    end #new_user_projects.each do |new_project|
+
+    return_vals[:project_last_email_date] = Project.visible_to(user.organization_id, user.id).includes(:activities).where("activities.category = 'Conversations'").maximum("activities.last_sent_date")
+    
+    # Change user onboarding flag
+    user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
+
+    # Return values to caller
+    return_vals[:overlapping_projects] = overlapping_projects
+    return_vals[:new_projects] = new_projects
+    return_vals[:same_projects] = same_projects
+
+    return_vals[:result] = 0  # success
+    return return_vals
   end
 
   def self.count_activities_by_user(array_of_account_ids, domain, time_zone='UTC')
@@ -366,8 +514,6 @@ class User < ActiveRecord::Base
     output
   end
 
-
-
   def self.meeting_report(array_of_account_ids, array_of_domains, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_meeting AS(
@@ -412,6 +558,26 @@ class User < ActiveRecord::Base
     output
   end
 
+  ######### Basic ACL ##########
+  # Roles have cascading effect, eg. if you're an "admin", then you also have access to what other roles have.
+
+  def admin?
+    self.role == User::ROLE[:Admin]
+  end
+
+  def power_user?
+    self.role == User::ROLE[:Poweruser] or self.admin?
+  end
+
+  def contributor?
+    self.role == User::ROLE[:Contributor] or self.admin? or self. power_user?
+  end
+
+  def observer?
+    self.role == User::ROLE[:Observer] or self.admin? or self. power_user? or self.contributor?
+  end
+
+  ######### End Basic ACL ##########
 
   def is_internal_user?
     true
