@@ -263,15 +263,14 @@ class ProjectsController < ApplicationController
     end
   end
 
+  # Handle bulk operations
   def bulk
     newArray = params["selected"].map { |key, value| key }
 
     if(params["operation"]=="delete")
       bulk_delete(newArray)
-    elsif params["operation"]=="category"
-      bulk_update_category(newArray, params["value"])
-    elsif params["operation"]=="owner"
-      bulk_update_owner(newArray, params["value"])
+    else
+      bulk_update(params["operation"], newArray, params["value"])
     end
 
     render :json => {:success => true, :msg => ''}.to_json
@@ -346,15 +345,15 @@ class ProjectsController < ApplicationController
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
   end
 
-  def bulk_update_owner(array_of_id, new_owner)
-    if(!array_of_id.nil?)
-      Project.where("id IN ( '#{array_of_id.join("','")}' )").update_all(owner_id: new_owner)
-    end
-  end
-
-  def bulk_update_category(array_of_id, new_type)
-    if(!array_of_id.nil?)
-      Project.where("id IN ( '#{array_of_id.join("','")}' )").update_all(category: new_type)
+  def bulk_update(field, array_of_ids, new_value)
+    if(!array_of_ids.nil?)
+      if field == "category"
+        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
+      elsif field == "owner"
+        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
+      elsif field == "status"
+        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(status: new_value)
+      end
     end
   end
 
