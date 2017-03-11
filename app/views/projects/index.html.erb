@@ -65,6 +65,12 @@
               <option value="<%=u.id %>" ><%= get_full_name(u) %></option>
                <% end %>
             </select>
+            <select class="status_box col-sm-3" data-placeholder="Change Status" id="bulk-status" disabled>
+              <option value="0"></option>
+              <% Project::STATUS.each do |s|    %>
+              <option value="<%=s %>" ><%=s %></option>
+               <% end %>
+            </select>
         </div>
         <% end %>
 

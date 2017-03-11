@@ -135,20 +135,19 @@ $(document).ready(function() {
     ////////////////////////////////////////
     // ../settings/salesforce_activities
     ////////////////////////////////////////
-
-    $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keyup(update_SOQL_query_preview);
-
     $('#salesforce-activity-refresh').click(function(){
         //Use encodeURI to escape '%' in 'like' predicates!
         var GETRequestURL = encodeURI( "/salesforce_activities_refresh?entity_pred=" + document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim() + '&activityhistory_pred=' + document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() );
-        
+
         $.ajax(GETRequestURL, {
             async: true,
             method: "POST",
             beforeSend: function () {
+                $("#salesforce-activity-refresh").css("pointer-events", "none");
                 $('#salesforce-activity-refresh .fa.fa-refresh').addClass('fa-spin');
             },
             complete: function() {
+                $("#salesforce-activity-refresh").css("pointer-events", "auto");
                 $('#salesforce-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
             }
         });
@@ -174,17 +173,20 @@ $(document).ready(function() {
             method: "POST",
             data: "",
             beforeSend: function () {
+                self.css("pointer-events", "none");
                 self.css("margin-left","0px");
                 self.removeClass('success-btn-highlight error-btn-highlight');
                 self.addClass('btn-primary btn-outline');
                 self.html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str);
                 $("#salesforce-fields-refresh-" + entity_type_str + "-btn .fa.fa-refresh").addClass('fa-spin');
             },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ Refresh ContextSmith " + entity_type_btn_str);
+            },
             error: function(data) {
                 var res = JSON.parse(data.responseText);
-                self.removeClass('btn-primary btn-outline');
                 self.addClass('error-btn-highlight');
-
                 alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n" + res.error);
             },
             statusCode: {
@@ -197,10 +199,9 @@ $(document).ready(function() {
                     self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
                 },
             },
-            success: function() {
+            complete: function() {
+                self.css("pointer-events", "auto");
                 self.removeClass('btn-primary btn-outline');
-                self.addClass('success-btn-highlight');
-                self.html("✓ Refresh ContextSmith " + entity_type_btn_str);
             }
         });
     });

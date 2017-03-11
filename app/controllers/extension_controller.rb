@@ -27,7 +27,7 @@ class ExtensionController < ApplicationController
   end
 
   def alerts_tasks
-    @notifications = @project.notifications.take(20)
+    @notifications = @project.notifications.order(:is_complete).take(15)
   end
 
   def contacts
