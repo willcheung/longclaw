@@ -89,15 +89,14 @@ class AccountsController < ApplicationController
     end
   end
 
+  # Handle bulk operations
   def bulk 
     newArray = params["selected"].map { |key, value| key }
 
     if(params["operation"]=="delete")
       bulk_delete(newArray)
-    elsif params["operation"]=="category"
-      bulk_update_category(newArray, params["value"])
-    elsif params["operation"]=="owner"
-      bulk_update_owner(newArray, params["value"])
+    else
+      bulk_update(params["operation"], newArray, params["value"])
     end
 
     render :json => {:success => true, :msg => ''}.to_json 
@@ -111,15 +110,13 @@ class AccountsController < ApplicationController
   end
 
   private
-    def bulk_update_owner(array_of_id, new_owner)
-      if(!array_of_id.nil?)
-        Account.where("id IN ( '#{array_of_id.join("','")}' )").update_all(owner_id: new_owner)
-      end
-    end
-
-    def bulk_update_category(array_of_id, new_type)
-      if(!array_of_id.nil?)
-        Account.where("id IN ( '#{array_of_id.join("','")}' )").update_all(category: new_type)
+    def bulk_update(field, array_of_ids, new_value)
+      if(!array_of_ids.nil?)
+        if field == "category"
+          Account.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
+        elsif field == "owner"
+          Account.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
+        end
       end
     end
 
