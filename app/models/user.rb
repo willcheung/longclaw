@@ -227,7 +227,7 @@ class User < ActiveRecord::Base
 
               dc = dice_coefficient(existing_project_members, new_project_members)
               intersect = intersect(existing_project_members, new_project_members)
-              logger.info("Dice Coefficient #{dc}, Intersect #{intersect}")
+              puts "Dice Coefficient #{dc}, Intersect #{intersect}"
               ahoy.track("Project Confirmation", dice_coefficient: dc, intersect: intersect, existing_project_members: existing_project_members, new_project_members: new_project_members)
 
               # puts "\n\n\n\n"
