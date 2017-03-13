@@ -228,9 +228,6 @@ class User < ActiveRecord::Base
               dc = dice_coefficient(existing_project_members, new_project_members)
               intersect = intersect(existing_project_members, new_project_members)
               puts "Dice Coefficient #{dc}, Intersect #{intersect}"
-              ahoy.track("Project Confirmation", dice_coefficient: dc, intersect: intersect, existing_project_members: existing_project_members, new_project_members: new_project_members)
-
-              # puts "\n\n\n\n"
 
               if dc == 1.0
                 # 100% match in external members. Do not display these projects.
