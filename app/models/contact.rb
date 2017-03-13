@@ -34,7 +34,7 @@ class Contact < ActiveRecord::Base
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
 
-  # Takes the External members from input data and determines the domains from the e-mail addresses, finds or creates an account from the domains, finds or creates a contact for the external members, then adds them as suggested members.  
+  # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Stream as suggested members.  
   def self.load(data, project, save_in_db=true)
     contacts = []
     current_org = project.account.organization
