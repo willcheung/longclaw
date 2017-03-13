@@ -168,8 +168,6 @@
 </div>
 
 <script>
-    $('[data-toggle="tooltip"]').tooltip();
-
     // Fix best_in_place bug/side-effect that adds paragraph tags to the .html of custom field dropdown lists, causing the value to be displayed awkwardly
     $('.best_in_place').bind('ajax:success', function(){ 
         this.innerHTML = this.innerHTML.replace('\<p\>', '').replace('\<\/p\>', '');
