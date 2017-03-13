@@ -778,7 +778,6 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # Currently this is no longer called during the onboarding process; user must manually create streams. 
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
