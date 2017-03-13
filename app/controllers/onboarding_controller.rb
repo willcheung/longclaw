@@ -86,7 +86,7 @@ class OnboardingController < ApplicationController
 
         elsif user.nil?
             format.json { render json: 'User not found.', status: 500}
-            logger.error "ERROR: User not found: " + params[:user_id]
+            puts "ERROR: User not found: " + params[:user_id]
             ahoy.track("Error Create Cluster", message: "User not found: #{params[:user_id]}")
             raise "ERROR: User not found during callback: " + params[:user_id]
             return nil
@@ -94,20 +94,17 @@ class OnboardingController < ApplicationController
         elsif data.nil? or data.empty?
 
             if params['code'] == 401 # Invalid credentials
-              puts "Error: #{params['message']}\n"
-              logger.error "ERROR: #{params['message']}\n"
+              puts "ERROR: #{params['message']}\n"
                 ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{params['message']}")
                 raise "ERROR: Invalid credential during callback: " + params[:user_id]
                 return nil
 
             elsif params['code'] == 404 # No external cluster found
-              puts "#{params['message']}\n"
-              logger.error "ERROR: #{params['message']}"
+              puts "ERROR: #{params['message']}"
               ahoy.track("Error Create Cluster for " + params[:user_id], message: "#{params['message']}")
             end
         else
-            puts "Unhandled backend response."
-            logger.error("Unhandled backend response #{params['message']}")
+            puts "Unhandled backend response #{params['message']}"
                 ahoy.track("Error Create Cluster for " + params[:user_id], message: "Unhandled backend response #{params['message']}.")
                 raise "ERROR: Unhandled backend response during callback: " + params[:user_id]
             return nil
@@ -132,8 +129,8 @@ class OnboardingController < ApplicationController
 
       rescue => e
         format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
-        logger.error "ERROR: Something went wrong: " + e.message
-        logger.error e.backtrace.join("\n")
+        puts "ERROR: Something went wrong: " + e.message
+        puts e.backtrace.join("\n")
         ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
       else
         format.json { render json: 'Clusters created for user ' + user.email, status: 200}
