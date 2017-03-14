@@ -4,7 +4,7 @@
 #
 #  id                      :integer          not null, primary key
 #  contextsmith_account_id :uuid
-#  external_account_id     :integer
+#  external_account_id     :string
 #  project_id              :uuid
 #  external_source         :string
 #  created_at              :datetime         not null
