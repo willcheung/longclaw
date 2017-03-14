@@ -18,7 +18,7 @@ class UserMailer < ApplicationMailer
       puts "Checking daily subscription for #{user.email}"
       @current_user_timezone = user.time_zone
       @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email)
-      @updates_today = @updates_today.map do |proj|
+      @updates_today = @updates_today.order(:name).map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
         temp = proj.dup
         # temp = Project.new     # another option
@@ -47,7 +47,7 @@ class UserMailer < ApplicationMailer
     if !@subs.nil? and !@subs.empty?
       puts "Checking weekly subscription for #{user.email}"
       @current_user_timezone = user.time_zone
-      @projects = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
+      @projects = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id").order(:name)
       # @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
 
       track user: user # ahoy_email tracker
