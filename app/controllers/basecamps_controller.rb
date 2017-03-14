@@ -6,15 +6,8 @@ class BasecampsController < ApplicationController
 	def index
 	end
 
-	def self.load
-		# call this method in order to update any kind of new activity
-	end
-
 	def basecamp2
-
-		respond_to do |format|
-		format.html { redirect_to BasecampService.connect_basecamp2}
-		end
+		redirect_to BasecampService.connect_basecamp2
 	end
 
 	def link_basecamp2_account
@@ -55,9 +48,11 @@ class BasecampsController < ApplicationController
 				end
 			end
 			basecamp_link.destroy
-		else
-			flash[:notice] = "Link Removed!"
-		end
+			rescue
+				flash[:error] = "Error!"
+			else
+				flash[:notice] = "Link Removed!"
+			end
 		end
 		respond_to do |format|
       format.html { redirect_to settings_basecamp_path }
