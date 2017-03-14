@@ -18,7 +18,8 @@ namespace :scheduler do
 
     desc 'Retrieve latest emails since yesterday for all active and confirmed projects in all organizations'
     task load_emails_since_yesterday: :environment do
-        if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
+        if ((Time.now.saturday? or Time.now.sunday?) and [0,6,12,18].include?(Time.now.hour))  # Runs once every 6 hours on weekends 
+            or (not(Time.now.saturday? or Time.now.sunday?) and [0,1,8,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour))  # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
             puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 
             Organization.all.each do |org|
@@ -50,7 +51,8 @@ namespace :scheduler do
 
     desc 'Retrieve latest calendar events since yesterday for all active and confirmed projects in all organizations'
     task load_events_since_yesterday: :environment do
-        if [3,9,15,21].include?(Time.now.hour) # Runs once every 6 hours
+        if ((Time.now.saturday? or Time.now.sunday?) and [3,9,15,21].include?(Time.now.hour))  # Runs once every 6 hours on weekends 
+            or (not(Time.now.saturday? or Time.now.sunday?) and [0,1,7,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour))  # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
             puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 
             Organization.all.each do |org|
@@ -117,11 +119,11 @@ namespace :scheduler do
                     if Time.current.hour == 17 && Time.current.sunday? || (args[:test] && !Rails.env.production?) # In the hour of 5pm on Sundays
                         UserMailer.weekly_summary_email(usr).deliver_later
                         sleep(0.5)
-                        print "user=", get_full_name(usr), "\n"
-                        print "   Time.current.hour=", Time.current.hour, " (17? ", Time.current.hour == 17, ")\n"
-                        print "   Time.current.sunday?=", Time.current.sunday?, "\n"
-                        print "   args[:test]=", args[:test], "\n"
-                        print "   Rails.env.production?=", Rails.env.production?, "\n"
+                        #puts "user=#{ get_full_name(usr) }"
+                        #puts "   Time.current.hour=#{ Time.current.hour } (17? #{ Time.current.hour == 17 })"
+                        #puts "   Time.current.sunday?=#{ Time.current.sunday? }"
+                        #puts "   args[:test]=#{ args[:test] }"
+                        #puts "   Rails.env.production?=#{ Rails.env.production? }"
                     end
                 end
             end
