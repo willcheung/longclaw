@@ -70,6 +70,7 @@ class BasecampsController < ApplicationController
 			if @basecamp2_user
 				begin 
 					events = BasecampService.basecamp2_user_project_events(@basecamp2_user, params[:basecamp_project_id])
+
 					object_info = events
 					eventable_id_list = events
 					list = []
@@ -80,18 +81,20 @@ class BasecampsController < ApplicationController
 						user_email['user_email'] = creator_info['email_address']
 						y.merge!(user_email)
 					end
+		
 
 					eventable_id_list.each{ |x| list << x['eventable']['id'] }
 					list.uniq!
 
 					if list
 						list.each do |a|
-							result = object_info.select { |b| b['eventable']['id'] == a }							
+							result = object_info.select { |b| b['eventable']['id'] == a && b['summary'].match("commented") }
+
 							result.sort_by { |hash| hash['updated_at'].to_i }
 							record = Activity.find_by(:backend_id => a)
 
 							if record.nil?
-								Activity.load_basecamp2_activities( result , params[:basecamp_project_id], current_user.id, params[:project_id] )
+									Activity.load_basecamp2_activities( result , params[:basecamp_project_id], current_user.id, params[:project_id] ) unless result.empty?
 							else
 								if record.email_messages.size < result.size
 									record.email_messages = result

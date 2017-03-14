@@ -57,6 +57,20 @@ class BasecampService
 		result
 	end
 
+		def self.basecamp2_user_project_discussion(basecamp_user, project_id)
+
+		basecamp_user = basecamp_user.refresh_token! if basecamp_user.token_expired?
+
+		token = set_access_token(basecamp_user['oauth_access_token'])
+		result = []
+		(1..40).each do |num|
+			req = JSON.parse(token.get("#{basecamp_user['oauth_instance_url']}/projects/#{project_id}/topics.json?page=#{num}", :params => {'query_foo' => 'bar'}).body)
+			req.each { |a| result << a }
+			break if req.size < 50
+		end
+		result
+	end
+
 
 	def self.load_basecamp2_events_from_backend(oauth_user, project, user_id='00000000-0000-0000-0000-000000000000')
 
