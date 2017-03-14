@@ -42,7 +42,7 @@ class SettingsController < ApplicationController
 	  end
 
     # Average Days Inactive
-    projects_inactivity = projects.group('projects.id').joins(:activities).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
+    projects_inactivity = projects.group('projects.id').joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
     if projects_inactivity.empty?  # if projects is empty, inactivity should be too
       @avg_inactivity = 0
     else
