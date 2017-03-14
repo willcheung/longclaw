@@ -1,6 +1,8 @@
 var checkCounter = 0;
 var URL_PREFIX = "/projects";
 
+$('[data-toggle="tooltip"]').tooltip();
+
 jQuery(document).ready(function($) {
 
   $("#search-account-projects").chosen();

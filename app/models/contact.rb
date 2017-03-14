@@ -34,6 +34,7 @@ class Contact < ActiveRecord::Base
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
 
+  # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Stream as suggested members.  
   def self.load(data, project, save_in_db=true)
     contacts = []
     current_org = project.account.organization
@@ -47,15 +48,18 @@ class Contact < ActiveRecord::Base
         # find account this new member should belong to
         account = Account.find_by(domain: domain, organization: current_org)
         # create a new account for this domain if one doesn't exist yet
-        account = Account.create(
-          domain: domain,
-          name: domain,
-          category: "Customer",
-          address: "",
-          website: "http://www.#{domain}",
-          owner_id: project.owner_id,
-          organization: current_org,
-          created_by: project.owner_id) unless account
+        unless account
+          puts "->  Creating Account for domain='#{domain}' owner=#{project.owner_id}..."
+          account = Account.create(
+            domain: domain,
+            name: domain,
+            category: "Customer",
+            address: "",
+            website: "http://www.#{domain}",
+            owner_id: project.owner_id,
+            organization: current_org,
+            created_by: project.owner_id)
+        end
 
         # find contact for this member
         contact = account.contacts.find_by_email(mem.address)

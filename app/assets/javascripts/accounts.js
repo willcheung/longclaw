@@ -1,6 +1,6 @@
-
 var checkCounter = 0;
 
+$('[data-toggle="tooltip"]').tooltip();
 
 $(document).ready(function(){
   

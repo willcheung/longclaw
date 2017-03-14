@@ -1,3 +1,4 @@
+$('[data-toggle="tooltip"]').tooltip();
 
 jQuery(document).ready(function($) {  
   //DataTables
