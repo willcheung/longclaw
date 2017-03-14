@@ -146,7 +146,7 @@
                                 <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>
                                 <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                             <% else %>
-                                <%= @project.project_owner.first_name + ' ' +  @project.project_owner.last_name %>
+                                <%= get_full_name(@project.project_owner) %>
                             <% end %>
                         </span>
                     </li>
