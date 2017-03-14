@@ -1,5 +1,5 @@
 <% remote ||= false %>
-<% url = @domain ? extension_create_account_path : accounts_path %>
+<% url = @domain ? extension_create_account_path : (modal_id == 'edit_account_modal' ? account_path : accounts_path) %>
 <%= simple_form_for @account, remote: remote, html: {role: :form, 'data-model' => 'account'}, url: url do |f| %>
 
   <span class="help-block" style="color:red"></span>      
