@@ -94,7 +94,7 @@ module Utils
     score < 0.0 ? 0 : score
   end
 
-  # Compares domain to our blacklist and returns true if valid (doesn't match any blacklisted pattern, correct length), false otherwise
+  # Compares domain to our blacklist and returns true if valid (doesn't match any blacklisted pattern; is correct length), false otherwise
   def passes_domain_filter(domain)
     bl_regex_patterns =[
                         # e-mail servers
