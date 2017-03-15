@@ -22,16 +22,15 @@
     <%= javascript_include_tag "https://code.highcharts.com/modules/heatmap.js" %>
     <%= javascript_include_tag "https://code.highcharts.com/modules/no-data-to-display.js" %>
     <%= csrf_meta_tags %>
-
+    
+    <!-- Chrome Extension -->
+    <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop">
 
 </head>
 <body class="top-navigation">
 
     <!-- Wrapper-->
     <div id="wrapper" class="<%= params[:controller] %>.<%= params[:action] %>">
-
-        <!-- Navigation -->
-        
 
         <!-- Page wraper -->
         <div id="page-wrapper" class="gray-bg <%= @extra_class %>">
