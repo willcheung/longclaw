@@ -67,7 +67,7 @@ class Notification < ActiveRecord::Base
     days_inactive_setting = RiskSetting.find_by(level: organization, metric: RiskSetting::METRIC[:DaysInactive])
     return unless days_inactive_setting.notify_task
 
-    project_inactive_days = Project.where(account_id: organization.accounts.ids).joins(:activities).where.not(activities: { category: Activity::CATEGORY[:Note] }).group('projects.id').maximum('activities.last_sent_date')
+    project_inactive_days = Project.where(account_id: organization.accounts.ids).joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).group('projects.id').maximum('activities.last_sent_date')
     project_inactive_days.each { |pid, last_sent_date| project_inactive_days[pid] = Time.current.to_date.mjd - last_sent_date.to_date.mjd } # convert last_sent_date to days inactive
     project_inactive_days.reject! { |pid, days_inactive| days_inactive < days_inactive_setting.medium_threshold }
 
