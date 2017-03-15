@@ -76,7 +76,7 @@ class Contact < ActiveRecord::Base
           project.project_members.create(contact_id: contact.id, status: ProjectMember::STATUS[:Pending])
 
           contacts << contact
-        end unless not passes_domain_filter(domain)
+        end unless not valid_domain?(domain)
       end unless d.newExternalMembers.nil?
     end
 
