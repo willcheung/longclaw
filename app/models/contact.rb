@@ -52,7 +52,7 @@ class Contact < ActiveRecord::Base
           account = Account.find_by(domain: domain, organization: current_org)
           # create a new account for this domain if one doesn't exist yet
           unless account
-            puts "-> Creating new Account for domain='#{domain}' owner='#{project.owner_id}' ..."
+            puts "-> Created a new account for domain='#{domain}' owner='#{project.owner_id}'."
             account = Account.create(
               domain: domain,
               name: domain,
@@ -76,6 +76,8 @@ class Contact < ActiveRecord::Base
           project.project_members.create(contact_id: contact.id, status: ProjectMember::STATUS[:Pending])
 
           contacts << contact
+        else
+        	puts "** Skipped creating a new Account for invalid domain='#{domain}'. **"
         end
       end unless d.newExternalMembers.nil?
     end
