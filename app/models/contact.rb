@@ -52,7 +52,7 @@ class Contact < ActiveRecord::Base
           account = Account.find_by(domain: domain, organization: current_org)
           # create a new account for this domain if one doesn't exist yet
           unless account
-            puts "** Created a new account for domain='#{domain}', organization='#{project.account.organization}'. **"
+            puts "** Created a new account for domain='#{domain}', organization='#{current_org}'. **"
             account = Account.create(
               domain: domain,
               name: domain,
