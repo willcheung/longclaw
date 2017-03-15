@@ -45,14 +45,14 @@ class Contact < ActiveRecord::Base
       d.newExternalMembers.each do |mem|
         domain = get_domain(mem.address)
         if valid_domain?(domain)
-          domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
+          subdomain = domain
+          domain = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
 
           ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
           # find account this new member should belong to
           account = Account.find_by(domain: domain, organization: current_org)
           # create a new account for this domain if one doesn't exist yet
           unless account
-            puts "** Created a new account for domain='#{domain}', organization='#{current_org}'. **"
             account = Account.create(
               domain: domain,
               name: domain,
@@ -62,6 +62,8 @@ class Contact < ActiveRecord::Base
               owner_id: project.owner_id,
               organization: current_org,
               created_by: project.owner_id)
+            subdomain_msg = domain != subdomain ? " (subdomain: #{subdomain})" : ""
+                puts "** Created a new account for domain='#{domain}'#{subdomain_msg}, organization='#{current_org}'. **"
           end
 
           # find contact for this member

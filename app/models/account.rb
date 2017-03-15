@@ -54,8 +54,8 @@ class Account < ActiveRecord::Base
         # Create missing accounts
         (grouped_external_members.keys - existing_domains).each do |d|
             if valid_domain?(d)
-                puts "** Created a new account for domain='#{d}', organization_id='#{organization_id}'. **"
-                d = get_domain_from_subdomain(d) # roll up subdomains into domains
+                subdomain = d
+                d = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
                 org_info = get_org_info(d)
 
                 account = Account.new(domain: d, 
@@ -67,6 +67,9 @@ class Account < ActiveRecord::Base
                                       organization_id: organization_id,
                                       created_by: owner_id)
                 account.save(validate: false)
+
+                subdomain_msg = d != subdomain ? " (subdomain: #{subdomain})" : ""
+                puts "** Created a new account for domain='#{d}'#{subdomain_msg}, organization_id='#{organization_id}'. **"
 
                 grouped_external_members[d].each do |c|
                     # Create contacts
