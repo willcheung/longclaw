@@ -649,3 +649,16 @@ a.suggested-action:hover, a.suggested-action:focus {
     padding-top: 0;
   }
 }
+
+#chrome-notification-bar {
+    text-align: center;
+    background-repeat:no-repeat;
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    height:20px;
+
+    span {
+      line-height: 22px;
+    }
+}
