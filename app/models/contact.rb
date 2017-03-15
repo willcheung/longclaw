@@ -77,7 +77,7 @@ class Contact < ActiveRecord::Base
 
           contacts << contact
         else
-        	puts "** Skipped creating a new Account for invalid domain='#{domain}'. **"
+        	puts "** Skipped creating a new account for invalid domain='#{domain}'. **"
         end
       end unless d.newExternalMembers.nil?
     end
