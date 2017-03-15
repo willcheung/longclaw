@@ -18,8 +18,8 @@ namespace :scheduler do
 
     desc 'Retrieve latest emails since yesterday for all active and confirmed projects in all organizations'
     task load_emails_since_yesterday: :environment do
-        if (((Time.now.saturday? or Time.now.sunday?) and [0,6,12,18].include?(Time.now.hour))  # Runs once every 6 hours on weekends 
-            or (not(Time.now.saturday? or Time.now.sunday?) and [0,1,8,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour))  # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
+        if (((Time.now.saturday? || Time.now.sunday?) && [0,6,12,18].include?(Time.now.hour))  # Runs once every 6 hours on weekends 
+            || (not(Time.now.saturday? || Time.now.sunday?) && [0,1,8,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour))  # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
            )
             puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 
@@ -52,8 +52,8 @@ namespace :scheduler do
 
     desc 'Retrieve latest calendar events since yesterday for all active and confirmed projects in all organizations'
     task load_events_since_yesterday: :environment do
-        if (((Time.now.saturday? or Time.now.sunday?) and [3,9,15,21].include?(Time.now.hour))  # Runs once every 6 hours on weekends 
-            or (not(Time.now.saturday? or Time.now.sunday?) and [0,1,7,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour))  # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
+        if (((Time.now.saturday? || Time.now.sunday?) && [3,9,15,21].include?(Time.now.hour))  # Runs once every 6 hours on weekends 
+            || (not(Time.now.saturday? || Time.now.sunday?) && [0,1,7,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour))  # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
            )  
             puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 
