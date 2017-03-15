@@ -44,8 +44,8 @@ class Contact < ActiveRecord::Base
     data_hash.each do |d|
       d.newExternalMembers.each do |mem|
         domain = get_domain(mem.address)
-        do
-          domain = get_domain_from_subdomain(domain) #roll up subdomains into domains
+        if valid_domain?(domain)
+          domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
 
           ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
           # find account this new member should belong to
@@ -76,7 +76,7 @@ class Contact < ActiveRecord::Base
           project.project_members.create(contact_id: contact.id, status: ProjectMember::STATUS[:Pending])
 
           contacts << contact
-        end unless not valid_domain?(domain)
+        end
       end unless d.newExternalMembers.nil?
     end
 
