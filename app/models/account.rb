@@ -54,6 +54,7 @@ class Account < ActiveRecord::Base
         # Create missing accounts
         (grouped_external_members.keys - existing_domains).each do |d|
             if valid_domain?(d)
+                puts "** Created a new account for domain='#{d}', organization_id='#{organization_id}'. **"
                 d = get_domain_from_subdomain(d) # roll up subdomains into domains
                 org_info = get_org_info(d)
 
@@ -73,6 +74,8 @@ class Account < ActiveRecord::Base
                                             last_name: get_last_name(c.personal),
                                             email: c.address)
                 end
+            else
+                puts "** Skipped creating a new account for invalid domain='#{d}'. **"
             end
         end
 
