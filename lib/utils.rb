@@ -98,15 +98,15 @@ module Utils
   def valid_domain?(domain)
     bl_regex_patterns =[
                         # e-mail servers
-                        '(.)*gmail.com', 
-                        '(.)*hotmail.com', 'hotmail.(.)*',
-                        '(.)*yahoo.com', 'yahoo.(.)*', 
+                        '(.)*gmail\.com', 
+                        '(.)*hotmail\.com', 'hotmail\.(.)*',
+                        '(.)*yahoo\.com', 'yahoo\.(.)*', 
                         # other servers or domains
-                        '(.)*calendar(.)*.google.com',
-                        '(.)*serverdata.net', 
-                        '(.)*comcastbiz.net', 
-                        '(.)*.salesforce.com', 
-                        '(.)*.zendesk.com', 
+                        '(.)*calendar(.)*\.google\.com',
+                        '(.)*serverdata\.net', 
+                        '(.)*comcastbiz\.net', 
+                        '(.)*\.salesforce\.com', 
+                        '(.)*\.zendesk\.com', 
                        ]
     return false if domain.length > 64
     bl_regex_patterns.none? { |p| Regexp.new(p, Regexp::IGNORECASE).match(domain) }
