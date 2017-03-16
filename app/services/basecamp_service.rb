@@ -88,7 +88,7 @@ class BasecampService
 		list.uniq!
 		if list
 			list.each do |a|
-				result = object_info.select { |b| b['eventable']['id'] == a }							
+				result = object_info.select { |b| b['eventable']['id'] == a && b['summary'].match("commented") }							
 				result.sort_by { |hash| hash['updated_at'].to_i }
 				record = Activity.find_by(:backend_id => a)
 

@@ -16,6 +16,26 @@ namespace :scheduler do
         end
     end
 
+    desc 'Retrieve latest 300 emails for specific active and confirmed projects in organizations'
+    task load_emails_for_org: :environment do
+      # Parameters: organization_id (via variable name injection into Environment)
+      # Usage: rake scheduler:load_emails_for_org org=organization_uuid 
+        puts "\n\n=====Task (load_emails_for_org) started at #{Time.now}====="
+        if ENV['org'].nil?
+            puts "*** Usage: rake scheduler:load_emails_for_org org=organization_uuid ***\n\n"
+        else
+          org = Organization.find(ENV['org']) 
+            org.accounts.each do |acc| 
+              acc.projects.is_active.each do |proj|
+                  puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
+                  ContextsmithService.load_emails_from_backend(proj, 300)
+                  sleep(1)
+              end
+            end
+        end
+    end
+
+
     desc 'Retrieve latest emails since yesterday for all active and confirmed projects in all organizations'
     task load_emails_since_yesterday: :environment do
         if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
