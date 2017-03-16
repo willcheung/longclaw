@@ -66,11 +66,11 @@
 
     <!-- Chrome header -->
     <% if request.user_agent.downcase.match(/chrome/) and cookies[:chromeNotificationBar] != "false" %>
-        <div id="chrome-notification-bar" style=""><span>Bring your accounts into your inbox. <a href="#" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)">Install our Chrome Extention for Gmail.</a></span></div>
+        <div id="chrome-notification-bar" style=""><span>Bring your accounts into your inbox. <a href="#" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)">Install our Chrome Extension for Gmail.</a></span></div>
         <script>
             function successCallback () {
                 $('#chrome-notification-bar').hide();
-                window.alert('Install successful! Please refresh your Gmail for the extention to take effect.');
+                window.alert('Install successful! Please refresh your Gmail for the extension to take effect.');
             }
             function failureCallback () {
                 window.alert('Cannot install extension. Please contact support@contextsmith.com for help.');
