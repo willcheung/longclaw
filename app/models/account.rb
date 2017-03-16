@@ -32,7 +32,7 @@ include ContextSmithParser
 class Account < ActiveRecord::Base
     after_create  :create_custom_fields
 
-    has_many    :projects, -> { where is_confirmed: true }, dependent: :destroy  #also want is_active:true ?
+    has_many  :projects, -> { where is_confirmed: true }, dependent: :destroy  #also want is_active:true ?
     has_many  :contacts, dependent: :destroy
     has_many  :activities, :through => :projects
     belongs_to  :organization
@@ -52,24 +52,33 @@ class Account < ActiveRecord::Base
         existing_domains = existing_accounts.map(&:domain)
 
         # Create missing accounts
-        (grouped_external_members.keys - existing_domains).each do |a|
-            org_info = get_org_info(a)
+        (grouped_external_members.keys - existing_domains).each do |d|
+            if valid_domain?(d)
+                subdomain = d
+                d = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
+                org_info = get_org_info(d)
 
-            account = Account.new(domain: a, 
-                                name: org_info[0], 
-                                category: "Customer",
-                                address: org_info[1],
-                                website: "http://www.#{a}",
-                                owner_id: owner_id, 
-                                organization_id: organization_id,
-                                created_by: owner_id)
-            account.save(validate: false)
+                account = Account.new(domain: d, 
+                                      name: org_info[0], 
+                                      category: "Customer",
+                                      address: org_info[1],
+                                      website: "http://www.#{d}",
+                                      owner_id: owner_id, 
+                                      organization_id: organization_id,
+                                      created_by: owner_id)
+                account.save(validate: false)
 
-            grouped_external_members[a].each do |c|
-                # Create contacts
-                account.contacts.create(first_name: get_first_name(c.personal),
-                                        last_name: get_last_name(c.personal),
-                                        email: c.address)
+                subdomain_msg = d != subdomain ? " (subdomain: #{subdomain})" : ""
+                puts "** Created a new account for domain='#{d}'#{subdomain_msg}, organization_id='#{organization_id}'. **"
+
+                grouped_external_members[d].each do |c|
+                    # Create contacts
+                    account.contacts.create(first_name: get_first_name(c.personal),
+                                            last_name: get_last_name(c.personal),
+                                            email: c.address)
+                end
+            else
+                puts "** Skipped creating a new account for invalid domain='#{d}'. **"
             end
         end
 
@@ -82,8 +91,8 @@ class Account < ActiveRecord::Base
             grouped_external_members[a.domain].each do |c|
                 if missing_emails.include?(c.address)
                     a.contacts.create(first_name: get_first_name(c.personal),
-                                    last_name: get_last_name(c.personal),
-                                    email: c.address)
+                                      last_name: get_last_name(c.personal),
+                                      email: c.address)
                 end
             end
         end

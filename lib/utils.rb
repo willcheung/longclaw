@@ -94,4 +94,33 @@ module Utils
     score < 0.0 ? 0 : score
   end
 
+  # Compares domain to our blacklist and returns true if valid (doesn't match any blacklisted pattern; is correct length), false otherwise
+  def valid_domain?(domain)
+    bl_regex_patterns =[
+                        # e-mail servers
+                        '(.)*gmail\.com', 
+                        '(.)*hotmail\.com', 'hotmail\.(.)*',
+                        '(.)*yahoo\.com', 'yahoo\.(.)*', 
+                        # other servers or domains
+                        '(.)*calendar(.)*\.google\.com',
+                        '(.)*serverdata\.net', 
+                        '(.)*comcastbiz\.net', 
+                        '(.)*\.salesforce\.com', 
+                        '(.)*\.zendesk\.com', 
+                       ]
+    return false if domain.length > 64
+    bl_regex_patterns.none? { |p| Regexp.new(p, Regexp::IGNORECASE).match(domain) }
+  end
+
+  # Returns the domain from subdomain. If special rule/exception is found, returns the subdomain unchanged.
+  def get_domain_from_subdomain(subdomain)
+    wl_regex_patterns =[ 
+                        '(.)*(\.co\.)(.)*',   
+                        '(.)*(\.com\.)(.)*', 
+                        '(.)*(\.net\.)(.)*',
+                        '(.)*(\.edu\.)(.)*'
+                       ]
+    return subdomain if wl_regex_patterns.any? { |p| Regexp.new(p, Regexp::IGNORECASE).match(subdomain) }
+    subdomain.split('.').last(2).join('.')  # obtain simple domain from subdomain
+  end
 end

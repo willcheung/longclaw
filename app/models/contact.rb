@@ -44,35 +44,43 @@ class Contact < ActiveRecord::Base
     data_hash.each do |d|
       d.newExternalMembers.each do |mem|
         domain = get_domain(mem.address)
-        ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
-        # find account this new member should belong to
-        account = Account.find_by(domain: domain, organization: current_org)
-        # create a new account for this domain if one doesn't exist yet
-        unless account
-          puts "->  Creating Account for domain='#{domain}' owner=#{project.owner_id}..."
-          account = Account.create(
-            domain: domain,
-            name: domain,
-            category: "Customer",
-            address: "",
-            website: "http://www.#{domain}",
-            owner_id: project.owner_id,
-            organization: current_org,
-            created_by: project.owner_id)
+        if valid_domain?(domain)
+          subdomain = domain
+          domain = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
+
+          ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
+          # find account this new member should belong to
+          account = Account.find_by(domain: domain, organization: current_org)
+          # create a new account for this domain if one doesn't exist yet
+          unless account
+            account = Account.create(
+              domain: domain,
+              name: domain,
+              category: "Customer",
+              address: "",
+              website: "http://www.#{domain}",
+              owner_id: project.owner_id,
+              organization: current_org,
+              created_by: project.owner_id)
+            subdomain_msg = domain != subdomain ? " (subdomain: #{subdomain})" : ""
+                puts "** Created a new account for domain='#{domain}'#{subdomain_msg}, organization='#{current_org}'. **"
+          end
+
+          # find contact for this member
+          contact = account.contacts.find_by_email(mem.address)
+          # create contact for this member if one doesn't exist yet
+          contact = account.contacts.create(
+            first_name: get_first_name(mem.personal),
+            last_name: get_last_name(mem.personal),
+            email: mem.address) unless contact
+
+          # add member to project as suggested member
+          project.project_members.create(contact_id: contact.id, status: ProjectMember::STATUS[:Pending])
+
+          contacts << contact
+        else
+        	puts "** Skipped creating a new account for invalid domain='#{domain}'. **"
         end
-
-        # find contact for this member
-        contact = account.contacts.find_by_email(mem.address)
-        # create contact for this member if one doesn't exist yet
-        contact = account.contacts.create(
-          first_name: get_first_name(mem.personal),
-          last_name: get_last_name(mem.personal),
-          email: mem.address) unless contact
-
-        # add member to project as suggested member
-        project.project_members.create(contact_id: contact.id, status: ProjectMember::STATUS[:Pending])
-
-        contacts << contact
       end unless d.newExternalMembers.nil?
     end
 
@@ -82,5 +90,4 @@ class Contact < ActiveRecord::Base
 	def is_internal_user?
 		return false
 	end
-
 end
