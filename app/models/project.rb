@@ -88,6 +88,7 @@ class Project < ActiveRecord::Base
   has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify
   has_many :custom_fields, as: :customizable, foreign_key: "customizable_uuid", dependent: :destroy
 
+  # TODO: Combine visible_to and visible_to_admin scopes for a general "role" checker
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
         .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])

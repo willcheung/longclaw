@@ -74,13 +74,13 @@ class OnboardingController < ApplicationController
             ############## Needs to be called in order -> Account (Contacts), User, Project ##########
 
             puts "Create accounts and contacts..."
-            Account.create_from_clusters(uniq_external_members, user.id, user.organization.id)
+            Account.create_from_clusters(uniq_external_members, user.id, user.organization_id)
 
             puts "Create internal users..."
-            User.create_from_clusters(uniq_internal_members, user.id, user.organization.id)
+            User.create_from_clusters(uniq_internal_members, user.id, user.organization_id)
 
             puts "Create projects, project members, and activities..."
-            Project.create_from_clusters(data, user.id, user.organization.id)
+            Project.create_from_clusters(data, user.id, user.organization_id)
 
             ##########################################################################################
 

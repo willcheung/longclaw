@@ -60,7 +60,7 @@ class SettingsController < ApplicationController
 
 	def create_for_alerts
 		if params[:level_type] == "Organization"
-			level_id = current_user.organization.id
+			level_id = current_user.organization_id
 		end
 		risk_settings = RiskSetting.where(level_type: params[:level_type], level_id: level_id)
 		new_settings = params['settings']

@@ -43,7 +43,7 @@ class ExtensionController < ApplicationController
       owner_id: current_user.id, 
       created_by: current_user.id,
       updated_by: current_user.id,
-      organization_id: current_user.organization.id,
+      organization_id: current_user.organization_id,
       status: 'Active')
     )
 

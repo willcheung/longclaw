@@ -43,6 +43,13 @@ class Account < ActiveRecord::Base
 
     validates :name, presence: true, uniqueness: { scope: :organization, message: "There's already an account with the same name." }
 
+    # TODO: Create a general visible_to scope for a general "role" checker
+    scope :visible_to, -> (user) {
+        select('DISTINCT(accounts.*)')
+            .where('accounts.organization_id = ?', user.organization_id)
+            .group('accounts.id')
+    }
+
     STATUS = %w(Active Inactive Dead)
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
 
