@@ -177,7 +177,7 @@ ActiveRecord::Schema.define(version: 20170305212057) do
 
   create_table "integrations", force: :cascade do |t|
     t.uuid     "contextsmith_account_id"
-    t.integer  "external_account_id"
+    t.string   "external_account_id"
     t.uuid     "project_id"
     t.string   "external_source"
     t.datetime "created_at",              null: false
