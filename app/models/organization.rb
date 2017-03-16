@@ -12,11 +12,11 @@
 
 
 class Organization < ActiveRecord::Base
-  has_many :users
-  has_many :accounts
-  has_many :oauth_users, foreign_key: "organization_id"
-  has_many :salesforce_accounts, foreign_key: "contextsmith_organization_id"
-  has_many :risk_settings, as: :level
+  has_many :users, dependent: :destroy
+  has_many :accounts, dependent: :destroy
+  has_many :oauth_users, foreign_key: "organization_id", dependent: :destroy
+  has_many :salesforce_accounts, foreign_key: "contextsmith_organization_id", dependent: :destroy
+  has_many :risk_settings, as: :level, dependent: :destroy
   has_many :custom_fields_metadatum, dependent: :destroy
   has_many :custom_fields, through: :custom_fields_metadatum
   has_many :custom_lists_metadatum, dependent: :destroy
