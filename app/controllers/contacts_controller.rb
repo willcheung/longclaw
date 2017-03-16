@@ -25,9 +25,9 @@ class ContactsController < ApplicationController
   # POST /contacts.json
   def create
     @contact = Contact.new(contact_params)
-    account = Account.find(@contact.account_id)
+    account = Account.find(@contact.account_id)  # didn't check for invalid account_id!
     respond_to do |format|
-      if !account.nil? && account.organization_id == current_user.organization_id && @contact.save
+      if account.organization_id == current_user.organization_id && @contact.save
         format.html { redirect_to @contact, notice: 'Contact was successfully created.' }
         # format.json { render action: 'show', status: :created, location: @contact }
         format.js 
