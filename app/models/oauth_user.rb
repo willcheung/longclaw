@@ -110,6 +110,15 @@ class OauthUser < ActiveRecord::Base
     oauth_access_token
   end
 
+  # Returns the Salesforce Instance (URL) of the organization to be used as a base URL 
+  def self.get_salesforce_instance_url(organization_id)
+    salesforce_user = self.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
+    if salesforce_user.nil?
+    	nil
+    else
+    	salesforce_user.oauth_instance_url 
+    end
+  end
 end
 
 

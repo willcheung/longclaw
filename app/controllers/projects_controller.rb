@@ -50,6 +50,7 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
     # get data for user filter
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
