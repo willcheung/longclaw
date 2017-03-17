@@ -1,12 +1,12 @@
 class OrganizationsController < ApplicationController
-	before_action :set_organization, only: [:show, :edit, :update, :destroy]
+  before_action :set_organization, only: [:show, :edit, :update, :destroy]
 
-	layout 'empty', only: 'new'
+  layout 'empty', only: 'new'
 
   # GET /organizations
   # GET /organizations.json
   def index
-    @organizations = organization.includes(:projects).includes(:account).all
+    @organizations = Organization.includes(:projects).includes(:account).all
   end
 
   # GET /organizations/1
@@ -17,10 +17,10 @@ class OrganizationsController < ApplicationController
   # GET /organizations/new
   def new
     @organization = Organization.new(domain: get_domain(current_user.email),
-    																 name: get_short_name(get_domain(current_user.email)).capitalize,
-    																 is_active: true,
-    																 owner_id: current_user.id
-    																)
+                                     name: get_short_name(get_domain(current_user.email)).capitalize,
+                                     is_active: true,
+                                     owner_id: current_user.id
+                                    )
   end
 
   # GET /organizations/1/edit
