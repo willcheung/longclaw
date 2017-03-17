@@ -60,10 +60,14 @@ class OrganizationsController < ApplicationController
   # DELETE /organizations/1
   # DELETE /organizations/1.json
   def destroy
-    @organization.destroy
-    respond_to do |format|
-      format.html { redirect_to organizations_url }
-      format.json { head :no_content }
+    @super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
+
+    if @super_admin.include?(current_user.email)
+      @organization.destroy
+      respond_to do |format|
+        format.html { redirect_to settings_super_user_url }
+        format.json { head :no_content }
+      end
     end
   end
 
@@ -75,6 +79,6 @@ class OrganizationsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def organization_params
-      params[:organization]
+      params.require(:organization).permit(:name, :domain)
     end
 end
