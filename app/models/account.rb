@@ -85,7 +85,7 @@ class Account < ActiveRecord::Base
                                             email: c.address)
                 end
             else
-                puts "** Skipped creating a new account for invalid domain='#{d}'. **"
+                puts "** Skipped processing the invalid domain='#{d}'. **"
             end
         end
 
