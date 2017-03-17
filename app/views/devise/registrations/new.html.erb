@@ -13,7 +13,7 @@
             <% if params[:c] %>
                 <p>ContextSmith is a smarter way to manage your key accounts and expansion.</p>
             <% else %>
-                <p>ContextSmith is a smarter way to manage your time and customers. Our 14-day free trial includes:</p>
+                <p>ContextSmith is a smarter way to manage your accounts. Our 14-day free trial includes:</p>
             <% end %>
             <ul style="line-height: 25px" class="m-t-md">
                 <li>Track account touch points in a single timeline.</li>
@@ -33,16 +33,36 @@
                     <p class="logo-name oauth"><%= params[:invited_by] %> welcomes you to ContextSmith</p>
                 <% end %>
 
-                <% unless params[:c] %>
+                <% if params[:c] %>
+                    <p class="m-t-sm"></p>
+                <% elsif params[:m] %>
+                    <h1 class="text-center">Thank you for installing!</h1>
+                <% else %>
                     <p class="oauth text-center"><small>14-day free trial. No credit card required. </small></p>
                 <% end %>
 
                 <div class="text-center">
-                  <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google-plus oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
+                    <% if params[:ext] and request.user_agent.downcase.match(/chrome/) %>
+                        <button class="btn btn-lg btn-primary oauth" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)"><i class="fa fa-envelope-o oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Install now for Gmail</span></button>
+                        <script>
+                            function successCallback () {
+                                location.href='https://app.contextsmith.com/users/sign_up?m=thanks-for-installing'
+                            }
+                            function failureCallback () {
+                                window.alert('Cannot install extension. Please try again or contact support@contextsmith.com for help.');
+                            }
+                        </script>
+                    <% elsif params[:m] %>
+                        <button class="btn btn-lg btn-primary oauth" onclick="location.href='https://mail.google.com'"><i class="fa fa-envelope-o oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Go to Gmail</span></button>
+                    <% else %>
+                        <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
+                    <% end %>
                 </div>
 
                 <% if params[:c] %>
                     <p style="font-size:14px" class="text-center m-t-md">Please contact your system admin or email <a href="mailto:support@contextsmith.com">support@contextsmith.com</a> if you have any questions.</p>
+                <% elsif params[:m] %>
+                    <p style="font-size:14px" class="text-center m-t-md">ContextSmith will show up on the right sidebar of your Gmail.</p>
                 <% else %>
                     <p style="font-size:12px" class="text-center"><small>By clicking this button you are agreeing to our <a href="https://www.contextsmith.com/terms/">Terms of Service</a>.</small></p>
 
@@ -55,7 +75,7 @@
         </div>
     </div>
 
-    <% unless params[:c] %>
+    <% unless params[:c] or params[:m] %>
     <hr class="m-t-xl m-b-xl"/>
     <div class="row">
       <h2 class="m-b-md"> Frequently Asked Questions</h2>
@@ -71,8 +91,8 @@
       </div>
 
       <div class="col-md-4">
-        <h3>Do I have to worry about you selling my email or data?</h3>
-        <p>Absolutely not. We protect the privacy of customer data. Your contact information and email data are yours alone and safe with us. We send out emails about product updates and helpful content, but you can opt out at any time. Here’s our <a href="https://www.contextsmith.com/privacy/">privacy policy</a>.</p>
+        <h3>Is ContextSmith platform secure?</h3>
+        <p>Absolutely. We repespect and protect the privacy of your important business data. Your contact information and email data are yours alone and safe with us. We are also EU – U.S. Privacy Shield certified. Take a look at our <a target="_blank" href="https://www.contextsmith.com/privacy/">privacy policy</a>.</p>
       </div>
     </div>
     <% end %>

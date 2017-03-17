@@ -86,7 +86,8 @@ Longclaw::Application.routes.draw do
     resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy], shallow: true
     end
-    #resources :organizations  # not using yet
+    
+    resources :organizations
 
     scope "search", controller: :search, as: 'search' do
       get "results"

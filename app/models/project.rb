@@ -85,9 +85,10 @@ class Project < ActiveRecord::Base
   has_many  :users, through: "project_members"
   has_many  :users_all, through: "project_members_all", source: :user
 
-  has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify
+  has_one  :salesforce_opportunity, foreign_key: "contextsmith_project_id", dependent: :nullify   # note: multiple SFDC opportunties may still map to a single project!
   has_many :custom_fields, as: :customizable, foreign_key: "customizable_uuid", dependent: :destroy
 
+  # TODO: Combine visible_to and visible_to_admin scopes for a general "role" checker
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
         .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])

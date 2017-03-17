@@ -111,9 +111,11 @@
                             Not linked
                         <% else %>
                             <% if @project.salesforce_opportunity.nil? %>
-                                <%= @project.account.salesforce_accounts.map{ |n| n.salesforce_account_name }.join(', ') %>
+                                <% @project.account.salesforce_accounts.each do |sfa| %>
+                                  <a href="<%= @salesforce_base_URL + "/" + sfa.salesforce_account_id %>" title="View '<%= sfa.salesforce_account_name %>' in Salesforce" target="_blank"><%= sfa.salesforce_account_name %><br></a>
+                                <% end %> 
                             <% else %>
-                                <%= @project.salesforce_opportunity.name %>
+                                <a href="<%= @salesforce_base_URL + "/" + @project.salesforce_opportunity.salesforce_opportunity_id %>" title="View '<%= @project.salesforce_opportunity.name %>' in Salesforce" target="_blank"><%= @project.salesforce_opportunity.name %></a>
                             <% end %>
                         <% end %>
                     </span>
@@ -187,7 +189,7 @@
                 </div>
                 <div class="col-sm-10">
                     <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested People</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be involved in this stream. Click the ✔ or X to confirm or reject our suggestions."></i>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be part of this accoutn stream. Click the ✔ or X to confirm or reject our suggestions."></i>
                 </div>
             </div>
             <!-- empty span here for proper toggle-open event handler traversal -->
