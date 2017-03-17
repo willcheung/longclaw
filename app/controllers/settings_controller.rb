@@ -156,9 +156,9 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		@super_admin = %w(wcheung@contextsmith.com rcwang@contextsmith.com)
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
 		if @super_admin.include?(current_user.email)
-			@users = User.registered.all
+			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
 		else
 			redirect_to root_path
 		end
