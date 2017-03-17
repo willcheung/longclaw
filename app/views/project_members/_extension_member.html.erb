@@ -14,6 +14,8 @@
                     <% if m.onboarding_step == nil %>
                     <%= link_to '(Invite)', "/settings/invite_user/#{m.id}", 'style' => 'font-size:10px', 'method' => 'post', 'remote' => true, 'id' => "#{m.id}", 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an email invitation." %>
                     <% end %>
+                <% else %>
+                    <small><a href="https://www.linkedin.com/search/results/people/?company=<%= get_domain(m.email) %>&keywords=<%= m.first_name + '%20' + m.last_name %>" target="_blank" class="m-l-xs"><i class="fa fa-linkedin"></i></a></small>
                 <% end %>
 
         </span><br>
