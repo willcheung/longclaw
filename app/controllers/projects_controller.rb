@@ -349,18 +349,18 @@ class ProjectsController < ApplicationController
   def bulk_update(field, array_of_ids, new_value)
     if(!array_of_ids.nil?)
       if field == "category"
-        Project.visible_to(current_user.organization_id, current_user.id).where("projects.id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(category: new_value)
       elsif field == "owner"
-        Project.visible_to(current_user.organization_id, current_user.id).where("projects.id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(owner_id: new_value)
       elsif field == "status"
-        Project.visible_to(current_user.organization_id, current_user.id).where("projects.id IN ( '#{array_of_ids.join("','")}' )").update_all(status: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(status: new_value)
       end
     end
   end
 
-  def bulk_delete(array_of_id)
+  def bulk_delete(array_of_ids)
     if(!array_of_id.nil?)
-      Project.visible_to(current_user.organization_id, current_user.id).where("projects.id IN ( '#{array_of_id.join("','")}' )").destroy_all
+      Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).destroy_all
     end
   end
 

@@ -12,7 +12,6 @@
 
 
 class Organization < ActiveRecord::Base
-
   has_many :users, dependent: :destroy
   has_many :accounts, dependent: :destroy
   has_many :projects, through: :accounts

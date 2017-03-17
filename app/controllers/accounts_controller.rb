@@ -111,16 +111,16 @@ class AccountsController < ApplicationController
     def bulk_update(field, array_of_ids, new_value)
       if(!array_of_ids.nil?)
         if field == "category"
-          Account.visible_to(current_user).where("id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
+          Account.visible_to(current_user).where(id: array_of_ids).update_all(category: new_value)
         elsif field == "owner"
-          Account.visible_to(current_user).where("id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
+          Account.visible_to(current_user).where(id: array_of_ids).update_all(owner_id: new_value)
         end
       end
     end
 
-    def bulk_delete(array_of_id)
+    def bulk_delete(array_of_ids)
       if(!array_of_id.nil?)
-        Account.visible_to(current_user).where("id IN ( '#{array_of_id.join("','")}' )").destroy_all
+        Account.visible_to(current_user).where(id: array_of_ids).destroy_all
       end
     end
 
