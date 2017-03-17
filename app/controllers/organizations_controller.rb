@@ -1,4 +1,5 @@
 class OrganizationsController < ApplicationController
+  before_action :check_if_admin
   before_action :set_organization, only: [:show, :edit, :update, :destroy]
 
   layout 'empty', only: 'new'
@@ -6,7 +7,7 @@ class OrganizationsController < ApplicationController
   # GET /organizations
   # GET /organizations.json
   def index
-    @organizations = Organization.includes(:projects).includes(:account).all
+    @organizations = Organization.includes(:projects, :accounts).all
   end
 
   # GET /organizations/1
@@ -60,18 +61,19 @@ class OrganizationsController < ApplicationController
   # DELETE /organizations/1
   # DELETE /organizations/1.json
   def destroy
-    @super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
-
-    if @super_admin.include?(current_user.email)
-      @organization.destroy
-      respond_to do |format|
-        format.html { redirect_to settings_super_user_url }
-        format.json { head :no_content }
-      end
+    @organization.destroy
+    respond_to do |format|
+      format.html { redirect_to settings_super_user_url }
+      format.json { head :no_content }
     end
   end
 
   private
+    def check_if_admin
+      @super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
+      redirect_to root_path and return unless @super_admin.include?(current_user.email)
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_organization
       @organization = Organization.find(params[:id])
