@@ -50,6 +50,7 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
     # get data for user filter
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
@@ -348,18 +349,18 @@ class ProjectsController < ApplicationController
   def bulk_update(field, array_of_ids, new_value)
     if(!array_of_ids.nil?)
       if field == "category"
-        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where("projects.id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
       elsif field == "owner"
-        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where("projects.id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
       elsif field == "status"
-        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(status: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where("projects.id IN ( '#{array_of_ids.join("','")}' )").update_all(status: new_value)
       end
     end
   end
 
   def bulk_delete(array_of_id)
     if(!array_of_id.nil?)
-      Project.where("id IN ( '#{array_of_id.join("','")}' )").destroy_all
+      Project.visible_to(current_user.organization_id, current_user.id).where("projects.id IN ( '#{array_of_id.join("','")}' )").destroy_all
     end
   end
 
