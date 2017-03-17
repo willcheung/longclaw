@@ -50,7 +50,6 @@ class ProjectsController < ApplicationController
   # GET /projects/1
   # GET /projects/1.json
   def show
-    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
     # get data for user filter
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
@@ -307,6 +306,8 @@ class ProjectsController < ApplicationController
     @weekly_subscribers = project_subscribers.weekly
     @suggested_members = @project.project_members_all.pending
     @user_subscription = project_subscribers.where(user: current_user).take
+
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
