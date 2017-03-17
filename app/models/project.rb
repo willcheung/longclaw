@@ -78,7 +78,7 @@ class Project < ActiveRecord::Base
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
   # v2: "_all" version, ignores status
-  has_many  :project_members, -> { confirmed }, dependent: :destroy, class_name: 'ProjectMember'
+  has_many  :project_members, -> { confirmed.order('contact_id ASC') }, dependent: :destroy, class_name: 'ProjectMember'
   has_many  :project_members_all, class_name: "ProjectMember", dependent: :destroy
   has_many  :contacts, through: "project_members"
   has_many  :contacts_all, through: "project_members_all", source: :contact
