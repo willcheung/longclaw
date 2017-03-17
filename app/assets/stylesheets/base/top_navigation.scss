@@ -27,9 +27,16 @@
   color: $primary;
 }
 
+.navbar-nav > li:not(.active) a:hover {
+  border-width: 0 0 3px 0;
+  border-color: lighten($primary, 25%);
+  border-style: solid;
+}
+
 .top-navigation .nav > li.active {
   background: #fff;
   border: none;
+  border-bottom: 3px $primary solid;
 }
 .top-navigation .nav > li.active > a {
   color: $primary;
