@@ -345,6 +345,8 @@ class ProjectsController < ApplicationController
     @last_page = activities.count <= (page_size * @page) # check whether there is another page to load
     activities = activities.limit(page_size).offset(page_size * (@page - 1))
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
+
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
 
   def bulk_update(field, array_of_ids, new_value)
