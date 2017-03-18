@@ -118,7 +118,8 @@
         <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= a.from[0].personal ? a.from[0].personal : a.from[0].address %></small>
-                <span class="label pull-right">Task</span>
+                <span class="message-date">&nbsp;—&nbsp;&nbsp;<%= Time.zone.at(a.last_sent_date).strftime("%b %d") %></span>
+                <span class="label pull-right"><%= a.email_messages.first["ActivityType"] %></span>
                 <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
             </h3>
 
@@ -137,6 +138,7 @@
                       true: raw('<a>Mark Private</a>')
                     }  %>
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a href="<%= @salesforce_base_URL + "/" + a.email_messages.first["Id"] %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a>
                 </div>
             </div> <!-- chat discussion -->
         <% elsif a.category == Activity::CATEGORY[:Basecamp2] %>
@@ -286,10 +288,6 @@
                 </div>
             </div>
         </div>
-
-    </td>
-    <td style="vertical-align:middle;font-size:11px;">
-        <%= Time.zone.at(a.last_sent_date).strftime("%_m/%d") %>
     </td>
 </tr>
 
