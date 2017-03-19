@@ -286,7 +286,7 @@ class ProjectsController < ApplicationController
     # metrics
     @project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
-    @project_pinned_count = @project.activities.pinned.count
+    @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
     project_rag_score = @project.activities.latest_rag_score.first
 
