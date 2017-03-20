@@ -5,7 +5,7 @@ namespace :scheduler do
     task load_emails: :environment do
         puts "\n\n=====Task (load_emails) started at #{Time.now}====="
 
-        Organization.all.each do |org|
+        Organization.is_active.each do |org|
             org.accounts.each do |acc| 
                 acc.projects.is_active.each do |proj|
                     puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
@@ -42,7 +42,7 @@ namespace :scheduler do
         if ( ((Time.now.saturday? || Time.now.sunday?) && [0,6,12,18].include?(Time.now.hour))  or  (not(Time.now.saturday? || Time.now.sunday?) && [0,1,7,13,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour)) )
             puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 
-            Organization.all.each do |org|
+            Organization.is_active.each do |org|
                 org.accounts.each do |acc| 
                     acc.projects.is_active.each do |proj|
                         puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
@@ -58,7 +58,7 @@ namespace :scheduler do
     task load_events: :environment do
         puts "\n\n=====Task (load_events) started at #{Time.now}====="
 
-        Organization.all.each do |org|
+        Organization.is_active.each do |org|
             org.accounts.each do |acc| 
                 acc.projects.is_active.each do |proj|
                     puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
@@ -75,7 +75,7 @@ namespace :scheduler do
         if ( ((Time.now.saturday? || Time.now.sunday?) && [3,9,15,21].include?(Time.now.hour))  or  (not(Time.now.saturday? || Time.now.sunday?) && [0,1,7,13,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour)) )  
             puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 
-            Organization.all.each do |org|
+            Organization.is_active.each do |org|
                 org.accounts.each do |acc| 
                     acc.projects.is_active.each do |proj|
                         puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
@@ -92,7 +92,7 @@ namespace :scheduler do
         if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
             puts "\n\n=====Task (load_basecamp2_eventsload_basecamp2_events) started at #{Time.now}====="
 
-            Organization.all.each do |org|
+            Organization.is_active.each do |org|
                 org.oauth_users.basecamp_user.each do |user| 
                     user.integrations.each do |integ|
                         BasecampService.load_basecamp2_events_from_backend(user, integ)
@@ -108,7 +108,7 @@ namespace :scheduler do
         puts "\n\n=====Task (email_daily_summary) started at #{Time.now}====="
 
         args.with_defaults(:test => false)
-        Organization.all.each do |org|
+        Organization.is_active.each do |org|
             org.users.each do |usr|
                 Time.use_zone(usr.time_zone) do
                     if Time.current.hour == 5 && Time.current.wday.between?(2, 6) || (args[:test] && !Rails.env.production?) # 5am next day after a weekday
@@ -123,7 +123,7 @@ namespace :scheduler do
     desc 'Generate Days Inactive alerts'
     task alert_for_days_inactive: :environment do
         puts "\n\n=====Task (alert_for_days_inactive) started at #{Time.now}====="
-        Organization.all.each do |org|
+        Organization.is_active.each do |org|
             Notification.load_alert_for_days_inactive(org)
         end
     end
@@ -133,7 +133,7 @@ namespace :scheduler do
         puts "\n\n=====Task (email_weekly_summary) started at #{Time.now}====="
 
         args.with_defaults(:test => false)
-        Organization.all.each do |org|
+        Organization.is_active.each do |org|
             org.users.each do |usr|
                 Time.use_zone(usr.time_zone) do
                     if Time.current.hour == 17 && Time.current.sunday? || (args[:test] && !Rails.env.production?) # In the hour of 5pm on Sundays

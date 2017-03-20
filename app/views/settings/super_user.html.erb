@@ -17,7 +17,10 @@
     <% @users.each do |org, users| %>
         <div class="ibox float-e-margins">
             <div class="ibox-content">
-                <h1><%= best_in_place org, :name, :as => 'input' %><i class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></i> <%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, org, method: :delete, data: {confirm: "All users, accounts and projects that belongs to this ORG will be deleted! Are you sure?"} %></h1>
+                <h1><%= best_in_place org, :name, :as => 'input' %><i class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></i> 
+                <%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, org, method: :delete, data: {confirm: "All users, accounts and projects that belongs to this ORG will be deleted! Are you sure?"} %>
+                // Is Active? <%= best_in_place org, :is_active, :as => 'checkbox', :data => {:organization => org}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%>
+                </h1>
                 <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
                     <thead>
                         <tr>
