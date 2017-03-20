@@ -3,7 +3,6 @@
 module Utils
   ONBOARDING = { "onboarded": -1, "fill_in_info": 0, "tutorial": 1, "confirm_projects": 2 }
 
-
 	def get_user_or_contact_from_pm(project_member)
 		if !project_member.user.nil?
 			project_member.user
@@ -19,7 +18,7 @@ module Utils
 	end
 
 	def get_first_name(name)
-		return "" if name.nil? or name.include?("@")
+		return "" if name.nil? || name.include?("@") || name.empty?
 
 	  if name.include?(', ') # Handles last name with comma
 	    name.split(', ').last.split(' ').first
@@ -29,7 +28,7 @@ module Utils
 	end
 
 	def get_last_name(name)
-		return "" if name.nil? or name.include?("@")
+		return "" if name.nil? || name.include?("@") || name.empty?
 
 	  if name.include?(', ') # Handles last name with comma
 	    name.split(', ').first.split(' ').last

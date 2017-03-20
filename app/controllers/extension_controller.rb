@@ -43,7 +43,7 @@ class ExtensionController < ApplicationController
       owner_id: current_user.id, 
       created_by: current_user.id,
       updated_by: current_user.id,
-      organization_id: current_user.organization.id,
+      organization_id: current_user.organization_id,
       status: 'Active')
     )
 
@@ -69,7 +69,7 @@ class ExtensionController < ApplicationController
     # TODO: blacklist gmail, yahoo, hotmail, etc.
     addresses = params[:emails].split(',').reject { |a| get_domain(a) == get_domain(current_user.email) }
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
-    addresses = addresses.group_by { |a| get_domain(a) }.values.sort_by(&:size).flatten
+    addresses = addresses.group_by { |a| get_domain(a) }.values.sort_by(&:size).flatten # group by addresses by domain frequency, most frequent domain first
     order_addresses_by_domain_freq = addresses.map { |a| "email = '#{a}' DESC" }.join(',')
     contacts = Contact.joins(:account).where(email: addresses, accounts: { organization_id: current_user.organization_id}).order(order_addresses_by_domain_freq) #.includes(:projects, :account)
     if contacts.present?
@@ -111,21 +111,20 @@ class ExtensionController < ApplicationController
     emails.zip(names) do |person|
       unless person[1] == 'me' || person[0] == current_user.email
         if get_domain(person[0]) == get_domain(current_user.email)
-          user = User.find_by(email: person[0], organization: current_user.organization)
-          user = current_user.organization.users.create(
+          user = current_user.organization.users.create_with(
             first_name: get_first_name(person[1]),
             last_name: get_last_name(person[1]),
-            email: person[0],
             invited_by_id: current_user.id,
             invitation_created_at: Time.current
-          ) unless user
+          ).find_or_create_by(email: person[0])
+
           @project.project_members.new(user: user)
         else
-          contact = @account.contacts.create(
+          contact = @account.contacts.create_with(
             first_name: get_first_name(person[1]),
-            last_name: get_last_name(person[1]),
-            email: person[0]
-          )
+            last_name: get_last_name(person[1])
+          ).find_or_create_by(email: person[0])
+
           @project.project_members.new(contact: contact)
         end
       end

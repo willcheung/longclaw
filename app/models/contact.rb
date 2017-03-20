@@ -34,6 +34,14 @@ class Contact < ActiveRecord::Base
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
 
+  # TODO: Create a general visible_to scope for a general "role" checker
+  scope :visible_to, -> (user) {
+      select('DISTINCT(contacts.*)')
+          .joins(:account)
+          .where("accounts.organization_id = ?", user.organization_id)
+          .group('contacts.id')
+  }
+
   # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Stream as suggested members.  
   def self.load(data, project, save_in_db=true)
     contacts = []
@@ -79,7 +87,7 @@ class Contact < ActiveRecord::Base
 
           contacts << contact
         else
-        	puts "** Skipped creating a new account for invalid domain='#{domain}'. **"
+        	puts "** Skipped processing the invalid domain='#{domain}'. **"
         end
       end unless d.newExternalMembers.nil?
     end

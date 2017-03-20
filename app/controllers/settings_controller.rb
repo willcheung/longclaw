@@ -60,7 +60,7 @@ class SettingsController < ApplicationController
 
 	def create_for_alerts
 		if params[:level_type] == "Organization"
-			level_id = current_user.organization.id
+			level_id = current_user.organization_id
 		end
 		risk_settings = RiskSetting.where(level_type: params[:level_type], level_id: level_id)
 		new_settings = params['settings']
@@ -156,9 +156,9 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		@super_admin = %w(wcheung@contextsmith.com rcwang@contextsmith.com)
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
 		if @super_admin.include?(current_user.email)
-			@users = User.registered.all
+			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
 		else
 			redirect_to root_path
 		end

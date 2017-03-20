@@ -73,6 +73,12 @@ class Notification < ActiveRecord::Base
 
     stale_projects = Project.where(id: project_inactive_days.keys)
     stale_projects.each do |p|
+      days_inactive = project_inactive_days[p.id]
+      level = days_inactive > days_inactive_setting.high_threshold ? "High" : "Medium"
+      project_owner = p.owner_id || '00000000-0000-0000-0000-000000000000'
+      name = "Inactive for #{days_inactive} days!"
+      description = "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days."
+
       last_activity = p.activities.where.not(category: Activity::CATEGORY[:Note]).first
       if last_activity.category == Activity::CATEGORY[:Conversation]
         message_id = last_activity.email_messages.last.messageId
@@ -82,37 +88,24 @@ class Notification < ActiveRecord::Base
         conversation_id = nil
       end
 
-      days_inactive = project_inactive_days[p.id]
-      level = days_inactive > days_inactive_setting.high_threshold ? "High" : "Medium"
-
-      # Create an event in Timeline. 
-      if last_activity.category == Activity::CATEGORY[:Alert]
-        # If last activity is an "Inactivity Alert", then update
-        p.activities.find_or_create_by(
-          posted_by: p.owner_id,
-          category: Activity::CATEGORY[:Alert],
-          is_public: true,
-          backend_id: nil,
-          title: "LIKE 'Inactive%'"
-        ).update(
-          title: "Inactive for #{days_inactive} days.",
-          note: "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days.",
-          last_sent_date: Time.now.utc,
-          last_sent_date_epoch: Time.now.utc.to_i
-        )
+      # if last_activity is a days inactive alert, the current days inactive streak is running, update it
+      if last_activity.category == Activity::CATEGORY[:Alert] && last_activity.email_messages.first && last_activity.email_messages.first.days_inactive?
+        alert_activity = last_activity
+      # otherwise, make a new days inactive alert on timeline
       else
-        # Otherwise, create new alert
-        p.activities.create(
-          posted_by: p.owner_id,
+        alert_activity = p.activities.new(
+          posted_by: project_owner,
           category: Activity::CATEGORY[:Alert],
-          is_public: true,
-          backend_id: nil,
-          title: "Inactive for #{days_inactive} days.",
-          note: "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days.",
-          last_sent_date: Time.now.utc,
-          last_sent_date_epoch: Time.now.utc.to_i
+          is_public: true
         )
       end
+      alert_activity.update(
+        title: name,
+        note: description,
+        email_messages: [{days_inactive: days_inactive}],
+        last_sent_date: Time.now.utc,
+        last_sent_date_epoch: Time.now.utc.to_i
+      )
 
       # Create/Update the notification with appropriate Activity id
       p.notifications.find_or_initialize_by(
@@ -122,9 +115,9 @@ class Notification < ActiveRecord::Base
         completed_by: nil, # so we don't overwrite completed tasks
         complete_date: nil # same here
       ).update(
-        name: "Inactive for #{days_inactive} days.",
-        description: "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days.",
-        assign_to: p.owner_id,
+        name: name,
+        description: description,
+        assign_to: project_owner,
         message_id: message_id,
         conversation_id: conversation_id,
         activity_id: last_activity.id
@@ -142,16 +135,18 @@ class Notification < ActiveRecord::Base
     level = pct_neg_sentiment < alert_setting.high_threshold ? "Medium" : "High"
 
     last_neg_sentiment_activity = neg_sentiments.first
+    project_owner = project.owner_id || '00000000-0000-0000-0000-000000000000'
+    name = "% Negative Sentiment threshold exceeded!"
+    description = "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%"
 
     # Create an event in Timeline
-    project.activities.find_or_initialize_by(
-      posted_by: project.owner_id,
+    project.activities.create(
+      posted_by: project_owner,
       category: Activity::CATEGORY[:Alert],
+      email_messages: [{pct_neg_sentiment: (pct_neg_sentiment*100).round(1)}],
       is_public: true,
-      backend_id: nil
-    ).update(
-      title: "% Negative Sentiment threshold exceeded!",
-      note: "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%",
+      title: name,
+      note: description,
       last_sent_date: Time.now.utc,
       last_sent_date_epoch: Time.now.utc.to_i
     )
@@ -163,9 +158,9 @@ class Notification < ActiveRecord::Base
       completed_by: nil,
       complete_date: nil
     ).update(
-      name: "% Negative Sentiment threshold exceeded!",
-      description: "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%",
-      assign_to: project.owner_id,
+      name: name,
+      description: description,
+      assign_to: project_owner,
       message_id: nil,
       conversation_id: nil,
       activity_id: -1

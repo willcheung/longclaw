@@ -25,8 +25,9 @@ class ContactsController < ApplicationController
   # POST /contacts.json
   def create
     @contact = Contact.new(contact_params)
+    account = Account.find(@contact.account_id)  # didn't check for invalid account_id!
     respond_to do |format|
-      if @contact.save
+      if account.organization_id == current_user.organization_id && @contact.save
         format.html { redirect_to @contact, notice: 'Contact was successfully created.' }
         # format.json { render action: 'show', status: :created, location: @contact }
         format.js 
@@ -65,7 +66,11 @@ class ContactsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_contact
-      @contact = Contact.find(params[:id])
+      begin
+        @contact = Contact.visible_to(current_user).find(params[:id])
+      rescue ActiveRecord::RecordNotFound
+        redirect_to root_url, :flash => { :error => "Contact not found or is private." }
+      end
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

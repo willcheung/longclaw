@@ -48,7 +48,7 @@ class AccountsController < ApplicationController
     @account = Account.new(account_params.merge(owner_id: current_user.id, 
                                                 created_by: current_user.id,
                                                 updated_by: current_user.id,
-                                                organization_id: current_user.organization.id,
+                                                organization_id: current_user.organization_id,
                                                 status: 'Active'))
     respond_to do |format|
       if @account.save
@@ -102,33 +102,35 @@ class AccountsController < ApplicationController
     render :json => {:success => true, :msg => ''}.to_json 
   end
 
-
   def set_salesforce_account
     @account.update_attributes(salesforce_id: params[:sid])
     respond_to :js
-
   end
 
   private
     def bulk_update(field, array_of_ids, new_value)
       if(!array_of_ids.nil?)
         if field == "category"
-          Account.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
+          Account.visible_to(current_user).where(id: array_of_ids).update_all(category: new_value)
         elsif field == "owner"
-          Account.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
+          Account.visible_to(current_user).where(id: array_of_ids).update_all(owner_id: new_value)
         end
       end
     end
 
-    def bulk_delete(array_of_id)
+    def bulk_delete(array_of_ids)
       if(!array_of_id.nil?)
-        Account.where("id IN ( '#{array_of_id.join("','")}' )").destroy_all
+        Account.visible_to(current_user).where(id: array_of_ids).destroy_all
       end
     end
 
     # Use callbacks to share common setup or constraints between actions.
     def set_account
-      @account = Account.find(params[:id])
+      begin
+        @account = Account.visible_to(current_user).find(params[:id])
+      rescue ActiveRecord::RecordNotFound
+        redirect_to root_url, :flash => { :error => "Account not found or is private." }
+      end
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

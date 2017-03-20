@@ -155,6 +155,7 @@
                       true: raw('<a>Mark Private</a>')
                     }  %>
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a href="<%= @salesforce_base_URL + "/" + a.email_messages.first["Id"] %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a>
                 </div>
             </div> <!-- chat discussion -->
         <% elsif a.category == Activity::CATEGORY[:Basecamp2] %>

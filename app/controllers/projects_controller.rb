@@ -286,7 +286,7 @@ class ProjectsController < ApplicationController
     # metrics
     @project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
-    @project_pinned_count = @project.activities.pinned.count
+    @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
     project_rag_score = @project.activities.latest_rag_score.first
 
@@ -306,6 +306,8 @@ class ProjectsController < ApplicationController
     @weekly_subscribers = project_subscribers.weekly
     @suggested_members = @project.project_members_all.pending
     @user_subscription = project_subscribers.where(user: current_user).take
+
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
@@ -343,23 +345,25 @@ class ProjectsController < ApplicationController
     @last_page = activities.count <= (page_size * @page) # check whether there is another page to load
     activities = activities.limit(page_size).offset(page_size * (@page - 1))
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
+
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
 
   def bulk_update(field, array_of_ids, new_value)
     if(!array_of_ids.nil?)
       if field == "category"
-        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(category: new_value)
       elsif field == "owner"
-        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(owner_id: new_value)
       elsif field == "status"
-        Project.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(status: new_value)
+        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(status: new_value)
       end
     end
   end
 
-  def bulk_delete(array_of_id)
+  def bulk_delete(array_of_ids)
     if(!array_of_id.nil?)
-      Project.where("id IN ( '#{array_of_id.join("','")}' )").destroy_all
+      Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).destroy_all
     end
   end
 
