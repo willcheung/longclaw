@@ -295,7 +295,7 @@ span.best_in_place.btn {
 .task-name .edit-task,
 .task-desc .edit-task,
 .contact-info .edit-contact {
-  display: none;
+  color: transparent;
 }
 .project-people .member:hover .delete-member,
 .timeline-note:hover .delete-note,
@@ -307,7 +307,7 @@ span.best_in_place.btn {
 .task-name:hover .edit-task,
 .task-desc:hover .edit-task,
 .contact-info:hover .edit-contact {
-  display: inline-block;
+  color: #999;
 }
 #projects-table th, #accounts-table th {
   padding-top:20px;

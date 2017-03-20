@@ -600,10 +600,11 @@
                                 <tr>
                                     <% if !pm.contact.nil? %>
                                         <% contact = pm.contact %>
-                                        <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-                                        <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-                                        <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                        <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
+                                        <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
+                                        <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                         <td class="contact-info"><%= contact.email %></td>
+                                        <!-- hardcoded data!!! -->
                                         <td style="text-align: center;"><% if contact.first_name == 'Christopher' %><i class="fa fa-check"><% end %></td>
                                         <td style="text-align: center;"><% if !contact.first_name == 'Paul' or !contact.first_name == 'Xavier' or !contact.first_name == 'Emmanuel' or !contact.first_name == 'Tom' %><i class="fa fa-check"><% end %></td>
                                     <% end %>
