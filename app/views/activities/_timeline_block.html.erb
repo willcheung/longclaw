@@ -181,8 +181,8 @@
                               <span class="message-author" href="#"> <%=c.creator.name %> </span> added a comment - <%=c.created_at.to_date %>
                               <span class="message-content"><%= simple_format(c.excerpt) %></span>
                             <% else %>
-                              <span class="message-author" href="#"> <%=c.creator.name %> </span> created action - <%=c.created_at.to_date %>
-                              <span class="message-content"><%= simple_format(c.summary) %></span>
+                              <span class="message-author" href="#"> <%=c.creator.name %> </span> created discussion - <%=c.created_at.to_date %>
+                              <span class="message-content"><%= simple_format(c.excerpt) %></span>
                               <%end%>
                           </div>
                       </div>
