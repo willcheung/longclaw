@@ -96,7 +96,8 @@ class ContextsmithService
 
     final_cluster = []
     new_ex_clusters.each do |key, value|
-      final_cluster.push(value + "@"+ key).join('|')
+      # each element in array is considered one project, so we can actually refresh multiple projects at once
+      final_cluster.push((value + "@"+ key).join('|'))
     end
        
     final_url = base_url + "?token_emails=" + token_emails.to_json + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + params
