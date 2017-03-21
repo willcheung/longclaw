@@ -362,7 +362,7 @@ class ProjectsController < ApplicationController
   end
 
   def bulk_delete(array_of_ids)
-    if(!array_of_id.nil?)
+    if(!array_of_ids.nil?)
       Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).destroy_all
     end
   end
