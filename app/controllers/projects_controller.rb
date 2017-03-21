@@ -198,7 +198,9 @@ class ProjectsController < ApplicationController
                                                 created_by: current_user.id,
                                                 updated_by: current_user.id
                                                 ))
+    # Add current_user to project member
     @project.project_members.new(user: current_user)
+    # Subscribe current_user as weekly / daily follower because s/he created the project
     @project.subscribers.new(user: current_user)
 
       respond_to do |format|
