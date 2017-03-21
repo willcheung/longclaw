@@ -37,7 +37,7 @@
             </div>
 
             <% if @project %>
-                <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="<%= "https://logo.clearbit.com/" + @account.contacts.first.email.split("@").last %>"/>
+                <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
                 <h3 class="m-t-sm m-l" style="margin-bottom:0"><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
                 <h6 class="text-mute-gray">Owner: <%= @project.project_owner.first_name + ' ' + @project.project_owner.last_name %></h6>
 

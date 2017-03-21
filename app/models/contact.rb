@@ -38,7 +38,7 @@ class Contact < ActiveRecord::Base
   scope :visible_to, -> (user) {
       select('DISTINCT(contacts.*)')
           .joins(:account)
-          .where(organization_id: user.organization_id)
+          .where(accounts: {organization_id: user.organization_id})
           .group('contacts.id')
   }
 

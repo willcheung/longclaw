@@ -94,6 +94,8 @@ class ExtensionController < ApplicationController
     @account ||= contacts.first.account
     @project ||= @account.projects.first
     create_project if @project.blank?
+
+    @clearbit_domain = @account.domain? ? @account.domain : (@account_contacts.present? ? @account_contacts.first.email.split("@").last : "")
   end
 
   def create_project

@@ -27,10 +27,17 @@
   color: $primary;
 }
 
-.navbar-nav > li:not(.active) a:hover {
+.navbar-nav > li:not(.active) a {
   border-width: 0 0 3px 0;
-  border-color: lighten($primary, 25%);
   border-style: solid;
+}
+
+.navbar-nav > li:not(.active) a:hover {
+  border-color: lighten($primary, 25%);
+}
+
+.navbar-nav > li:not(.active) a:not(hover) {
+  border-color: white;
 }
 
 .top-navigation .nav > li.active {

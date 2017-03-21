@@ -32,7 +32,7 @@ class SearchController < ApplicationController
   def autocomplete_project_subs
     if (params[:type] == "daily")
       subs = ProjectSubscriber.all.where(project_id: params[:project_id], daily: true).pluck(:user_id)
-      print subs.length
+      # print subs.length
     elsif (params[:type] == "weekly")
       subs = ProjectSubscriber.all.where(project_id: params[:project_id], weekly: true).pluck(:user_id)
     end
@@ -44,29 +44,13 @@ class SearchController < ApplicationController
   end
 
   def autocomplete_project_member
-    # current_user.organization.accounts.contacts + current_user.organization.users
-    @search_list = []
-   
-    accounts_result = current_user.organization.accounts.includes(:contacts).each do |account|
-      account.contacts.each do |contact|
-        new_user = Struct.new(:first_name, :last_name, :email).new
-        new_user.email = contact.email
-        new_user.first_name = contact.first_name
-        new_user.last_name = contact.last_name
-        @search_list.push(new_user)
-      end
-    end
-
-    current_user.organization.users.each do |user|
-      new_user = Struct.new(:first_name, :last_name, :email).new
-      new_user.email = user.email
-      new_user.first_name = user.first_name
-      new_user.last_name = user.last_name
-      @search_list.push(new_user)
-    end
+    members = ProjectMember.where(project_id: params[:project_id], status: ProjectMember::STATUS[:Confirmed])
+    internal_members = members.pluck(:user_id).compact
+    external_members = members.pluck(:contact_id).compact
+    @non_members = current_user.organization.users.where.not(id: internal_members) + current_user.organization.contacts.where.not(id: external_members)
 
     respond_to do |format|
-      format.json { render json: @search_list.map { |x| { :name => x.first_name + ' ' + x.last_name, :email => x.email } }.to_json.html_safe }
+      format.json { render json: @non_members.map { |x| { :name => get_full_name(x), :email => x.email } }.to_json.html_safe }
     end
   end
 

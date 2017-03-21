@@ -1,6 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-8">
-        <img class="pull-left m-r-sm m-t-sm" style="max-height:75px;max-width:75px" src="<%= "https://logo.clearbit.com/" + @project.account.contacts.first.email.split("@").last %>"/>
+        <img class="pull-left m-r-sm m-t-sm" style="max-height:75px;max-width:75px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
         <h2>
             <%= @account.name %>&nbsp;&nbsp;&nbsp;&nbsp;
             <% #if (@account.owner_id.nil? || @account.owner_id == current_user.id) %>
@@ -86,11 +86,11 @@
                                                     <tbody>
                                                         <% @account_contacts.each do |contact| %>
                                                         <tr>
-                                                            <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-                                                            <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-                                                            <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td class="contact-type"><i class="fa fa-envelope"> </i></td>
-                                                            <td class="contact-info"><%= best_in_place contact, :email, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-email-activator" %><i id="contact-<%= contact.id %>-email-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :email, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-email-activator" %><i id="contact-<%= contact.id %>-email-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, contact, method: :delete, data: {confirm: "About to delete this contact. Are you sure?"} %></td>
                                                         </tr>
                                                         <% end %>
