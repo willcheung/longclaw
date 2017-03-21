@@ -179,10 +179,18 @@
                           <div class="message">
                             <% if c.action == 'commented on'%>
                               <span class="message-author" href="#"> <%=c.creator.name %> </span> added a comment - <%=c.created_at.to_date %>
-                              <span class="message-content"><%= simple_format(c.excerpt) %></span>
+                              <% if simple_format(c.excerpt).include? "..."%>
+                                  <span class="message-content"><%= simple_format(c.excerpt)%></span><a style="font-size:10px;" href="<%=a.email_messages.first.html_url%>" target="_blank">(view more)</a>
+                                <% else %>
+                                  <span class="message-content"><%= simple_format(c.excerpt) %></span>
+                                <%end%>
                             <% else %>
                               <span class="message-author" href="#"> <%=c.creator.name %> </span> created discussion - <%=c.created_at.to_date %>
-                              <span class="message-content"><%= simple_format(c.excerpt) %></span>
+                                <% if simple_format(c.excerpt).include? "..."%>
+                                  <span class="message-content"><%= simple_format(c.excerpt)%><a style="font-size:10px;" href="<%=a.email_messages.first.html_url%>" target="_blank">(view more)</a></span>
+                                <% else %>
+                                  <span class="message-content"><%= simple_format(c.excerpt) %></span>
+                                <%end%>
                               <%end%>
                           </div>
                       </div>
