@@ -116,7 +116,7 @@ jQuery(document).ready(function($) {
     render: renderContacts,
     load: function (term, callback) {
       if (!term.length) return callback()
-      $.getJSON( '/search/autocomplete_project_member.json', { term: encodeURIComponent(term) } )
+      $.getJSON( '/search/autocomplete_project_member.json', { project_id: window.location.pathname.slice(10) } )
         .done( function (data) {
           callback(data);
         })

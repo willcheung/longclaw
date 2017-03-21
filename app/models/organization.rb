@@ -15,6 +15,7 @@ class Organization < ActiveRecord::Base
   has_many :users, dependent: :destroy
   has_many :accounts, dependent: :destroy
   has_many :projects, through: :accounts
+  has_many :contacts, through: :accounts
   has_many :oauth_users, foreign_key: "organization_id", dependent: :destroy
   has_many :salesforce_accounts, foreign_key: "contextsmith_organization_id", dependent: :destroy
   has_many :risk_settings, as: :level, dependent: :destroy
