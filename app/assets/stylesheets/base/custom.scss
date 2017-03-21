@@ -573,6 +573,10 @@ a.suggested-action:hover, a.suggested-action:focus {
   padding: 8px 12px;
 }
 
+.extension-sidebar ul.nav.nav-tabs {
+  border-bottom: 0;
+}
+
 .vertical-timeline-block.extension-block {
   margin-bottom: 2em;
 }

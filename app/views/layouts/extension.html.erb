@@ -39,7 +39,7 @@
             <% if @project %>
                 <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="<%= "https://logo.clearbit.com/" + @account.contacts.first.email.split("@").last %>"/>
                 <h3 class="m-t-sm m-l" style="margin-bottom:0"><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
-                <h3 class="text-mute-gray">Account: <%= @account.name %></h3>
+                <h6 class="text-mute-gray">Owner: <%= @project.project_owner.first_name + ' ' + @project.project_owner.last_name %></h6>
 
                 <ul class="nav nav-tabs m-b-sm m-t-md">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(emails: params[:emails]) %>">Activities</a></li>
