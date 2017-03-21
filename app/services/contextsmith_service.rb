@@ -96,6 +96,7 @@ class ContextsmithService
 
     final_cluster = []
     new_ex_clusters.each do |key, value|
+      # Each domain will only contain email handle, except last element of the string.  ex: "[wcheung|klu|vluong@contextsmith.com]"
       final_cluster.push(value.join('|') + "@"+ key)
     end
        

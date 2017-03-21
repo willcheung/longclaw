@@ -23,6 +23,8 @@ class Organization < ActiveRecord::Base
   has_many :custom_lists_metadatum, dependent: :destroy
   has_many :custom_lists, through: :custom_lists_metadatum
 
+  scope :is_active, -> {where("is_active = TRUE")}
+
   validates :domain, uniqueness: true
 
   # Returns new_org if there's no existing one.  If there is, return existing one.
