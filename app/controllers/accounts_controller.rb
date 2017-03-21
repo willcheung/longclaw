@@ -119,7 +119,7 @@ class AccountsController < ApplicationController
     end
 
     def bulk_delete(array_of_ids)
-      if(!array_of_id.nil?)
+      if(!array_of_ids.nil?)
         Account.visible_to(current_user).where(id: array_of_ids).destroy_all
       end
     end
