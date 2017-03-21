@@ -28,8 +28,8 @@ class ProjectMembersController < ApplicationController
     @project_members = []
     emails = params[:email].split(',')
     emails.each do |email|
-      if get_domain(email) == get_domain(current_user.email)
-        user = current_user.organization.users.find_by_email(email)
+      user = current_user.organization.users.find_by_email(email)
+      if user
         project_member = ProjectMember.find_or_initialize_by(project_id: params[:project_id], user: user) if user
       else
         contact = Contact.visible_to(current_user).find_by_email(email)
