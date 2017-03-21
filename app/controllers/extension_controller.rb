@@ -29,6 +29,7 @@ class ExtensionController < ApplicationController
 
   def alerts_tasks
     @notifications = @project.notifications.order(:is_complete).take(15)
+    @users_reverse = get_current_org_users
   end
 
   def contacts

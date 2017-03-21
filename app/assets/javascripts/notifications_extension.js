@@ -20,3 +20,15 @@ $(document).on('ifUnchecked', 'input', function(event){
   // $(this).parent().parent().parent().css('opacity', '1');
   $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
 });
+
+$('[data-toggle="overdue"]').tooltip();
+
+$('[data-toggle="overdue"]').hover(function(){
+  $('.tooltip-inner').css('max-width', '64px');
+  $('.tooltip-inner').css('padding', '2px 2px');
+  $('.tooltip-inner').css('opacity', '1');
+  $('.tooltip-inner').css('background-color', 'grey');
+  $('.tooltip-inner').css('color', 'white');
+
+  $('.tooltip-arrow').css('opacity', '0');
+});

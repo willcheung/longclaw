@@ -114,7 +114,8 @@ class NotificationsController < ApplicationController
     @notification = Notification.new(notification_params.merge(category: 'To-do',
       original_due_date: o_due_date,
       remind_date: r_date,
-      has_time: false
+      has_time: false,
+      assign_to: current_user.id
       ))
 
     # send notification email for the assign_to user
