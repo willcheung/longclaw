@@ -308,6 +308,7 @@ class ProjectsController < ApplicationController
     @user_subscription = project_subscribers.where(user: current_user).take
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
+    @clearbit_domain = @project.account.domain? ? @project.account.domain : (@project.account.contacts.present? ? @project.account.contacts.first.email.split("@").last : "")
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
