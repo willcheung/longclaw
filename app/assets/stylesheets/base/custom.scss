@@ -642,7 +642,11 @@ a.suggested-action:hover, a.suggested-action:focus {
   }
 
   small {
-    color: #aaa;
+    color: #999;
+  }
+
+  .task.checked, .task.checked small {
+    color: #bbb;
   }
 }
 
