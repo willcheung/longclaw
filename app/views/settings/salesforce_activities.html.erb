@@ -64,7 +64,7 @@
                         <td>
                           <div>
                             <input id="salesforce-activity-activityhistory-predicate-customconfig-id" type="hidden" value="<%= @activityhistory_predicate.id %>">
-                            <textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., ActivitySubtype != 'Email' or NOT(Subject like '%email%')" /><%= @activityhistory_predicate.config_value %></textarea>
+                            <textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., NOT(ActivitySubtype = 'Email' OR Subject like '%email%')" /><%= @activityhistory_predicate.config_value %></textarea>
                             <span>
                               <button id="salesforce-activity-save-activityhistory-predicate-btn" class="btn btn-primary btn-outline" style="vertical-align: top" disabled> <i class="fa fa-floppy-o"></i></button>
                             </span>
