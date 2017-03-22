@@ -26,10 +26,11 @@ class SalesforceService
                              instance_url: salesforce_user.oauth_instance_url,
                              api_version: '38.0')
       begin
+        puts "SalesforceService: Refreshing access token. Client established using Restforce gem.  Accessing user_info..."
         client.user_info
       rescue
         client = nil
-        puts "Error: salesforce connection error"
+        puts "*** SalesforceService error: salesforce connection error ***"
       end      
     end
 

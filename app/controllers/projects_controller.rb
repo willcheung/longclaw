@@ -13,7 +13,7 @@ class ProjectsController < ApplicationController
     @title = "Streams"
 
     # for filter and bulk owner assignment
-    @owners = User.where(organization_id: current_user.organization_id)
+    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
 
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
