@@ -135,20 +135,53 @@ $(document).ready(function() {
     ////////////////////////////////////////
     // ../settings/salesforce_activities
     ////////////////////////////////////////
+    $('#salesforce-activity-save-entity-predicate-btn,#salesforce-activity-save-activityhistory-predicate-btn').click(function(){
+        var type;
+        var self = $(this);
+        if (self.attr("id").includes("salesforce-activity-save-entity-predicate-btn")) {
+            type = "entity";
+        }
+        else {
+            type = "activityhistory";
+        }
+
+        var custom_config_id = document.getElementById("salesforce-activity-" + type + "-predicate-customconfig-id").value.trim();
+        var config_type = "/settings/salesforce_activities#salesforce-activity-" + type + "-predicate-textarea";
+        var predicate = document.getElementById("salesforce-activity-" + type + "-predicate-textarea").value.trim();
+
+        var PATCHRequestURL = encodeURI( "/custom_configurations/" + custom_config_id);
+        $.ajax(PATCHRequestURL, {
+            async: true,
+            method: "PATCH",
+            data: { "custom_configuration[config_type]": config_type,  "custom_configuration[config_value]": predicate },
+            beforeSend: function () {
+                self.prop("disabled",true);
+                self.html("<i class='fa fa-refresh fa-spin'></i>");
+            },
+            // TODO: didn't handle error!!
+            complete: function() {
+                self.html("<i class='fa fa-floppy-o'></i>");
+                self.addClass("green-fade-out");
+                self.blur();
+            }
+        });
+    });
+
     $('#salesforce-activity-refresh').click(function(){
         //Use encodeURI to escape '%' in 'like' predicates!
-        var GETRequestURL = encodeURI( "/salesforce_activities_refresh?entity_pred=" + document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim() + '&activityhistory_pred=' + document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() );
+        var POSTRequestURL = encodeURI( "/salesforce_activities_refresh?entity_pred=" + document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim() + '&activityhistory_pred=' + document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() );
 
-        $.ajax(GETRequestURL, {
+        $.ajax(POSTRequestURL, {
             async: true,
             method: "POST",
             beforeSend: function () {
                 $("#salesforce-activity-refresh").css("pointer-events", "none");
-                $('#salesforce-activity-refresh .fa.fa-refresh').addClass('fa-spin');
+                $("#salesforce-activity-refresh .fa.fa-refresh").addClass("fa-spin");
             },
+            // TODO: didn't handle error!!!
             complete: function() {
                 $("#salesforce-activity-refresh").css("pointer-events", "auto");
-                $('#salesforce-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
+                $("#salesforce-activity-refresh .fa.fa-refresh").removeClass("fa-spin");
             }
         });
     });
@@ -178,7 +211,7 @@ $(document).ready(function() {
                 self.removeClass('success-btn-highlight error-btn-highlight');
                 self.addClass('btn-primary btn-outline');
                 self.html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str);
-                $("#salesforce-fields-refresh-" + entity_type_str + "-btn .fa.fa-refresh").addClass('fa-spin');
+                $("#salesforce-fields-refresh-" + entity_type_str + "-btn .fa.fa-refresh").addClass("fa-spin");
             },
             success: function() {
                 self.addClass('success-btn-highlight');

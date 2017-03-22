@@ -230,36 +230,36 @@ class SalesforceController < ApplicationController
   def self.get_salesforce_fields(organization_id, custom_fields_only=false)
     client = SalesforceService.connect_salesforce(organization_id)
 
-    unless client.nil?
-      sf_account_fields = {}
-      sf_account_fields_metadata = {}
-      sf_opportunity_fields = {}
-      sf_opportunity_fields_metadata = {}
+    return nil if client.nil?
 
-      account_describe = client.describe('Account')
-      account_describe.fields.each do |f|
-        sf_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
-        metadata = {}
-        metadata["type"] = f.type
-        metadata["custom"] = f.custom
-        metadata["updateable"] = f.updateable
-        metadata["nillable"] = f.nillable
-        sf_account_fields_metadata[f.name] = metadata
-      end
-      account_describe = client.describe('Opportunity')
-      account_describe.fields.each do |f|
-        sf_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
-        metadata = {}
-        metadata["type"] = f.type
-        metadata["custom"] = f.custom
-        metadata["updateable"] = f.updateable
-        metadata["nillable"] = f.nillable
-        sf_opportunity_fields_metadata[f.name] = metadata
-      end
+    sf_account_fields = {}
+    sf_account_fields_metadata = {}
+    sf_opportunity_fields = {}
+    sf_opportunity_fields_metadata = {}
 
-      sf_account_fields = sf_account_fields.sort_by { |k,v| v.upcase }
-      sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
+    account_describe = client.describe('Account')
+    account_describe.fields.each do |f|
+      sf_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      metadata = {}
+      metadata["type"] = f.type
+      metadata["custom"] = f.custom
+      metadata["updateable"] = f.updateable
+      metadata["nillable"] = f.nillable
+      sf_account_fields_metadata[f.name] = metadata
     end
+    account_describe = client.describe('Opportunity')
+    account_describe.fields.each do |f|
+      sf_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      metadata = {}
+      metadata["type"] = f.type
+      metadata["custom"] = f.custom
+      metadata["updateable"] = f.updateable
+      metadata["nillable"] = f.nillable
+      sf_opportunity_fields_metadata[f.name] = metadata
+    end
+
+    sf_account_fields = sf_account_fields.sort_by { |k,v| v.upcase }
+    sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
 
     return {sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata}
   end

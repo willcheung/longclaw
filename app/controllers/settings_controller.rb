@@ -114,6 +114,22 @@ class SettingsController < ApplicationController
 
 	def salesforce_activities
 		@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.downcase }  # all active projects because "admin" role can see everything
+
+		# Load previous queries if it was saved
+		custom_config = current_user.organization.custom_configurations.where("organization_id = '#{current_user.organization_id}' AND config_type LIKE '/settings/salesforce_activities#%'")
+
+		@entity_predicate = custom_config.where(config_type: "/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea")
+		if @entity_predicate.empty?
+			@entity_predicate = current_user.organization.custom_configurations.create(config_type: "/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea", config_value: "") 
+		else
+			@entity_predicate = @entity_predicate.first
+		end
+		@activityhistory_predicate = custom_config.where(config_type: "/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea")
+		if @activityhistory_predicate.empty?
+			@activityhistory_predicate = current_user.organization.custom_configurations.create(config_type: "/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea", config_value: "") 
+		else
+			@activityhistory_predicate = @activityhistory_predicate.first
+		end
 	end
 
 	def salesforce_fields
@@ -126,7 +142,9 @@ class SettingsController < ApplicationController
 		else
 			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
 		end
-		#puts "************** @sf_fields **************", @sf_fields, "******************************"
+
+		#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
+		@salesforce_connection_error = true if @sf_fields.nil?
 	end
 
 	def basecamp
@@ -193,7 +211,5 @@ class SettingsController < ApplicationController
 			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'], @basecamp2_user['oauth_instance_url'])
 		end
 	end
-
-
 
 end
