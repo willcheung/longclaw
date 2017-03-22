@@ -16,7 +16,7 @@ class AccountsController < ApplicationController
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? and (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
 
-    @owners = User.where(organization_id: current_user.organization_id)
+    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
   end
 
   # GET /accounts/1
