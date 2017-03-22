@@ -198,7 +198,9 @@ class ProjectsController < ApplicationController
                                                 created_by: current_user.id,
                                                 updated_by: current_user.id
                                                 ))
+    # Add current_user to project member
     @project.project_members.new(user: current_user)
+    # Subscribe current_user as weekly / daily follower because s/he created the project
     @project.subscribers.new(user: current_user)
 
       respond_to do |format|
@@ -308,6 +310,7 @@ class ProjectsController < ApplicationController
     @user_subscription = project_subscribers.where(user: current_user).take
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
+    @clearbit_domain = @project.account.domain? ? @project.account.domain : (@project.account.contacts.present? ? @project.account.contacts.first.email.split("@").last : "")
 
     # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
@@ -362,7 +365,7 @@ class ProjectsController < ApplicationController
   end
 
   def bulk_delete(array_of_ids)
-    if(!array_of_id.nil?)
+    if(!array_of_ids.nil?)
       Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).destroy_all
     end
   end

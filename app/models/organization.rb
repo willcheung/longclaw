@@ -15,6 +15,7 @@ class Organization < ActiveRecord::Base
   has_many :users, dependent: :destroy
   has_many :accounts, dependent: :destroy
   has_many :projects, through: :accounts
+  has_many :contacts, through: :accounts
   has_many :oauth_users, foreign_key: "organization_id", dependent: :destroy
   has_many :salesforce_accounts, foreign_key: "contextsmith_organization_id", dependent: :destroy
   has_many :risk_settings, as: :level, dependent: :destroy
@@ -22,6 +23,8 @@ class Organization < ActiveRecord::Base
   has_many :custom_fields, through: :custom_fields_metadatum
   has_many :custom_lists_metadatum, dependent: :destroy
   has_many :custom_lists, through: :custom_lists_metadatum
+
+  scope :is_active, -> {where("is_active = TRUE")}
 
   validates :domain, uniqueness: true
 

@@ -1,15 +1,15 @@
-<div class="vertical-timeline-block <%= a.id.to_s + a.category %>" id="<%= a.backend_id.to_s %>">
+<div class="vertical-timeline-block <%= a.id.to_s + a.category %>" >
 
     <% if a.category == Activity::CATEGORY[:Conversation] %>
-        <div class="vertical-timeline-icon secondary-bg">
+        <div class="vertical-timeline-icon secondary-bg" id="<%= a.backend_id.to_s %>">
             <i class="fa fa-envelope"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Note] %>
-        <div class="vertical-timeline-icon sticky-bg">
+        <div class="vertical-timeline-icon sticky-bg" id="<%= a.id.to_s %>">
             <i class="fa fa-sticky-note"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Meeting] %>
-        <div class="vertical-timeline-icon warning-bg">
+        <div class="vertical-timeline-icon warning-bg" id="<%= a.id.to_s %>">
             <i class="fa fa-calendar"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:JIRA] %>
@@ -29,7 +29,7 @@
             <i class="basecamp2-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Alert] %>
-        <div class="vertical-timeline-icon danger-bg">
+        <div class="vertical-timeline-icon danger-bg" id="<%= a.id.to_s %>">
             <i class="fa fa-exclamation"></i>
         </div>
     <% end %>
@@ -201,7 +201,7 @@
                         <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
                       
                         &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
-                        &sdot; <a href="<%=a.email_messages.first.html_url%>" target="_blank">View in BaseCamp2 <i class="fa fa-external-link"></i></a>
+                        &sdot; <a href="<%=a.email_messages.first.html_url%>" target="_blank">View in BaseCamp 2 <i class="fa fa-external-link"></i></a>
                   </div><!-- action-links -->
             </div> <!-- chat discussion -->
 
