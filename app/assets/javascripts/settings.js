@@ -156,8 +156,7 @@ $(document).ready(function() {
             data: { "custom_configuration[config_type]": config_type,  "custom_configuration[config_value]": predicate },
             beforeSend: function () {
                 self.prop("disabled",true);
-                self.html("<i class='fa fa-refresh'></i>");
-                $("#salesforce-activity-save-" + type + "-pred .fa.fa-refresh").addClass("fa-spin");
+                self.html("<i class='fa fa-refresh fa-spin'></i>");
             },
             // TODO: didn't handle error!!
             complete: function() {
