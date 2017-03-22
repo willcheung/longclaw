@@ -1,5 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-8">
+        <img class="pull-left m-r-sm m-t-sm" style="max-height:75px;max-width:75px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
         <h2>
             <%= @account.name %>&nbsp;&nbsp;&nbsp;&nbsp;
             <% #if (@account.owner_id.nil? || @account.owner_id == current_user.id) %>
