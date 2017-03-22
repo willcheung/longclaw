@@ -53,7 +53,7 @@
                       </tr>
                       <tr>
                         <td><label style="font-weight:normal" for="salesforce-activity-activityhistory-predicate-textarea">ActivityHistory</label></td>
-                        <td><textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., ActivitySubtype != 'Email' or NOT(Subject like '%email%')" />NOT(ActivitySubtype = 'Email' OR Subject like '%email%')</textarea></td>
+                        <td><textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., ActivitySubtype != 'Email' or NOT(Subject like '%email%')" />NOT(Activity_Type__c = 'Email' OR Subject like '%email%' OR Subject like '%reply%')</textarea></td>
                       </tr>
                     </tbody>
                     <tfoot>
