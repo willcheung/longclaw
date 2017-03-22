@@ -258,8 +258,6 @@ class User < ActiveRecord::Base
           if account.projects.size == 0
             # Add project into account.  Modify new project into confirmed project
             new_project.update_attributes(is_confirmed: true)
-            # Subscribe to existing project
-            new_project.subscribers.create(user_id: user.id)
           elsif overlapping_p.size > 0
             overlapping_p.each do |p|
               p.project_members.create(user_id: user.id)
@@ -275,9 +273,6 @@ class User < ActiveRecord::Base
 
               # Copy new_project activities
               Activity.copy_email_activities(new_project, p)
-
-              # Subscribe to existing project
-              p.subscribers.create(user_id: user.id)
             end
 
             new_project.destroy # Delete unconfirmed project

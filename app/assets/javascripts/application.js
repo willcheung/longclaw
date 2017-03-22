@@ -8,7 +8,6 @@
 //= require jquery
 //= require jquery_ujs
 //= require ahoy
-//= require metisMenu/jquery.metisMenu.js
 //= require pace/pace.min.js
 //= require slimscroll/jquery.slimscroll.min.js
 //= require toastr/toastr.min.js

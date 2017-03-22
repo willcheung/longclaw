@@ -573,6 +573,10 @@ a.suggested-action:hover, a.suggested-action:focus {
   padding: 8px 12px;
 }
 
+.extension-sidebar ul.nav.nav-tabs {
+  border-bottom: 0;
+}
+
 .vertical-timeline-block.extension-block {
   margin-bottom: 2em;
 }
@@ -622,7 +626,7 @@ a.suggested-action:hover, a.suggested-action:focus {
 }
 
 .extension-sidebar .tasks {
-  margin: 7px 0;
+  margin: 20px 0;
 
   .icheckbox_square-green {
     float: left;
@@ -633,12 +637,16 @@ a.suggested-action:hover, a.suggested-action:focus {
     line-height: 15px;
   }
 
-  p, small {
-    margin-left:28px
+  div.task {
+    margin-left: 28px;
   }
 
   small {
-    color: #aaa;
+    color: #999;
+  }
+
+  .task.checked, .task.checked small {
+    color: #bbb;
   }
 }
 
