@@ -22,6 +22,7 @@ class Organization < ActiveRecord::Base
   has_many :custom_fields, through: :custom_fields_metadatum
   has_many :custom_lists_metadatum, dependent: :destroy
   has_many :custom_lists, through: :custom_lists_metadatum
+  has_many :custom_configurations
 
   validates :domain, uniqueness: true
 

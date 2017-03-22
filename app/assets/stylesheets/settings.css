@@ -1,6 +1,27 @@
+@keyframes greenfadeout {
+  from {background-color: springgreen;}
+  to {background-color: transparent;}
+}
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes greenfadeout {
+  from {background-color: springgreen;}
+  to {background-color: transparent;}
+}
+
+.green-fade-out {
+  /* color: #3C8DC5; */
+  -webkit-animation-name: greenfadeout;  /* Safari 4.0 - 8.0 */
+  -webkit-animation-duration: 3s;        /* Safari 4.0 - 8.0 */
+  -webkit-animation-fill-mode: forwards;
+  animation-name: greenfadeout;
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+}
+
 .success-btn-highlight {
   color: darkolivegreen;
-  background-color: #0FB;
+  background-color: springgreen;
   border: 1px solid darkolivegreen;
   transition: all 0.5s;
 }

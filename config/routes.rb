@@ -1,5 +1,4 @@
 Longclaw::Application.routes.draw do
-
   unauthenticated do
     get "extension" => "extension#new"
     get "extension/account" => "extension#new"
@@ -127,6 +126,7 @@ Longclaw::Application.routes.draw do
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
     resources :custom_lists, only: [:create, :update, :destroy]
     resources :custom_lists_metadata, only: [:create, :update, :destroy]  #for /settings/custom_lists
+    resources :custom_configurations, only: [:update, :destroy]
   end
 
   devise_scope :user do # Unauthenticated user
@@ -138,8 +138,6 @@ Longclaw::Application.routes.draw do
 
   get '/users/auth/basecamp2' => 'basecamps#basecamp2'
   get '/users/auth/37signals/callback' => 'settings#basecamp'
-
-
 
 
   # Cluster callback

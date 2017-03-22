@@ -49,17 +49,33 @@
                     <tbody>
                       <tr>
                         <td><label style="font-weight:normal" for="salesforce-activity-entity-predicate-textarea">Account / Opportunity</label></td>
-                        <td><textarea id="salesforce-activity-entity-predicate-textarea" rows="2" cols="80" placeholder="e.g., Id = '0099900000A0aAwAAA'" /></textarea></td>
+                        <td>
+                          <div>
+                            <input id="salesforce-activity-entity-predicate-customconfig-id" type="hidden" value="<%= @entity_predicate.id %>">
+                            <textarea id="salesforce-activity-entity-predicate-textarea" rows="2" cols="80" placeholder="e.g., Id = '0099900000A0aAwAAA'" /><%= @entity_predicate.config_value %></textarea>
+                            <span>
+                              <button id="salesforce-activity-save-entity-predicate-btn" class="btn btn-primary btn-outline" style="vertical-align: top;" disabled> <i class="fa fa-floppy-o"></i></button>
+                            </span>
+                          </div>
+                        </td>
                       </tr>
                       <tr>
                         <td><label style="font-weight:normal" for="salesforce-activity-activityhistory-predicate-textarea">ActivityHistory</label></td>
-                        <td><textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., ActivitySubtype != 'Email' or NOT(Subject like '%email%')" />NOT(ActivitySubtype = 'Email' OR Subject like '%email%')</textarea></td>
+                        <td>
+                          <div>
+                            <input id="salesforce-activity-activityhistory-predicate-customconfig-id" type="hidden" value="<%= @activityhistory_predicate.id %>">
+                            <textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., ActivitySubtype != 'Email' or NOT(Subject like '%email%')" /><%= @activityhistory_predicate.config_value %></textarea>
+                            <span>
+                              <button id="salesforce-activity-save-activityhistory-predicate-btn" class="btn btn-primary btn-outline" style="vertical-align: top" disabled> <i class="fa fa-floppy-o"></i></button>
+                            </span>
+                          </div>
+                        </td>
                       </tr>
                     </tbody>
                     <tfoot>
                       <tr>
-                        <td>Preview</td>
-                        <td><p id="salesforce-activity-query-preview">.</p></td>
+                        <td>Query Preview</td>
+                        <td><p class="well" id="salesforce-activity-query-preview">.</p></td>
                       </tr>
                     </tfoot>
                   </table>
@@ -76,7 +92,6 @@
                             <th style="padding-top:15px">ContextSmith Stream</th>
                             <th>
                               <div style="padding-top:15px; display: inline; margin-right:5px">Salesforce Activities</div>
-
                               <div id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Activities</div>
                               <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Activities from Salesforce."></i>
                             </th>
@@ -106,20 +121,35 @@
 </div>
 
 <script>
-    function update_SOQL_query_preview() {
+    function handle_updating_SOQL_query() {
+        console.log(event);
+        if (event) {
+            if (event.target.id == "salesforce-activity-entity-predicate-textarea") {
+                type = "entity";
+            }
+            else {
+                type = "activityhistory";
+            }
+            
+            // Remove green highlight of a previously successful query save
+            $("#salesforce-activity-save-" + type + "-predicate-btn").prop("disabled",false);
+            $("#salesforce-activity-save-" + type + "-predicate-btn").removeClass('green-fade-out');
+        }
+        
+        // Update the SOQL query preview
         entity_predicate = document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim();
         activityhistory_predicate = document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim();
 
         if (entity_predicate != "")
-          entity_predicate = "AND (" + entity_predicate + ")";
+            entity_predicate = "AND (" + entity_predicate + ")";
 
         if (activityhistory_predicate != "")
-          activityhistory_predicate = " WHERE (" + activityhistory_predicate + ")";
+            activityhistory_predicate = " WHERE (" + activityhistory_predicate + ")";
         
         $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id' " + entity_predicate);
     }
     
-    update_SOQL_query_preview(); //update initial preview
+    handle_updating_SOQL_query(); // set initial query preview
 
-    $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keyup(update_SOQL_query_preview);
+    $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keyup(handle_updating_SOQL_query);
 </script>
