@@ -59,10 +59,6 @@ class BasecampsController < ApplicationController
     end
 	end
 
-	def refresh_accounts
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
-	end
-
 	def refresh_stream
 		if params[:project_id]
 
@@ -70,10 +66,11 @@ class BasecampsController < ApplicationController
 			if @basecamp2_user
 				begin 
 					events = BasecampService.basecamp2_user_project_events(@basecamp2_user, params[:basecamp_project_id])
-				
+			
 					object_info = events
 					eventable_id_list = events
 					list = []
+					
 
 					object_info.each do |y|
 						creator_info = BasecampService.basecamp2_user_info( y['creator']['id'],@basecamp2_user['oauth_access_token'],@basecamp2_user['oauth_instance_url'] )
@@ -87,7 +84,7 @@ class BasecampsController < ApplicationController
 
 					if list
 						list.each do |a|
-							result = object_info.select { |b| b['eventable']['id'] == a && b['summary'].match("commented") }
+							result = object_info.select { |b| b['eventable']['id'] == a  && b['eventable']['type'] == 'Message' }
 
 							result.sort_by { |hash| hash['updated_at'].to_i }
 							record = Activity.find_by(:backend_id => a)
