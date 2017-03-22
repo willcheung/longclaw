@@ -142,7 +142,9 @@ class SettingsController < ApplicationController
 		else
 			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
 		end
-		#puts "************** @sf_fields **************", @sf_fields, "******************************"
+
+		#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
+		@salesforce_connection_error = true if @sf_fields.nil?
 	end
 
 	def basecamp

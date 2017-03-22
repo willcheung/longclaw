@@ -43,6 +43,10 @@
   border: 1px solid tomato;
 }
 
+.box-shadow {
+  box-shadow: 3px 3px 1px #888888;
+}
+
 .filter-switch {
   position: relative;
   display: inline-block;
