@@ -23,11 +23,13 @@ class ExtensionController < ApplicationController
   end
 
   def account
-    @activities = @project.activities.take(8)
+    @activities = @project.activities.visible_to(current_user.email).take(8)
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
 
   def alerts_tasks
     @notifications = @project.notifications.order(:is_complete).take(15)
+    @users_reverse = get_current_org_users
   end
 
   def contacts
@@ -94,7 +96,7 @@ class ExtensionController < ApplicationController
     @project ||= @account.projects.first
     create_project if @project.blank?
 
-    @clearbit_domain = @account.domain? ? @account.domain : (@account_contacts.present? ? @account_contacts.first.email.split("@").last : "")
+    @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
   def create_project
