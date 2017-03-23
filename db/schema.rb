@@ -11,12 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170305212057) do
+ActiveRecord::Schema.define(version: 20170320222006) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "uuid-ossp"
   enable_extension "hstore"
+  enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                                  default: "",         null: false
@@ -126,6 +126,17 @@ ActiveRecord::Schema.define(version: 20170305212057) do
 
   add_index "contacts", ["account_id"], name: "index_contacts_on_account_id", using: :btree
 
+  create_table "custom_configurations", force: :cascade do |t|
+    t.uuid     "organization_id",              null: false
+    t.uuid     "user_id"
+    t.string   "config_type",                  null: false
+    t.string   "config_value",    default: "", null: false
+    t.datetime "created_at",                   null: false
+    t.datetime "updated_at",                   null: false
+  end
+
+  add_index "custom_configurations", ["organization_id", "user_id", "config_type"], name: "idx_custom_configurations", unique: true, using: :btree
+
   create_table "custom_fields", force: :cascade do |t|
     t.uuid     "organization_id",           null: false
     t.integer  "custom_fields_metadata_id", null: false
@@ -177,7 +188,7 @@ ActiveRecord::Schema.define(version: 20170305212057) do
 
   create_table "integrations", force: :cascade do |t|
     t.uuid     "contextsmith_account_id"
-    t.string   "external_account_id"
+    t.integer  "external_account_id"
     t.uuid     "project_id"
     t.string   "external_source"
     t.datetime "created_at",              null: false

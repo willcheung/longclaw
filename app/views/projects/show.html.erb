@@ -153,11 +153,8 @@
                             <% end %>
                         </span>
                     </li>
-                    <li class="list-group-item m-b-sm">
-                        <strong>Account:</strong>
-                        <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
-                    </li>
-                    <!-- Custom fields -->
+
+                    <!-- Stream custom fields -->
                     <% @project.custom_fields.each.with_index do |cf, i| %>
                         <li class="list-group-item m-b-sm">
                             <strong><%= cf.custom_fields_metadatum.name %>:</strong>
@@ -171,8 +168,32 @@
                                 <span class="pull-right m-r-xs"><%= best_in_place cf, :value, :as => :input, :place_holder => '(none)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#proj-customfield#{i}-activator" %></span>
                             <% end %>
                         </li>
-                    <% end %>  
-                    <!-- End: custom fields -->
+                    <% end %>
+
+                    <!-- Account and Account-level custom fields -->
+                    <div id="stream-account-custom-fields" class="list-group-item m-b-sm toggle-open" style="margin-left: -1em">
+                        <span class="col-sm-1 fa fa-caret-right toggle-icon" style="width:3%"></span>
+                        <div>
+                            <strong>Account:</strong>
+                            <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Account-level custom fields can be hidden/unhidden below. Not editable on this page."></i>
+                            <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
+                        </div>
+                    </div>
+                    <!-- empty span here for proper toggle-open event handler traversal -->
+                    <span></span>
+                    <dl class="no-display">
+                        <dd class="m-t-md">
+                            <% @project.account.custom_fields.each do |cf| %>
+                                <li class="list-group-item m-b-sm">
+                                    <div>
+                                    <strong><%= cf.custom_fields_metadatum.name %>:</strong>
+                                    <span class="pull-right m-r-xs"><%= cf.value %><% if cf.value.nil? or cf.value.empty? %>(none)<%end%></span>
+                                    </div>
+                                </li>
+                            <% end %>
+                        </dd>
+                    </dl>
+
                     <li class="list-group-item small m-t-md first-item">
                         <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
                         Last Updated:
@@ -370,13 +391,6 @@
         }
     });
 
-
-    /* Toggle Show Stream Subs */
-    $('.toggle-open').click( function () {
-        $(this).find(".toggle-icon").toggleClass("fa-caret-right fa-caret-down");
-        $(this).next().next().toggle(400);
-    })
-
     /* Spin the refresh icon to show that refresh is running */
     $('#btn-refresh').click( function () {
         $('.fa.fa-refresh').addClass('fa-spin');
@@ -385,5 +399,10 @@
     // Fix best_in_place bug/side-effect that adds paragraph tags to the .html of custom field dropdown lists, causing the value to be displayed awkwardly
     $('.best_in_place').bind('ajax:success', function(){ 
         this.innerHTML = this.innerHTML.replace('\<p\>', '').replace('\<\/p\>', '');
+    });
+
+    $(document).ready(function(){
+        /* Set the initial state of Account custom fields expandable section to expanded+showing */
+        toggleSection($("#stream-account-custom-fields"));
     });
 </script>
