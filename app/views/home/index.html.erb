@@ -168,7 +168,7 @@
                         <% @subscribed_projects.each do |p| %>
                             <tr style="height:70px;">
                                 <td>
-                                    <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
+                                    <div><a href="<%= project_path(p) %>"><%= p.name %></a><% if p.owner_id == current_user.id %> *<% end %></div>
                                     <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                 </td>
                                 <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
@@ -218,6 +218,20 @@
                             </script>
                         <% end %>
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>* = You own this stream</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
