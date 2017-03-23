@@ -4,8 +4,8 @@ class HomeController < ApplicationController
 
   def index
     # Load all projects/streams visible to user
-    all_accessible_projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
-    @projects = all_accessible_projects.owner_of(current_user.id)
+    visible_projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
+    @projects = visible_projects.owner_of(current_user.id)
     project_tasks = Notification.where(project_id: @projects.pluck(:id))
     # Unused metrics
     #@open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)
@@ -16,7 +16,7 @@ class HomeController < ApplicationController
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
     @users_reverse = get_current_org_users
     # Load all projects/streams to which the user is subscribed
-    @subscribed_projects = all_accessible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.daily, project_subscribers.weekly").sort_by { |p| p.name.upcase }
+    @subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: "#{current_user.id}"}).group("project_subscribers.daily, project_subscribers.weekly").sort_by { |p| p.name.upcase }
 
     custom_lists = current_user.organization.get_custom_lists_with_options
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
