@@ -16,7 +16,7 @@ class HomeController < ApplicationController
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
     @users_reverse = get_current_org_users
     # Load all projects/streams to which the user is subscribed
-    @subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: "#{current_user.id}"}).group("project_subscribers.daily, project_subscribers.weekly").sort_by { |p| p.name.upcase }
+    @subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly").sort_by { |p| p.name.upcase }
 
     custom_lists = current_user.organization.get_custom_lists_with_options
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
