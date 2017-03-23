@@ -157,6 +157,6 @@
     $(document).ready(function() {
         handle_updating_SOQL_query(); // set initial query preview
 
-        $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keypress(handle_updating_SOQL_query);
+        $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keyup(handle_updating_SOQL_query);
     });
 </script>
