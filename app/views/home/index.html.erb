@@ -1,7 +1,5 @@
 
-
 <div class="wrapper wrapper-content animated fadeInRight">
-
     <div class="row">
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
@@ -47,8 +45,8 @@
                 </div>
             </div>
         </div> -->
-
     </div>
+
     <!-- Metrics -->
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
@@ -74,11 +72,11 @@
                     </div> -->
                 <!-- <h2>Open Tasks</h2>
                      <div class="col-lg-12 m-b-md">
-                        <% if @open_tasks_not_overdue.empty? %>
+                        < % if @open_tasks_not_overdue.empty? %>
                             <p>Nothing here, nice.</p>
-                        <% else %>
-                            <%= render "notifications/table", :notifications => @open_tasks_not_overdue %>
-                        <% end %>
+                        < % else %>
+                            < %= render "notifications/table", :notifications => @open_tasks_not_overdue %>
+                        < % end %>
                     </div> -->
                 <p><a href="<%= notifications_path %>/?type=incomplete&assignee=me">See more Smart Tasks &raquo;</a>
             </div>
@@ -99,7 +97,7 @@
                             <th></th>
                             <th></th>
                             <th>Risk Score</th>
-                            <th>Open Tasks</th>
+                            <th>Open Smart Tasks</th>
                             <th>Status</th>
                             <th>Last 7d Activity</th>
                             <th></th>
@@ -110,7 +108,7 @@
                             <tr style="height:70px;">
                                 <td>
                                     <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
-                                    <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a><small></div>
+                                    <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                 </td>
                                 <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
                                 <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
@@ -145,6 +143,85 @@
         </div>
     </div>
 
+    <div class="row ibox float-e-margins">
+        <div class="col-lg-12">
+            <div class="ibox-title">
+                <h2>My Stream Subscriptions</h2>
+            </div>
+            <div class="ibox-content">
+                <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Stream</th>
+                            <th>Type</th>
+                            <th></th>
+                            <th></th>
+                            <th>Risk Score</th>
+                            <th>Open Smart Tasks</th>
+                            <th>Status</th>
+                            <th>Last 7d Activity</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% @subscribed_projects.each do |p| %>
+                            <tr style="height:70px;">
+                                <td>
+                                    <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
+                                    <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
+                                </td>
+                                <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
+                                <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
+                                <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
+                                <td style="text-align:right;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
+                                <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
+                                <td><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id]%></div></td>
+                                <td><div id="sparkline2-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
+                                <td>
+                                    <% if p.is_public %>
+                                        <span class="label label-default pull-right">Public</span>
+                                    <% else %>
+                                        <span class="label label-warning pull-right">Private</span>
+                                    <% end %>
+                                </td>
+                                <td>
+                                    <!--<% if p.weekly %>
+                                        <span class="label label-info pull-right"><i class="fa fa-check"></i>Weekly</span>
+                                    <% end %>                                    <% if p.daily %>
+                                        <span class="label label-info pull-right"><i class="fa fa-check"></i> Daily</span>
+                                    <% end %>-->
+                                    <% if p.daily %>
+                                        <%= link_to "<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{p.id}", class: "block m-b-xs", title: "Following daily" %>
+                                    <% else %>
+                                        <%= link_to "<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{p.id}", class: "block m-b-xs", title: "Follow daily" %>
+                                    <% end %>
+                                    </span>
+                                    <% if p.weekly %>
+                                        <%= link_to "<i class=\"fa fa-check\"></i> Weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-index-unfollow-weekly-#{p.id}", class: "block m-b-xs", title: "Following weekly" %>
+                                    <% else %>
+                                        <%= link_to "<i class=\"fa fa-bell-o\"></i> Weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{p.id}", class: "block m-b-xs", title: "Follow weekly" %>
+                                    <% end %>
+                                </td>
+                            </tr>
+
+                            <script>
+                            $("#sparkline2-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {
+                                type: 'bar',
+                                height: '20',
+                                barWidth: 12,
+                                barSpacing: 2,
+                                barColor: '#5DA5DA',
+                                zeroAxis: false,
+                                zeroColor: '#ed5565'
+                            });
+                            </script>
+                        <% end %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <%= javascript_include_tag "notifications_table" %>
