@@ -161,7 +161,7 @@ $(document).ready(function() {
             // TODO: didn't handle error!!
             complete: function() {
                 self.html("<i class='fa fa-floppy-o'></i>");
-                self.addClass("green-fade-out");
+                self.addClass("green-fadeto-grey");
                 self.blur();
             }
         });

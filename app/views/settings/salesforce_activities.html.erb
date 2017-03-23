@@ -120,9 +120,14 @@
     </div>
 </div>
 
+<style>
+  .btn:disabled {
+    color: white;
+    background-color: grey;
+  }
+</style>
 <script>
-    function handle_updating_SOQL_query() {
-        console.log(event);
+    function handle_updating_SOQL_query(event) {
         if (event) {
             if (event.target.id == "salesforce-activity-entity-predicate-textarea") {
                 type = "entity";
@@ -132,8 +137,8 @@
             }
             
             // Remove green highlight of a previously successful query save
-            $("#salesforce-activity-save-" + type + "-predicate-btn").prop("disabled",false);
-            $("#salesforce-activity-save-" + type + "-predicate-btn").removeClass('green-fade-out');
+            $("#salesforce-activity-save-"+type+"-predicate-btn").prop("disabled",false);
+            $("#salesforce-activity-save-"+type+"-predicate-btn").removeClass('green-fadeto-grey');
         }
         
         // Update the SOQL query preview
@@ -148,8 +153,10 @@
         
         $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id' " + entity_predicate);
     }
-    
-    handle_updating_SOQL_query(); // set initial query preview
 
-    $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keyup(handle_updating_SOQL_query);
+    $(document).ready(function() {
+        handle_updating_SOQL_query(); // set initial query preview
+
+        $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keypress(handle_updating_SOQL_query);
+    });
 </script>
