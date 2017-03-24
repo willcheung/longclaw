@@ -126,9 +126,9 @@
 
                                         <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
                                         <td><% if p.is_public %>
-                                                <span class="label label-warning pull-right">Public</span>
+                                                <span class="label label-default pull-right">Public</span>
                                             <% else %>
-                                                <span class="label label-default pull-right">Private</span>
+                                                <span class="label label-warning pull-right">Private</span>
                                             <% end %>
                                         </td>
                                         <td style="width: 120px"> 
