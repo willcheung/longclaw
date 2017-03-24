@@ -588,18 +588,18 @@ class Project < ActiveRecord::Base
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
-      UNION ALL
-      (
-      -- Meetings directly from actvities table
-      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Note]}' as category, count(meetings.*) as num_activities
-      FROM time_series
-      LEFT JOIN (SELECT last_sent_date as sent_date, project_id
-                  FROM activities where category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
-                ) as meetings
-        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
-      GROUP BY time_series.project_id, days, category
-      ORDER BY time_series.project_id, days ASC
-      )
+      --UNION ALL
+      --(
+      ---- Meetings directly from actvities table
+      --SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Note]}' as category, count(meetings.*) as num_activities
+      --FROM time_series
+      --LEFT JOIN (SELECT last_sent_date as sent_date, project_id
+      --            FROM activities where category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+      --          ) as meetings
+      --  ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+      --GROUP BY time_series.project_id, days, category
+      --ORDER BY time_series.project_id, days ASC
+      --)
       UNION ALL
       (
       -- JIRA directly from actvities table
@@ -642,26 +642,26 @@ class Project < ActiveRecord::Base
   end
 
   # This is the SQL query to get daily activities for multiple projects.  TO DO: get rid of cross join
-  def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
-    query = <<-SQL
-      WITH time_series as (
-        SELECT *
-          from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1
-                CROSS JOIN
-               (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
-       )
-      SELECT time_series.project_id as id, date(time_series.days) as date, count(activities.*) as num_activities
-      FROM time_series
-      LEFT JOIN (SELECT sent_date, project_id
-                 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}') and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'))
-                 ) as activities
-        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
-      GROUP BY time_series.project_id, days
-      ORDER BY time_series.project_id, days ASC
-    SQL
+  # def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
+  #   query = <<-SQL
+  #     WITH time_series as (
+  #       SELECT *
+  #         from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1
+  #               CROSS JOIN
+  #              (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
+  #      )
+  #     SELECT time_series.project_id as id, date(time_series.days) as date, count(activities.*) as num_activities
+  #     FROM time_series
+  #     LEFT JOIN (SELECT sent_date, project_id
+  #                FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}') and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'))
+  #                ) as activities
+  #       ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+  #     GROUP BY time_series.project_id, days
+  #     ORDER BY time_series.project_id, days ASC
+  #   SQL
 
-    Activity.find_by_sql(query)
-  end
+  #   Activity.find_by_sql(query)
+  # end
 
   # How Busy Are We? Chart on Home#index
   def self.count_total_activities_by_day(array_of_account_ids, time_zone)
@@ -700,59 +700,86 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
-# TO-DO: This needs to be deprecated.  Use daily_activities_last_x_days.
-  def self.count_activities_by_day(days_ago, array_of_project_ids)
-    metrics = {}
-    previous = nil
-    arr = []
-    days_ago_sql = "(CURRENT_DATE - INTERVAL '#{days_ago-1} days')"
-
+  def self.count_activities_by_day_sparkline(array_of_project_ids, time_zone, days_ago=7)
     query = <<-SQL
       WITH time_series as (
         SELECT *
-          FROM (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1
+          from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1
                 CROSS JOIN
                (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
        )
-      SELECT time_series.project_id, time_series.days, count(activities.*) as count_activities
+      SELECT time_series.project_id as id, date(time_series.days) as date, count(DISTINCT emails.*) + count(DISTINCT other_activities.*) as num_activities
       FROM time_series
-      LEFT JOIN (SELECT sent_date, project_id from
-                    (SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id
-                      FROM activities
-                      where project_id in ('#{array_of_project_ids.join("','")}')
-                      AND category = 'Conversation'
-                    ) t
-                 WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})
-                 ) as activities
-        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
+      LEFT JOIN (SELECT sent_date, project_id
+                 FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}') and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                 ) as emails
+        ON emails.project_id = time_series.project_id and date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+      LEFT JOIN (SELECT last_sent_date as sent_date, project_id
+                  FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') and project_id in ('#{array_of_project_ids.join("','")}') and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                ) as other_activities
+        ON other_activities.project_id = time_series.project_id and date_trunc('day', other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days
       ORDER BY time_series.project_id, days ASC
     SQL
 
-    activities = Project.find_by_sql(query)
-
-    activities.each_with_index do |p,i|
-      if previous.nil?
-        arr << p.count_activities
-        previous = p.project_id
-      else
-        if previous == p.project_id
-          arr << p.count_activities
-        else
-          metrics[previous] = arr
-          arr = []
-          arr << p.count_activities
-        end
-        previous = p.project_id
-      end
-
-      if activities[i+1].nil?
-        metrics[previous] = arr
-      end
-    end
-
-    return metrics
+    result = Project.find_by_sql(query)
+    result = result.group_by(&:id)
+    result.each { |pid, project| result[pid] = project.map(&:num_activities) }
   end
+
+# TO-DO: This needs to be deprecated.  Use daily_activities_last_x_days.
+  # def self.count_activities_by_day(days_ago, array_of_project_ids)
+  #   metrics = {}
+  #   previous = nil
+  #   arr = []
+  #   days_ago_sql = "(CURRENT_DATE - INTERVAL '#{days_ago-1} days')"
+
+  #   query = <<-SQL
+  #     WITH time_series as (
+  #       SELECT *
+  #         FROM (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1
+  #               CROSS JOIN
+  #              (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
+  #      )
+  #     SELECT time_series.project_id, time_series.days, count(activities.*) as count_activities
+  #     FROM time_series
+  #     LEFT JOIN (SELECT sent_date, project_id from
+  #                   (SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id
+  #                     FROM activities
+  #                     where project_id in ('#{array_of_project_ids.join("','")}')
+  #                     AND category = 'Conversation'
+  #                   ) t
+  #                WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})
+  #                ) as activities
+  #       ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
+  #     GROUP BY time_series.project_id, days
+  #     ORDER BY time_series.project_id, days ASC
+  #   SQL
+
+  #   activities = Project.find_by_sql(query)
+
+  #   activities.each_with_index do |p,i|
+  #     if previous.nil?
+  #       arr << p.count_activities
+  #       previous = p.project_id
+  #     else
+  #       if previous == p.project_id
+  #         arr << p.count_activities
+  #       else
+  #         metrics[previous] = arr
+  #         arr = []
+  #         arr << p.count_activities
+  #       end
+  #       previous = p.project_id
+  #     end
+
+  #     if activities[i+1].nil?
+  #       metrics[previous] = arr
+  #     end
+  #   end
+
+  #   return metrics
+  # end
 
   # Top Active Streams/Engagement Last 7d
   def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)

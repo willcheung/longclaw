@@ -150,7 +150,7 @@
                                     </tr>
 
                                     <script>        
-                                    $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {       
+                                    $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @sparkline[p.id] %>, {       
                                         type: 'bar',      
                                         height: '20',     
                                         barWidth: 12,     
