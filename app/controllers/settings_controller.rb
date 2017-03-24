@@ -133,6 +133,7 @@ class SettingsController < ApplicationController
 	end
 
 	def salesforce_fields
+		# Don't save SFDC custom fields, so must query Salesforce for them each time.
 		cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
 		@cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
 		@cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
@@ -142,8 +143,8 @@ class SettingsController < ApplicationController
 		else
 			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
 		end
-
 		#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
+
 		@salesforce_connection_error = true if @sf_fields.nil?
 	end
 

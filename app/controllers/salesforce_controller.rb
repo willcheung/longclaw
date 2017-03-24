@@ -1,12 +1,12 @@
 class SalesforceController < ApplicationController
-	layout "empty", only: [:index]
+  layout "empty", only: [:index]
 
   def index
     @category_param = []
     @filter_email = []
 
-  	@projects = []
-  	@activities_by_month = []
+    @projects = []
+    @activities_by_month = []
     @activities_by_date = []
     @project = Project.new
     @isconnect = false
@@ -15,11 +15,11 @@ class SalesforceController < ApplicationController
     @pinned_activities = []
     @data = []
 
-  	if params[:id].nil?
-  		return
-  	else
-  		# set this salesforce id to contextsmith account id
-  		@salesforce_id = params[:id]
+    if params[:id].nil?
+      return
+    else
+      # set this salesforce id to contextsmith account id
+      @salesforce_id = params[:id]
 
       salesforce = SalesforceAccount.eager_load(:account).find_by(salesforce_account_id: params[:id], contextsmith_organization_id: current_user.organization_id)
 
@@ -31,7 +31,7 @@ class SalesforceController < ApplicationController
       if account.nil?
         return
       end
-  	end
+    end
 
     if !params[:actiontype].nil?
       @actiontype = params[:actiontype]
@@ -39,29 +39,29 @@ class SalesforceController < ApplicationController
 
     @isconnect = true
 
-  	# check if id is valid and in the scope
+    # check if id is valid and in the scope
 
-  	# for now, just use test account
-  	@projects = Project.includes(:activities).where(account_id: account.id)
+    # for now, just use test account
+    @projects = Project.includes(:activities).where(account_id: account.id)
     activities = []
     if !@projects.empty?
-    	if !params[:pid].nil?
-    		@projects.each do |p|
-    			if p.id == params[:pid]
+      if !params[:pid].nil?
+        @projects.each do |p|
+          if p.id == params[:pid]
             @final_filter_user = p.all_involved_people(current_user.email)
             activities = Activity.get_activity_by_filter(p, params)
             @project_risk_score = p.current_risk_score(current_user.time_zone)
             @project = p
-    			end
-    		end
-  		else
+          end
+        end
+      else
         @final_filter_user = @projects[0].all_involved_people(current_user.email)
         activities = Activity.get_activity_by_filter(@projects[0], params)
 
         @project_risk_score = @projects[0].current_risk_score(current_user.time_zone)
         @project = @projects[0]
-  		end
-	    @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
+      end
+      @activities_by_month = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%^B %Y') }
       activities_by_date_temp = activities.select {|a| a.is_visible_to(current_user) }.group_by {|a| a.last_sent_date.strftime('%Y %m %d') }
 
       activities_by_date_temp.each do |date, activities|
@@ -88,7 +88,7 @@ class SalesforceController < ApplicationController
       @project_pinned_count = @project.activities.pinned.count
 
       @users_reverse = get_current_org_users
- 		end
+    end
 
     if(!params[:category].nil? and !params[:category].empty?)
       @category_param = params[:category].split(',')
@@ -137,25 +137,32 @@ class SalesforceController < ApplicationController
 
   # Activities are loaded into native CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
   def refresh_activities
+    method_name = "refresh_activities()"
     filter_predicate_str = {}
     filter_predicate_str["entity"] = params[:entity_pred].strip
     filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
 
-    #puts "******************** refresh_activities()   ...  filter_predicate_str=", filter_predicate_str
+    #puts "******************** #{method_name}  ...  filter_predicate_str=", filter_predicate_str
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
-    @streams.each do |s|
+    client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-      if s.salesforce_opportunity.nil? # Stream not linked to SF Opportunity
-        if !s.account.salesforce_accounts.empty? # Stream linked to SF Account
-          s.account.salesforce_accounts.each do |sf_a|
-            Activity.load_salesforce_activities(s, current_user.organization_id, sf_a.salesforce_account_id, type="Account", filter_predicate_str)
+    unless client.nil?  # connection error
+      @streams.each do |s|
+        if s.salesforce_opportunity.nil? # Stream not linked to SF Opportunity
+          if !s.account.salesforce_accounts.empty? # Stream linked to SF Account
+            s.account.salesforce_accounts.each do |sf_a|
+              Activity.load_salesforce_activities(client, s, sf_a.salesforce_account_id, type="Account", filter_predicate_str)
+            end
           end
+        else # Stream linked to Opportunity
+          # If Stream is linked in Opportunity, then save on Opportunity level
+          Activity.load_salesforce_activities(client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
         end
-      else # Stream linked to Opportunity
-        # If Stream is linked in Opportunity, then save on Opportunity level
-        Activity.load_salesforce_activities(s, current_user.organization_id, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
       end
+    else
+      return_service_unavailable_response(method_name)
+      return
     end
 
     render :text => ' '
@@ -165,28 +172,32 @@ class SalesforceController < ApplicationController
   # Parameters: entity_type: = "accounts" or "projects".
   # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS stream, an update will be carried out for each mapping.
   def refresh_fields
+    method_name = "refresh_fields()"
     if params[:entity_type] == "accounts"
       account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
 
       unless account_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
         client = SalesforceService.connect_salesforce(current_user.organization_id)
+        #client=nil # simulates a Salesforce connection error
 
-        unless client.nil?  #connection error
+        unless client.nil?  # connection successful
           accounts = Account.where("accounts.organization_id = ? and status = 'Active'", current_user.organization_id)
           accounts.each do |a|
             unless a.salesforce_accounts.first.nil? 
               #print "***** SFDC account:\"", a.salesforce_accounts.first.salesforce_account_name, "\" --> CS account:\"", a.name, "\" *****\n"
-              result = Account.load_salesforce_fields(client, a.id, a.salesforce_accounts.first.salesforce_account_id, account_custom_fields)
-              unless result.nil?
-                puts "*****Error*****: Salesforce query error in SalesforceController.refresh_fields() -> Account.load_salesforce_fields(): Attempted to load fields from Salesforce Account \"" + a.salesforce_accounts.first.salesforce_account_name + "\" (sfdc_id='" + a.salesforce_accounts.first.salesforce_account_id + "') to CS Account \"" + a.name + "\" (account_id='" + a.id + "').  Details: " + result
-                render :json => { :error => "Error while attempting to load fields from Salesforce Account \"" + a.salesforce_accounts.first.salesforce_account_name + "\" (sfdc_id='" + a.salesforce_accounts.first.salesforce_account_id + "') to CS Account \"" + a.name + "\" (account_id='" + a.id + "').  Details: " + result }, status: :internal_server_error # 500
+              errors = Account.load_salesforce_fields(client, a.id, a.salesforce_accounts.first.salesforce_account_id, account_custom_fields)
+              #errors="This is a test error!!!" # simulates a Salesforce query error
+
+              unless errors.nil? # Salesforce query error occurred
+                method_location = "Account.load_salesforce_fields()"
+                error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  Details: #{errors}"
+                return_internal_server_error_response(method_name, method_location, error_detail)
                 return
               end
             end
           end
         else
-          puts "Salesforce service unavailable in SalesforceController.refresh_fields(): Cannot establish a connection!"
-          render :json => { :error => "Salesforce service unavailable: cannot establish a connection" }, status: :service_unavailable #503
+          return_service_unavailable_response(method_name)
           return
         end
       end
@@ -195,23 +206,26 @@ class SalesforceController < ApplicationController
 
       unless stream_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
         client = SalesforceService.connect_salesforce(current_user.organization_id)
+        #client=nil # simulates a Salesforce connection error
 
-        unless client.nil?  #connection error
+        unless client.nil?  # connection successful
           streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity)
           streams.each do |s|
             unless s.salesforce_opportunity.nil?
               #print "***** SFDC stream:\"", s.salesforce_opportunity.name, "\" --> CS opportunity:\"", s.name, "\" *****\n"
-              result = Project.load_salesforce_fields(client, s.id, s.salesforce_opportunity.salesforce_opportunity_id, stream_custom_fields)
-              unless result.nil?
-                puts "*****Error*****: Salesforce query error in SalesforceController.refresh_fields() -> Project.load_salesforce_fields(): attempting to load fields from Salesforce Opportunity \"" + s.salesforce_opportunity.name + "\" (sfdc_id='" + s.salesforce_opportunity.salesforce_opportunity_id + "') to CS Stream \"" + s.name + "\" (account_id='" + s.id + "').  Details: " + result
-                render :json => { :error => "Error while attempting to load fields from Salesforce Opportunity \"" + s.salesforce_opportunity.name + "\" (sfdc_id='" + s.salesforce_opportunity.salesforce_opportunity_id + "') to CS Stream \"" + s.name + "\" (account_id='" + s.id + "').  Details: " + result }, status: :internal_server_error # 500
+              errors = Project.load_salesforce_fields(client, s.id, s.salesforce_opportunity.salesforce_opportunity_id, stream_custom_fields)
+              #errors="This is a test error!!!" # simulates a Salesforce query error
+
+              unless errors.nil? # Salesforce query error occurred
+                method_location = "Project.load_salesforce_fields()"
+                error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (account_id='#{s.id}').  Details: #{errors}"
+                return_internal_server_error_response(method_name, method_location, error_detail)
                 return
               end
             end
           end
         else
-          puts "Salesforce service unavailable in SalesforceController.refresh_fields(): Cannot establish a connection!"
-          render :json => { :error => "Salesforce service unavailable: cannot establish a connection" }, status: :service_unavailable #503
+          return_service_unavailable_response(method_name)
           return
         end
       end
@@ -293,7 +307,6 @@ class SalesforceController < ApplicationController
 
   end
 
-
   def disconnect
     # delete salesforce data
     # delete salesforce oauth_user
@@ -304,5 +317,17 @@ class SalesforceController < ApplicationController
     respond_to do |format|
       format.html { redirect_to settings_salesforce_path }
     end
+  end
+
+  private
+
+  def return_service_unavailable_response(method_name)
+    puts "****SFDC****: Salesforce service unavailable in SalesforceController.#{method_name}: Cannot establish a connection!"
+    render json: { error: "Salesforce service unavailable: cannot establish a connection" }, status: :service_unavailable #503
+  end
+
+  def return_internal_server_error_response(method_name, method_location, error_detail)
+    puts "****SFDC****: Salesforce query error in SalesforceController.#{method_name} (#{method_location}): #{error_detail}"
+    render json: { error: error_detail }, status: :internal_server_error # 500
   end
 end
