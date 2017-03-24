@@ -133,7 +133,7 @@ class SettingsController < ApplicationController
 	end
 
 	def salesforce_fields
-		# Don't save SFDC custom fields, so must query Salesforce for them each time.
+		# We don't save SFDC custom fields (i.e., in PG), so we must query Salesforce for these every time.
 		cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
 		@cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
 		@cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
