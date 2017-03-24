@@ -161,7 +161,7 @@ class SalesforceController < ApplicationController
         end
       end
     else
-      render_service_unavailable_response(method_name)
+      render_service_unavailable_error(method_name)
       return
     end
 
@@ -191,13 +191,13 @@ class SalesforceController < ApplicationController
               unless errors.nil? # Salesforce query error occurred
                 method_location = "Account.load_salesforce_fields()"
                 error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  Details: #{errors}"
-                render_internal_server_error_response(method_name, method_location, error_detail)
+                render_internal_server_error(method_name, method_location, error_detail)
                 return
               end
             end
           end
         else
-          render_service_unavailable_response(method_name)
+          render_service_unavailable_error(method_name)
           return
         end
       end
@@ -219,13 +219,13 @@ class SalesforceController < ApplicationController
               unless errors.nil? # Salesforce query error occurred
                 method_location = "Project.load_salesforce_fields()"
                 error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (account_id='#{s.id}').  Details: #{errors}"
-                render_internal_server_error_response(method_name, method_location, error_detail)
+                render_internal_server_error(method_name, method_location, error_detail)
                 return
               end
             end
           end
         else
-          render_service_unavailable_response(method_name)
+          render_service_unavailable_error(method_name)
           return
         end
       end
@@ -321,12 +321,12 @@ class SalesforceController < ApplicationController
 
   private
 
-  def render_service_unavailable_response(method_name)
+  def render_service_unavailable_error(method_name)
     puts "****SFDC****: Salesforce service unavailable in SalesforceController.#{method_name}: Cannot establish a connection!"
     render json: { error: "Salesforce service unavailable: cannot establish a connection" }, status: :service_unavailable #503
   end
 
-  def render_internal_server_error_response(method_name, method_location, error_detail)
+  def render_internal_server_error(method_name, method_location, error_detail)
     puts "****SFDC****: Salesforce query error in SalesforceController.#{method_name} (#{method_location}): #{error_detail}"
     render json: { error: error_detail }, status: :internal_server_error # 500
   end
