@@ -1,3 +1,5 @@
+//= require highcharts-sparkline/highcharts-sparkline
+
 $('[data-toggle="tooltip"]').tooltip();
 
 jQuery(document).ready(function($) {  

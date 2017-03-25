@@ -44,7 +44,7 @@ class ProjectsController < ApplicationController
     end
 
     # new project modal
-    @project = Project.new
+    @project = Project.new 
   end
 
   # GET /projects/1
