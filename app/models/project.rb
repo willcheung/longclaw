@@ -130,106 +130,6 @@ class Project < ActiveRecord::Base
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
-  def self.check_existing_from_clusters(data, user_id, organization_id)
-    # Use Dice Coefficient
-    # Everything lives in OnboardingController#confirm_projects right now
-  end
-
-  def self.find_min_risk_score_by_day(array_of_project_ids, time_zone, day_range=14)
-    start_time_sec = (day_range-1).days.ago.in_time_zone(time_zone).midnight.utc.to_i
-
-    query = <<-SQL
-        SELECT activities.id AS id,
-               activities.project_id AS project_id,
-               messages ->> 'sentDate' AS sent_date,
-               jsonb_array_elements(messages->'sentimentItems')->>'score' AS sentiment_score,
-               notifications.id AS has_risk,
-               notifications.is_complete,
-               notifications.complete_date
-        FROM activities
-        CROSS JOIN LATERAL jsonb_array_elements(email_messages) messages
-        LEFT JOIN notifications
-        ON activities.id = notifications.activity_id
-        AND messages ->> 'messageId' = notifications.message_id
-        AND notifications.category = '#{Notification::CATEGORY[:Alert]}'
-        WHERE activities.category = '#{Activity::CATEGORY[:Conversation]}'
-        AND messages->>'sentimentItems' IS NOT NULL
-        AND activities.project_id IN ('#{array_of_project_ids.join("','")}')
-      SQL
-
-    result = Activity.find_by_sql(query)
-
-    # instantiate min_scores as Hash of Arrays of Arrays
-    # project_id => [day in day_range][possible scores]
-    min_scores = Hash.new()
-    # instantiate non_risk_min_score as Hash
-    # project_id => lowest score for all scores created before day_range
-    non_risk_min_score = Hash.new()
-
-    array_of_project_ids.each do |pid|
-      min_scores[pid] = Array.new(day_range) { [] }
-      non_risk_min_score[pid] = 0
-    end
-
-    if result
-      result.each do|r|
-        sentiment_score = r.sentiment_score.to_f
-
-        # array position for sent date of current sentiment score (0 if before date range)
-        date_index = (r.sent_date.to_i - start_time_sec) / (24*60*60)
-        date_index = 0 if date_index < 0
-
-        # array position for end date of current sentiment score, set below
-        end_index = nil
-
-        if r.has_risk
-          # risk notification found
-          if r.is_complete && r.complete_date.to_i >= start_time_sec
-            complete_index = (r.complete_date.to_i - start_time_sec) / (24*60*60)
-            # consider score for days it is open
-            end_index = complete_index-1
-          elsif !r.is_complete
-            # consider score for all days after it was created
-            end_index = day_range-1
-          end
-        else
-          # no risk notification, can't be closed
-          if sentiment_score < non_risk_min_score[r.project_id]
-            if r.sent_date.to_i < start_time_sec
-              # min score from before day_range, will add to consideration later
-              non_risk_min_score[r.project_id] = sentiment_score
-            else
-              # consider score for all days after it was created
-              end_index = day_range-1
-            end
-          end
-        end
-
-        # push score into min_scores to be considered for lowest score on each day it can apply for
-        (date_index..end_index).each do |i|
-          min_scores[r.project_id][i] << sentiment_score
-        end if end_index # scores where end_index is set above are considered
-      end
-
-      # push score from non_risk_min_score into min_scores
-      non_risk_min_score.each do |key, value|
-        (0..day_range-1).each do |i|
-          min_scores[key][i] << value
-        end
-      end
-    end
-
-    # set final score of each day by taking min from the innermost array, then round and scale score
-    min_scores.each do |key, value|
-      (0..day_range-1).each do |i|
-        score = value[i].sort[0]
-        min_scores[key][i] = scale_sentiment_score(score)
-      end
-    end
-
-    min_scores
-  end
-
   def self.count_tasks_per_project(array_of_project_ids)
     query = <<-SQL
         SELECT projects.id AS id,
@@ -263,15 +163,6 @@ class Project < ActiveRecord::Base
   def self.open_risk_count(array_of_project_ids)
     risks_per_project = Project.count_tasks_per_project(array_of_project_ids)
     Hash[risks_per_project.map { |p| [p.id, p.open_risks] }]
-  end
-
-  def self.current_risk_score(array_of_project_ids, time_zone)
-    projects_min_scores = Project.find_min_risk_score_by_day(array_of_project_ids, time_zone, 1)
-    Hash[projects_min_scores.map { |pid, scores| [pid, scores[0]] }]
-  end
-
-  def current_risk_score(time_zone)
-    Project.current_risk_score([self.id], time_zone)[self.id]
   end
 
   def self.new_risk_score(array_of_project_ids, time_zone)
@@ -588,18 +479,6 @@ class Project < ActiveRecord::Base
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
-      --UNION ALL
-      --(
-      ---- Meetings directly from actvities table
-      --SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Note]}' as category, count(meetings.*) as num_activities
-      --FROM time_series
-      --LEFT JOIN (SELECT last_sent_date as sent_date, project_id
-      --            FROM activities where category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
-      --          ) as meetings
-      --  ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
-      --GROUP BY time_series.project_id, days, category
-      --ORDER BY time_series.project_id, days ASC
-      --)
       UNION ALL
       (
       -- JIRA directly from actvities table
@@ -640,28 +519,6 @@ class Project < ActiveRecord::Base
 
     Activity.find_by_sql(query)
   end
-
-  # This is the SQL query to get daily activities for multiple projects.  TO DO: get rid of cross join
-  # def self.find_and_count_activities_by_day(array_of_project_ids, time_zone)
-  #   query = <<-SQL
-  #     WITH time_series as (
-  #       SELECT *
-  #         from (SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'), CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}', INTERVAL '1 day') as days) t1
-  #               CROSS JOIN
-  #              (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
-  #      )
-  #     SELECT time_series.project_id as id, date(time_series.days) as date, count(activities.*) as num_activities
-  #     FROM time_series
-  #     LEFT JOIN (SELECT sent_date, project_id
-  #                FROM email_activities_last_14d where project_id in ('#{array_of_project_ids.join("','")}') and sent_date::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '14 days'))
-  #                ) as activities
-  #       ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
-  #     GROUP BY time_series.project_id, days
-  #     ORDER BY time_series.project_id, days ASC
-  #   SQL
-
-  #   Activity.find_by_sql(query)
-  # end
 
   # How Busy Are We? Chart on Home#index
   def self.count_total_activities_by_day(array_of_account_ids, time_zone)
@@ -727,60 +584,6 @@ class Project < ActiveRecord::Base
     result.each { |pid, project| result[pid] = project.map(&:num_activities) }
   end
 
-# TO-DO: This needs to be deprecated.  Use daily_activities_last_x_days.
-  # def self.count_activities_by_day(days_ago, array_of_project_ids)
-  #   metrics = {}
-  #   previous = nil
-  #   arr = []
-  #   days_ago_sql = "(CURRENT_DATE - INTERVAL '#{days_ago-1} days')"
-
-  #   query = <<-SQL
-  #     WITH time_series as (
-  #       SELECT *
-  #         FROM (SELECT generate_series(date #{days_ago_sql}, CURRENT_DATE, INTERVAL '1 day') as days) t1
-  #               CROSS JOIN
-  #              (SELECT id as project_id from projects where id in ('#{array_of_project_ids.join("','")}')) t2
-  #      )
-  #     SELECT time_series.project_id, time_series.days, count(activities.*) as count_activities
-  #     FROM time_series
-  #     LEFT JOIN (SELECT sent_date, project_id from
-  #                   (SELECT jsonb_array_elements(email_messages) ->> 'sentDate' as sent_date, project_id
-  #                     FROM activities
-  #                     where project_id in ('#{array_of_project_ids.join("','")}')
-  #                     AND category = 'Conversation'
-  #                   ) t
-  #                WHERE t.sent_date::integer > EXTRACT(EPOCH FROM #{days_ago_sql})
-  #                ) as activities
-  #       ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer)) = time_series.days
-  #     GROUP BY time_series.project_id, days
-  #     ORDER BY time_series.project_id, days ASC
-  #   SQL
-
-  #   activities = Project.find_by_sql(query)
-
-  #   activities.each_with_index do |p,i|
-  #     if previous.nil?
-  #       arr << p.count_activities
-  #       previous = p.project_id
-  #     else
-  #       if previous == p.project_id
-  #         arr << p.count_activities
-  #       else
-  #         metrics[previous] = arr
-  #         arr = []
-  #         arr << p.count_activities
-  #       end
-  #       previous = p.project_id
-  #     end
-
-  #     if activities[i+1].nil?
-  #       metrics[previous] = arr
-  #     end
-  #   end
-
-  #   return metrics
-  # end
-
   # Top Active Streams/Engagement Last 7d
   def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
     hours_ago_end = hours_ago_end.hours.ago.to_i
@@ -838,19 +641,8 @@ class Project < ActiveRecord::Base
           project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
         end
 
-        # Don't Automatically subscribe to projects created.  This is done in onboarding#confirm_projects
-        # project.subscribers.create(user_id: user_id)
-
         # Upsert project conversations.
         Activity.load(get_project_conversations(data, p), project, true, user_id)
-
-        # Upsert/load Smart Tasks.
-        #Notification.load(get_project_conversations(data, p), project, false)
-
-        # Load Opportunities
-        # 8/30: Temporarily disable this because it gets too noisy during initial onboarding phase
-        # Also removing the rake scheduler for this.  Will need to think of a better solution to surface this.
-        # Notification.load_opportunity_for_stale_projects(project)
 
         # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
