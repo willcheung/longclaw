@@ -47,7 +47,8 @@ Highcharts.SparkLine = function (a, b, c) {
                 title: {
                     text: null
                 },
-                tickPositions: [0]
+                tickPositions: [0],
+                softMax: 1
             },
             legend: {
                 enabled: false
@@ -82,7 +83,8 @@ Highcharts.SparkLine = function (a, b, c) {
                             }
                         }
                     },
-                    fillOpacity: 0.25
+                    fillOpacity: 0.25,
+                    groupPadding: 0
                 },
                 column: {
                     negativeColor: '#910000',
@@ -132,10 +134,8 @@ function doChunk() {
                 pointStart: 1
             }],
             tooltip: {
-                formatter: function () {
-                    return '<span style="font-size: 10px">Activities (' + (8 - parseInt(this.x, 10)) + ' days ago):</span><br/>' +
-                           '<b>' + this.y + '</b>'
-                }
+                headerFormat: null,
+                pointFormat: "<b>{point.y}</b>"
             },
             chart: chart
         });
@@ -148,11 +148,6 @@ function doChunk() {
             setTimeout(doChunk, 0);
             break;
         }
-
-        // Print a feedback on the performance
-        // if (n === fullLen) {
-        //     $('#result').html('Generated ' + fullLen + ' sparklines in ' + (new Date() - start) + ' ms');
-        // }
     }
 }
 doChunk();

@@ -105,7 +105,7 @@
                     </thead>
                     <tbody>
                         <% @projects.each do |p| %>
-                            <tr style="height:70px;">
+                            <tr>
                                 <td>
                                     <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                     <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
@@ -154,7 +154,7 @@
                     </thead>
                     <tbody>
                         <% @subscribed_projects.each do |p| %>
-                            <tr style="height:70px;">
+                            <tr>
                                 <td>
                                     <div><a href="<%= project_path(p) %>"><%= p.name %></a><% if p.owner_id == current_user.id %> *<% end %></div>
                                     <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
