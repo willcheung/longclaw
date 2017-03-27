@@ -105,7 +105,7 @@
                             </thead>
                             <tbody>
                                 <% @projects.each do |p| %>
-                                    <tr style="height:70px;">
+                                    <tr>
                                         <td>
                                             <input type="checkbox" class="bulk-project" value="<%=p.id  %>"<% if not current_user.admin? %>hidden<% end %> />
                                         </td>
