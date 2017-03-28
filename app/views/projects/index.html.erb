@@ -105,7 +105,7 @@
                             </thead>
                             <tbody>
                                 <% @projects.each do |p| %>
-                                    <tr style="height:70px;">
+                                    <tr>
                                         <td>
                                             <input type="checkbox" class="bulk-project" value="<%=p.id  %>"<% if not current_user.admin? %>hidden<% end %> />
                                         </td>
@@ -122,7 +122,7 @@
                                         <td style="text-align: center;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
                                         <td style="text-align: center;" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
                                         <td style="text-align:center"><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id].to_i%></div></td>
-                                        <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
+                                        <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
 
                                         <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
                                         <td><% if p.is_public %>
@@ -148,18 +148,6 @@
                                             </span>
                                         </td>
                                     </tr>
-
-                                    <script>        
-                                    $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {       
-                                        type: 'bar',      
-                                        height: '20',     
-                                        barWidth: 12,     
-                                        barSpacing: 2,        
-                                        barColor: '#5DA5DA',      
-                                        zeroAxis: false,      
-                                        zeroColor: '#ed5565'      
-                                    });       
-                                    </script>
                                 <% end %>
                             </tbody>
                         </table>
