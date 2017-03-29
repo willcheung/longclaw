@@ -109,7 +109,7 @@ namespace :scheduler do
 
         args.with_defaults(:test => false)
         Organization.is_active.each do |org|
-            org.users.each do |usr|
+            org.users.not_disabled.each do |usr|
                 Time.use_zone(usr.time_zone) do
                     if Time.current.hour == 5 && Time.current.wday.between?(2, 6) || (args[:test] && !Rails.env.production?) # 5am next day after a weekday
                         UserMailer.daily_summary_email(usr).deliver_later
@@ -134,7 +134,7 @@ namespace :scheduler do
 
         args.with_defaults(:test => false)
         Organization.is_active.each do |org|
-            org.users.each do |usr|
+            org.users.not_disabled.each do |usr|
                 Time.use_zone(usr.time_zone) do
                     if Time.current.hour == 17 && Time.current.sunday? || (args[:test] && !Rails.env.production?) # In the hour of 5pm on Sundays
                         UserMailer.weekly_summary_email(usr).deliver_later

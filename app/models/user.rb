@@ -23,7 +23,7 @@
 #  oauth_expires_at       :datetime
 #  organization_id        :uuid
 #  department             :string
-#  is_disabled            :boolean
+#  is_disabled            :boolean          default(FALSE), not null
 #  created_at             :datetime
 #  updated_at             :datetime
 #  invitation_created_at  :datetime

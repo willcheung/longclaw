@@ -370,7 +370,7 @@ ActiveRecord::Schema.define(version: 20170329210337) do
     t.datetime "oauth_expires_at"
     t.uuid     "organization_id"
     t.string   "department"
-    t.boolean  "is_disabled"
+    t.boolean  "is_disabled",            default: false, null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "invitation_created_at"
