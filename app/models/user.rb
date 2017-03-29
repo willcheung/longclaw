@@ -35,6 +35,7 @@
 #  time_zone              :string           default("UTC")
 #  mark_private           :boolean          default(FALSE), not null
 #  role                   :string
+#  refresh_inbox          :boolean          default(TRUE), not null
 #
 # Indexes
 #
@@ -66,6 +67,7 @@ class User < ActiveRecord::Base
 
   scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
   scope :not_disabled, -> {where("users.is_disabled = false")}
+  scope :allow_refresh_inbox, -> {where("users.refresh_inbox = true")}
   scope :onboarded, -> {where("onboarding_step = #{Utils::ONBOARDING[:onboarded]}")}
 
   devise :database_authenticatable, :registerable,

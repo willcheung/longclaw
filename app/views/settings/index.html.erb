@@ -13,7 +13,29 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-    <h1>General Settings</h1>
+    <h1>My Settings</h1>
+    <div class="row">
+        <div class="ibox-content text-center" style="font-size:18px;">
+            <div class="col-md-6">
+                <ul class="list-group clear-list">
+                    <li class="list-group-item first-item"><strong>My Title:</strong> <%= best_in_place current_user, :title, :as => 'input', :place_holder => '(none)', :activator => "#title-activator" %><i id="title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
+                    <li class="list-group-item"><strong>My Department:</strong> <%= best_in_place current_user, :department, :as => 'input', :place_holder => '(none)', :activator => "#dept-activator" %><i id="dept-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
+                    <li class="list-group-item"><strong>My User Role:</strong> <%= current_user.role %>  <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Only Admin can change this."></i></li>
+                    <li class="list-group-item"><strong>Email and calendar refresh:</strong> <%= current_user.refresh_inbox %> <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Whether inbox and calendar are connected. Only Admin can change this."></i></li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <ul class="list-group clear-list">
+                    <li class="list-group-item first-item"><strong>Account Streams I'm part of:</strong> <br><%= current_user.project_members.map {|p| p.project.name}.join(', ') %>  <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or you contribute to these accounts."></i></li>
+                    <li class="list-group-item"><strong>Account Streams I subscribed to:</strong><br> <%= current_user.subscriptions.map {|p| p.project.name}.join(', ') %> <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these accounts to receive Daily or Weekly updates."></i></li>
+                </ul>
+            </div>
+            <span>&nbsp;</span>
+        </div>
+        
+    </div>
+
+    <h1>Organization Settings</h1>
 
     <div class="row">
         <div class="col-md-4">
