@@ -33,7 +33,7 @@ class ReportsController < ApplicationController
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
-  def dashboard_data
+  def ad_sort_data
     @sort = params[:sort]
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
@@ -97,7 +97,7 @@ class ReportsController < ApplicationController
     end
   end
 
-  def account_data
+  def ad_account_data
     @account = Project.find(params[:id])   ### why does Project.find get set to an "account"??
     @risk_score = @account.new_risk_score(current_user.time_zone)
     @open_tasks_count = @account.notifications.open.count
