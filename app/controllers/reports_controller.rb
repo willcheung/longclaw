@@ -69,8 +69,8 @@ class ReportsController < ApplicationController
         y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: y, color: 'blue' })
       end
-    when "Engagement Last 7d"
-      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), 7*24)
+    when "Engagement Last 14d"
+      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), 14*24)
       @data = project_engagement.map do |p|
         Hashie::Mash.new({ id: p.id, name: p.name, y: p.num_activities, color: 'blue'})
       end
@@ -105,6 +105,7 @@ class ReportsController < ApplicationController
     @risk_score_trend = @account.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
+    @activities_moving_avg = @account.activities_moving_average(current_user.time_zone)
     @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
     # Total activities by Conversation
     activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
