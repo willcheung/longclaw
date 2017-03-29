@@ -30,80 +30,102 @@
         </div>
 
         <div class="col-md-4">
-            <div class="ibox-content text-center">
+            <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
                 <h1>Alerts</h1>
                 <div class="m-b-md">
                     <i class="fa fa-bell fa-4x"></i>
                 </div>
                 
                 <p>4 Alerts set</p>
-                <p><a href="<%= settings_alerts_path %>">Configure alerts</a></p>
+                <% if current_user.admin? %>
+                    <p><a href="<%= settings_alerts_path %>">Configure alerts</a></p>
+                <% else %>
+                    <p>Only Admin role can access this page</p>
+                <% end %>
 
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="ibox-content text-center">
+            <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
                 <h1>Custom Fields</h1>
                 <div class="m-b-sm">
                     <i class="fa fa-pencil-square-o fa-4x"></i>
                 </div>
                 
-                <p><a href="<%= settings_custom_fields_path %>">Edit custom fields</a></p>
-                <p><a href="<%= settings_custom_lists_path %>">Edit custom lists</a></p>
+                <% if current_user.admin? %>
+                    <p><a href="<%= settings_custom_fields_path %>">Edit custom fields</a></p>
+                    <p><a href="<%= settings_custom_lists_path %>">Edit custom lists</a></p>
+                <% else %>
+                    <p>Only Admin role can access this page</p>
+                <% end %>
 
             </div>
         </div>
     </div>
 
-    <% if current_user.admin? %>
+
     <h1>Integrations</h1>
     
     <div class="row">
         <div class="col-md-4">
-            <div class="ibox-content text-center">
+            <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
                 <h1>Salesforce</h1>
                 <div class="m-b-sm">
                     <img src="assets/images/salesforce.png"/ style="height:75px;"/>
                 </div>
+
+                <% if current_user.admin? %>
                 
-                <% if @salesforce_user.nil?%>
-                    <p>Not connected</p>
+                    <% if @salesforce_user.nil?%>
+                        <p>Not connected</p>
+                    <% else %>
+                        <p>Connected</p>
+                    <% end %>
+                    <p><a href="<%= settings_salesforce_path %>">Configure settings</a></p>
+
                 <% else %>
-                    <p>Connected</p>
+                     <p>Only Admin role can access this page</p>
                 <% end %>
-                <p><a href="<%= settings_salesforce_path %>">Configure settings</a></p>
 
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="ibox-content text-center">
+            <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
                 <h1>Basecamp 2</h1>
                 <div class="m-b-md">
                     <img src="assets/images/basecamp2.png"/ style="height:75px;"/>
                 </div>
-                
-                <% if @basecamp2_user.nil?%>
-                    <p>Not Connected</p>
-                <% else %>
-                    <p>Connected</p>
-                <% end %>
 
-                <p><a href="<%=settings_basecamp_path%>">Configure settings</a></p>
+                <% if current_user.admin? %>
+                    <% if @basecamp2_user.nil?%>
+                        <p>Not Connected</p>
+                    <% else %>
+                        <p>Connected</p>
+                    <% end %>
+
+                    <p><a href="<%=settings_basecamp_path%>">Configure settings</a></p>
+                <% else %>
+                     <p>Only Admin role can access this page</p>
+                <% end %>
 
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="ibox-content text-center">
+            <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
                 <h1>Jira</h1>
                 <div class="m-b-sm">
                     <img src="assets/images/jira.png"/ style="height:75px;"/>
                 </div>
-                
-            <p class="m-t-md">Webhook URL: <span class="well well-sm" style="line-height:3">https://<%= request.host %>/hooks/jira</span></p>
-            <p><a href="https://contextsmith.zendesk.com/hc/en-us/articles/230918807" target="_blank">Get connected</a></p>
+             
+                <% if current_user.admin? %>    
+                    <p class="m-t-md">Webhook URL: <span class="well well-sm" style="line-height:3">https://<%= request.host %>/hooks/jira</span></p>
+                    <p><a href="https://contextsmith.zendesk.com/hc/en-us/articles/230918807" target="_blank">Get connected</a></p>
+                <% else %>
+                     <p>Only Admin role can access this page</p>
+                <% end %>
 
             </div>
         </div>
@@ -111,17 +133,20 @@
 
     <div class="row m-t-md">
         <div class="col-md-4">
-            <div class="ibox-content text-center">
+            <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
                 <h1>Zendesk</h1>
                 <div class="m-b-sm">
                     <img src="assets/images/zendesk.png"/ style="height:70px;"/>
                 </div>
                 
-            <p class="m-t-md">Webhook URL: <span class="well well-sm" style="line-height:3">https://<%= request.host %>/hooks/zendesk</span></p>
-            <p><a href="https://contextsmith.zendesk.com/hc/en-us/articles/235244287" target="_blank">Get connected</a></p>
+                <% if current_user.admin? %>
+                    <p class="m-t-md">Webhook URL: <span class="well well-sm" style="line-height:3">https://<%= request.host %>/hooks/zendesk</span></p>
+                    <p><a href="https://contextsmith.zendesk.com/hc/en-us/articles/235244287" target="_blank">Get connected</a></p>
+                <% else %>
+                     <p>Only Admin role can access this page</p>
+                <% end %>
 
             </div>
         </div>
     </div>
-    <% end %>
 </div>
