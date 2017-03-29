@@ -186,7 +186,7 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Parameters:  filter_predicates is a hash that contains several keys -- "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL query.
+  # Parameters:  filter_predicates is a hash that contains several keys -- "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates = nil, limit=200)
     val = []
     if filter_predicates["entity"] == ""
@@ -208,7 +208,7 @@ class Activity < ActiveRecord::Base
     
     activities = SalesforceService.query_salesforce(client, query_statement)
 
-    unless activities.nil?  # Salesforce Error
+    unless activities.nil?  # unless failed Salesforce query
       unless activities.first.nil?  # in case custom filters results in no record being selected
         activities.first.each do |a|
           if a.first == "ActivityHistories"
@@ -238,11 +238,34 @@ class Activity < ActiveRecord::Base
           end
         end
         #puts "************* Result of:", query_statement
-        #print "-> # of rows UPSERTed into Activities = ", val.count, " total *************\n"
+        #puts "-> # of rows UPSERTed into Activities = #{val.count} total *************"
       end
-    else
-      #TODO: Handle error
+    else  # Salesforce query failure
+      return "query=\"#{query_statement}\""  # proprogate query to caller
     end
+
+    nil # successful request
+  end
+
+  # This is used to write out CS Activities to SFDC Account (ActivityHistory).
+  # Parameters:  project - CS stream
+  #              type - SFDC: 'Account' or 'Opportunity'
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", limit=200)
+    val = []
+
+    sObject_meta = {id: sfdc_id,  type: type}
+    update_details = {activity_date: Time.now.strftime('%Y-%m-%d'), subject: "ContextSmith Activity", priority: 'Normal', description: "ContextSmith Activity for stream \"#{project.name}\" (id=#{project.id})"}
+
+    results = SalesforceService.update_salesforce(client, sObject_meta, update_details, "ActivityHistory")
+    
+    unless results.nil?  # unless failed Salesforce query
+      puts "-> a SFDC Task was created from ContextSmith activity! New task Id='#{results}'."
+    else  # Salesforce query failure
+      #return "error=#{results}"  # proprogate error (if any) to caller
+      return "N/A"  #no error details to propogate to caller
+    end
+
+    nil # successful request
   end
 
   def self.load_basecamp2_activities(e, project, user, project_id)
