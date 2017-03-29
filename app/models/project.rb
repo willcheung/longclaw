@@ -636,7 +636,7 @@ class Project < ActiveRecord::Base
         ) t
       JOIN projects ON projects.id = t.project_id
       WHERE (t.category = '#{Activity::CATEGORY[:Conversation]}' AND (sent_date::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
-      OR (t.category = '#{Activity::CATEGORY[:Meeting]}' AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
+      OR (t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
       GROUP BY projects.id
       ORDER BY num_activities DESC
     SQL

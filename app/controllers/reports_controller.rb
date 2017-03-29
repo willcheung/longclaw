@@ -69,8 +69,8 @@ class ReportsController < ApplicationController
         y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: y, color: 'blue' })
       end
-    when "Engagement Last 7d"
-      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), 7*24)
+    when "Engagement Last 14d"
+      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), 14*24)
       @data = project_engagement.map do |p|
         Hashie::Mash.new({ id: p.id, name: p.name, y: p.num_activities, color: 'blue'})
       end
