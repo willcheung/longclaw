@@ -16,7 +16,6 @@
 //= require best_in_place
 //= require best_in_place.jquery-ui
 //= require switchery/switchery.js
-//= require sparkline/jquery.sparkline.min.js
 //= require jstz/jstz.min.js
 //= require chosen/chosen.jquery.min.js
 //= require selectize/selectize.min.js

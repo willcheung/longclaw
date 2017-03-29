@@ -1,3 +1,5 @@
+//= require highcharts-sparkline/highcharts-sparkline.js
+
 var checkCounter = 0;
 var URL_PREFIX = "/projects";
 
