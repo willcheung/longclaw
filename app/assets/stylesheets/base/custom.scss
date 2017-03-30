@@ -567,6 +567,12 @@ a.suggested-action:hover, a.suggested-action:focus {
   pointer-events: none;
 }
 
+.settings-element-disabled { 
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: default;
+}
+
 /** Chrome Extenstion **/
 .extension-sidebar ul.nav.nav-tabs li a {
   font-size: 11px;

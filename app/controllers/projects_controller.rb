@@ -81,6 +81,7 @@ class ProjectsController < ApplicationController
     @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
+    @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
     activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
 
