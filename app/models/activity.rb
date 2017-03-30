@@ -199,13 +199,13 @@ class Activity < ActiveRecord::Base
     if filter_predicates["activityhistory"] == ""
       activityhistory_predicate = ""
     else
-      activityhistory_predicate = "WHERE (" + filter_predicates["activityhistory"] + ")"
+      activityhistory_predicate = "AND (" + filter_predicates["activityhistory"] + ")"
     end
 
     if type == "Account"
-      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories #{activityhistory_predicate} limit #{limit}) from Account where Id='#{sfdc_id}' #{entity_predicate}"
+      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE 'ContextSmith Imported%')) #{activityhistory_predicate} limit #{limit}) FROM Account WHERE Id='#{sfdc_id}' #{entity_predicate}"
     elsif type == "Opportunity"
-      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories #{activityhistory_predicate} limit #{limit}) from Opportunity where Id='#{sfdc_id}' #{entity_predicate}"
+      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE 'ContextSmith Imported%')) #{activityhistory_predicate} limit #{limit}) FROM Opportunity WHERE Id='#{sfdc_id}' #{entity_predicate}"
     end
     
     activities = SalesforceService.query_salesforce(client, query_statement)
