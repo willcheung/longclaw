@@ -26,8 +26,8 @@
             </div>
             <div class="col-md-6">
                 <ul class="list-group clear-list">
-                    <li class="list-group-item first-item"><strong>Account Streams I'm part of: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or you contribute to these accounts."></i></strong> <br> <small><%= current_user.projects.pluck(:name).join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %>  </small></li>
-                    <li class="list-group-item"><strong>Account Streams I subscribed to: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these accounts to receive Daily or Weekly updates."></i></strong><br> <small><%= current_user.subscriptions.joins(:project).select('projects.name').pluck(:name).join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
+                    <li class="list-group-item first-item"><strong>Account Streams I'm part of: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or you contribute to these accounts."></i></strong> <br> <small><%= current_user.projects.where('projects.is_confirmed = true AND projects.status = \'Active\'').pluck(:name).join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %>  </small></li>
+                    <li class="list-group-item"><strong>Account Streams I subscribed to: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these accounts to receive Daily or Weekly updates."></i></strong><br> <small><%= current_user.subscriptions.joins(:project).where('projects.is_confirmed = true AND projects.status = \'Active\'').select('projects.name').pluck(:name).join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
                 </ul>
             </div>
             <span>&nbsp;</span>
