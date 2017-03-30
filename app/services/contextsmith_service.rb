@@ -78,7 +78,7 @@ class ContextsmithService
     if Rails.env.development?
       token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
     else
-      project.users.registered.not_disabled.each do |u|
+      project.users.registered.not_disabled.allow_refresh_inbox.each do |u|
         success = true
         success = u.refresh_token! if u.token_expired?
         token_emails << { token: u.oauth_access_token, email: u.email } if success
