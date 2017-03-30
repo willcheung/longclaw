@@ -1,10 +1,17 @@
 class ReportsController < ApplicationController
   before_action :get_owners_in_org, only: [:accounts_dashboard, :dashboard_data]
   
-  def touches_by_team
-    # TODO: find way to get number of projects for each user listed here
-    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
-    @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
+  def team_dashboard
+    users = current_user.organization.users
+    accounts_managed = users.includes(:projects_owner_of).group('users.id').count('projects.*').sort_by { |uid, num_accounts| num_accounts }.reverse
+    @accounts_managed = accounts_managed.map do |u|
+      user = users.find { |usr| usr.id == u[0] }
+      Hashie::Mash.new({ id: user.id, num_accounts: u[1], name: get_full_name(user)})
+    end
+
+    # custom_lists = current_user.organization.get_custom_lists_with_options
+    # @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+    # @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
   def accounts_dashboard
@@ -157,6 +164,12 @@ class ReportsController < ApplicationController
     @team_leaderboard = @team_leaderboard[0...5]
 
     render layout: false
+  end
+
+  def touches_by_team
+    # TODO: find way to get number of projects for each user listed here
+    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
+    @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 
   def accounts

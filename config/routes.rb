@@ -109,6 +109,7 @@ Longclaw::Application.routes.draw do
       get 'accounts_dashboard'
       get 'ad_sort_data/:sort' => 'reports#ad_sort_data', as: :ad_sort_data
       get 'ad_account_data/:id' => 'reports#ad_account_data', as: :ad_account_data
+      get 'team_dashboard'
     end
 
     scope "extension", controller: :extension, as: 'extension' do
