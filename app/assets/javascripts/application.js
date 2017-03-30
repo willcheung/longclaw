@@ -106,7 +106,12 @@ $(document).ready(function() {
     $.each(errors, function(field, messages){
       $input = $('input[name="' + model + '[' + field + ']"]');
       $input.closest('.form-group').addClass('has-error');
-      $input.closest('.form-group').siblings('.help-block').html( messages.join(' & ') );
+      try {
+        $input.closest('.form-group').siblings('.help-block').html( messages.join(' & ') );
+      }
+      catch (err) {
+        // do nothing
+      }
     });
 
   };
