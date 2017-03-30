@@ -26,8 +26,8 @@
             </div>
             <div class="col-md-6">
                 <ul class="list-group clear-list">
-                    <li class="list-group-item first-item"><strong>Account Streams I'm part of:</strong> <br><%= current_user.projects.pluck(:name).join(', ') %>  <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or you contribute to these accounts."></i></li>
-                    <li class="list-group-item"><strong>Account Streams I subscribed to:</strong><br> <%= current_user.subscriptions.joins(:project).select('projects.name').pluck(:name).join(', ') %> <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these accounts to receive Daily or Weekly updates."></i></li>
+                    <li class="list-group-item first-item"><strong>Account Streams I'm part of: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or you contribute to these accounts."></i></strong> <br> <small><%= current_user.projects.pluck(:name).join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %>  </small></li>
+                    <li class="list-group-item"><strong>Account Streams I subscribed to: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these accounts to receive Daily or Weekly updates."></i></strong><br> <small><%= current_user.subscriptions.joins(:project).select('projects.name').pluck(:name).join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
                 </ul>
             </div>
             <span>&nbsp;</span>
