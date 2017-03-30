@@ -14,6 +14,14 @@ class ReportsController < ApplicationController
     # @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
+  def td_user_data
+    @user = User.where(organization_id: current_user.organization_id).find(params[:id])
+    @error = "Oops, something went wrong. Try again." and return if @user.blank?
+
+    render layout: false
+  end
+
+  # accounts_dashboard is actually referring to account streams, AKA projects
   def accounts_dashboard
     projects = Project.visible_to(current_user.organization_id, current_user.id)
     if projects.nil?
@@ -40,6 +48,7 @@ class ReportsController < ApplicationController
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
+  # for loading left-chart on accounts_dashboard
   def ad_sort_data
     @sort = params[:sort]
 
@@ -104,22 +113,24 @@ class ReportsController < ApplicationController
     end
   end
 
+  # for loading right panel on accounts_dashboard ("account" in this case is an account stream, internally known as a project)
   def ad_account_data
-    @account = Project.find(params[:id])   ### why does Project.find get set to an "account"??
-    @risk_score = @account.new_risk_score(current_user.time_zone)
-    @open_tasks_count = @account.notifications.open.count
-    @last_activity_date = @account.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
-    @risk_score_trend = @account.new_risk_score_trend(current_user.time_zone)
+    @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
+
+    @risk_score = @project.new_risk_score(current_user.time_zone)
+    @open_tasks_count = @project.notifications.open.count
+    @last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
+    @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
-    @activities_moving_avg = @account.activities_moving_average(current_user.time_zone)
-    @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
+    @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
+    @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
     # Total activities by Conversation
     activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
 
     # TODO: Generate data for Risk Volume Chart in SQL query
     # Risk Volume Chart
-    risk_notifications = @account.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
+    risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
     risks_by_date = Array.new(14, 0)
     risk_notifications.each do |r|
       # risks_by_date based on number of days since 14 days ago
@@ -140,13 +151,13 @@ class ReportsController < ApplicationController
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
     # Read and Sent times
-    @in_outbound_report = User.total_team_usage_report([@account.account.id], current_user.organization.domain)
+    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
     #Meetings in Interaction Time
-    @meeting_report = User.meeting_team_report([@account.account.id], @in_outbound_report['email'])
+    @meeting_report = User.meeting_team_report([@project.account.id], @in_outbound_report['email'])
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
-    user_num_activities = User.count_activities_by_user_flex([@account.account.id], current_user.organization.domain)
+    user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)
     @team_leaderboard = []
     @activities_by_dept = Hash.new(0)
     activities_by_dept_total = 0

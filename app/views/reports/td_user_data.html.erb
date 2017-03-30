@@ -1,0 +1,273 @@
+<div id="user-header">
+    <div class="row m-b-sm">
+        <div class="col-lg-8">
+            <h1><%= get_full_name @user %></h1>
+        </div>
+        <div class="col-lg-4 m-t-md">
+            <span class="label">Last 14 days</span>
+        </div>
+    </div>
+
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>On Target</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px">85%</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric text-danger">
+                    <div class="metric-title">
+                        <h4>Open Alerts</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px">3</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>Accounts Managed</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px">5</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>Revenue Managed</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- end id="user-header" -->
+    
+<div id="user-charts">
+    <div class="ibox-content">
+        <h2>Activities Volume</h2>
+        
+        <div class="row m-t-md">
+            <div id="activities-chart" style="height:240px"></div>
+        </div>
+
+        <div class="row m-t-md">
+            <div id="customers-volume-chart" style="height:280px"></div>
+        </div>
+
+    </div>
+
+    <div class="ibox-content">
+        <div class="row">
+            <h2>Alerts and Tasks</h2>
+            <div id="tasks-trend" style="height:280px"></div>
+        </div>
+    </div>
+
+    <div class="ibox-content">
+
+    </div>
+</div>
+<script type="text/javascript">
+    
+    /*****
+    Render right charts
+    ******/
+
+    function renderCharts(riskScore) {
+
+        $('#customers-volume-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            credits: false,
+            title: {
+                text: 'Interaction Time per Account',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+            },
+            xAxis: {
+                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                reversed: true
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Emails',
+                data: [0.5, 1, 2.2, 2.8, 3]
+            }, {
+                name: 'Meetings',
+                data: [0, 1, 0, 0.5, 2]
+            }]
+        });
+
+
+        $('#tasks-trend').highcharts({
+            title: {
+                text: ''
+            },
+            credits: false,
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+                min: 0,
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                shared: true
+            },
+            series: [{
+                name: 'Total Open Alerts',
+                data: [3, 4, 5, 8, 11, 13, 17, 17, 18, 18, 17, 15],
+                type: 'area',
+                color: '#cccccc',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'New Alerts',
+                data: [5, 7, 10, 10, 13, 13, 21, 19, 26, 25, 19, 17],
+                type: 'line',
+                color: '#B23232',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'Closed Alerts',
+                data: [2, 3, 5, 2, 2, 0, 4, 2, 3, 8, 1, 2],
+                type: 'line',
+                color: '#149414',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }]
+        });
+
+
+        $('#activities-chart').highcharts({
+            chart: {
+                events:{
+                  load: function(event) {
+                    var extremes = this.yAxis[0].getExtremes();
+                    this.yAxis[0].setExtremes(0, extremes.dataMax);
+                    }
+                },
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: "Touches By Day",
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+                
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: { text: '' },
+                labels: { enabled: true },
+                minorGridLineWidth: 0
+            },
+            legend: {
+                enabled: true
+            },
+            tooltip: {
+                positioner: function () {
+                    return {
+                        x: this.chart.chartWidth - this.label.width, // right aligned
+                        y: -15 // align to title
+                    };
+                },
+                borderWidth: 0,
+                backgroundColor: 'none',
+                pointFormat: '{point.stackTotal}',
+                xDateFormat: '%b %e',
+                shadow: false,
+                style: {
+                    fontSize: '16px',
+                    color: '#555555'
+                }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                type: 'column',
+                name: 'Email',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(10) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Meeting',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Support Ticket',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Alerts Closed',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Tasks Closed',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            }
+            ]
+        });
+
+    };
+</script>
