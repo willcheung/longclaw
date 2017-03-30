@@ -167,7 +167,7 @@ $(document).ready(function() {
         });
     });
 
-    $('#salesforce-activity-cs-refresh').click(function(){
+    $('#salesforce-activity-refresh').click(function(){
         var self = $(this);
         var buttonTxtStr = self.attr("btnLabel");
 
