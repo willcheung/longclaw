@@ -29,6 +29,8 @@
 #  index_activities_on_email_messages                          (email_messages)
 #  index_activities_on_project_id                              (project_id)
 #
+require 'action_view'
+include ActionView::Helpers::DateHelper  #for time_ago_in_words
 
 class Activity < ActiveRecord::Base
   include PgSearch
@@ -247,23 +249,67 @@ class Activity < ActiveRecord::Base
     nil # successful request
   end
 
-  # This is used to write out CS Activities to SFDC Account (ActivityHistory).
-  # Parameters:  project - CS stream
-  #              type - SFDC: 'Account' or 'Opportunity'
-  def self.export_cs_activities(client, project, sfdc_id, type="Account", limit=200)
-    val = []
+  # This is used to export CS Activities to SFDC Account (ActivityHistory).
+  # Parameters:  project - CS stream to export
+  #              type - SFDC entity type: 'Account' or 'Opportunity'
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil, limit=200)
+    #recently_updated_sfdc_rids = client.get_updated('Task', Time.local(2017,3,1), Time.local(2017,3,31))
+    # SFDC type formats:  dateTime = "2017-03-01T00:00:00z",  date = "2017-03-01"
+    delete_tasks_query_stmt = "select Id FROM Task WHERE WhatId = '#{sfdc_id}' AND TaskSubType = 'Task' AND Subject LIKE 'ContextSmith Imported%'"
+    delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
+    delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
+    delete_tasks_query_stmt += " LIMIT #{limit}"
+    puts "Deleting tasks returned from SFDC query \'#{delete_tasks_query_stmt}\'...."
+    tasks_to_delete = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
+    #tasks = client.query(delete_tasks_query_stmt)
 
-    sObject_meta = {id: sfdc_id,  type: type}
-    update_details = {activity_date: Time.now.strftime('%Y-%m-%d'), subject: "ContextSmith Activity", priority: 'Normal', description: "ContextSmith Activity for stream \"#{project.name}\" (id=#{project.id})"}
-
-    results = SalesforceService.update_salesforce(client, sObject_meta, update_details, "ActivityHistory")
-    
-    unless results.nil?  # unless failed Salesforce query
-      puts "-> a SFDC Task was created from ContextSmith activity! New task Id='#{results}'."
+    unless tasks_to_delete.nil?  # unless failed Salesforce query
+      tasks_to_delete.each { |t| t.destroy}
     else  # Salesforce query failure
-      #return "error=#{results}"  # proprogate error (if any) to caller
-      return "N/A"  #no error details to propogate to caller
+      return "Attempted to delete old SFDC tasks matching query=\"#{delete_tasks_query_stmt}\""  # proprogate query to caller
     end
+    
+    #unless project.activities.empty?
+      project.activities.each do |a|
+
+        description = a.category + " activity (imported from ContextSmith) -- "
+        if a.category == Activity::CATEGORY[:Conversation]
+          #Time.zone.at(m.sentDate).strftime("%b %d")
+        elsif a.category == Activity::CATEGORY[:Note]
+    
+        elsif a.category == Activity::CATEGORY[:Meeting] 
+
+        elsif a.category == Activity::CATEGORY[:JIRA]
+          Time.zone.at(a.last_sent_date)
+          description = "Description: #{a.note}"
+          description += " #{pluralize(a.email_messages.first.issue.fields.comment.total - 1, 'older comment')} on JIRA" if a.email_messages.first.issue.fields.comment.total > 1
+
+          a.email_messages.first.issue.fields.comment.comments.each { |c| description += "\n#{c.author.displayName} added a comment: \n#{c.body}\n" }
+          # "- #{time_ago_in_words(c.updated.to_time)} ago"
+        elsif a.category == Activity::CATEGORY[:Zendesk]
+
+        elsif a.category == Activity::CATEGORY[:Basecamp2]
+
+        elsif a.category == Activity::CATEGORY[:Alert]
+
+        else
+          next  # if any other Activity type (e.g., Salesforce), skip to next Activity
+        end
+        sObject_meta = { id: sfdc_id, type: type }
+        update_details = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "ContextSmith Imported #{a.category}: #{a.title}", priority: 'Normal', description: description }
+
+        puts "----> sObject_meta:\n #{sObject_meta}\n"
+        puts "----> update_details:\n #{update_details}\n"
+        results = SalesforceService.update_salesforce(client, sObject_meta, update_details, "ActivityHistory")
+        
+        unless results.nil?  # unless failed Salesforce query
+          puts "-> a SFDC Task was created from ContextSmith activity! New task Id='#{results}'."
+        else  # Salesforce query failure
+          #return "error=#{results}"  # proprogate error (if any) to caller
+          return "None"  #no error details to propogate to caller
+        end
+      end
+    #end
 
     nil # successful request
   end

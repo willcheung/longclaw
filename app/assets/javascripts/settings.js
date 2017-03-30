@@ -171,7 +171,7 @@ $(document).ready(function() {
         var self = $(this);
         var buttonTxtStr = self.attr("btnLabel");
 
-        $.ajax("/salesforce_activities_cs_refresh", {
+        $.ajax("/salesforce_activities_refresh", {
             async: true,
             method: "POST",
             data: { entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() },

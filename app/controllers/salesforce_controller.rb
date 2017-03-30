@@ -136,8 +136,8 @@ class SalesforceController < ApplicationController
   end
 
   # Activities are loaded into native CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
-  def refresh_cs_activities
-    method_name = "refresh_cs_activities()"
+  def refresh_activities
+    method_name = "refresh_activities()"
     filter_predicate_str = {}
     filter_predicate_str["entity"] = params[:entity_pred].strip
     filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
@@ -182,7 +182,7 @@ class SalesforceController < ApplicationController
     render :text => ' '
   end
 
-  # Activities are exported into remote SFDC Account (or Opportunity), depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
+  # Activities are exported into remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
   def export_cs_activities
     method_name = "export_cs_activities()"
 
