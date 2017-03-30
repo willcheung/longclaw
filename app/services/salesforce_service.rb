@@ -15,7 +15,7 @@ class SalesforceService
     end
 
     client = nil
-    if(!salesforce_user.nil?)  
+    if(salesforce_user.present?)  
       # Restforce gem automatically refresh access token if expired       
       client = Restforce.new(host: hostURL,
                              client_id: salesforce_client_id,
@@ -34,6 +34,7 @@ class SalesforceService
       end      
     end
 
+    #return nil # simulates a Salesforce connection error
     return client
 
   end
@@ -50,6 +51,7 @@ class SalesforceService
       end     
     end
 
+    #return nil # simulates a Salesforce query error
     return salesforce_result
 
   end

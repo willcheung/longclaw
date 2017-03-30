@@ -557,6 +557,40 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
+  def activities_moving_average(time_zone, days_ago=14, segment_size=30)
+    query = <<-SQL
+      WITH time_series as (
+        SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') as days  
+      ), activities_by_day AS (
+        SELECT date(time_series.days) as date, COUNT(DISTINCT emails.*) + COUNT(DISTINCT other_activities.*) AS num_activities
+        FROM time_series
+        LEFT JOIN (SELECT messages ->> 'messageId'::text AS message_id,
+                          (messages ->> 'sentDate')::integer AS sent_date
+                    FROM activities,
+                    LATERAL jsonb_array_elements(email_messages) messages
+                    WHERE category = 'Conversation'
+                    AND activities.project_id = '#{self.id}'
+                    AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days') AND (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}')
+                    GROUP BY 1,2
+                   ) as emails
+          ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+        LEFT JOIN (SELECT last_sent_date as sent_date
+                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'))
+                  ) as other_activities
+          ON date_trunc('day', other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+        GROUP BY time_series.days
+        ORDER BY time_series.days ASC
+      )
+      SELECT date(time_series.days) AS date, num_activities, SUM(num_activities) OVER (ORDER BY activities_by_day.date ROWS BETWEEN #{segment_size - 1} PRECEDING AND CURRENT ROW) AS moving_sum, AVG(num_activities) OVER (ORDER BY activities_by_day.date ROWS BETWEEN #{segment_size - 1} PRECEDING AND CURRENT ROW) AS moving_avg
+      FROM time_series
+      LEFT JOIN activities_by_day
+      ON activities_by_day.date = time_series.days
+    SQL
+
+    result = Project.find_by_sql(query)
+    result.last(days_ago).map(&:moving_avg).map(&:to_f)
+  end
+
   def self.count_activities_by_day_sparkline(array_of_project_ids, time_zone, days_ago=7)
     query = <<-SQL
       WITH time_series as (
@@ -602,7 +636,7 @@ class Project < ActiveRecord::Base
         ) t
       JOIN projects ON projects.id = t.project_id
       WHERE (t.category = '#{Activity::CATEGORY[:Conversation]}' AND (sent_date::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
-      OR (t.category = '#{Activity::CATEGORY[:Meeting]}' AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
+      OR (t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
       GROUP BY projects.id
       ORDER BY num_activities DESC
     SQL

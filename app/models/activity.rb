@@ -187,7 +187,7 @@ class Activity < ActiveRecord::Base
   end
 
   # Parameters:  filter_predicates is a hash that contains several keys -- "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL query.
-  def self.load_salesforce_activities(project, organization_id, sfdc_id, type="Account", filter_predicates = nil, limit=200)
+  def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates = nil, limit=200)
     val = []
     if filter_predicates["entity"] == ""
       entity_predicate = ""
@@ -200,7 +200,6 @@ class Activity < ActiveRecord::Base
       activityhistory_predicate = "WHERE (" + filter_predicates["activityhistory"] + ")"
     end
 
-    client = SalesforceService.connect_salesforce(organization_id)
     if type == "Account"
       query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories #{activityhistory_predicate} limit #{limit}) from Account where Id='#{sfdc_id}' #{entity_predicate}"
     elsif type == "Opportunity"
