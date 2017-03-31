@@ -18,6 +18,9 @@ class ReportsController < ApplicationController
     @user = User.where(organization_id: current_user.organization_id).find(params[:id])
     @error = "Oops, something went wrong. Try again." and return if @user.blank?
 
+    @open_alerts = @user.notifications.open.risks.count
+    @accounts_managed = @user.projects_owner_of.count
+
     render layout: false
   end
 

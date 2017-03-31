@@ -1,9 +1,9 @@
 <div id="user-header">
     <div class="row m-b-sm">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             <h1><%= get_full_name @user %></h1>
         </div>
-        <div class="col-lg-4 m-t-md">
+        <div class="col-lg-2 m-t-md">
             <span class="label">Last 14 days</span>
         </div>
     </div>
@@ -11,14 +11,14 @@
     <div class="ibox-content">
         <div class="row">
             <div class="col-md-3 text-center">
-                <div class="metric">
+                <!-- <div class="metric">
                     <div class="metric-title">
                         <h4>On Target</h4>
                     </div>
                     <div class="metric-content">
                         <h2 style="font-weight:600;font-size:46px">85%</h2>
                     </div>
-                </div>
+                </div> -->
             </div>
 
             <div class="col-md-3 text-center">
@@ -27,7 +27,7 @@
                         <h4>Open Alerts</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px">3</h2>
+                        <h2 style="font-weight:600;font-size:46px"><%= @open_alerts %></h2>
                     </div>
                 </div>
             </div>
@@ -38,20 +38,20 @@
                         <h4>Accounts Managed</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px">5</h2>
+                        <h2 style="font-weight:600;font-size:46px"><%= @accounts_managed %></h2>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-3 text-center">
-                <div class="metric">
+                <!-- <div class="metric">
                     <div class="metric-title">
                         <h4>Revenue Managed</h4>
                     </div>
                     <div class="metric-content">
                         <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
 
