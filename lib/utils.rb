@@ -57,7 +57,7 @@ module Utils
 		if member.is_internal_user?
 			"@"+get_short_name(get_domain(member.email))
 		else
-			link_to("@"+get_short_name(get_domain(member.email)), account_path(member.account))
+			link_to("@"+get_short_name(get_domain(member.email)), account_path(member.account), target: "_blank")
 		end
 	end
 
