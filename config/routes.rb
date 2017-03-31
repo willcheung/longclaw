@@ -45,6 +45,7 @@ Longclaw::Application.routes.draw do
     post "/salesforce_refresh" => 'salesforce#refresh_accounts'
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
     post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
+    post "/salesforce_activities_cs_export" => 'salesforce#export_cs_activities'
     post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'

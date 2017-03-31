@@ -143,6 +143,10 @@ class SettingsController < ApplicationController
 		else
 			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
 		end
+
+		# add ("nil") options to remove mapping 
+		@sf_fields[:sf_account_fields] << ["","(none)"] 
+		@sf_fields[:sf_opportunity_fields] << ["","(none)"]
 		#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
 
 		@salesforce_connection_error = true if @sf_fields.nil?
