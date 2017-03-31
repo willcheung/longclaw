@@ -1,4 +1,3 @@
-
 class BasecampsController < ApplicationController
 	layout "empty", only: [:index]
 

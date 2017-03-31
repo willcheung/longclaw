@@ -14,6 +14,7 @@
 #  updated_at          :datetime         not null
 #  oauth_refresh_date  :integer
 #  oauth_issued_date   :datetime
+#  user_id             :uuid
 #
 # Indexes
 #

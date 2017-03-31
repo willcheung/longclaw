@@ -80,15 +80,16 @@ class User < ActiveRecord::Base
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
 
-   def self.from_omniauth(auth, organization_id)
+   def self.from_omniauth(auth, organization_id, user_id)
     where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
-      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider)
+      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id)
 
       if oauth_user
         oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
                                      oauth_refresh_token: auth.credentials.refresh_token,
                                      oauth_instance_url: auth.credentials.instance_url,
-                                     organization_id: organization_id )
+                                     organization_id: organization_id,
+                                     user_id: user_id )
       else
         oauth_user = OauthUser.create(
           oauth_provider: auth.provider,
@@ -97,7 +98,8 @@ class User < ActiveRecord::Base
           oauth_refresh_token: auth.credentials.refresh_token,
           oauth_instance_url: auth.credentials.instance_url,
           oauth_user_name: auth.extra.username,
-          organization_id: organization_id)
+          organization_id: organization_id,
+          user_id: user_id)
 
         oauth_user.save
       end

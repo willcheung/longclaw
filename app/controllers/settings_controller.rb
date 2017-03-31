@@ -1,4 +1,3 @@
-
 class SettingsController < ApplicationController
 
 	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
@@ -8,11 +7,10 @@ class SettingsController < ApplicationController
 		@user_count = current_user.organization.users.count
 		@registered_user_count = current_user.organization.users.registered.count
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-		@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+    @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
     if(@salesforce_user.nil?)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id)
     end
-    
 	end
 
 	def users
@@ -139,9 +137,9 @@ class SettingsController < ApplicationController
 		@cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
 
 		if (params[:sf_custom_fields_only] == "true")
-			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, true)
+			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, current_user.id, true)
 		else
-			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
+			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, current_user.id)
 		end
 
 		# add ("nil") options to remove mapping 
@@ -201,9 +199,9 @@ class SettingsController < ApplicationController
 
 	def get_salesforce_user
 		# try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
-		@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+    @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
     if(@salesforce_user.nil?)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id)
     end
   end
 
