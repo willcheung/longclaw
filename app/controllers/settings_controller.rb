@@ -11,6 +11,9 @@ class SettingsController < ApplicationController
     if(@salesforce_user.nil?)
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id)
     end
+
+    @current_user_projects = current_user.projects.where('projects.is_confirmed = true AND projects.status = \'Active\'')
+    @current_user_subscriptions = current_user.valid_streams_subscriptions
 	end
 
 	def users

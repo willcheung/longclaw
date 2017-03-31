@@ -18,7 +18,7 @@
 #
 # Indexes
 #
-#  oauth_per_user  (oauth_provider,oauth_user_name,oauth_instance_url) UNIQUE
+#  oauth_per_user  (oauth_provider,oauth_user_name,oauth_instance_url,organization_id,user_id) UNIQUE
 #
 
 require 'net/http'

@@ -236,7 +236,7 @@ ActiveRecord::Schema.define(version: 20170331022214) do
     t.uuid     "user_id"
   end
 
-  add_index "oauth_users", ["oauth_provider", "oauth_user_name", "oauth_instance_url"], name: "oauth_per_user", unique: true, using: :btree
+  add_index "oauth_users", ["oauth_provider", "oauth_user_name", "oauth_instance_url", "organization_id", "user_id"], name: "oauth_per_user", unique: true, using: :btree
 
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name"
