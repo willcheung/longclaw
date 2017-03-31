@@ -82,7 +82,7 @@ class User < ActiveRecord::Base
 
    def self.from_omniauth(auth, organization_id, user_id)
     where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
-      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id)
+      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id, user_id: user_id)
 
       if oauth_user
         oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
