@@ -1,6 +1,5 @@
 require 'net/http'
 require "erb"
-require 'uri'
 include ERB::Util
 
 class OnboardingController < ApplicationController
