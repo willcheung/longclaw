@@ -1,25 +1,30 @@
 require 'net/http'
 require "erb"
+require 'uri'
 include ERB::Util
 
 class OnboardingController < ApplicationController
 	layout 'empty', except: ['tutorial']
 
-	def fill_in_info
-		# change user onboarding status and cluster_create_date becomes join date
-    current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
-
-    if ENV["RAILS_ENV"] == 'production'
-    	if !ENV["HUBSPOT_EVT_ONBRD"].nil? and !ENV["HUBSPOT_EVT_ONBRD"].empty?
-				# Fire hubspot event to add new user to list
-				# This URL is different for every enterprise customer with subdomain (but same for everyone on app.contextsmith.com)
-				# ENV["HUBSPOT_EVT_ONBRD"] looks something like "http://track.hubspot.com/v1/event?_n=000000617114&_a=2189465&lifecyclestage=customer"
-				s = ENV["HUBSPOT_EVT_ONBRD"] + "&_a=2189465&email=#{current_user.email}&firstname=#{url_encode(current_user.first_name)}&lastname=#{url_encode(current_user.last_name)}"
-				url = URI.parse(s)
-				req = Net::HTTP.get(url)
-			end
-		end
-	end
+    def fill_in_info
+        # change user onboarding status and cluster_create_date becomes join date
+      current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
+        if ENV["RAILS_ENV"] == 'production'
+          if !ENV["mailchimp_evt_onbrd"].nil? and !ENV["mailchimp_evt_onbrd"].empty?
+            list_id = "0b8529ba9c"
+            uri = URI('https://us13.api.mailchimp.com/3.0/lists/' + list_id + '/members/')
+            res = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
+              req = Net::HTTP::Post.new(uri)
+              req['Content-Type'] = 'application/json'
+              req.basic_auth 'anystring', ENV["mailchimp_api_key"]
+              json_data = {'email_address' => current_user.email, 'status' => 'subscribed', "merge_fields" => {"FNAME"=>"#{current_user.first_name}","LNAME" => "#{current_user.last_name}"} }.to_json
+              req.body = json_data
+              response = http.request(req) # Net::HTTPResponse object 
+            end 
+            # MailChimp API call takes a few minutes before contact is added to the mailchimp list
+          end
+        end
+    end
 
 	def tutorial
 		render layout: false
