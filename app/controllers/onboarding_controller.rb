@@ -9,7 +9,6 @@ class OnboardingController < ApplicationController
         # change user onboarding status and cluster_create_date becomes join date
       current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
         if ENV["RAILS_ENV"] == 'production'
-          if !ENV["mailchimp_evt_onbrd"].nil? and !ENV["mailchimp_evt_onbrd"].empty?
             list_id = "0b8529ba9c"
             uri = URI('https://us13.api.mailchimp.com/3.0/lists/' + list_id + '/members/')
             res = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
@@ -21,7 +20,6 @@ class OnboardingController < ApplicationController
               response = http.request(req) # Net::HTTPResponse object 
             end 
             # MailChimp API call takes a few minutes before contact is added to the mailchimp list
-          end
         end
     end
 
