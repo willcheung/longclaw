@@ -9,7 +9,7 @@ class OnboardingController < ApplicationController
         # change user onboarding status and cluster_create_date becomes join date
       current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
         if ENV["RAILS_ENV"] == 'production'
-            list_id = ENV['mailchimp_email_list']
+            list_id = ENV['mailchimp_email_list_id']
             # Using MailChimp for email automation. User's domain will be sent to ContextSmith Trial Newsletter
             uri = URI('https://us13.api.mailchimp.com/3.0/lists/' + list_id + '/members/')
             res = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
