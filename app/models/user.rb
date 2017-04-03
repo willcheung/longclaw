@@ -559,6 +559,15 @@ class User < ActiveRecord::Base
     output
   end
 
+  # Returns a map of the ROLEs values only (not keys), for use in best-in-place picklists
+  def self.getRolesMap
+    roles_map = {}
+    ROLE.each do |r| #self.ROLE.each do |clm|
+      roles_map[r[1]] = r[1]
+    end
+    return roles_map
+  end
+
   ######### Basic ACL ##########
   # Roles have cascading effect, eg. if you're an "admin", then you also have access to what other roles have.
 
@@ -571,11 +580,11 @@ class User < ActiveRecord::Base
   end
 
   def contributor?
-    self.role == User::ROLE[:Contributor] or self.admin? or self. power_user?
+    self.role == User::ROLE[:Contributor] or self.admin? or self.power_user?
   end
 
   def observer?
-    self.role == User::ROLE[:Observer] or self.admin? or self. power_user? or self.contributor?
+    self.role == User::ROLE[:Observer] or self.admin? or self.power_user? or self.contributor?
   end
 
   ######### End Basic ACL ##########
