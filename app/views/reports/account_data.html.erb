@@ -173,8 +173,12 @@
                     allowPointSelect: true,
                     cursor: 'pointer',
                     dataLabels: {
-                        enabled: false,
-                        distance: -25,
+                        enabled: true,
+                        distance: 10,
+                        style: {
+                            fontSize: 10,
+                            fontWeight: 'normal'
+                        },
                         format: '{point.name}',
                     }
                 }
@@ -437,7 +441,7 @@
 
         $('#activities-chart').highcharts({
             chart: {
-                height: <%= @activities_by_category_date.blank? ? 140 : 240 %>,
+                height: 240,
                 events:{
                   load: function(event) {
                     var extremes = this.yAxis[0].getExtremes();
@@ -511,13 +515,17 @@
                 data: <%= activities_by_date.map {|c| c.num_activities }.to_json.html_safe %>
             },
             <% end %>
-            // Dummy data series to make sure axis still shown when there is no data
             {
-                type: 'column',
+                type: 'spline',
+                name: '30-day Average',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= Array.new(14, 0) %>,
-                showInLegend: false
+                data: <%= @activities_moving_avg %>,
+                marker: {
+                    lineWidth: 2,
+                    lineColor: Highcharts.getOptions().colors[4],
+                    fillColor: 'white'
+                }
             }]
         });
 

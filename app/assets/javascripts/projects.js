@@ -1,3 +1,5 @@
+//= require highcharts-sparkline/highcharts-sparkline.js
+
 var checkCounter = 0;
 var URL_PREFIX = "/projects";
 
@@ -21,6 +23,11 @@ jQuery(document).ready(function($) {
 	    }
 	    e.preventDefault();
 	  });
+
+  /* Toggle Show Expandable Sections (i.e., "Details", "Daily Followers", etc.) */
+  $('.toggle-open').click( function () {
+      toggleSection($(this));
+  })
 
 
   //DataTables
@@ -314,6 +321,13 @@ function bulkOperation(operation, value, url){
 
   return result;
 }
+
+function toggleSection(toggleSectionParentDOMObj) {
+    if (toggleSectionParentDOMObj) {
+        toggleSectionParentDOMObj.find(".toggle-icon").toggleClass("fa-caret-right fa-caret-down");
+        toggleSectionParentDOMObj.next().next().toggle(400);
+    }
+};
 
 // Copied from notifications.js for displaying notifications per project
 

@@ -3,27 +3,34 @@ class HomeController < ApplicationController
   before_action :check_user_onboarding, only: :index
 
   def index
-    # Load all projects visible to user
-    @projects = Project.owner_of(current_user.id).is_active.is_confirmed.preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
-    #@projects = Project.owner_of(current_user.id)
+    # Load all projects/streams visible to user
+    visible_projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
+    @projects = visible_projects.owner_of(current_user.id)
     project_tasks = Notification.where(project_id: @projects.pluck(:id))
-    @open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)
-    @open_risks = project_tasks.open.risks
+    # Unused metrics
+    #@open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)
+    #@open_risks = project_tasks.open.risks
     @overdue_tasks = project_tasks.open.where("original_due_date::date <= ?", Date.today).where("assign_to='#{current_user.id}'")
     @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'")
     # Need this to show project name and user name
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
     @users_reverse = get_current_org_users
+    # Load all projects/streams to which the user is subscribed
+    @subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly").sort_by { |p| p.name.upcase }
 
     custom_lists = current_user.organization.get_custom_lists_with_options
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
 
-    unless @projects.empty?
+    # Calculate project metrics
+    unless @projects.empty? && @subscribed_projects.empty?
+      project_ids_a = @projects.map(&:id) | @subscribed_projects.map(&:id)
       #@project_last_activity_date = Project.owner_of(current_user.id).includes(:activities).maximum("activities.last_sent_date")
-      @metrics = Project.count_activities_by_day(7, @projects.map(&:id))
-      @risk_scores = Project.new_risk_score(@projects.map(&:id), current_user.time_zone)
-      @open_risk_count = Project.open_risk_count(@projects.map(&:id))
-      @rag_status = Project.current_rag_score(@projects.map(&:id))
+      # @metrics = Project.count_activities_by_day(7, project_ids_a)  # TODO: consider using daily_activities_last_x_days instead of count_activities_by_day
+      @sparkline = Project.count_activities_by_day_sparkline(project_ids_a, current_user.time_zone)
+      @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
+      @open_risk_count = Project.open_risk_count(project_ids_a)
+      @rag_status = Project.current_rag_score(project_ids_a)
+      puts "risk_scores: #{@risk_scores}"
     end
   end
 

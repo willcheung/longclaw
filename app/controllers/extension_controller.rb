@@ -75,7 +75,7 @@ class ExtensionController < ApplicationController
     order_addresses_by_domain_freq = addresses.map { |a| "email = '#{a}' DESC" }.join(',')
     contacts = Contact.joins(:account).where(email: addresses, accounts: { organization_id: current_user.organization_id}).order(order_addresses_by_domain_freq) #.includes(:projects, :account)
     if contacts.present?
-      projects = contacts.includes(:projects).map(&:projects).flatten
+      projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
       if projects.present?
         @project = projects.group_by(&:id).values.max_by(&:size).first
         @account = @project.account
@@ -93,7 +93,7 @@ class ExtensionController < ApplicationController
       end
     end
     @account ||= contacts.first.account
-    @project ||= @account.projects.first
+    @project ||= @account.projects.where(status: "Active").first
     create_project if @project.blank?
 
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")

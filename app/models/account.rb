@@ -32,7 +32,7 @@ include ContextSmithParser
 class Account < ActiveRecord::Base
     after_create  :create_custom_fields
 
-    has_many  :projects, -> { where is_confirmed: true }, dependent: :destroy  #also want is_active:true ?
+    has_many  :projects, -> { where is_confirmed: true }, dependent: :destroy  #also want status:'Active' ?
     has_many  :contacts, dependent: :destroy
     has_many  :activities, :through => :projects
     belongs_to  :organization

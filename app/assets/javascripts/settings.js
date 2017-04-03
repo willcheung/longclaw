@@ -135,20 +135,114 @@ $(document).ready(function() {
     ////////////////////////////////////////
     // ../settings/salesforce_activities
     ////////////////////////////////////////
-    $('#salesforce-activity-refresh').click(function(){
-        //Use encodeURI to escape '%' in 'like' predicates!
-        var GETRequestURL = encodeURI( "/salesforce_activities_refresh?entity_pred=" + document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim() + '&activityhistory_pred=' + document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() );
+    $('#salesforce-activity-save-entity-predicate-btn,#salesforce-activity-save-activityhistory-predicate-btn').click(function(){
+        var type;
+        var self = $(this);
+        if (self.attr("id").includes("salesforce-activity-save-entity-predicate-btn")) {
+            type = "entity";
+        }
+        else {
+            type = "activityhistory";
+        }
 
-        $.ajax(GETRequestURL, {
+        var custom_config_id = document.getElementById("salesforce-activity-" + type + "-predicate-customconfig-id").value.trim();
+        var config_type = "/settings/salesforce_activities#salesforce-activity-" + type + "-predicate-textarea";
+        var predicate = document.getElementById("salesforce-activity-" + type + "-predicate-textarea").value.trim();
+
+        var requestURL = encodeURI( "/custom_configurations/" + custom_config_id);
+        $.ajax(requestURL, {
+            async: true,
+            method: "PATCH",
+            data: { "custom_configuration[config_type]": config_type,  "custom_configuration[config_value]": predicate },
+            beforeSend: function () {
+                self.prop("disabled",true);
+                self.html("<i class='fa fa-refresh fa-spin'></i>");
+            },
+            // TODO: didn't handle error!!
+            complete: function() {
+                self.html("<i class='fa fa-floppy-o'></i>");
+                self.addClass("green-fadeto-grey");  // 3s
+                setTimeout(function() { self.removeClass("green-fadeto-grey")}, 3000); // remove to restore mouseover effect
+            }
+        });
+    });
+
+    $('#salesforce-activity-refresh').click(function(){
+        var self = $(this);
+        var buttonTxtStr = self.attr("btnLabel");
+
+        $.ajax("/salesforce_activities_refresh", {
             async: true,
             method: "POST",
+            data: { entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() },
             beforeSend: function () {
-                $("#salesforce-activity-refresh").css("pointer-events", "none");
-                $('#salesforce-activity-refresh .fa.fa-refresh').addClass('fa-spin');
+                self.css("pointer-events", "none");
+                self.prop("disabled",true);
+                self.removeClass('success-btn-highlight error-btn-highlight');
+                self.addClass('btn-primary btn-outline');
+                self.html("<i class='fa fa-refresh fa-spin'></i> "+buttonTxtStr);
+            },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ "+buttonTxtStr);
+            },
+            error: function(data) {
+                var res = JSON.parse(data.responseText);
+                self.addClass('error-btn-highlight');
+                alert(buttonTxtStr+" error!\n\n" + res.error);
+            },
+            statusCode: {
+                500: function() {
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                },
+                503: function() {
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                },
             },
             complete: function() {
-                $("#salesforce-activity-refresh").css("pointer-events", "auto");
-                $('#salesforce-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
+                self.css("pointer-events", "auto");
+                self.prop("disabled",false);
+                self.removeClass('btn-primary btn-outline');
+            }
+        });
+    });
+
+    $('#salesforce-activity-cs-export').click(function(){
+        var self = $(this);
+        var buttonTxtStr = self.attr("btnLabel");
+
+        $.ajax("/salesforce_activities_cs_export", {
+            async: true,
+            method: "POST",
+            data: {},
+            beforeSend: function () {
+                self.css("pointer-events", "none");
+                self.prop("disabled",true);
+                self.removeClass('success-btn-highlight error-btn-highlight');
+                self.addClass('btn-primary btn-outline');
+                self.html("<i class='fa fa-refresh fa-spin'></i> "+buttonTxtStr);
+            },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ "+buttonTxtStr);
+            },
+            error: function(data) {
+                var res = JSON.parse(data.responseText);
+                self.addClass('error-btn-highlight');
+                alert(buttonTxtStr+" error!\n\n" + res.error);
+            },
+            statusCode: {
+                500: function() {
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce update error");
+                },
+                503: function() {
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                },
+            },
+            complete: function() {
+                self.css("pointer-events", "auto");
+                self.prop("disabled",false);
+                self.removeClass('btn-primary btn-outline');
             }
         });
     });
@@ -177,8 +271,7 @@ $(document).ready(function() {
                 self.css("margin-left","0px");
                 self.removeClass('success-btn-highlight error-btn-highlight');
                 self.addClass('btn-primary btn-outline');
-                self.html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str);
-                $("#salesforce-fields-refresh-" + entity_type_str + "-btn .fa.fa-refresh").addClass('fa-spin');
+                self.html("<i class='fa fa-refresh fa-spin'></i> Refresh ContextSmith " + entity_type_btn_str);
             },
             success: function() {
                 self.addClass('success-btn-highlight');
@@ -187,7 +280,7 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n" + res.error);
+                alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n\n" + res.error);
             },
             statusCode: {
                 500: function() {
@@ -217,6 +310,7 @@ $(document).ready(function() {
           entity_type_btn_str = "Streams";
         }
 
+        // Reset button style to initial state
         $(selectorStr).css("margin-left","0px")
         $(selectorStr).removeClass('success-btn-highlight error-btn-highlight');
         $(selectorStr).addClass('btn-primary btn-outline');

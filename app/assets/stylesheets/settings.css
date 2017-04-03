@@ -1,6 +1,33 @@
+@keyframes greenfadetogrey {
+  0%   {color:black; background-color: springgreen;}
+  85%  {color:black; background-color: springgreen;}
+  100% {color:white; background-color: grey;}
+}
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes greenfadetogrey {
+  0%   {color:black; background-color: springgreen;}
+  85%  {color:black; background-color: springgreen;}
+  100% {color:white; background-color: grey;}
+}
+
+/* Firefox */
+@-moz-keyframes greenfadetogrey {
+  0%   {color:black; background-color: springgreen;}
+  85%  {color:black; background-color: springgreen;}
+  100% {color:white; background-color: grey;}
+}
+
+.green-fadeto-grey {
+  /* color: #3C8DC5; */
+  animation:         greenfadetogrey 3s forwards;
+  -webkit-animation: greenfadetogrey 3s forwards;  /* Safari */
+  -moz-animation:    greenfadetogrey 3s forwards;  /* FF */
+}
+
 .success-btn-highlight {
   color: darkolivegreen;
-  background-color: #0FB;
+  background-color: springgreen;
   border: 1px solid darkolivegreen;
   transition: all 0.5s;
 }
@@ -20,6 +47,10 @@
   color: tomato;
   background-color: white;
   border: 1px solid tomato;
+}
+
+.box-shadow {
+  box-shadow: 3px 3px 1px #888888;
 }
 
 .filter-switch {

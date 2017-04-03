@@ -23,7 +23,7 @@
 #  oauth_expires_at       :datetime
 #  organization_id        :uuid
 #  department             :string
-#  is_disabled            :boolean
+#  is_disabled            :boolean          default(FALSE), not null
 #  created_at             :datetime
 #  updated_at             :datetime
 #  invitation_created_at  :datetime
@@ -35,6 +35,7 @@
 #  time_zone              :string           default("UTC")
 #  mark_private           :boolean          default(FALSE), not null
 #  role                   :string
+#  refresh_inbox          :boolean          default(TRUE), not null
 #
 # Indexes
 #
@@ -52,8 +53,9 @@ class User < ActiveRecord::Base
   has_many    :accounts, foreign_key: "owner_id", dependent: :nullify
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
-  has_many    :notifications, foreign_key: "assign_to"
+  has_many    :notifications, foreign_key: "assign_to", dependent: :nullify
   has_many    :oauth_users
+  has_many    :custom_configurations, dependent: :destroy
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -65,6 +67,7 @@ class User < ActiveRecord::Base
 
   scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
   scope :not_disabled, -> {where("users.is_disabled = false")}
+  scope :allow_refresh_inbox, -> {where("users.refresh_inbox = true")}
   scope :onboarded, -> {where("onboarding_step = #{Utils::ONBOARDING[:onboarded]}")}
 
   devise :database_authenticatable, :registerable,

@@ -16,7 +16,6 @@
 //= require best_in_place
 //= require best_in_place.jquery-ui
 //= require switchery/switchery.js
-//= require sparkline/jquery.sparkline.min.js
 //= require jstz/jstz.min.js
 //= require chosen/chosen.jquery.min.js
 //= require selectize/selectize.min.js
@@ -107,7 +106,12 @@ $(document).ready(function() {
     $.each(errors, function(field, messages){
       $input = $('input[name="' + model + '[' + field + ']"]');
       $input.closest('.form-group').addClass('has-error');
-      $input.closest('.form-group').siblings('.help-block').html( messages.join(' & ') );
+      try {
+        $input.closest('.form-group').siblings('.help-block').html( messages.join(' & ') );
+      }
+      catch (err) {
+        // do nothing
+      }
     });
 
   };

@@ -1,6 +1,6 @@
 <div class="tasks">
   <input type="checkbox" class="i-checks" id="<%= n.id %>" <%= "checked" if n.is_complete %> >
-  <div class="task">
+  <div class="task <%= "checked" if n.is_complete %>">
 	  <p><%= n.name %> &nbsp; <% if n.category == Notification::CATEGORY[:Alert] %> <span class="label label-danger label-outlined label-xs" style="vertical-align: middle">Alert</span><% end %></p>  
 
 		<small>Assigned: <%= best_in_place n, :assign_to, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#task-#{n.id}-assignee-activator" %>

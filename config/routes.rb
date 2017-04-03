@@ -1,5 +1,4 @@
 Longclaw::Application.routes.draw do
-
   unauthenticated do
     get "extension" => "extension#new"
     get "extension/account" => "extension#new"
@@ -46,6 +45,7 @@ Longclaw::Application.routes.draw do
     post "/salesforce_refresh" => 'salesforce#refresh_accounts'
     post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
     post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
+    post "/salesforce_activities_cs_export" => 'salesforce#export_cs_activities'
     post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
@@ -127,6 +127,7 @@ Longclaw::Application.routes.draw do
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
     resources :custom_lists, only: [:create, :update, :destroy]
     resources :custom_lists_metadata, only: [:create, :update, :destroy]  #for /settings/custom_lists
+    resources :custom_configurations, only: [:update, :destroy]
   end
 
   devise_scope :user do # Unauthenticated user
@@ -138,8 +139,6 @@ Longclaw::Application.routes.draw do
 
   get '/users/auth/basecamp2' => 'basecamps#basecamp2'
   get '/users/auth/37signals/callback' => 'settings#basecamp'
-
-
 
 
   # Cluster callback
