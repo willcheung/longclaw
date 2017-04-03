@@ -23,5 +23,8 @@ class ProjectSubscriber < ActiveRecord::Base
   scope :daily, -> { where daily: true }
   scope :weekly, -> { where weekly: true }
 
-	validates :project_id, uniqueness: {:scope => [:user_id]}
+  scope :active_daily, -> { joins(:project).where(daily: true, projects: {is_confirmed: true, status: 'Active'}) }
+  scope :active_weekly, -> { joins(:project).where(weekly: true, projects: {is_confirmed: true, status: 'Active'}) }
+
+  validates :project_id, uniqueness: {:scope => [:user_id]}
 end
