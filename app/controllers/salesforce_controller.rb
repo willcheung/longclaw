@@ -188,11 +188,8 @@ class SalesforceController < ApplicationController
 
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
-<<<<<<< HEAD
-    client = SalesforceService.connect_salesforce(current_user.organization_id)
-=======
     client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
->>>>>>> upstream/develop
+
 
     unless client.nil?  # unless connection error
       
@@ -243,11 +240,7 @@ class SalesforceController < ApplicationController
       account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
 
       unless account_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
-<<<<<<< HEAD
-        client = SalesforceService.connect_salesforce(current_user.organization_id)
-=======
         client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
->>>>>>> upstream/develop
         #client=nil # simulates a Salesforce connection error
 
         unless client.nil?  # unless connection error
@@ -275,11 +268,7 @@ class SalesforceController < ApplicationController
       stream_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
 
       unless stream_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
-<<<<<<< HEAD
-        client = SalesforceService.connect_salesforce(current_user.organization_id)
-=======
         client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
->>>>>>> upstream/develop
         #client=nil # simulates a Salesforce connection error
 
         unless client.nil?  # unless connection error
@@ -315,13 +304,9 @@ class SalesforceController < ApplicationController
   # :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
   # :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
   # :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
-<<<<<<< HEAD
-  def self.get_salesforce_fields(organization_id, custom_fields_only=false)
-    client = SalesforceService.connect_salesforce(organization_id)
-=======
+
   def self.get_salesforce_fields(organization_id, user_id, custom_fields_only=false)
     client = SalesforceService.connect_salesforce(organization_id, user_id)
->>>>>>> upstream/develop
 
     return nil if client.nil?
 
