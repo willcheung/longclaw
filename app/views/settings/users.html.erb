@@ -57,7 +57,7 @@
                         <% if current_user.admin? %>
                             <td><%= best_in_place u, :mark_private, :as => 'checkbox', :data => {:user => u}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%></td>
                             <td><%= best_in_place u, :refresh_inbox, :as => 'checkbox', :data => {:user => u}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%></td>
-                            <td style="width:100px"><%= best_in_place u, :role, :as => :select, :collection => User::ROLE, :place_holder => '(none)', :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></td>
+                            <td style="width:100px"><%= best_in_place u, :role, :as => :select, :collection => User.getRolesMap, :place_holder => '(none)', :class => 'btn btn-outline btn-xs fa-caret-down', :style => 'font-size:12px;' %></td>
                             <td><%= best_in_place u, :is_disabled, :as => 'checkbox', :data => {:user => u}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%></td>
                         <% else %>
                             <td style="text-align:center"><small>(hidden)</small></td>

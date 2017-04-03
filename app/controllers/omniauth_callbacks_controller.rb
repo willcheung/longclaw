@@ -1,11 +1,11 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
-    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id)
+    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
     redirect_to settings_salesforce_path
   end
 
   def salesforcesandbox
-    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id)
+    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
     redirect_to settings_salesforce_path
   end
 

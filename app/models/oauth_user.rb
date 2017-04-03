@@ -14,10 +14,11 @@
 #  updated_at          :datetime         not null
 #  oauth_refresh_date  :integer
 #  oauth_issued_date   :datetime
+#  user_id             :uuid
 #
 # Indexes
 #
-#  oauth_per_user  (oauth_provider,oauth_user_name,oauth_instance_url) UNIQUE
+#  oauth_per_user  (oauth_provider,oauth_user_name,oauth_instance_url,organization_id,user_id) UNIQUE
 #
 
 require 'net/http'
