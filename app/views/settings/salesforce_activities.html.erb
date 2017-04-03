@@ -18,7 +18,7 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="ibox float-e-margins">
         <div class="ibox-content">
-            <% if @salesforce_user.nil?%> <a class="btn btn-primary btn-sm" style="font-size:12px" href="<%=user_omniauth_authorize_url(:salesforce)%> ">Login to Salesforce</a>
+            <% if @salesforce_user.nil?%> <a class="btn btn-primary btn-sm" style="font-size:12px" href="<%=user_omniauth_authorize_url(:salesforce)%>">Login to Salesforce</a>
             <a class="btn btn-primary btn-sm" style="font-size:12px" href="/users/auth/salesforcesandbox">Login to Salesforce Sandbox</a> <br>
             Must be a Salesforce admin. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
             <% else %>
@@ -35,8 +35,7 @@
                   </div>
               </nav>
 
-              
-              <div style="margin:5px 0">
+              <div>
                 <span style="font-size:15px;font-weight:bold;padding-right:1em">Salesforce Activities Filter</span>
                 <span>
                   <table class="table table-striped table-bordered table-hover responsive no-wrap">
@@ -75,7 +74,7 @@
                     <tfoot>
                       <tr>
                         <td>Query Preview</td>
-                        <td><p class="well" id="salesforce-activity-query-preview">.</p></td>
+                        <td><span class="well" id="salesforce-activity-query-preview" style="line-height: 1.5; display:inline-block; margin-bottom: 0">-</span></td>
                       </tr>
                     </tfoot>
                   </table>
@@ -89,11 +88,23 @@
                 <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th style="padding-top:15px">ContextSmith Stream</th>
+                            <th style="vertical-align: bottom">ContextSmith Stream</th>
                             <th>
-                              <div style="padding-top:15px; display: inline; margin-right:5px">Salesforce Activities</div>
-                              <div id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Refresh Activities</div>
-                              <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Activities from Salesforce."></i>
+                              <span style="vertical-align: bottom; margin-right:5px">Salesforce Activities</span>
+                              <span style="display: inline-block;">
+                                <div>
+                                  <span id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline" btnLabel="Refresh ContextSmith Activities" style="width: 18em;"><i class="fa fa-refresh"></i> Refresh ContextSmith Activities</span>
+                                  <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Activities from Salesforce."></i>
+                                </div>
+                                <% if @super_admin.include?(current_user.email) %>
+                                  <div>
+                                <% else %>
+                                  <div style="display: none">
+                                <% end %>
+                                  <span id="salesforce-activity-cs-export" class="btn btn-sm btn-primary btn-outline" btnLabel="Update Salesforce ActivityHistory" style="width: 18em;"><i class="fa fa-refresh"></i> Update Salesforce ActivityHistory</span>
+                                  <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Export latest ContextSmith Activities to Salesforce."></i>
+                                </div>
+                              </span>
                             </th>
                         </tr>
                     </thead>
@@ -135,28 +146,35 @@
             else {
                 type = "activityhistory";
             }
-            
-            // Remove green highlight of a previously successful query save
+           
             $("#salesforce-activity-save-"+type+"-predicate-btn").prop("disabled",false);
-            $("#salesforce-activity-save-"+type+"-predicate-btn").removeClass('green-fadeto-grey');
+            $("#salesforce-activity-save-"+type+"-predicate-btn").removeClass('green-fadeto-grey');  // remove green highlight animation of a previously successful query save, even while in mid-animation
         }
+
+        // Reset button style to initial state
+        $("#salesforce-activity-refresh").removeClass('success-btn-highlight error-btn-highlight');
+        $("#salesforce-activity-refresh").addClass('btn-primary btn-outline');
+        $("#salesforce-activity-refresh").html("<i class='fa fa-refresh'></i> Refresh ContextSmith Activities")
+        $("#salesforce-activity-cs-export").removeClass('success-btn-highlight error-btn-highlight');
+        $("#salesforce-activity-cs-export").addClass('btn-primary btn-outline');
+        $("#salesforce-activity-cs-export").html("<i class='fa fa-refresh'></i> Update Salesforce ActivityHistory")
         
         // Update the SOQL query preview
         entity_predicate = document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim();
         activityhistory_predicate = document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim();
 
         if (entity_predicate != "")
-            entity_predicate = "AND (" + entity_predicate + ")";
+            entity_predicate = " AND (" + entity_predicate + ")";
 
         if (activityhistory_predicate != "")
-            activityhistory_predicate = " WHERE (" + activityhistory_predicate + ")";
+            activityhistory_predicate = " AND (" + activityhistory_predicate + ")";
         
-        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id' " + entity_predicate);
+        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE 'ContextSmith ——%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
     }
 
     $(document).ready(function() {
         handle_updating_SOQL_query(); // set initial query preview
 
-        $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keydown(handle_updating_SOQL_query);
+        $('#salesforce-activity-entity-predicate-textarea,#salesforce-activity-activityhistory-predicate-textarea').keyup(handle_updating_SOQL_query);
     });
 </script>

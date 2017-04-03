@@ -126,12 +126,12 @@ class SalesforceController < ApplicationController
   end
 
   def refresh_accounts
-    SalesforceAccount.load(current_user.organization_id)
+    SalesforceAccount.load(current_user.organization_id, current_user.id)
     render :text => ' '
   end
 
   def refresh_opportunities
-    SalesforceOpportunity.load(current_user.organization_id)
+    SalesforceOpportunity.load(current_user.organization_id, current_user.id)
     render :text => ' '
   end
 
@@ -145,19 +145,81 @@ class SalesforceController < ApplicationController
     #puts "******************** #{method_name}  ...  filter_predicate_str=", filter_predicate_str
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
-    client = SalesforceService.connect_salesforce(current_user.organization_id)
+    client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
 
-    unless client.nil?  # connection error
+    unless client.nil?  # unless connection error
       @streams.each do |s|
-        if s.salesforce_opportunity.nil? # Stream not linked to SF Opportunity
-          if !s.account.salesforce_accounts.empty? # Stream linked to SF Account
-            s.account.salesforce_accounts.each do |sf_a|
-              Activity.load_salesforce_activities(client, s, sf_a.salesforce_account_id, type="Account", filter_predicate_str)
+        if s.salesforce_opportunity.nil? # Stream not linked to SFDC Opportunity
+          if !s.account.salesforce_accounts.empty? # Stream linked to SFDC Account
+            s.account.salesforce_accounts.each do |sfa|
+              errors = Activity.load_salesforce_activities(client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
+
+              unless errors.nil? # Salesforce query error occurred
+                method_location = "Activity.load_salesforce_activities()"
+                error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
+                render_internal_server_error(method_name, method_location, error_detail)
+                return
+              end
             end
           end
         else # Stream linked to Opportunity
           # If Stream is linked in Opportunity, then save on Opportunity level
-          Activity.load_salesforce_activities(client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
+          errors = Activity.load_salesforce_activities(client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
+
+          unless errors.nil? # Salesforce query error occurred
+            method_location = "Activity.load_salesforce_activities()"
+            error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
+            render_internal_server_error(method_name, method_location, error_detail)
+            return
+          end
+        end
+      end
+    else
+      render_service_unavailable_error(method_name)
+      return
+    end
+
+    render :text => ' '
+  end
+
+  # Activities are exported into remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
+  def export_cs_activities
+    method_name = "export_cs_activities()"
+
+    @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
+
+    client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
+
+    unless client.nil?  # unless connection error
+      
+
+      @streams.each do |s|
+        if s.salesforce_opportunity.nil? # Stream not linked to SFDC Opportunity
+          if !s.account.salesforce_accounts.empty? # Stream linked to SFDC Account
+            s.account.salesforce_accounts.each do |sfa|
+              #errors = Activity.export_cs_activities(client, s, sfa.salesforce_account_id, "Account")
+              errors = Activity.export_cs_activities(client, s, "0013600000G3aLwAAJ", "Account")
+
+              unless errors.nil? # Salesforce query error occurred
+                method_location = "Activity.export_cs_activities()"
+                error_detail = "Error while attempting to export CS activity from CS Stream \"#{s.name}\" (stream_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{errors}"
+                render_internal_server_error(method_name, method_location, error_detail)
+                return
+              end
+            end
+          end
+        else # Stream linked to Opportunity
+          # If Stream is linked in Opportunity, then save on Opportunity level
+=begin
+          errors = Activity.export_cs_activities(client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
+
+          unless errors.nil? # Salesforce query error occurred
+            method_location = "Activity.export_cs_activities()"
+            error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
+            render_internal_server_error(method_name, method_location, error_detail)
+            return
+          end
+=end
         end
       end
     else
@@ -177,10 +239,10 @@ class SalesforceController < ApplicationController
       account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
 
       unless account_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
-        client = SalesforceService.connect_salesforce(current_user.organization_id)
+        client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
         #client=nil # simulates a Salesforce connection error
 
-        unless client.nil?  # connection successful
+        unless client.nil?  # unless connection error
           accounts = Account.where("accounts.organization_id = ? and status = 'Active'", current_user.organization_id)
           accounts.each do |a|
             unless a.salesforce_accounts.first.nil? 
@@ -205,10 +267,10 @@ class SalesforceController < ApplicationController
       stream_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
 
       unless stream_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
-        client = SalesforceService.connect_salesforce(current_user.organization_id)
+        client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
         #client=nil # simulates a Salesforce connection error
 
-        unless client.nil?  # connection successful
+        unless client.nil?  # unless connection error
           streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity)
           streams.each do |s|
             unless s.salesforce_opportunity.nil?
@@ -218,7 +280,7 @@ class SalesforceController < ApplicationController
 
               unless errors.nil? # Salesforce query error occurred
                 method_location = "Project.load_salesforce_fields()"
-                error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (account_id='#{s.id}').  Details: #{errors}"
+                error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
                 render_internal_server_error(method_name, method_location, error_detail)
                 return
               end
@@ -241,8 +303,8 @@ class SalesforceController < ApplicationController
   # :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
   # :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
   # :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
-  def self.get_salesforce_fields(organization_id, custom_fields_only=false)
-    client = SalesforceService.connect_salesforce(organization_id)
+  def self.get_salesforce_fields(organization_id, user_id, custom_fields_only=false)
+    client = SalesforceService.connect_salesforce(organization_id, user_id)
 
     return nil if client.nil?
 
@@ -310,7 +372,7 @@ class SalesforceController < ApplicationController
   def disconnect
     # delete salesforce data
     # delete salesforce oauth_user
-    SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).destroy_all
+    SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).destroy_all   # will unlink all accounts for the Organization if somebody from the Organization d/c's from their SFDC account!
     salesforce_user = OauthUser.find_by(id: params[:id])
     salesforce_user.destroy
 

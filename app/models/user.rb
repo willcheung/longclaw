@@ -53,9 +53,9 @@ class User < ActiveRecord::Base
   has_many    :accounts, foreign_key: "owner_id", dependent: :nullify
   has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
-  has_many    :notifications, foreign_key: "assign_to"
+  has_many    :notifications, foreign_key: "assign_to", dependent: :nullify
   has_many    :oauth_users
-  has_many    :custom_configurations
+  has_many    :custom_configurations, dependent: :destroy
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -80,15 +80,20 @@ class User < ActiveRecord::Base
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
 
-   def self.from_omniauth(auth, organization_id)
+  def valid_streams_subscriptions
+    self.subscriptions.joins(:project).where(projects: {is_confirmed: true, status: 'Active'})
+  end
+
+  def self.from_omniauth(auth, organization_id, user_id)
     where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
-      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider)
+      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id, user_id: user_id)
 
       if oauth_user
         oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
                                      oauth_refresh_token: auth.credentials.refresh_token,
                                      oauth_instance_url: auth.credentials.instance_url,
-                                     organization_id: organization_id )
+                                     organization_id: organization_id,
+                                     user_id: user_id )
       else
         oauth_user = OauthUser.create(
           oauth_provider: auth.provider,
@@ -97,7 +102,8 @@ class User < ActiveRecord::Base
           oauth_refresh_token: auth.credentials.refresh_token,
           oauth_instance_url: auth.credentials.instance_url,
           oauth_user_name: auth.extra.username,
-          organization_id: organization_id)
+          organization_id: organization_id,
+          user_id: user_id)
 
         oauth_user.save
       end
@@ -553,6 +559,15 @@ class User < ActiveRecord::Base
     output
   end
 
+  # Returns a map of the ROLEs values only (not keys), for use in best-in-place picklists
+  def self.getRolesMap
+    roles_map = {}
+    ROLE.each do |r| #self.ROLE.each do |clm|
+      roles_map[r[1]] = r[1]
+    end
+    return roles_map
+  end
+
   ######### Basic ACL ##########
   # Roles have cascading effect, eg. if you're an "admin", then you also have access to what other roles have.
 
@@ -565,11 +580,11 @@ class User < ActiveRecord::Base
   end
 
   def contributor?
-    self.role == User::ROLE[:Contributor] or self.admin? or self. power_user?
+    self.role == User::ROLE[:Contributor] or self.admin? or self.power_user?
   end
 
   def observer?
-    self.role == User::ROLE[:Observer] or self.admin? or self. power_user? or self.contributor?
+    self.role == User::ROLE[:Observer] or self.admin? or self.power_user? or self.contributor?
   end
 
   ######### End Basic ACL ##########

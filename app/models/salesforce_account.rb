@@ -52,8 +52,8 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   # 
   ################################################################################################## 
-	def self.load(organization_id, query_range=500)
-		client = SalesforceService.connect_salesforce(organization_id)
+	def self.load(organization_id, user_id, query_range=500)
+		client = SalesforceService.connect_salesforce(organization_id, user_id)
     return if client.nil?
 
 

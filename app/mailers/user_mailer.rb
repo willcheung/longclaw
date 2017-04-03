@@ -12,9 +12,9 @@ class UserMailer < ApplicationMailer
 
   def daily_summary_email(user)
     @user = user
-    sub = user.subscriptions.daily
+    @subs = user.valid_streams_subscriptions.daily
 
-    unless sub.blank?
+    unless @subs.blank?
       puts "Checking daily subscription for #{user.email}"
       @current_user_timezone = user.time_zone
       @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email)
@@ -42,9 +42,9 @@ class UserMailer < ApplicationMailer
   def weekly_summary_email(user)
     open_or_recently_closed = "notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
     
-    @subs = user.subscriptions.weekly
+    @subs = user.valid_streams_subscriptions.weekly
 
-    if !@subs.nil? and !@subs.empty?
+    unless @subs.blank?
       puts "Checking weekly subscription for #{user.email}"
       @current_user_timezone = user.time_zone
       @projects = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id").order(:name)

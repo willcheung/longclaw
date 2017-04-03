@@ -1,14 +1,14 @@
 class SalesforceService
 
-  def self.connect_salesforce(organization_id)
+  def self.connect_salesforce(organization_id, user_id)
     salesforce_client_id = ENV['salesforce_client_id']
     salesforce_client_secret = ENV['salesforce_client_secret'] 
     hostURL = 'login.salesforce.com'  
     # try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
-    salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
+    salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id)
 
     if(salesforce_user.nil?)
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
+      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id, user_id: user_id)
       salesforce_client_id = ENV['salesforce_sandbox_client_id']
       salesforce_client_secret = ENV['salesforce_sandbox_client_secret']
       hostURL = 'test.salesforce.com' 
@@ -30,29 +30,55 @@ class SalesforceService
         client.user_info
       rescue
         client = nil
-        puts "*** SalesforceService error: salesforce connection error ***"
+        puts "*** SalesforceService error: Salesforce connection error! ***"
       end      
     end
 
-    #return nil # simulates a Salesforce connection error
+    #return nil  # simulates a Salesforce connection error
     return client
 
   end
 
   def self.query_salesforce(client, query_statement)
-    salesforce_result = nil
+    query_result = nil
 
-    if(!client.nil?)          
+    if (!client.nil?)
       begin
-        salesforce_result = client.query(query_statement)
+        query_result = client.query(query_statement)
       rescue  
-        salesforce_result = nil
-        puts "Error: salesforce query error.  Query: " + query_statement
+        query_result = nil
+        puts "*** SalesforceService error: Salesforce query error! Query: #{query_statement}"
       end     
     end
 
-    #return nil # simulates a Salesforce query error
-    return salesforce_result
+    #return nil  # simulates a Salesforce query error
+    return query_result
+
+  end
+
+  # sObject_meta is a hash that contains the :id and :type of the SFDC sObject we are updating
+  def self.update_salesforce(client, sObject_meta, update_details, update_type="ActivityHistory")
+    update_result = nil
+    
+    if (!client.nil?)
+      if update_type == "ActivityHistory"
+        begin
+          update_result = client.create('Task', TaskSubtype: 'Task', Status: 'Completed', WhatId: sObject_meta[:id], ActivityDate: update_details[:activity_date], Subject: update_details[:subject], Priority: update_details[:priority], Description: update_details[:description])  # update_result is the new Task's Id
+          #puts "---> new Task creation=#{update_result}"
+          if update_result == false
+            puts "*** SalesforceService error: Salesforce update error while updating sObject #{sObject_meta[:id]} update_type: #{update_type}"
+            update_result = nil
+          end
+          #update_result = client.upsert('Task', 'Id', Id: newTask_Id, Subject: "New subject") if newTask_Id.present?
+        rescue  
+          puts "*** SalesforceService error: Salesforce update error while updating sObject #{sObject_meta[:id]} update_type: #{update_type}"  
+          update_result = nil
+        end    
+      end 
+    end
+
+    #return nil  # simulates a Salesforce update error
+    return update_result
 
   end
 end
