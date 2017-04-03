@@ -259,6 +259,6 @@ class ReportsController < ApplicationController
   private
 
   def get_owners_in_org
-    @owners = User.where(organization_id: current_user.organization_id)
+    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
   end
 end
