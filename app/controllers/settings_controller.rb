@@ -131,6 +131,9 @@ class SettingsController < ApplicationController
 		else
 			@activityhistory_predicate = @activityhistory_predicate.first
 		end
+
+		# to decide if show "update SFDC ActivityHistory" export button
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
 	end
 
 	def salesforce_fields
