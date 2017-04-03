@@ -145,11 +145,7 @@ class SalesforceController < ApplicationController
     #puts "******************** #{method_name}  ...  filter_predicate_str=", filter_predicate_str
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 
-<<<<<<< HEAD
-    client = SalesforceService.connect_salesforce(current_user.organization_id)
-=======
     client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
->>>>>>> upstream/develop
 
     unless client.nil?  # unless connection error
       @streams.each do |s|
