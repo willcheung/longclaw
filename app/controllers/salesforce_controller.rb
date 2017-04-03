@@ -190,6 +190,7 @@ class SalesforceController < ApplicationController
 
     client = SalesforceService.connect_salesforce(current_user.organization_id, current_user.id)
 
+
     unless client.nil?  # unless connection error
       
 
@@ -303,6 +304,7 @@ class SalesforceController < ApplicationController
   # :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
   # :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
   # :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
+
   def self.get_salesforce_fields(organization_id, user_id, custom_fields_only=false)
     client = SalesforceService.connect_salesforce(organization_id, user_id)
 

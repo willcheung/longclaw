@@ -169,6 +169,7 @@
         if (activityhistory_predicate != "")
             activityhistory_predicate = " AND (" + activityhistory_predicate + ")";
         
+
         $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE 'ContextSmith ——%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
     }
 
