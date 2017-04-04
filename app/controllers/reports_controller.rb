@@ -21,6 +21,8 @@ class ReportsController < ApplicationController
     @open_alerts = @user.notifications.open.risks.count
     @accounts_managed = @user.projects_owner_of.count
 
+    @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
+
     render layout: false
   end
 
