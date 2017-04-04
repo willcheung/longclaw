@@ -76,6 +76,15 @@ $(document).ready(function() {
     // note: jqxhr.responseJSON undefined, parsing responseText instead
     $(event.data).render_form_errors( $.parseJSON(jqxhr.responseText) );
   });
+
+  /****************
+   Contact Modal remote form
+   ****************/
+  $(document).bind('ajaxError', 'form.new_contact', function(event, jqxhr, settings, exception){
+    // note: jqxhr.responseJSON undefined, parsing responseText instead
+    $(event.data).render_form_errors( $.parseJSON(jqxhr.responseText) );
+  });
+
 });
 
   /****************************
