@@ -108,8 +108,10 @@ Longclaw::Application.routes.draw do
       get 'd_executive'
       get 'd_competitors'
       get 'accounts_dashboard'
-      get 'dashboard_data/:sort' => 'reports#dashboard_data'
-      get 'account_data/:id' => 'reports#account_data'
+      get 'ad_sort_data/:sort' => 'reports#ad_sort_data', as: :ad_sort_data
+      get 'ad_account_data/:id' => 'reports#ad_account_data', as: :ad_account_data
+      get 'team_dashboard'
+      get 'td_user_data/:id' => 'reports#td_user_data', as: :td_user_data
     end
 
     scope "extension", controller: :extension, as: 'extension' do
@@ -120,6 +122,7 @@ Longclaw::Application.routes.draw do
       get 'contacts'
       get 'metrics'
       get 'no_account/:domain', to: 'extension#no_account', as: :no_account
+      get 'project_error'
       post 'create_account'
     end
 

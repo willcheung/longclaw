@@ -75,7 +75,7 @@
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
 
             // Build URL for AJAX call for filtered data
-            var url = "dashboard_data/" + encodeURIComponent($('#sort-type').val());
+            var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val());
             var accountTypeFilter = $('#account-filter').val().length == 0 ? "" : "account=" + $('#account-filter').val();
             var streamTypeFilter = $('#category-filter').val().length == 0 ? "" : "category=" + $('#category-filter').val();
             var ownerFilter = $('#owner-filter').val().length == 0 ? "" : "owner=" + $('#owner-filter').val();
@@ -124,8 +124,7 @@
                     point: {
                         events: {
                             click: function () {
-                                // console.log(this.options.id)
-                                $.get("account_data/" + this.options.id, function (data) {
+                                $.get("ad_account_data/" + this.options.id, function (data) {
                                     $("#account-data").html(data);
                                     renderCharts(this.y);
                                 })
