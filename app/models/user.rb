@@ -65,10 +65,10 @@ class User < ActiveRecord::Base
   has_many    :projects, through: "project_members"
   has_many    :projects_all, through: "project_members_all", source: :project
 
-  scope :registered, -> {where("users.oauth_access_token is not null or users.oauth_access_token != ''")}
-  scope :not_disabled, -> {where("users.is_disabled = false")}
-  scope :allow_refresh_inbox, -> {where("users.refresh_inbox = true")}
-  scope :onboarded, -> {where("onboarding_step = #{Utils::ONBOARDING[:onboarded]}")}
+  scope :registered, -> { where.not oauth_access_token: nil }
+  scope :not_disabled, -> { where is_disabled: false }
+  scope :allow_refresh_inbox, -> { where refresh_inbox: true }
+  scope :onboarded, -> { where onboarding_step: Utils::ONBOARDING[:onboarded] }
 
   devise :database_authenticatable, :registerable,
          :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce, :salesforce_sandbox]

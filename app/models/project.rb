@@ -118,8 +118,8 @@ class Project < ActiveRecord::Base
     .where("project_subscribers.user_id = ? AND project_subscribers.weekly IS TRUE", user_id)
   }
   
-  scope :is_active, -> {where("projects.status = 'Active'")}
-  scope :is_confirmed, -> {where("projects.is_confirmed = true")}
+  scope :is_active, -> { where status: 'Active' }
+  scope :is_confirmed, -> { where is_confirmed: true }
 
   validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
   validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
