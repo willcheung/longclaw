@@ -144,6 +144,8 @@
                     text: ''
                 },
                 min: 0,
+                softMax: 1,
+                minorGridLineWidth: 0,
                 plotLines: [{
                     value: 0,
                     width: 1,
@@ -154,22 +156,22 @@
                 shared: true
             },
             series: [{
-                name: 'Total Open Alerts',
-                data: [3, 4, 5, 8, 11, 13, 17, 17, 18, 18, 17, 15],
+                name: 'Total Open Tasks',
+                data: <%= @tasks_trend_data.total_open.to_json.html_safe %>,
                 type: 'area',
                 color: '#cccccc',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
             }, {
-                name: 'New Alerts',
-                data: [5, 7, 10, 10, 13, 13, 21, 19, 26, 25, 19, 17],
+                name: 'New Tasks',
+                data: <%= @tasks_trend_data.new_open.to_json.html_safe %>,
                 type: 'line',
                 color: '#B23232',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
             }, {
-                name: 'Closed Alerts',
-                data: [2, 3, 5, 2, 2, 0, 4, 2, 3, 8, 1, 2],
+                name: 'Closed Tasks',
+                data: <%= @tasks_trend_data.new_closed.to_json.html_safe %>,
                 type: 'line',
                 color: '#149414',
                 pointInterval: <%= 1.day * 1000 %>,
@@ -204,7 +206,8 @@
             yAxis: {
                 title: { text: '' },
                 labels: { enabled: true },
-                minorGridLineWidth: 0
+                minorGridLineWidth: 0,
+                softMax: 1
             },
             legend: {
                 enabled: true

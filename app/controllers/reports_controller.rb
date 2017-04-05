@@ -15,6 +15,7 @@ class ReportsController < ApplicationController
   end
 
   def td_user_data
+    day_range = 14
     @user = User.where(organization_id: current_user.organization_id).find(params[:id])
     @error = "Oops, something went wrong. Try again." and return if @user.blank?
 
@@ -22,6 +23,26 @@ class ReportsController < ApplicationController
     @accounts_managed = @user.projects_owner_of.count
 
     @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
+
+    @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range, 0), new_open: Array.new(day_range, 0), new_closed: Array.new(day_range, 0)})
+    tasks = @user.notifications
+    tasks_by_open_date = tasks.group('date(created_at)').count
+    tasks_by_complete_date = tasks.group('date(complete_date)').count
+    tasks_by_open_date.each do |date, opened_tasks|
+      date_index = day_range - 1 - Date.current.mjd + date.mjd
+      @tasks_trend_data.new_open[date_index] += opened_tasks if date_index >= 0
+      @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
+        date_index <= i ? num_tasks + opened_tasks : num_tasks
+      end
+    end
+    tasks_by_complete_date.each do |date, completed_tasks|
+      next if date.nil?
+      date_index = day_range - 1 - Date.current.mjd + date.mjd
+      @tasks_trend_data.new_closed[date_index] += completed_tasks if date_index >= 0
+      @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
+        date_index <= i ? num_tasks - completed_tasks : num_tasks
+      end
+    end
 
     render layout: false
   end
