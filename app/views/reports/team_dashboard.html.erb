@@ -1,0 +1,126 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Team Dashboard</h2>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Team:</div>
+                <select class="category_filter col-lg-9">
+                    <option value="Sales">Account Management</option>
+                    <option value="Sales">Customer Success</option>
+                    <option value="Sales">Sales</option>
+                </select> 
+            </div>
+        </div>
+        <div class="col-lg-4 filter-space">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Title:</div>
+                <select class="category_filter col-lg-8">
+                    <option value="Sales">Account Manager</option>
+                    <option value="Sales">Customer Success Manager</option>
+                    <option value="Sales">Director of Services</option>
+                    <option value="Sales">(No Title)</option>
+                </select> 
+            </div>
+        </div>
+        <div class="col-lg-3 filter-space">
+        </div>
+    </div>
+    
+    <div class="row border-bottom white-bg dashboard-header">
+            <!-- LEFT -->
+            <div class="col-md-5">
+                <h4 class="m-l-md">Sort by: 
+                <select class="metric_filter col-lg-8" data-placeholder="Select Type">
+                    <option selected>Accounts Managed</option>
+                    <option>Revenue Managed</option>
+                    <option>Revenue per Hour Spent (Last 7d)</option>
+                    <option>Time Spent (Last 7d)</option>
+                    <option>On Target</option>
+                    <option>Activities (Last 7d)</option>
+                    <option>New Alerts & Tasks (Last 7d)</option>
+                    <option>Closed Alerts & Tasks (Last 7d)</option>
+                    <option>Open Tasks</option>
+                  </select>    
+               
+                </h4>
+                <div id="left-chart" class="left-chart" style="height:800px;"></div>
+                
+            </div>
+
+            <div class="col-md-7" style="margin-top:45px;">
+                <div id="user-data">
+                    <div class="row" style="margin-top:50px;">
+                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+<script>
+
+    $(function () {
+        $('#left-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%= @accounts_managed.map(&:name).to_json.html_safe %>,
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                max: 100,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                                $.get("td_user_data/" + this.options.id, function (data) {
+                                    $("#user-data").html(data);
+                                    renderCharts(this.y);
+                                })
+                            }
+                        }
+                    }
+                }   
+            },
+            credits: {
+                enabled: false
+            },
+            series: [{
+                name: 'Accounts Managed',
+                data: [
+                <% @accounts_managed.each do |u| %>
+                {
+                    y: <%= u.num_accounts %>,
+                    id: "<%= u.id %>"
+                },
+                <% end %>
+                ]
+            }]
+        });
+    });
+
+
+</script>
+

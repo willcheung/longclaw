@@ -1,7 +1,7 @@
 <div id="account-header">
     <div class="row m-b-sm">
         <div class="col-lg-12">
-            <h2><%= @account.name %></h2>
+            <h2><%= @project.name %></h2>
         </div>
     </div>
 
@@ -41,7 +41,7 @@
             </div>
         </div>
         <div class="row text-center">
-            <h3><%= link_to "See Alerts & Next Steps &rarr;".html_safe, project_path(@account)+"/tasks", class: "btn btn-outline btn-primary btn-xs" %></h3>
+            <h3><%= link_to "See Alerts & Next Steps &rarr;".html_safe, project_path(@project)+"/tasks", class: "btn btn-outline btn-primary btn-xs" %></h3>
         </div>
     </div>
 </div>
@@ -62,7 +62,7 @@
         </div>
 
         <div class="row m-t-lg text-center">
-            <h3><%= link_to "See activities &rarr;".html_safe, project_path(@account), class: "btn btn-outline btn-primary btn-xs" %></h3>
+            <h3><%= link_to "See activities &rarr;".html_safe, project_path(@project), class: "btn btn-outline btn-primary btn-xs" %></h3>
         </div>
     </div>
 
@@ -73,7 +73,7 @@
         </div>
 
         <div class="row m-t-lg text-center">
-            <h3><a href="<%= project_path(@account) %>/arg" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
+            <h3><a href="<%= project_path(@project) %>/arg" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
         </div>
     </div>
 </div>
