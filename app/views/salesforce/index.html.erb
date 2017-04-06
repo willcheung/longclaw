@@ -3,97 +3,95 @@
     <div class="wrapper animated fadeInUp">
       <div class="panel blank-panel">
         <div class="panel-heading">
-          <ul class="nav nav-tabs">            
-            <% if @projects.empty? %>
+          <ul class="nav nav-tabs">
+            <% if @project.nil? %>
               <div class="text-center m-t-lg">
-                <% if !@isconnect %>
+                <h3>Invalid project identifier</h3>
+              </div>
+            <% elsif @streams_mapped.blank? %>
+              <div class="text-center m-t-lg">
+                <% if !@is_mapped_to_CS_account %>
                   <h3>Not connected to any ContextSmith Account</h3>
                 <% else %>
                   <h3>No project in this account</h3>
                 <% end  %>
               </div>
             <% else %>
-        	    <% @projects.each do |p| %>
-                <span style="font-size: 15px;"><% if p.id!= @project.id %> <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> "><% end %><%=p.name%><% if p.id!= @project.id %></a><% end %> | </span>
+              <!-- Show links to all connected CS streams at the top -->
+        	    <% @streams_mapped.each_with_index do |p, i| %>
+                <% if p.id == @project.id %> 
+                  <span style="font-size: 15px; font-weight: bold"><%=p.name%></span>
+                <% else %>
+                  <span style="font-size: 15px; text-decoration: underline">
+                  <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> "><%=p.name%></a></span>
+                <% end %>
+                &nbsp;&nbsp;<% if i < @streams_mapped.size - 1 %>|<%end %>&nbsp;&nbsp;
+                </span>
               <% end %>
             <% end %>
           </ul>
         </div>
       </div>
      
-    <% if !@projects.empty? %>
+    <% if @project.present? && @streams_mapped.present? %>
       <!-- Form -->
-      <div class="col-lg-12" style="padding-top: 20px;">
-        <div class="col-lg-1">
-        </div>
-
+      <div class="col-lg-12" style="padding-top: 20px">
+        <!--<div class="col-lg-1">
+        </div>-->
         <div class="row header-box projects-box white-bg col-lg-8">
-          <div class="col-xs-3" style="padding-top: 10px;">
-            <div class="metric <%= risk_color(@project_risk_score) %>">
-              <div class="metric-title">
-                <h5><%= risk_level(@project_risk_score) %></h5>
-              </div>
-              <div class="metric-content">
-                <h3><%= @project_risk_score %></h3>
-              </div>
-            </div>
-            </div>
-            <div class="col-xs-3" style="padding-top: 10px;">
-              <div class="metric text-danger">
-                <div class="metric-title">
-                  <h5>Open Risks</h5>
+          <div class="col-xs-12" style="padding-top: 10px;">
+            <div class="row">
+                <div class="col-xs-4">
+                    <div class="metric <%= risk_color(@project_risk_score) %>">
+                        <div class="metric-title" align="center">
+                            <h4>Risk Score</h4>
+                        </div>
+                        <div class="metric-content" align="center">
+                            <h2><%= @project_risk_score %></h2>
+                        </div>
+                    </div>
                 </div>
-                <div class="metric-content">
-                  <h3><%= @project_open_risks_count %></h3>
+                <div class="col-xs-4">
+                    <div class="metric text-danger">
+                        <div class="metric-title" align="center">
+                            <h4>Open Smart Tasks</h4>
+                        </div>
+                        <div class="metric-content" align="center">
+                            <h2><%= @project_open_tasks_count %></h2>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-            <div class="col-xs-3"  style="padding-top: 10px;">
-              <div class="metric">
-                <div class="metric-title">
-                  <h5>Last Activity</h5>
+                <div class="col-xs-4">
+                    <div class="metric">
+                        <div class="metric-title" align="center">
+                            <h4>Status</h4>
+                        </div>
+                        <div class="metric-content" align="center">
+                          <div class="large-circle rag-circle<%=@project_rag_status%>"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="metric-content">
-                  <h3><%= @project_last_activity_date ? time_ago_in_words(@project_last_activity_date) + " ago" : "--" %></h3>
-                </div>
-              </div>
-            </div>
-            <div class="col-xs-3"  style="padding-top: 12px;">
-              <div class="metric">
-                <div class="metric-title">
-                  <h5></h5>
-                </div>
-                <div class="metric-content">
-                  <h3>
-                  <% if @project.subscribers.map(&:user_id).include?(current_user.id) %>
-                    <%= link_to "<i class=\"fa fa-check\"></i> Following".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :delete, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
-                  <% else %>
-                     <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow ".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id), remote: true, method: :post, id: "follow-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm" %>
-                  <% end %>
-                  </h3>
-                </div>
-              </div>
             </div>
           </div>
         </div>
+      </div>
 
-          <!-- Render by Activity, key, smart task, insight -->
+      <!-- Render by Activity, key, smart task, insight -->
 
       <div class="row">
         <div class="col-lg-12" style="padding-top: 20px;">
-         
             <ul class="nav nav-tabs">
                   <li class="nav-tab"><a id="newsfeed-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=show" class="white-bg"><i class="fa fa-comments"></i> Activities</a></li>
-                  <li class="nav-tab"><a id="pinned-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Key Activities (<%= @project_pinned_count %>)</a></li>
-                  <li class="nav-tab"><a id="tasks-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=tasks" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks (<%= @project_open_tasks_count %>)</a></li>
-                  <li class="nav-tab"><a id="insights-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=insights" class="white-bg"><i class="fa fa-lightbulb-o"></i> Insights</a></li>
+                  <li class="nav-tab"><a id="pinned-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=pinned_tab" class="white-bg"><i class="fa fa-thumb-tack"></i> Key Activities (<%= @project_pinned_count %>)</a></li>
+                  <li class="nav-tab"><a id="tasks-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=tasks_tab" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks (<%= @project_open_tasks_count %>)</a></li>
+                  <li class="nav-tab"><a id="arg-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=arg_tab" class="white-bg"><i class="fa fa-users"></i> Relationship Graph</a></li>
+                  <li class="nav-tab"><a id="insights-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=insights_tab" class="white-bg"><i class="fa fa-lightbulb-o"></i> Insights</a></li>
                 </ul>
-             
-            <%= render 'projects/timeline' if @actiontype == "show" %> 
-            <%= render 'projects/pinned_tab', pinned_activities: @pinned_activities if @actiontype == "pinned" %> 
-            <%= render 'notifications/project' if @actiontype == "tasks" %> 
-            <%= render 'projects/insights_tab', project_id: @project.id if @actiontype == "insights" %>
-
+            <%= render 'projects/activities_tab' if @actiontype == "show" %>
+            <%= render 'projects/pinned_tab', pinned_activities: @pinned_activities if @actiontype == "pinned_tab" %>
+            <%= render 'notifications/project' if @actiontype == "tasks_tab" %>
+            <%= render 'projects/arg_tab', project_id: @project.id if @actiontype == "arg_tab" %>
+            <%= render 'projects/insights_tab', project_id: @project.id if @actiontype == "insights_tab" %>
            
         </div>
       </div>   
@@ -104,160 +102,56 @@
 
 <script>
 <% if @actiontype == "show" %>
-$(function () {
-  Highcharts.setOptions({                                            
-  // This is for all plots, change Date axis to local timezone
-    global : {
-      // timezoneOffset: -7 * 60,
-      useUTC : false
-    },
-    lang: {
-        resetZoom: "Clear date filter"
-    }
-  });
-  $('#time-filter-highcharts').highcharts({
-    chart: {
-        events:{
-          load: function(event) {
-            var extremes = this.yAxis[0].getExtremes();
-            this.yAxis[0].setExtremes(0, extremes.dataMax);
-        },
-          selection: function(event) {
-
-            if(event.xAxis !=null){
-              g_minDate = event.xAxis[0].min/1000;
-              g_maxDate = event.xAxis[0].max/1000;
-              console.log('----------------');
-              console.log(g_minDate);
-              console.log(g_maxDate);
-              console.log('----------------');
-              applyFilter();
-
-              // activityTimeFilter(event.xAxis[0].min/1000,event.xAxis[0].max/1000);
-
-            }
-            else{
-              // console.log("selection: reset");
-              // activityTimeFilterReset();
-              g_minDate = 0; 
-              g_maxDate = 0;
-              applyFilter();
-            }
-
-          }
-
-        },
-        zoomType: 'x',
-        backgroundColor: '#f3f3f4'
-    },
-    credits: {
-        enabled: false
-    },
-    title: {
-        text: ''
-    },
-    // subtitle: {
-    //     text: document.ontouchstart === undefined ?
-    //             'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
-    // },
-    xAxis: {
-        type: 'datetime'
-    },
-    yAxis: {
-        title: { text: '' },
-        labels: { enabled: false },
-        gridLineWidth: 0,
-        minorGridLineWidth: 0
-    },
-    legend: {
-        enabled: false
-    },
-    plotOptions: {
-        area: {
-            fillColor: {
-                linearGradient: {
-                    x1: 0,
-                    y1: 0,
-                    x2: 0,
-                    y2: 1
-                },
-                stops: [
-                    [0, Highcharts.getOptions().colors[0]],
-                    [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
-                ]
-            },
-            marker: {
-                radius: 2
-            },
-            lineWidth: 1,
-            states: {
-                hover: {
-                    lineWidth: 1
-                }
-            },
-            threshold: null
+    /* Pins (same as the one in projects#show */
+    $('.best_in_place.pin').on("ajax:success", function(){
+        if ($(this).data('activity').is_pinned) {
+            // remove from pinned tab
+            $(this).data('activity').is_pinned = false;
+            var id = $(this).data('activity').id;
+            $("tr#pin-"+id).fadeOut(400, function() {$("tr#pin-"+id).remove();});
+            $(this).parents('.vertical-timeline-content').children('h3').children('#pinned').hide();
         }
-    },
+        else {
+            // add to pinned tab
+            $(this).data('activity').is_pinned = true;
+            $(this).parents('.vertical-timeline-content').children('h3').children('#pinned').show();
+        }
+    });
 
-    series: [{
-        type: 'column',
-        name: 'Activity Count',
-        data: [ 
-                <% counter = 0  %>
-                <% @activities_by_date.each do |a| %>
-                    <% if (counter < @activities_by_date.length)  %>
-                      <% counter = counter + 1  %>
-                      <%='['+a.utc_milli_timestamp.inspect + ','+ a.count.inspect+'],' %>
-                    <% else  %>
-                      <%='['+ +a.utc_milli_timestamp.inspect + ','+ a.count.inspect+']' %>
-                    <% end %>
-                  
-                <% end %>
-              ]                
-    }]
-  });
-});
+    /* Toggle Private */
+    $('.best_in_place.toggle-private').on('ajax:success', function() {
+        if ($(this).data('activity').is_public) {
+            $(this).data('activity').is_public = false;
+            $(this).parents('.vertical-timeline-content').children('h3').children('#private').show();
+        }
+        else {
+            $(this).data('activity').is_public = true;
+            $(this).parents('.vertical-timeline-content').children('h3').children('#private').hide();
+        }
+    });
+
+    /* Spin the refresh icon to show that refresh is running */
+    $('#btn-refresh').click( function () {
+        $('.fa.fa-refresh').addClass('fa-spin');
+    })
+
+    // Fix best_in_place bug/side-effect that adds paragraph tags to the .html of custom field dropdown lists, causing the value to be displayed awkwardly
+    $('.best_in_place').bind('ajax:success', function(){ 
+        this.innerHTML = this.innerHTML.replace('\<p\>', '').replace('\<\/p\>', '');
+    });
+
+    $(document).ready(function(){
+        /* Set the initial state of Account custom fields expandable section to expanded+showing */
+        toggleSection($("#stream-account-custom-fields"));
+    });
 <% end %>
 
 $(document).ready(function(){
-
-  <% if @actiontype == "show" %>
-
-   $('.comment_category').chosen({ disable_search: false, allow_single_deselect: true, width: $('.comment_category_div').width() + 'px'});
-
-  $('.user_filter').chosen({disable_search: false, allow_single_deselect: true, width: $('.user_filter_div').width() + 'px'});  
-
-  $('#timeline-filters').hide();
-   
-  <% end %>
-
-
-
-  <% if @actiontype == "tasks" %>
-  $('#notifications-table').DataTable({
-      scrollX: true,
-      responsive: true,
-      columnDefs: [
-        { searchable: false, targets: [0,1,3,4,5,6]},
-        { orderable: false, targets: [2,3] },
-        { orderDataType: "dom-checkbox", targets: 0 }
-      ],
-      bPaginate: false,
-      order: [[0, "asc"], [ 6, "desc" ]],
-      dom:' <"col-sm-4 row"f><"top">t<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
-      language: {
-      search: "_INPUT_",
-      searchPlaceholder: "Start typing to filter list..."
-      }
-    });
-    $('input[type=search]').attr('size', '50');
-    <% end %>
-
 });
 
 
 </script>
 
-<% if @actiontype == "tasks" or @actiontype == "show" %>
+<% if @actiontype == "tasks_tab" || @actiontype == "show" %>
 <%= javascript_include_tag 'notifications' %>
 <% end %>
