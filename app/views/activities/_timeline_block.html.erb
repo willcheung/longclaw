@@ -85,7 +85,7 @@
                     <% end %>
                 </div>
             </div> <!-- chat discussion -->
-        <% unless params[:action] == "daily_summary" %>
+        <% unless (params[:action] == "daily_summary" || params[:actiontype] = "show") %> <!-- for Home > Daily summary, or for Salesforce Controller -->
             <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => "timeline-block-notification-table", :notifications => a.notifications %></div>
         <% end %>
 

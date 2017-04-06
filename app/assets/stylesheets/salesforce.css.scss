@@ -59,7 +59,7 @@
   border-left: 4px solid #A1C436;
 }
 
-//* ----- SimpleForm Styles (used for New Note's RAG-Status radio buttons) -------*//
+//* ----- SimpleForm Styles (used for New Note's RAG-Status radio buttons) ----- *//
 
 .simple_form {
   label > input{
@@ -82,4 +82,45 @@
   label > input:checked + .rag-border-color3{
     background: #A1C436;
   }
+}
+
+//* ----- Misc. ----- *//
+.metric-title {
+  font-weight: bold;
+  font-size: 14px;
+}
+.metric-content {
+  font-size: 26px; 
+}
+
+ul.nav-tabs li.active a {
+  background: #f9f9f9;
+  color: #3C8DC5;
+  //font-weight: bold;
+}
+
+.white-bg {
+  background-color: white !important;
+}
+
+.nav-tabs {
+  border-bottom: none;
+}
+
+.timeline-end {
+  width: 400px;
+  margin: 30px auto 0;
+  text-align: center;
+}
+
+.timeline-end hr {
+  border-top-color: #cccccc;
+}
+
+.timeline-end h3 {
+  position: relative;
+  top: -30px;
+  background-color: #f3f3f4;
+  width: 225px;
+  margin: 0 auto;
 }
