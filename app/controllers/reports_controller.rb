@@ -29,7 +29,7 @@ class ReportsController < ApplicationController
     tasks_by_open_date = tasks.group('date(created_at)').count
     tasks_by_complete_date = tasks.group('date(complete_date)').count
     tasks_by_open_date.each do |date, opened_tasks|
-      date_index = day_range - 1 - Date.current.mjd + date.mjd
+      date_index = date.mjd - (day_range - 1).days.ago.to_date.mjd
       @tasks_trend_data.new_open[date_index] += opened_tasks if date_index >= 0
       @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
         date_index <= i ? num_tasks + opened_tasks : num_tasks
@@ -37,10 +37,34 @@ class ReportsController < ApplicationController
     end
     tasks_by_complete_date.each do |date, completed_tasks|
       next if date.nil?
-      date_index = day_range - 1 - Date.current.mjd + date.mjd
+      date_index = date.mjd - (day_range - 1).days.ago.to_date.mjd
       @tasks_trend_data.new_closed[date_index] += completed_tasks if date_index >= 0
       @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
         date_index <= i ? num_tasks - completed_tasks : num_tasks
+      end
+    end
+
+    meeting_time = @user.meeting_time_by_project
+    email_time = @user.email_time_by_project
+    @interaction_time_per_account = Hashie::Mash.new({names: [], ids: [], meeting_time: [], sent_time: [], read_time: []})
+    meeting_time.each do |p|
+      @interaction_time_per_account.names << p.name
+      @interaction_time_per_account.ids << p.id
+      @interaction_time_per_account.meeting_time << p.total_meeting_hours
+      @interaction_time_per_account.sent_time << 0
+      @interaction_time_per_account.read_time << 0
+    end
+    email_time.each do |p|
+      i = @interaction_time_per_account.ids.index(p.id)
+      if i.nil?
+        @interaction_time_per_account.names << p.name
+        @interaction_time_per_account.ids << p.id
+        @interaction_time_per_account.meeting_time << 0
+        @interaction_time_per_account.sent_time << p.outbound
+        @interaction_time_per_account.read_time << p.inbound
+      else
+        @interaction_time_per_account.sent_time[i] = p.outbound
+        @interaction_time_per_account.read_time[i] = p.inbound
       end
     end
 

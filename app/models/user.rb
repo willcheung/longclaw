@@ -596,6 +596,57 @@ class User < ActiveRecord::Base
     output
   end
 
+  def email_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    query = <<-SQL
+      WITH user_emails AS (
+        SELECT messages ->> 'messageId'::text AS message_id,
+               project_id,
+               array_length(regexp_split_to_array((messages ->'content') ->> 'body', E'[^\\\\w:!.()?//\\\\,-]+'), 1) AS word_count,
+               jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+               CASE
+                 WHEN messages -> 'to' IS NULL THEN NULL
+                 ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+               END AS to,
+               CASE
+                 WHEN messages -> 'cc' IS NULL THEN NULL
+                 ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+               END AS cc
+        FROM activities,
+        LATERAL jsonb_array_elements(email_messages) messages
+        WHERE category = '#{Activity::CATEGORY[:Conversation]}'
+        AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+      )
+      SELECT projects.id, projects.name, SUM(outbound_wc)::float AS outbound, SUM(inbound_wc)::float AS inbound, COALESCE(SUM(outbound_wc),0) + COALESCE(SUM(inbound_wc),0) AS total
+      FROM (
+        SELECT inbound_emails.project_id, SUM(inbound_emails.word_count) AS outbound_wc, 0 AS inbound_wc
+        FROM (
+          SELECT DISTINCT message_id, project_id, word_count
+          FROM user_emails
+          WHERE "from" = '#{self.email}'
+        ) inbound_emails
+        GROUP BY project_id, message_id
+        UNION ALL
+        SELECT outbound_emails.project_id, 0 AS outbound_wc, SUM(outbound_emails.word_count) AS inbound_wc
+        FROM (
+          SELECT DISTINCT message_id, project_id, word_count
+          FROM user_emails
+          WHERE '#{self.email}' IN ("to", "cc")
+        ) outbound_emails
+        GROUP BY project_id, message_id
+      ) AS wc_table
+      LEFT JOIN projects
+      ON projects.id = wc_table.project_id
+      GROUP BY 1
+      ORDER BY total
+    SQL
+    project_times = Project.find_by_sql(query)
+
+    project_times.each do |p|
+      p.inbound = p.inbound <= 400 ? 0.01 : (p.inbound/4000.0).round(2)
+      p.outbound = p.outbound <= 9 ? 0.01 : (p.outbound/900.0).round(2)
+    end
+  end
+
   def self.meeting_report(array_of_account_ids, array_of_domains, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_meeting AS(
@@ -638,6 +689,22 @@ class User < ActiveRecord::Base
         output << y
       end
     output
+  end
+
+  def meeting_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    query = <<-SQL
+      SELECT projects.id, projects.name, SUM((messages->>'end_epoch')::integer - last_sent_date_epoch::integer) / 3600::float AS total_meeting_hours
+      FROM activities
+      LEFT JOIN projects
+      ON projects.id = activities.project_id,
+      LATERAL jsonb_array_elements(email_messages) messages
+      WHERE activities.category = '#{Activity::CATEGORY[:Meeting]}'
+      AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+      AND "from" || "to" || cc @> '[{"address":"#{self.email}"}]'::jsonb
+      AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{self.organization.accounts.ids.join("','")}'))
+      GROUP BY 1
+    SQL
+    Project.find_by_sql(query)
   end
 
   # Returns a map of the ROLEs values only (not keys), for use in best-in-place picklists
