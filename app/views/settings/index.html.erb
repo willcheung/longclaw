@@ -32,11 +32,27 @@
             </div>
             <span>&nbsp;</span>
         </div>
-        
     </div>
 
-    <h1>Organization Settings</h1>
+    <% if current_user.power_or_chrome_user_only? %>
+        <h1>My Integrations </h1>
+        <div class="row">
+            <div class="ibox-content text-center">
+                <h1>Salesforce</h1>
+                <div class="m-b-sm">
+                    <img src="assets/images/salesforce.png"/ style="height:75px;"/>
+                </div>
+            
+                <% if @individual_salesforce_user.nil? %>
+                    <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%>">Login to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Login to Salesforce Sandbox</a> <br>
+                <% else %>
+                    <p>Connected as <%= @individual_salesforce_user.oauth_user_name %><span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="/salesforce/disconnect/<%=@individual_salesforce_user.id %>r">Disconnect!</a></span></p>
+                <% end %>
+            </div>
+        </div>
+    <% end %>
 
+    <h1>Organization Settings</h1>
     <div class="row">
         <div class="col-md-4">
             <div class="ibox-content text-center">
@@ -86,9 +102,7 @@
         </div>
     </div>
 
-
-    <h1>Integrations</h1>
-    
+    <h1>Organization Integrations</h1>
     <div class="row">
         <div class="col-md-4">
             <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
