@@ -3,15 +3,61 @@ class ReportsController < ApplicationController
   
   def team_dashboard
     users = current_user.organization.users
-    accounts_managed = users.includes(:projects_owner_of).group('users.id').count('projects.*').sort_by { |uid, num_accounts| num_accounts }.reverse
-    @accounts_managed = accounts_managed.map do |u|
-      user = users.find { |usr| usr.id == u[0] }
-      Hashie::Mash.new({ id: user.id, num_accounts: u[1], name: get_full_name(user)})
+    accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
+    @accounts_managed = accounts_managed.map do |uid, num_accounts|
+      user = users.find { |usr| usr.id == uid }
+      Hashie::Mash.new({ id: user.id, num_accounts: num_accounts, name: get_full_name(user)})
     end
 
     # custom_lists = current_user.organization.get_custom_lists_with_options
     # @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
     # @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+  end
+
+    # for loading left-chart on team_dashboard
+  def td_sort_data
+    @sort = params[:sort]
+
+    # projects = Project.visible_to(current_user.organization_id, current_user.id)
+    # projects = projects.where(category: params[:category]) if params[:category]
+    # projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
+
+    # Incrementally apply any filters
+    # if !params[:owner].nil?
+    #   if params["owner"]=="none"
+    #     projects = projects.where(owner_id: nil)
+    #   elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+    #     projects = projects.where(owner_id: params[:owner]);
+    #   end
+    # end 
+
+    users = current_user.organization.users
+
+    # @data = [] and return if projects.blank?  #quit early if all projects are filtered out
+
+    case @sort
+    when "Accounts Managed"
+      accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
+      @data = accounts_managed.map do |uid, num_accounts|
+        user = users.find { |usr| usr.id == uid }
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: num_accounts})
+      end
+    when "Time Spent (Last 14d)"
+
+    when "Activities (Last 14d)"
+
+    when "New Alerts & Tasks (Last 14d)"
+
+    when "Closed Alerts & Tasks (Last 14d)"
+
+    when "Open Alerts & Tasks"
+      open_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS FALSE").group('users.id').order("task_count DESC")
+      @data = open_tasks.map do |u|
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+      end
+    else # Invalid
+      @data = []
+    end
   end
 
   def td_user_data

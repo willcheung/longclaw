@@ -36,16 +36,16 @@
             <!-- LEFT -->
             <div class="col-md-5">
                 <h4 class="m-l-md">Sort by: 
-                <select class="metric_filter col-lg-8" data-placeholder="Select Type">
+                <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Type">
                     <option selected>Accounts Managed</option>
-                    <option>Revenue Managed</option>
-                    <option>Revenue per Hour Spent (Last 7d)</option>
-                    <option>Time Spent (Last 7d)</option>
-                    <option>On Target</option>
-                    <option>Activities (Last 7d)</option>
-                    <option>New Alerts & Tasks (Last 7d)</option>
-                    <option>Closed Alerts & Tasks (Last 7d)</option>
-                    <option>Open Tasks</option>
+                    <!-- <option>Revenue Managed</option> -->
+                    <!-- <option>Revenue per Hour Spent (Last 14d)</option> -->
+                    <option>Time Spent (Last 14d)</option>
+                    <!-- <option>On Target</option> -->
+                    <option>Activities (Last 14d)</option>
+                    <option>New Alerts & Tasks (Last 14d)</option>
+                    <option>Closed Alerts & Tasks (Last 14d)</option>
+                    <option>Open Alerts & Tasks</option>
                   </select>    
                
                 </h4>
@@ -66,6 +66,16 @@
 <script>
 
     $(function () {
+
+        $('#sort-type').change( function () {
+            // Clear stream data ("right") chart
+            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
+
+            // Build URL for AJAX call for filtered data
+            var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val());
+            $.getScript(url)
+        });
+
         $('#left-chart').highcharts({
             chart: {
                 type: 'bar'
@@ -79,7 +89,7 @@
             },
             yAxis: {
                 min: 0,
-                max: 100,
+                // max: 100,
                 opposite: true,
                 title: {
                     text: ''
