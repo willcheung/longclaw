@@ -64,7 +64,6 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-
   CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
 
   #
@@ -253,13 +252,12 @@ class Activity < ActiveRecord::Base
     nil # successful request
   end
 
-  # This is used to bulk export CS Activities to SFDC Account (ActivityHistory).
+  # This is used to bulk delete CS Activities in the SFDC entity (ActivityHistory).
   # Parameters:  project - CS stream to export
   #              type - SFDC entity type: 'Account' or 'Opportunity'
-  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil, limit=200)
-    #recently_updated_sfdc_rids = client.get_updated('Task', Time.local(2017,3,1), Time.local(2017,3,31))
-    # SFDC type formats:  dateTime = "2017-03-01T00:00:00z",  date = "2017-03-01"
-    delete_tasks_query_stmt = "select Id FROM Task WHERE WhatId = '#{sfdc_id}' AND TaskSubType = 'Task' AND Subject LIKE 'ContextSmith ——%'"
+  # Notes:  SFDC type formats:  dateTime = "2017-03-01T00:00:00z",  date = "2017-03-01"
+  def self.delete_all_cs_activities(client, type="Account", from_date=nil, to_date=nil, limit=200)
+    delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Subject LIKE 'ContextSmith ——%'"
     delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
     delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
     delete_tasks_query_stmt += " LIMIT #{limit}"
@@ -272,14 +270,19 @@ class Activity < ActiveRecord::Base
     else  # Salesforce query failure
       return "Attempted to delete old SFDC tasks matching query=\"#{delete_tasks_query_stmt}\""  # proprogate query to caller
     end
-    
+  end
+
+  # This is used to bulk export CS Activities to SFDC entity (ActivityHistory).
+  # Parameters:  project - CS stream to export
+  #              type - SFDC entity type: 'Account' or 'Opportunity'
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil, limit=200)
     project.activities.each do |a|
       description = a.category + " activity (imported from ContextSmith) ——\n"
       activity_date = Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d")
       if a.category == Activity::CATEGORY[:Conversation]
           #activity_date = Time.zone.at(m.sentDate).strftime("%b %d")
-          description += "Description: Conversation: \"#{ a.title }:\"  #{get_conversation_member_names(a.from, a.to, a.cc)}"
-          description += !a.is_public ? "  (Private)\n" : "\n"
+          description += "Description:  \"#{ a.title }:\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }"
+          description += !a.is_public ? "  (private)\n" : "\n"
           a.email_messages.each do |m|
             description += "—————————————————————————\n"
             description += "Sender/addressees: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
@@ -291,7 +294,7 @@ class Activity < ActiveRecord::Base
           description += a.note.present? ? a.note : self.rag_note(a.rag_score.to_i)
       elsif a.category == Activity::CATEGORY[:Meeting] 
           description += "Description:  #{ a.title }"
-          description += !a.is_public ? "  (Private)\n" : "\n"
+          description += !a.is_public ? "  (private)\n" : "\n"
           description += "Time: #{ self.get_calendar_interval(a) }\n"
           description += "Meeting Organizer: #{ a.from[0].personal ? a.from[0].personal : a.from[0].address }\n"
           description += "Attendees: #{ self.get_calendar_member_names(a.to) }\n"
@@ -302,15 +305,36 @@ class Activity < ActiveRecord::Base
           a.email_messages.first.issue.fields.comment.comments.each { |c| description += "\n#{ c.author.displayName } added a comment: #{ c.body }\n" }
           # "- #{time_ago_in_words(c.updated.to_time)} ago"
       elsif a.category == Activity::CATEGORY[:Zendesk]
-          # TODO: Add export Zendesk activity to Salesforce
+          description += "Description:  \"#{ a.title }:\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }  #{ a.email_messages.first.status }"
+          description += !a.is_public ? "  (private)\n" : "\n"
+
+
+
+          a.email_messages.first.comments.each do |c|
+            description += "#{ c.author } added a comment - #{ c.created_at }\n"
+            description += "Content: #{ strip_tags(simple_format(c.text)) }\n"
+           end
       elsif a.category == Activity::CATEGORY[:Basecamp2]
-          # TODO: Add export Basecamp2 activity to Salesforce
+          description += "Description:  \"#{ a.title }\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }"
+          description += !a.is_public ? "  (private)\n" : "\n"
+          a.email_messages.reverse.each do |c|
+            if c.eventable
+              description += "—————————————————————————\n"
+              if c.action == 'commented on'
+                description += "#{ c.creator.name } added a comment - #{ c.created_at.to_date }\n"
+              else
+                description += "#{ c.creator.name } created discussion - #{ c.created_at.to_date }\n"
+              end
+              description += "Content: #{ strip_tags(simple_format(c[:excerpt])) }\n"
+            end
+          end
       elsif a.category == Activity::CATEGORY[:Alert]
           description += "Description:  #{ a.title }\n"
           description += a.note + "\n"
       else
-          next  # if any other Activity type (e.g., Salesforce), skip to next Activity
+          next # if any other Activity type (e.g., Salesforce), skip to the next Activity!
       end
+
       sObject_meta = { id: sfdc_id, type: type }
       update_details = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "ContextSmith —— #{a.category}: #{a.title}", priority: 'Normal', description: description }
 
