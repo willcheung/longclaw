@@ -46,11 +46,17 @@ class ReportsController < ApplicationController
 
     when "Activities (Last 14d)"
 
-    when "New Alerts & Tasks (Last 14d)"
-
-    when "Closed Alerts & Tasks (Last 14d)"
-
-    when "Open Alerts & Tasks"
+    when "New Alerts/Tasks (Last 14d)"
+      new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
+      @data = new_tasks.map do |u|
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+      end
+    when "Closed Alerts/Tasks (Last 14d)"
+      closed_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS TRUE AND EXTRACT(EPOCH FROM notifications.complete_date) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
+      @data = closed_tasks.map do |u|
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+      end
+    when "Open Alerts/Tasks"
       open_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS FALSE").group('users.id').order("task_count DESC")
       @data = open_tasks.map do |u|
         Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
