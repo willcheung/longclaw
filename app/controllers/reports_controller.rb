@@ -78,8 +78,8 @@ class ReportsController < ApplicationController
 
     @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range, 0), new_open: Array.new(day_range, 0), new_closed: Array.new(day_range, 0)})
     tasks = @user.notifications
-    tasks_by_open_date = tasks.group('date(created_at)').count
-    tasks_by_complete_date = tasks.group('date(complete_date)').count
+    tasks_by_open_date = tasks.group("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
+    tasks_by_complete_date = tasks.group("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
     tasks_by_open_date.each do |date, opened_tasks|
       date_index = date.mjd - (day_range - 1).days.ago.to_date.mjd
       @tasks_trend_data.new_open[date_index] += opened_tasks if date_index >= 0
