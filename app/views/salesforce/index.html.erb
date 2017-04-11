@@ -9,17 +9,13 @@
       <div class="panel blank-panel">
         <div class="panel-heading">
           <ul class="nav nav-tabs">
-            <% if @project.nil? %>
+            <% if !@is_mapped_to_CS_account || @streams_mapped.nil? %>
               <div class="text-center m-t-lg">
-                <h3>Invalid project identifier</h3>
+                <h3>Invalid Salesforce identifier or no valid ContextSmith streams are mapped to this Salesforce Account.</h3>
               </div>
-            <% elsif @streams_mapped.blank? %>
+            <% elsif @streams_mapped.empty? %>
               <div class="text-center m-t-lg">
-                <% if !@is_mapped_to_CS_account %>
-                  <h3>Not connected to any ContextSmith Account</h3>
-                <% else %>
-                  <h3>No project in this account</h3>
-                <% end  %>
+                <h3>No visible or active streams are mapped to this Salesforce Account.</h3>
               </div>
             <% else %>
               <span>Streams:&nbsp;&nbsp;</span>
@@ -35,6 +31,7 @@
                 </span>
               <% end %>
             <% end %>
+            <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%> "><span class="fa fa-refresh pull-right"> Refresh view</a></span>
           </ul>
         </div>
       </div>
@@ -142,9 +139,6 @@
         toggleSection($("#stream-account-custom-fields"));
     });
   <% end %>
-
-$(document).ready(function(){
-});
 
 </script>
 <% if @actiontype == "tasks_tab" || @actiontype == "show" %>
