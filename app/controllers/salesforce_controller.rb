@@ -19,6 +19,7 @@ class SalesforceController < ApplicationController
       cs_account = sf_account.account
       return if cs_account.nil?  # no CS accounts mapped to this Salesforce account
     end
+
     @is_mapped_to_CS_account = true
 
     @actiontype = (params[:actiontype].present? && (["index", "show", "filter_timeline", "more_timeline", "pinned_tab", "tasks_tab", "insights_tab", "arg_tab"].include? params[:actiontype])) ? params[:actiontype] : 'show'
@@ -211,6 +212,8 @@ class SalesforceController < ApplicationController
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
 
     @client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+    Activity.delete_all_cs_activities(@client) #clear all existing CS Activities from SFDC (accounts)
 
     unless @client.nil?  # unless connection error
       @streams.each do |s|

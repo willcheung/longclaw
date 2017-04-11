@@ -65,6 +65,7 @@ class SalesforceService
 
   end
 
+  # This is used to Insert CS activity into the corresponding SFDC account/opportunity
   # Parameters: sObject_meta - a hash that contains the :id (and :type, optional) of the SFDC sObject we are updating
   #             update_details - hash containing :activity_date, :subject, :priority, and :description of Salesforce Activity to write
   def self.update_salesforce(client, sObject_meta, update_details, update_type="ActivityHistory")
@@ -73,13 +74,16 @@ class SalesforceService
     if (!client.nil?)
       if update_type == "ActivityHistory"
         begin
+          #TODO: Do an upsert instead of Delete followed by an Insert for performance
+          #update_result = client.upsert('Task', nil, TaskSubtype: 'Task', Status: 'Completed', WhatId: sObject_meta[:id], ActivityDate: update_details[:activity_date], Subject: update_details[:subject], Priority: update_details[:priority], Description: update_details[:description])  # update_result is the new Task's Id
+          #update_result = client.upsert('Task', 'Id', Id: newTask_Id, Subject: "New subject") if update_result.present?
+
           update_result = client.create('Task', TaskSubtype: 'Task', Status: 'Completed', WhatId: sObject_meta[:id], ActivityDate: update_details[:activity_date], Subject: update_details[:subject], Priority: update_details[:priority], Description: update_details[:description])  # update_result is the new Task's Id
           #puts "---> new Task creation=#{update_result}"
           if update_result == false
             puts "*** SalesforceService error: Salesforce update error while updating sObject_meta: #{sObject_meta}, sObject_fields: #{update_details} update_type: #{update_type}"
             update_result = nil
           end
-          #update_result = client.upsert('Task', 'Id', Id: newTask_Id, Subject: "New subject") if newTask_Id.present?
         rescue  
           puts "*** SalesforceService error: Salesforce update error while updating sObject_meta: #{sObject_meta}, sObject_fields: #{update_details} update_type: #{update_type}"
           update_result = nil
