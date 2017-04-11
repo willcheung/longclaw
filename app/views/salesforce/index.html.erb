@@ -13,7 +13,7 @@
               <div class="text-center m-t-lg">
                 <h3>Invalid Salesforce identifier or no valid ContextSmith streams are mapped to this Salesforce Account.</h3>
               </div>
-            <% elsif @streams_mapped.empty? %>
+            <% elsif @project.empty? || @streams_mapped.empty? %>
               <div class="text-center m-t-lg">
                 <h3>No visible or active streams are mapped to this Salesforce Account.</h3>
               </div>
