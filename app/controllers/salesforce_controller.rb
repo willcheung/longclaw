@@ -6,11 +6,13 @@ class SalesforceController < ApplicationController
     @category_param = []
     @filter_email = []
 
+    @id_param_present = false
     @is_mapped_to_CS_account = false
 
     if params[:id].nil?
       return
     else
+      @id_param_present = true
       # Set this salesforce id to contextsmith account id and then try to find a SF account mapping
       @salesforce_id = params[:id]  
       sf_account = SalesforceAccount.eager_load(:account).find_by(salesforce_account_id: @salesforce_id, contextsmith_organization_id: current_user.organization_id)
@@ -27,9 +29,9 @@ class SalesforceController < ApplicationController
     # check if CS account_id is valid and in the scope
     @streams_mapped = Project.visible_to(current_user.organization_id, current_user.id).where(account_id: cs_account.id)
     #@streams_mapped.each { |p| puts "**************** project=#{ p.name }"}
+    #puts ">>>>>>>>>>>>>>>>>>>>>>>>>>> cs_account.id=#{cs_account.id}"
 
     activities = []
-
     if @streams_mapped.present?
       if params[:pid].present?
         @project = @streams_mapped.detect {|p| p.id == params[:pid]} || nil

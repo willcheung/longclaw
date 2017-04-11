@@ -2,8 +2,8 @@ class SalesforceService
 
   def self.connect_salesforce(organization_id, user_id=nil)
     salesforce_client_id = ENV['salesforce_client_id']
-    salesforce_client_secret = ENV['salesforce_client_secret'] 
-    hostURL = 'login.salesforce.com'  
+    salesforce_client_secret = ENV['salesforce_client_secret']
+    hostURL = 'login.salesforce.com'
     # try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
     if user_id
       salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id)
