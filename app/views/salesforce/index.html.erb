@@ -9,13 +9,13 @@
       <div class="panel blank-panel">
         <div class="panel-heading">
           <ul class="nav nav-tabs">
-            <% if !@is_mapped_to_CS_account || @streams_mapped.nil? %>
+            <% if @id_param_present.blank? %>
+              <div class="text-center m-t-lg">
+                <h3>Invalid Salesforce identifier.</h3>
+              </div>
+            <% elsif !@is_mapped_to_CS_account || @streams_mapped.blank? || @project.blank? %>
               <div class="text-center m-t-lg">
                 <h3>Invalid Salesforce identifier or no valid ContextSmith streams are mapped to this Salesforce Account.</h3>
-              </div>
-            <% elsif @project.empty? || @streams_mapped.empty? %>
-              <div class="text-center m-t-lg">
-                <h3>No visible or active streams are mapped to this Salesforce Account.</h3>
               </div>
             <% else %>
               <span>Streams:&nbsp;&nbsp;</span>
@@ -30,13 +30,13 @@
                 &nbsp;&nbsp;<% if i < @streams_mapped.size - 1 %>|<%end %>&nbsp;&nbsp;
                 </span>
               <% end %>
-            <% end %>
-            <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%> "><span class="fa fa-refresh pull-right"> Refresh view</a></span>
+              <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%> "><span class="fa fa-refresh pull-right"> Refresh view</a></span>
+            <% end %>              
           </ul>
         </div>
       </div>
      
-    <% if @project.present? && @streams_mapped.present? %>
+    <% if @project.present? %>
       <!-- Form -->
       <div class="col-lg-12" style="padding-top: 15px">
         <!--<div class="col-lg-1">
