@@ -151,16 +151,17 @@ class SalesforceController < ApplicationController
   end
 
   def refresh_accounts
-    SalesforceAccount.load(current_user.organization_id)
+    SalesforceAccount.load_accounts(current_user.organization_id)
     render :text => ' '
   end
 
   def refresh_opportunities
-    SalesforceOpportunity.load(current_user.organization_id)
+    SalesforceOpportunity.load_opportunities(current_user.organization_id)
     render :text => ' '
   end
 
-  # Activities are loaded into native CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
+  # Load SFDC Activities into native CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
+  # Note: Ignores exported CS data residing on SFDC
   def refresh_activities
     method_name = "refresh_activities()"
     filter_predicate_str = {}
@@ -207,15 +208,16 @@ class SalesforceController < ApplicationController
     render :text => ' '
   end
 
-  # Activities are exported into remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
-  def export_cs_activities
-    method_name = "export_cs_activities()"
+  # CS Activities are exported into the remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
+  # Note: Ignores imported SFDC data residing locally
+  def export_activities
+    method_name = "export_activities()"
 
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
 
     @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-    Activity.delete_all_cs_activities(@client) #clear all existing CS Activities from SFDC (accounts)
+    Activity.delete_all_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
 
     unless @client.nil?  # unless connection error
       @streams.each do |s|

@@ -211,7 +211,7 @@ $(document).ready(function() {
         var self = $(this);
         var buttonTxtStr = self.attr("btnLabel");
 
-        $.ajax("/salesforce_activities_cs_export", {
+        $.ajax("/salesforce_activityhistory_update", {
             async: true,
             method: "POST",
             data: {},

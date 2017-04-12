@@ -45,7 +45,6 @@ class SalesforceService
 
     #return nil  # simulates a Salesforce connection error
     return client
-
   end
 
   def self.query_salesforce(client, query_statement)
@@ -62,7 +61,6 @@ class SalesforceService
 
     #return nil  # simulates a Salesforce query error
     return query_result
-
   end
 
   # This is used to Insert CS activity into the corresponding SFDC account/opportunity
@@ -93,6 +91,5 @@ class SalesforceService
 
     #return nil  # simulates a Salesforce update error
     return update_result
-
   end
 end
