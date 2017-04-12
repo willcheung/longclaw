@@ -5,30 +5,25 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-
     <div class="row">
-        <div class="col-lg-4">
-            <div class="">
-                <div class="font-bold col-lg-3 m-t-sm">Team:</div>
-                <select class="category_filter col-lg-9">
-                    <option value="Sales">Account Management</option>
-                    <option value="Sales">Customer Success</option>
-                    <option value="Sales">Sales</option>
+        <div class="col-lg-12">
+            <div class="font-bold col-md-12">Filter:</div>
+            <div class="col-md-12 m-t-sm filter-space">
+                <select id="team-filter" class="category_filter col-md-3" data-placeholder="Select Team">
+                    <option></option> <!-- no filter -->
+                    <option>Account Management</option>
+                    <option>Customer Success</option>
+                    <option>Sales</option>
+                    <option value="none">(No Team)</option>
+                </select>
+                <select id="title-filter" class="category_filter col-md-3" data-placeholder="Select Title">
+                    <option></option>
+                    <option>Account Manager</option>
+                    <option>Customer Success Manager</option>
+                    <option>Director of Services</option>
+                    <option value="none">(No Title)</option>
                 </select> 
             </div>
-        </div>
-        <div class="col-lg-4 filter-space">
-            <div class="">
-                <div class="font-bold col-lg-3 m-t-sm">Title:</div>
-                <select class="category_filter col-lg-8">
-                    <option value="Sales">Account Manager</option>
-                    <option value="Sales">Customer Success Manager</option>
-                    <option value="Sales">Director of Services</option>
-                    <option value="Sales">(No Title)</option>
-                </select> 
-            </div>
-        </div>
-        <div class="col-lg-3 filter-space">
         </div>
     </div>
     
@@ -67,12 +62,12 @@
 
     $(function () {
 
-        $('#sort-type').change( function () {
+        $('#sort-type, #team-filter, #title-filter').change( function () {
             // Clear stream data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
 
             // Build URL for AJAX call for filtered data
-            var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val());
+            var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param({ team: $('#team-filter').val(), title: $('#title-filter').val() });
             $.getScript(url)
         });
 

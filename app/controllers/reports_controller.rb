@@ -1,5 +1,5 @@
 class ReportsController < ApplicationController
-  before_action :get_owners_in_org, only: [:accounts_dashboard, :dashboard_data]
+  before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
   
   def team_dashboard
     users = current_user.organization.users
@@ -17,23 +17,25 @@ class ReportsController < ApplicationController
     # for loading left-chart on team_dashboard
   def td_sort_data
     @sort = params[:sort]
-
-    # projects = Project.visible_to(current_user.organization_id, current_user.id)
-    # projects = projects.where(category: params[:category]) if params[:category]
-    # projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
-
-    # Incrementally apply any filters
-    # if !params[:owner].nil?
-    #   if params["owner"]=="none"
-    #     projects = projects.where(owner_id: nil)
-    #   elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-    #     projects = projects.where(owner_id: params[:owner]);
-    #   end
-    # end 
-
     users = current_user.organization.users
 
-    # @data = [] and return if projects.blank?  #quit early if all projects are filtered out
+    if params[:team].present?
+      if params[:team] == "none"
+        users = users.where(department: nil)
+      else
+        users = users.where(department: params[:team])
+      end
+    end
+
+    if params[:title].present?
+      if params[:title] == "none"
+        users = users.where(title: nil)
+      else
+        users = users.where(title: params[:title])
+      end
+    end
+
+    @data = [] and return if users.blank?  #quit early if all projects are filtered out
 
     case @sort
     when "Accounts Managed"
@@ -176,12 +178,12 @@ class ReportsController < ApplicationController
     @sort = params[:sort]
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    projects = projects.where(category: params[:category]) if params[:category]
-    projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
+    projects = projects.where(category: params[:category]) if params[:category].present?
+    projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account].present?
 
     # Incrementally apply any filters
-    if !params[:owner].nil?
-      if params["owner"]=="none"
+    if params[:owner].present?
+      if params["owner"] == "none"
         projects = projects.where(owner_id: nil)
       elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
         projects = projects.where(owner_id: params[:owner]);
