@@ -254,15 +254,15 @@
             },
             series: [ {
                 name: 'Meetings',
-                color: '#ffb833',
+                color: "<%= highcharts_series_color('Meetings') %>",
                 data: <%= @meeting_report.to_json.html_safe %> 
             }, {
                 name: 'Sent',
-                color: '#00cccc',
+                color: "<%= highcharts_series_color('Sent Emails') %>",
                 data: <%= @in_outbound_report['outbound'].to_json.html_safe %>
             }, {
                 name: 'Read',
-                color: '#995cd6',
+                color: "<%= highcharts_series_color('Read Emails') %>",
                 data: <%= @in_outbound_report['inbound'].to_json.html_safe %>
             }]
         });

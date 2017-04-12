@@ -123,12 +123,15 @@
             },
             series: [{
                 name: 'Meetings',
+                color: "<%= highcharts_series_color('Meetings') %>",
                 data: <%= @interaction_time_per_account.meeting_time.to_json.html_safe %>
             }, {
                 name: 'Read Emails',
+                color: "<%= highcharts_series_color('Read Emails') %>",
                 data: <%= @interaction_time_per_account.read_time.to_json.html_safe %>
             }, {
                 name: 'Sent Emails',
+                color: "<%= highcharts_series_color('Sent Emails') %>",
                 data: <%= @interaction_time_per_account.sent_time.to_json.html_safe %>
             }]
         });

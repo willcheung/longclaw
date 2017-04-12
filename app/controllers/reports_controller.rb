@@ -40,10 +40,25 @@ class ReportsController < ApplicationController
       accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
       @data = accounts_managed.map do |uid, num_accounts|
         user = users.find { |usr| usr.id == uid }
-        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: num_accounts})
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: num_accounts })
       end
     when "Time Spent (Last 14d)"
-
+      email_time = User.team_usage_report(current_user.organization.accounts.ids, current_user.organization.users.pluck(:email))
+      meeting_time = User.meeting_report(current_user.organization.accounts.ids, current_user.organization.users.pluck(:email))
+      @data = users.map do |user|
+        email_t = email_time.find { |et| et.email == user.email }
+        if email_t.nil?
+          email_t = { "Read Emails": 0, "Sent Emails": 0 }
+        else
+          email_t = { "Read Emails": [(email_t.inbound / 4000.0).round(2), 0.01].max, "Sent Emails": [(email_t.outbound / 900.0).round(2), 0.001].max }
+        end
+        meeting_t = meeting_time.find { |mt| mt.email == user.email }
+        meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total / 3600.0 }
+        time_hash = meeting_t.merge(email_t)
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
+      end
+      @data.sort_by! { |d| d.total }.reverse!
+      @categories = ["Meetings", "Read Emails", "Sent Emails"]
     when "Activities (Last 14d)"
       user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
       @data = user_activities.map do |uid, activities|
@@ -259,9 +274,9 @@ class ReportsController < ApplicationController
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
     # Read and Sent times
-    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
+    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
     #Meetings in Interaction Time
-    @meeting_report = User.meeting_team_report([@project.account.id], @in_outbound_report['email'])
+    @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team

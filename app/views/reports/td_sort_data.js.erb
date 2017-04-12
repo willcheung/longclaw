@@ -17,6 +17,20 @@ while(chart.series.length > 1) {
     <% end %> ]
   }, false)
   <% end %>
+<% elsif @sort == "Time Spent (Last 14d)" %>
+  chart.series[0].hide();
+  <% @categories.each do |c| %>
+  chart.addSeries({
+    name: "<%= c %>",
+    color: "<%= highcharts_series_color(c) %>",
+    data: [ <% @data.each do |d| %>
+    {
+      y: <%= d.y[c] %>,
+      id: "<%= d.id %>"
+    }, 
+    <% end %> ]
+  }, false)
+  <% end %>
 <% else %>
   chart.series[0].show();
   chart.series[0].update({

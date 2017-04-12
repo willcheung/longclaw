@@ -467,32 +467,32 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
-  def self.count_activities_by_user(array_of_account_ids, domain, time_zone='UTC')
-    query = <<-SQL
-      select t2.inbound as email,
-             t2.inbound_count,
-             COALESCE(t1.outbound_count,0) as outbound_count,
-             COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) as total
-      from
-        (select "from" as outbound,
-                count(DISTINCT message_id) as outbound_count
-          from user_activities_last_14d
-          where "from" like '%#{domain}' and to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}' BETWEEN (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days') and (CURRENT_DATE AT TIME ZONE '#{time_zone}') and project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
-          group by "from" order by outbound_count desc) t1
-      FULL OUTER JOIN
-        (select inbound, count(DISTINCT message_id) as inbound_count from
-          (
-            select "to" as inbound, message_id from user_activities_last_14d where "to" like '%#{domain}' UNION ALL select "cc" as inbound, message_id from user_activities_last_14d
-            where "cc" like '%#{domain}' and to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}' BETWEEN (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days') and (CURRENT_DATE AT TIME ZONE '#{time_zone}') and project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
-          ) t
-        group by inbound order by inbound_count desc) t2
-        ON t1.outbound = t2.inbound
-        order by total desc
-        limit 10;
-    SQL
+  # def self.count_activities_by_user(array_of_account_ids, domain, time_zone='UTC')
+  #   query = <<-SQL
+  #     select t2.inbound as email,
+  #            t2.inbound_count,
+  #            COALESCE(t1.outbound_count,0) as outbound_count,
+  #            COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) as total
+  #     from
+  #       (select "from" as outbound,
+  #               count(DISTINCT message_id) as outbound_count
+  #         from user_activities_last_14d
+  #         where "from" like '%#{domain}' and to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}' BETWEEN (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days') and (CURRENT_DATE AT TIME ZONE '#{time_zone}') and project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
+  #         group by "from" order by outbound_count desc) t1
+  #     FULL OUTER JOIN
+  #       (select inbound, count(DISTINCT message_id) as inbound_count from
+  #         (
+  #           select "to" as inbound, message_id from user_activities_last_14d where "to" like '%#{domain}' UNION ALL select "cc" as inbound, message_id from user_activities_last_14d
+  #           where "cc" like '%#{domain}' and to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}' BETWEEN (CURRENT_DATE AT TIME ZONE '#{time_zone}' - INTERVAL '14 days') and (CURRENT_DATE AT TIME ZONE '#{time_zone}') and project_id in (SELECT id as project_id from projects where account_id in ('#{array_of_account_ids.join("','")}'))
+  #         ) t
+  #       group by inbound order by inbound_count desc) t2
+  #       ON t1.outbound = t2.inbound
+  #       order by total desc
+  #       limit 10;
+  #   SQL
 
-    User.find_by_sql(query)
-  end
+  #   User.find_by_sql(query)
+  # end
 
   # Team Leaderboard chart
   def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
@@ -644,7 +644,7 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
-  def self.team_usage_report(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.team_usage_report(array_of_account_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
       -- shows the total time usage be adding all the inbound emails and outbound emails as inbound and outbound
@@ -701,7 +701,7 @@ class User < ActiveRecord::Base
             GROUP BY recipient) as t
           GROUP BY recipient
         ) as t2 ON t.sender = t2.recipient)t3
-        WHERE email LIKE '%#{domain}'
+        WHERE email IN ('%#{array_of_user_emails.join("','")}')
         ORDER BY total DESC
         limit 5;
     SQL
@@ -721,15 +721,15 @@ class User < ActiveRecord::Base
         if user
           arr_full_name << get_full_name(user)
           arr_email << m.email
-          if m.inbound.to_i <= 400
-            in_b = 0.1
+          if m.inbound.to_i <= 40
+            in_b = 0.01
           else 
             in_b = m.inbound.to_i / 4000.0
           end
           arr_inbound << in_b.round(1)
 
           if m.outbound.to_i <= 9
-            out_b = 0.1
+            out_b = 0.01
           else 
             out_b = m.outbound.to_i / 900.0
           end
@@ -743,7 +743,8 @@ class User < ActiveRecord::Base
     output
   end
 
-  def email_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+
+  def email_time_by_project(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_emails AS (
         SELECT messages ->> 'messageId'::text AS message_id,
@@ -790,18 +791,18 @@ class User < ActiveRecord::Base
     project_times = Project.find_by_sql(query)
 
     project_times.each do |p|
-      p.inbound = p.inbound <= 400 ? 0.01 : (p.inbound/4000.0).round(2)
+      p.inbound = p.inbound <= 40 ? 0.01 : (p.inbound/4000.0).round(2)
       p.outbound = p.outbound <= 9 ? 0.01 : (p.outbound/900.0).round(2)
     end
   end
 
-  def self.meeting_report(array_of_account_ids, array_of_domains, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.meeting_report(array_of_account_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_meeting AS(
         SELECT  "to" AS attendees, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch, backend_id
           FROM activities,
           LATERAL jsonb_array_elements(email_messages) messages
-          WHERE category='Meeting'
+          WHERE category = 'Meeting'
           AND to_timestamp((messages ->> 'end_epoch')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
           AND project_id IN
             (
@@ -811,16 +812,16 @@ class User < ActiveRecord::Base
             )
         GROUP BY 1,2,3,4
       )
-      SELECT email, CAST(SUM(end_t) - SUM(start_t) as integer )AS total
+      SELECT email, SUM(end_t::integer - start_t::integer) AS total
       FROM (
-        SELECT email, cast(start_t AS bigint) , cast(end_t AS bigint), backend_id
+        SELECT email, start_t, end_t, backend_id
         FROM(   
             SELECT jsonb_array_elements(attendees) ->> 'address' AS email,
                   start_epoch AS start_t,
                   jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t,
                   backend_id
             FROM user_meeting ) t
-        WHERE email in ('#{array_of_domains.join("','")}')
+        WHERE email in ('#{array_of_user_emails.join("','")}')
         GROUP BY backend_id, t.email, t.start_t, t.end_t ) as t2
         GROUP BY t2.email
         ORDER BY email DESC;
@@ -839,7 +840,7 @@ class User < ActiveRecord::Base
     output
   end
 
-  def meeting_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def meeting_time_by_project(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       SELECT projects.id, projects.name, SUM((messages->>'end_epoch')::integer - last_sent_date_epoch::integer) / 3600::float AS total_meeting_hours
       FROM activities
