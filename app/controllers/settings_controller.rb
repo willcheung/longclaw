@@ -1,19 +1,20 @@
 class SettingsController < ApplicationController
-
 	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
-	before_filter :get_salesforce_user, only: ['salesforce', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
+	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
 
 	def index
 		@user_count = current_user.organization.users.count
 		@registered_user_count = current_user.organization.users.registered.count
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-    @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
-    if(@salesforce_user.nil?)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id)
-    end
 
-    @current_user_projects = current_user.projects.where('projects.is_confirmed = true AND projects.status = \'Active\'')
-    @current_user_subscriptions = current_user.valid_streams_subscriptions
+		if (@salesforce_user.nil? && # could not connect via organization/admin login
+				current_user.power_or_chrome_user_only?)  # AND is an individual (power user or chrome user)
+			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @individual_salesforce_user.nil?
+		end
+
+		@current_user_projects = current_user.projects.where('projects.is_confirmed = true AND projects.status = \'Active\'')
+		@current_user_subscriptions = current_user.valid_streams_subscriptions
 	end
 
 	def users
@@ -103,57 +104,65 @@ class SettingsController < ApplicationController
 
 	# Map CS Accounts with Salesforce accounts: "One CS Account can link to many Salesforce Accounts"
 	def salesforce
-		@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
-		@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("lower(accounts.name)")
+		if current_user.role == User::ROLE[:Admin]
+			@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
+			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("lower(accounts.name)")
+		end
 	end
 
 	# Map CS Streams with Salesforce Opportunities: "One CS Stream can link to many Salesforce Opportunities"
 	def salesforce_opportunities
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active projects because "admin" role can see everything
-		@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
+		if current_user.role == User::ROLE[:Admin]
+			@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active projects because "admin" role can see everything
+			@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
+		end
 	end
 
 	def salesforce_activities
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active projects because "admin" role can see everything
+		if current_user.role == User::ROLE[:Admin]
+			@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active projects because "admin" role can see everything
 
-		# Load previous queries if it was saved
-		custom_config = current_user.organization.custom_configurations.where("organization_id = '#{current_user.organization_id}' AND config_type LIKE '/settings/salesforce_activities#%'")
+			# Load previous queries if it was saved
+			custom_config = current_user.organization.custom_configurations.where("organization_id = '#{current_user.organization_id}' AND config_type LIKE '/settings/salesforce_activities#%'")
 
-		@entity_predicate = custom_config.where(config_type: "/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea")
-		if @entity_predicate.empty?
-			@entity_predicate = current_user.organization.custom_configurations.create(config_type: "/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea", config_value: "") 
-		else
-			@entity_predicate = @entity_predicate.first
+			@entity_predicate = custom_config.where(config_type: "/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea")
+			if @entity_predicate.empty?
+				@entity_predicate = current_user.organization.custom_configurations.create(config_type: "/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea", config_value: "") 
+			else
+				@entity_predicate = @entity_predicate.first
+			end
+			@activityhistory_predicate = custom_config.where(config_type: "/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea")
+			if @activityhistory_predicate.empty?
+				@activityhistory_predicate = current_user.organization.custom_configurations.create(config_type: "/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea", config_value: "") 
+			else
+				@activityhistory_predicate = @activityhistory_predicate.first
+			end
+
+			# to decide if show "update SFDC ActivityHistory" export button
+			@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
 		end
-		@activityhistory_predicate = custom_config.where(config_type: "/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea")
-		if @activityhistory_predicate.empty?
-			@activityhistory_predicate = current_user.organization.custom_configurations.create(config_type: "/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea", config_value: "") 
-		else
-			@activityhistory_predicate = @activityhistory_predicate.first
-		end
-
-		# to decide if show "update SFDC ActivityHistory" export button
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
 	end
 
 	def salesforce_fields
-		# We don't save SFDC custom fields (i.e., in PG), so we must query Salesforce for these every time.
-		cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
-		@cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
-		@cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+		if current_user.role == User::ROLE[:Admin]
+			# We don't save SFDC custom fields (i.e., in PG), so we must query Salesforce for these every time.
+			cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
+			@cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
+			@cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
 
-		if (params[:sf_custom_fields_only] == "true")
-			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, current_user.id, true)
-		else
-			@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, current_user.id)
+			if (params[:sf_custom_fields_only] == "true")
+				@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, true)
+			else
+				@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
+			end
+
+			# add ("nil") options to remove mapping 
+			@sf_fields[:sf_account_fields] << ["","(none)"] 
+			@sf_fields[:sf_opportunity_fields] << ["","(none)"]
+			#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
+
+			@salesforce_connection_error = true if @sf_fields.nil?
 		end
-
-		# add ("nil") options to remove mapping 
-		@sf_fields[:sf_account_fields] << ["","(none)"] 
-		@sf_fields[:sf_opportunity_fields] << ["","(none)"]
-		#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
-
-		@salesforce_connection_error = true if @sf_fields.nil?
 	end
 
 	def basecamp
@@ -203,12 +212,17 @@ class SettingsController < ApplicationController
 
 	private
 
-	def get_salesforce_user
-		# try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
-    @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
-    if(@salesforce_user.nil?)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id)
-    end
+	# Gets SFDC connection for Organization (a single SFDC admin login only)
+	def get_salesforce_admin_user
+		if current_user.admin?
+			# try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
+			@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+			if(@salesforce_user.nil?)
+			  @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
+			end
+		else
+			@salesforce_user = nil
+		end
   end
 
   def get_basecamp2_user

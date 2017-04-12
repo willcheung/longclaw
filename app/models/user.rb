@@ -79,31 +79,54 @@ class User < ActiveRecord::Base
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
+  EXTENSION_ROLE = { Chromeuser: 'Chrome user' }
 
   def valid_streams_subscriptions
     self.subscriptions.joins(:project).where(projects: {is_confirmed: true, status: 'Active'})
   end
 
-  def self.from_omniauth(auth, organization_id, user_id)
+  def self.from_omniauth(auth, organization_id, user_id=nil)
     where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
-      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id, user_id: user_id)
+      if user_id
+        oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id, user_id: user_id)
+      else
+        oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id)
+      end
 
       if oauth_user
-        oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
-                                     oauth_refresh_token: auth.credentials.refresh_token,
-                                     oauth_instance_url: auth.credentials.instance_url,
-                                     organization_id: organization_id,
-                                     user_id: user_id )
+        if user_id
+          oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
+                                       oauth_refresh_token: auth.credentials.refresh_token,
+                                       oauth_instance_url: auth.credentials.instance_url,
+                                       organization_id: organization_id,
+                                       user_id: user_id )
+        else
+          oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
+                                       oauth_refresh_token: auth.credentials.refresh_token,
+                                       oauth_instance_url: auth.credentials.instance_url,
+                                       organization_id: organization_id)
+        end
       else
-        oauth_user = OauthUser.create(
-          oauth_provider: auth.provider,
-          oauth_provider_uid: auth.uid,
-          oauth_access_token: auth.credentials.token,
-          oauth_refresh_token: auth.credentials.refresh_token,
-          oauth_instance_url: auth.credentials.instance_url,
-          oauth_user_name: auth.extra.username,
-          organization_id: organization_id,
-          user_id: user_id)
+        if user_id
+          oauth_user = OauthUser.create(
+            oauth_provider: auth.provider,
+            oauth_provider_uid: auth.uid,
+            oauth_access_token: auth.credentials.token,
+            oauth_refresh_token: auth.credentials.refresh_token,
+            oauth_instance_url: auth.credentials.instance_url,
+            oauth_user_name: auth.extra.username,
+            organization_id: organization_id,
+            user_id: user_id)
+        else
+          oauth_user = OauthUser.create(
+            oauth_provider: auth.provider,
+            oauth_provider_uid: auth.uid,
+            oauth_access_token: auth.credentials.token,
+            oauth_refresh_token: auth.credentials.refresh_token,
+            oauth_instance_url: auth.credentials.instance_url,
+            oauth_user_name: auth.extra.username,
+            organization_id: organization_id)
+        end
 
         oauth_user.save
       end
@@ -833,11 +856,14 @@ class User < ActiveRecord::Base
   end
 
   # Returns a map of the ROLEs values only (not keys), for use in best-in-place picklists
-  def self.getRolesMap
+  def self.getRolesMap(include_extension_roles=false)
     roles_map = {}
     ROLE.each do |r| #self.ROLE.each do |clm|
       roles_map[r[1]] = r[1]
     end
+    EXTENSION_ROLE.each do |r| #self.ROLE.each do |clm|
+      roles_map[r[1]] = r[1]
+    end if include_extension_roles
     return roles_map
   end
 
@@ -858,6 +884,10 @@ class User < ActiveRecord::Base
 
   def observer?
     self.role == User::ROLE[:Observer] or self.admin? or self.power_user? or self.contributor?
+  end
+
+  def power_or_chrome_user_only?
+    [User::ROLE[:Poweruser], User::EXTENSION_ROLE[:Chromeuser]].include? (self.role) 
   end
 
   ######### End Basic ACL ##########

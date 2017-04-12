@@ -1,14 +1,23 @@
 class SalesforceService
 
-  def self.connect_salesforce(organization_id, user_id)
+  def self.connect_salesforce(organization_id, user_id=nil)
     salesforce_client_id = ENV['salesforce_client_id']
-    salesforce_client_secret = ENV['salesforce_client_secret'] 
-    hostURL = 'login.salesforce.com'  
+    salesforce_client_secret = ENV['salesforce_client_secret']
+    hostURL = 'login.salesforce.com'
     # try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
-    salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id)
+    if user_id
+      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id)
+    else
+      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
+    end
 
-    if(salesforce_user.nil?)
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id, user_id: user_id)
+    if (salesforce_user.nil?)
+      if user_id
+        salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id, user_id: user_id)
+      else
+        salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
+      end
+
       salesforce_client_id = ENV['salesforce_sandbox_client_id']
       salesforce_client_secret = ENV['salesforce_sandbox_client_secret']
       hostURL = 'test.salesforce.com' 
@@ -56,22 +65,27 @@ class SalesforceService
 
   end
 
-  # sObject_meta is a hash that contains the :id and :type of the SFDC sObject we are updating
+  # This is used to Insert CS activity into the corresponding SFDC account/opportunity
+  # Parameters: sObject_meta - a hash that contains the :id (and :type, optional) of the SFDC sObject we are updating
+  #             update_details - hash containing :activity_date, :subject, :priority, and :description of Salesforce Activity to write
   def self.update_salesforce(client, sObject_meta, update_details, update_type="ActivityHistory")
     update_result = nil
     
     if (!client.nil?)
       if update_type == "ActivityHistory"
         begin
+          #TODO: Do an upsert instead of Delete followed by an Insert for performance
+          #update_result = client.upsert('Task', nil, TaskSubtype: 'Task', Status: 'Completed', WhatId: sObject_meta[:id], ActivityDate: update_details[:activity_date], Subject: update_details[:subject], Priority: update_details[:priority], Description: update_details[:description])  # update_result is the new Task's Id
+          #update_result = client.upsert('Task', 'Id', Id: newTask_Id, Subject: "New subject") if update_result.present?
+
           update_result = client.create('Task', TaskSubtype: 'Task', Status: 'Completed', WhatId: sObject_meta[:id], ActivityDate: update_details[:activity_date], Subject: update_details[:subject], Priority: update_details[:priority], Description: update_details[:description])  # update_result is the new Task's Id
           #puts "---> new Task creation=#{update_result}"
           if update_result == false
-            puts "*** SalesforceService error: Salesforce update error while updating sObject #{sObject_meta[:id]} update_type: #{update_type}"
+            puts "*** SalesforceService error: Salesforce update error while updating sObject_meta: #{sObject_meta}, sObject_fields: #{update_details} update_type: #{update_type}"
             update_result = nil
           end
-          #update_result = client.upsert('Task', 'Id', Id: newTask_Id, Subject: "New subject") if newTask_Id.present?
         rescue  
-          puts "*** SalesforceService error: Salesforce update error while updating sObject #{sObject_meta[:id]} update_type: #{update_type}"  
+          puts "*** SalesforceService error: Salesforce update error while updating sObject_meta: #{sObject_meta}, sObject_fields: #{update_details} update_type: #{update_type}"
           update_result = nil
         end    
       end 

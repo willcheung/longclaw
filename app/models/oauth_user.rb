@@ -29,6 +29,7 @@ class OauthUser < ActiveRecord::Base
 	has_many :integrations, dependent: :destroy
 
 	scope :basecamp_user, -> {where oauth_provider: CATEGORY[:basecamp2] }
+	scope :salesforce_user, -> {where oauth_provider: CATEGORY[:salesforce] }
 	
 	CATEGORY = { basecamp2: 'basecamp2', salesforce: 'salesforce' }
 	
@@ -43,16 +44,15 @@ class OauthUser < ActiveRecord::Base
 			if !client.nil?
 				
 			else
-				user = OauthUser.new(
-				oauth_provider: result['oauth_provider'],
-				oauth_provider_uid: result['oauth_provider_uid'],
-				oauth_access_token: result['oauth_access_token'],
-				oauth_refresh_token: result['oauth_refresh_token'],
-				oauth_instance_url: result['oauth_instance_url'],
-				oauth_user_name: result['oauth_user_name'],
-				organization_id: organization_id,
-				oauth_refresh_date: result['oauth_refresh_date'],
-				oauth_issued_date: Time.now
+				user = OauthUser.new( oauth_provider: result['oauth_provider'],
+															oauth_provider_uid: result['oauth_provider_uid'],
+															oauth_access_token: result['oauth_access_token'],
+															oauth_refresh_token: result['oauth_refresh_token'],
+															oauth_instance_url: result['oauth_instance_url'],
+															oauth_user_name: result['oauth_user_name'],
+															organization_id: organization_id,
+															oauth_refresh_date: result['oauth_refresh_date'],
+															oauth_issued_date: Time.now
 				)
 
 				if user.valid?
@@ -121,12 +121,4 @@ class OauthUser < ActiveRecord::Base
     end
   end
 end
-
-
-
-
-
-
-
-
 
