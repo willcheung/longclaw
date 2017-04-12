@@ -36,6 +36,8 @@ module ApplicationHelper
       "#78a300"
     elsif category == Activity::CATEGORY[:Alert]
       "#ed5565"
+    elsif category == Activity::CATEGORY[:Basecamp2]
+      "#91e8e1"
     end
   end
 

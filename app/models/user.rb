@@ -329,11 +329,11 @@ class User < ActiveRecord::Base
     return return_vals
   end
 
-  def daily_activities_by_category(days_ago=14)
+  def daily_activities_by_category(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     array_of_account_ids = self.organization.accounts.ids
     query = <<-SQL
       WITH time_series AS (
-        SELECT generate_series(date(CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') AS days  
+        SELECT generate_series(date(TIMESTAMP '#{start_day}'), date(TIMESTAMP '#{end_day}'), INTERVAL '1 day') AS days  
       )
       (
       SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
@@ -353,7 +353,7 @@ class User < ActiveRecord::Base
                 LATERAL jsonb_array_elements(email_messages) messages
                 WHERE category = '#{Activity::CATEGORY[:Conversation]}'
                 AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
-                AND (messages ->> 'sentDate')::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                AND (messages ->> 'sentDate')::integer > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
           ) AS emails
         ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{self.time_zone}') = time_series.days AND '#{self.email}' IN (emails.from, emails.to, emails.cc)
       GROUP BY days, category
@@ -369,9 +369,9 @@ class User < ActiveRecord::Base
                   WHERE category = '#{Activity::CATEGORY[:Meeting]}' 
                   AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS meetings
-        ON date_trunc('day', meetings.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', meetings.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
@@ -385,9 +385,9 @@ class User < ActiveRecord::Base
                   WHERE category = '#{Activity::CATEGORY[:JIRA]}' 
                   AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS jiras
-        ON date_trunc('day', jiras.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', jiras.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
@@ -401,9 +401,9 @@ class User < ActiveRecord::Base
                   WHERE category = '#{Activity::CATEGORY[:Salesforce]}' 
                   AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS salesforces
-        ON date_trunc('day', salesforces.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', salesforces.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
@@ -417,9 +417,9 @@ class User < ActiveRecord::Base
                   WHERE category = '#{Activity::CATEGORY[:Zendesk]}' 
                   AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS zendesks
-        ON date_trunc('day', zendesks.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', zendesks.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
@@ -433,9 +433,9 @@ class User < ActiveRecord::Base
                   WHERE category = '#{Activity::CATEGORY[:Basecamp2]}' 
                   AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS basecamp2s
-        ON date_trunc('day', basecamp2s.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', basecamp2s.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )      
@@ -530,8 +530,95 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
-  def self.count_all_activities_by_user(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
-    # TODO new query, similar to count_activities_by_user_flex that includes all other activity types to display as stacked bars on team dashboard
+  def self.count_all_activities_by_user(array_of_account_ids, array_of_user_ids, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    query = <<-SQL 
+      (
+        SELECT users.id, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
+        FROM users
+        LEFT JOIN (
+          SELECT messages ->> 'messageId'::text AS message_id,
+                 jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+                 CASE
+                   WHEN messages -> 'to' IS NULL THEN NULL
+                   ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+                 END AS to,
+                 CASE
+                   WHEN messages -> 'cc' IS NULL THEN NULL
+                   ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+                 END AS cc
+          FROM activities,
+          LATERAL jsonb_array_elements(email_messages) messages
+          WHERE category = '#{Activity::CATEGORY[:Conversation]}'
+          AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+          AND project_id IN ( SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}') )
+        ) AS emails
+        ON users.email IN (emails.from, emails.to, emails.cc)
+        WHERE users.id IN ('#{array_of_user_ids.join("','")}')
+        GROUP BY users.id, category
+      )
+      UNION ALL
+      (
+        SELECT users.id, '#{Activity::CATEGORY[:Meeting]}' AS category, COUNT(activities.*) AS num_activities
+        FROM users
+        LEFT JOIN activities
+        ON category = '#{Activity::CATEGORY[:Meeting]}'
+        AND ("from" || "to" || "cc") @> ('[{"address":"' || users.email || '"}]')::jsonb
+        AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+        AND project_id IN ( SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}') )
+        WHERE users.id IN ('#{array_of_user_ids.join("','")}')
+        GROUP BY users.id, category
+      )
+      UNION ALL
+      (
+        SELECT users.id, '#{Activity::CATEGORY[:JIRA]}' AS category, COUNT(activities.*) AS num_activities
+        FROM users
+        LEFT JOIN activities
+        ON category = '#{Activity::CATEGORY[:JIRA]}'
+        AND ("from" || "to" || "cc") @> ('[{"address":"' || users.email || '"}]')::jsonb
+        AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+        AND project_id IN ( SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}') )
+        WHERE users.id IN ('#{array_of_user_ids.join("','")}')
+        GROUP BY users.id, category
+      )
+      UNION ALL
+      (
+        SELECT users.id, '#{Activity::CATEGORY[:Zendesk]}' AS category, COUNT(activities.*) AS num_activities
+        FROM users
+        LEFT JOIN activities
+        ON category = '#{Activity::CATEGORY[:Zendesk]}'
+        AND ("from" || "to" || "cc") @> ('[{"address":"' || users.email || '"}]')::jsonb
+        AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+        AND project_id IN ( SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}') )
+        WHERE users.id IN ('#{array_of_user_ids.join("','")}')
+        GROUP BY users.id, category
+      )
+      UNION ALL
+      (
+        SELECT users.id, '#{Activity::CATEGORY[:Salesforce]}' AS category, COUNT(activities.*) AS num_activities
+        FROM users
+        LEFT JOIN activities
+        ON category = '#{Activity::CATEGORY[:Salesforce]}'
+        AND ("from" || "to" || "cc") @> ('[{"address":"' || users.email || '"}]')::jsonb
+        AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+        AND project_id IN ( SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}') )
+        WHERE users.id IN ('#{array_of_user_ids.join("','")}')
+        GROUP BY users.id, category
+      )
+      UNION ALL
+      (
+        SELECT users.id, '#{Activity::CATEGORY[:Basecamp2]}' AS category, COUNT(activities.*) AS num_activities
+        FROM users
+        LEFT JOIN activities
+        ON category = '#{Activity::CATEGORY[:Basecamp2]}'
+        AND ("from" || "to" || "cc") @> ('[{"address":"' || users.email || '"}]')::jsonb
+        AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+        AND project_id IN ( SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}') )
+        WHERE users.id IN ('#{array_of_user_ids.join("','")}')
+        GROUP BY users.id, category
+      )
+    SQL
+
+    User.find_by_sql(query)
   end
 
   def self.team_usage_report(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)

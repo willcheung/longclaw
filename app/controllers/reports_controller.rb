@@ -45,7 +45,13 @@ class ReportsController < ApplicationController
     when "Time Spent (Last 14d)"
 
     when "Activities (Last 14d)"
-
+      user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
+      @data = user_activities.map do |uid, activities|
+        user = users.find { |usr| usr.id == uid }
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
+      end
+      @data.sort_by! { |d| d.total }.reverse!
+      @categories = @data.first.y.map(&:category)
     when "New Alerts/Tasks (Last 14d)"
       new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = new_tasks.map do |u|
