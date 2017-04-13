@@ -9,9 +9,8 @@ class ReportsController < ApplicationController
       Hashie::Mash.new({ id: user.id, num_accounts: num_accounts, name: get_full_name(user)})
     end
 
-    # custom_lists = current_user.organization.get_custom_lists_with_options
-    # @departments = custom_lists.present? ? custom_lists["Department"] : {}
-    # @titles = custom_lists.present? ? custom_lists["Titles"] : {}
+    @departments = users.pluck(:department).compact.uniq
+    @titles = users.pluck(:title).compact.uniq
   end
 
     # for loading left-chart on team_dashboard

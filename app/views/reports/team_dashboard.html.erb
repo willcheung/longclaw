@@ -11,16 +11,16 @@
             <div class="col-md-12 m-t-sm filter-space">
                 <select id="team-filter" class="category_filter col-md-3" data-placeholder="Select Team">
                     <option></option> <!-- no filter -->
-                    <option>Account Management</option>
-                    <option>Customer Success</option>
-                    <option>Sales</option>
+                    <% @departments.each do |d| %>
+                    <option><%= d %></option>
+                    <% end %>
                     <option value="none">(No Team)</option>
                 </select>
                 <select id="title-filter" class="category_filter col-md-3" data-placeholder="Select Title">
                     <option></option>
-                    <option>Account Manager</option>
-                    <option>Customer Success Manager</option>
-                    <option>Director of Services</option>
+                    <% @titles.each do |t| %>
+                    <option><%= t %></option>
+                    <% end %>
                     <option value="none">(No Title)</option>
                 </select> 
             </div>
