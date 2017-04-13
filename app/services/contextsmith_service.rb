@@ -37,24 +37,21 @@ class ContextsmithService
   end
 
   def self.get_emails_from_backend_with_callback(user)
-    max=10000
+    max = ENV["max_emails"] ? ENV["max_emails"].to_i : 10000
     base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
 
     if Rails.env.production?
       callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
-      user.refresh_token! if user.token_expired?
-      token_emails = [{ token: user.oauth_access_token, email: user.email }]
+      token_emails = [{ token: user.fresh_token, email: user.email }]
       in_domain = ""
     elsif Rails.env.test? # Test / DEBUG 
       callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
-      user.refresh_token! if user.token_expired?
-      token_emails = [{ token: user.oauth_access_token, email: user.email }]
+      token_emails = [{ token: user.fresh_token, email: user.email }]
       in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
     else # Dev environment
       callback_url = "http://localhost:3000/onboarding/#{user.id}/create_clusters.json"
       u = User.find_by_email('indifferenzetester@gmail.com')
-      u.refresh_token! if u.token_expired?
-      token_emails = [{ token: u.oauth_access_token, email: u.email }]
+      token_emails = [{ token: u.fresh_token, email: u.email }]
       in_domain = "&in_domain=comprehend.com"
     end
     ### TODO: add "&request=true" to final_url
