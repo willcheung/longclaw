@@ -10,8 +10,8 @@ class ReportsController < ApplicationController
     end
 
     # custom_lists = current_user.organization.get_custom_lists_with_options
-    # @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
-    # @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    # @departments = custom_lists.present? ? custom_lists["Department"] : {}
+    # @titles = custom_lists.present? ? custom_lists["Titles"] : {}
   end
 
     # for loading left-chart on team_dashboard
