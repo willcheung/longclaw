@@ -44,14 +44,16 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: num_accounts })
       end
     when "Time Spent (Last 14d)"
-      email_time = User.team_usage_report(current_user.organization.accounts.ids, current_user.organization.users.pluck(:email))
-      meeting_time = User.meeting_report(current_user.organization.accounts.ids, current_user.organization.users.pluck(:email))
+      account_ids = current_user.organization.accounts.ids
+      user_emails = current_user.organization.users.pluck(:email)
+      email_time = User.team_usage_report(account_ids, user_emails)
+      meeting_time = User.meeting_report(account_ids, user_emails)
       @data = users.map do |user|
         email_t = email_time.find { |et| et.email == user.email }
         if email_t.nil?
           email_t = { "Read Emails": 0, "Sent Emails": 0 }
         else
-          email_t = { "Read Emails": [(email_t.inbound / 4000.0).round(2), 0.01].max, "Sent Emails": [(email_t.outbound / 900.0).round(2), 0.001].max }
+          email_t = { "Read Emails": [(email_t.inbound / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max, "Sent Emails": [(email_t.outbound / User::WORDS_PER_HOUR[:Write]).round(2), 0.001].max }
         end
         meeting_t = meeting_time.find { |mt| mt.email == user.email }
         meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total / 3600.0 }
@@ -98,7 +100,7 @@ class ReportsController < ApplicationController
 
     @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
 
-    @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range, 0), new_open: Array.new(day_range, 0), new_closed: Array.new(day_range, 0)})
+    @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range-1, 0), new_open: Array.new(day_range-1, 0), new_closed: Array.new(day_range-1, 0)})
     tasks = @user.notifications
     tasks_by_open_date = tasks.group("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
     tasks_by_complete_date = tasks.group("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count

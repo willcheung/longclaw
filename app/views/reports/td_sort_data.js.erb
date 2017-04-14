@@ -9,12 +9,14 @@ while(chart.series.length > 1) {
   chart.addSeries({
     name: "<%= c %>",
     color: "<%= highcharts_series_color(c) %>",
-    data: [ <% @data.each do |d| %>
+    data: [ 
+    <% @data.each do |d| %>
     {
       y: <%= d.y[i].num_activities %>,
       id: "<%= d.id %>"
     }, 
-    <% end %> ]
+    <% end %> 
+    ]
   }, false)
   <% end %>
 <% elsif @sort == "Time Spent (Last 14d)" %>
@@ -23,12 +25,14 @@ while(chart.series.length > 1) {
   chart.addSeries({
     name: "<%= c %>",
     color: "<%= highcharts_series_color(c) %>",
-    data: [ <% @data.each do |d| %>
+    data: [ 
+    <% @data.each do |d| %>
     {
       y: <%= d.y[c] %>,
       id: "<%= d.id %>"
     }, 
-    <% end %> ]
+    <% end %> 
+    ]
   }, false)
   <% end %>
 <% else %>
