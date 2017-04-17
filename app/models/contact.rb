@@ -34,6 +34,7 @@ class Contact < ActiveRecord::Base
   has_many   :projects_all, through: "project_members_all", source: :project
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
+  validates_format_of :email,:with => Devise::email_regexp
 
   # TODO: Create a general visible_to scope for a general "role" checker
   scope :visible_to, -> (user) {

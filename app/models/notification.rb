@@ -63,6 +63,7 @@ class Notification < ActiveRecord::Base
     end
   end
 
+  #
   def self.load_alert_for_days_inactive(organization)
     days_inactive_setting = RiskSetting.find_by(level: organization, metric: RiskSetting::METRIC[:DaysInactive])
     return unless days_inactive_setting.notify_task
@@ -125,6 +126,7 @@ class Notification < ActiveRecord::Base
     end
   end
 
+  #
   def self.load_alert_for_pct_neg_sentiment(project, alert_setting, sentiment_setting)
     engagement_volume = project.conversations.sum('jsonb_array_length(email_messages)')
     neg_sentiments = project.conversations.select(:id, :backend_id, "(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score, jsonb_array_elements(email_messages)->>'messageId' AS message_id")

@@ -79,31 +79,54 @@ class User < ActiveRecord::Base
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
+  EXTENSION_ROLE = { Chromeuser: 'Chrome user' }
 
   def valid_streams_subscriptions
     self.subscriptions.joins(:project).where(projects: {is_confirmed: true, status: 'Active'})
   end
 
-  def self.from_omniauth(auth, organization_id, user_id)
+  def self.from_omniauth(auth, organization_id, user_id=nil)
     where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
-      oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id, user_id: user_id)
+      if user_id
+        oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id, user_id: user_id)
+      else
+        oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id)
+      end
 
       if oauth_user
-        oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
-                                     oauth_refresh_token: auth.credentials.refresh_token,
-                                     oauth_instance_url: auth.credentials.instance_url,
-                                     organization_id: organization_id,
-                                     user_id: user_id )
+        if user_id
+          oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
+                                       oauth_refresh_token: auth.credentials.refresh_token,
+                                       oauth_instance_url: auth.credentials.instance_url,
+                                       organization_id: organization_id,
+                                       user_id: user_id )
+        else
+          oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
+                                       oauth_refresh_token: auth.credentials.refresh_token,
+                                       oauth_instance_url: auth.credentials.instance_url,
+                                       organization_id: organization_id)
+        end
       else
-        oauth_user = OauthUser.create(
-          oauth_provider: auth.provider,
-          oauth_provider_uid: auth.uid,
-          oauth_access_token: auth.credentials.token,
-          oauth_refresh_token: auth.credentials.refresh_token,
-          oauth_instance_url: auth.credentials.instance_url,
-          oauth_user_name: auth.extra.username,
-          organization_id: organization_id,
-          user_id: user_id)
+        if user_id
+          oauth_user = OauthUser.create(
+            oauth_provider: auth.provider,
+            oauth_provider_uid: auth.uid,
+            oauth_access_token: auth.credentials.token,
+            oauth_refresh_token: auth.credentials.refresh_token,
+            oauth_instance_url: auth.credentials.instance_url,
+            oauth_user_name: auth.extra.username,
+            organization_id: organization_id,
+            user_id: user_id)
+        else
+          oauth_user = OauthUser.create(
+            oauth_provider: auth.provider,
+            oauth_provider_uid: auth.uid,
+            oauth_access_token: auth.credentials.token,
+            oauth_refresh_token: auth.credentials.refresh_token,
+            oauth_instance_url: auth.credentials.instance_url,
+            oauth_user_name: auth.extra.username,
+            organization_id: organization_id)
+        end
 
         oauth_user.save
       end
@@ -327,6 +350,87 @@ class User < ActiveRecord::Base
 
     return_vals[:result] = 0  # success
     return return_vals
+  end
+
+  def daily_activities_by_category(days_ago=14)
+    query = <<-SQL
+      WITH time_series AS (
+        SELECT generate_series(date(CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') AS days  
+      )
+      (
+      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
+      FROM time_series
+      LEFT JOIN (SELECT messages ->> 'messageId'::text AS message_id,
+                        messages ->> 'sentDate'::text AS sent_date,
+                       jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+                       CASE
+                         WHEN messages -> 'to' IS NULL THEN NULL
+                         ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+                       END AS to,
+                       CASE
+                         WHEN messages -> 'cc' IS NULL THEN NULL
+                         ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+                       END AS cc
+                FROM activities,
+                LATERAL jsonb_array_elements(email_messages) messages
+                WHERE category = '#{Activity::CATEGORY[:Conversation]}'
+                AND (messages ->> 'sentDate')::integer > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+          ) AS emails
+        ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{self.time_zone}') = time_series.days AND '#{self.email}' IN (emails.from, emails.to, emails.cc)
+      GROUP BY days, category
+      ORDER BY days ASC
+      )
+      UNION ALL
+      (
+      -- Meetings directly from actvities table
+      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Meeting]}' AS category, count(meetings.*) AS num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
+                  FROM activities WHERE category = '#{Activity::CATEGORY[:Meeting]}' AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                ) AS meetings
+        ON date_trunc('day', meetings.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+      GROUP BY days, category
+      ORDER BY days ASC
+      )
+      UNION ALL
+      (
+      -- JIRA directly from actvities table
+      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:JIRA]}' AS category, count(jiras.*) AS num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
+                  FROM activities WHERE category = '#{Activity::CATEGORY[:JIRA]}' AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                ) AS jiras
+        ON date_trunc('day', jiras.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+      GROUP BY days, category
+      ORDER BY days ASC
+      )
+      UNION ALL
+      (
+      -- Salesforce directly from actvities table
+      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Salesforce]}' AS category, count(salesforces.*) AS num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
+                  FROM activities WHERE category = '#{Activity::CATEGORY[:Salesforce]}' AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                ) AS salesforces
+        ON date_trunc('day', salesforces.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+      GROUP BY days, category
+      ORDER BY days ASC
+      )
+      UNION ALL
+      (
+      -- Zendesk directly from actvities table
+      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Zendesk]}' AS category, count(zendesks.*) AS num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
+                  FROM activities WHERE category = '#{Activity::CATEGORY[:Zendesk]}' AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{self.time_zone}' - INTERVAL '#{days_ago} days'))
+                ) AS zendesks
+        ON date_trunc('day', zendesks.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
+      GROUP BY days, category
+      ORDER BY days ASC
+      )      
+    SQL
+
+    User.find_by_sql(query)
   end
 
   def self.count_activities_by_user(array_of_account_ids, domain, time_zone='UTC')
@@ -560,11 +664,14 @@ class User < ActiveRecord::Base
   end
 
   # Returns a map of the ROLEs values only (not keys), for use in best-in-place picklists
-  def self.getRolesMap
+  def self.getRolesMap(include_extension_roles=false)
     roles_map = {}
     ROLE.each do |r| #self.ROLE.each do |clm|
       roles_map[r[1]] = r[1]
     end
+    EXTENSION_ROLE.each do |r| #self.ROLE.each do |clm|
+      roles_map[r[1]] = r[1]
+    end if include_extension_roles
     return roles_map
   end
 
@@ -585,6 +692,10 @@ class User < ActiveRecord::Base
 
   def observer?
     self.role == User::ROLE[:Observer] or self.admin? or self.power_user? or self.contributor?
+  end
+
+  def power_or_chrome_user_only?
+    [User::ROLE[:Poweruser], User::EXTENSION_ROLE[:Chromeuser]].include? (self.role) 
   end
 
   ######### End Basic ACL ##########

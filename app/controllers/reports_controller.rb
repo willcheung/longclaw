@@ -1,12 +1,32 @@
 class ReportsController < ApplicationController
   before_action :get_owners_in_org, only: [:accounts_dashboard, :dashboard_data]
   
-  def touches_by_team
-    # TODO: find way to get number of projects for each user listed here
-    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
-    @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
+  def team_dashboard
+    users = current_user.organization.users
+    accounts_managed = users.includes(:projects_owner_of).group('users.id').count('projects.*').sort_by { |uid, num_accounts| num_accounts }.reverse
+    @accounts_managed = accounts_managed.map do |u|
+      user = users.find { |usr| usr.id == u[0] }
+      Hashie::Mash.new({ id: user.id, num_accounts: u[1], name: get_full_name(user)})
+    end
+
+    # custom_lists = current_user.organization.get_custom_lists_with_options
+    # @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+    # @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
+  def td_user_data
+    @user = User.where(organization_id: current_user.organization_id).find(params[:id])
+    @error = "Oops, something went wrong. Try again." and return if @user.blank?
+
+    @open_alerts = @user.notifications.open.risks.count
+    @accounts_managed = @user.projects_owner_of.count
+
+    @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
+
+    render layout: false
+  end
+
+  # accounts_dashboard is actually referring to account streams, AKA projects
   def accounts_dashboard
     projects = Project.visible_to(current_user.organization_id, current_user.id)
     if projects.nil?
@@ -33,7 +53,8 @@ class ReportsController < ApplicationController
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
   end
 
-  def dashboard_data
+  # for loading left-chart on accounts_dashboard
+  def ad_sort_data
     @sort = params[:sort]
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
@@ -97,22 +118,24 @@ class ReportsController < ApplicationController
     end
   end
 
-  def account_data
-    @account = Project.find(params[:id])   ### why does Project.find get set to an "account"??
-    @risk_score = @account.new_risk_score(current_user.time_zone)
-    @open_tasks_count = @account.notifications.open.count
-    @last_activity_date = @account.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
-    @risk_score_trend = @account.new_risk_score_trend(current_user.time_zone)
+  # for loading right panel on accounts_dashboard ("account" in this case is an account stream, internally known as a project)
+  def ad_account_data
+    @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
+
+    @risk_score = @project.new_risk_score(current_user.time_zone)
+    @open_tasks_count = @project.notifications.open.count
+    @last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
+    @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
-    @activities_moving_avg = @account.activities_moving_average(current_user.time_zone)
-    @activities_by_category_date = @account.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
+    @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
+    @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
     # Total activities by Conversation
     activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
 
     # TODO: Generate data for Risk Volume Chart in SQL query
     # Risk Volume Chart
-    risk_notifications = @account.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
+    risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
     risks_by_date = Array.new(14, 0)
     risk_notifications.each do |r|
       # risks_by_date based on number of days since 14 days ago
@@ -133,13 +156,13 @@ class ReportsController < ApplicationController
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
     # Read and Sent times
-    @in_outbound_report = User.total_team_usage_report([@account.account.id], current_user.organization.domain)
+    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
     #Meetings in Interaction Time
-    @meeting_report = User.meeting_team_report([@account.account.id], @in_outbound_report['email'])
+    @meeting_report = User.meeting_team_report([@project.account.id], @in_outbound_report['email'])
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
-    user_num_activities = User.count_activities_by_user_flex([@account.account.id], current_user.organization.domain)
+    user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)
     @team_leaderboard = []
     @activities_by_dept = Hash.new(0)
     activities_by_dept_total = 0
@@ -157,6 +180,12 @@ class ReportsController < ApplicationController
     @team_leaderboard = @team_leaderboard[0...5]
 
     render layout: false
+  end
+
+  def touches_by_team
+    # TODO: find way to get number of projects for each user listed here
+    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
+    @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
   end
 
   def accounts
