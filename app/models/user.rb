@@ -676,7 +676,7 @@ class User < ActiveRecord::Base
             GROUP BY recipient) as t
           GROUP BY recipient
         ) as t2 ON t.sender = t2.recipient)t3
-        WHERE email IN ('%#{array_of_user_emails.join("','")}')
+        WHERE email IN ('#{array_of_user_emails.join("','")}')
         ORDER BY total DESC
         limit 5;
     SQL

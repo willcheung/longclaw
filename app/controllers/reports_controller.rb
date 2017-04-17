@@ -100,12 +100,12 @@ class ReportsController < ApplicationController
 
     @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
 
-    @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range-1, 0), new_open: Array.new(day_range-1, 0), new_closed: Array.new(day_range-1, 0)})
+    @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range, 0), new_open: Array.new(day_range, 0), new_closed: Array.new(day_range, 0)})
     tasks = @user.notifications
     tasks_by_open_date = tasks.group("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
     tasks_by_complete_date = tasks.group("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
     tasks_by_open_date.each do |date, opened_tasks|
-      date_index = date.mjd - (day_range - 1).days.ago.to_date.mjd
+      date_index = date.mjd - day_range.days.ago.to_date.mjd
       @tasks_trend_data.new_open[date_index] += opened_tasks if date_index >= 0
       @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
         date_index <= i ? num_tasks + opened_tasks : num_tasks
@@ -113,7 +113,7 @@ class ReportsController < ApplicationController
     end
     tasks_by_complete_date.each do |date, completed_tasks|
       next if date.nil?
-      date_index = date.mjd - (day_range - 1).days.ago.to_date.mjd
+      date_index = date.mjd - day_range.days.ago.to_date.mjd
       @tasks_trend_data.new_closed[date_index] += completed_tasks if date_index >= 0
       @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
         date_index <= i ? num_tasks - completed_tasks : num_tasks
