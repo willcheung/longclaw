@@ -111,6 +111,7 @@ Longclaw::Application.routes.draw do
       get 'ad_sort_data/:sort' => 'reports#ad_sort_data', as: :ad_sort_data
       get 'ad_account_data/:id' => 'reports#ad_account_data', as: :ad_account_data
       get 'team_dashboard'
+      get 'td_sort_data/:sort' => 'reports#td_sort_data', as: :td_sort_data
       get 'td_user_data/:id' => 'reports#td_user_data', as: :td_user_data
     end
 

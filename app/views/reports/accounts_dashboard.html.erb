@@ -75,23 +75,7 @@
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
 
             // Build URL for AJAX call for filtered data
-            var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val());
-            var accountTypeFilter = $('#account-filter').val().length == 0 ? "" : "account=" + $('#account-filter').val();
-            var streamTypeFilter = $('#category-filter').val().length == 0 ? "" : "category=" + $('#category-filter').val();
-            var ownerFilter = $('#owner-filter').val().length == 0 ? "" : "owner=" + $('#owner-filter').val();
-
-            // Determine queryString (filter) part of URL
-            if (accountTypeFilter || streamTypeFilter || ownerFilter) {
-                url += "?" + accountTypeFilter;
-                if (accountTypeFilter && (streamTypeFilter || ownerFilter))
-                    url += "&";
-
-                url += streamTypeFilter;
-                if ((accountTypeFilter || streamTypeFilter) && ownerFilter)
-                    url += "&";
-
-                url += ownerFilter;
-            }
+            var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param({ account: $('#account-filter').val(), category: $('#category-filter').val(), owner: $('#owner-filter').val() });
             $.getScript(url)
         });
 

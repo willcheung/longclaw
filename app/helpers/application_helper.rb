@@ -22,20 +22,29 @@ module ApplicationHelper
   end
 
   def highcharts_series_color(category)
-    if category == Activity::CATEGORY[:Conversation]
+    case category
+    when Activity::CATEGORY[:Conversation]
       "#46C6C6"
-    elsif category == Activity::CATEGORY[:Meeting]
+    when Activity::CATEGORY[:Meeting]
       "#FFA500"
-    elsif category == Activity::CATEGORY[:Note]
+    when Activity::CATEGORY[:Note]
       "#ffde6b"
-    elsif category == Activity::CATEGORY[:JIRA]
+    when Activity::CATEGORY[:JIRA]
       "#205081"
-    elsif category == Activity::CATEGORY[:Salesforce]
+    when Activity::CATEGORY[:Salesforce]
       "#1798c1"
-    elsif category == Activity::CATEGORY[:Zendesk]
+    when Activity::CATEGORY[:Zendesk]
       "#78a300"
-    elsif category == Activity::CATEGORY[:Alert]
+    when Activity::CATEGORY[:Alert]
       "#ed5565"
+    when Activity::CATEGORY[:Basecamp2]
+      "#91e8e1"
+    when 'Meetings'
+      '#ffb833'
+    when 'Sent Emails'
+      '#00cccc'
+    when 'Read Emails'
+      '#995cd6'
     end
   end
 

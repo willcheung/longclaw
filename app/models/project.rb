@@ -118,8 +118,8 @@ class Project < ActiveRecord::Base
     .where("project_subscribers.user_id = ? AND project_subscribers.weekly IS TRUE", user_id)
   }
   
-  scope :is_active, -> {where("projects.status = 'Active'")}
-  scope :is_confirmed, -> {where("projects.is_confirmed = true")}
+  scope :is_active, -> { where status: 'Active' }
+  scope :is_confirmed, -> { where is_confirmed: true }
 
   validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
   validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
@@ -443,6 +443,17 @@ class Project < ActiveRecord::Base
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
       )
+      UNION ALL
+      (
+      -- Basecamp2
+      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:Basecamp2]}' as category,
+            count(*) as activity_count
+      FROM activities
+      WHERE category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      )
     SQL
 
     Activity.find_by_sql(query)
@@ -482,36 +493,48 @@ class Project < ActiveRecord::Base
       UNION ALL
       (
       -- JIRA directly from actvities table
-      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:JIRA]}' as category, count(meetings.*) as num_activities
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:JIRA]}' as category, count(jiras.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
-                ) as meetings
-        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+                ) as jiras
+        ON jiras.project_id = time_series.project_id and date_trunc('day', jiras.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
       -- Salesforce directly from actvities table
-      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Salesforce]}' as category, count(meetings.*) as num_activities
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Salesforce]}' as category, count(salesforces.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
-                ) as meetings
-        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+                ) as salesforces
+        ON salesforces.project_id = time_series.project_id and date_trunc('day', salesforces.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
       -- Zendesk directly from actvities table
-      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Zendesk]}' as category, count(meetings.*) as num_activities
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Zendesk]}' as category, count(zendesks.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
-                ) as meetings
-        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+                ) as zendesks
+        ON zendesks.project_id = time_series.project_id and date_trunc('day', zendesks.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
+      UNION ALL
+      (
+      -- Basecamp2 directly from actvities table
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Basecamp2]}' as category, count(basecamp2s.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT last_sent_date as sent_date, project_id
+                  FROM activities where category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                ) as basecamp2s
+        ON basecamp2s.project_id = time_series.project_id and date_trunc('day', basecamp2s.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )

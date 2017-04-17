@@ -30,7 +30,7 @@ class Contact < ActiveRecord::Base
   has_many   :project_members, -> { confirmed }, dependent: :destroy, class_name: "ProjectMember"
   has_many   :project_members_all, class_name: "ProjectMember", dependent: :destroy
   has_many   :projects, through: "project_members"
-  has_many   :visible_projects, -> { where is_confirmed: true, status: "Active" }, through: "project_members", source: :project
+  has_many   :visible_projects, -> { is_active.is_confirmed }, through: "project_members", source: :project
   has_many   :projects_all, through: "project_members_all", source: :project
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
