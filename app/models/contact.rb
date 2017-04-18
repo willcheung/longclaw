@@ -20,6 +20,7 @@
 #
 #  index_contacts_on_account_id  (account_id)
 #
+include ActionView::Helpers::SanitizeHelper   # for sanitize (escape single quotes)
 
 class Contact < ActiveRecord::Base
 	belongs_to :account
@@ -35,6 +36,8 @@ class Contact < ActiveRecord::Base
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
   validates_format_of :email,:with => Devise::email_regexp
+
+  scope  :imported_from_salesforce, -> { where source: 'Salesforce' }
 
   # TODO: Create a general visible_to scope for a general "role" checker
   scope :visible_to, -> (user) {
@@ -100,4 +103,68 @@ class Contact < ActiveRecord::Base
 	def is_internal_user?
 		return false
 	end
+
+  # Parameters:  client - connection to Salesforce
+  #              account_id - CS account to load contacts to
+  #              sfdc_id - id of SFDC account to load contacts from
+  def self.load_salesforce_contacts(client, account_id, sfdc_id, limit=100)
+    val = []
+
+    query_statement = "SELECT AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_id}' limit #{limit}"  
+
+    contacts = SalesforceService.query_salesforce(client, query_statement)
+    #contacts = nil #simulate SFDC query error
+    unless contacts.blank?  # unless failed Salesforce query
+      contacts.each do |c|
+        firstname = self.capitalize_first_only(c[:FirstName])
+        lastname = self.capitalize_first_only(c[:LastName])
+        val << "('#{account_id}', 
+                  #{c[:FirstName].blank? ? '\'\'' : Contact.sanitize(firstname)},
+                  #{c[:LastName].blank? ? '\'\'' : Contact.sanitize(lastname)},
+                  #{c[:Email].blank? ? '\'\'' : Contact.sanitize(c[:Email])},
+                  #{c[:Title].blank? ? '\'\'' : Contact.sanitize(c[:Title])},
+                  #{c[:Department].blank? ? 'null' : Contact.sanitize(c[:Department])},
+                  #{c[:Phone].blank? ? '\'\'' : Contact.sanitize(c[:Phone])},
+                  'Salesforce',
+                  #{c[:MobilePhone].blank? ? 'null' : Contact.sanitize(c[:MobilePhone])},
+                  #{c[:Description].blank? ? 'null' : Contact.sanitize(c[:Description])},
+                  '#{Time.now}', '#{Time.now}')"
+      end
+
+      insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "source", "mobile", "background_info", "created_at", "updated_at") VALUES'
+      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, title = EXCLUDED.title, department = EXCLUDED.department, phone = EXCLUDED.phone, source = EXCLUDED.source, mobile = EXCLUDED.mobile, background_info = EXCLUDED.background_info, updated_at = EXCLUDED.updated_at'
+      values = val.join(', ')
+      #puts "And inserting values....  \"#{values}\""
+
+      if !val.empty?
+        Contact.transaction do
+          # Insert activities into database
+          begin
+            Contact.connection.execute([insert,values,on_conflict].join(' '))
+          rescue ActiveRecord::StatementInvalid => e
+            error = ""
+            if (e.to_s[0..23]) == "PG::CardinalityViolation" 
+              error = "PostgreSQL error: \"#{e}\"" 
+            else
+              error = "Invalid statement error: \"#{e}\"" 
+            end
+            puts "ActiveRecord error=#{error}"
+            return error
+          end
+        end
+      end
+      puts "************* Result of SFDC query \"#{query_statement}\":"
+      puts "-> # of rows UPSERTed into Contacts = #{val.count} total *************"
+    else  # Salesforce query failure
+      return "query=\"#{query_statement}\""  # proprogate query to caller
+    end
+
+    nil # successful request
+  end
+
+  private
+
+  def self.capitalize_first_only (str)
+    str.slice(0,1).capitalize + str.slice(1..-1) if !str.nil?
+  end
 end

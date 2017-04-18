@@ -1,24 +1,27 @@
 $('[data-toggle="tooltip"]').tooltip();
 
 $(document).ready(function() {
+    // TODO: completely remove below commented code if confirm commenting it out doesn't break anything!
+    // $('.salesforce_account_box').chosen({allow_single_deselect: true});
 
-    $('.salesforce_account_box').chosen({allow_single_deselect: true});
+    // $('.salesforce_account_box').on('change',function(evt,params){
+    //     console.log($(this).attr('id'));
+    //     console.log(params);   
 
-    $('.salesforce_account_box').on('change',function(evt,params){
-        console.log($(this).attr('id'));
-        console.log(params);   
+    //     // $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
 
-        // $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+    // if(params){
+    //   $.ajax({url:'/update_salesforce/?id='+$(this).attr('id')+'&sid='+params["selected"]});
+    // }
+    // else{
+    //   $.ajax({url:'/update_salesforce/?id='+$(this).attr('id')+'&sid= '});
+    // }
 
-    if(params){
-      $.ajax({url:'/update_salesforce/?id='+$(this).attr('id')+'&sid='+params["selected"]});
-    }
-    else{
-      $.ajax({url:'/update_salesforce/?id='+$(this).attr('id')+'&sid= '});
-    }
+    // });
 
-    });
-
+    ////////////////////////////////////////
+    // ../settings/salesforce_accounts
+    ////////////////////////////////////////
     $("#salesforce-account-search").selectize({
         closeAfterSelect: true,
         valueField: 'id',
@@ -71,6 +74,54 @@ $(document).ready(function() {
         }
     });
 
+    $('.sfdc-refresh').click(function(){
+        var entity_type, entity_type_btn_str;
+        var self = $(this);
+        if ($(this).attr("id").includes("salesforce-acc-refresh")) {
+            entity_type = "accounts";
+        }
+        else if ($(this).attr("id").includes("salesforce-opp-refresh")) {
+            entity_type = "opportunities";
+        }
+        else if ($(this).attr("id").includes("salesforce-con-refresh")) {
+            entity_type = "contacts";
+        }
+
+        entity_type_btn_str = entity_type.charAt(0).toUpperCase() + entity_type.slice(1);
+        console.log("$(this).attr('id'): " + self.attr("id"));
+        console.log("entity_type_btn_str: " + entity_type_btn_str);
+        
+        $.ajax('/salesforce/refresh/' + entity_type, {
+            async: true,
+            method: "POST",
+            beforeSend: function () {
+                $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
+            },
+            error: function(data) {
+                var res = JSON.parse(data.responseText);
+                self.addClass('error-btn-highlight');
+                alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n\n" + res.error);
+            },
+            statusCode: {
+                500: function() {
+                    self.css("margin-left","60px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                },
+                503: function() {
+                    self.css("margin-left","30px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                },
+            },
+            complete: function() {
+                $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
+                location.reload();
+            }
+        });
+    });
+
+    ////////////////////////////////////////
+    // ../settings/salesforce_opportunities
+    ////////////////////////////////////////
     $("#salesforce-opportunity-search").selectize({
         closeAfterSelect: true,
         valueField: 'id',
@@ -171,7 +222,7 @@ $(document).ready(function() {
         var self = $(this);
         var buttonTxtStr = self.attr("btnLabel");
 
-        $.ajax("/salesforce_activities_refresh", {
+        $.ajax("/salesforce/refresh/activities", {
             async: true,
             method: "POST",
             data: { entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() },
@@ -211,7 +262,7 @@ $(document).ready(function() {
         var self = $(this);
         var buttonTxtStr = self.attr("btnLabel");
 
-        $.ajax("/salesforce_activities_cs_export", {
+        $.ajax("/salesforce_activityhistory_update", {
             async: true,
             method: "POST",
             data: {},
@@ -251,18 +302,18 @@ $(document).ready(function() {
     // ../settings/salesforce_fields
     ////////////////////////////////////////
     $('#salesforce-fields-refresh-accounts-btn,#salesforce-fields-refresh-projects-btn').click(function() {
-        var entity_type_str, entity_type_btn_str;
+        var entity_type, entity_type_btn_str;
         var self = $(this);
         if (self.attr("id").includes("salesforce-fields-refresh-accounts-btn")) {
-            entity_type_str = "accounts";
+            entity_type = "accounts";
             entity_type_btn_str = "Accounts";
         } 
         else {
-            entity_type_str = "projects";
+            entity_type = "projects";
             entity_type_btn_str = "Streams";
         }
 
-        $.ajax('/salesforce_fields_refresh?entity_type=' + entity_type_str, {
+        $.ajax('/salesforce_fields_refresh?entity_type=' + entity_type, {
             async: true,
             method: "POST",
             data: "",
