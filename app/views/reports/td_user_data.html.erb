@@ -68,7 +68,7 @@
         </div>
 
         <div class="row m-t-md">
-            <div id="customers-volume-chart" style="height:280px"></div>
+            <div id="customers-interaction-chart" style="height:280px"></div>
         </div>
 
     </div>
@@ -92,7 +92,7 @@
 
     function renderCharts(riskScore) {
 
-        $('#customers-volume-chart').highcharts({
+        $('#customers-interaction-chart').highcharts({
             chart: {
                 type: 'bar'
             },
@@ -105,7 +105,7 @@
                 }
             },
             xAxis: {
-                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise']
+                categories: <%= @interaction_time_per_account.names.to_json.html_safe %>
             },
             yAxis: {
                 min: 0,
@@ -122,11 +122,17 @@
                 }
             },
             series: [{
-                name: 'Emails',
-                data: [0.5, 1, 2.2, 2.8, 3]
-            }, {
                 name: 'Meetings',
-                data: [0, 1, 0, 0.5, 2]
+                color: "<%= highcharts_series_color('Meetings') %>",
+                data: <%= @interaction_time_per_account.meeting_time.to_json.html_safe %>
+            }, {
+                name: 'Read Emails',
+                color: "<%= highcharts_series_color('Read Emails') %>",
+                data: <%= @interaction_time_per_account.read_time.to_json.html_safe %>
+            }, {
+                name: 'Sent Emails',
+                color: "<%= highcharts_series_color('Sent Emails') %>",
+                data: <%= @interaction_time_per_account.sent_time.to_json.html_safe %>
             }]
         });
 
@@ -144,6 +150,8 @@
                     text: ''
                 },
                 min: 0,
+                softMax: 1,
+                minorGridLineWidth: 0,
                 plotLines: [{
                     value: 0,
                     width: 1,
@@ -154,22 +162,22 @@
                 shared: true
             },
             series: [{
-                name: 'Total Open Alerts',
-                data: [3, 4, 5, 8, 11, 13, 17, 17, 18, 18, 17, 15],
+                name: 'Total Open Tasks',
+                data: <%= @tasks_trend_data.total_open.to_json.html_safe %>,
                 type: 'area',
                 color: '#cccccc',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
             }, {
-                name: 'New Alerts',
-                data: [5, 7, 10, 10, 13, 13, 21, 19, 26, 25, 19, 17],
+                name: 'New Tasks',
+                data: <%= @tasks_trend_data.new_open.to_json.html_safe %>,
                 type: 'line',
                 color: '#B23232',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
             }, {
-                name: 'Closed Alerts',
-                data: [2, 3, 5, 2, 2, 0, 4, 2, 3, 8, 1, 2],
+                name: 'Closed Tasks',
+                data: <%= @tasks_trend_data.new_closed.to_json.html_safe %>,
                 type: 'line',
                 color: '#149414',
                 pointInterval: <%= 1.day * 1000 %>,
@@ -204,7 +212,8 @@
             yAxis: {
                 title: { text: '' },
                 labels: { enabled: true },
-                minorGridLineWidth: 0
+                minorGridLineWidth: 0,
+                softMax: 1
             },
             legend: {
                 enabled: true
