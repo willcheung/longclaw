@@ -11,12 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170331022214) do
+ActiveRecord::Schema.define(version: 20170418203416) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "uuid-ossp"
   enable_extension "hstore"
+  enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                                  default: "",         null: false
@@ -124,6 +124,8 @@ ActiveRecord::Schema.define(version: 20170331022214) do
     t.string   "department"
   end
 
+  add_index "contacts", ["account_id", "email"], name: "index_contacts_on_account_id_and_email", unique: true, using: :btree
+  add_index "contacts", ["account_id", "first_name", "last_name", "email"], name: "contacts_accounts_email_ukey", unique: true, using: :btree
   add_index "contacts", ["account_id"], name: "index_contacts_on_account_id", using: :btree
 
   create_table "custom_configurations", force: :cascade do |t|
@@ -349,6 +351,15 @@ ActiveRecord::Schema.define(version: 20170331022214) do
   end
 
   add_index "salesforce_opportunities", ["salesforce_opportunity_id"], name: "index_salesforce_opportunities_on_salesforce_opportunity_id", unique: true, using: :btree
+
+  create_table "temp", id: false, force: :cascade do |t|
+    t.text    "message_id"
+    t.uuid    "project_id"
+    t.integer "word_count"
+    t.text    "from"
+    t.text    "to"
+    t.text    "cc"
+  end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "first_name",             default: "",    null: false

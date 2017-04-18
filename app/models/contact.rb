@@ -18,8 +18,11 @@
 #
 # Indexes
 #
-#  index_contacts_on_account_id  (account_id)
+#  contacts_accounts_email_ukey            (account_id,first_name,last_name,email) UNIQUE
+#  index_contacts_on_account_id            (account_id)
+#  index_contacts_on_account_id_and_email  (account_id,email) UNIQUE
 #
+
 include ActionView::Helpers::SanitizeHelper   # for sanitize (escape single quotes)
 
 class Contact < ActiveRecord::Base
@@ -104,31 +107,39 @@ class Contact < ActiveRecord::Base
 		return false
 	end
 
+  # Takes Contacts in SFDC account and copies them into CS accounts mapped to it, overwriting all existing contact fields
   # Parameters:  client - connection to Salesforce
   #              account_id - CS account to load contacts to
   #              sfdc_id - id of SFDC account to load contacts from
   def self.load_salesforce_contacts(client, account_id, sfdc_id, limit=100)
     val = []
 
-    query_statement = "SELECT AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_id}' limit #{limit}"  
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_id}' ORDER BY Email, FirstName, LastName LIMIT #{limit}"
 
     contacts = SalesforceService.query_salesforce(client, query_statement)
     #contacts = nil #simulate SFDC query error
     unless contacts.blank?  # unless failed Salesforce query
+      emails_processed = {}
+
+      # Keep the first contact (alphabetically, by First then Last Name) from contacts with identical e-mails; ignore contacts with no e-mail field
       contacts.each do |c|
-        firstname = self.capitalize_first_only(c[:FirstName])
-        lastname = self.capitalize_first_only(c[:LastName])
-        val << "('#{account_id}', 
-                  #{c[:FirstName].blank? ? '\'\'' : Contact.sanitize(firstname)},
-                  #{c[:LastName].blank? ? '\'\'' : Contact.sanitize(lastname)},
-                  #{c[:Email].blank? ? '\'\'' : Contact.sanitize(c[:Email])},
-                  #{c[:Title].blank? ? '\'\'' : Contact.sanitize(c[:Title])},
-                  #{c[:Department].blank? ? 'null' : Contact.sanitize(c[:Department])},
-                  #{c[:Phone].blank? ? '\'\'' : Contact.sanitize(c[:Phone])},
-                  'Salesforce',
-                  #{c[:MobilePhone].blank? ? 'null' : Contact.sanitize(c[:MobilePhone])},
-                  #{c[:Description].blank? ? 'null' : Contact.sanitize(c[:Description])},
-                  '#{Time.now}', '#{Time.now}')"
+        email = Contact.sanitize(c[:Email])
+        if c[:Email].present? && emails_processed[email].nil?
+          firstname = self.capitalize_first_only(c[:FirstName])
+          lastname = self.capitalize_first_only(c[:LastName])
+          val << "('#{account_id}', 
+                    #{c[:FirstName].blank? ? '\'\'' : Contact.sanitize(firstname)},
+                    #{c[:LastName].blank? ? '\'\'' : Contact.sanitize(lastname)},
+                    #{c[:Email].blank? ? '\'\'' : email},
+                    #{c[:Title].blank? ? '\'\'' : Contact.sanitize(c[:Title])},
+                    #{c[:Department].blank? ? 'null' : Contact.sanitize(c[:Department])},
+                    #{c[:Phone].blank? ? '\'\'' : Contact.sanitize(c[:Phone])},
+                    'Salesforce',
+                    #{c[:MobilePhone].blank? ? 'null' : Contact.sanitize(c[:MobilePhone])},
+                    #{c[:Description].blank? ? 'null' : Contact.sanitize(c[:Description])},
+                    '#{Time.now}', '#{Time.now}')"
+          emails_processed[email] = email 
+        end
       end
 
       insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "source", "mobile", "background_info", "created_at", "updated_at") VALUES'
@@ -164,6 +175,7 @@ class Contact < ActiveRecord::Base
 
   private
 
+  # Capitalizes first character and leaves the remaining alone (unlike .capitalize which changes remaining ones to lowercase)
   def self.capitalize_first_only (str)
     str.slice(0,1).capitalize + str.slice(1..-1) if !str.nil?
   end
