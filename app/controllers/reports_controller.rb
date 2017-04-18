@@ -11,6 +11,9 @@ class ReportsController < ApplicationController
 
     @departments = users.pluck(:department).compact.uniq
     @titles = users.pluck(:title).compact.uniq
+
+    # TODO: real left chart pagination
+    @accounts_managed = @accounts_managed.take(25)
   end
 
     # for loading left-chart on team_dashboard
@@ -88,6 +91,8 @@ class ReportsController < ApplicationController
     else # Invalid
       @data = []
     end
+    # TODO: real left chart pagination
+    @data = @data.take(25)
   end
 
   def td_user_data
@@ -172,6 +177,9 @@ class ReportsController < ApplicationController
     custom_lists = current_user.organization.get_custom_lists_with_options
     @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    
+    # TODO: real left chart pagination
+    @risk_scores = @risk_scores.take(25)
   end
 
   # for loading left-chart on accounts_dashboard
@@ -237,6 +245,8 @@ class ReportsController < ApplicationController
     else # Invalid
       @data = []
     end
+    # TODO: real left chart pagination
+    @data = @data.take(25)
   end
 
   # for loading right panel on accounts_dashboard ("account" in this case is an account stream, internally known as a project)
