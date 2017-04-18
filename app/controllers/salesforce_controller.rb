@@ -158,7 +158,35 @@ class SalesforceController < ApplicationController
     when "opportunities"
       SalesforceOpportunity.load_opportunities(current_user.organization_id)
     when "contacts"
-      puts "*** United Airlines beatdown! Refreshing!"
+      # Load SFDC Contacts into CS Accounts, depending on the explicit (primary) mapping of a SFDC Account (first one) to a CS account.
+      account_mapping = []
+      method_name = "refresh_salesforce#contacts()"
+      accounts = Account.visible_to(current_user)
+      accounts.each do |a|
+        account_mapping << [a, a.salesforce_accounts.first] if a.salesforce_accounts.present?
+      end
+
+      unless accounts.empty? || account_mapping.empty?  # no visible or mapped accountss
+        client = SalesforceService.connect_salesforce(current_user.organization_id)
+        #client = nil #simulate connection error
+        unless client.nil?  # unless SFDC connection error
+          account_mapping.each do |m|
+            a = m[0]
+            sfa = m[1]
+            errors = Contact.load_salesforce_contacts(client, a.id, sfa.salesforce_account_id)
+
+            unless errors.nil? # Salesforce query error occurred
+              failure_method_location = "Contact.load_salesforce_contacts()"
+              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (stream_id='#{a.id}').  Details: #{errors}"
+              render_internal_server_error(method_name, failure_method_location, error_detail)
+              return
+            end
+          end
+        else
+          render_service_unavailable_error(method_name)
+          return
+        end
+      end
     when "activities"
       # Load SFDC Activities into CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
       # Note: Ignores exported CS data residing on SFDC
@@ -169,7 +197,6 @@ class SalesforceController < ApplicationController
 
       #puts "******************** #{method_name}  ...  filter_predicate_str=", filter_predicate_str
       @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
-
       @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
       unless @client.nil?  # unless connection error
@@ -180,9 +207,9 @@ class SalesforceController < ApplicationController
                 errors = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
 
                 unless errors.nil? # Salesforce query error occurred
-                  method_location = "Activity.load_salesforce_activities()"
+                  failure_method_location = "Activity.load_salesforce_activities()"
                   error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
-                  render_internal_server_error(method_name, method_location, error_detail)
+                  render_internal_server_error(method_name, failure_method_location, error_detail)
                   return
                 end
               end
@@ -192,9 +219,9 @@ class SalesforceController < ApplicationController
             errors = Activity.load_salesforce_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
 
             unless errors.nil? # Salesforce query error occurred
-              method_location = "Activity.load_salesforce_activities()"
+              failure_method_location = "Activity.load_salesforce_activities()"
               error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
-              render_internal_server_error(method_name, method_location, error_detail)
+              render_internal_server_error(method_name, failure_method_location, error_detail)
               return
             end
           end
@@ -204,7 +231,7 @@ class SalesforceController < ApplicationController
         return
       end
     else
-      # error
+      # Error: unsupported Salesforce entity type
     end
     render :text => ' '
   end
