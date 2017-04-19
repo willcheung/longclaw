@@ -9,6 +9,11 @@
       <div class="panel blank-panel">
         <div class="panel-heading">
           <ul class="nav nav-tabs">
+            <% if @id_param_present.blank? || !@is_mapped_to_CS_account || @streams_mapped.blank? %>
+              <span>
+                <img alt="image" style="width: 220px;display: block; margin: 10% auto;" src="/assets/logo.png">
+              </span>
+            <% end %>
             <% if @id_param_present.blank? %>
               <div class="text-center m-t-lg">
                 <h3>Invalid Salesforce identifier.</h3>
@@ -97,8 +102,8 @@
             <%= render 'projects/insights_tab', project_id: @project.id if @actiontype == "insights_tab" %>
            
         </div>
-      </div>   
-      <% end %>
+      </div>  
+    <% end %>
     </div>
   </div>
 </div>

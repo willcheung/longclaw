@@ -133,7 +133,7 @@ class SalesforceController < ApplicationController
     end
 
     respond_to do |format|
-      format.html { redirect_to settings_salesforce_path }
+      format.html { redirect_to settings_salesforce_accounts_path }
     end
   end
 
@@ -150,72 +150,102 @@ class SalesforceController < ApplicationController
     end
   end
 
-  def refresh_accounts
-    SalesforceAccount.load(current_user.organization_id)
-    render :text => ' '
-  end
+  # Load SFDC Accounts or Opportunities into CS models, or Load SFDC Contacts into mapped CS Accounts
+  def refresh_salesforce
+    case params[:entity_type]
+    when "accounts"
+      SalesforceAccount.load_accounts(current_user.organization_id)
+    when "opportunities"
+      SalesforceOpportunity.load_opportunities(current_user.organization_id)
+    when "contacts"
+      # Load SFDC Contacts into CS Accounts, depending on the explicit (primary) mapping of a SFDC Account (first one) to a CS account.
+      account_mapping = []
+      method_name = "refresh_salesforce#contacts()"
+      accounts = Account.visible_to(current_user)
+      accounts.each do |a|
+        account_mapping << [a, a.salesforce_accounts.first] if a.salesforce_accounts.present?
+      end
 
-  def refresh_opportunities
-    SalesforceOpportunity.load(current_user.organization_id)
-    render :text => ' '
-  end
+      unless accounts.empty? || account_mapping.empty?  # no visible or mapped accountss
+        client = SalesforceService.connect_salesforce(current_user.organization_id)
+        #client = nil #simulate connection error
+        unless client.nil?  # unless SFDC connection error
+          account_mapping.each do |m|
+            a = m[0]
+            sfa = m[1]
+            errors = Contact.load_salesforce_contacts(client, a.id, sfa.salesforce_account_id)
 
-  # Activities are loaded into native CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
-  def refresh_activities
-    method_name = "refresh_activities()"
-    filter_predicate_str = {}
-    filter_predicate_str["entity"] = params[:entity_pred].strip
-    filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
-
-    #puts "******************** #{method_name}  ...  filter_predicate_str=", filter_predicate_str
-    @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
-
-    @client = SalesforceService.connect_salesforce(current_user.organization_id)
-
-    unless @client.nil?  # unless connection error
-      @streams.each do |s|
-        if s.salesforce_opportunity.nil? # Stream not linked to SFDC Opportunity
-          if !s.account.salesforce_accounts.empty? # Stream linked to SFDC Account
-            s.account.salesforce_accounts.each do |sfa|
-              errors = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
-
-              unless errors.nil? # Salesforce query error occurred
-                method_location = "Activity.load_salesforce_activities()"
-                error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
-                render_internal_server_error(method_name, method_location, error_detail)
-                return
-              end
+            unless errors.nil? # Salesforce query error occurred
+              failure_method_location = "Contact.load_salesforce_contacts()"
+              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (stream_id='#{a.id}').  Details: #{errors}"
+              render_internal_server_error(method_name, failure_method_location, error_detail)
+              return
             end
           end
-        else # Stream linked to Opportunity
-          # If Stream is linked in Opportunity, then save on Opportunity level
-          errors = Activity.load_salesforce_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
-
-          unless errors.nil? # Salesforce query error occurred
-            method_location = "Activity.load_salesforce_activities()"
-            error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
-            render_internal_server_error(method_name, method_location, error_detail)
-            return
-          end
+        else
+          render_service_unavailable_error(method_name)
+          return
         end
       end
-    else
-      render_service_unavailable_error(method_name)
-      return
-    end
+    when "activities"
+      # Load SFDC Activities into CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
+      # Note: Ignores exported CS data residing on SFDC
+      method_name = "refresh_salesforce#activities()"
+      filter_predicate_str = {}
+      filter_predicate_str["entity"] = params[:entity_pred].strip
+      filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
 
+      #puts "******************** #{method_name}  ...  filter_predicate_str=", filter_predicate_str
+      @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
+      @client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+      unless @client.nil?  # unless connection error
+        @streams.each do |s|
+          if s.salesforce_opportunity.nil? # Stream not linked to SFDC Opportunity
+            if !s.account.salesforce_accounts.empty? # Stream linked to SFDC Account
+              s.account.salesforce_accounts.each do |sfa|
+                errors = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
+
+                unless errors.nil? # Salesforce query error occurred
+                  failure_method_location = "Activity.load_salesforce_activities()"
+                  error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
+                  render_internal_server_error(method_name, failure_method_location, error_detail)
+                  return
+                end
+              end
+            end
+          else # Stream linked to Opportunity
+            # If Stream is linked in Opportunity, then save on Opportunity level
+            errors = Activity.load_salesforce_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
+
+            unless errors.nil? # Salesforce query error occurred
+              failure_method_location = "Activity.load_salesforce_activities()"
+              error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  Details: #{errors}"
+              render_internal_server_error(method_name, failure_method_location, error_detail)
+              return
+            end
+          end
+        end
+      else
+        render_service_unavailable_error(method_name)
+        return
+      end
+    else
+      # Error: unsupported Salesforce entity type
+    end
     render :text => ' '
   end
 
-  # Activities are exported into remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
-  def export_cs_activities
-    method_name = "export_cs_activities()"
+  # CS Activities are exported into the remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
+  # Note: Ignores imported SFDC data residing locally
+  def export_activities
+    method_name = "export_activities()"
 
     @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
 
     @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-    Activity.delete_all_cs_activities(@client) #clear all existing CS Activities from SFDC (accounts)
+    Activity.delete_all_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
 
     unless @client.nil?  # unless connection error
       @streams.each do |s|
@@ -372,7 +402,7 @@ class SalesforceController < ApplicationController
     end
 
     respond_to do |format|
-      format.html { redirect_to settings_salesforce_path }
+      format.html { redirect_to settings_salesforce_accounts_path }
     end
 
   end

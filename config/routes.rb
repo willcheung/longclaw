@@ -42,10 +42,8 @@ Longclaw::Application.routes.draw do
     get "salesforce/disconnect/:id" => 'salesforce#disconnect'
     post "/link_salesforce_account" => 'salesforce#link_salesforce_account'
     post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
-    post "/salesforce_refresh" => 'salesforce#refresh_accounts'
-    post "/salesforce_opp_refresh" => 'salesforce#refresh_opportunities'
-    post "/salesforce_activities_refresh" => 'salesforce#refresh_activities'
-    post "/salesforce_activities_cs_export" => 'salesforce#export_cs_activities'
+    post "/salesforce/refresh/:entity_type" => 'salesforce#refresh_salesforce'
+    post "/salesforce_activityhistory_update" => 'salesforce#export_activities'
     post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
@@ -66,7 +64,7 @@ Longclaw::Application.routes.draw do
       get "custom_fields"
       get "custom_lists"
       get "custom_list/:id" => 'settings#custom_list_show'
-      get "salesforce" 
+      get "salesforce_accounts" 
       get "salesforce_opportunities" 
       get "salesforce_activities" 
       get "basecamp"
@@ -111,6 +109,7 @@ Longclaw::Application.routes.draw do
       get 'ad_sort_data/:sort' => 'reports#ad_sort_data', as: :ad_sort_data
       get 'ad_account_data/:id' => 'reports#ad_account_data', as: :ad_account_data
       get 'team_dashboard'
+      get 'td_sort_data/:sort' => 'reports#td_sort_data', as: :td_sort_data
       get 'td_user_data/:id' => 'reports#td_user_data', as: :td_user_data
     end
 

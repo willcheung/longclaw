@@ -65,6 +65,7 @@ class Activity < ActiveRecord::Base
                   }
 
   CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
+  CS_ACTIVITY_SFDC_EXPORT_PREFIX = "ContextSmith ——"
 
   #
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
@@ -192,7 +193,7 @@ class Activity < ActiveRecord::Base
   end
 
   # Parameters:  filter_predicates is a hash that contains several keys -- "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
-  def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates = nil, limit=200)
+  def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
     val = []
     if filter_predicates["entity"] == ""
       entity_predicate = ""
@@ -205,10 +206,11 @@ class Activity < ActiveRecord::Base
       activityhistory_predicate = "AND (" + filter_predicates["activityhistory"] + ")"
     end
 
+    # Note: we avoid importing exported CS data residing on SFDC
     if type == "Account"
-      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE 'ContextSmith ——%')) #{activityhistory_predicate} limit #{limit}) FROM Account WHERE Id='#{sfdc_id}' #{entity_predicate}"
+      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%')) #{activityhistory_predicate} limit #{limit}) FROM Account WHERE Id='#{sfdc_id}' #{entity_predicate}"  
     elsif type == "Opportunity"
-      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE 'ContextSmith ——%')) #{activityhistory_predicate} limit #{limit}) FROM Opportunity WHERE Id='#{sfdc_id}' #{entity_predicate}"
+      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%')) #{activityhistory_predicate} limit #{limit}) FROM Opportunity WHERE Id='#{sfdc_id}' #{entity_predicate}"
     end
     
     activities = SalesforceService.query_salesforce(client, query_statement)
@@ -257,7 +259,7 @@ class Activity < ActiveRecord::Base
   #              type - SFDC entity type: 'Account' or 'Opportunity'
   # Notes:  SFDC type formats:  dateTime = "2017-03-01T00:00:00z",  date = "2017-03-01"
   def self.delete_all_cs_activities(client, type="Account", from_date=nil, to_date=nil, limit=200)
-    delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Subject LIKE 'ContextSmith ——%'"
+    delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'"
     delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
     delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
     delete_tasks_query_stmt += " LIMIT #{limit}"
@@ -336,7 +338,7 @@ class Activity < ActiveRecord::Base
       end
 
       sObject_meta = { id: sfdc_id, type: type }
-      update_details = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "ContextSmith —— #{a.category}: #{a.title}", priority: 'Normal', description: description }
+      update_details = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "#{CS_ACTIVITY_SFDC_EXPORT_PREFIX} #{a.category}: #{a.title}", priority: 'Normal', description: description }
 
       puts "----> sObject_meta:\n #{sObject_meta}\n"
       puts "----> update_details:\n #{update_details}\n"

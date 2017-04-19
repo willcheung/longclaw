@@ -1,17 +1,98 @@
 class ReportsController < ApplicationController
-  before_action :get_owners_in_org, only: [:accounts_dashboard, :dashboard_data]
+  before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
   
   def team_dashboard
     users = current_user.organization.users
-    accounts_managed = users.includes(:projects_owner_of).group('users.id').count('projects.*').sort_by { |uid, num_accounts| num_accounts }.reverse
-    @accounts_managed = accounts_managed.map do |u|
-      user = users.find { |usr| usr.id == u[0] }
-      Hashie::Mash.new({ id: user.id, num_accounts: u[1], name: get_full_name(user)})
+    accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
+    @accounts_managed = accounts_managed.map do |uid, num_accounts|
+      user = users.find { |usr| usr.id == uid }
+      Hashie::Mash.new({ id: user.id, num_accounts: num_accounts, name: get_full_name(user)})
     end
 
-    # custom_lists = current_user.organization.get_custom_lists_with_options
-    # @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
-    # @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    @departments = users.pluck(:department).compact.uniq
+    @titles = users.pluck(:title).compact.uniq
+
+    # TODO: real left chart pagination
+    @accounts_managed = @accounts_managed.take(25)
+  end
+
+    # for loading left-chart on team_dashboard
+  def td_sort_data
+    @sort = params[:sort]
+    users = current_user.organization.users
+
+    if params[:team].present?
+      if params[:team] == "none"
+        users = users.where(department: nil)
+      else
+        users = users.where(department: params[:team])
+      end
+    end
+
+    if params[:title].present?
+      if params[:title] == "none"
+        users = users.where(title: nil)
+      else
+        users = users.where(title: params[:title])
+      end
+    end
+
+    @data = [] and return if users.blank?  #quit early if all projects are filtered out
+
+    case @sort
+    when "Accounts Managed"
+      accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
+      @data = accounts_managed.map do |uid, num_accounts|
+        user = users.find { |usr| usr.id == uid }
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: num_accounts })
+      end
+    when "Time Spent (Last 14d)"
+      account_ids = current_user.organization.accounts.ids
+      user_emails = current_user.organization.users.pluck(:email)
+      email_time = User.team_usage_report(account_ids, user_emails)
+      meeting_time = User.meeting_report(account_ids, user_emails)
+      @data = users.map do |user|
+        email_t = email_time.find { |et| et.email == user.email }
+        if email_t.nil?
+          email_t = { "Read Emails": 0, "Sent Emails": 0 }
+        else
+          email_t = { "Read Emails": [(email_t.inbound / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max, "Sent Emails": [(email_t.outbound / User::WORDS_PER_HOUR[:Write]).round(2), 0.001].max }
+        end
+        meeting_t = meeting_time.find { |mt| mt.email == user.email }
+        meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total / 3600.0 }
+        time_hash = meeting_t.merge(email_t)
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
+      end
+      @data.sort_by! { |d| d.total }.reverse!
+      @categories = ["Meetings", "Read Emails", "Sent Emails"]
+    when "Activities (Last 14d)"
+      user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
+      @data = user_activities.map do |uid, activities|
+        user = users.find { |usr| usr.id == uid }
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
+      end
+      @data.sort_by! { |d| d.total }.reverse!
+      @categories = @data.first.y.map(&:category)
+    when "New Alerts/Tasks (Last 14d)"
+      new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
+      @data = new_tasks.map do |u|
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+      end
+    when "Closed Alerts/Tasks (Last 14d)"
+      closed_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS TRUE AND EXTRACT(EPOCH FROM notifications.complete_date) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
+      @data = closed_tasks.map do |u|
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+      end
+    when "Open Alerts/Tasks"
+      open_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS FALSE").group('users.id').order("task_count DESC")
+      @data = open_tasks.map do |u|
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+      end
+    else # Invalid
+      @data = []
+    end
+    # TODO: real left chart pagination
+    @data = @data.take(25)
   end
 
   def td_user_data
@@ -22,6 +103,51 @@ class ReportsController < ApplicationController
     @accounts_managed = @user.projects_owner_of.count
 
     @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
+
+    day_range = 14
+    @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range + 1, 0), new_open: Array.new(day_range + 1, 0), new_closed: Array.new(day_range + 1, 0)})
+    tasks = @user.notifications
+    tasks_by_open_date = tasks.group("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
+    tasks_by_complete_date = tasks.group("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
+    tasks_by_open_date.each do |date, opened_tasks|
+      date_index = date.mjd - day_range.days.ago.to_date.mjd
+      @tasks_trend_data.new_open[date_index] += opened_tasks if date_index >= 0
+      @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
+        date_index <= i ? num_tasks + opened_tasks : num_tasks
+      end
+    end
+    tasks_by_complete_date.each do |date, completed_tasks|
+      next if date.nil?
+      date_index = date.mjd - day_range.days.ago.to_date.mjd
+      @tasks_trend_data.new_closed[date_index] += completed_tasks if date_index >= 0
+      @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
+        date_index <= i ? num_tasks - completed_tasks : num_tasks
+      end
+    end
+
+    meeting_time = @user.meeting_time_by_project
+    email_time = @user.email_time_by_project
+    @interaction_time_per_account = Hashie::Mash.new({names: [], ids: [], meeting_time: [], sent_time: [], read_time: []})
+    meeting_time.each do |p|
+      @interaction_time_per_account.names << p.name
+      @interaction_time_per_account.ids << p.id
+      @interaction_time_per_account.meeting_time << p.total_meeting_hours
+      @interaction_time_per_account.sent_time << 0
+      @interaction_time_per_account.read_time << 0
+    end
+    email_time.each do |p|
+      i = @interaction_time_per_account.ids.index(p.id)
+      if i.nil?
+        @interaction_time_per_account.names << p.name
+        @interaction_time_per_account.ids << p.id
+        @interaction_time_per_account.meeting_time << 0
+        @interaction_time_per_account.sent_time << p.outbound
+        @interaction_time_per_account.read_time << p.inbound
+      else
+        @interaction_time_per_account.sent_time[i] = p.outbound
+        @interaction_time_per_account.read_time[i] = p.inbound
+      end
+    end
 
     render layout: false
   end
@@ -51,6 +177,9 @@ class ReportsController < ApplicationController
     custom_lists = current_user.organization.get_custom_lists_with_options
     @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
     @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    
+    # TODO: real left chart pagination
+    @risk_scores = @risk_scores.take(25)
   end
 
   # for loading left-chart on accounts_dashboard
@@ -58,12 +187,12 @@ class ReportsController < ApplicationController
     @sort = params[:sort]
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    projects = projects.where(category: params[:category]) if params[:category]
-    projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account]
+    projects = projects.where(category: params[:category]) if params[:category].present?
+    projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account].present?
 
     # Incrementally apply any filters
-    if !params[:owner].nil?
-      if params["owner"]=="none"
+    if params[:owner].present?
+      if params["owner"] == "none"
         projects = projects.where(owner_id: nil)
       elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
         projects = projects.where(owner_id: params[:owner]);
@@ -116,6 +245,8 @@ class ReportsController < ApplicationController
     else # Invalid
       @data = []
     end
+    # TODO: real left chart pagination
+    @data = @data.take(25)
   end
 
   # for loading right panel on accounts_dashboard ("account" in this case is an account stream, internally known as a project)
@@ -156,9 +287,9 @@ class ReportsController < ApplicationController
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
     # Read and Sent times
-    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
+    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
     #Meetings in Interaction Time
-    @meeting_report = User.meeting_team_report([@project.account.id], @in_outbound_report['email'])
+    @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team

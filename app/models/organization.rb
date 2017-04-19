@@ -25,7 +25,7 @@ class Organization < ActiveRecord::Base
   has_many :custom_lists, through: :custom_lists_metadatum
   has_many :custom_configurations, dependent: :destroy
 
-  scope :is_active, -> {where("is_active = TRUE")}
+  scope :is_active, -> { where is_active: true }
 
   validates :domain, uniqueness: true
 
