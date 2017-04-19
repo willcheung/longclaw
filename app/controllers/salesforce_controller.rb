@@ -166,7 +166,7 @@ class SalesforceController < ApplicationController
         account_mapping << [a, a.salesforce_accounts.first] if a.salesforce_accounts.present?
       end
 
-      unless accounts.empty? || account_mapping.empty?  # no visible or mapped accountss
+      unless account_mapping.empty?  # no visible or mapped accounts
         client = SalesforceService.connect_salesforce(current_user.organization_id)
         #client = nil #simulate connection error
         unless client.nil?  # unless SFDC connection error
