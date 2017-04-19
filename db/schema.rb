@@ -352,15 +352,6 @@ ActiveRecord::Schema.define(version: 20170418203416) do
 
   add_index "salesforce_opportunities", ["salesforce_opportunity_id"], name: "index_salesforce_opportunities_on_salesforce_opportunity_id", unique: true, using: :btree
 
-  create_table "temp", id: false, force: :cascade do |t|
-    t.text    "message_id"
-    t.uuid    "project_id"
-    t.integer "word_count"
-    t.text    "from"
-    t.text    "to"
-    t.text    "cc"
-  end
-
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "first_name",             default: "",    null: false
     t.string   "last_name",              default: "",    null: false
