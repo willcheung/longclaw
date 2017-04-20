@@ -18,7 +18,6 @@
 #
 # Indexes
 #
-#  contacts_accounts_email_ukey            (account_id,first_name,last_name,email) UNIQUE
 #  index_contacts_on_account_id            (account_id)
 #  index_contacts_on_account_id_and_email  (account_id,email) UNIQUE
 #

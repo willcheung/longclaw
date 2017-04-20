@@ -42,7 +42,7 @@
                 <div class="m-b-sm">
                     <img src="assets/images/salesforce.png"/ style="height:75px;"/>
                 </div>
-            
+
                 <% if @individual_salesforce_user.nil? %>
                     <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%>">Login to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Login to Salesforce Sandbox</a> <br>
                 <% else %>

@@ -2,6 +2,7 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
+  before_action :set_salesforce_user, only: [:account]
 
   def test
     render layout: "empty"
@@ -142,6 +143,21 @@ class ExtensionController < ApplicationController
       redirect_to extension_project_error_path and return
     end
     success
+  end
+
+  def set_salesforce_user
+    @salesforce_user = nil
+    if current_user.admin?
+      puts "#{current_user.first_name} is admin!"
+      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
+    elsif current_user.power_or_chrome_user_only?  # AND is an individual (power user or chrome user)
+      puts "#{current_user.first_name} is a Power or Chrome user!"
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
+    end
+    puts "@salesforce_user=#{@salesforce_user}" 
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
