@@ -44,9 +44,9 @@
                 </div>
 
                 <% if @individual_salesforce_user.nil? %>
-                    <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%>">Login to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Login to Salesforce Sandbox</a> <br>
+                    <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", return_to_path: settings_path) %>">Login to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Login to Salesforce Sandbox</a> <br>
                 <% else %>
-                    <p>Connected as <%= @individual_salesforce_user.oauth_user_name %><span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="/salesforce/disconnect/<%=@individual_salesforce_user.id %>r">Disconnect!</a></span></p>
+                    <p>Connected as <%= @individual_salesforce_user.oauth_user_name %><span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @individual_salesforce_user.id, return_to_path: settings_path) %>">Disconnect!</a></span></p>
                 <% end %>
             </div>
         </div>

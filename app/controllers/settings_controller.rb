@@ -13,8 +13,6 @@ class SettingsController < ApplicationController
 			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @individual_salesforce_user.nil?
 		end
 
-		session[:return_to] = settings_path  #for redirecting back to this page after Salesforce auth callback
-
 		@current_user_projects = current_user.projects.where('projects.is_confirmed = true AND projects.status = \'Active\'')
 		@current_user_subscriptions = current_user.valid_streams_subscriptions
 	end
@@ -111,7 +109,6 @@ class SettingsController < ApplicationController
 
 			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("upper(accounts.name)")
 		end
-		session[:return_to] = settings_salesforce_accounts_path  #for redirecting back to this page after Salesforce auth callback
 	end
 
 	# Map CS Streams with Salesforce Opportunities: "One CS Stream can link to many Salesforce Opportunities"
