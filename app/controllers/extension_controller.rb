@@ -1,8 +1,8 @@
 class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
-  before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
+  before_action :set_salesforce_user
 
   def test
     render layout: "empty"
@@ -157,7 +157,6 @@ class ExtensionController < ApplicationController
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
     end
-    puts "@salesforce_user=#{@salesforce_user}" 
     session[:return_to] = request.fullpath  #for redirecting back to this page after Salesforce auth callback
   end
 
