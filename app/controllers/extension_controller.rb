@@ -1,8 +1,8 @@
 class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
+  before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
-  before_action :set_salesforce_user, only: [:account]
 
   def test
     render layout: "empty"
