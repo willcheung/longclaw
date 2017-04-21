@@ -10,7 +10,6 @@ class ExtensionController < ApplicationController
   end
 
   def index
-    puts ">>> params[:emails]=#{params[:emails]} <<<"
   end
 
   def new
@@ -71,6 +70,7 @@ class ExtensionController < ApplicationController
   private
 
   def set_account_and_project
+    puts "***** params[:emails]=#{params[:emails]} *****"
     # TODO: blacklist gmail, yahoo, hotmail, etc.
     addresses = params[:emails].split(',').reject { |a| get_domain(a) == get_domain(current_user.email) }
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
@@ -165,6 +165,7 @@ class ExtensionController < ApplicationController
 
   # Save redirect (return) path to be used for Salesforce OAuth callback
   def set_oauth_return_to_path
+    puts ">>> params[:emails]=#{params[:emails]}  <<<"
     case params[:action]
     when "account"
       @return_to_path = extension_account_path(emails: params[:emails])
