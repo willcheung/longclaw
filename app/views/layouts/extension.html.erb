@@ -41,7 +41,7 @@
                     <% if @salesforce_user.nil? %>
                         <a href="<%=user_omniauth_authorize_url(:salesforce)%>"><img src="/assets/images/salesforce.png" style="width:20px" title="Connect to Salesforce"/></a>
                     <% else %>
-                        <img src="/assets/images/salesforce_icon_check.png" style="width:20px;" title="Connected to Salesforce"/>
+                        <img src="/assets/images/salesforce_icon_check.png" style="width:20px;"/>
                     <% end %>
                 </span>
             </div>
