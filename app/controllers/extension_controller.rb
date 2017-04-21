@@ -166,11 +166,11 @@ class ExtensionController < ApplicationController
   def set_oauth_return_to_path
     case params[:action]
     when "account"
-      @return_to_path = extension_account_path
+      @return_to_path = extension_account_path(emails: params[:emails])
     when "alerts_tasks"
-      @return_to_path = extension_alerts_tasks_path
+      @return_to_path = extension_alerts_tasks_path(emails: params[:emails])
     when "contacts"
-      @return_to_path = extension_contacts_path
+      @return_to_path = extension_contacts_path(emails: params[:emails])
     when "metrics"
       @return_to_path = extension_metrics_path
     else
