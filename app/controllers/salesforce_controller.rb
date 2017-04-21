@@ -421,7 +421,6 @@ class SalesforceController < ApplicationController
 
   end
 
-  # Parameters:  return_to_path - the path to which we will redirected after disconnecting
   def disconnect
     # delete salesforce data
     # delete salesforce oauth_user
@@ -430,7 +429,7 @@ class SalesforceController < ApplicationController
     salesforce_user.destroy if salesforce_user.present?
 
     respond_to do |format|
-      format.html { redirect_to(params[:return_to_path] || settings_path) }
+      format.html { redirect_to(request.referer || settings_path) }
     end
   end
 

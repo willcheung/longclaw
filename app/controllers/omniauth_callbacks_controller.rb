@@ -62,10 +62,9 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
   # Correctly redirect to the right page after returning from OAuth call (whether in web app or Chrome extension)
-  # Parameters:  return_to_path - the path to which we will redirected after the oauth call in the callback
   def user_omniauth_auth_helper
-    session[:return_to_path] = request.referer #params[:return_to_path]  # save the redirect path which will be used in the callback
-    #session[:return_to_path] = params[:return_to_path]
+    puts "In user_omniauth_auth_helper:  params=#{params} request.referer=#{request.referer}"
+    session[:return_to_path] = request.referer  # save the redirect path which will be used in the callback
     redirect_to user_omniauth_authorize_path, provider: params[:provider]
   end
 end
