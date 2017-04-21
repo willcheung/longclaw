@@ -164,6 +164,7 @@ class ExtensionController < ApplicationController
 
   # Save redirect (return) path to be used for Salesforce OAuth callback
   def set_oauth_return_to_path
+    puts "params: #{params}"
     case params[:action]
     when "account"
       @return_to_path = extension_account_path(emails: params[:emails])
@@ -176,6 +177,7 @@ class ExtensionController < ApplicationController
     else
       @return_to_path = extension_path
     end
+    puts ">>> @return_to_path=#{@return_to_path} ... params[:emails]=#{params[:emails]} .... params[:action]=#{params[:action]} <<<"
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
