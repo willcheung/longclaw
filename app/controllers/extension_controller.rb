@@ -177,6 +177,7 @@ class ExtensionController < ApplicationController
     else
       @return_to_path = extension_path
     end
+    @return_to_path = "/extension/contacts?emails=support@gusto.com" #TEST!!!!
     puts ">>> @return_to_path=#{@return_to_path} ... params[:emails]=#{params[:emails]} .... params[:action]=#{params[:action]} <<<"
   end
 
