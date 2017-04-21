@@ -182,7 +182,7 @@ class ExtensionController < ApplicationController
     else
       @return_to_path = extension_path
     end
-    puts ">>> @return_to_path=#{@return_to_path} ... params[:emails]=#{params[:emails]} .... params[:action]=#{params[:action]} <<<"
+    #puts ">>> @return_to_path=#{@return_to_path} ... params[:emails]=#{params[:emails]} .... params[:action]=#{params[:action]} <<<"
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
