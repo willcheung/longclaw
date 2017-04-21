@@ -10,6 +10,7 @@ class ExtensionController < ApplicationController
   end
 
   def index
+    puts ">>> params[:emails]=#{params[:emails]} <<<"
   end
 
   def new
@@ -70,7 +71,6 @@ class ExtensionController < ApplicationController
   private
 
   def set_account_and_project
-    puts ">>>>> params[:emails] ... #{params[:emails]}"
     # TODO: blacklist gmail, yahoo, hotmail, etc.
     addresses = params[:emails].split(',').reject { |a| get_domain(a) == get_domain(current_user.email) }
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
@@ -174,6 +174,10 @@ class ExtensionController < ApplicationController
       @return_to_path = extension_contacts_path(emails: params[:emails])
     when "metrics"
       @return_to_path = extension_metrics_path
+    when "project_error"
+      @return_to_path = extension_project_error_path
+    when "no_account"
+      @return_to_path = extension_no_account_path
     else
       @return_to_path = extension_path
     end
