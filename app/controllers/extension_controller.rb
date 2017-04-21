@@ -70,7 +70,8 @@ class ExtensionController < ApplicationController
   private
 
   def set_account_and_project
-    puts "***** params[:emails]=#{params[:emails]} *****"
+    params[:emails] = URI.unescape(params[:emails], '%2E')
+
     # TODO: blacklist gmail, yahoo, hotmail, etc.
     addresses = params[:emails].split(',').reject { |a| get_domain(a) == get_domain(current_user.email) }
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
@@ -181,6 +182,7 @@ class ExtensionController < ApplicationController
     else
       @return_to_path = extension_path
     end
+    puts ">>> @return_to_path=#{@return_to_path} ... params[:emails]=#{params[:emails]} .... params[:action]=#{params[:action]} <<<"
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
