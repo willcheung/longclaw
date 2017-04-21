@@ -39,7 +39,7 @@
                 <span style="width: 20px; height: 40px; vertical-align: top; margin:5px 0; padding:0 3px;display:inline-block; border-left: 1px solid #EEE">
                     <img src="/assets/images/salesforce.png" style="width:0px;"/>
                     <% if @salesforce_user.nil? %>
-                        <a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", return_to_path: extension_path) %>"><img src="/assets/images/salesforce.png" style="width:20px" title="Click to connect to Salesforce"/></a>
+                        <a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", return_to_path: @return_to_path) %>"><img src="/assets/images/salesforce.png" style="width:20px" title="Click to connect to Salesforce"/></a>
                     <% else %>
                         <!-- TODO: Add disconnect -->
                         <img src="/assets/images/salesforce_icon_check.png" style="width:20px;" title="Connected to Salesforce!"/>

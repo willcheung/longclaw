@@ -2,6 +2,7 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
+  before_action :set_oauth_return_to_path
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
 
   def test
@@ -159,6 +160,22 @@ class ExtensionController < ApplicationController
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
     end
     #puts "@salesforce_user=#{@salesforce_user}" 
+  end
+
+  # Save redirect (return) path to be used for Salesforce OAuth callback
+  def set_oauth_return_to_path
+    case params[:action]
+    when :account
+      @return_to_path = extension_account_path
+    when :alerts_tasks
+      @return_to_path = extension_alerts_tasks_path
+    when :contacts
+      @return_to_path = extension_contacts_path
+    when :metrics
+      @return_to_path = extension_metrics_path
+    else
+      @return_to_path = root_path
+    end
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
