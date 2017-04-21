@@ -606,7 +606,7 @@
                                         <!-- hardcoded data!!! -->
                                         <td style="text-align: center;"><%= rand(2..12) %></td>
                                         <td class="contact-info">Will Cheung</td>
-                                        <td class="contact-info">Steven Yong</td>
+                                        <td class="contact-info"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date %></td>
                                     <% end %>
                                 </tr>
                             <% end %>
