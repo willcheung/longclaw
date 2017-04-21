@@ -147,15 +147,18 @@ class ExtensionController < ApplicationController
 
   def set_salesforce_user
     @salesforce_user = nil
-    if current_user.present? && current_user.admin?
+
+    return if current_user.nil?
+
+    if current_user.admin?
       # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
-    elsif current_user.present? && current_user.power_or_chrome_user_only?  # AND is an individual (power user or chrome user)
+    elsif current_user.power_or_chrome_user_only?  # AND is an individual (power user or chrome user)
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
     end
-    puts "@salesforce_user=#{@salesforce_user}" 
+    #puts "@salesforce_user=#{@salesforce_user}" 
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
