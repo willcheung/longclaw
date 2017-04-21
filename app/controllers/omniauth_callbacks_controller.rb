@@ -1,13 +1,12 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
     User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
-    puts "Here in OmniauthCallbacksController@salesforce !!!"
-    redirect_to settings_path
+    redirect_to(session.delete(:return_to) || settings_path)
   end
 
   def salesforcesandbox
     User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
-    redirect_to settings_path
+    redirect_to(session.delete(:return_to) || settings_path)
   end
 
 	def google_oauth2

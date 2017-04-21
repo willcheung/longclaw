@@ -158,6 +158,7 @@ class ExtensionController < ApplicationController
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
     end
     puts "@salesforce_user=#{@salesforce_user}" 
+    session[:return_to] = request.fullpath  #for redirecting back to this page after Salesforce auth callback
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

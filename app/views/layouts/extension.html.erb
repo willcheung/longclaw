@@ -37,10 +37,11 @@
                     </a>
                 </span>
                 <span style="width: 20px; height: 40px; vertical-align: top; margin:5px 0; padding:0 3px;display:inline-block; border-left: 1px solid #EEE">
+                    <img src="/assets/images/salesforce.png" style="width:0px;"/>
                     <% if @salesforce_user.nil? %>
-                        <img src="/assets/images/salesforce.png" style="width:0px;"/>
                         <a href="<%=user_omniauth_authorize_url(:salesforce)%>"><img src="/assets/images/salesforce.png" style="width:20px"/></a>
                     <% else %>
+                    xxxx
                         <img src="/assets/images/salesforce_icon_check.png" style="width:20px;"/>
                     <% end %>
                 </span>
