@@ -165,16 +165,16 @@ class ExtensionController < ApplicationController
   # Save redirect (return) path to be used for Salesforce OAuth callback
   def set_oauth_return_to_path
     case params[:action]
-    when :account
+    when "account"
       @return_to_path = extension_account_path
-    when :alerts_tasks
+    when "alerts_tasks"
       @return_to_path = extension_alerts_tasks_path
-    when :contacts
+    when "contacts"
       @return_to_path = extension_contacts_path
-    when :metrics
+    when "metrics"
       @return_to_path = extension_metrics_path
     else
-      @return_to_path = root_path
+      @return_to_path = extension_path
     end
   end
 
