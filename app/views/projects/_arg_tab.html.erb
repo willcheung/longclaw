@@ -587,12 +587,12 @@
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
+                                <th>Name</th>
                                 <th>Title</th>
-                                <th>Email</th>
-                                <th style="text-align: center;">Salesforce Lead</th>
-                                <th style="text-align: center;">Salesforce Contact</th>
+                                <th>Best Connection</th>
+                                <th>Engagement</th>
+                                <th>Last touch</th>
+                                <th>Last touch date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -600,13 +600,13 @@
                                 <tr>
                                     <% if !pm.contact.nil? %>
                                         <% contact = pm.contact %>
-                                        <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
-                                        <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
-                                        <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
-                                        <td class="contact-info"><%= contact.email %></td>
+                                        <td class="contact-info"><%= contact.first_name + ' ' + contact.last_name %></td>
+                                        <td class="contact-info"><%= contact.title %></td>
+                                        <td class="contact-info">Will Cheung</td>
                                         <!-- hardcoded data!!! -->
-                                        <td style="text-align: center;"><% if contact.first_name == 'Christopher' %><i class="fa fa-check"><% end %></td>
-                                        <td style="text-align: center;"><% if !contact.first_name == 'Paul' or !contact.first_name == 'Xavier' or !contact.first_name == 'Emmanuel' or !contact.first_name == 'Tom' %><i class="fa fa-check"><% end %></td>
+                                        <td style="text-align: center;"><%= rand(2..12) %></td>
+                                        <td class="contact-info">Will Cheung</td>
+                                        <td class="contact-info">Steven Yong</td>
                                     <% end %>
                                 </tr>
                             <% end %>
