@@ -19,7 +19,6 @@
     <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" %>
     
     <%= csrf_meta_tags %>
-
 </head>
 <body>
     <!-- Wrapper-->
@@ -29,28 +28,66 @@
 
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
-                <span style="width: 230px; display:inline-block">
+                <span style="width: 225px; display:inline-block">
                     <a href="<%= root_path %>" target="_blank" class="navbar-brand">
                         <span class="clear">
                             <div class="block logo">&nbsp;</div>
                         </span>
                     </a>
                 </span>
-                <span style="width: 20px; height: 40px; vertical-align: top; margin:5px 0; padding:0 3px;display:inline-block; border-left: 1px solid #EEE">
-                    <img src="/assets/images/salesforce.png" style="width:0px;"/>
-                    <% if @salesforce_user.nil? %>
-                        <a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", return_to_path: @return_to_path) %>"><img src="/assets/images/salesforce.png" style="width:20px" title="Click to connect to Salesforce"/></a>
-                    <% else %>
-                        <!-- TODO: Add disconnect -->
-                        <img src="/assets/images/salesforce_icon_check.png" style="width:20px;" title="Connected to Salesforce!"/>
-                    <% end %>
-                </span>
+                <li class="dropdown" style="width: 25px; height: 40px; vertical-align: top; margin:5px 0; padding:0 3px;display:inline-block; border-left: 1px solid #EEE">
+                    <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:0px;"/>
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">  
+                        <% if @salesforce_user.nil? %>
+                            <img src="/assets/images/salesforce.png" style="width:20px" title="Salesforce"/></a>
+                        <% else %>
+                            <img src="/assets/images/salesforce_icon_check.png" style="width:20px;" title="Salesforce"/>
+                        <% end %>
+                        <span class="caret" style="display:inline"></span>
+                    </a>
+                    <ul class="dropdown-menu" style="width:200px; position: absolute; left:-170px">
+                        <div style="margin: 0.5em">
+                            <% if @salesforce_user.present? %>
+                                <li><strong><%= @salesforce_user.oauth_user_name %></strong></li>
+                                <li class="divider"></li>
+                                <!--<li>———</li>-->
+                                <li><a href="#">Link to Account</a></li>
+                                <li><a href="<%= salesforce_disconnect_path(id: @salesforce_user.id, return_to_path: @return_to_path) %>">Logout of Salesforce</a></li> 
+                            <% else %>
+                                <li><a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", return_to_path: @return_to_path) %>">Connect to Salesforce</a></li>
+                            <% end %>
+                        </div>
+                    </ul>
+                </li>
             </div>
 
             <% if @project %>
-                <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
-                <h3 class="m-t-sm m-l" style="margin-bottom:0"><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
-                <h6 class="text-mute-gray">Owner: <%= get_full_name(@project.project_owner) %></h6>
+                <div style="">
+                    <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
+                    <div>
+                        <h3 class="m-t-sm m-l" style="margin-bottom: 9px"><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
+                        <div class="text-mute-gray" style="font-size: 10px">
+                            <span><strong>Owner:</strong>&nbsp;&nbsp;<%= get_full_name(@project.project_owner) %><br/></span>
+                            <% if @salesforce_user.present? %>
+                                <span><strong>Linked to SFDC:</strong>&nbsp;&nbsp;
+                                    <span>
+                                    <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
+                                        Not linked<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title='Click on the Salesforce logo above, then select "Link to Account"'></i>
+                                    <% else %>
+                                        <% if @project.salesforce_opportunity.nil? %>
+                                            <% @project.account.salesforce_accounts.each do |sfa| %>
+                                              <a href="<%= @salesforce_base_URL + "/" + sfa.salesforce_account_id %>" title="View '<%= sfa.salesforce_account_name %>' in Salesforce" target="_blank"><%= sfa.salesforce_account_name %><br></a>
+                                            <% end %> 
+                                        <% else %>
+                                            <a href="<%= @salesforce_base_URL + "/" + @project.salesforce_opportunity.salesforce_opportunity_id %>" title="View '<%= @project.salesforce_opportunity.name %>' in Salesforce" target="_blank"><%= @project.salesforce_opportunity.name %></a>
+                                        <% end %>
+                                    <% end %>
+                                    </span>
+                                </span>
+                            <% end %>
+                        </div>
+                    </div>
+                </div>
 
                 <ul class="nav nav-tabs m-b-sm m-t-md">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(emails: params[:emails]) %>">Activities</a></li>
@@ -72,8 +109,8 @@
     <%= javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js" %>
     <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" %>
 
-    <!-- Google Analytics -->
     <% if ENV["RAILS_ENV"] == 'production' %>
+    <!-- Google Analytics -->
         <script>
           (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -82,8 +119,12 @@
 
           ga('create', '<%= ENV['GA_ID'] %>', 'auto');
           ga('send', 'pageview');
+          $('[data-toggle="tooltip"]').tooltip();
         </script>
     <% end %>
 
+    <script>
+        $('[data-toggle="tooltip"]').tooltip();
+    </script>
 </body>
 </html>

@@ -166,7 +166,7 @@ class ExtensionController < ApplicationController
 
   # Save redirect (return) path to be used for Salesforce OAuth callback
   def set_oauth_return_to_path
-    @return_to_path = URI.escape(request.original_fullpath, ".")  #to escape the '.' in emails
+    @return_to_path = URI.escape(request.original_fullpath, ".")  # to escape the '.' in emails
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
