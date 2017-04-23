@@ -28,14 +28,14 @@
 
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
-                <span style="width: 225px; display:inline-block">
+                <span style="width:230px; display:inline-block">
                     <a href="<%= root_path %>" target="_blank" class="navbar-brand">
                         <span class="clear">
                             <div class="block logo">&nbsp;</div>
                         </span>
                     </a>
                 </span>
-                <li class="dropdown" style="width: 25px; height: 40px; vertical-align: top; margin:5px 0; padding:0 3px;display:inline-block; border-left: 1px solid #EEE">
+                <li class="dropdown" style="width:22px; height:40px; vertical-align:top; margin:5px 0; padding:0 3px;display:inline-block; border-left: 1px solid #EEE">
                     <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:0px;"/>
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">  
                         <% if @salesforce_user.nil? %>
@@ -43,15 +43,18 @@
                         <% else %>
                             <img src="/assets/images/salesforce_icon_check.png" style="width:20px;" title="Salesforce"/>
                         <% end %>
-                        <span class="caret" style="display:inline"></span>
+                        <span class="caret" style="margin-left:5px;display:inline"></span>
                     </a>
-                    <ul class="dropdown-menu" style="width:200px; position: absolute; left:-170px">
-                        <div style="margin: 0.5em">
+                    <ul class="dropdown-menu" style="width:200px; position:absolute; left:-175px; margin-top:6px">
+                        <div style="margin: 0.5em; line-height: 2.7em">
                             <% if @salesforce_user.present? %>
-                                <li><strong><%= @salesforce_user.oauth_user_name %></strong></li>
+                                <li style="line-height: 1em"><strong><%= @salesforce_user.oauth_user_name %></strong></li>
                                 <li class="divider"></li>
                                 <!--<li>———</li>-->
-                                <li><a href="#">Link to Account</a></li>
+                                <li><div id="salesforce-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh"> <i class="fa fa-refresh"></i> Refresh Accounts</div>
+                                <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Salesforce."></i></li>
+                                <li><div id="salesforce-opp-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh"> <i class="fa fa-refresh"></i> Refresh Opportunities</div>
+                                <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Opportunities from Salesforce. Do this after Accounts have been linked."></i></li>
                                 <li><a href="<%= salesforce_disconnect_path(id: @salesforce_user.id, return_to_path: @return_to_path) %>">Logout of Salesforce</a></li> 
                             <% else %>
                                 <li><a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", return_to_path: @return_to_path) %>">Connect to Salesforce</a></li>
@@ -67,12 +70,12 @@
                     <div>
                         <h3 class="m-t-sm m-l" style="margin-bottom: 9px"><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
                         <div class="text-mute-gray" style="font-size: 10px">
-                            <span><strong>Owner:</strong>&nbsp;&nbsp;<%= get_full_name(@project.project_owner) %><br/></span>
+                            <span><strong>Owner:</strong>&nbsp;&nbsp;<%= @project.project_owner.present? ? get_full_name(@project.project_owner) : "(None)" %><br/></span>
                             <% if @salesforce_user.present? %>
-                                <span><strong>Linked to SFDC:</strong>&nbsp;&nbsp;
+                                <span><strong>Linked to SFDC:</strong><i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title='Click on name the right to map a Salesforce Opportunity"'></i>&nbsp;&nbsp;
                                     <span>
                                     <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
-                                        Not linked<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title='Click on the Salesforce logo above, then select "Link to Account"'></i>
+                                        Not linked
                                     <% else %>
                                         <% if @project.salesforce_opportunity.nil? %>
                                             <% @project.account.salesforce_accounts.each do |sfa| %>
@@ -106,6 +109,10 @@
 
     <%= yield :javascript %>
 
+    <script>
+        $('[data-toggle="tooltip"]').tooltip();
+    </script>
+
     <%= javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js" %>
     <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" %>
 
@@ -119,12 +126,8 @@
 
           ga('create', '<%= ENV['GA_ID'] %>', 'auto');
           ga('send', 'pageview');
-          $('[data-toggle="tooltip"]').tooltip();
         </script>
     <% end %>
 
-    <script>
-        $('[data-toggle="tooltip"]').tooltip();
-    </script>
 </body>
 </html>
