@@ -1,9 +1,9 @@
 <% m = get_user_or_contact_from_pm(pm) %>
 <div class="row m-b-sm member <%= pm.id %>">
-    <div class="col-sm-2">
-        <%= get_profile_pic(get_full_name(m), m.email, "message-avatar") %>
+    <div class="col-xs-2">
+        <%= get_profile_pic(get_full_name(m), m.email) %>
     </div>
-    <div class="col-sm-7 project-team-title">
+    <div class="col-xs-7 project-team-title">
         <span><% if m.first_name.blank? && m.last_name.blank? %>
                     <%= get_local_part(m.email) %>
                 <% else %>
@@ -21,11 +21,11 @@
         <span><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
     </div>
     <% if pm.status == ProjectMember::STATUS[:Confirmed] %>
-    <div class="col-sm-3 m-t-xs delete-member">
+    <div class="col-xs-3 m-t-xs delete-member">
         <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this person from the stream?"}, remote: true %>
     </div>
     <% else %>
-    <div class="col-sm-3 m-t-xs">
+    <div class="col-xs-3 m-t-xs">
         <%= link_to "<i class=\"fa fa-check-circle fa-lg\"></i>".html_safe, pm, method: :put, class: "text-primary", title: "Confirm", data: {confirm: "Confirm this suggested person?"}, remote: true %>
         <%= link_to "<i class=\"fa fa-times-circle fa-lg\"></i>".html_safe, pm, method: :delete, class: "text-muted", title: "Reject", data: {confirm: "Reject this suggested person?"}, remote: true %>
     </div>

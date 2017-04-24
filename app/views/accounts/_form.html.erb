@@ -8,9 +8,15 @@
   <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: @account_types, selected: @account.category %>
   <% if @domain %>
     <%= f.input :website, wrapper_html: { class: 'col-md-12'}, input_html: { value: 'http://www.'+@domain } %>
-    <%= f.input :domain, as: :hidden, input_html: { value: @domain } %> 
-    <input type="hidden" name="emails" value="<%= params[:emails] %>">
-    <input type="hidden" name="names" value="<%= params[:names] %>">
+    <%= f.input :domain, as: :hidden, input_html: { value: @domain } %>
+    <% params[:internal].values.each.with_index.each do |person, i| %>
+      <%= hidden_field_tag "internal[#{i}][]", person[0] %>
+      <%= hidden_field_tag "internal[#{i}][]", person[1] %>
+    <% end %>
+    <% params[:external].values.each.with_index.each do |person, i| %>
+      <%= hidden_field_tag "external[#{i}][]", person[0] %>
+      <%= hidden_field_tag "external[#{i}][]", person[1] %>
+    <% end %>
   <% else %>
     <%= f.input :website, wrapper_html: { class: 'col-md-12'} %>
   <% end %>
