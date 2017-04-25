@@ -52,9 +52,9 @@
                                 <li class="divider"></li>
 
                                 <li><button id="salesforce-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="font-size: 10px"> <i class="fa fa-refresh"></i> Refresh Accounts</button><i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Salesforce."></i></li>
-                                <li><a href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Logout of Salesforce</a></li> 
+                                <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">Logout of Salesforce</a></li> 
                             <% else %>
-                                <li><a href="<%= user_omniauth_auth_helper_path(provider: 'salesforce', return_to_path: extension_path(login: true)) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a></li>
+                                <li><a href="<%= user_omniauth_auth_helper_path(:salesforce) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a></li>
                             <% end %>
                         </div>
                     </ul>
@@ -289,6 +289,14 @@
             padding-bottom: 0em;
         }
     </style>
+
+    <% if params[:login] %>
+        <!-- if params[:login] is set, redirected here after signing in successfully from extension -->
+        <script type="text/javascript">
+        // Close this window, extension sidebar will refresh
+          window.close();
+        </script>
+    <% end %>
 </body>
 </html>
 <!-- End of ContextSmith Chrome extension code -->
