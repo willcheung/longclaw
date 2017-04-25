@@ -161,12 +161,18 @@ class ExtensionController < ApplicationController
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
     end
-    #puts "@salesforce_user=#{@salesforce_user}" 
+    
+    @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
+    # If no SFDC accounts found, automatically refresh the SFDC accounts list
+    if !@sfdc_accounts_exist
+      SalesforceAccount.load_accounts(current_user.organization_id) 
+      @sfdc_accounts_exist = true
+    end
   end
 
-  # Save redirect (return) path to be used for Salesforce OAuth callback
+  # Save redirect (return) path to be used for Salesforce OAuth callback in extension
   def set_oauth_return_to_path
-    @return_to_path = URI.escape(request.original_fullpath, ".")  # to escape the '.' in emails
+    @return_to_path = URI.escape(request.original_fullpath, ".")  # to escape the '.' in the query string
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

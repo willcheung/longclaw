@@ -1,5 +1,4 @@
 $(document).ready(function() {
-
 /* Autocomplete and Tokenization for search bar using Selectize */
   $("#search").selectize({
     closeAfterSelect: true,
