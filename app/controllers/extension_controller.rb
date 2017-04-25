@@ -2,7 +2,6 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
-  before_action :set_oauth_return_to_path
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
 
   def test
@@ -169,11 +168,6 @@ class ExtensionController < ApplicationController
       SalesforceAccount.load_accounts(current_user.organization_id) 
       @sfdc_accounts_exist = true
     end
-  end
-
-  # Save redirect (return) path to be used for Salesforce OAuth callback in extension
-  def set_oauth_return_to_path
-    @return_to_path = URI.escape(request.original_fullpath, ".")  # to escape the '.' in the query string
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
