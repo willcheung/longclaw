@@ -1,6 +1,8 @@
 class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
+  before_action :set_salesforce_user
+  before_action :set_oauth_return_to_path
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
 
   def test
@@ -68,6 +70,8 @@ class ExtensionController < ApplicationController
   private
 
   def set_account_and_project
+    params[:emails] = URI.unescape(params[:emails], '%2E')
+
     # TODO: blacklist gmail, yahoo, hotmail, etc.
     addresses = params[:emails].split(',').reject { |a| get_domain(a) == get_domain(current_user.email) }
     redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
@@ -142,6 +146,27 @@ class ExtensionController < ApplicationController
       redirect_to extension_project_error_path and return
     end
     success
+  end
+
+  def set_salesforce_user
+    @salesforce_user = nil
+
+    return if current_user.nil?
+
+    if current_user.admin?
+      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
+    elsif current_user.power_or_chrome_user_only?  # AND is an individual (power user or chrome user)
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
+    end
+    #puts "@salesforce_user=#{@salesforce_user}" 
+  end
+
+  # Save redirect (return) path to be used for Salesforce OAuth callback
+  def set_oauth_return_to_path
+    @return_to_path = URI.escape(request.original_fullpath, ".")  # to escape the '.' in emails
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

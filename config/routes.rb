@@ -39,7 +39,7 @@ Longclaw::Application.routes.draw do
     resources :users
     resources :notifications, only: [:index, :update, :create]
     resources :salesforce, only: [:index]
-    get "salesforce/disconnect/:id" => 'salesforce#disconnect'
+    get "salesforce/disconnect/:id/:return_to_path" => 'salesforce#disconnect', as: "salesforce_disconnect"
     post "/link_salesforce_account" => 'salesforce#link_salesforce_account'
     post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
     post "/salesforce/refresh/:entity_type" => 'salesforce#refresh_salesforce'
@@ -136,6 +136,7 @@ Longclaw::Application.routes.draw do
   	# root to: "sessions#new"
     root to: redirect('/auth/basecamp')
     get '/auth/:provider/callback' => 'setting#basecamp'
+    get "/user/omniauth/auth/:provider/:return_to_path", to:  "omniauth_callbacks#user_omniauth_auth_helper", as: :user_omniauth_auth_helper
     # get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
   end
 
