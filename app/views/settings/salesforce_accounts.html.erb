@@ -60,7 +60,7 @@
                   <%end%>
                 </div>
 
-                <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right" style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id, return_to_path: settings_salesforce_accounts_path) %>">Disconnect (<%= @salesforce_user.oauth_user_name %>)</a></span>
+                <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right" style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect (<%= @salesforce_user.oauth_user_name %>)</a></span>
               </div>
 
               <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
