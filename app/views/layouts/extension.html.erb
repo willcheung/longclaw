@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<!-- Start of ContextSmith Chrome extension code -->
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -54,7 +54,7 @@
                                 <li><button id="salesforce-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="font-size: 10px"> <i class="fa fa-refresh"></i> Refresh Accounts</button><i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Salesforce."></i></li>
                                 <li><a href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Logout of Salesforce</a></li> 
                             <% else %>
-                                <li><a href="<%= user_omniauth_authorize_url(:salesforce) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a></li>
+                                <li><a href="<%= user_omniauth_auth_helper_path(provider: 'salesforce', return_to_path: extension_path(login: true)) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a></li>
                             <% end %>
                         </div>
                     </ul>
@@ -289,6 +289,6 @@
             padding-bottom: 0em;
         }
     </style>
-
 </body>
 </html>
+<!-- End of ContextSmith Chrome extension code -->
