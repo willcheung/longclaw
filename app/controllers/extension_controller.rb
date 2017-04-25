@@ -1,6 +1,8 @@
 class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
+  before_action :set_salesforce_user
+  before_action :set_oauth_return_to_path
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
 
   def test
@@ -68,7 +70,14 @@ class ExtensionController < ApplicationController
   private
 
   def set_account_and_project
-    ex_emails = params[:external].values.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
+    p "*** set account and project ***"
+    p params
+    ### url example: .../extension/account?internal%5B0%5D%5B%5D=Will%20Cheung&internal%5B0%5D%5B%5D=wcheung%40contextsmith.com&internal%5B1%5D%5B%5D=Kelvin%20Lu&internal%5B1%5D%5B%5D=klu%40contextsmith.com&internal%5B2%5D%5B%5D=Richard%20Wang&internal%5B2%5D%5B%5D=rcwang%40contextsmith.com&internal%5B3%5D%5B%5D=Yu-Yun%20Liu&internal%5B3%5D%5B%5D=liu%40contextsmith.com&external%5B0%5D%5B%5D=Richard%20Wang&external%5B0%5D%5B%5D=rcwang%40enfind.com&external%5B1%5D%5B%5D=Brad%20Barbin&external%5B1%5D%5B%5D=brad%40enfind.com
+    ### more readable url example: .../extension/account?internal[0][]=Will Cheung&internal[0][]=wcheung@contextsmith.com&internal[1][]=Kelvin Lu&internal[1][]=klu@contextsmith.com&internal[2][]=Richard Wang&internal[2][]=rcwang@contextsmith.com&internal[3][]=Yu-Yun Liu&internal[3][]=liu@contextsmith.com&external[0][]=Richard Wang&external[0][]=rcwang@enfind.com&external[1][]=Brad Barbin&external[1][]=brad@enfind.com
+    ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Full Name', 'email@address.com'] }
+    external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
+
+    ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
     redirect_to extension_path and return if ex_emails.blank? # if somehow request was made without external people, redirect to home page
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten # group by ex_emails by domain frequency, order by most frequent domain
     order_emails_by_domain_freq = ex_emails.map { |email| "email = '#{email}' DESC" }.join(',')
@@ -132,8 +141,10 @@ class ExtensionController < ApplicationController
   end
 
   def create_people(status=ProjectMember::STATUS[:Pending])
+    external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
+    internal = params[:internal].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
     # p "*** creating new internal members for project #{@project.name} ***"
-    params[:internal].values.select { |person| get_domain(person[1]) == current_user.organization.domain }.each do |person|
+    internal.select { |person| get_domain(person[1]) == current_user.organization.domain }.each do |person|
       unless person[0] == 'me' || person[1] == current_user.email
         user = current_user.organization.users.create_with(
           first_name: get_first_name(person[0]),
@@ -147,9 +158,30 @@ class ExtensionController < ApplicationController
     end if params[:internal].present?
 
     # p "*** creating new external members for project #{@project.name} ***"
-    params[:external].values.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
+    external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
     end
+  end
+
+  def set_salesforce_user
+    @salesforce_user = nil
+
+    return if current_user.nil?
+
+    if current_user.admin?
+      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
+    elsif current_user.power_or_chrome_user_only?  # AND is an individual (power user or chrome user)
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
+    end
+    #puts "@salesforce_user=#{@salesforce_user}" 
+  end
+
+  # Save redirect (return) path to be used for Salesforce OAuth callback
+  def set_oauth_return_to_path
+    @return_to_path = URI.escape(request.original_fullpath, ".")  # to escape the '.' in emails
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

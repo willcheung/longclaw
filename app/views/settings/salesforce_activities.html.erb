@@ -29,7 +29,7 @@
                   <!-- Collect the nav links, forms, and other content for toggling -->
                   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
-                      <li><a href="<%= settings_salesforce_path %>">Step 1: Map Accounts</a></li>
+                      <li><a href="<%= settings_salesforce_accounts_path %>">Step 1: Map Accounts</a></li>
                       <li><a href="<%= settings_salesforce_opportunities_path %>">Step 2: Map Opportunities</a></li>
                       <li class="active"><a href="<%= settings_salesforce_activities_path %>">Step 3: Map Activities</a></li>
                       <li><a href="<%= settings_salesforce_fields_path %>">Step 4: Map Fields</a></li>
@@ -170,7 +170,7 @@
             activityhistory_predicate = " AND (" + activityhistory_predicate + ")";
         
 
-        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE 'ContextSmith ——%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
+        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{Activity::CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
     }
 
     $(document).ready(function() {

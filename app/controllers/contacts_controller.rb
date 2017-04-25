@@ -25,7 +25,7 @@ class ContactsController < ApplicationController
   # POST /contacts.json
   def create
     @contact = Contact.new(contact_params)
-    account = Account.find(@contact.account_id)  # didn't check for invalid account_id!
+    account = Account.find(@contact.account_id)  # didn't verify account_id!
     respond_to do |format|
       if account.organization_id == current_user.organization_id && @contact.save
         format.html { redirect_to @contact, notice: 'Contact was successfully created.' }
@@ -43,6 +43,7 @@ class ContactsController < ApplicationController
   # PATCH/PUT /contacts/1.json
   def update
     respond_to do |format|
+      #if Contact.where(id: @contact.id).update_all(contact_params)  #allows updating Contact if email is null
       if @contact.update(contact_params)
         format.html { redirect_to @contact, notice: 'Contact was successfully updated.' }
         format.json { respond_with_bip(@contact) }

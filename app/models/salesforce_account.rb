@@ -52,10 +52,10 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   # 
   ################################################################################################## 
-	def self.load(organization_id, query_range=500)
+  # This class method finds SFDC accounts and creates a local model
+	def self.load_accounts(organization_id, query_range=500)
 		client = SalesforceService.connect_salesforce(organization_id)
     return if client.nil?
-
 
     firstQuery = true   
     last_Created_Id = nil
