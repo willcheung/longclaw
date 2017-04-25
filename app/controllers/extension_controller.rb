@@ -2,7 +2,6 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
-  before_action :set_oauth_return_to_path
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
 
   def test
@@ -26,7 +25,6 @@ class ExtensionController < ApplicationController
 
   def account
     @activities = @project.activities.visible_to(current_user.email).take(8)
-    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
 
   def alerts_tasks
@@ -153,6 +151,8 @@ class ExtensionController < ApplicationController
 
     return if current_user.nil?
 
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
+
     if current_user.admin?
       # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
@@ -161,12 +161,13 @@ class ExtensionController < ApplicationController
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
     end
-    #puts "@salesforce_user=#{@salesforce_user}" 
-  end
-
-  # Save redirect (return) path to be used for Salesforce OAuth callback
-  def set_oauth_return_to_path
-    @return_to_path = URI.escape(request.original_fullpath, ".")  # to escape the '.' in emails
+    
+    @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
+    # If no SFDC accounts found, automatically refresh the SFDC accounts list
+    if !@sfdc_accounts_exist
+      SalesforceAccount.load_accounts(current_user.organization_id) 
+      @sfdc_accounts_exist = true
+    end
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

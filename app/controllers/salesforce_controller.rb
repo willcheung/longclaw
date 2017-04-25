@@ -133,7 +133,7 @@ class SalesforceController < ApplicationController
     end
 
     respond_to do |format|
-      format.html { redirect_to settings_salesforce_accounts_path }
+      format.html { redirect_to URI.escape(request.referer, ".") }
     end
   end
 
@@ -402,7 +402,7 @@ class SalesforceController < ApplicationController
     end
 
     respond_to do |format|
-      format.html { redirect_to settings_salesforce_accounts_path }
+      format.html { redirect_to URI.escape(request.referer, ".") }
     end
 
   end
@@ -416,7 +416,7 @@ class SalesforceController < ApplicationController
     end
 
     respond_to do |format|
-      format.html { redirect_to settings_salesforce_opportunities_path }
+      format.html { redirect_to URI.escape(request.referer, ".") }
     end
 
   end
