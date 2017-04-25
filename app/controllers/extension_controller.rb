@@ -26,7 +26,6 @@ class ExtensionController < ApplicationController
 
   def account
     @activities = @project.activities.visible_to(current_user.email).take(8)
-    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
 
   def alerts_tasks
@@ -152,6 +151,8 @@ class ExtensionController < ApplicationController
     @salesforce_user = nil
 
     return if current_user.nil?
+
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
 
     if current_user.admin?
       # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
