@@ -70,16 +70,18 @@ class ExtensionController < ApplicationController
   private
 
   def set_account_and_project
-    p "*** set account and project ***"
-    p params
+    # p "*** set account and project ***"
+    # p params
     ### url example: .../extension/account?internal%5B0%5D%5B%5D=Will%20Cheung&internal%5B0%5D%5B%5D=wcheung%40contextsmith.com&internal%5B1%5D%5B%5D=Kelvin%20Lu&internal%5B1%5D%5B%5D=klu%40contextsmith.com&internal%5B2%5D%5B%5D=Richard%20Wang&internal%5B2%5D%5B%5D=rcwang%40contextsmith.com&internal%5B3%5D%5B%5D=Yu-Yun%20Liu&internal%5B3%5D%5B%5D=liu%40contextsmith.com&external%5B0%5D%5B%5D=Richard%20Wang&external%5B0%5D%5B%5D=rcwang%40enfind.com&external%5B1%5D%5B%5D=Brad%20Barbin&external%5B1%5D%5B%5D=brad%40enfind.com
     ### more readable url example: .../extension/account?internal[0][]=Will Cheung&internal[0][]=wcheung@contextsmith.com&internal[1][]=Kelvin Lu&internal[1][]=klu@contextsmith.com&internal[2][]=Richard Wang&internal[2][]=rcwang@contextsmith.com&internal[3][]=Yu-Yun Liu&internal[3][]=liu@contextsmith.com&external[0][]=Richard Wang&external[0][]=rcwang@enfind.com&external[1][]=Brad Barbin&external[1][]=brad@enfind.com
     ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Full Name', 'email@address.com'] }
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
 
     ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
-    redirect_to extension_path and return if ex_emails.blank? # if somehow request was made without external people, redirect to home page
-    ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten # group by ex_emails by domain frequency, order by most frequent domain
+    # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#index page
+    redirect_to extension_path and return if ex_emails.blank? 
+    # group by ex_emails by domain frequency, order by most frequent domain
+    ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
     order_emails_by_domain_freq = ex_emails.map { |email| "email = '#{email}' DESC" }.join(',')
     # find all contacts within current_user org that match the external emails, in the order of ex_emails
     contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
@@ -95,11 +97,13 @@ class ExtensionController < ApplicationController
       domains = ex_emails.map { |email| get_domain(email) }.uniq
       where_domain_matches = domains.map { |domain| "email LIKE '%#{domain}'"}.join(" OR ")
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
-      # find all contacts within current_user org that have a similar email domain, in the order of domain frequency
+      # find all contacts within current_user org that have a similar email domain to external emails, in the order of domain frequency
       contacts = Contact.joins(:account).where(accounts: { organization_id: current_user.organization_id }).where(where_domain_matches).order(order_domain_frequency)
       if contacts.blank?
         order_domain_frequency = domains.map { |domain| "domain = '#{domain}' DESC" }.join(',')
+        # find all accounts within current_user org whose domain is the email domain for external emails, in the order of domain frequency
         accounts = Account.where(domain: domains, organization: current_user.organization).order(order_domain_frequency)
+        # if no accounts are found that match our external email domains at this point, redirect to extension#no_account page to allow user to create this account
         redirect_to extension_no_account_path(URI.escape(domains.first, ".")) + "\?" + { internal: params[:internal], external: params[:external] }.to_param and return if @accounts.blank?
         @account = accounts.first
       end
@@ -109,7 +113,9 @@ class ExtensionController < ApplicationController
 
     if @project.blank?
       create_project
-    elsif params[:action] == "account" # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
+    elsif params[:action] == "account" 
+      # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
+      # since project already exists, any new external members found should be added as suggested members, let user confirm
       create_people
     end
     
@@ -128,6 +134,7 @@ class ExtensionController < ApplicationController
     )
     @project.project_members.new(user: current_user)
 
+    # new project needs some initial external people, add them as confirmed members before loading emails/calendar from backend
     create_people(ProjectMember::STATUS[:Confirmed])
 
     success = @project.save
@@ -140,6 +147,8 @@ class ExtensionController < ApplicationController
     success
   end
 
+  # helper method for creating people, used in set_account_and_project & create_project (@project should already be set before calling this)
+  # by default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
   def create_people(status=ProjectMember::STATUS[:Pending])
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
     internal = params[:internal].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
