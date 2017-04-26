@@ -39,9 +39,9 @@
                     <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:0px;"/>
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">  
                         <% if @salesforce_user.nil? %>
-                            <img src="/assets/images/salesforce.png" style="width:20px" title="Salesforce"/></a>
+                            <img src="/assets/images/icons/salesforce_disconnected_icon.png" style="width:20px" title="Salesforce"/></a>
                         <% else %>
-                            <img src="/assets/images/salesforce_icon_check.png" style="width:20px;" title="Salesforce"/>
+                            <img src="/assets/images/salesforce.png" style="width:20px;" title="Salesforce"/>
                         <% end %>
                     </a>
                     <span class="caret" style="margin-left:5px;display:inline"></span>
@@ -50,8 +50,15 @@
                             <% if @salesforce_user.present? %>
                                 <li style="line-height: 1em"><strong><%= @salesforce_user.oauth_user_name %></strong></li>
                                 <li class="divider"></li>
+                                
+                                <li><button 
+                                <%= "disabled " if !@enable_linking_and_refresh %>
+                                id="salesforce-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="font-size: 10px
+                                <%= "; color: #EEE" if !@enable_linking_and_refresh %>
+                                "><i class="fa fa-refresh"></i> Refresh Accounts</button> <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
+                                <%= @enable_linking_and_refresh ? "Retrieve latest Accounts from Salesforce." : "To retrieve the latest Accounts from Salesforce, please contact ContextSmith support or your ContextSmith administrator." %>
+                                "></i></li>
 
-                                <li><button id="salesforce-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="font-size: 10px"> <i class="fa fa-refresh"></i> Refresh Accounts</button><i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Salesforce."></i></li>
                                 <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">Logout of Salesforce</a></li> 
                             <% else %>
                                 <li><a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a></li>
@@ -67,32 +74,40 @@
                     <div>
                         <h3 class="m-t-sm m-l" style="margin-bottom: 9px"><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
                         <div class="text-mute-gray" style="font-size: 10px">
-                            <span><strong>Owner:</strong>&nbsp;&nbsp;<%= @project.project_owner.present? ? get_full_name(@project.project_owner) : "(None)" %><br/></span>
+                            <strong>Owner:</strong>&nbsp;&nbsp;<%= @project.project_owner.present? ? get_full_name(@project.project_owner) : "(None)" %><br/>
                             <% if @salesforce_user.present? %>
-                                <span><strong>Linked to Salesforce:</strong></span>
+                                <strong>Linked to Salesforce:</strong>
                                 <span>
                                     <% if !@sfdc_accounts_exist %>
-                                        <i class="fa fa-exclamation-triangle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Click on Salesforce menu above and select the option to refresh the list of Salesforce Accounts!"></i> <span>No Salesforce Accounts found! Refresh needed.</span>
+                                        <i class="fa fa-exclamation-triangle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="
+                                        <%= @enable_linking_and_refresh ? "Click on Salesforce menu above and select the option to refresh the list of Salesforce Accounts!" : "To link and/or refresh Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
+                                        "></i> <span>No Salesforce Accounts found! Refresh needed.</span>
                                     <% else %>
-                                        <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="To refresh the list of Salesforce Accounts, click on Salesforce menu above and select the option."></i>
+                                        <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="
+                                        <%= @enable_linking_and_refresh ? "To refresh the list of Salesforce Accounts, click on Salesforce menu above and select the option." : "To link and/or refresh Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
+                                        "></i>
                                         <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
-                                            <button id="link-account-btn" onclick="link_account_btn_click()">Link an account</button>
-                                            <div id="search-form-div" style="display:none">
-                                                <%= form_tag("/link_salesforce_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
-                                                    <div class="col-lg-16" style="width:14em;display: inline-block">
-                                                      <input type="search" name="salesforce_id" id="salesforce-entity-search" class="contacts z-top salesforce-search" style="" placeholder="Not linked">
-                                                    </div>
-                                                    <input name="account_id" type="hidden" value="<%= @project.account.id %>">     
-                                                    <div class="col-lg-2" style="margin:0px; padding-left:0px; vertical-align: text-bottom; display: inline-block">
-                                                      <input type="submit" name="commit" value="Link" class="btn btn-primary btn-sm" style="padding-top:4px; height:2.7em; font-size:9px">
-                                                    </div>
-                                                <%end%>
-                                            </div>
+                                            <% if @enable_linking_and_refresh %>
+                                                <button id="link-account-btn" onclick="link_account_btn_click()">Link an account</button>
+                                                <div id="search-form-div" style="display:none">
+                                                    <%= form_tag("/link_salesforce_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
+                                                        <div class="col-lg-16" style="width:14em;display: inline-block">
+                                                          <input type="search" name="salesforce_id" id="salesforce-entity-search" class="contacts z-top salesforce-search" style="" placeholder="Not linked">
+                                                        </div>
+                                                        <input name="account_id" type="hidden" value="<%= @project.account.id %>">     
+                                                        <div class="col-lg-2" style="margin:0px; padding-left:0px; vertical-align: text-bottom; display: inline-block">
+                                                          <input type="submit" name="commit" value="Link" class="btn btn-primary btn-sm" style="padding-top:4px; height:2.7em; font-size:9px">
+                                                        </div>
+                                                    <%end%>
+                                                </div>
+                                            <% else %>
+                                                No linked accounts.
+                                            <% end %>
                                         <% else %> <!-- No SFDC account mapped -->
                                             <% if @project.salesforce_opportunity.nil? %>
                                                 <% @project.account.salesforce_accounts.each_with_index do |sfa, i| %>
                                                     <a href="<%= @salesforce_base_URL + "/" + sfa.salesforce_account_id %>" title="View in Salesforce" target="_blank"><%= sfa.salesforce_account_name %></a>
-                                                    [<a href="/delete_salesforce_account/<%=sfa.id%>" data-method="delete" title="Unlink '<%= sfa.salesforce_account_name %>'"><i class="fa fa-chain-broken text-mute-gray"></i></a>]
+                                                    [<a href="/delete_salesforce_account/<%=sfa.id%>" data-method="delete" title="Unlink '<%= sfa.salesforce_account_name %>'">unlink</a>]
                                                     <%= "," if i < @project.account.salesforce_accounts.count - 1 %>
                                                     &nbsp;</a>
                                                 <% end %> 
@@ -181,6 +196,7 @@
             }
         });
 
+<% if @enable_linking_and_refresh %>
         $('.sfdc-refresh').click(function(){
             var entity_type, entity_type_btn_str;
             var self = $(this);
@@ -225,6 +241,7 @@
                 }
             });
         });
+<% end %>
 
         var popupWindowRef = null;
         var openSignInPopup = function (strUrl, strTarget) {
