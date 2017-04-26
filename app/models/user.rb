@@ -51,7 +51,7 @@ include ContextSmithParser
 class User < ActiveRecord::Base
 	belongs_to 	:organization
   has_many    :accounts, foreign_key: "owner_id", dependent: :nullify
-  has_many    :projects_owner_of, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
+  has_many    :projects_owner_of, -> { is_active }, class_name: "Project", foreign_key: "owner_id", dependent: :nullify
   has_many    :subscriptions, class_name: "ProjectSubscriber", dependent: :destroy
   has_many    :notifications, foreign_key: "assign_to", dependent: :nullify
   has_many    :oauth_users
