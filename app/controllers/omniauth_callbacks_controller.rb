@@ -1,12 +1,12 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
-    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id) if current_user.present?
+    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
     #puts "****** session return_to_path: #{ session[:return_to_path] }"
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
   def salesforcesandbox
-    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id) if current_user.present?
+    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
