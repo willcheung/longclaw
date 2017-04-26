@@ -3,17 +3,19 @@ class ReportsController < ApplicationController
   
   def team_dashboard
     users = current_user.organization.users
-    accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
-    @accounts_managed = accounts_managed.map do |uid, num_accounts|
+    user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
+    @data = user_activities.map do |uid, activities|
       user = users.find { |usr| usr.id == uid }
-      Hashie::Mash.new({ id: user.id, num_accounts: num_accounts, name: get_full_name(user)})
+      Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
     end
+    @data.sort_by! { |d| d.total }.reverse!
+    @categories = @data.first.y.map(&:category)
 
     @departments = users.pluck(:department).compact.uniq
     @titles = users.pluck(:title).compact.uniq
 
     # TODO: real left chart pagination
-    @accounts_managed = @accounts_managed.take(25)
+    @data = @data.take(25)
   end
 
     # for loading left-chart on team_dashboard
