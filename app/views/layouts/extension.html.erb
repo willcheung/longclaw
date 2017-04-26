@@ -37,12 +37,8 @@
                 </span>
                 <li class="dropdown" style="width:22px; height:40px; vertical-align:top; margin:5px 0; padding:0 3px;display:inline-block; border-left: 1px solid #EEE">
                     <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:0px;"/>
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">  
-                        <% if @salesforce_user.nil? %>
-                            <img src="/assets/images/icons/salesforce_disconnected_icon.png" style="width:20px" title="Not connected to Salesforce"/></a>
-                        <% else %>
-                            <img src="/assets/images/salesforce.png" style="width:20px;" title="Connected to Salesforce"/>
-                        <% end %>
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"> 
+                    <img src="/assets/images/salesforce.png" style="width:20px" title="<%= @salesforce_user.present? ? "Connected to Salesforce" : "Not connected to Salesforce" %>"/></a>
                     </a>
                     <span class="caret" style="margin-left:5px;display:inline"></span>
                     <ul class="dropdown-menu" style="width:200px; position:absolute; left:-175px; margin-top:6px">
