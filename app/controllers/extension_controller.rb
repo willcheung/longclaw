@@ -52,7 +52,7 @@ class ExtensionController < ApplicationController
     respond_to do |format|
       if @account.save
         if create_project
-          format.html { redirect_to extension_account_path(emails: params[:emails]), notice: 'Account Stream was successfully created.' }
+          format.html { redirect_to extension_account_path(internal: params[:internal], external: params[:external]), notice: 'Account Stream was successfully created.' }
           format.js
         else
           format.html { render action: 'no_account' }
@@ -68,40 +68,60 @@ class ExtensionController < ApplicationController
   private
 
   def set_account_and_project
-    params[:emails] = URI.unescape(params[:emails], '%2E')
+    # p "*** set account and project ***"
+    # p params
+    ### url example: .../extension/account?internal%5B0%5D%5B%5D=Will%20Cheung&internal%5B0%5D%5B%5D=wcheung%40contextsmith.com&internal%5B1%5D%5B%5D=Kelvin%20Lu&internal%5B1%5D%5B%5D=klu%40contextsmith.com&internal%5B2%5D%5B%5D=Richard%20Wang&internal%5B2%5D%5B%5D=rcwang%40contextsmith.com&internal%5B3%5D%5B%5D=Yu-Yun%20Liu&internal%5B3%5D%5B%5D=liu%40contextsmith.com&external%5B0%5D%5B%5D=Richard%20Wang&external%5B0%5D%5B%5D=rcwang%40enfind.com&external%5B1%5D%5B%5D=Brad%20Barbin&external%5B1%5D%5B%5D=brad%40enfind.com
+    ### more readable url example: .../extension/account?internal[0][]=Will Cheung&internal[0][]=wcheung@contextsmith.com&internal[1][]=Kelvin Lu&internal[1][]=klu@contextsmith.com&internal[2][]=Richard Wang&internal[2][]=rcwang@contextsmith.com&internal[3][]=Yu-Yun Liu&internal[3][]=liu@contextsmith.com&external[0][]=Richard Wang&external[0][]=rcwang@enfind.com&external[1][]=Brad Barbin&external[1][]=brad@enfind.com
+    ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Full Name', 'email@address.com'] }
+    external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
 
-    # TODO: blacklist gmail, yahoo, hotmail, etc.
-    addresses = params[:emails].split(',').reject { |a| get_domain(a) == get_domain(current_user.email) }
-    redirect_to extension_path and return if addresses.blank? # if none left, show flash message? or redirect to "this is an internal communication" page
-    addresses = addresses.group_by { |a| get_domain(a) }.values.sort_by(&:size).flatten # group by addresses by domain frequency, most frequent domain first
-    order_addresses_by_domain_freq = addresses.map { |a| "email = '#{a}' DESC" }.join(',')
-    contacts = Contact.joins(:account).where(email: addresses, accounts: { organization_id: current_user.organization_id}).order(order_addresses_by_domain_freq) #.includes(:projects, :account)
+    ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
+    # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#index page
+    redirect_to extension_path and return if ex_emails.blank? 
+    # group by ex_emails by domain frequency, order by most frequent domain
+    ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
+    order_emails_by_domain_freq = ex_emails.map { |email| "email = '#{email}' DESC" }.join(',')
+    # find all contacts within current_user org that match the external emails, in the order of ex_emails
+    contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
     if contacts.present?
+      # get all streams that these contacts are members of
       projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
       if projects.present?
+        # set most frequent project as stream
         @project = projects.group_by(&:id).values.max_by(&:size).first
         @account = @project.account
       end
     else
-      domains = addresses.map { |a| get_domain(a) }.uniq
+      domains = ex_emails.map { |email| get_domain(email) }.uniq
       where_domain_matches = domains.map { |domain| "email LIKE '%#{domain}'"}.join(" OR ")
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
+      # find all contacts within current_user org that have a similar email domain to external emails, in the order of domain frequency
       contacts = Contact.joins(:account).where(accounts: { organization_id: current_user.organization_id }).where(where_domain_matches).order(order_domain_frequency)
       if contacts.blank?
         order_domain_frequency = domains.map { |domain| "domain = '#{domain}' DESC" }.join(',')
+        # find all accounts within current_user org whose domain is the email domain for external emails, in the order of domain frequency
         accounts = Account.where(domain: domains, organization: current_user.organization).order(order_domain_frequency)
-        redirect_to extension_no_account_path(URI.escape(domains.first, ".")) + "\?" + { emails: params[:emails], names: params[:names] }.to_param and return if @accounts.blank?
+        # if no accounts are found that match our external email domains at this point, redirect to extension#no_account page to allow user to create this account
+        redirect_to extension_no_account_path(URI.escape(domains.first, ".")) + "\?" + { internal: params[:internal], external: params[:external] }.to_param and return if @accounts.blank?
         @account = accounts.first
       end
     end
     @account ||= contacts.first.account
-    @project ||= @account.projects.where(status: "Active").first
-    create_project if @project.blank?
+    @project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
 
+    if @project.blank?
+      create_project
+    elsif params[:action] == "account" 
+      # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
+      # since project already exists, any new external members found should be added as suggested members, let user confirm
+      create_people
+    end
+    
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
   def create_project
+    # p "*** creating project for account #{@account.name} ***"
     @project = @account.projects.new(
       name: @account.name,
       description: "Default stream for #{@account.name}",
@@ -112,29 +132,8 @@ class ExtensionController < ApplicationController
     )
     @project.project_members.new(user: current_user)
 
-    emails = params[:emails].split(',')
-    names = params[:names].split(',')
-    emails.zip(names) do |person|
-      unless person[1] == 'me' || person[0] == current_user.email
-        if get_domain(person[0]) == get_domain(current_user.email)
-          user = current_user.organization.users.create_with(
-            first_name: get_first_name(person[1]),
-            last_name: get_last_name(person[1]),
-            invited_by_id: current_user.id,
-            invitation_created_at: Time.current
-          ).find_or_create_by(email: person[0])
-
-          @project.project_members.new(user: user)
-        else
-          contact = @account.contacts.create_with(
-            first_name: get_first_name(person[1]),
-            last_name: get_last_name(person[1])
-          ).find_or_create_by(email: person[0])
-
-          @project.project_members.new(contact: contact)
-        end
-      end
-    end
+    # new project needs some initial external people, add them as confirmed members before loading emails/calendar from backend
+    create_people(ProjectMember::STATUS[:Confirmed])
 
     success = @project.save
     if success
@@ -144,6 +143,31 @@ class ExtensionController < ApplicationController
       redirect_to extension_project_error_path and return
     end
     success
+  end
+
+  # helper method for creating people, used in set_account_and_project & create_project (@project should already be set before calling this)
+  # by default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
+  def create_people(status=ProjectMember::STATUS[:Pending])
+    external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
+    internal = params[:internal].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
+    # p "*** creating new internal members for project #{@project.name} ***"
+    internal.select { |person| get_domain(person[1]) == current_user.organization.domain }.each do |person|
+      unless person[0] == 'me' || person[1] == current_user.email
+        user = current_user.organization.users.create_with(
+          first_name: get_first_name(person[0]),
+          last_name: get_last_name(person[0]),
+          invited_by_id: current_user.id,
+          invitation_created_at: Time.current
+        ).find_or_create_by(email: person[1])
+
+        ProjectMember.create(project: @project, user: user)
+      end
+    end if params[:internal].present?
+
+    # p "*** creating new external members for project #{@project.name} ***"
+    external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
+      Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
+    end
   end
 
   def set_salesforce_user

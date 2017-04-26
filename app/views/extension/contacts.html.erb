@@ -1,7 +1,19 @@
+<strong><span id="pm-length"><%= @project_members.length %></span> People</strong>
+<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this account stream."></i>
 <dd class="project-people members">
     <% @project_members.each do |pm| %>
-        <%= render 'project_members/extension_member', pm: pm %>
+        <%= render 'project_members/member', pm: pm %>
     <% end %>
 </dd>
+
+<% if @suggested_members.present? %>
+<strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested People</strong>
+<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be part of this account stream. Click the ✔ or X to confirm or reject our suggestions."></i>
+<dd class="project-people suggested-members">
+    <% @suggested_members.each do |pm| %>
+        <%= render 'project_members/member', pm: pm %>
+    <% end %>
+</dd>
+<% end %>
 
 <p class="text-center m-t-md"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>/arg" target="_blank">View Relationship Graph &rarr;</a></button></p>
