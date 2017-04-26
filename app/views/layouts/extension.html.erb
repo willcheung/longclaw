@@ -39,9 +39,9 @@
                     <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:0px;"/>
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">  
                         <% if @salesforce_user.nil? %>
-                            <img src="/assets/images/icons/salesforce_disconnected_icon.png" style="width:20px" title="Salesforce"/></a>
+                            <img src="/assets/images/icons/salesforce_disconnected_icon.png" style="width:20px" title="Not connected to Salesforce"/></a>
                         <% else %>
-                            <img src="/assets/images/salesforce.png" style="width:20px;" title="Salesforce"/>
+                            <img src="/assets/images/salesforce.png" style="width:20px;" title="Connected to Salesforce"/>
                         <% end %>
                     </a>
                     <span class="caret" style="margin-left:5px;display:inline"></span>
