@@ -161,10 +161,12 @@ class ExtensionController < ApplicationController
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
     end
-    
+
     @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
+    @enable_linking_and_refresh = current_user.admin? || current_user.power_or_chrome_user_only?
+
     # If no SFDC accounts found, automatically refresh the SFDC accounts list
-    if !@sfdc_accounts_exist
+    if !@sfdc_accounts_exist && @enable_linking_and_refresh
       SalesforceAccount.load_accounts(current_user.organization_id) 
       @sfdc_accounts_exist = true
     end

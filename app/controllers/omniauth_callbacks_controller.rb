@@ -1,14 +1,13 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
     User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
+    #puts "****** session return_to_path: #{ session[:return_to_path] }"
     redirect_to (session.delete(:return_to_path) || root_path)
-    #sign_in_and_redirect @user, :event => :authentication
   end
 
   def salesforcesandbox
     User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
     redirect_to (session.delete(:return_to_path) || root_path)
-    #sign_in_and_redirect @user, :event => :authentication
   end
 
 	def google_oauth2
@@ -66,8 +65,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   # Correctly redirect to the right page after returning from OAuth call (whether in web app or Chrome extension)
   def user_omniauth_auth_helper
     # Save the redirect path which will be used in the OAuth callback
-    session[:return_to_path] = URI.escape(request.referer, ".")
-    #store_location_for(:user, URI.escape(request.referer, "."))
-    redirect_to user_omniauth_authorize_path, provider: params[:provider]
+    session[:return_to_path] = params[:source] == "chrome" ? extension_path(login: true) : URI.escape(request.referer, ".")
+    redirect_to user_omniauth_authorize_path(params[:provider])
   end
 end
