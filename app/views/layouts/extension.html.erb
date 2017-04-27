@@ -49,16 +49,22 @@
                                 <li class="divider"></li>
                                 
                                 <li><button 
-                                <%= "disabled " if !@enable_linking_and_refresh %>
+                                <%= "disabled " if !@enable_sfdc_login_linking_and_refresh %>
                                 id="salesforce-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="font-size: 10px
-                                <%= "; color: #EEE" if !@enable_linking_and_refresh %>
+                                <%= "; color: #EEE" if !@enable_sfdc_login_linking_and_refresh %>
                                 "><i class="fa fa-refresh"></i> Refresh Accounts</button> <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
-                                <%= @enable_linking_and_refresh ? "Retrieve latest Accounts from Salesforce." : "To retrieve the latest Accounts from Salesforce, please contact ContextSmith support or your ContextSmith administrator." %>
+                                <%= @enable_sfdc_login_linking_and_refresh ? "Retrieve latest Accounts from Salesforce." : "To retrieve the latest Accounts from Salesforce, please contact ContextSmith support or your ContextSmith administrator." %>
                                 "></i></li>
 
                                 <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">Log out of Salesforce</a></li> 
                             <% else %>
-                                <li><a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a></li>
+                                <li>
+                                <% if @enable_sfdc_login_linking_and_refresh %>
+                                    <a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a>
+                                <% else %>
+                                    <span style="color:lightgrey">Connect to Salesforce</span>
+                                <% end %>
+                                </li>
                             <% end %>
                         </div>
                     </ul>
@@ -77,14 +83,14 @@
                                 <span>
                                     <% if !@sfdc_accounts_exist %>
                                         <i class="fa fa-exclamation-triangle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="
-                                        <%= @enable_linking_and_refresh ? "Click on Salesforce menu above and select the option to refresh the list of Salesforce Accounts!" : "To link and/or refresh Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
+                                        <%= @enable_sfdc_login_linking_and_refresh ? "Click on Salesforce menu above and select the option to refresh the list of Salesforce Accounts!" : "To link and/or refresh Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
                                         "></i> <span>No Salesforce Accounts found! Refresh needed.</span>
                                     <% else %>
                                         <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="
-                                        <%= @enable_linking_and_refresh ? "To refresh the list of Salesforce Accounts, click on Salesforce menu above and select the option." : "To link and/or refresh Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
+                                        <%= @enable_sfdc_login_linking_and_refresh ? "To refresh the list of Salesforce Accounts, click on Salesforce menu above and select the option." : "To link and/or refresh Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
                                         "></i>
                                         <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
-                                            <% if @enable_linking_and_refresh %>
+                                            <% if @enable_sfdc_login_linking_and_refresh %>
                                                 <button id="link-account-btn" onclick="link_account_btn_click()">Link an account</button>
                                                 <div id="search-form-div" style="display:none">
                                                     <%= form_tag("/link_salesforce_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
@@ -193,7 +199,7 @@
             }
         });
 
-<% if @enable_linking_and_refresh %>
+<% if @enable_sfdc_login_linking_and_refresh %>
         $('.sfdc-refresh').click(function(){
             var entity_type, entity_type_btn_str;
             var self = $(this);
