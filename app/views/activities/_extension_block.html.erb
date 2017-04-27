@@ -50,7 +50,7 @@
         <% elsif a.category == Activity::CATEGORY[:Note] %>
             <div class="rag-bar<%=a['rag_score']%> p-xxs">
                 <h4><strong><%= get_full_name(a.user) %></strong> wrote: </h4>
-                <p><%= truncate(a.note, length: 100, separator: ' ') %></p>
+                <p><%= simple_format(truncate(a.note, length: 100, separator: ' ')) %></p>
                 <p class="time-ago">By <%= get_full_name(a.user) %> <%= time_ago_in_words(Time.zone.at(a.last_sent_date)) %> ago</small>
                 <p class="time-ago"><a href="/projects/<%= a.project.id + '/#' + a.id.to_s %>" target="_blank">View in ContextSmith <i class="fa fa-external-link"></i></a></p>
             </div>
