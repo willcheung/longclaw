@@ -40,7 +40,7 @@ class UserMailer < ApplicationMailer
   end
 
   def weekly_summary_email(user)
-    open_or_recently_closed = "notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
+    open_or_recently_closed = "notifications.id IS NULL OR notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
     
     @subs = user.valid_streams_subscriptions.weekly
 
