@@ -12,7 +12,7 @@
     <% params[:internal].values.each.with_index.each do |person, i| %>
       <%= hidden_field_tag "internal[#{i}][]", person[0] %>
       <%= hidden_field_tag "internal[#{i}][]", person[1] %>
-    <% end %>
+    <% end if params[:internal].present? %>
     <% params[:external].values.each.with_index.each do |person, i| %>
       <%= hidden_field_tag "external[#{i}][]", person[0] %>
       <%= hidden_field_tag "external[#{i}][]", person[1] %>

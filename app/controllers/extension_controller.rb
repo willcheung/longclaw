@@ -73,6 +73,7 @@ class ExtensionController < ApplicationController
     ### url example: .../extension/account?internal%5B0%5D%5B%5D=Will%20Cheung&internal%5B0%5D%5B%5D=wcheung%40contextsmith.com&internal%5B1%5D%5B%5D=Kelvin%20Lu&internal%5B1%5D%5B%5D=klu%40contextsmith.com&internal%5B2%5D%5B%5D=Richard%20Wang&internal%5B2%5D%5B%5D=rcwang%40contextsmith.com&internal%5B3%5D%5B%5D=Yu-Yun%20Liu&internal%5B3%5D%5B%5D=liu%40contextsmith.com&external%5B0%5D%5B%5D=Richard%20Wang&external%5B0%5D%5B%5D=rcwang%40enfind.com&external%5B1%5D%5B%5D=Brad%20Barbin&external%5B1%5D%5B%5D=brad%40enfind.com
     ### more readable url example: .../extension/account?internal[0][]=Will Cheung&internal[0][]=wcheung@contextsmith.com&internal[1][]=Kelvin Lu&internal[1][]=klu@contextsmith.com&internal[2][]=Richard Wang&internal[2][]=rcwang@contextsmith.com&internal[3][]=Yu-Yun Liu&internal[3][]=liu@contextsmith.com&external[0][]=Richard Wang&external[0][]=rcwang@enfind.com&external[1][]=Brad Barbin&external[1][]=brad@enfind.com
     ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Full Name', 'email@address.com'] }
+    redirect_to extension_path and return if params[:external].blank?
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
 
     ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
@@ -148,22 +149,24 @@ class ExtensionController < ApplicationController
   # helper method for creating people, used in set_account_and_project & create_project (@project should already be set before calling this)
   # by default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
   def create_people(status=ProjectMember::STATUS[:Pending])
+    if params[:internal].present?
+      internal = params[:internal].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } } 
+      # p "*** creating new internal members for project #{@project.name} ***"
+      internal.select { |person| get_domain(person[1]) == current_user.organization.domain }.each do |person|
+        unless person[0] == 'me' || person[1] == current_user.email
+          user = current_user.organization.users.create_with(
+            first_name: get_first_name(person[0]),
+            last_name: get_last_name(person[0]),
+            invited_by_id: current_user.id,
+            invitation_created_at: Time.current
+          ).find_or_create_by(email: person[1])
+
+          ProjectMember.create(project: @project, user: user)
+        end
+      end 
+    end
+
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
-    internal = params[:internal].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
-    # p "*** creating new internal members for project #{@project.name} ***"
-    internal.select { |person| get_domain(person[1]) == current_user.organization.domain }.each do |person|
-      unless person[0] == 'me' || person[1] == current_user.email
-        user = current_user.organization.users.create_with(
-          first_name: get_first_name(person[0]),
-          last_name: get_last_name(person[0]),
-          invited_by_id: current_user.id,
-          invitation_created_at: Time.current
-        ).find_or_create_by(email: person[1])
-
-        ProjectMember.create(project: @project, user: user)
-      end
-    end if params[:internal].present?
-
     # p "*** creating new external members for project #{@project.name} ***"
     external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
