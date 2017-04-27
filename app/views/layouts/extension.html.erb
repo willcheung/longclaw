@@ -56,7 +56,7 @@
                                 <%= @enable_linking_and_refresh ? "Retrieve latest Accounts from Salesforce." : "To retrieve the latest Accounts from Salesforce, please contact ContextSmith support or your ContextSmith administrator." %>
                                 "></i></li>
 
-                                <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">Logout of Salesforce</a></li> 
+                                <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">Log out of Salesforce</a></li> 
                             <% else %>
                                 <li><a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a></li>
                             <% end %>
