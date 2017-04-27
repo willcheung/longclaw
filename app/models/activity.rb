@@ -235,7 +235,7 @@ class Activity < ActiveRecord::Base
         end
 
         insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "note", "created_at", "updated_at") VALUES'
-        on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages'
+        on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET title = EXCLUDED.title, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages, last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at'
         values = val.join(', ')
 
         if !val.empty?
