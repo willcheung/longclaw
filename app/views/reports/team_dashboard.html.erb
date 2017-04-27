@@ -32,15 +32,15 @@
             <div class="col-md-5">
                 <h4 class="m-l-md">Sort by: 
                 <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Type">
-                    <option selected>Accounts Managed</option>
-                    <!-- <option>Revenue Managed</option> -->
-                    <!-- <option>Revenue per Hour Spent (Last 14d)</option> -->
+                    <option selected>Activities (Last 14d)</option>
                     <option>Time Spent (Last 14d)</option>
-                    <!-- <option>On Target</option> -->
-                    <option>Activities (Last 14d)</option>
+                    <option>Accounts Managed</option>
                     <option>New Alerts/Tasks (Last 14d)</option>
                     <option>Closed Alerts/Tasks (Last 14d)</option>
                     <option>Open Alerts/Tasks</option>
+                    <!-- <option>Revenue Managed</option> -->
+                    <!-- <option>Revenue per Hour Spent (Last 14d)</option> -->
+                    <!-- <option>On Target</option> -->
                   </select>    
                
                 </h4>
@@ -79,7 +79,7 @@
                 text: ''
             },
             xAxis: {
-                categories: <%= @accounts_managed.map(&:name).to_json.html_safe %>,
+                categories: <%= @data.map(&:name).to_json.html_safe %>,
                 crosshair: true
             },
             yAxis: {
@@ -115,16 +115,24 @@
                 enabled: false
             },
             series: [{
-                name: 'Accounts Managed',
-                data: [
-                <% @accounts_managed.each do |u| %>
+                name: 'Series 1',
+                visible: false
+            },
+            <% @categories.each.with_index do |c, i| %>
+            {
+                name: "<%= c %>",
+                color: "<%= highcharts_series_color(c) %>",
+                data: [ 
+                <% @data.each do |d| %>
                 {
-                    y: <%= u.num_accounts %>,
-                    id: "<%= u.id %>"
-                },
-                <% end %>
+                  y: <%= d.y[i].num_activities %>,
+                  id: "<%= d.id %>"
+                }, 
+                <% end %> 
                 ]
-            }]
+            },
+            <% end %>
+            ]
         });
     });
 

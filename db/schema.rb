@@ -125,7 +125,6 @@ ActiveRecord::Schema.define(version: 20170418203416) do
   end
 
   add_index "contacts", ["account_id", "email"], name: "index_contacts_on_account_id_and_email", unique: true, using: :btree
-  add_index "contacts", ["account_id", "first_name", "last_name", "email"], name: "contacts_accounts_email_ukey", unique: true, using: :btree
   add_index "contacts", ["account_id"], name: "index_contacts_on_account_id", using: :btree
 
   create_table "custom_configurations", force: :cascade do |t|

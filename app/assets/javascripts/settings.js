@@ -88,8 +88,8 @@ $(document).ready(function() {
         }
 
         entity_type_btn_str = entity_type.charAt(0).toUpperCase() + entity_type.slice(1);
-        console.log("$(this).attr('id'): " + self.attr("id"));
-        console.log("entity_type_btn_str: " + entity_type_btn_str);
+        // console.log("$(this).attr('id'): " + self.attr("id"));
+        // console.log("entity_type_btn_str: " + entity_type_btn_str);
         
         $.ajax('/salesforce/refresh/' + entity_type, {
             async: true,

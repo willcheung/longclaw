@@ -18,7 +18,6 @@
 #
 # Indexes
 #
-#  contacts_accounts_email_ukey            (account_id,first_name,last_name,email) UNIQUE
 #  index_contacts_on_account_id            (account_id)
 #  index_contacts_on_account_id_and_email  (account_id,email) UNIQUE
 #
@@ -59,48 +58,53 @@ class Contact < ActiveRecord::Base
 
     data_hash.each do |d|
       d.newExternalMembers.each do |mem|
-        domain = get_domain(mem.address)
-        if valid_domain?(domain)
-          subdomain = domain
-          domain = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
-
-          ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
-          # find account this new member should belong to
-          account = Account.find_by(domain: domain, organization: current_org)
-          # create a new account for this domain if one doesn't exist yet
-          unless account
-            account = Account.create(
-              domain: domain,
-              name: domain,
-              category: "Customer",
-              address: "",
-              website: "http://www.#{domain}",
-              owner_id: project.owner_id,
-              organization: current_org,
-              created_by: project.owner_id)
-            subdomain_msg = domain != subdomain ? " (subdomain: #{subdomain})" : ""
-                puts "** Created a new account for domain='#{domain}'#{subdomain_msg}, organization='#{current_org}'. **"
-          end
-
-          # find contact for this member
-          contact = account.contacts.find_by_email(mem.address)
-          # create contact for this member if one doesn't exist yet
-          contact = account.contacts.create(
-            first_name: get_first_name(mem.personal),
-            last_name: get_last_name(mem.personal),
-            email: mem.address) unless contact
-
-          # add member to project as suggested member
-          project.project_members.create(contact_id: contact.id, status: ProjectMember::STATUS[:Pending])
-
-          contacts << contact
-        else
-        	puts "** Skipped processing the invalid domain='#{domain}'. **"
-        end
+        contact = find_or_create_from_email_info(mem.address, mem.personal, project)
+        contacts << contact if contact
       end unless d.newExternalMembers.nil?
     end
 
     return contacts
+  end
+
+  def self.find_or_create_from_email_info(address, personal, project, status=ProjectMember::STATUS[:Pending], source=nil)
+    org = project.account.organization
+    domain = get_domain(address)
+    if valid_domain?(domain)
+      subdomain = domain
+      domain = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
+
+      ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
+      # find account this new member should belong to
+      account = org.accounts.find_by_domain(domain)
+      # create a new account for this domain if one doesn't exist yet
+      unless account
+        account = Account.create(
+          domain: domain,
+          name: domain,
+          category: "Customer",
+          address: "",
+          website: "http://www.#{domain}",
+          owner_id: project.owner_id,
+          organization: org,
+          created_by: project.owner_id)
+        subdomain_msg = domain != subdomain ? " (subdomain: #{subdomain})" : ""
+        puts "** Created a new account for domain='#{domain}'#{subdomain_msg}, organization='#{org}'. **"
+      end
+
+      # find or create contact for this member
+      contact = account.contacts.create_with(
+        first_name: get_first_name(personal),
+        last_name: get_last_name(personal),
+        source: source
+        ).find_or_create_by(email: address)
+
+      # add member to project as suggested member
+      ProjectMember.create(project: project, contact: contact, status: status)
+
+      contact
+    else
+      puts "** Skipped processing the invalid domain='#{domain}'. **"
+    end
   end
 
 	def is_internal_user?

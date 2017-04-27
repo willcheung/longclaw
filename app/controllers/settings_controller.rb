@@ -105,7 +105,6 @@ class SettingsController < ApplicationController
 	# Map CS Accounts with Salesforce accounts: "One CS Account can link to many Salesforce Accounts"
 	def salesforce_accounts
 		if current_user.role == User::ROLE[:Admin]
-			#@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 			@accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order("upper(accounts.name)")
 
 			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("upper(accounts.name)")
