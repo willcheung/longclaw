@@ -190,10 +190,10 @@ class ExtensionController < ApplicationController
     end
 
     @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
-    @enable_linking_and_refresh = current_user.admin? || current_user.power_or_chrome_user_only?
+    @enable_sfdc_login_linking_and_refresh = current_user.admin? || current_user.power_or_chrome_user_only?
 
     # If no SFDC accounts found, automatically refresh the SFDC accounts list
-    if !@sfdc_accounts_exist && @enable_linking_and_refresh
+    if !@sfdc_accounts_exist && @enable_sfdc_login_linking_and_refresh
       SalesforceAccount.load_accounts(current_user.organization_id) 
       @sfdc_accounts_exist = true
     end

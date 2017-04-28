@@ -83,7 +83,7 @@ class User < ActiveRecord::Base
   WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
 
   def valid_streams_subscriptions
-    self.subscriptions.joins(:project).where(projects: {is_confirmed: true, status: 'Active'})
+    self.subscriptions.joins(:project).where(projects: {id: Project.visible_to(self.organization_id, self.id).pluck(:id)})
   end
 
   def self.from_omniauth(auth, organization_id, user_id=nil)

@@ -247,7 +247,7 @@
                     <tr>
                       <td style="font-size:13px;text-align:left;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px;">
                         <% if a.note.length != 0 %>
-                          <%= a.note %>
+                          <%= simple_format(a.note) %>
                         <% else %> 
                           <%= rag_note(a['rag_score']) %> <!--placeholder-->
                         <% end %>
