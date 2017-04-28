@@ -150,7 +150,7 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Load SFDC Accounts or Opportunities into CS models, or Load SFDC Contacts into mapped CS Accounts
+  # Load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts
   def refresh_salesforce
     case params[:entity_type]
     when "accounts"
@@ -245,7 +245,7 @@ class SalesforceController < ApplicationController
 
     @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-    Activity.delete_all_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
+    Activity.delete_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
 
     unless @client.nil?  # unless connection error
       @streams.each do |s|
@@ -350,48 +350,6 @@ class SalesforceController < ApplicationController
     render :text => ' '
   end
 
-  # Returns a hash of:
-  # :sf_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
-  # :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
-  # :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
-  # :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
-  def self.get_salesforce_fields(organization_id, custom_fields_only=false)
-    client = SalesforceService.connect_salesforce(organization_id)
-
-    return nil if client.nil?
-
-    sf_account_fields = {}
-    sf_account_fields_metadata = {}
-    sf_opportunity_fields = {}
-    sf_opportunity_fields_metadata = {}
-
-    account_describe = client.describe('Account')
-    account_describe.fields.each do |f|
-      sf_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
-      metadata = {}
-      metadata["type"] = f.type
-      metadata["custom"] = f.custom
-      metadata["updateable"] = f.updateable
-      metadata["nillable"] = f.nillable
-      sf_account_fields_metadata[f.name] = metadata
-    end
-    account_describe = client.describe('Opportunity')
-    account_describe.fields.each do |f|
-      sf_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
-      metadata = {}
-      metadata["type"] = f.type
-      metadata["custom"] = f.custom
-      metadata["updateable"] = f.updateable
-      metadata["nillable"] = f.nillable
-      sf_opportunity_fields_metadata[f.name] = metadata
-    end
-
-    sf_account_fields = sf_account_fields.sort_by { |k,v| v.upcase }
-    sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
-
-    return {sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata}
-  end
-
   def remove_account_link
     salesforce_account = SalesforceAccount.eager_load(:account).find_by(id: params[:id], contextsmith_organization_id: current_user.organization_id)
 
@@ -431,6 +389,48 @@ class SalesforceController < ApplicationController
     respond_to do |format|
       format.html { redirect_to(request.referer || settings_path) }
     end
+  end
+
+  # Gets Salesforce (custom) fields in the form of the following hash:
+  # :sf_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
+  # :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
+  # :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
+  # :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
+  def self.get_salesforce_fields(organization_id, custom_fields_only=false)
+    client = SalesforceService.connect_salesforce(organization_id)
+
+    return nil if client.nil?
+
+    sf_account_fields = {}
+    sf_account_fields_metadata = {}
+    sf_opportunity_fields = {}
+    sf_opportunity_fields_metadata = {}
+
+    account_describe = client.describe('Account')
+    account_describe.fields.each do |f|
+      sf_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      metadata = {}
+      metadata["type"] = f.type
+      metadata["custom"] = f.custom
+      metadata["updateable"] = f.updateable
+      metadata["nillable"] = f.nillable
+      sf_account_fields_metadata[f.name] = metadata
+    end
+    account_describe = client.describe('Opportunity')
+    account_describe.fields.each do |f|
+      sf_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      metadata = {}
+      metadata["type"] = f.type
+      metadata["custom"] = f.custom
+      metadata["updateable"] = f.updateable
+      metadata["nillable"] = f.nillable
+      sf_opportunity_fields_metadata[f.name] = metadata
+    end
+
+    sf_account_fields = sf_account_fields.sort_by { |k,v| v.upcase }
+    sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
+
+    return {sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata}
   end
 
   private

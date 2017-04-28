@@ -192,7 +192,13 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Parameters:  filter_predicates is a hash that contains several keys -- "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  # Copies Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS stream.
+  # Parameters:   client - SFDC connection
+  #               project - the CS stream into which to load the SFDC activity
+  #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
+  #               type - to specify loading from an SFDC "Account" or "Opportunity"
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               limit (optional) - the max number of activity records to process
   def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
     val = []
     if filter_predicates["entity"] == ""
@@ -254,15 +260,16 @@ class Activity < ActiveRecord::Base
     nil # successful request
   end
 
-  # This is used to bulk delete CS Activities in the SFDC entity (ActivityHistory).
-  # Parameters:  project - CS stream to export
-  #              type - SFDC entity type: 'Account' or 'Opportunity'
-  # Notes:  SFDC type formats:  dateTime = "2017-03-01T00:00:00z",  date = "2017-03-01"
-  def self.delete_all_cs_activities(client, type="Account", from_date=nil, to_date=nil, limit=200)
+  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory).
+  # Parameters:   client - SFDC connection
+  #               type - SFDC entity type: 'Account' or 'Opportunity'
+  #               from_date (optional) - the start date of a date range (e.g., "2018-01-01")
+  #               to_date (optional) - the end date of a date range (e.g., "2018-01-01")
+  # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
+  def self.delete_cs_activities(client, type="Account", from_date=nil, to_date=nil)
     delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'"
     delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
     delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
-    delete_tasks_query_stmt += " LIMIT #{limit}"
     puts "Deleting tasks returned from SFDC query \'#{delete_tasks_query_stmt}\'...."
     tasks_to_delete = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
     #tasks = client.query(delete_tasks_query_stmt)
@@ -274,9 +281,13 @@ class Activity < ActiveRecord::Base
     end
   end
 
-  # This is used to bulk export CS Activities to SFDC entity (ActivityHistory).
-  # Parameters:  project - CS stream to export
-  #              type - SFDC entity type: 'Account' or 'Opportunity'
+  # Bulk export CS Activities to a SFDC Account or Opportunity (ActivityHistory).
+  # Parameters:   client - SFDC connection
+  #               project - the CS stream from which to export
+  #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
+  #               type - to specify exporting into an SFDC "Account" or "Opportunity"
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               limit (optional) - the max number of activity records to process
   def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil, limit=200)
     project.activities.each do |a|
       description = a.category + " activity (imported from ContextSmith) ——\n"
