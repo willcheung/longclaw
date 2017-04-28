@@ -245,7 +245,7 @@ class SalesforceController < ApplicationController
 
     @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-    Activity.delete_all_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
+    Activity.delete_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
 
     unless @client.nil?  # unless connection error
       @streams.each do |s|

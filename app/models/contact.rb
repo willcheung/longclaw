@@ -111,14 +111,15 @@ class Contact < ActiveRecord::Base
 		return false
 	end
 
-  # Takes Contacts in SFDC account and copies them into CS accounts mapped to it, overwriting all existing contact fields
+  # Takes Contacts in SFDC account and copies them into a CS account, overwriting all existing contact fields to matched (same email in an account) Contacts.
   # Parameters:  client - connection to Salesforce
-  #              account_id - CS account to load contacts to
-  #              sfdc_id - id of SFDC account to load contacts from
-  def self.load_salesforce_contacts(client, account_id, sfdc_id, limit=100)
+  #              account_id - the CS account to which this copies contacts
+  #              sfdc_account_id - id of SFDC account from which this copies contacts 
+  #              limit (optional) - the max number of contacts to process
+  def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_id}' ORDER BY Email, FirstName, LastName LIMIT #{limit}"
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, FirstName, LastName LIMIT #{limit}"
 
     contacts = SalesforceService.query_salesforce(client, query_statement)
     #contacts = nil #simulate SFDC query error
@@ -175,6 +176,15 @@ class Contact < ActiveRecord::Base
     end
 
     nil # successful request
+  end
+
+  # Takes Contacts in a CS account and exports them into a SFDC account, overwriting all existing contact fields
+  # Parameters:  client - connection to Salesforce
+  #              account_id - the CS account from which this exports contacts
+  #              sfdc_account_id - id of SFDC account to which this exports contacts 
+  #              limit (optional) - the max number of contacts to process
+  def self.export_cs_contacts(client, account_id, sfdc_account_id, limit=100)
+
   end
 
   private

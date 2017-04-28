@@ -75,8 +75,10 @@ $(document).ready(function() {
     });
 
     $('.sfdc-refresh').click(function(){
-        var entity_type, entity_type_btn_str;
         var self = $(this);
+        var entity_type, entity_type_btn_str;
+        var buttonTxtStr = self.attr("btnLabel");
+
         if ($(this).attr("id").includes("salesforce-acc-refresh")) {
             entity_type = "accounts";
         }
@@ -87,9 +89,7 @@ $(document).ready(function() {
             entity_type = "contacts";
         }
 
-        entity_type_btn_str = entity_type.charAt(0).toUpperCase() + entity_type.slice(1);
         // console.log("$(this).attr('id'): " + self.attr("id"));
-        // console.log("entity_type_btn_str: " + entity_type_btn_str);
         
         $.ajax('/salesforce/refresh/' + entity_type, {
             async: true,
@@ -97,10 +97,14 @@ $(document).ready(function() {
             beforeSend: function () {
                 $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
             },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ " + buttonTxtStr);
+            },
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n\n" + res.error);
+                alert(buttonTxtStr + " error!\n\n" + res.error);
             },
             statusCode: {
                 500: function() {
@@ -187,8 +191,9 @@ $(document).ready(function() {
     // ../settings/salesforce_activities
     ////////////////////////////////////////
     $('#salesforce-activity-save-entity-predicate-btn,#salesforce-activity-save-activityhistory-predicate-btn').click(function(){
-        var type;
         var self = $(this);
+        var type;
+
         if (self.attr("id").includes("salesforce-activity-save-entity-predicate-btn")) {
             type = "entity";
         }
@@ -302,8 +307,9 @@ $(document).ready(function() {
     // ../settings/salesforce_fields
     ////////////////////////////////////////
     $('#salesforce-fields-refresh-accounts-btn,#salesforce-fields-refresh-projects-btn').click(function() {
-        var entity_type, entity_type_btn_str;
         var self = $(this);
+        var entity_type, entity_type_btn_str;
+
         if (self.attr("id").includes("salesforce-fields-refresh-accounts-btn")) {
             entity_type = "accounts";
             entity_type_btn_str = "Accounts";
