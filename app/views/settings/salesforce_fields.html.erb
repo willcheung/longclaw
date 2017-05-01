@@ -30,7 +30,7 @@
                   <!-- Collect the nav links, forms, and other content for toggling -->
                   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
-                      <li><a href="<%= settings_salesforce_path %>">Step 1: Map Accounts</a></li>
+                      <li><a href="<%= settings_salesforce_accounts_path %>">Step 1: Map Accounts</a></li>
                       <li><a href="<%= settings_salesforce_opportunities_path %>">Step 2: Map Opportunities</a></li>
                       <li><a href="<%= settings_salesforce_activities_path %>">Step 3: Map Activities</a></li>
                       <li class="active"><a href="<%= settings_salesforce_fields_path %>">Step 4: Map Fields</a></li>
@@ -39,7 +39,7 @@
               </nav>
               <% if @salesforce_connection_error %> 
                 <div class="box-shadow" style="border:1px solid red;border-radius:10px;line-height:3;margin:2px 0;padding:6px 18px">
-                  <i class="fa fa-exclamation-circle fa-2x" style="color:red"></i> — Salesforce connection error occurred.  Try <a href="<%= settings_salesforce_path %>">disconnecting and reconnecting to Salesforce</a>.
+                  <i class="fa fa-exclamation-circle fa-2x" style="color:red"></i> — Salesforce connection error occurred.  Try <a href="<%= settings_salesforce_accounts_path %>">disconnecting and reconnecting to Salesforce</a>.
                 </div>
               <% else %>
                 <div id="filter_toggle" style="padding:0.5em 0 0;margin-bottom:1em;border-bottom:1px dotted grey;">
@@ -59,7 +59,7 @@
                         <td style="margin-right:-1em;padding:0;float:right">
                           <a href="#" style="border-bottom:2px solid red;display:none"><i class="fa fa-exclamation"></i> Clear account mapping</a>&nbsp;&nbsp;
                           <div style="min-width:18em;width:18em;padding:0px;display:inline-block">
-                            <span id="salesforce-fields-refresh-accounts-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Accounts</span>
+                            <button id="salesforce-fields-refresh-accounts-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Accounts</button>
                             <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
                           </div>
                         </td>
@@ -109,7 +109,7 @@
                       <td style="margin-right:-1.5em;padding:0;float:right">
                         <a href="#" style="border-bottom:2px solid red;display:none"><i class="fa fa-exclamation"></i> Clear all stream mapping</a>&nbsp;&nbsp;
                         <div style="min-width:18em;width:18em;padding:0px;display:inline-block">
-                          <span id="salesforce-fields-refresh-projects-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Streams</span>
+                          <button id="salesforce-fields-refresh-projects-btn" class="btn btn-sm btn-primary btn-outline"> <i class="fa fa-refresh"></i> Refresh ContextSmith Streams</button>
                           <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve values from Salesforce fields and load into ContextSmith fields."></i>
                         </div>
                       </td>

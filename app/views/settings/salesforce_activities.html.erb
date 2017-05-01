@@ -29,7 +29,7 @@
                   <!-- Collect the nav links, forms, and other content for toggling -->
                   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
-                      <li><a href="<%= settings_salesforce_path %>">Step 1: Map Accounts</a></li>
+                      <li><a href="<%= settings_salesforce_accounts_path %>">Step 1: Map Accounts</a></li>
                       <li><a href="<%= settings_salesforce_opportunities_path %>">Step 2: Map Opportunities</a></li>
                       <li class="active"><a href="<%= settings_salesforce_activities_path %>">Step 3: Map Activities</a></li>
                       <li><a href="<%= settings_salesforce_fields_path %>">Step 4: Map Fields</a></li>
@@ -95,12 +95,12 @@
                               <span style="vertical-align: bottom; margin-right:5px">Salesforce Activities</span>
                               <span style="display: inline-block;">
                                 <div>
-                                  <span id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline" btnLabel="Refresh ContextSmith Activities" style="width: 18em;"><i class="fa fa-refresh"></i> Refresh ContextSmith Activities</span>
+                                  <button id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline" btnLabel="Refresh ContextSmith Activities" style="width: 18em;"><i class="fa fa-refresh"></i> Refresh ContextSmith Activities</button>
                                   <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Activities from Salesforce."></i>
                                 </div>
                                 <% if @super_admin.include?(current_user.email) %>
                                   <div>
-                                    <span id="salesforce-activity-cs-export" class="btn btn-sm btn-primary btn-outline" btnLabel="Update Salesforce ActivityHistory" style="width: 18em;"><i class="fa fa-refresh"></i> Update Salesforce ActivityHistory</span>
+                                    <button id="salesforce-activity-cs-export" class="btn btn-sm btn-primary btn-outline" btnLabel="Update Salesforce ActivityHistory" style="width: 18em;"><i class="fa fa-refresh"></i> Update Salesforce ActivityHistory</button>
                                     <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Export latest ContextSmith Activities to Salesforce."></i>
                                   </div>
                                 <% end %>
@@ -170,7 +170,7 @@
             activityhistory_predicate = " AND (" + activityhistory_predicate + ")";
         
 
-        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE 'ContextSmith ——%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
+        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{Activity::CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
     }
 
     $(document).ready(function() {

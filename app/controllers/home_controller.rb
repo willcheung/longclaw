@@ -30,8 +30,10 @@ class HomeController < ApplicationController
       @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
       @open_risk_count = Project.open_risk_count(project_ids_a)
       @rag_status = Project.current_rag_score(project_ids_a)
-      puts "risk_scores: #{@risk_scores}"
+      # puts "risk_scores: #{@risk_scores}"
     end
+
+    p params
   end
 
   def daily_summary

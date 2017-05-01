@@ -1,6 +1,6 @@
 class SettingsController < ApplicationController
 	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
-	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
+	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce_accounts', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
 
 	def index
 		@user_count = current_user.organization.users.count
@@ -103,10 +103,11 @@ class SettingsController < ApplicationController
 	end
 
 	# Map CS Accounts with Salesforce accounts: "One CS Account can link to many Salesforce Accounts"
-	def salesforce
+	def salesforce_accounts
 		if current_user.role == User::ROLE[:Admin]
-			@accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
-			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("lower(accounts.name)")
+			@accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order("upper(accounts.name)")
+
+			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("upper(accounts.name)")
 		end
 	end
 
@@ -156,12 +157,14 @@ class SettingsController < ApplicationController
 				@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
 			end
 
-			# add ("nil") options to remove mapping 
-			@sf_fields[:sf_account_fields] << ["","(none)"] 
-			@sf_fields[:sf_opportunity_fields] << ["","(none)"]
-			#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
-
-			@salesforce_connection_error = true if @sf_fields.nil?
+			if @sf_fields.nil?  # SFDC connection error
+				@salesforce_connection_error = true
+			else
+				# add ("nil") options to remove mapping 
+				@sf_fields[:sf_account_fields] << ["","(none)"] 
+				@sf_fields[:sf_opportunity_fields] << ["","(none)"] 
+				#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
+			end
 		end
 	end
 

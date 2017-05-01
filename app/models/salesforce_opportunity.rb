@@ -27,7 +27,8 @@ class SalesforceOpportunity < ActiveRecord::Base
 	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id", primary_key: "salesforce_account_id"
   belongs_to  :project, foreign_key: "contextsmith_project_id"
 
-	def self.load(organization_id, query_range=500)
+  # This class method finds SFDC opportunities and creates a local model
+	def self.load_opportunities(organization_id, query_range=500)
   	val = []
 
   	client = SalesforceService.connect_salesforce(organization_id)

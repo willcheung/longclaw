@@ -105,8 +105,8 @@ class ProjectsController < ApplicationController
     end
 
     #Shows the total email usage report
-    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
-    @meeting_report = User.meeting_team_report([@project.account.id], @in_outbound_report['email'])
+    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
+    @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
     
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
