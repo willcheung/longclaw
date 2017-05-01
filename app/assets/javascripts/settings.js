@@ -19,6 +19,7 @@ $(document).ready(function() {
 
     // });
 
+
     ////////////////////////////////////////
     // ../settings/salesforce_accounts
     ////////////////////////////////////////
@@ -79,14 +80,17 @@ $(document).ready(function() {
         var entity_type, entity_type_btn_str;
         var buttonTxtStr = self.attr("btnLabel");
 
-        if ($(this).attr("id").includes("salesforce-acc-refresh")) {
+        if ($(this).attr("id").includes("salesforce-accounts-acc-refresh")) {  //clicked on 'Refresh Accounts'
             entity_type = "accounts";
         }
-        else if ($(this).attr("id").includes("salesforce-opp-refresh")) {
+        else if ($(this).attr("id").includes("salesforce-accounts-opp-refresh")) {  //clicked on 'Refresh Opportunities'
             entity_type = "opportunities";
         }
-        else if ($(this).attr("id").includes("salesforce-con-refresh")) {
+        else if ($(this).attr("id").includes("salesforce-accounts-cont-refresh")) {  //clicked on 'Refresh Contacts'
             entity_type = "contacts";
+        }
+        else {
+            return;
         }
 
         // console.log("$(this).attr('id'): " + self.attr("id"));
@@ -122,6 +126,53 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('#salesforce-accounts-cs-export-contacts').click(function(){
+        var self = $(this);
+        var entity_type, entity_type_btn_str;
+        var buttonTxtStr = self.attr("btnLabel");
+
+        if ($(this).attr("id").includes("salesforce-accounts-cs-export-contacts")) {  //clicked on 'Update Salesforce Contacts'
+            entity_type = "contacts";
+        }
+        else {
+            return;
+        }
+
+        // console.log("$(this).attr('id'): " + self.attr("id"));
+        
+        $.ajax('/salesforce/update/' + entity_type, {
+            async: true,
+            method: "POST",
+            beforeSend: function () {
+                $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
+            },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ " + buttonTxtStr);
+            },
+            error: function(data) {
+                var res = JSON.parse(data.responseText);
+                self.addClass('error-btn-highlight');
+                alert(buttonTxtStr + " error!\n\n" + res.error);
+            },
+            statusCode: {
+                500: function() {
+                    self.css("margin-left","60px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce update error");
+                },
+                503: function() {
+                    self.css("margin-left","30px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                },
+            },
+            complete: function() {
+                $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
+                location.reload();
+            }
+        });
+    });
+
 
     ////////////////////////////////////////
     // ../settings/salesforce_opportunities
@@ -223,14 +274,27 @@ $(document).ready(function() {
         });
     });
 
-    $('#salesforce-activity-refresh').click(function(){
+    $('#salesforce-activity-refresh, #salesforce-activity-cs-export-activities').click(function(){
         var self = $(this);
+        var error500_msg;
+        var requestURL;
+        var request_data = {};
         var buttonTxtStr = self.attr("btnLabel");
 
-        $.ajax("/salesforce/refresh/activities", {
+        if (self.attr("id").includes("salesforce-activity-refresh")) {
+            error500_msg = "Salesforce query error";
+            requestURL = "/salesforce/refresh/activities";
+            request_data = { entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() };
+        }
+        else {
+            error500_msg = "Salesforce update error";
+            requestURL = "/salesforce/update/activities";
+        }
+
+        $.ajax(requestURL, {
             async: true,
             method: "POST",
-            data: { entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() },
+            data: request_data,
             beforeSend: function () {
                 self.css("pointer-events", "none");
                 self.prop("disabled",true);
@@ -249,47 +313,7 @@ $(document).ready(function() {
             },
             statusCode: {
                 500: function() {
-                    self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
-                },
-                503: function() {
-                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
-                },
-            },
-            complete: function() {
-                self.css("pointer-events", "auto");
-                self.prop("disabled",false);
-                self.removeClass('btn-primary btn-outline');
-            }
-        });
-    });
-
-    $('#salesforce-activity-cs-export').click(function(){
-        var self = $(this);
-        var buttonTxtStr = self.attr("btnLabel");
-
-        $.ajax("/salesforce_activityhistory_update", {
-            async: true,
-            method: "POST",
-            data: {},
-            beforeSend: function () {
-                self.css("pointer-events", "none");
-                self.prop("disabled",true);
-                self.removeClass('success-btn-highlight error-btn-highlight');
-                self.addClass('btn-primary btn-outline');
-                self.html("<i class='fa fa-refresh fa-spin'></i> "+buttonTxtStr);
-            },
-            success: function() {
-                self.addClass('success-btn-highlight');
-                self.html("✓ "+buttonTxtStr);
-            },
-            error: function(data) {
-                var res = JSON.parse(data.responseText);
-                self.addClass('error-btn-highlight');
-                alert(buttonTxtStr+" error!\n\n" + res.error);
-            },
-            statusCode: {
-                500: function() {
-                    self.html("<i class='fa fa-exclamation'></i> Salesforce update error");
+                    self.html("<i class='fa fa-exclamation'></i> " + error500_msg);
                 },
                 503: function() {
                     self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");

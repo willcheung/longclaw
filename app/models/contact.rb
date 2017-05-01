@@ -184,7 +184,7 @@ class Contact < ActiveRecord::Base
   #              sfdc_account_id - id of SFDC account to which this exports contacts 
   #              limit (optional) - the max number of contacts to process
   def self.export_cs_contacts(client, account_id, sfdc_account_id, limit=100)
-
+    puts "############## I am now exporting CS contacts"
   end
 
   private
