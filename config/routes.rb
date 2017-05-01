@@ -74,6 +74,7 @@ Longclaw::Application.routes.draw do
       get "basecamp2_activity"
       get "salesforce_fields" 
       get "super_user"
+      get "user_analytics"
       post "invite_user/:user_id" => 'settings#invite_user'
     end
 

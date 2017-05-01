@@ -200,6 +200,26 @@ class SettingsController < ApplicationController
 		end
 	end
 
+
+
+
+	def user_analytics
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
+		if @super_admin.include?(current_user.email)
+			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+			@institution = Organization.all
+			puts "------------here is the instutution #{@institution}"
+			
+		else
+			redirect_to root_path
+		end
+	end
+
+
+
+
+
+
 	def invite_user
 		@user = User.find_by_id(params[:user_id])
 
