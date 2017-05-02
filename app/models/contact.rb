@@ -40,6 +40,7 @@ class Contact < ActiveRecord::Base
   validates_format_of :email,:with => Devise::email_regexp
 
   scope  :imported_from_salesforce, -> { where source: 'Salesforce' }
+  scope  :not_imported_from_salesforce, -> { where("source != 'Salesforce' OR source is null") }
 
   # TODO: Create a general visible_to scope for a general "role" checker
   scope :visible_to, -> (user) {
@@ -111,7 +112,7 @@ class Contact < ActiveRecord::Base
 		return false
 	end
 
-  # Takes Contacts in SFDC account and copies them into a CS account, overwriting all existing contact fields to matched (same email in an account) Contacts.
+  # Takes Contacts in SFDC account and copies them into a CS account, overwriting all existing contact fields to matched (same email in an account) Contacts.  If SFDC Contact (by "LeadSource") was exported from CS, the contact will not be processed.
   # Parameters:  client - connection to Salesforce
   #              account_id - the CS account to which this copies contacts
   #              sfdc_account_id - id of SFDC account from which this copies contacts 
@@ -119,7 +120,7 @@ class Contact < ActiveRecord::Base
   def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, FirstName, LastName LIMIT #{limit}"
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' AND LeadSource != 'ContextSmith' ORDER BY Email, FirstName, LastName LIMIT #{limit}"
 
     contacts = SalesforceService.query_salesforce(client, query_statement)
     #contacts = nil #simulate SFDC query error
@@ -178,13 +179,31 @@ class Contact < ActiveRecord::Base
     nil # successful request
   end
 
-  # Takes Contacts in a CS account and exports them into a SFDC account, overwriting all existing contact fields
+  # Takes Contacts in a CS account and exports them into a SFDC account.  Skips contacts that are found to be imported from Salesforce.  Does not attempt any duplicate matching; creates a new contact each time.  Returns nil if successful, otherwise returns the error (string).
   # Parameters:  client - connection to Salesforce
   #              account_id - the CS account from which this exports contacts
   #              sfdc_account_id - id of SFDC account to which this exports contacts 
   #              limit (optional) - the max number of contacts to process
-  def self.export_cs_contacts(client, account_id, sfdc_account_id, limit=100)
-    puts "############## I am now exporting CS contacts"
+  def self.export_cs_contacts(client, account_id, sfdc_account_id)
+    Account.find(account_id).contacts.not_imported_from_salesforce.each do |c|
+      #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
+      sObject_meta = { id: sfdc_account_id, type: "Account" }
+      #sObject_fields = { FirstName: c.first_name, LastName: c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, LeadSource: 'ContextSmith', MobilePhone: c.mobile, Description: c.background_info }
+      sObject_fields = { FirstName: c.first_name.nil? ? "" : c.first_name, LastName: c.last_name.nil? ? "" : c.last_name, Email: c.email.nil? ? "" : c.email, Title: c.title.nil? ? "" : c.title, Department: c.department.nil? ? "" : c.department, Phone: c.phone.nil? ? "" : c.phone, LeadSource: 'ContextSmith', MobilePhone: c.mobile.nil? ? "" : c.mobile, Description: c.background_info.nil? ? "" : c.background_info }
+
+      puts "----> sObject_meta:\t #{sObject_meta}\n"
+      puts "----> sObject_fields:\t #{sObject_fields}\n"
+      results = SalesforceService.update_salesforce(client: client, sObject_meta: sObject_meta, update_type: "contacts", sObject_fields: sObject_fields)
+      
+      unless results.nil?  # unless failed Salesforce query
+        puts "-> a SFDC Contact was created from a ContextSmith contact. New Contact Id='#{results}'."
+      else  # Salesforce query failure
+        #return "error=#{results}"  # proprogate error (if any) to caller
+        return "None"  #no error details to propogate to caller
+      end
+    end # End: Account.find(account_id).contacts.each do
+
+    nil # successful creation from request
   end
 
   private

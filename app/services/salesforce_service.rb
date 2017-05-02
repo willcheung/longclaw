@@ -63,29 +63,50 @@ class SalesforceService
     return query_result
   end
 
-  # This is used to Insert CS activity into the corresponding SFDC account/opportunity
+  # This is used to export/create CS activity or contacts to the corresponding SFDC account/opportunity.  If succesful, returns the sObject SFDC id that was created; otherwise for errors, returns nil.
   # Parameters: sObject_meta - a hash that contains the :id (and :type, optional) of the SFDC sObject we are updating
-  #             update_details - hash containing :activity_date, :subject, :priority, and :description of Salesforce Activity to write
-  def self.update_salesforce(client, sObject_meta, update_details, update_type="ActivityHistory")
+  #             update_type - "activity" to export activity to SFDC ActivityHistory, "contacts" to export contacts to SFDC Contacts
+  #             sObject_fields - hash containing entity field values (for specific fields, see the individual types below)
+  def self.update_salesforce(params)
+    #puts "params: #{params}"
     update_result = nil
     
-    if (!client.nil?)
-      if update_type == "ActivityHistory"
+    if (!params[:client].nil?)
+      case (params[:update_type])
+      when "activity"
         begin
+          # Insert CS activity into the corresponding SFDC account/opportunity.
+          # Parameters: sObject_fields - hash containing :activity_date, :subject, :priority, and :description of Salesforce Activity to write
           #TODO: Do an upsert instead of Delete followed by an Insert for performance
-          #update_result = client.upsert('Task', nil, TaskSubtype: 'Task', Status: 'Completed', WhatId: sObject_meta[:id], ActivityDate: update_details[:activity_date], Subject: update_details[:subject], Priority: update_details[:priority], Description: update_details[:description])  # update_result is the new Task's Id
-          #update_result = client.upsert('Task', 'Id', Id: newTask_Id, Subject: "New subject") if update_result.present?
 
-          update_result = client.create('Task', TaskSubtype: 'Task', Status: 'Completed', WhatId: sObject_meta[:id], ActivityDate: update_details[:activity_date], Subject: update_details[:subject], Priority: update_details[:priority], Description: update_details[:description])  # update_result is the new Task's Id
+          # update_result = client.upsert('Task', nil, TaskSubtype: 'Task', Status: 'Completed', WhatId: params[:sObject_meta][:id], ActivityDate: params[:sObject_fields][:activity_date], Subject: params[:sObject_fields][:subject], Priority: params[:sObject_fields][:priority], Description: params[:sObject_fields][:description])  # update_result is the new Task's Id
+          # update_result = client.upsert('Task', 'Id', Id: newTask_Id, Subject: "New subject") if update_result.present?
+
+          update_result = params[:client].create('Task', TaskSubtype: 'Task', Status: 'Completed', WhatId: params[:sObject_meta][:id], ActivityDate: params[:sObject_fields][:activity_date], Subject: params[:sObject_fields][:subject], Priority: params[:sObject_fields][:priority], Description: params[:sObject_fields][:description])  # update_result is the new Task's sObject Id
           #puts "---> new Task creation=#{update_result}"
           if update_result == false
-            puts "*** SalesforceService error: Salesforce update error while updating sObject_meta: #{sObject_meta}, sObject_fields: #{update_details} update_type: #{update_type}"
+            puts "*** SalesforceService error: Salesforce update error while updating SFDC ActivityHistory. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{params[:sObject_fields]}"
             update_result = nil
           end
         rescue  
-          puts "*** SalesforceService error: Salesforce update error while updating sObject_meta: #{sObject_meta}, sObject_fields: #{update_details} update_type: #{update_type}"
+          puts "*** SalesforceService error: Salesforce update error while updating SFDC ActivityHistory. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{params[:sObject_fields]}"
           update_result = nil
-        end    
+        end
+      when "contacts"
+        begin
+          # Export CS contacts into the corresponding SFDC account.
+          update_result = params[:client].create('Contact', WhatId: params[:sObject_meta][:id], FirstName: params[:sObject_fields][:FirstName], LastName: params[:sObject_fields][:LastName], Email: params[:sObject_fields][:Email], Title: params[:sObject_fields][:Title], Department: params[:sObject_fields][:Department], Phone: params[:sObject_fields][:Phone], LeadSource: params[:sObject_fields][:LeadSource], MobilePhone: params[:sObject_fields][:MobilePhone], Description: params[:sObject_fields][:Description])  # update_result is the new Contact's sObject Id
+          #puts "---> new Contact creation=#{update_result}"
+          if update_result == false
+            puts "*** SalesforceService error: Salesforce update error while updating SFDC Contacts. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{params[:sObject_fields]}"
+            update_result = nil
+          end
+        rescue  
+          puts "*** SalesforceService error: Salesforce update error while updating SFDC Contacts.  sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{params[:sObject_fields]}"
+          update_result = nil
+        end
+      else
+        return nil # Wrong parameter passed
       end 
     end
 

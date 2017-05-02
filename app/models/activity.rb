@@ -281,14 +281,13 @@ class Activity < ActiveRecord::Base
     end
   end
 
-  # Bulk export CS Activities to a SFDC Account or Opportunity (ActivityHistory).
+  # Bulk export CS Activities to a SFDC Account or Opportunity (ActivityHistory). Returns nil if successful, otherwise, otherwise returns the error (string).
   # Parameters:   client - SFDC connection
   #               project - the CS stream from which to export
   #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
   #               type - to specify exporting into an SFDC "Account" or "Opportunity"
   #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
-  #               limit (optional) - the max number of activity records to process
-  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil, limit=200)
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil)
     project.activities.each do |a|
       description = a.category + " activity (imported from ContextSmith) ——\n"
       activity_date = Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d")
@@ -349,21 +348,21 @@ class Activity < ActiveRecord::Base
       end
 
       sObject_meta = { id: sfdc_id, type: type }
-      update_details = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "#{CS_ACTIVITY_SFDC_EXPORT_PREFIX} #{a.category}: #{a.title}", priority: 'Normal', description: description }
+      sObject_fields = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "#{CS_ACTIVITY_SFDC_EXPORT_PREFIX} #{a.category}: #{a.title}", priority: 'Normal', description: description }
 
       puts "----> sObject_meta:\n #{sObject_meta}\n"
-      puts "----> update_details:\n #{update_details}\n"
-      results = SalesforceService.update_salesforce(client, sObject_meta, update_details, "ActivityHistory")
+      puts "----> sObject_fields:\n #{sObject_fields}\n"
+      results = SalesforceService.update_salesforce(client: client, sObject_meta: sObject_meta, update_type: "activity", sObject_fields: sObject_fields)
       
       unless results.nil?  # unless failed Salesforce query
-        puts "-> a SFDC Task was created from ContextSmith activity! New task Id='#{results}'."
+        puts "-> a SFDC Task was created from a ContextSmith activity. New Task Id='#{results}'."
       else  # Salesforce query failure
         #return "error=#{results}"  # proprogate error (if any) to caller
         return "None"  #no error details to propogate to caller
       end
     end # project.activities.each do
 
-    nil # successful request
+    nil # successful creation from request
   end
 
   #
