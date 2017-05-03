@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170418203416) do
+ActiveRecord::Schema.define(version: 20170503003509) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -319,6 +319,7 @@ ActiveRecord::Schema.define(version: 20170418203416) do
   end
 
   add_index "risk_settings", ["level_type", "level_id"], name: "index_risk_settings_on_level_type_and_level_id", using: :btree
+  add_index "risk_settings", ["metric", "is_positive", "level_type", "level_id"], name: "idx_risk_settings_uniq", unique: true, using: :btree
 
   create_table "salesforce_accounts", force: :cascade do |t|
     t.string   "salesforce_account_id",        default: "", null: false
