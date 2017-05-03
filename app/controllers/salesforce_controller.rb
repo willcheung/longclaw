@@ -177,7 +177,7 @@ class SalesforceController < ApplicationController
 
             unless errors.nil? # Salesforce query error occurred
               failure_method_location = "Contact.load_salesforce_contacts()"
-              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (stream_id='#{a.id}').  Details: #{errors}"
+              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  Details: #{errors}"
               render_internal_server_error(method_name, failure_method_location, error_detail)
               return
             end
@@ -303,8 +303,8 @@ class SalesforceController < ApplicationController
             errors = Contact.export_cs_contacts(client, a.id, sfa.salesforce_account_id)
 
             unless errors.nil? # Salesforce query error occurred
-              failure_method_location = "Contact.load_salesforce_contacts()"
-              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (stream_id='#{a.id}').  Details: #{errors}"
+              failure_method_location = "Contact.export_cs_contacts()"
+              error_detail = "Error while attempting to export CS contacts from CS Account \"#{a.name}\" (account_id='#{a.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{errors}"
               render_internal_server_error(method_name, failure_method_location, error_detail)
               return
             end

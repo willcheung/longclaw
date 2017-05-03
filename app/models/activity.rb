@@ -357,8 +357,8 @@ class Activity < ActiveRecord::Base
       unless results.nil?  # unless failed Salesforce query
         puts "-> a SFDC Task was created from a ContextSmith activity. New Task Id='#{results}'."
       else  # Salesforce query failure
-        #return "error=#{results}"  # proprogate error (if any) to caller
-        return "None"  #no error details to propogate to caller
+        #return "None"  #no error details to propogate to caller
+        return "sObject_fields=#{sObject_fields}"  #parameter details to propogate to caller
       end
     end # project.activities.each do
 

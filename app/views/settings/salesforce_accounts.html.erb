@@ -81,7 +81,7 @@
                                 <div style="padding-top:15px; display: inline; margin-right:5px;">Salesforce Contacts <small>(first 10)</small></div>
                                 <span><button id="salesforce-accounts-cont-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Refresh Contacts"> <i class="fa fa-refresh"></i> Refresh Contacts</button>
                                 <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve Contacts from Salesforce Accounts."></i></span>
-                                <span><button id="salesforce-accounts-cs-export-contacts" class="btn btn-sm btn-primary btn-outline" btnLabel="Refresh Contacts"> <i class="fa fa-refresh"></i> Update Salesforce Contacts</button>
+                                <span><button id="salesforce-accounts-cs-export-contacts" class="btn btn-sm btn-primary btn-outline" btnLabel="Update Salesforce Contacts"> <i class="fa fa-refresh"></i> Update Salesforce Contacts</button>
                                 <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Export Contacts to Salesforce."></i></span>
                           </th>
                           <th></th>
@@ -93,7 +93,7 @@
                         <td class="col-lg-2"><%= a.account.name %></td>
                         <td class="col-lg-5"><%= a.salesforce_account_name %></td>
                         <td class="col-lg-5"><ul><%= a.salesforce_opportunities.limit(10).sort { |a,b| b.close_date <=> a.close_date  }.map { |o| "<li> <strong>" + o.name + "</strong>, " + number_to_currency(o.amount, unit: "$", precision: 0) + ", " + o.stage_name + ", isClosed: #{o.is_closed}, isWon: #{o.is_won}, close_date: #{o.close_date}" + "</li>"}.join("").html_safe %></ul></td>
-                        <td class="col-lg-2"><ul><%= a.account.contacts.imported_from_salesforce.sort_by { |a| a.first_name.upcase + a.last_name.upcase }.take(10).map { |c| "<li><strong> #{ (c.first_name.blank? && c.last_name.blank?) ? 'Anonymous' : c.first_name + " " + c.last_name } </strong> (#{ c.email })" }.join("").html_safe %></ul></td>
+                        <td class="col-lg-2"><ul><%= a.account.contacts.source_from_salesforce.sort_by { |a| a.first_name.upcase + a.last_name.upcase }.take(10).map { |c| "<li><strong> #{ (c.first_name.blank? && c.last_name.blank?) ? 'Anonymous' : c.first_name + " " + c.last_name } </strong> (#{ c.email })" }.join("").html_safe %></ul></td>
                         <td><a href="/delete_salesforce_account/<%=a.id%>" data-method="delete"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>
                       </tr>
                     <% end %>

@@ -112,11 +112,11 @@ $(document).ready(function() {
             },
             statusCode: {
                 500: function() {
-                    self.css("margin-left","60px");
+                    //self.css("margin-left","0px");
                     self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
                 },
                 503: function() {
-                    self.css("margin-left","30px");
+                    //self.css("margin-left","0px");
                     self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
                 },
             },
@@ -158,11 +158,11 @@ $(document).ready(function() {
             },
             statusCode: {
                 500: function() {
-                    self.css("margin-left","60px");
+                    //self.css("margin-left","0px");
                     self.html("<i class='fa fa-exclamation'></i> Salesforce update error");
                 },
                 503: function() {
-                    self.css("margin-left","30px");
+                    //self.css("margin-left","0px");
                     self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
                 },
             },
