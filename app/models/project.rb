@@ -173,16 +173,15 @@ class Project < ActiveRecord::Base
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
-    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
-    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    project_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).sum('jsonb_array_length(activities.email_messages)')
-    project_risks = projects.includes(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).group('activities.id')
-    project_p_neg_sentiment = project_risks.each_with_object({}) do |p, result|
-      risks = p.activities.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
-        .map { |a| scale_sentiment_score(a.sentiment_score) }.select{ |score| score > sentiment_setting.high_threshold }.count
-      result[p.id] = calculate_score_by_setting(risks.to_f/project_engagement[p.id], pct_neg_sentiment_setting)
-    end
-      
+    # sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
+    # pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    # project_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).sum('jsonb_array_length(activities.email_messages)')
+    # project_risks = projects.includes(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).group('activities.id')
+    # project_p_neg_sentiment = project_risks.each_with_object({}) do |p, result|
+    #   risks = p.activities.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+    #     .map { |a| scale_sentiment_score(a.sentiment_score) }.select{ |score| score > sentiment_setting.high_threshold }.count
+    #   result[p.id] = calculate_score_by_setting(risks.to_f/project_engagement[p.id], pct_neg_sentiment_setting)
+    # end
 
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
@@ -196,23 +195,23 @@ class Project < ActiveRecord::Base
     project_rag_status.each { |pid, rag_score| project_rag_status[pid] = calculate_score_by_setting(rag_score, rag_status_setting) }
 
     # Overall Score
-    overall = [project_p_neg_sentiment, project_inactivity_risk, project_rag_status].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
+    overall = [project_inactivity_risk, project_rag_status].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
     overall.each { |pid, score| overall[pid] = score.round }
   end
 
   def new_risk_score(time_zone)
     risk_settings = RiskSetting.where(level: self.account.organization)
     # Risk / Engagement Ratio
-    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
-    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    engagement = self.conversations.sum('jsonb_array_length(activities.email_messages)')
-    if engagement.zero?
-      percent_neg_sentiment = 0
-    else
-      risks = self.conversations.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
-        .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
-      percent_neg_sentiment = Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
-    end
+    # sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
+    # pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    # engagement = self.conversations.sum('jsonb_array_length(activities.email_messages)')
+    # if engagement.zero?
+    #   percent_neg_sentiment = 0
+    # else
+    #   risks = self.conversations.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+    #     .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
+    #   percent_neg_sentiment = Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
+    # end
 
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
@@ -226,31 +225,31 @@ class Project < ActiveRecord::Base
     rag_score = (rag_status ? Project.calculate_score_by_setting(rag_status.rag_score, rag_score_setting) : 0)
 
     # Overall Score
-    (percent_neg_sentiment + inactivity_risk + rag_score).round
+    (inactivity_risk + rag_score).round
   end
 
   def new_risk_score_trend(time_zone, day_range=14)
     risk_settings = RiskSetting.where(level: self.account.organization)
     
     # Risk / Engagement Ratio
-    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
-    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    total_engagement = self.conversations
-    if total_engagement.count.zero?
-      pct_neg_sentiment_by_day = Array.new(day_range, 0)
-    else
-      pct_neg_sentiment_by_day = ((day_range - 1).days.ago.in_time_zone(time_zone).to_date..Time.current.in_time_zone(time_zone).to_date).map do |date|
-        engagement = total_engagement.where(last_sent_date: Time.at(0)..date).sum('jsonb_array_length(activities.email_messages)')
-        if engagement.zero?
-          0
-        else
-          risks = total_engagement.where(last_sent_date: Time.at(0)..date)
-            .select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
-            .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
-          Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
-        end
-      end
-    end
+    # sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
+    # pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    # total_engagement = self.conversations
+    # if total_engagement.count.zero?
+    #   pct_neg_sentiment_by_day = Array.new(day_range, 0)
+    # else
+    #   pct_neg_sentiment_by_day = ((day_range - 1).days.ago.in_time_zone(time_zone).to_date..Time.current.in_time_zone(time_zone).to_date).map do |date|
+    #     engagement = total_engagement.where(last_sent_date: Time.at(0)..date).sum('jsonb_array_length(activities.email_messages)')
+    #     if engagement.zero?
+    #       0
+    #     else
+    #       risks = total_engagement.where(last_sent_date: Time.at(0)..date)
+    #         .select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+    #         .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
+    #       Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
+    #     end
+    #   end
+    # end
     
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
@@ -271,7 +270,7 @@ class Project < ActiveRecord::Base
     end
     rag_score_by_day.map! { |score| Project.calculate_score_by_setting(score, rag_score_setting) }
 
-    [rag_score_by_day, days_inactive_by_day, pct_neg_sentiment_by_day].transpose.map(&:sum)
+    [rag_score_by_day, days_inactive_by_day].transpose.map(&:sum)
   end
 
   def self.current_rag_score(array_of_project_ids)
