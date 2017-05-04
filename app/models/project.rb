@@ -322,7 +322,7 @@ class Project < ActiveRecord::Base
     tempSet = Set.new
     activities.each do |a|
       a.email_addresses.each do |e|
-        tempSet.add(e) unless get_domain(e) == 'resources.calendar.google.com' # exclude Google Calendar resource emails
+        tempSet.add(e) unless e.blank? || get_domain(e) == 'resources.calendar.google.com' # exclude Google Calendar resource emails
       end
       tempSet.add(a.user.email) if a.user # Add Note Authors
     end
