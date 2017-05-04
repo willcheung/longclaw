@@ -52,6 +52,7 @@ class ExtensionController < ApplicationController
     respond_to do |format|
       if @account.save
         if create_project
+          @project.subscribers.create(user: current_user)
           format.html { redirect_to extension_account_path(internal: params[:internal], external: params[:external]), notice: 'Account Stream was successfully created.' }
           format.js
         else
