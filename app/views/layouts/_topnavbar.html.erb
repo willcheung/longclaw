@@ -70,7 +70,7 @@
 
     <!-- Chrome header -->
     <% if request.user_agent.downcase.match(/chrome/) and cookies[:chromeNotificationBar] != "false" %>
-        <div id="chrome-notification-bar" style=""><span>Bring customer context into your inbox. <a href="#" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)">Install our Chrome Extension for Gmail.</a></span></div>
+        <div id="chrome-notification-bar" style=""><span>Manage your customers from your inbox. <a href="#" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)">Install our Chrome Extension for Gmail.</a></span></div>
         <script>
             function successCallback () {
                 $('#chrome-notification-bar').hide();
