@@ -130,23 +130,30 @@ class SalesforceService
   #             email  - string, the email to search for to determine the contact to upsert
   #             params - a hash that contains the Contact information (e.g., FirstName, Email, LeadSource etc.)
   def self.upsert_sfdc_contact(client: client, sfdc_account_id: sfdc_account_id, email: email, params: params)
-    #puts "upsert_sfdc_contact(sfdc_account_id, email, params) ... @sfdc_account_id: #{sfdc_account_id}, email: #{email}, params: #{params}"
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email}' ORDER BY LastName, FirstName"
     
     result = SalesforceService.query_salesforce(client, query_statement)
+
     unless result.size == 0   
       c = result.first  # pick one matched Contact
       upsert_result = update_sfdc_contact(client: client, sfdc_contact_id: c[:Id], sfdc_account_id: sfdc_account_id, params: params)
     else
       begin
-        puts "Contact #{sfdc_account_id}/#{email} not found. Creating a new Contact..."
-        upsert_result = client.create('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], MobilePhone: params[:MobilePhone], Description: params[:Description])  
+        puts "Contact #{email} in SFDC Account #{sfdc_account_id} not found. Creating a new Contact..."
+        #puts "...with params: #{params}"
+        upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], MobilePhone: params[:MobilePhone], Description: params[:Description])  
         if upsert_result == false
           puts "*** SalesforceService error: Update Salesforce error while creating a new SFDC Contact. sObject_meta: #{ params }, sObject_fields: #{params[:sObject_fields]}"
           upsert_result = nil
         end
       rescue => e
-        puts "*** SalesforceService error: Update Salesforce error while creating a new SFDC Contact: \"#{e}\". sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
+        if (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
+          puts "*** SalesforceService error: Update Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! Contact is created with only minimal Contact info: FirstName, LastName, Email, LeadSource"
+          upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource])
+          return upsert_result  #return "N/A (duplicate contact; skipped!)"
+        else
+          puts "*** SalesforceService error: Update Salesforce error while creating a new SFDC Contact: \"#{e}\". sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
+        end
         upsert_result = nil
       end
     end
