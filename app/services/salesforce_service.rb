@@ -129,6 +129,7 @@ class SalesforceService
   #             sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
   #             email  - string, the email to search for to determine the contact to upsert
   #             params - a hash that contains the Contact information (e.g., FirstName, Email, LeadSource etc.)
+  # TODO: Warn user that Contacts may not be properly copied because a "Contact Duplicate Rules" in SFDC settings might be preventing this method from creating new contacts. e.g., "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
   def self.upsert_sfdc_contact(client: client, sfdc_account_id: sfdc_account_id, email: email, params: params)
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email}' ORDER BY LastName, FirstName"
     
@@ -148,8 +149,9 @@ class SalesforceService
         end
       rescue => e
         if (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
-          puts "*** SalesforceService error: Update Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! Contact is created with only minimal Contact info: FirstName, LastName, Email, LeadSource"
-          upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource])
+          print "*** SalesforceService error: Update Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only minimal Contact fields: FirstName, LastName, Email, LeadSource ... "
+          upsert_result = client.create('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource])
+          puts "Contact successfully created!"
           return upsert_result  #return "N/A (duplicate contact; skipped!)"
         else
           puts "*** SalesforceService error: Update Salesforce error while creating a new SFDC Contact: \"#{e}\". sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
