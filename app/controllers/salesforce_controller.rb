@@ -125,11 +125,13 @@ class SalesforceController < ApplicationController
   end
 
   def link_salesforce_account
-    # One CS Account can link to many Salesforce Accounts
+    # One CS Account can be linked to many Salesforce Accounts
     salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
     if !salesforce_account.nil?
       salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save
+
+      puts "current_user: #{current_user}"
     end
 
     respond_to do |format|
@@ -542,7 +544,6 @@ class SalesforceController < ApplicationController
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
-
 
   def render_service_unavailable_error(method_name)
     puts "****SFDC****: Salesforce service unavailable in SalesforceController.#{method_name}: Cannot establish a connection!"
