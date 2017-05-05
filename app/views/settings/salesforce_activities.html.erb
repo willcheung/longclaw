@@ -96,12 +96,12 @@
                               <span style="display: inline-block;">
                                 <div>
                                   <button id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline" btnLabel="Refresh ContextSmith Activities" style="width: 18em;"><i class="fa fa-refresh"></i> Refresh ContextSmith Activities</button>
-                                  <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Activities from Salesforce."></i>
+                                  <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve Activities from Salesforce."></i>
                                 </div>
                                 <% if @super_admin.include?(current_user.email) %>
                                   <div>
-                                    <button id="salesforce-activity-cs-export" class="btn btn-sm btn-primary btn-outline" btnLabel="Update Salesforce ActivityHistory" style="width: 18em;"><i class="fa fa-refresh"></i> Update Salesforce ActivityHistory</button>
-                                    <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Export latest ContextSmith Activities to Salesforce."></i>
+                                    <button id="salesforce-activity-cs-export-activities" class="btn btn-sm btn-primary btn-outline" btnLabel="Update Salesforce ActivityHistory" style="width: 18em;"><i class="fa fa-refresh"></i> Update Salesforce ActivityHistory</button>
+                                    <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Export Activities to Salesforce."></i>
                                   </div>
                                 <% end %>
                               </span>
@@ -155,9 +155,9 @@
         $("#salesforce-activity-refresh").removeClass('success-btn-highlight error-btn-highlight');
         $("#salesforce-activity-refresh").addClass('btn-primary btn-outline');
         $("#salesforce-activity-refresh").html("<i class='fa fa-refresh'></i> Refresh ContextSmith Activities")
-        $("#salesforce-activity-cs-export").removeClass('success-btn-highlight error-btn-highlight');
-        $("#salesforce-activity-cs-export").addClass('btn-primary btn-outline');
-        $("#salesforce-activity-cs-export").html("<i class='fa fa-refresh'></i> Update Salesforce ActivityHistory")
+        $("#salesforce-activity-cs-export-activities").removeClass('success-btn-highlight error-btn-highlight');
+        $("#salesforce-activity-cs-export-activities").addClass('btn-primary btn-outline');
+        $("#salesforce-activity-cs-export-activities").html("<i class='fa fa-refresh'></i> Update Salesforce ActivityHistory")
         
         // Update the SOQL query preview
         entity_predicate = document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim();
@@ -170,7 +170,7 @@
             activityhistory_predicate = " AND (" + activityhistory_predicate + ")";
         
 
-        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{Activity::CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
+        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
     }
 
     $(document).ready(function() {

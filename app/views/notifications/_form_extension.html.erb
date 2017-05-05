@@ -1,7 +1,7 @@
 <% remote ||= false %>
 <%= simple_form_for Notification.new, remote: remote do |f| %>
 <div class="icheckbox_square-green" style="position: relative;float: left"></div>
-  <%= f.input :name, label: false, input_html: { class: "input-border input-sm" }, placeholder: "Type here to add a To-Do. (Press Enter to save)" %>
+  <%= f.input :name, label: false, input_html: { class: "input-border input-sm" }, placeholder: "Type here to add a To-Do. (Enter to save)" %>
   <%= f.input :project_id, label: false, as: :hidden, input_html: { value: @project.id } %>
 <% end %>
 <script type="text/javascript">
@@ -11,4 +11,9 @@
     if (e.which == 13 && $('#notification_name').val()) { $(this).submit(); } // submit form on Enter when value is entered
   });
 </script>
-
+<style>
+	input::-webkit-input-placeholder {
+		font-size: 11px;
+		color: blue;
+	}
+</style>
