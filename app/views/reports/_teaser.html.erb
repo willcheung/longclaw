@@ -1,0 +1,19 @@
+<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+    <div class="modal-dialog modal-lg" style="width: 478px; margin: 20vh auto;" role="document">
+        <div class="modal-content" style="padding: 1em">
+            <div class="text-center">
+                <i class="fa fa-lock" style="font-size: 8em"></i>
+            </div>
+            <h3 class="text-center" style="margin-top: 2vh;">Dashboards are not available to Free Trial users. Sign up now to get full access! Send an email over to <a href="mailto:support@contextsmith.com">support@contextsmith.com</a> to get that started.</h3>
+            <h3 class="text-center" style="margin-top: 2vh;"><%= link_to "← Maybe later, take me back", :back, class: "btn btn-primary btn-lg" %> <a href="mailto:support@contextsmith.com?subject=Upgrade" class="btn btn-success btn-lg">Sign me up! &rarr;</a></h3>
+            <p class="text-center">Check out our <a href="https://www.contextsmith.com/pricing/" target="_blank">pricing page</a> for more information.</p>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('.modal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+</script>

@@ -58,7 +58,9 @@
         </div>
 </div>
 
-<script>
+<%= render "teaser" if current_user.trial? %>
+
+<script type="text/javascript">
 
     $(function () {
 

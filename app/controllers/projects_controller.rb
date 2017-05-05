@@ -83,26 +83,26 @@ class ProjectsController < ApplicationController
     # Engagement Volume Chart
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
-    activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
+    # activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
 
     # TODO: Generate data for Risk Volume Chart in SQL query
     # Risk Volume Chart
-    risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
-    risks_by_date = Array.new(14, 0)
-    risk_notifications.each do |r|
-      # risks_by_date based on number of days since 14 days ago
-      day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
-      risks_by_date[day_index] += 1
-    end
+    # risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
+    # risks_by_date = Array.new(14, 0)
+    # risk_notifications.each do |r|
+    #   # risks_by_date based on number of days since 14 days ago
+    #   day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
+    #   risks_by_date[day_index] += 1
+    # end
 
-    @risk_activity_engagement = []
-    risks_by_date.zip(activity_engagement).each do | a, b|
-      if b == 0
-        @risk_activity_engagement.push(0)
-      else
-        @risk_activity_engagement.push(a/b.to_f * 100)
-      end
-    end
+    # @risk_activity_engagement = []
+    # risks_by_date.zip(activity_engagement).each do | a, b|
+    #   if b == 0
+    #     @risk_activity_engagement.push(0)
+    #   else
+    #     @risk_activity_engagement.push(a/b.to_f * 100)
+    #   end
+    # end
 
     #Shows the total email usage report
     @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
