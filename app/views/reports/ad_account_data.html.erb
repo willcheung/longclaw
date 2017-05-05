@@ -53,9 +53,9 @@
             <div id="risk-chart" style="height:240px;margin-right:13px;margin-left:5px"></div>
         </div>
 
-        <div class="row m-t-md">
+        <!-- <div class="row m-t-md">
             <div id="risk-detection-chart" style='margin-right:10px;margin-left:14px;'></div>
-        </div>
+        </div> -->
 
         <div class="row m-t-md">
             <div id="activities-chart"></div>
@@ -362,82 +362,82 @@
                 }]
             });
 
-        $('#risk-detection-chart').highcharts({
+        // $('#risk-detection-chart').highcharts({
 
-            chart: {
-                height: 140,
-                events:{
-                  load: function(event) {
-                    var extremes = this.yAxis[0].getExtremes();
-                      if(extremes.dataMax == 0){
-                        extremes.max = 100;
-                        this.yAxis[0].setExtremes(0, 100);
-                      }
+        //     chart: {
+        //         height: 140,
+        //         events:{
+        //           load: function(event) {
+        //             var extremes = this.yAxis[0].getExtremes();
+        //               if(extremes.dataMax == 0){
+        //                 extremes.max = 100;
+        //                 this.yAxis[0].setExtremes(0, 100);
+        //               }
 
-                    }
-                }
-            },
-            credits: {
-                enabled: false
-            },
-            title: {
-                text: "% Negative Sentiment / Engagement",
-                    align: 'left',
-                    margin: 0,
-                    x: 35,
-                    style: {
-                        color: '#555555',
-                        fontSize: '16px'
-                    }
-            },
-            xAxis: {
-                type: 'datetime',
-                crosshair: true,
-                events: {
-                    setExtremes: syncExtremes
-                }
-            },
-            yAxis: {
-                title: { text: '' },
-                labels: { enabled: true },
-                minorGridLineWidth: 0
-            },
-            legend: {
-                enabled: false
-            },
-            tooltip: {
-                positioner: function () {
-                    return {
-                        x: this.chart.chartWidth - this.label.width, // right aligned
-                        y: -15 // align to title
-                    };
-                },
-                borderWidth: 0,
-                backgroundColor: 'none',
-                pointFormat: '{point.y:.0f}'+"%" ,
-                xDateFormat: '%b %e',
-                shadow: false,
-                style: {
-                    fontSize: '16px',
-                    color: '#555555'
-                }
-            },
-            plotOptions: {
-                series: {
-                    stacking: 'normal'
-                }
-            },
-            series: [{
-                type: 'area',
-                name: 'New Risk',
-                color: '#FF5050',
-                pointInterval: <%= 1.day * 1000 %>,
-                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= @risk_activity_engagement.to_json.html_safe  %>,
-            }
+        //             }
+        //         }
+        //     },
+        //     credits: {
+        //         enabled: false
+        //     },
+        //     title: {
+        //         text: "% Negative Sentiment / Engagement",
+        //             align: 'left',
+        //             margin: 0,
+        //             x: 35,
+        //             style: {
+        //                 color: '#555555',
+        //                 fontSize: '16px'
+        //             }
+        //     },
+        //     xAxis: {
+        //         type: 'datetime',
+        //         crosshair: true,
+        //         events: {
+        //             setExtremes: syncExtremes
+        //         }
+        //     },
+        //     yAxis: {
+        //         title: { text: '' },
+        //         labels: { enabled: true },
+        //         minorGridLineWidth: 0
+        //     },
+        //     legend: {
+        //         enabled: false
+        //     },
+        //     tooltip: {
+        //         positioner: function () {
+        //             return {
+        //                 x: this.chart.chartWidth - this.label.width, // right aligned
+        //                 y: -15 // align to title
+        //             };
+        //         },
+        //         borderWidth: 0,
+        //         backgroundColor: 'none',
+        //         pointFormat: '{point.y:.0f}'+"%" ,
+        //         xDateFormat: '%b %e',
+        //         shadow: false,
+        //         style: {
+        //             fontSize: '16px',
+        //             color: '#555555'
+        //         }
+        //     },
+        //     plotOptions: {
+        //         series: {
+        //             stacking: 'normal'
+        //         }
+        //     },
+        //     series: [{
+        //         type: 'area',
+        //         name: 'New Risk',
+        //         color: '#FF5050',
+        //         pointInterval: < %= 1.day * 1000 %>,
+        //         pointStart: < %= 14.days.ago.at_midnight.to_i * 1000 %>,
+        //         data: < %= @risk_activity_engagement.to_json.html_safe  %>,
+        //     }
 
-          ]
-        });
+        //   ]
+        // });
 
         $('#activities-chart').highcharts({
             chart: {

@@ -34,15 +34,6 @@ class SettingsController < ApplicationController
       @avg_neg_sentiment_scores = tmp_score.nan? ? 0 : scale_sentiment_score(tmp_score)
     end
 
-		# Average PctNegSentiment Last 30d
-		total_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current }).sum('jsonb_array_length(activities.email_messages)')
-		if total_engagement.zero?
-			@avg_p_neg_sentiment = 0.0
-		else
-			total_risks = Activity.where(project_id: projects.ids, category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current).select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score").map { |a| a.sentiment_score }.select { |score| score < -0.75 }.count
-			@avg_p_neg_sentiment = (total_risks.to_f/total_engagement*100).round(1)
-	  end
-
     # Average Days Inactive
     projects_inactivity = projects.group('projects.id').joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
     if projects_inactivity.empty?  # if projects is empty, inactivity should be too

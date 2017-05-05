@@ -79,7 +79,7 @@ class User < ActiveRecord::Base
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
-  EXTENSION_ROLE = { Chromeuser: 'Chrome user' }
+  OTHER_ROLE = { Trial: 'Trial', Chromeuser: "Chrome user" }
   WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
 
   def valid_streams_subscriptions
@@ -158,44 +158,30 @@ class User < ActiveRecord::Base
     else
       # Considered referred user if email exists but not oauth elements
       referred_user = User.where(:email => auth.info.email).first
+      user_attributes = {
+        first_name: info["first_name"],
+        last_name: info["last_name"],
+        oauth_provider: auth.provider,
+        email: info["email"],
+        image_url: info["image"],
+        oauth_provider_uid: auth.uid,
+        password: Devise.friendly_token[0,20],
+        oauth_access_token: credentials["token"],
+        oauth_refresh_token: credentials["refresh_token"],
+        oauth_expires_at: Time.at(credentials["expires_at"]),
+        onboarding_step: Utils::ONBOARDING[:fill_in_info],
+        role: OTHER_ROLE[:Trial],
+        is_disabled: false,
+        time_zone: time_zone
+      }
 
       if referred_user
         # Change referred_user into real user
-        referred_user.update_attributes(
-          first_name: info["first_name"],
-          last_name: info["last_name"],
-          oauth_provider: auth.provider,
-          email: info["email"],
-          image_url: info["image"],
-          oauth_provider_uid: auth.uid,
-          password: Devise.friendly_token[0,20],
-          oauth_access_token: credentials["token"],
-          oauth_refresh_token: credentials["refresh_token"],
-          oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: Utils::ONBOARDING[:fill_in_info],
-          role: User::ROLE[:Observer],
-          is_disabled: false,
-          time_zone: time_zone
-        )
+        referred_user.update_attributes(user_attributes)
 
         return referred_user
       else # New User
-        user = User.create(
-          first_name: info["first_name"],
-        	last_name: info["last_name"],
-          oauth_provider: auth.provider,
-          email: info["email"],
-          image_url: info["image"],
-          oauth_provider_uid: auth.uid,
-          password: Devise.friendly_token[0,20],
-          oauth_access_token: credentials["token"],
-          oauth_refresh_token: credentials["refresh_token"],
-          oauth_expires_at: Time.at(credentials["expires_at"]),
-          onboarding_step: Utils::ONBOARDING[:fill_in_info],
-          role: User::ROLE[:Observer],
-          is_disabled: false,
-          time_zone: time_zone
-        )
+        user = User.create(user_attributes)
 
         org = Organization.create_or_update_user_organization(get_domain(info["email"]), user)
         user.update_attributes(organization_id: org.id)
@@ -821,14 +807,14 @@ class User < ActiveRecord::Base
   end
 
   # Returns a map of the ROLEs values only (not keys), for use in best-in-place picklists
-  def self.getRolesMap(include_extension_roles=false)
+  def self.getRolesMap(include_other_roles=false)
     roles_map = {}
     ROLE.each do |r| #self.ROLE.each do |clm|
       roles_map[r[1]] = r[1]
     end
-    EXTENSION_ROLE.each do |r| #self.ROLE.each do |clm|
+    OTHER_ROLE.each do |r| #self.ROLE.each do |clm|
       roles_map[r[1]] = r[1]
-    end if include_extension_roles
+    end if include_other_roles
     return roles_map
   end
 
@@ -836,23 +822,27 @@ class User < ActiveRecord::Base
   # Roles have cascading effect, eg. if you're an "admin", then you also have access to what other roles have.
 
   def admin?
-    self.role == User::ROLE[:Admin]
+    self.role == ROLE[:Admin]
   end
 
   def power_user?
-    self.role == User::ROLE[:Poweruser] or self.admin?
+    self.role == ROLE[:Poweruser] or self.admin?
   end
 
   def contributor?
-    self.role == User::ROLE[:Contributor] or self.admin? or self.power_user?
+    self.role == ROLE[:Contributor] or self.admin? or self.power_user?
   end
 
   def observer?
-    self.role == User::ROLE[:Observer] or self.admin? or self.power_user? or self.contributor?
+    self.role == ROLE[:Observer] or self.admin? or self.power_user? or self.contributor?
+  end
+
+  def trial?
+    self.role == OTHER_ROLE[:Trial]
   end
 
   def power_or_chrome_user_only?
-    [User::ROLE[:Poweruser], User::EXTENSION_ROLE[:Chromeuser]].include? (self.role) 
+    [ROLE[:Poweruser], OTHER_ROLE[:Chromeuser], OTHER_ROLE[:Trial]].include? (self.role) 
   end
 
   ######### End Basic ACL ##########

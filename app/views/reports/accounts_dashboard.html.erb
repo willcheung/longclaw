@@ -68,7 +68,10 @@
         </div>
 </div>
 
-<script>
+<%= render "teaser" if current_user.trial? %>
+
+<script type="text/javascript">
+
     $(document).ready(function() {
         $('#sort-type, #account-filter, #owner-filter, #category-filter').change( function () {
             // Clear stream data ("right") chart
