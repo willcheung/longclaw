@@ -1,7 +1,8 @@
 class SalesforceController < ApplicationController
   layout "empty", only: [:index]
 
-  # For accessing Streams#show page+tabs from a Salesforce iframe "page"
+  # For accessing Streams#show page+tabs from a Salesforce Visualforce iframe page
+  # e.g., the route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_stream_id> ("&actiontype=" is optional)
   def index
     @category_param = []
     @filter_email = []
@@ -89,8 +90,8 @@ class SalesforceController < ApplicationController
         end
 
         #Shows the total email usage report
-        @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
-        @meeting_report = User.meeting_team_report([@project.account.id], @in_outbound_report['email'])
+        @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
+        @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
         
         # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
         # Most Active Contributors & Activities By Team
@@ -124,12 +125,28 @@ class SalesforceController < ApplicationController
     end
   end
 
+  # Links a CS account to a Salesforce account.  If a Power User or Trial (Chrome) User links a SFDC account, then automatically import the SFDC contacts.
   def link_salesforce_account
-    # One CS Account can link to many Salesforce Accounts
+    # One CS Account can be linked to many Salesforce Accounts
     salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
     if !salesforce_account.nil?
       salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save
+
+      # Automatically import the SFDC contacts for Power Users and Trial (Chrome) Users
+      if current_user.power_or_chrome_user_only?
+        puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked an account to a SFDC account. Attempting to automatically load SFDC contacts..."
+        client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+        unless client.nil?  #successful connection established
+          errors = Contact.load_salesforce_contacts(client, salesforce_account.account.id, salesforce_account.salesforce_account_id)
+          if errors.nil? 
+            puts "Contacts successfully loaded."
+          else # Salesforce query error occurred
+            puts "Error in Contact.load_salesforce_contacts()! Attempted to load contacts from Salesforce Account \"#{salesforce_account.salesforce_account_name}\" (sfdc_id='#{salesforce_account.salesforce_account_id}') to CS Account \"#{salesforce_account.account.name}\" (account_id='#{salesforce_account.account.id}')."
+          end
+        end
+      end
     end
 
     respond_to do |format|
@@ -542,7 +559,6 @@ class SalesforceController < ApplicationController
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
-
 
   def render_service_unavailable_error(method_name)
     puts "****SFDC****: Salesforce service unavailable in SalesforceController.#{method_name}: Cannot establish a connection!"

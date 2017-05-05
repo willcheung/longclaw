@@ -15,9 +15,24 @@
                     <%= link_to '(Invite)', "/settings/invite_user/#{m.id}", 'style' => 'font-size:10px', 'method' => 'post', 'remote' => true, 'id' => "#{m.id}", 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an email invitation." %>
                     <% end %>
                 <% else %>
-                    <small><a href="https://www.linkedin.com/search/results/people/?company=<%= get_domain(m.email) %>&keywords=<%= m.first_name + '%20' + m.last_name %>" target="_blank" class="m-l-xs"><i class="fa fa-linkedin"></i></a></small>
+                    <% if m.is_source_from_salesforce? %>
+                        <a 
+                        <% if @salesforce_base_URL.present? && m.external_source_id.present? %>
+                          href="<%= @salesforce_base_URL + "/" + m.external_source_id %>"
+                        <% end %>
+                        target="_blank" class="m-l-xs"><img id="sfdc-icon" style="height:8%;width:8%" src="/assets/images/Salesforce.png" style="width:0px;" title="View contact in Salesforce"/></a>
+                    <% end %>
+                    <small><a href="https://www.linkedin.com/search/results/people/?company=<%= get_domain(m.email) %>&keywords=<%= m.first_name + '%20' + m.last_name %>" target="_blank" class="m-l-xs" title="Search contact in LinkedIn"><i class="fa fa-linkedin"></i></a></small>
                 <% end %>
         </span><br>
+        <% if !m.is_internal_user? %>
+        <span><small>
+            <a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= m.email %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"><%= m.email %></a>
+            <% if m.phone.present? || m.mobile.present? %>
+                &nbsp;•&nbsp;&nbsp;<%= m.phone.present? ? m.phone : m.mobile %>
+            <% end %>
+        </small></span><br>
+        <% end %>
         <span><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
     </div>
     <% if pm.status == ProjectMember::STATUS[:Confirmed] %>

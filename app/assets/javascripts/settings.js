@@ -1,6 +1,12 @@
 $('[data-toggle="tooltip"]').tooltip();
 
 $(document).ready(function() {
+    // Disable the submit button after submitting a form
+    $("#search-form").submit(function () {
+        $("#search-form .btn").attr("disabled", true);
+        return true;
+    });
+
     // TODO: completely remove below commented code if confirm commenting it out doesn't break anything!
     // $('.salesforce_account_box').chosen({allow_single_deselect: true});
 
@@ -18,7 +24,6 @@ $(document).ready(function() {
     // }
 
     // });
-
 
     ////////////////////////////////////////
     // ../settings/salesforce_accounts
@@ -86,7 +91,7 @@ $(document).ready(function() {
         else if ($(this).attr("id").includes("salesforce-accounts-opp-refresh")) {  //clicked on 'Refresh Opportunities'
             entity_type = "opportunities";
         }
-        else if ($(this).attr("id").includes("salesforce-accounts-cont-refresh")) {  //clicked on 'Refresh Contacts'
+        else if ($(this).attr("id").includes("salesforce-accounts-cont-import")) {  //clicked on 'Import Contacts'
             entity_type = "contacts";
         }
         else {
@@ -99,6 +104,7 @@ $(document).ready(function() {
             async: true,
             method: "POST",
             beforeSend: function () {
+                self.css("pointer-events", "none");
                 $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
             },
             success: function() {
@@ -121,18 +127,19 @@ $(document).ready(function() {
                 },
             },
             complete: function() {
+                self.css("pointer-events", "auto");
                 $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
                 location.reload();
             }
         });
     });
 
-    $('#salesforce-accounts-cs-export-contacts').click(function(){
+    $('#salesforce-accounts-export-contacts').click(function(){
         var self = $(this);
         var entity_type, entity_type_btn_str;
         var buttonTxtStr = self.attr("btnLabel");
 
-        if ($(this).attr("id").includes("salesforce-accounts-cs-export-contacts")) {  //clicked on 'Update Salesforce Contacts'
+        if ($(this).attr("id").includes("salesforce-accounts-export-contacts")) {  //clicked on 'Update Salesforce Contacts'
             entity_type = "contacts";
         }
         else {
@@ -145,6 +152,7 @@ $(document).ready(function() {
             async: true,
             method: "POST",
             beforeSend: function () {
+                self.css("pointer-events", "none");
                 $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
             },
             success: function() {
@@ -167,12 +175,12 @@ $(document).ready(function() {
                 },
             },
             complete: function() {
+                self.css("pointer-events", "auto");
                 $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
                 location.reload();
             }
         });
     });
-
 
     ////////////////////////////////////////
     // ../settings/salesforce_opportunities
@@ -262,7 +270,7 @@ $(document).ready(function() {
             method: "PATCH",
             data: { "custom_configuration[config_type]": config_type,  "custom_configuration[config_value]": predicate },
             beforeSend: function () {
-                self.prop("disabled",true);
+                self.prop("disabled", true);
                 self.html("<i class='fa fa-refresh fa-spin'></i>");
             },
             // TODO: didn't handle error!!
@@ -297,7 +305,7 @@ $(document).ready(function() {
             data: request_data,
             beforeSend: function () {
                 self.css("pointer-events", "none");
-                self.prop("disabled",true);
+                self.prop("disabled", true);
                 self.removeClass('success-btn-highlight error-btn-highlight');
                 self.addClass('btn-primary btn-outline');
                 self.html("<i class='fa fa-refresh fa-spin'></i> "+buttonTxtStr);
@@ -321,7 +329,7 @@ $(document).ready(function() {
             },
             complete: function() {
                 self.css("pointer-events", "auto");
-                self.prop("disabled",false);
+                self.prop("disabled", false);
                 self.removeClass('btn-primary btn-outline');
             }
         });

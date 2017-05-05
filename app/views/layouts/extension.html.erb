@@ -43,17 +43,25 @@
                     </a>
                     <span class="caret" style="margin-left:2px;display:inline"></span>
                     <ul class="dropdown-menu" style="width:200px; position:absolute; left:-175px; margin-top:6px">
-                        <div style="margin: 0.5em; line-height: 2em">
+                        <div style="margin:0.5em; line-height:2.5em">
                             <% if @salesforce_user.present? %>
                                 <li style="line-height: 1em"><strong><%= @salesforce_user.oauth_user_name %></strong></li>
                                 <li class="divider"></li>
                                 
                                 <li><button 
                                 <%= "disabled " if !@enable_sfdc_login_linking_and_refresh %>
-                                id="salesforce-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="font-size: 10px
+                                id="salesforce-ext-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Refresh Accounts" style="font-size: 10px
                                 <%= "; color: #EEE" if !@enable_sfdc_login_linking_and_refresh %>
                                 "><i class="fa fa-refresh"></i> Refresh Accounts</button> <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
                                 <%= @enable_sfdc_login_linking_and_refresh ? "Retrieve latest Accounts from Salesforce." : "To retrieve the latest Accounts from Salesforce, please contact ContextSmith support or your ContextSmith administrator." %>
+                                "></i></li>
+                                
+                                <li><button 
+                                <%= "disabled " if !@enable_sfdc_login_linking_and_refresh %>
+                                id="salesforce-ext-cont-import" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Import Contacts" style="font-size: 10px
+                                <%= "; color: #EEE" if !@enable_sfdc_login_linking_and_refresh %>
+                                "><i class="fa fa-refresh"></i> Import Contacts</button> <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
+                                <%= @enable_sfdc_login_linking_and_refresh ? "Retrieve Contacts from Salesforce." : "To retrieve Contacts from the linked Salesforce Account, please contact ContextSmith support or your ContextSmith administrator." %>
                                 "></i></li>
 
                                 <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">Log out of Salesforce</a></li> 
@@ -92,11 +100,11 @@
                                     "></i>
                                     <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
                                         <% if @enable_sfdc_login_linking_and_refresh %>
-                                            <button id="link-account-btn" onclick="link_account_btn_click()">Link an account</button>
+                                            <button id="show-link-account-form-btn" onclick="show_link_account_form_btn_clicked()">Not Linked. Click to link.</button>
                                             <div id="search-form-div" style="display:none">
                                                 <%= form_tag("/link_salesforce_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
                                                     <div class="col-lg-16" style="width:14em;display: inline-block">
-                                                      <input type="search" name="salesforce_id" id="salesforce-entity-search" class="contacts z-top salesforce-search" style="" placeholder="Not linked">
+                                                      <input type="search" name="salesforce_id" id="salesforce-entity-search" class="contacts z-top salesforce-search" style="" placeholder="Search SFDC Accounts...">
                                                     </div>
                                                     <input name="account_id" type="hidden" value="<%= @project.account.id %>">     
                                                     <div class="col-lg-2" style="margin:0px; padding-left:0px; vertical-align: text-bottom; display: inline-block">
@@ -105,7 +113,7 @@
                                                 <%end%>
                                             </div>
                                         <% else %>
-                                            No linked accounts.
+                                            Not linked.
                                         <% end %>
                                     <% else %> <!-- No SFDC account mapped -->
                                         <% if @project.salesforce_opportunity.nil? %>
@@ -205,15 +213,18 @@
         $('.sfdc-refresh').click(function(){
             var entity_type, entity_type_btn_str;
             var self = $(this);
-            if ($(this).attr("id").includes("salesforce-acc-refresh")) {
+            if ($(this).attr("id").includes("salesforce-ext-acc-refresh")) {  //clicked on 'Refresh Accounts'
                 entity_type = "accounts";
             }
             // else if ($(this).attr("id").includes("salesforce-opp-refresh")) {
             //     entity_type = "opportunities";
             // }
-            // else if ($(this).attr("id").includes("salesforce-con-refresh")) {
-            //     entity_type = "contacts";
-            // }
+            else if ($(this).attr("id").includes("salesforce-ext-cont-import")) {  //clicked on 'Import Contacts'
+                entity_type = "contacts";
+            }
+            else {
+                return;
+            }
 
             entity_type_btn_str = entity_type.charAt(0).toUpperCase() + entity_type.slice(1);
             // console.log("$(this).attr('id'): " + self.attr("id"));
@@ -223,6 +234,7 @@
                 async: true,
                 method: "POST",
                 beforeSend: function () {
+                    self.css("pointer-events", "none");
                     $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
                 },
                 error: function(data) {
@@ -232,15 +244,16 @@
                 },
                 statusCode: {
                     500: function() {
-                        self.css("margin-left","60px");
+                        //self.css("margin-left","0px");
                         self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
                     },
                     503: function() {
-                        self.css("margin-left","30px");
+                        //self.css("margin-left","0px");
                         self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
                     },
                 },
                 complete: function() {
+                    self.css("pointer-events", "auto");
                     $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
                     location.reload();
                 }
@@ -266,10 +279,17 @@
             }
         };
 
-        function link_account_btn_click () {
-            $("#link-account-btn").hide();
+        // Button to show the form to link SFDC account
+        function show_link_account_form_btn_clicked () {
+            $("#show-link-account-form-btn").hide();
             $("#search-form-div").show();
         }
+
+        // Disable the "Link" submit button after clicking it
+        $("#search-form").submit(function () {
+            $("#search-form .btn").attr("disabled", true);
+            return true;
+        });
     </script>
 
     <%= javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js" %>
