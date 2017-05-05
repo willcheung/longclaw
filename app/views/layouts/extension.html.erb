@@ -100,7 +100,7 @@
                                     "></i>
                                     <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
                                         <% if @enable_sfdc_login_linking_and_refresh %>
-                                            <button id="link-account-btn" onclick="link_account_btn_click()">Not Linked. Click to link.</button>
+                                            <button id="show-link-account-form-btn" onclick="show_link_account_form_btn_clicked()">Not Linked. Click to link.</button>
                                             <div id="search-form-div" style="display:none">
                                                 <%= form_tag("/link_salesforce_account/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
                                                     <div class="col-lg-16" style="width:14em;display: inline-block">
@@ -279,10 +279,17 @@
             }
         };
 
-        function link_account_btn_click () {
-            $("#link-account-btn").hide();
+        // Button to show the form to link SFDC account
+        function show_link_account_form_btn_clicked () {
+            $("#show-link-account-form-btn").hide();
             $("#search-form-div").show();
         }
+
+        // Disable the "Link" submit button after clicking it
+        $("#search-form").submit(function () {
+            $("#search-form .btn").attr("disabled", true);
+            return true;
+        });
     </script>
 
     <%= javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js" %>

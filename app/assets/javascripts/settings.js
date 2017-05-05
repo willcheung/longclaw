@@ -1,6 +1,12 @@
 $('[data-toggle="tooltip"]').tooltip();
 
 $(document).ready(function() {
+    // Disable the submit button after submitting a form
+    $("#search-form").submit(function () {
+        $("#search-form .btn").attr("disabled", true);
+        return true;
+    });
+
     // TODO: completely remove below commented code if confirm commenting it out doesn't break anything!
     // $('.salesforce_account_box').chosen({allow_single_deselect: true});
 
@@ -175,7 +181,6 @@ $(document).ready(function() {
             }
         });
     });
-
 
     ////////////////////////////////////////
     // ../settings/salesforce_opportunities
