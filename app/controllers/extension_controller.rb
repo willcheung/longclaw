@@ -24,6 +24,9 @@ class ExtensionController < ApplicationController
     @account = Account.new
   end
 
+  def private_domain
+  end
+
   def account
     @activities = @project.activities.visible_to(current_user.email).take(8)
   end
@@ -101,12 +104,15 @@ class ExtensionController < ApplicationController
     ### url example: .../extension/account?internal%5B0%5D%5B%5D=Will%20Cheung&internal%5B0%5D%5B%5D=wcheung%40contextsmith.com&internal%5B1%5D%5B%5D=Kelvin%20Lu&internal%5B1%5D%5B%5D=klu%40contextsmith.com&internal%5B2%5D%5B%5D=Richard%20Wang&internal%5B2%5D%5B%5D=rcwang%40contextsmith.com&internal%5B3%5D%5B%5D=Yu-Yun%20Liu&internal%5B3%5D%5B%5D=liu%40contextsmith.com&external%5B0%5D%5B%5D=Richard%20Wang&external%5B0%5D%5B%5D=rcwang%40enfind.com&external%5B1%5D%5B%5D=Brad%20Barbin&external%5B1%5D%5B%5D=brad%40enfind.com
     ### more readable url example: .../extension/account?internal[0][]=Will Cheung&internal[0][]=wcheung@contextsmith.com&internal[1][]=Kelvin Lu&internal[1][]=klu@contextsmith.com&internal[2][]=Richard Wang&internal[2][]=rcwang@contextsmith.com&internal[3][]=Yu-Yun Liu&internal[3][]=liu@contextsmith.com&external[0][]=Richard Wang&external[0][]=rcwang@enfind.com&external[1][]=Brad Barbin&external[1][]=brad@enfind.com
     ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Full Name', 'email@address.com'] }
-    redirect_to extension_path and return if params[:external].blank?
+
+    # If there are no external users specified, redirect to extension#private_domain page
+    redirect_to extension_private_domain_path and return if params[:external].blank?
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
 
     ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
-    # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#index page
-    redirect_to extension_path and return if ex_emails.blank? 
+    # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#private_domain page
+    redirect_to extension_private_domain_path and return if ex_emails.blank? 
+
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
     order_emails_by_domain_freq = ex_emails.map { |email| "email = '#{email}' DESC" }.join(',')
