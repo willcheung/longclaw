@@ -1,4 +1,12 @@
-<h3 class="m-t-lg">This account is not in ContextSmith.</h3>
+<h3 class="m-t-lg"><strong>This account is not in ContextSmith.</strong></h3>
+
 <p class="text-center m-t-lg"><%= link_to "Create #{@domain}", '#new_account_modal', 'data-toggle' => 'modal', class: 'btn btn-primary' %></p>
+
+<h3 class="m-t-md">Create this account to have access to a Custom Timeline containing all activity related to it — so that you won't miss a thing!</h3>
+
+<div style="display:block; margin:auto; width:50%;">
+	<h3 class="m-t-md">Sample:</h3>
+	<img src="<%= root_url %>/assets/images/tutorial/chrome_timeline_shadow.png" alt="Timeline sample screenshot" title="Timeline sample screenshot" style="display:block; margin:auto; width:<%= (288 * 0.75).round %>px; height:<%= (551 * 0.75).round %>px;"/>
+</div>
 
 <%= render 'accounts/modal', modal_id: 'new_account_modal' %>

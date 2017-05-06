@@ -3,6 +3,7 @@ class ExtensionController < ApplicationController
 
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
+  before_action :get_account_types, only: [:no_account]
 
   def test
     render layout: "empty"
@@ -68,6 +69,32 @@ class ExtensionController < ApplicationController
 
   private
 
+  def set_salesforce_user
+    @salesforce_user = nil
+
+    return if current_user.nil?
+
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
+
+    if current_user.admin?
+      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
+    elsif current_user.power_or_chrome_user_only?  # AND is an individual (power user or chrome user)
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
+    end
+
+    @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
+    @enable_sfdc_login_linking_and_refresh = current_user.admin? || current_user.power_or_chrome_user_only?
+
+    # If no SFDC accounts found, automatically refresh the SFDC accounts list
+    if !@sfdc_accounts_exist && @enable_sfdc_login_linking_and_refresh
+      SalesforceAccount.load_accounts(current_user.organization_id) 
+      @sfdc_accounts_exist = true
+    end
+  end
+
   def set_account_and_project
     # p "*** set account and project ***"
     # p params
@@ -122,6 +149,11 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
+  def get_account_types
+    custom_lists = current_user.organization.get_custom_lists_with_options
+    @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
+  end
+
   def create_project
     # p "*** creating project for account #{@account.name} ***"
     @project = @account.projects.new(
@@ -171,32 +203,6 @@ class ExtensionController < ApplicationController
     # p "*** creating new external members for project #{@project.name} ***"
     external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
-    end
-  end
-
-  def set_salesforce_user
-    @salesforce_user = nil
-
-    return if current_user.nil?
-
-    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
-
-    if current_user.admin?
-      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
-      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
-    elsif current_user.power_or_chrome_user_only?  # AND is an individual (power user or chrome user)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
-      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
-    end
-
-    @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
-    @enable_sfdc_login_linking_and_refresh = current_user.admin? || current_user.power_or_chrome_user_only?
-
-    # If no SFDC accounts found, automatically refresh the SFDC accounts list
-    if !@sfdc_accounts_exist && @enable_sfdc_login_linking_and_refresh
-      SalesforceAccount.load_accounts(current_user.organization_id) 
-      @sfdc_accounts_exist = true
     end
   end
 
