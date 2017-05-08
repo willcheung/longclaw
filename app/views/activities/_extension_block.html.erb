@@ -38,7 +38,7 @@
         <% if a.category == Activity::CATEGORY[:Conversation] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong> (<%= a.email_messages.size %>)</h4>
             <% m = a.email_messages.last %>
-            <small><%= get_conversation_member_names(a.from, a.to, a.cc, 'other', 2) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</span></small>
+            <small><%= get_conversation_member_names(a.from, a.to, a.cc, 'other', 2) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</span><br/></small>
             <%= if m.content.nil? || m.content.is_a?(String)
                    get_expandable_text_html(text: m.content, id: a.id, length: 100, max_length: 500, separator: ' ').html_safe
                 else
@@ -49,19 +49,19 @@
         <% elsif a.category == Activity::CATEGORY[:Note] %>
             <div class="rag-bar<%=a['rag_score']%> p-xxs">
                 <h4><strong><%= get_full_name(a.user) %></strong> wrote: </h4>
-                <small class="time-ago"><%= time_ago_in_words(Time.zone.at(a.last_sent_date)) %> ago</small>
+                <small class="time-ago"><%= time_ago_in_words(Time.zone.at(a.last_sent_date)) %> ago<br/></small>
                 <%= get_expandable_text_html(text: a.note, id: a.id, length: 100, max_length: 450, separator: ' ').html_safe %>
                 <p class="time-ago"><a href="/projects/<%= a.project.id + '/#' + a.id.to_s %>" target="_blank">View in ContextSmith <i class="fa fa-external-link"></i></a></p>
             </div>
 
         <% elsif a.category == Activity::CATEGORY[:Meeting] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
-            <small><%= get_calendar_member_names(a.to, 'other', 1) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> ago</span></small>
+            <small><%= get_calendar_member_names(a.to, 'other', 1) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> ago</span><br/></small>
             <p class="time-ago"><a href="/projects/<%= a.project.id + '/#' + a.id.to_s %>" target="_blank">View in ContextSmith <i class="fa fa-external-link"></i></a></p>
 
         <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
-            <small><%= a.from[0].personal ? a.from[0].personal : a.from[0].address %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> ago</span></small>
+            <small><%= a.from[0].personal ? a.from[0].personal : a.from[0].address %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> ago</span><br/></small>
             <%= get_expandable_text_html(text: a.note, id: a.id, length: 100, max_length: 500, separator: ' ').html_safe %> 
             <% if @salesforce_base_URL.present? %><p class="time-ago"><a href="<%= @salesforce_base_URL + "/" + a.email_messages.first["Id"] %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a></p><% end %>
 
@@ -71,7 +71,7 @@
         <% elsif a.category == Activity::CATEGORY[:JIRA] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
             <% c = a.email_messages.first.issue.fields.comment.comments.last %>
-            <small>By <%= c.author.displayName %> <span class="time-ago" style="float:right"><%= time_ago_in_words(c.updated.to_time) %> ago</span></small>
+            <small>By <%= c.author.displayName %> <span class="time-ago" style="float:right"><%= time_ago_in_words(c.updated.to_time) %> ago</span><br/></small>
             <% if c.present? %>
                 <%= get_expandable_text_html(text: c.body, id: a.id, length: 80, max_length: 500, separator: ' ').html_safe %>
                 <p class="time-ago"><a href="<%= a.email_messages.first.issue.self.sub(/(?<=atlassian\.net\/).*/, "browse/" + a.email_messages.first.issue['key']) %>" target="_blank">View in JIRA <i class="fa fa-external-link"></i></a></p>
@@ -82,13 +82,13 @@
 
         <% elsif a.category == Activity::CATEGORY[:Zendesk] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
-            <small class="time-ago">Last updated <%= time_ago_in_words(a.last_sent_date) %> ago</small>
+            <small class="time-ago">Last updated <%= time_ago_in_words(a.last_sent_date) %> ago<br/></small>
             <%= get_expandable_text_html(text: a.email_messages.first.comments.last.text, id: a.id, length: 80, max_length: 500, separator: ' ').html_safe %>
             <p class="time-ago"><a href="<%= a.email_messages.first.link %>" target="_blank">View in Zendesk <i class="fa fa-external-link"></i></a></p>
 
         <% elsif a.category == Activity::CATEGORY[:Alert] %>
             <h4><strong>Alert: <%= truncate(a.title, length: 30, separator: ' ') %></strong></h4>
-            <small class="time-ago"><%= time_ago_in_words(a.last_sent_date) %> ago</small>
+            <small class="time-ago"><%= time_ago_in_words(a.last_sent_date) %> ago<br/></small>
             <%= get_expandable_text_html(text: a.note, id: a.id, length: 80, max_length: 200, separator: ' ').html_safe %>
 
         <% end %>
