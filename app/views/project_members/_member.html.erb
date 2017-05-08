@@ -16,11 +16,13 @@
                     <% end %>
                 <% else %>
                     <% if m.is_source_from_salesforce? %>
-                        <a 
                         <% if @salesforce_base_URL.present? && m.external_source_id.present? %>
-                          href="<%= @salesforce_base_URL + "/" + m.external_source_id %>"
+                            <a href="<%= @salesforce_base_URL + "/" + m.external_source_id %>" target="_blank" class="m-l-xs">
                         <% end %>
-                        target="_blank" class="m-l-xs"><img id="sfdc-icon" style="height:8%;width:8%" src="/assets/images/Salesforce.png" style="width:0px;" title="View contact in Salesforce"/></a>
+                                <img id="sfdc-icon" style="height:8%;width:8%" src="<%= root_url %>assets/images/Salesforce.png" style="width:0px;" title="View contact in Salesforce"/>
+                        <% if @salesforce_base_URL.present? && m.external_source_id.present? %>
+                            </a>
+                        <% end %>
                     <% end %>
                     <small><a href="https://www.linkedin.com/search/results/people/?company=<%= get_domain(m.email) %>&keywords=<%= m.first_name + '%20' + m.last_name %>" target="_blank" class="m-l-xs" title="Search contact in LinkedIn"><i class="fa fa-linkedin"></i></a></small>
                 <% end %>

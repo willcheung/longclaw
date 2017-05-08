@@ -250,4 +250,24 @@ module ApplicationHelper
   	end
   	flash_messages.join("\n").html_safe
   end
+
+  # Generates formatted (with HTML tags), expandable and collapsible text.  Uses simple_format() to break newlines, and truncate() to break up content.
+  # Parameters:   text - the text content to display truncated
+  #               id - used as the unique identifier in DOM
+  #               length (optional) - length to truncate text, default = 100
+  #               max_length (optional) - maximum length to display the text, default = length of text
+  #               separator (optional) - the separator option in the truncate() function, default to empty string
+  # Note:  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
+  def get_expandable_text_html(text: , id: , length: 100, max_length: text.length, separator: '')
+    # Do some newline processing to ensure proper conversion to <br> by simple_format later
+    text.gsub!(/\r\n/, "\n")  # convert the carriage-return + newline sequences (e.g., from SFDC activity) into single newlines
+    text.gsub!(/\n+/, "\n")   # convert double newlines into single ones 
+
+    id = id.to_s
+    html = "<span id=\"" + id + "-short\" style=\"display:block\">" + simple_format(truncate(text, length: length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span')
+    html += "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "');\">&nbsp;[more]</a></span>" + 
+            "<span id=\""+ id +"\" style=\"display: none\">" + simple_format(truncate(text, length: max_length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span') + 
+            "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "');\">&nbsp;[less]</a></span>" if text.length >length
+    return html
+  end
 end
