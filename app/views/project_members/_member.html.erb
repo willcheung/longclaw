@@ -19,7 +19,7 @@
                         <% if @salesforce_base_URL.present? && m.external_source_id.present? %>
                             <a href="<%= @salesforce_base_URL + "/" + m.external_source_id %>" target="_blank" class="m-l-xs">
                         <% end %>
-                                <img id="sfdc-icon" style="height:8%;width:8%" src="<%= root_url %>assets/images/Salesforce.png" style="width:0px;" title="View contact in Salesforce"/>
+                                <img id="sfdc-icon" style="height:8%;width:8%" src="/assets/images/salesforce.png" style="width:0px;" title="View contact in Salesforce"/>
                         <% if @salesforce_base_URL.present? && m.external_source_id.present? %>
                             </a>
                         <% end %>

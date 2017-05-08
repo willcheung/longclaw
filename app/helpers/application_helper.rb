@@ -254,9 +254,9 @@ module ApplicationHelper
   # Generates formatted (with HTML tags), expandable and collapsible text.  Uses simple_format() to break newlines, and truncate() to break up content.
   # Parameters:   text - the text content to display truncated
   #               id - used as the unique identifier in DOM
-  #               length (optional) - length to truncate text, default = 100
-  #               max_length (optional) - maximum length to display the text, default = length of text
-  #               separator (optional) - the separator option in the truncate() function, default to empty string
+  #               length (optional) - length at which to truncate text, defaults to 100
+  #               max_length (optional) - maximum length of the text to display, defaults to the length of text
+  #               separator (optional) - the separator option in the truncate() function, defaults to empty string
   # Note:  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
   def get_expandable_text_html(text: , id: , length: 100, max_length: text.length, separator: '')
     # Do some newline processing to ensure proper conversion to <br> by simple_format later
