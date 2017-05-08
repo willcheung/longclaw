@@ -95,7 +95,7 @@ class Contact < ActiveRecord::Base
         account = Account.create(
           domain: domain,
           name: domain,
-          category: "Customer",
+          category: Account::CATEGORY[:Customer], # TODO: 'Customer' may not be in Org's custom list of Account Types (Categories)!!
           address: "",
           website: "http://www.#{domain}",
           owner_id: project.owner_id,

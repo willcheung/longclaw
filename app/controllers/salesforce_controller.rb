@@ -139,11 +139,11 @@ class SalesforceController < ApplicationController
         client = SalesforceService.connect_salesforce(current_user.organization_id)
 
         unless client.nil?  #successful connection established
-          errors = Contact.load_salesforce_contacts(client, salesforce_account.account.id, salesforce_account.salesforce_account_id)
+          errors = Contact.load_salesforce_contacts(client, salesforce_account.contextsmith_account_id, salesforce_account.salesforce_account_id)
           if errors.nil? 
             puts "Contacts successfully loaded."
           else # Salesforce query error occurred
-            puts "Error in Contact.load_salesforce_contacts()! Attempted to load contacts from Salesforce Account \"#{salesforce_account.salesforce_account_name}\" (sfdc_id='#{salesforce_account.salesforce_account_id}') to CS Account \"#{salesforce_account.account.name}\" (account_id='#{salesforce_account.account.id}')."
+            puts "Error in Contact.load_salesforce_contacts()! Attempted to load contacts from Salesforce Account \"#{salesforce_account.salesforce_account_name}\" (sfdc_id='#{salesforce_account.salesforce_account_id}') to CS Account \"#{salesforce_account.account.name}\" (account_id='#{salesforce_account.contextsmith_account_id}')."
           end
         end
       end

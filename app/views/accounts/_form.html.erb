@@ -5,7 +5,12 @@
   <span class="help-block" style="color:red"></span>      
   <%# Added Bootstrap classes, and help-block container for error messages %> 
   <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
-  <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: @account_types, selected: @account.category %>
+  <% if current_user.trial? && @domain %>
+    <!-- category="Customer" for Trial users in Chrome extension -->
+    <%= f.input :category, as: :hidden, input_html: {value: "#{Account::CATEGORY[:Customer]}"} %>
+  <% else %>
+    <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: @account_types, selected: @account.category %>
+  <% end %>
   <% if @domain %>
     <%= f.input :website, wrapper_html: { class: 'col-md-12'}, input_html: { value: 'http://www.'+@domain } %>
     <%= f.input :domain, as: :hidden, input_html: { value: @domain } %>
