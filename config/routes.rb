@@ -121,6 +121,7 @@ Longclaw::Application.routes.draw do
       get 'contacts'
       get 'metrics'
       get 'no_account/:domain', to: 'extension#no_account', as: :no_account
+      get 'private_domain'
       get 'project_error'
       post 'create_account'
     end

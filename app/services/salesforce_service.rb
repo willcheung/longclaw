@@ -125,12 +125,12 @@ class SalesforceService
   private
 
   # Finds a Contact in SFDC Account that matches an e-mail address.  If found, performs an update on the SFDC Contact.  If multiple Contacts are found, picks only one (first one alphabetically by last name). If not found, a new SFDC Contact is created/inserted.  Returns nil if there is an error, or the Contact's SFDC/sObject id if successful.
-  # Parameters: client - connection to Salesforce
-  #             sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
-  #             email  - string, the email to search for to determine the contact to upsert
-  #             params - a hash that contains the Contact information (e.g., FirstName, Email, LeadSource etc.)
+  # Parameters (all required):  client - connection to Salesforce
+  #                             sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
+  #                             email  - string, the email to search for to determine the contact to upsert
+  #                             params - a hash that contains the Contact information (e.g., FirstName, Email, LeadSource etc.)
   # TODO: Warn user that Contacts may not be properly copied because a "Contact Duplicate Rules" in SFDC settings might be preventing this method from creating new contacts. e.g., "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
-  def self.upsert_sfdc_contact(client: client, sfdc_account_id: sfdc_account_id, email: email, params: params)
+  def self.upsert_sfdc_contact(client: , sfdc_account_id: , email: , params: )
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email}' ORDER BY LastName, FirstName"
     
     result = SalesforceService.query_salesforce(client, query_statement)
@@ -164,11 +164,11 @@ class SalesforceService
   end
 
   # Updates the Salesforce Contact with info in params. If the SFDC sfdc_contact_id cannot be found, try to find it using Contact's email in the SFDC Account
-  # Parameters: client - connection to Salesforce
-  #             sfdc_contact_id - the external sObject id that identifies the Salesforce Contact to update
-  #             sfdc_account_id - the SFDC/sObject id of the Salesforce Account where the Contact resides
-  #             params - a hash that contains the Contact information (e.g., FirstName, Email, LeadSource etc.)
-  def self.update_sfdc_contact(client: client, sfdc_contact_id: sfdc_contact_id, sfdc_account_id: sfdc_account_id, params: params)
+  # Parameters (all required):  client - connection to Salesforce
+  #                             sfdc_contact_id - the external sObject id that identifies the Salesforce Contact to update
+  #                             sfdc_account_id - the SFDC/sObject id of the Salesforce Account where the Contact resides
+  #                             params - a hash that contains the Contact information (e.g., FirstName, Email, LeadSource etc.)
+  def self.update_sfdc_contact(client: , sfdc_contact_id: , sfdc_account_id: , params: )
     begin
       update_result = client.update!('Contact', Id: sfdc_contact_id, FirstName: params[:FirstName], LastName: params[:LastName], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone], Description: params[:Description])
       update_result = sfdc_contact_id
