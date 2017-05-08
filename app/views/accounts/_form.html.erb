@@ -7,7 +7,7 @@
   <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
   <% if current_user.trial? && @domain %>
     <!-- category="Customer" for Trial users in Chrome extension -->
-    <%= f.input :category, as: :hidden, wrapper_html: {style: 'display:none'}, input_html: {value: "#{Account::CATEGORY[:Customer]}"} %>
+    <%= f.input :category, as: :hidden, input_html: {value: "#{Account::CATEGORY[:Customer]}"} %>
   <% else %>
     <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: @account_types, selected: @account.category %>
   <% end %>
