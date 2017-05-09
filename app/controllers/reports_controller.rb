@@ -3,7 +3,11 @@ class ReportsController < ApplicationController
   
   def team_dashboard
     users = current_user.organization.users
+    @departments = users.pluck(:department).compact.uniq
+    @titles = users.pluck(:title).compact.uniq
     user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
+    @data = [] and @categories = [] and return if user_activities.blank?
+
     @data = user_activities.map do |uid, activities|
       user = users.find { |usr| usr.id == uid }
       Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
@@ -11,8 +15,6 @@ class ReportsController < ApplicationController
     @data.sort_by! { |d| d.total }.reverse!
     @categories = @data.first.y.map(&:category)
 
-    @departments = users.pluck(:department).compact.uniq
-    @titles = users.pluck(:title).compact.uniq
 
     # TODO: real left chart pagination
     @data = @data.take(25)
@@ -51,6 +53,7 @@ class ReportsController < ApplicationController
     when "Time Spent (Last 14d)"
       account_ids = current_user.organization.accounts.ids
       user_emails = current_user.organization.users.pluck(:email)
+      @data = [] and @categories = [] and return if account_ids.blank? || user_emails.blank?
       email_time = User.team_usage_report(account_ids, user_emails)
       meeting_time = User.meeting_report(account_ids, user_emails)
       @data = users.map do |user|
@@ -69,6 +72,7 @@ class ReportsController < ApplicationController
       @categories = ["Meetings", "Read Emails", "Sent Emails"]
     when "Activities (Last 14d)"
       user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
+      @data = [] and @categories = [] and return if user_activities.blank?
       @data = user_activities.map do |uid, activities|
         user = users.find { |usr| usr.id == uid }
         Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
