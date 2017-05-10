@@ -61,7 +61,11 @@ class ReportsController < ApplicationController
         if email_t.nil?
           email_t = { "Read Emails": 0, "Sent Emails": 0 }
         else
-          email_t = { "Read Emails": [(email_t.inbound / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max, "Sent Emails": [(email_t.outbound / User::WORDS_PER_HOUR[:Write]).round(2), 0.001].max }
+          # TODO: figure out why some email_t are not nil but email_t.inbound or email_t.outbound are nil (Issue #692)
+          email_t = { 
+            "Read Emails": email_t.inbound.nil? ? 0 : [(email_t.inbound / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max,
+            "Sent Emails": email_t.outbound.nil? ? 0 : [(email_t.outbound / User::WORDS_PER_HOUR[:Write]).round(2), 0.001].max
+          }
         end
         meeting_t = meeting_time.find { |mt| mt.email == user.email }
         meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total / 3600.0 }
