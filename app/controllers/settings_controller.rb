@@ -100,6 +100,7 @@ class SettingsController < ApplicationController
 
 			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("upper(accounts.name)")
 		end
+		@linked_to_sfdc = @salesforce_link_accounts.present?
 	end
 
 	# Map CS Streams with Salesforce Opportunities: "One CS Stream can link to many Salesforce Opportunities"

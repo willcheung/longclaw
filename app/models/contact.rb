@@ -138,7 +138,7 @@ class Contact < ActiveRecord::Base
 
       # Keep the first contact (alphabetically, by Last then First Name) from contacts with identical e-mails; ignore contacts with no e-mail field
       contacts.each do |c|
-        email = Contact.sanitize(c[:Email])          
+        email = Contact.sanitize(c[:Email]) 
         if c[:Email].present? && emails_processed[email].nil?
           firstname = self.capitalize_first_only(c[:FirstName])
           lastname = self.capitalize_first_only(c[:LastName])
