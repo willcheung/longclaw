@@ -110,11 +110,13 @@ class ReportsController < ApplicationController
 
     @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
 
+    # compute Tasks Trend Data for this user on the fly, this may be done better with a materialized view in the future
     day_range = 14
     @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range + 1, 0), new_open: Array.new(day_range + 1, 0), new_closed: Array.new(day_range + 1, 0)})
     tasks = @user.notifications
     tasks_by_open_date = tasks.group("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
     tasks_by_complete_date = tasks.group("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
+    # count all new tasks on new_open and total_open trend lines
     tasks_by_open_date.each do |date, opened_tasks|
       date_index = date.mjd - day_range.days.ago.to_date.mjd
       @tasks_trend_data.new_open[date_index] += opened_tasks if date_index >= 0
@@ -122,6 +124,7 @@ class ReportsController < ApplicationController
         date_index <= i ? num_tasks + opened_tasks : num_tasks
       end
     end
+    # count all completed tasks on new_closed and total_open trend lines
     tasks_by_complete_date.each do |date, completed_tasks|
       next if date.nil?
       date_index = date.mjd - day_range.days.ago.to_date.mjd
@@ -131,29 +134,26 @@ class ReportsController < ApplicationController
       end
     end
 
+    # compute Interaction Time per Account for this user on the fly
     meeting_time = @user.meeting_time_by_project
     email_time = @user.email_time_by_project
-    @interaction_time_per_account = Hashie::Mash.new({names: [], ids: [], meeting_time: [], sent_time: [], read_time: []})
+    @interaction_time_per_account = []
     meeting_time.each do |p|
-      @interaction_time_per_account.names << p.name
-      @interaction_time_per_account.ids << p.id
-      @interaction_time_per_account.meeting_time << p.total_meeting_hours
-      @interaction_time_per_account.sent_time << 0
-      @interaction_time_per_account.read_time << 0
+      @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, meeting_time: p.total_meeting_hours, sent_time: 0, read_time: 0, total: p.total_meeting_hours)
     end
     email_time.each do |p|
-      i = @interaction_time_per_account.ids.index(p.id)
-      if i.nil?
-        @interaction_time_per_account.names << p.name
-        @interaction_time_per_account.ids << p.id
-        @interaction_time_per_account.meeting_time << 0
-        @interaction_time_per_account.sent_time << p.outbound
-        @interaction_time_per_account.read_time << p.inbound
+      i_t = @interaction_time_per_account.find { |it| it.id == p.id }
+      if i_t.nil?
+        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, meeting_time: 0, sent_time: p.outbound, read_time: p.inbound, total: p.outbound + p.inbound)
       else
-        @interaction_time_per_account.sent_time[i] = p.outbound
-        @interaction_time_per_account.read_time[i] = p.inbound
+        i_t.sent_time = p.outbound
+        i_t.read_time = p.inbound
+        i_t.total += p.outbound + p.inbound
       end
     end
+    @interaction_time_per_account.sort_by! { |it| it.total }.reverse!
+    # take the top 7 interaction time per account, currently allotted space only fits about 7 categories on xAxis before labels are cut off
+    @interaction_time_per_account = @interaction_time_per_account.take(7)
 
     render layout: false
   end
