@@ -90,11 +90,11 @@ class SalesforceService
           # update_result is the new Task's sObject Id
           #puts "---> new Task creation result = \"#{update_result}\""
           if update_result == false
-            puts "*** SalesforceService error: Update Salesforce error while creating SFDC ActivityHistory. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
+            puts "*** SalesforceService error: Update Salesforce Activity error while creating SFDC ActivityHistory. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
             update_result = nil
           end
         rescue  
-          puts "*** SalesforceService error: Update Salesforce error while creating SFDC ActivityHistory. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
+          puts "*** SalesforceService error: Update Salesforce Activity error while creating SFDC ActivityHistory. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
           update_result = nil
         end
       when "contacts"
@@ -110,7 +110,7 @@ class SalesforceService
         end
         # update_result is the new Contact's sObject Id ?
         if update_result == false
-          puts "*** SalesforceService error: Update Salesforce error while creating/updating a SFDC Contact. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
+          puts "*** SalesforceService error: Update Salesforce Contacts error while creating/updating a SFDC Contact. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
           update_result = nil
         end
       else
@@ -133,10 +133,15 @@ class SalesforceService
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , email: , params: )
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email}' ORDER BY LastName, FirstName"
     
-    result = SalesforceService.query_salesforce(client, query_statement)
+    query_result = self.query_salesforce(client, query_statement)
 
-    unless result.size == 0   
-      c = result.first  # pick one matched Contact
+    if query_result.nil?  # e.g. Possible error: account information (i.e., Id) is outdated 
+      puts "*** SalesforceService error: Update Salesforce Contacts error while querying SFDC. SFDC Account Id, etc. may not be valid. if not, disconnect and re-establish connection to SFDC, refresh accounts, then re-link.  query_statement: #{ query_statement }, sObject_meta: #{ params }, sObject_fields: #{params[:sObject_fields]}"
+      return nil  # propogate error to caller
+    end
+
+    unless query_result.size == 0   
+      c = query_result.first  # pick one matched Contact
       upsert_result = update_sfdc_contact(client: client, sfdc_contact_id: c[:Id], sfdc_account_id: sfdc_account_id, params: params)
     else
       begin
@@ -144,17 +149,17 @@ class SalesforceService
         #puts "...with params: #{params}"
         upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], MobilePhone: params[:MobilePhone], Description: params[:Description])  
         if upsert_result == false
-          puts "*** SalesforceService error: Update Salesforce error while creating a new SFDC Contact. sObject_meta: #{ params }, sObject_fields: #{params[:sObject_fields]}"
+          puts "*** SalesforceService error: Update Salesforce Contacts error while creating a new SFDC Contact. sObject_meta: #{ params }, sObject_fields: #{params[:sObject_fields]}"
           upsert_result = nil
         end
       rescue => e
         if (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
-          print "*** SalesforceService error: Update Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only minimal Contact fields: FirstName, LastName, Email, LeadSource ... "
+          print "*** SalesforceService error: Update Salesforce Contact error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only minimal Contact fields: FirstName, LastName, Email, LeadSource ... "
           upsert_result = client.create('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource])
           puts "Contact successfully created!"
           return upsert_result  #return "N/A (duplicate contact; skipped!)"
         else
-          puts "*** SalesforceService error: Update Salesforce error while creating a new SFDC Contact: \"#{e}\". sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
+          puts "*** SalesforceService error: Update Salesforce Contact error while creating a new SFDC Contact: \"#{e}\". sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
         end
         upsert_result = nil
       end
@@ -175,13 +180,13 @@ class SalesforceService
     rescue => e
       error = "*** SalesforceService error: "
       if (e.to_s[0...25]) == "FIELD_INTEGRITY_EXCEPTION" # In case SFDC Contact was deleted on Salesforce, or external SFDC id is invalid
-        puts error + "Update Salesforce error -- invalid salesforce ID -- while updating SFDC Contact! (#{e})  Will attempt to upsert Contact using e-mail instead."
+        puts error + "Update Salesforce Contact error -- invalid salesforce ID -- while updating SFDC Contact! (#{e})  Will attempt to upsert Contact using e-mail instead."
         return upsert_sfdc_contact(client: client, sfdc_account_id: sfdc_account_id, email: params[:Email], params: params)
       # elsif (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
-      #   error += "Update Salesforce error -- DUPLICATE contact detected -- while updating SFDC Contact! Contact skipped."
+      #   error += "Update Salesforce Contact error -- DUPLICATE contact detected -- while updating SFDC Contact! Contact skipped."
       #   update_result = "N/A (duplicate contact; skipped!)"
       else
-        error += "Update Salesforce error while updating a SFDC Contact: \"#{e}\"" 
+        error += "Update Salesforce Contact error while updating a SFDC Contact: \"#{e}\"" 
         update_result = nil
       end
       error += "sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
