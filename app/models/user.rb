@@ -515,6 +515,7 @@ class User < ActiveRecord::Base
 
   def self.count_all_activities_by_user(array_of_account_ids, array_of_user_ids, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     array_of_project_ids = Project.where(account_id: array_of_account_ids).pluck(:id)
+    return [] if array_of_account_ids.blank? || array_of_user_ids.blank? || array_of_project_ids.blank?
     query = <<-SQL
       (
         SELECT users.id, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
