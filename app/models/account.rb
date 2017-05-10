@@ -75,7 +75,7 @@ class Account < ActiveRecord::Base
 
             account = Account.new(domain: domain, 
                                   name: org_info[0], 
-                                  category: "Customer",
+                                  category: Account::CATEGORY[:Customer], # TODO: 'Customer' may not be in Org's custom list of Account Types (Categories)!!
                                   address: org_info[1],
                                   website: "http://www.#{domain}",
                                   owner_id: owner_id, 

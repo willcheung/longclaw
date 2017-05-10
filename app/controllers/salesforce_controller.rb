@@ -1,7 +1,8 @@
 class SalesforceController < ApplicationController
   layout "empty", only: [:index]
 
-  # For accessing Streams#show page+tabs from a Salesforce iframe "page"
+  # For accessing Streams#show page+tabs from a Salesforce Visualforce iframe page
+  # e.g., the route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_stream_id> ("&actiontype=" is optional)
   def index
     @category_param = []
     @filter_email = []
@@ -89,8 +90,8 @@ class SalesforceController < ApplicationController
         end
 
         #Shows the total email usage report
-        @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.domain)
-        @meeting_report = User.meeting_team_report([@project.account.id], @in_outbound_report['email'])
+        @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
+        @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
         
         # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
         # Most Active Contributors & Activities By Team
@@ -124,12 +125,28 @@ class SalesforceController < ApplicationController
     end
   end
 
+  # Links a CS account to a Salesforce account.  If a Power User or Trial (Chrome) User links a SFDC account, then automatically import the SFDC contacts.
   def link_salesforce_account
-    # One CS Account can link to many Salesforce Accounts
+    # One CS Account can be linked to many Salesforce Accounts
     salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
     if !salesforce_account.nil?
       salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save
+
+      # Automatically import the SFDC contacts for Power Users and Trial (Chrome) Users
+      if current_user.power_or_chrome_user_only?
+        puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked an account to a SFDC account. Attempting to automatically load SFDC contacts..."
+        client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+        unless client.nil?  #successful connection established
+          errors = Contact.load_salesforce_contacts(client, salesforce_account.contextsmith_account_id, salesforce_account.salesforce_account_id)
+          if errors.nil? 
+            puts "Contacts successfully loaded."
+          else # Salesforce query error occurred
+            puts "Error in Contact.load_salesforce_contacts()! Attempted to load contacts from Salesforce Account \"#{salesforce_account.salesforce_account_name}\" (sfdc_id='#{salesforce_account.salesforce_account_id}') to CS Account \"#{salesforce_account.account.name}\" (account_id='#{salesforce_account.contextsmith_account_id}')."
+          end
+        end
+      end
     end
 
     respond_to do |format|
@@ -150,7 +167,7 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Load SFDC Accounts or Opportunities into CS models, or Load SFDC Contacts into mapped CS Accounts
+  # Load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts.
   def refresh_salesforce
     case params[:entity_type]
     when "accounts"
@@ -177,7 +194,7 @@ class SalesforceController < ApplicationController
 
             unless errors.nil? # Salesforce query error occurred
               failure_method_location = "Contact.load_salesforce_contacts()"
-              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (stream_id='#{a.id}').  Details: #{errors}"
+              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  Details: #{errors}"
               render_internal_server_error(method_name, failure_method_location, error_detail)
               return
             end
@@ -187,6 +204,7 @@ class SalesforceController < ApplicationController
           return
         end
       end
+    # end when params[:entity_type] = "contacts"
     when "activities"
       # Load SFDC Activities into CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
       # Note: Ignores exported CS data residing on SFDC
@@ -230,53 +248,92 @@ class SalesforceController < ApplicationController
         render_service_unavailable_error(method_name)
         return
       end
+    # end when params[:entity_type] = "activities"
     else
-      # Error: unsupported Salesforce entity type
+      # Error: unsupported Salesforce entity type; do nothing
     end
+
     render :text => ' '
   end
 
-  # CS Activities are exported into the remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
-  # Note: Ignores imported SFDC data residing locally
-  def export_activities
-    method_name = "export_activities()"
+  # Export CS Activity or Contacts into the mapped SFDC Account (or Opportunity)
+  def export_salesforce
+    case params[:entity_type]
+    when "activities"
+      # All CS Activities are exported into the remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
+      # Note: Ignores imported SFDC activity residing locally
+      method_name = "export_salesforce#activities()"
+      @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
 
-    @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
+      @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-    @client = SalesforceService.connect_salesforce(current_user.organization_id)
+      Activity.delete_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
 
-    Activity.delete_all_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
+      unless @client.nil?  # unless connection error
+        @streams.each do |s|
+          if s.salesforce_opportunity.nil? # Stream not linked to SFDC Opportunity
+            if !s.account.salesforce_accounts.empty? # Stream linked to SFDC Account
+              s.account.salesforce_accounts.each do |sfa|
+                errors = Activity.export_cs_activities(@client, s, sfa.salesforce_account_id, "Account")
 
-    unless @client.nil?  # unless connection error
-      @streams.each do |s|
-        if s.salesforce_opportunity.nil? # Stream not linked to SFDC Opportunity
-          if !s.account.salesforce_accounts.empty? # Stream linked to SFDC Account
-            s.account.salesforce_accounts.each do |sfa|
-              errors = Activity.export_cs_activities(@client, s, sfa.salesforce_account_id, "Account")
-
-              unless errors.nil? # Salesforce query error occurred
-                method_location = "Activity.export_cs_activities()"
-                error_detail = "Error while attempting to export CS activity from CS Stream \"#{s.name}\" (stream_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{errors}"
-                render_internal_server_error(method_name, method_location, error_detail)
-                return
+                unless errors.nil? # Salesforce query error occurred
+                  method_location = "Activity.export_cs_activities()"
+                  error_detail = "Error while attempting to export CS activity from CS Stream \"#{s.name}\" (stream_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{errors}"
+                  render_internal_server_error(method_name, method_location, error_detail)
+                  return
+                end
               end
             end
-          end
-        else # Stream linked to Opportunity
-          # If Stream is linked in Opportunity, then save on Opportunity level
-          errors = Activity.export_cs_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
+          else # Stream linked to Opportunity
+            # If Stream is linked in Opportunity, then save on Opportunity level
+            errors = Activity.export_cs_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
-          unless errors.nil? # Salesforce query error occurred
-            method_location = "Activity.export_cs_activities()"
-            error_detail = "Error while attempting to export CS activity from CS Stream \"#{s.name}\" (stream_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{errors}"
-            render_internal_server_error(method_name, method_location, error_detail)
-            return
+            unless errors.nil? # Salesforce query error occurred
+              method_location = "Activity.export_cs_activities()"
+              error_detail = "Error while attempting to export CS activity from CS Stream \"#{s.name}\" (stream_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{errors}"
+              render_internal_server_error(method_name, method_location, error_detail)
+              return
+            end
           end
         end
+      else
+        render_service_unavailable_error(method_name)
+        return
       end
+    #end when params[:entity_type] = "activities"
+    when "contacts"
+      # Export local Contacts out to SFDC Accounts, depending on the explicit (primary) mapping of a CS account to SFDC Account (first one).
+      method_name = "export_salesforce#contacts()"
+      account_mapping = []
+      accounts = Account.visible_to(current_user)
+      accounts.each do |a|
+        account_mapping << [a, a.salesforce_accounts.first] if a.salesforce_accounts.present?
+      end
+
+      unless account_mapping.empty?  # no visible or mapped accounts
+        client = SalesforceService.connect_salesforce(current_user.organization_id)
+        #client = nil #simulate connection error
+        unless client.nil?  # unless SFDC connection error
+          account_mapping.each do |m|
+            a = m[0]
+            sfa = m[1]
+            errors = Contact.export_cs_contacts(client, a.id, sfa.salesforce_account_id)
+
+            unless errors.nil? # Salesforce query error occurred
+              failure_method_location = "Contact.export_cs_contacts()"
+              error_detail = "Error while attempting to export CS contacts from CS Account \"#{a.name}\" (account_id='#{a.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{errors}"
+              render_internal_server_error(method_name, failure_method_location, error_detail)
+              return
+            end
+          end
+        else
+          render_service_unavailable_error(method_name)
+          return
+        end
+      end
+    # end when params[:entity_type] = "contacts"
     else
-      render_service_unavailable_error(method_name)
-      return
+      # Error: unsupported Salesforce entity type; do nothing
     end
 
     render :text => ' '
@@ -350,48 +407,6 @@ class SalesforceController < ApplicationController
     render :text => ' '
   end
 
-  # Returns a hash of:
-  # :sf_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
-  # :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
-  # :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
-  # :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
-  def self.get_salesforce_fields(organization_id, custom_fields_only=false)
-    client = SalesforceService.connect_salesforce(organization_id)
-
-    return nil if client.nil?
-
-    sf_account_fields = {}
-    sf_account_fields_metadata = {}
-    sf_opportunity_fields = {}
-    sf_opportunity_fields_metadata = {}
-
-    account_describe = client.describe('Account')
-    account_describe.fields.each do |f|
-      sf_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
-      metadata = {}
-      metadata["type"] = f.type
-      metadata["custom"] = f.custom
-      metadata["updateable"] = f.updateable
-      metadata["nillable"] = f.nillable
-      sf_account_fields_metadata[f.name] = metadata
-    end
-    account_describe = client.describe('Opportunity')
-    account_describe.fields.each do |f|
-      sf_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
-      metadata = {}
-      metadata["type"] = f.type
-      metadata["custom"] = f.custom
-      metadata["updateable"] = f.updateable
-      metadata["nillable"] = f.nillable
-      sf_opportunity_fields_metadata[f.name] = metadata
-    end
-
-    sf_account_fields = sf_account_fields.sort_by { |k,v| v.upcase }
-    sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
-
-    return {sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata}
-  end
-
   def remove_account_link
     salesforce_account = SalesforceAccount.eager_load(:account).find_by(id: params[:id], contextsmith_organization_id: current_user.organization_id)
 
@@ -431,6 +446,48 @@ class SalesforceController < ApplicationController
     respond_to do |format|
       format.html { redirect_to(request.referer || settings_path) }
     end
+  end
+
+  # Gets Salesforce (custom) fields in the form of the following hash:
+  #   :sf_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
+  #   :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
+  #   :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
+  #   :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
+  def self.get_salesforce_fields(organization_id, custom_fields_only=false)
+    client = SalesforceService.connect_salesforce(organization_id)
+
+    return nil if client.nil?
+
+    sf_account_fields = {}
+    sf_account_fields_metadata = {}
+    sf_opportunity_fields = {}
+    sf_opportunity_fields_metadata = {}
+
+    account_describe = client.describe('Account')
+    account_describe.fields.each do |f|
+      sf_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      metadata = {}
+      metadata["type"] = f.type
+      metadata["custom"] = f.custom
+      metadata["updateable"] = f.updateable
+      metadata["nillable"] = f.nillable
+      sf_account_fields_metadata[f.name] = metadata
+    end
+    account_describe = client.describe('Opportunity')
+    account_describe.fields.each do |f|
+      sf_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      metadata = {}
+      metadata["type"] = f.type
+      metadata["custom"] = f.custom
+      metadata["updateable"] = f.updateable
+      metadata["nillable"] = f.nillable
+      sf_opportunity_fields_metadata[f.name] = metadata
+    end
+
+    sf_account_fields = sf_account_fields.sort_by { |k,v| v.upcase }
+    sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
+
+    return {sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata}
   end
 
   private
@@ -502,7 +559,6 @@ class SalesforceController < ApplicationController
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
-
 
   def render_service_unavailable_error(method_name)
     puts "****SFDC****: Salesforce service unavailable in SalesforceController.#{method_name}: Cannot establish a connection!"

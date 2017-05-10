@@ -50,7 +50,7 @@ class Activity < ActiveRecord::Base
   scope :notes, -> { where category: CATEGORY[:Note] }
   scope :meetings, -> { where category: CATEGORY[:Meeting] }
   scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
-  scope :from_lastweek, -> { where last_sent_date: (Time.current.yesterday.midnight - 1.weeks)..Time.current.yesterday.end_of_day }
+  scope :from_lastweek, -> { where last_sent_date: 1.week.ago.midnight..Time.current.yesterday.end_of_day }
   scope :reverse_chronological, -> { order last_sent_date: :desc }
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
@@ -192,7 +192,13 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Parameters:  filter_predicates is a hash that contains several keys -- "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  # Copies Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS stream.
+  # Parameters:   client - SFDC connection
+  #               project - the CS stream into which to load the SFDC activity
+  #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
+  #               type - to specify loading from an SFDC "Account" or "Opportunity"
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               limit (optional) - the max number of activity records to process
   def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
     val = []
     if filter_predicates["entity"] == ""
@@ -235,7 +241,7 @@ class Activity < ActiveRecord::Base
         end
 
         insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "note", "created_at", "updated_at") VALUES'
-        on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages'
+        on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET title = EXCLUDED.title, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages, last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at'
         values = val.join(', ')
 
         if !val.empty?
@@ -254,15 +260,16 @@ class Activity < ActiveRecord::Base
     nil # successful request
   end
 
-  # This is used to bulk delete CS Activities in the SFDC entity (ActivityHistory).
-  # Parameters:  project - CS stream to export
-  #              type - SFDC entity type: 'Account' or 'Opportunity'
-  # Notes:  SFDC type formats:  dateTime = "2017-03-01T00:00:00z",  date = "2017-03-01"
-  def self.delete_all_cs_activities(client, type="Account", from_date=nil, to_date=nil, limit=200)
+  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory).
+  # Parameters:   client - SFDC connection
+  #               type - SFDC entity type: 'Account' or 'Opportunity'
+  #               from_date (optional) - the start date of a date range (e.g., "2018-01-01")
+  #               to_date (optional) - the end date of a date range (e.g., "2018-01-01")
+  # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
+  def self.delete_cs_activities(client, type="Account", from_date=nil, to_date=nil)
     delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'"
     delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
     delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
-    delete_tasks_query_stmt += " LIMIT #{limit}"
     puts "Deleting tasks returned from SFDC query \'#{delete_tasks_query_stmt}\'...."
     tasks_to_delete = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
     #tasks = client.query(delete_tasks_query_stmt)
@@ -274,10 +281,13 @@ class Activity < ActiveRecord::Base
     end
   end
 
-  # This is used to bulk export CS Activities to SFDC entity (ActivityHistory).
-  # Parameters:  project - CS stream to export
-  #              type - SFDC entity type: 'Account' or 'Opportunity'
-  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil, limit=200)
+  # Bulk export CS Activities to a SFDC Account or Opportunity (ActivityHistory). Returns nil if successful, otherwise, otherwise returns the error (string).
+  # Parameters:   client - SFDC connection
+  #               project - the CS stream from which to export
+  #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
+  #               type - to specify exporting into an SFDC "Account" or "Opportunity"
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil)
     project.activities.each do |a|
       description = a.category + " activity (imported from ContextSmith) ——\n"
       activity_date = Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d")
@@ -338,21 +348,21 @@ class Activity < ActiveRecord::Base
       end
 
       sObject_meta = { id: sfdc_id, type: type }
-      update_details = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "#{CS_ACTIVITY_SFDC_EXPORT_PREFIX} #{a.category}: #{a.title}", priority: 'Normal', description: description }
+      sObject_fields = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "#{CS_ACTIVITY_SFDC_EXPORT_PREFIX} #{a.category}: #{a.title}", priority: 'Normal', description: description }
 
       puts "----> sObject_meta:\n #{sObject_meta}\n"
-      puts "----> update_details:\n #{update_details}\n"
-      results = SalesforceService.update_salesforce(client, sObject_meta, update_details, "ActivityHistory")
+      puts "----> sObject_fields:\n #{sObject_fields}\n"
+      results = SalesforceService.update_salesforce(client: client, sObject_meta: sObject_meta, update_type: "activity", sObject_fields: sObject_fields)
       
       unless results.nil?  # unless failed Salesforce query
-        puts "-> a SFDC Task was created from ContextSmith activity! New task Id='#{results}'."
+        puts "-> a SFDC Task was created from a ContextSmith activity. New Task Id='#{results}'."
       else  # Salesforce query failure
-        #return "error=#{results}"  # proprogate error (if any) to caller
-        return "None"  #no error details to propogate to caller
+        #return "None"  #no error details to propogate to caller
+        return "sObject_fields=#{sObject_fields}"  #parameter details to propogate to caller
       end
     end # project.activities.each do
 
-    nil # successful request
+    nil # successful creation from request
   end
 
   #
