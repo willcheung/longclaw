@@ -151,7 +151,7 @@ class ExtensionController < ApplicationController
     end
 
     @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
-    @linked_to_sfdc = !@project.salesforce_opportunity.nil? || @project.account.salesforce_accounts.present?
+    @linked_to_sfdc = @project && (!@project.salesforce_opportunity.nil? || @project.account.salesforce_accounts.present?)
     @enable_sfdc_login_and_linking = current_user.admin? || current_user.power_or_chrome_user_only?
     @enable_sfdc_refresh = @enable_sfdc_login_and_linking  # refresh and login/linking permissions can be separate in the future
 
@@ -187,8 +187,8 @@ class ExtensionController < ApplicationController
     success
   end
 
-  # helper method for creating people, used in set_account_and_project & create_project (@project should already be set before calling this)
-  # by default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
+  # Helper method for creating people, used in set_account_and_project & create_project (@project should already be set before calling this)
+  # By default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
   def create_people(status=ProjectMember::STATUS[:Pending])
     if params[:internal].present?
       internal = params[:internal].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } } 
