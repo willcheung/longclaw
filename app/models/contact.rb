@@ -70,25 +70,24 @@ class Contact < ActiveRecord::Base
     org = project.account.organization
     domain = get_domain(address)
     if valid_domain?(domain)
-      subdomain = domain
-      domain = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
+      primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
 
       ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
       # find account this new member should belong to
-      account = org.accounts.find_by_domain(domain)
+      account = org.accounts.find_by_domain(primary_domain)
       # create a new account for this domain if one doesn't exist yet
       unless account
         account = Account.create(
-          domain: domain,
-          name: domain,
+          domain: primary_domain,
+          name: primary_domain,
           category: "Customer",
           address: "",
-          website: "http://www.#{domain}",
+          website: "http://www.#{primary_domain}",
           owner_id: project.owner_id,
           organization: org,
           created_by: project.owner_id)
-        subdomain_msg = domain != subdomain ? " (subdomain: #{subdomain})" : ""
-        puts "** Created a new account for domain='#{domain}'#{subdomain_msg}, organization='#{org}'. **"
+        subdomain_msg = primary_domain != domain ? " (subdomain: #{domain})" : ""
+        puts "** Created a new account for domain='#{primary_domain}'#{subdomain_msg}, organization='#{org}'. **"
       end
 
       # find or create contact for this member

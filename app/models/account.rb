@@ -54,38 +54,42 @@ class Account < ActiveRecord::Base
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
 
     def self.create_from_clusters(external_members, owner_id, organization_id)
-        grouped_external_members = external_members.group_by{ |x| get_domain(x.address) }
+        domain_grouped_external_members = external_members.group_by { |x| get_domain(x.address) }
+        domain_grouped_external_members.keep_if do |domain, person_array|
+            valid = valid_domain?(domain)
+            p "** Skipped processing the invalid domain='#{domain}'. **" if !valid
+            valid
+        end
+        grouped_external_members = Hash.new(Array.new)
+        domain_grouped_external_members.each do |domain, person_array|
+            primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into one primary domain
+            p "** subdomain '#{domain}' detected! external members to be merged with primary domain '#{primary_domain}'. **" if primary_domain != domain
+            grouped_external_members[primary_domain] += person_array
+        end
         existing_accounts = Account.where(domain: grouped_external_members.keys, organization_id: organization_id).includes(:contacts)
         existing_domains = existing_accounts.map(&:domain)
 
         # Create missing accounts
-        (grouped_external_members.keys - existing_domains).each do |d|
-            if valid_domain?(d)
-                subdomain = d
-                d = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
-                org_info = get_org_info(d)
+        (grouped_external_members.keys - existing_domains).each do |domain|
+            org_info = get_org_info(domain)
 
-                account = Account.new(domain: d, 
-                                      name: org_info[0], 
-                                      category: "Customer",
-                                      address: org_info[1],
-                                      website: "http://www.#{d}",
-                                      owner_id: owner_id, 
-                                      organization_id: organization_id,
-                                      created_by: owner_id)
-                account.save(validate: false)
+            account = Account.new(domain: domain, 
+                                  name: org_info[0], 
+                                  category: "Customer",
+                                  address: org_info[1],
+                                  website: "http://www.#{domain}",
+                                  owner_id: owner_id, 
+                                  organization_id: organization_id,
+                                  created_by: owner_id)
+            account.save(validate: false)
 
-                subdomain_msg = d != subdomain ? " (subdomain: #{subdomain})" : ""
-                puts "** Created a new account for domain='#{d}'#{subdomain_msg}, organization_id='#{organization_id}'. **"
+            puts "** Created a new account for domain='#{domain}', organization_id='#{organization_id}'. **"
 
-                grouped_external_members[d].each do |c|
-                    # Create contacts
-                    account.contacts.create(first_name: get_first_name(c.personal),
-                                            last_name: get_last_name(c.personal),
-                                            email: c.address)
-                end
-            else
-                puts "** Skipped processing the invalid domain='#{d}'. **"
+            grouped_external_members[domain].each do |c|
+                # Create contacts
+                account.contacts.create(first_name: get_first_name(c.personal),
+                                        last_name: get_last_name(c.personal),
+                                        email: c.address)
             end
         end
 
