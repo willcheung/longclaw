@@ -125,7 +125,7 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Links a CS account to a Salesforce account.  If a Power User or Trial (Chrome) User links a SFDC account, then automatically import the SFDC contacts.
+  # Links a CS account to a Salesforce account.  If a Power User or trial/Chrome User links a SFDC account, then automatically import the SFDC contacts.
   def link_salesforce_account
     # One CS Account can be linked to many Salesforce Accounts
     salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
@@ -133,8 +133,8 @@ class SalesforceController < ApplicationController
       salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save
 
-      # Automatically import the SFDC contacts for Power Users and Trial (Chrome) Users
-      if current_user.power_or_chrome_user_only?
+      # Automatically import the SFDC contacts for Power Users and trial/Chrome Users
+      if current_user.power_or_trial_only?
         puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked an account to a SFDC account. Attempting to automatically load SFDC contacts..."
         client = SalesforceService.connect_salesforce(current_user.organization_id)
 

@@ -59,7 +59,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   	reset_session
   	puts "Error: Oauth verification failure!"
     ahoy.track("Error logging in", message: "Oauth verification failure!")
-  	redirect_to new_user_registration_path, :flash => { :error => "Can't login using your Google account. Your administrator may need to grant access for you." }
+  	redirect_to new_user_registration_path, :flash => { :error => "Can't log in using your Google account. Your administrator may need to grant access for you." }
   end
 
   # Correctly redirect to the right page after returning from OAuth call (whether in web app or Chrome extension)
