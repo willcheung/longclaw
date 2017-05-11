@@ -26,7 +26,7 @@ class ContextsmithService
   end
   
   # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
-  def self.load_calendar_from_backend(project, max=100, after=150.days.ago.to_i, before=Time.current.to_i, save_in_db=true)
+  def self.load_calendar_from_backend(project, max=100, after=150.days.ago.to_i, before=1.5.days.from_now.to_i, save_in_db=true)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
     params =  "&max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
     
