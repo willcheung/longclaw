@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block extension-block <%= 'future-activity' if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %>" >
+<div class="vertical-timeline-block extension-block <%= 'future-activity' if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %> ">
 
     <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon secondary-bg">
