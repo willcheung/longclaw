@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block extension-block">
+<div class="vertical-timeline-block extension-block <%= 'future-activity' if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %>" >
 
     <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon secondary-bg">
@@ -56,7 +56,7 @@
 
         <% elsif a.category == Activity::CATEGORY[:Meeting] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
-            <small><%= get_calendar_member_names(a.to, 'other', 1) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> ago</span><br/></small>
+            <small><%= get_calendar_member_names(a.to, 'other', 1) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> <%= Time.zone.at(a.last_sent_date) > Time.current ? "from now" : "ago" %></span><br/></small>
             <p class="time-ago"><a href="/projects/<%= a.project.id + '/#' + a.id.to_s %>" target="_blank">View in ContextSmith <i class="fa fa-external-link"></i></a></p>
 
         <% elsif a.category == Activity::CATEGORY[:Salesforce] %>

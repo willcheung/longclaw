@@ -574,6 +574,10 @@ a.suggested-action:hover, a.suggested-action:focus {
     cursor: default;
 }
 
+.future-activity {
+  opacity: 0.5;
+}
+
 /** Chrome Extension **/
 .extension-sidebar ul.nav.nav-tabs li a {
   font-size: 11px;
