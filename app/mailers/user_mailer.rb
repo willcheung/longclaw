@@ -13,8 +13,9 @@ class UserMailer < ApplicationMailer
   def daily_summary_email(user)
     @user = user
     @subs = user.valid_streams_subscriptions.daily
+    @upcoming_meetings = user.upcoming_meetings
 
-    unless @subs.blank?
+    unless @subs.blank? && @upcoming_meetings.blank?
       puts "Checking daily subscription for #{user.email}"
       @current_user_timezone = user.time_zone
       @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email)

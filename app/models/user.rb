@@ -86,6 +86,11 @@ class User < ActiveRecord::Base
     self.subscriptions.joins(:project).where(projects: {id: Project.visible_to(self.organization_id, self.id).pluck(:id)})
   end
 
+  def upcoming_meetings
+    Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current.midnight..Time.current.end_of_day))
+    .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{self.email}\"}]'::jsonb").order(:last_sent_date)
+  end
+
   def self.from_omniauth(auth, organization_id, user_id=nil)
     where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
       if user_id
