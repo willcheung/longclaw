@@ -110,7 +110,7 @@ class SalesforceService
         end
         # update_result is the new Contact's sObject Id ?
         if update_result == false
-          puts "*** SalesforceService error: Export Salesforce Contacts error while creating/updating a SFDC Contact. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
+          puts "*** SalesforceService error: Export Contacts to Salesforce error while creating/updating a SFDC Contact. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
           update_result = nil
         end
       else
@@ -136,7 +136,7 @@ class SalesforceService
     query_result = self.query_salesforce(client, query_statement)
 
     if query_result.nil?
-      puts "*** SalesforceService error: Export Salesforce Contacts error while querying SFDC. Standard SFDC columns were used, but query will still fail if somehow not all columns were set up on Salesforce!  Check query on SFDC Developer console or check Contact fields on Salesforce.com.  query_statement: #{ query_statement }, sObject_meta: #{ params }, sObject_fields: #{ params[:sObject_fields] }"
+      puts "*** SalesforceService error: Export Contacts to Salesforce error while querying SFDC. Standard SFDC columns were used, but query will still fail if somehow not all columns were set up on Salesforce!  Check query on SFDC Developer console or check Contact fields on Salesforce.com.  query_statement: #{ query_statement }, sObject_meta: #{ params }, sObject_fields: #{ params[:sObject_fields] }"
       return nil  # propogate error to caller
     end
 
@@ -149,17 +149,17 @@ class SalesforceService
         #puts "...with params: #{params}"
         upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
         if upsert_result == false
-          puts "*** SalesforceService error: Export Salesforce Contacts error while creating a new SFDC Contact. sObject_meta: #{ params }, sObject_fields: #{params[:sObject_fields]}"
+          puts "*** SalesforceService error: Export Contacts to Salesforce error while creating a new SFDC Contact. sObject_meta: #{ params }, sObject_fields: #{params[:sObject_fields]}"
           upsert_result = nil
         end
       rescue => e
         if (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
-          print "*** SalesforceService error: Export Salesforce Contacts error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only minimal Contact fields: FirstName, LastName, and Email ... "
+          print "*** SalesforceService error: Export Contacts to Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only minimal Contact fields: FirstName, LastName, and Email ... "
           upsert_result = client.create('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email]) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
           puts "Contact successfully created!"
           return upsert_result  #return "N/A (duplicate contact; skipped!)"
         else
-          puts "*** SalesforceService error: Export Salesforce Contacts error while creating a new SFDC Contact: \"#{e}\". sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
+          puts "*** SalesforceService error: Export Contacts to Salesforce error while creating a new SFDC Contact: \"#{e}\". sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
         end
         upsert_result = nil
       end
@@ -180,13 +180,13 @@ class SalesforceService
     rescue => e
       error = "*** SalesforceService error: "
       if (e.to_s[0...25]) == "FIELD_INTEGRITY_EXCEPTION" # In case SFDC Contact was deleted on Salesforce, or external SFDC Id of Contact is invalid
-        puts error + "Export Salesforce Contacts error -- invalid salesforce Contact Id -- while updating SFDC Contact! (#{e})  Will attempt to upsert Contact using e-mail instead."
+        puts error + "Export Contacts to Salesforce error -- invalid salesforce Contact Id -- while updating SFDC Contact! (#{e})  Will attempt to upsert Contact using e-mail instead."
         return upsert_sfdc_contact(client: client, sfdc_account_id: sfdc_account_id, email: params[:Email], params: params)
       # elsif (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
-      #   error += "Export Salesforce Contacts error -- DUPLICATE contact detected -- while updating SFDC Contact! Contact skipped."
+      #   error += "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while updating SFDC Contact! Contact skipped."
       #   update_result = "N/A (duplicate contact; skipped!)"
       else
-        error += "Export Salesforce Contacts error while updating a SFDC Contact: \"#{e}\"" 
+        error += "Export Contacts to Salesforce error while updating a SFDC Contact: \"#{e}\"" 
         update_result = nil
       end
       error += "sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
