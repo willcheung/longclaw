@@ -8,7 +8,7 @@ class SettingsController < ApplicationController
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 
 		if (@salesforce_user.nil? && # could not connect via organization/admin login
-				current_user.power_or_chrome_user_only?)  # AND is an individual (power user or chrome user)
+				current_user.power_or_trial_only?)  # AND is an individual (power user or trial/Chrome user)
 			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
 			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @individual_salesforce_user.nil?
 		end
