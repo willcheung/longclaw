@@ -28,30 +28,29 @@ class ExtensionController < ApplicationController
   end
 
   def private_domain
-    #VPL @users = []
-    # @users = []    +    @nonusers = []
-    # @nonusers = []     +    #p "params[:internal]: #{params[:internal]}"
-    # #p "params[:internal]: #{params[:internal]}"     +    if params[:internal].size == 1
-    # if params[:internal].size == 1     +      #name = params[:internal]["0"][0]
-    #   #name = params[:internal]["0"][0]    +      email = params[:internal]["0"][1] 
-    #   email = params[:internal]["0"][1]      +      user = User.find_by_email(email)
-    #   user = User.find_by_email(email)     +      if user.present?
-    #   if user.present?     +        @users << user
-    #     @users << user     +      else
-    #   else     +        @nonusers << email
-    #     @nonusers << email     +      end
-    #   end    +    else
-    # else     +      params[:internal].each do |u|
-    #   params[:internal].each do |u|    +        name = u[1][0]
-    #     name = u[1][0]     +        email = u[1][1] 
-    #     email = u[1][1]      +        user = User.find_by_email(email)
-    #     user = User.find_by_email(email)     +        if user.present?
-    #     if user.present?     +          @users << user
-    #       @users << user     +        else
-    #     else     +          @nonusers << email
-    #       @nonusers << email     +        end
-    #     end    +      end
-    #   end    +    end
+    # VPL @users = []
+    # @nonusers = []
+    # #p "params[:internal]: #{params[:internal]}"
+    # if params[:internal].size == 1
+    #   #name = params[:internal]["0"][0]
+    #   email = params[:internal]["0"][1] 
+    #   user = User.find_by_email(email)
+    #   if user.present?
+    #     @users << user
+    #   else
+    #     @nonusers << email
+    #   end
+    # else
+    #   params[:internal].each do |u|
+    #     name = u[1][0]
+    #     email = u[1][1] 
+    #     user = User.find_by_email(email)
+    #     if user.present?
+    #       @users << user
+    #     else
+    #       @nonusers << email
+    #     end
+    #   end
     # end
   end
 
