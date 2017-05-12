@@ -63,7 +63,7 @@
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
             <small><%= a.from[0].personal ? a.from[0].personal : a.from[0].address %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> ago</span><br/></small>
             <%= get_expandable_text_html(text: a.note, id: a.id, length: 100, max_length: 500, separator: ' ').html_safe %> 
-            <% if @salesforce_base_URL.present? %><p class="time-ago"><a href="<%= @salesforce_base_URL + "/" + a.email_messages.first["Id"] %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a></p><% end %>
+            <% if @salesforce_base_URL.present? %><p class="time-ago"><a href="<%= @salesforce_base_URL + "/" + a.backend_id %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a></p><% end %>
 
         <% elsif a.category == Activity::CATEGORY[:Basecamp2] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong> (<%= a.email_messages.size %>)</h4>
