@@ -28,31 +28,30 @@ class ExtensionController < ApplicationController
   end
 
   def private_domain
-    #VPL 
-    # @users = []
-    # @nonusers = []
-    # #p "params[:internal]: #{params[:internal]}"
-    # if params[:internal].size == 1
-    #   #name = params[:internal]["0"][0]
-    #   email = params[:internal]["0"][1] 
-    #   user = User.find_by_email(email)
-    #   if user.present?
-    #     @users << user
-    #   else
-    #     @nonusers << email
-    #   end
-    # else
-    #   params[:internal].each do |u|
-    #     name = u[1][0]
-    #     email = u[1][1] 
-    #     user = User.find_by_email(email)
-    #     if user.present?
-    #       @users << user
-    #     else
-    #       @nonusers << email
-    #     end
-    #   end
-    # end
+    @users = []
+    @nonusers = []
+    #p "params[:internal]: #{params[:internal]}"
+    if params[:internal].size == 1
+      #name = params[:internal]["0"][0]
+      email = params[:internal]["0"][1] 
+      user = User.find_by_email(email)
+      if user.present?
+        @users << user
+      else
+        @nonusers << email
+      end
+    else
+      params[:internal].each do |u|
+        name = u[1][0]
+        email = u[1][1] 
+        user = User.find_by_email(email)
+        if user.present?
+          @users << user
+        else
+          @nonusers << email
+        end
+      end
+    end
   end
 
   def account
@@ -108,14 +107,12 @@ class ExtensionController < ApplicationController
     ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Name(?)', 'email@address.com'] }
 
     # If there are no external users specified, redirect to extension#private_domain page
-    redirect_to extension_private_domain_path and return if params[:external].blank?
-    #VPL redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
+    redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
 
     ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
     # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#private_domain page
-    redirect_to extension_private_domain_path and return if ex_emails.blank?
-    #VPL redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if ex_emails.blank? 
+    redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if ex_emails.blank? 
 
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 

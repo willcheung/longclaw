@@ -1,5 +1,22 @@
-<h3 class="text-center middle-box"><strong>This looks like an internal e-mail conversation .</strong></h3>
+<h3 class="text-center middle-box"><strong>This looks like an internal e-mail conversation or person.</strong></h3>
 
 <h3 class="text-center" style="margin:40px 0; line-height:1.25em">ContextSmith does not track any internal e-mails to protect your privacy and reduce noise.</h3>
 
-<h3 class="text-center" style="line-height: 1.25em">Please click or mouse-over a customer e-mail to get more context from a timeline and contacts.</h3>
+<h3 class="text-center" style="line-height: 1.25em">Please mouse-over a customer or open a customer e-mail to get more context from a timeline and contacts.</h3>
+
+<hr/>
+
+Users found:<br/>
+<%= "None" if @users.empty? %>
+<ol>
+<% @users.each do |u| %>
+    <li><%= get_full_name(u) %></li>
+<% end %>
+</ol>
+Non-users found:<br/>
+<%= "None" if @nonusers.empty? %>
+<ol>
+<% @nonusers.each do |e| %>
+    <li><%= e %></li>
+<% end %>
+</ol>
