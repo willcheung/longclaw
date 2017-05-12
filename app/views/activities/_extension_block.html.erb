@@ -38,7 +38,7 @@
         <% if a.category == Activity::CATEGORY[:Conversation] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong> (<%= a.email_messages.size %>)</h4>
             <% m = a.email_messages.last %>
-            <small><span class="message-author" href="#" title="temp"> <%= m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal %></span>&nbsp;to&nbsp;<%= get_conversation_member_names([], m.to, m.cc, 'other', 1) %> &nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;<span class="time-ago"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</span><br/></small>
+            <small><span class="message-author" href="#" title="temp"> <%= m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal %></span>&nbsp;to&nbsp;<span data-toggle="tooltip" data-placement="top" data-original-title="<%= get_conversation_member_names([], m.to, m.cc, '', 99) %>"><%= get_conversation_member_names([], m.to, m.cc, 'other', 1) %></span> &nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;<span class="time-ago"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</span><br/></small>
             <%= if m.content.nil? || m.content.is_a?(String)
                    get_expandable_text_html(text: m.content, id: a.id, length: 100, max_length: 500, separator: ' ').html_safe
                 else
