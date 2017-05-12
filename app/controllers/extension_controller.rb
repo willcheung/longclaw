@@ -107,9 +107,8 @@ class ExtensionController < ApplicationController
     ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Name(?)', 'email@address.com'] }
 
     # If there are no external users specified, redirect to extension#private_domain page
-    redirect_to extension_private_domain_path and return if params[:external].blank?     +    redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
+    redirect_to extension_private_domain_path and return if params[:external].blank?
     #VPL redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
-
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
 
     ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
