@@ -847,7 +847,8 @@ class User < ActiveRecord::Base
     self.role == OTHER_ROLE[:Trial]
   end
 
-  def power_or_chrome_user_only?
+  # Trial user = Chrome User (TODO: make "Chrome user" role obsolete)
+  def power_or_trial_only?
     [ROLE[:Poweruser], OTHER_ROLE[:Chromeuser], OTHER_ROLE[:Trial]].include? (self.role) 
   end
 

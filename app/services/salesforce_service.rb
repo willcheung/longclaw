@@ -125,10 +125,10 @@ class SalesforceService
   private
 
   # Finds a Contact in SFDC Account that matches an e-mail address.  If found, performs an update on the SFDC Contact.  If multiple Contacts are found, picks only one (first one alphabetically by last name). If not found, a new SFDC Contact is created/inserted.  Returns nil if there is an error, or the Contact's SFDC/sObject id if successful.
-  # Parameters (all required):  client - connection to Salesforce
-  #                             sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
-  #                             email  - string, the email to search for to determine the contact to upsert
-  #                             params - a hash that contains the Contact information (e.g., FirstName, Email, etc.)
+  # Parameters:  client - connection to Salesforce
+  #              sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
+  #              email  - string, the email to search for to determine the contact to upsert
+  #              params - a hash that contains the Contact information (e.g., FirstName, Email, etc.)
   # TODO: Warn user that Contacts may not be properly copied because a "Contact Duplicate Rules" in SFDC settings might be preventing this method from creating new contacts. e.g., "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , email: , params: )
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email}' ORDER BY LastName, FirstName"  # Unused: Description
