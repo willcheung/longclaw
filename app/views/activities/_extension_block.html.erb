@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block extension-block">
+<div class="vertical-timeline-block extension-block <%= 'future-activity' if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %>">
 
     <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon secondary-bg">
@@ -38,7 +38,7 @@
         <% if a.category == Activity::CATEGORY[:Conversation] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong> (<%= a.email_messages.size %>)</h4>
             <% m = a.email_messages.last %>
-            <small><%= get_conversation_member_names(a.from, a.to, a.cc, 'other', 2) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</span><br/></small>
+            <small><span class="message-author" href="#" title="temp"> <%= m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal %></span>&nbsp;to&nbsp;<%= get_conversation_member_names([], m.to, m.cc, 'other', 1) %><span class="time-ago" style="float:right"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</span><br/></small>
             <%= if m.content.nil? || m.content.is_a?(String)
                    get_expandable_text_html(text: m.content, id: a.id, length: 100, max_length: 500, separator: ' ').html_safe
                 else
@@ -56,14 +56,14 @@
 
         <% elsif a.category == Activity::CATEGORY[:Meeting] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
-            <small><%= get_calendar_member_names(a.to, 'other', 1) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> ago</span><br/></small>
+            <small><%= get_calendar_member_names(a.to, 'other', 1) %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> <%= Time.zone.at(a.last_sent_date) > Time.current ? "from now" : "ago" %></span><br/></small>
             <p class="time-ago"><a href="/projects/<%= a.project.id + '/#' + a.id.to_s %>" target="_blank">View in ContextSmith <i class="fa fa-external-link"></i></a></p>
 
         <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong></h4>
             <small><%= a.from[0].personal ? a.from[0].personal : a.from[0].address %> <span class="time-ago" style="float:right"><%= time_ago_in_words(a.last_sent_date) %> ago</span><br/></small>
             <%= get_expandable_text_html(text: a.note, id: a.id, length: 100, max_length: 500, separator: ' ').html_safe %> 
-            <% if @salesforce_base_URL.present? %><p class="time-ago"><a href="<%= @salesforce_base_URL + "/" + a.email_messages.first["Id"] %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a></p><% end %>
+            <% if @salesforce_base_URL.present? %><p class="time-ago"><a href="<%= @salesforce_base_URL + "/" + a.backend_id %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a></p><% end %>
 
         <% elsif a.category == Activity::CATEGORY[:Basecamp2] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong> (<%= a.email_messages.size %>)</h4>
@@ -95,20 +95,3 @@
     </div>
 </div>
 
-<!-- TODO: move this script to extension.js -->
-<script type="text/javascript">
-    function toggle_visibility_for_pair(id) {
-        console.log(id + ", " + id+"-short");
-        toggle_visibility(id+"-short");
-        toggle_visibility(id);
-    }
-
-    function toggle_visibility(id) {
-        console.log("toggling: " + id)
-        var e = document.getElementById(id);
-        if(e.style.display == 'block')
-            e.style.display = 'none';
-        else
-            e.style.display = 'block';
-    }
-</script>

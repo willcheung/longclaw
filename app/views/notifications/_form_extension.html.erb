@@ -1,7 +1,12 @@
 <% remote ||= false %>
 <%= simple_form_for Notification.new, remote: remote do |f| %>
-<div class="icheckbox_square-green" style="position: relative;float: left"></div>
-  <%= f.input :name, label: false, input_html: { class: "input-border input-sm" }, placeholder: "Type here to add a To-Do. (Enter to save)" %>
+<!-- <div class="icheckbox_square-green" style="position: relative;float: left"></div>-->
+  <span class="input-group-btn top" style="float: left">
+    <button class="info-bg btn-icon" disabled="true">
+      <i class="fa fa-check-square-o"></i>
+    </button>
+  </span>
+  <%= f.input :name, label: false, input_html: { class: "input-border input-sm" }, placeholder: "Type to add a To-Do. (Enter to save)" %>
   <%= f.input :project_id, label: false, as: :hidden, input_html: { value: @project.id } %>
 <% end %>
 <script type="text/javascript">
@@ -12,8 +17,8 @@
   });
 </script>
 <style>
-	input::-webkit-input-placeholder {
-		font-size: 11px;
-		color: blue;
-	}
+    input::-webkit-input-placeholder {
+        font-size: 11px;
+        color: blue;
+    }
 </style>

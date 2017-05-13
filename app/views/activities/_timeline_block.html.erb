@@ -1,4 +1,4 @@
-<div class="vertical-timeline-block <%= a.id.to_s + a.category %>" >
+<div class="vertical-timeline-block <%= a.id.to_s + a.category %> <%= 'future-activity' if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %>">
 
     <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon secondary-bg" id="<%= a.backend_id.to_s %>">
@@ -34,7 +34,14 @@
         </div>
     <% end %>
 
-    <span class="vertical-date left"><%= Time.zone.at(a.last_sent_date).strftime("%b %d") %><br />
+    <span class="vertical-date left">
+        <%= if Time.zone.at(a.last_sent_date).to_date == Date.current
+                "Today"
+            elsif Time.zone.at(a.last_sent_date).to_date == (Date.current + 1.day)
+                "Tomorrow"
+            else
+                Time.zone.at(a.last_sent_date).strftime("%b %d") 
+            end %><br />
         <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span>
 
@@ -155,7 +162,7 @@
                       true: raw('<a>Mark Private</a>')
                     }  %>
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
-                  <% if @salesforce_base_URL.present? %>&sdot; <a href="<%= @salesforce_base_URL + "/" + a.email_messages.first["Id"] %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a><% end %>
+                  <% if @salesforce_base_URL.present? %>&sdot; <a href="<%= @salesforce_base_URL + "/" + a.backend_id %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a><% end %>
                 </div>
             </div> <!-- chat discussion -->
         <% elsif a.category == Activity::CATEGORY[:Basecamp2] %>

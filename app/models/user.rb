@@ -86,6 +86,11 @@ class User < ActiveRecord::Base
     self.subscriptions.joins(:project).where(projects: {id: Project.visible_to(self.organization_id, self.id).pluck(:id)})
   end
 
+  def upcoming_meetings
+    Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current.midnight..Time.current.end_of_day))
+    .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{self.email}\"}]'::jsonb").order(:last_sent_date)
+  end
+
   def self.from_omniauth(auth, organization_id, user_id=nil)
     where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
       if user_id
@@ -515,6 +520,7 @@ class User < ActiveRecord::Base
 
   def self.count_all_activities_by_user(array_of_account_ids, array_of_user_ids, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     array_of_project_ids = Project.where(account_id: array_of_account_ids).pluck(:id)
+    return [] if array_of_account_ids.blank? || array_of_user_ids.blank? || array_of_project_ids.blank?
     query = <<-SQL
       (
         SELECT users.id, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
@@ -841,7 +847,8 @@ class User < ActiveRecord::Base
     self.role == OTHER_ROLE[:Trial]
   end
 
-  def power_or_chrome_user_only?
+  # Trial user = Chrome User (TODO: make "Chrome user" role obsolete)
+  def power_or_trial_only?
     [ROLE[:Poweruser], OTHER_ROLE[:Chromeuser], OTHER_ROLE[:Trial]].include? (self.role) 
   end
 
