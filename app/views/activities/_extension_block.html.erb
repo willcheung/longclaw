@@ -1,35 +1,35 @@
 <div class="vertical-timeline-block extension-block <%= 'future-activity' if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %>">
 
     <% if a.category == Activity::CATEGORY[:Conversation] %>
-        <div class="vertical-timeline-icon secondary-bg">
+        <div class="vertical-timeline-icon secondary-bg" id="<%=a.id%>">
             <i class="fa fa-envelope"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Note] %>
-        <div class="vertical-timeline-icon sticky-bg">
+        <div class="vertical-timeline-icon sticky-bg" id="<%=a.id%>">
             <i class="fa fa-sticky-note"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Meeting] %>
-        <div class="vertical-timeline-icon warning-bg">
+        <div class="vertical-timeline-icon warning-bg" id="<%=a.id%>">
             <i class="fa fa-calendar"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:JIRA] %>
-        <div class="vertical-timeline-icon jira-bg">
+        <div class="vertical-timeline-icon jira-bg" id="<%=a.id%>">
             <i class="jira-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Zendesk] %>
-        <div class="vertical-timeline-icon zd-bg">
+        <div class="vertical-timeline-icon zd-bg" id="<%=a.id%>">
             <i class="zd-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
-        <div class="vertical-timeline-icon salesforce-bg">
+        <div class="vertical-timeline-icon salesforce-bg" id="<%=a.id%>">
             <i class="salesforce-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Basecamp2] %>
-        <div class="vertical-timeline-icon basecamp2-bg">
+        <div class="vertical-timeline-icon basecamp2-bg" id="<%=a.id%>">
             <i class="basecamp2-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Alert] %>
-        <div class="vertical-timeline-icon danger-bg">
+        <div class="vertical-timeline-icon danger-bg" id="<%=a.id%>">
             <i class="fa fa-exclamation"></i>
         </div>
     <% end %>

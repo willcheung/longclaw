@@ -12,14 +12,13 @@
 
 <!-- TODO: move this script to extension.js -->
 <script type="text/javascript">
-    function toggle_visibility_for_pair(id) {
-        console.log(id + ", " + id+"-short");
-        toggle_visibility(id+"-short");
-        toggle_visibility(id);
+    function toggle_visibility_for_pair(id1, id2) {
+        toggle_visibility(id1);
+        toggle_visibility(id2);
     }
 
     function toggle_visibility(id) {
-        console.log("toggling: " + id)
+        //console.log("toggling: " + id)
         var e = document.getElementById(id);
         if(e.style.display == 'block')
             e.style.display = 'none';
