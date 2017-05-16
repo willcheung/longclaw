@@ -39,14 +39,14 @@ class ContextsmithService
     callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
 
     if Rails.env.production?
-      sources = [{ token: user.fresh_token, email: user.email }]
+      sources = [{ token: user.fresh_token, email: user.email, kind: 'gmail' }]
       in_domain = ""
     elsif Rails.env.test? # Test / DEBUG 
-      sources = [{ token: user.fresh_token, email: user.email }]
+      sources = [{ token: user.fresh_token, email: user.email, kind: 'gmail' }]
       in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
     else # Dev environment
       u = User.find_by_email('indifferenzetester@gmail.com')
-      sources = [{ token: u.fresh_token, email: u.email }]
+      sources = [{ token: u.fresh_token, email: u.email, kind: 'gmail' }]
       in_domain = "&in_domain=comprehend.com"
     end
     final_url = base_url + "?preview=true&time=true&neg_sentiment=0&cluster_method=BY_EMAIL_DOMAIN&max=" + max.to_s + "&callback=" + callback_url + in_domain
