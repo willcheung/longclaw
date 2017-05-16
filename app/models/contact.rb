@@ -51,6 +51,9 @@ class Contact < ActiveRecord::Base
           .group('contacts.id')
   }
 
+  PHONE_LEN_MAX = 32
+  MOBILE_LEN_MAX = 32
+
   def is_source_from_salesforce?
     return self.source == "Salesforce"
   end
@@ -128,7 +131,7 @@ class Contact < ActiveRecord::Base
   def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, LeadSource, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"  # Unused: Description, LeadSource
 
     contacts = SalesforceService.query_salesforce(client, query_statement)
     #contacts = nil #simulate SFDC query error
@@ -137,13 +140,13 @@ class Contact < ActiveRecord::Base
 
       # Keep the first contact (alphabetically, by Last then First Name) from contacts with identical e-mails; ignore contacts with no e-mail field
       contacts.each do |c|
-        email = Contact.sanitize(c[:Email])          
+        email = Contact.sanitize(c[:Email]) 
         if c[:Email].present? && emails_processed[email].nil?
           firstname = self.capitalize_first_only(c[:FirstName])
           lastname = self.capitalize_first_only(c[:LastName])
-          lead_source = c[:LeadSource]
-          lead_source = "Salesforce" if lead_source.blank?
-          lead_source = "" if lead_source == "ContextSmith"
+          #lead_source = c[:LeadSource]
+          #lead_source = "Salesforce" if lead_source.blank?
+          #lead_source = "" if lead_source == "ContextSmith"
 
           val << "('#{account_id}', 
                     #{c[:FirstName].blank? ? '\'\'' : Contact.sanitize(firstname)},
@@ -151,19 +154,22 @@ class Contact < ActiveRecord::Base
                     #{c[:Email].blank? ? '\'\'' : email},
                     #{c[:Title].blank? ? '\'\'' : Contact.sanitize(c[:Title])},
                     #{c[:Department].blank? ? 'null' : Contact.sanitize(c[:Department])},
-                    #{c[:Phone].blank? ? '\'\'' : Contact.sanitize(c[:Phone])},
-                    #{lead_source.blank? ? 'null' : Contact.sanitize(lead_source)},
-                    #{c[:MobilePhone].blank? ? 'null' : Contact.sanitize(c[:MobilePhone])},
-                    #{c[:Description].blank? ? 'null' : Contact.sanitize(c[:Description])},
-                    #{(c[:LeadSource]=="Chrome" || c[:LeadSource]=="ContextSmith") ? 'null' : "'#{c[:Id]}'" },
+                    #{c[:Phone].blank? ? '\'\'' : Contact.sanitize(c[:Phone][0...PHONE_LEN_MAX])},
+                    #{c[:MobilePhone].blank? ? 'null' : Contact.sanitize(c[:MobilePhone][0...MOBILE_LEN_MAX])},
+                    'Salesforce',
+                    #{"'#{c[:Id]}'"},
                     '#{Time.now}',
                     '#{Time.now}')"
+          ####### Unused: 
+                    #{c[:Description].blank? ? 'null' : Contact.sanitize(c[:Description])},
+                    #{lead_source.blank? ? 'null' : Contact.sanitize(lead_source)},
+                    #{(c[:LeadSource]=="Chrome" || c[:LeadSource]=="ContextSmith") ? 'null' : "'#{c[:Id]}'" },
           emails_processed[email] = email 
         end
       end
 
-      insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "source", "mobile", "background_info", "external_source_id", "created_at", "updated_at") VALUES'
-      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, title = EXCLUDED.title, department = EXCLUDED.department, phone = EXCLUDED.phone, source = EXCLUDED.source, mobile = EXCLUDED.mobile, background_info = EXCLUDED.background_info, external_source_id = EXCLUDED.external_source_id, updated_at = EXCLUDED.updated_at'
+      insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "mobile", "source", "external_source_id", "created_at", "updated_at") VALUES'  # Unused: "background_info" 
+      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, title = EXCLUDED.title, department = EXCLUDED.department, phone = EXCLUDED.phone, mobile = EXCLUDED.mobile, external_source_id = EXCLUDED.external_source_id, updated_at = EXCLUDED.updated_at'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
       values = val.join(', ')
       #puts "And inserting values....  \"#{values}\""
 
@@ -203,7 +209,8 @@ class Contact < ActiveRecord::Base
       #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
 
       sObject_meta = { id: sfdc_account_id, type: "Account" }
-      sObject_fields = { FirstName: c.first_name, LastName: c.last_name.empty? ? "(none)" : c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, LeadSource: c.source, MobilePhone: c.mobile, Description: c.background_info }
+      sObject_fields = { FirstName: c.first_name, LastName: c.last_name.empty? ? "(none)" : c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
+      # Unused: LeadSource: c.source, Description: c.background_info
       #puts "----> sObject_meta:\t #{sObject_meta}\n"
       #puts "----> sObject_fields:\t #{sObject_fields}\n"
       sObject_fields[:external_sfdc_id] = c.external_source_id if c.is_source_from_salesforce?

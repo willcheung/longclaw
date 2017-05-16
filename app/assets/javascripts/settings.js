@@ -139,7 +139,7 @@ $(document).ready(function() {
         var entity_type, entity_type_btn_str;
         var buttonTxtStr = self.attr("btnLabel");
 
-        if ($(this).attr("id").includes("salesforce-accounts-export-contacts")) {  //clicked on 'Update Salesforce Contacts'
+        if ($(this).attr("id").includes("salesforce-accounts-export-contacts")) {  //clicked on 'Export Contacts to Salesforce'
             entity_type = "contacts";
         }
         else {

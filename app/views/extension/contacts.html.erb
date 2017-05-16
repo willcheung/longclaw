@@ -16,30 +16,32 @@
 </dd>
 <% end %>
 
-<p class="text-center m-t-md"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>/arg" target="_blank">View Relationship Graph &rarr;</a></button></p>
-<p class="text-center m-t-md">
-    <% if @salesforce_user.present? %>
-        <button 
-        <%= "disabled " if !@enable_sfdc_login_linking_and_refresh %>
-        id="salesforce-ext-export-cs-contacts" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Update Salesforce Contacts" style="
-        <%= "; color: #EEE" if !@enable_sfdc_login_linking_and_refresh %>
-        ">
-        <i class="fa fa-refresh"></i>  Update Salesforce Contacts</button> <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
-        <%= @enable_sfdc_login_linking_and_refresh ? "Export Contacts to Salesforce." : "To export Contacts to the linked Salesforce Account, please contact ContextSmith support or your ContextSmith administrator." %>
+<p class="text-center m-t-md"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>/arg" target="_blank">View Relationship Graph &rarr;</a></p>
+<p class="text-center">
+    <button 
+    <%= "disabled " if @salesforce_user.nil? || !@linked_to_sfdc  %>
+    id="salesforce-ext-export-cs-contacts" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Export Contacts to Salesforce">
+    <i class="fa fa-refresh"></i>&nbsp;Export Contacts to Salesforce
+    </button>
+    <% if (@salesforce_user && !@linked_to_sfdc) || (@salesforce_user.nil? && @enable_sfdc_login_and_linking) %>
+        <i class="fa fa-exclamation-triangle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
+        <%= @salesforce_user ? "Link to a Salesforce Account first!" : "Click on Salesforce menu above and log in first!" %>
         "></i>
     <% else %>
-        Log in to sync to Salesforce
+        <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
+        <%= @salesforce_user ? (@linked_to_sfdc ? "Send Contacts to linked Salesforce Account." : "-") : (@enable_sfdc_login_and_linking ? "-" : "To export Contacts to the linked Salesforce Account, please contact ContextSmith support or your ContextSmith administrator.") %>
+        "></i>
     <% end %>
 </p>
 
-<% if @enable_sfdc_login_linking_and_refresh %>
+<% if @salesforce_user && @linked_to_sfdc %>
 <script>
     $('#salesforce-ext-export-cs-contacts').click(function(){
         var self = $(this);
         var entity_type, entity_type_btn_str;
         var buttonTxtStr = self.attr("btnLabel");
 
-        if ($(this).attr("id").includes("salesforce-ext-export-cs-contacts")) {  //clicked on 'Update Salesforce Contacts'
+        if ($(this).attr("id").includes("salesforce-ext-export-cs-contacts")) {  //clicked on 'Export Contacts to Salesforce'
             entity_type = "contacts";
         }
         else {

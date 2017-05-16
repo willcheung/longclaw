@@ -29,6 +29,7 @@ class AccountsController < ApplicationController
     @account_contacts = @account.contacts
     @clearbit_domain = @account.domain? ? @account.domain : (@account_contacts.present? ? @account_contacts.first.email.split("@").last : "")
     @project = Project.new(account: @account)
+    @contact = Contact.new(account: @account)
 
     @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}  #need this for New Stream modal
   end

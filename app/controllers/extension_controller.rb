@@ -1,9 +1,9 @@
 class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
-  before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
   before_action :get_account_types, only: [:no_account]
+  before_action :set_salesforce_user
 
   def test
     render layout: "empty"
@@ -24,7 +24,34 @@ class ExtensionController < ApplicationController
     @account = Account.new
   end
 
+  def project_error
+  end
+
   def private_domain
+    # VPL @users = []
+    # @nonusers = []
+    # #p "params[:internal]: #{params[:internal]}"
+    # if params[:internal].size == 1
+    #   #name = params[:internal]["0"][0]
+    #   email = params[:internal]["0"][1] 
+    #   user = User.find_by_email(email)
+    #   if user.present?
+    #     @users << user
+    #   else
+    #     @nonusers << email
+    #   end
+    # else
+    #   params[:internal].each do |u|
+    #     name = u[1][0]
+    #     email = u[1][1] 
+    #     user = User.find_by_email(email)
+    #     if user.present?
+    #       @users << user
+    #     else
+    #       @nonusers << email
+    #     end
+    #   end
+    # end
   end
 
   def account
@@ -72,46 +99,22 @@ class ExtensionController < ApplicationController
 
   private
 
-  def set_salesforce_user
-    @salesforce_user = nil
-
-    return if current_user.nil?
-
-    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
-
-    if current_user.admin?
-      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
-      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
-    elsif current_user.power_or_chrome_user_only?  # AND is an individual (power user or chrome user)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
-      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
-    end
-
-    @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
-    @enable_sfdc_login_linking_and_refresh = current_user.admin? || current_user.power_or_chrome_user_only?
-
-    # If no SFDC accounts found, automatically refresh the SFDC accounts list
-    if !@sfdc_accounts_exist && @enable_sfdc_login_linking_and_refresh
-      SalesforceAccount.load_accounts(current_user.organization_id) 
-      @sfdc_accounts_exist = true
-    end
-  end
-
   def set_account_and_project
     # p "*** set account and project ***"
     # p params
     ### url example: .../extension/account?internal%5B0%5D%5B%5D=Will%20Cheung&internal%5B0%5D%5B%5D=wcheung%40contextsmith.com&internal%5B1%5D%5B%5D=Kelvin%20Lu&internal%5B1%5D%5B%5D=klu%40contextsmith.com&internal%5B2%5D%5B%5D=Richard%20Wang&internal%5B2%5D%5B%5D=rcwang%40contextsmith.com&internal%5B3%5D%5B%5D=Yu-Yun%20Liu&internal%5B3%5D%5B%5D=liu%40contextsmith.com&external%5B0%5D%5B%5D=Richard%20Wang&external%5B0%5D%5B%5D=rcwang%40enfind.com&external%5B1%5D%5B%5D=Brad%20Barbin&external%5B1%5D%5B%5D=brad%40enfind.com
     ### more readable url example: .../extension/account?internal[0][]=Will Cheung&internal[0][]=wcheung@contextsmith.com&internal[1][]=Kelvin Lu&internal[1][]=klu@contextsmith.com&internal[2][]=Richard Wang&internal[2][]=rcwang@contextsmith.com&internal[3][]=Yu-Yun Liu&internal[3][]=liu@contextsmith.com&external[0][]=Richard Wang&external[0][]=rcwang@enfind.com&external[1][]=Brad Barbin&external[1][]=brad@enfind.com
-    ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Full Name', 'email@address.com'] }
+    ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Name(?)', 'email@address.com'] }
 
     # If there are no external users specified, redirect to extension#private_domain page
     redirect_to extension_private_domain_path and return if params[:external].blank?
+    #VPL redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
 
     ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
     # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#private_domain page
-    redirect_to extension_private_domain_path and return if ex_emails.blank? 
+    redirect_to extension_private_domain_path and return if ex_emails.blank?
+    #VPL redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if ex_emails.blank? 
 
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
@@ -160,6 +163,34 @@ class ExtensionController < ApplicationController
     @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
   end
 
+  def set_salesforce_user
+    @salesforce_user = nil
+
+    return if current_user.nil?
+
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
+
+    if current_user.admin?
+      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
+    elsif current_user.power_or_trial_only?  # individual power user or trial/Chrome user
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
+    end
+
+    @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
+    @linked_to_sfdc = @project && (!@project.salesforce_opportunity.nil? || @project.account.salesforce_accounts.present?)
+    @enable_sfdc_login_and_linking = current_user.admin? || current_user.power_or_trial_only?
+    @enable_sfdc_refresh = @enable_sfdc_login_and_linking  # refresh and login/linking permissions can be separate in the future
+
+    # If no SFDC accounts found, automatically refresh the SFDC accounts list
+    if !@sfdc_accounts_exist && @enable_sfdc_login_and_linking
+      SalesforceAccount.load_accounts(current_user.organization_id) 
+      @sfdc_accounts_exist = true
+    end
+  end
+
   def create_project
     # p "*** creating project for account #{@account.name} ***"
     @project = @account.projects.new(
@@ -185,8 +216,8 @@ class ExtensionController < ApplicationController
     success
   end
 
-  # helper method for creating people, used in set_account_and_project & create_project (@project should already be set before calling this)
-  # by default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
+  # Helper method for creating people, used in set_account_and_project & create_project (@project should already be set before calling this)
+  # By default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
   def create_people(status=ProjectMember::STATUS[:Pending])
     if params[:internal].present?
       internal = params[:internal].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } } 

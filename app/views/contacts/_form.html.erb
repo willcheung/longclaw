@@ -1,7 +1,8 @@
 <% remote ||= false %>
-<%= simple_form_for :contact, url: :contacts, remote: remote, html: {role: :form, 'data-model' => 'contact', id: 'new_contact'}  do |f| %>
+<%= simple_form_for @contact, url: :contacts, remote: remote, html: {role: :form, 'data-model' => 'contact', id: 'new_contact'}  do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
+      <span class="help-block" style="color:red"></span>
       <%= f.input :first_name, wrapper_html: { class: 'col-md-6'} %>
       <%= f.input :last_name, wrapper_html: { class: 'col-md-6'} %>
       <%= f.input :email, wrapper_html: { class: 'col-md-4'}, :required => true %>
