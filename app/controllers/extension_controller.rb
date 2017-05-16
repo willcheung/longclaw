@@ -108,13 +108,11 @@ class ExtensionController < ApplicationController
 
     # If there are no external users specified, redirect to extension#private_domain page
     redirect_to extension_private_domain_path and return if params[:external].blank?
-    #VPL redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
 
     ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
     # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#private_domain page
     redirect_to extension_private_domain_path and return if ex_emails.blank?
-    #VPL redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if ex_emails.blank? 
 
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
@@ -140,7 +138,7 @@ class ExtensionController < ApplicationController
         # find all accounts within current_user org whose domain is the email domain for external emails, in the order of domain frequency
         accounts = Account.where(domain: domains, organization: current_user.organization).order(order_domain_frequency)
         # if no accounts are found that match our external email domains at this point, redirect to extension#no_account page to allow user to create this account
-        redirect_to extension_no_account_path(URI.escape(domains.first, ".")) + "\?" + { internal: params[:internal], external: params[:external] }.to_param and return if @accounts.blank?
+        redirect_to extension_no_account_path(URI.escape(domains.first, ".")) + "\?" + { internal: params[:internal], external: params[:external] }.to_param and return if accounts.blank?
         @account = accounts.first
       end
     end
