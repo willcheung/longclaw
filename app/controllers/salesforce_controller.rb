@@ -149,8 +149,7 @@ class SalesforceController < ApplicationController
         end
 
         # Add SFDC contacts to pending members ('Suggested People') of all streams in this CS account if not already a member of the stream, even SFDC contacts to whom the current user does not have visibility!
-        sfdc_contacts = []
-        account.contacts.each { |c| sfdc_contacts << c if c.is_source_from_salesforce? }
+        sfdc_contacts = account.contacts.select { |c| c.is_source_from_salesforce? }
         account.projects.each do |p|
           project_contact_ids = p.contacts_all.pluck(:contact_id)
 
