@@ -28,8 +28,7 @@ class ExtensionController < ApplicationController
   end
 
   def private_domain
-    #VPL 
-    # @users = []
+    # VPL @users = []
     # @nonusers = []
     # #p "params[:internal]: #{params[:internal]}"
     # if params[:internal].size == 1

@@ -265,9 +265,9 @@ module ApplicationHelper
 
     id = id.to_s
     html = "<span id=\"" + id + "-short\" style=\"display:block\">" + simple_format(truncate(text, length: length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span')
-    html += "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "');\">&nbsp;[more]</a></span>" + 
-            "<span id=\""+ id +"\" style=\"display: none\">" + simple_format(truncate(text, length: max_length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span') + 
-            "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "');\">&nbsp;[less]</a></span>" if text.length >length
+    html += "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[more]</a></span>" + 
+            "<span id=\""+ id +"-full\" style=\"display: none\">" + simple_format(truncate(text, length: max_length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span') + 
+            "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[less]</a></span>" if text.length >length
     return html
   end
 end

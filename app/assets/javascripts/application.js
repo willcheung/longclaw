@@ -106,7 +106,6 @@ $(document).ready(function() {
   };
 
   $.fn.render_form_errors = function(errors){
-
     $form = this;
     this.clear_previous_errors();
     model = this.data('model');

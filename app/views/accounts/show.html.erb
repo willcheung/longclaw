@@ -84,7 +84,7 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <% @account_contacts.each do |contact| %>
+                                                        <% @account_contacts.sort_by {|u| u.last_name.upcase}.each do |contact| %>
                                                         <tr>
                                                             <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>

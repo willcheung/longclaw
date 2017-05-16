@@ -38,6 +38,8 @@ class ProjectMembersController < ApplicationController
 
       next if project_member.blank? || (project_member.id.present? && project_member.status == ProjectMember::STATUS[:Confirmed])
       project_member.status = ProjectMember::STATUS[:Confirmed]
+      
+      @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id) if @salesforce_base_URL.nil? && project_member.contact.present? && project_member.contact.is_source_from_salesforce?  # If project_member is an (external) SFDC contact, enable _member#show to create an external link
 
       if project_member.save
         @project_members.push(project_member)
@@ -60,6 +62,7 @@ class ProjectMembersController < ApplicationController
   end
 
   private
+
   def set_project_member
     @project_member = ProjectMember.find(params[:id])
   end
