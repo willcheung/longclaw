@@ -16,7 +16,7 @@
 </dd>
 <% end %>
 
-<p class="text-center m-t-md"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>/arg" target="_blank">View Relationship Graph &rarr;</a></button></p>
+<p class="text-center m-t-md"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>/arg" target="_blank">View Relationship Graph &rarr;</a></p>
 <p class="text-center">
     <button 
     <%= "disabled " if @salesforce_user.nil? || !@linked_to_sfdc  %>
