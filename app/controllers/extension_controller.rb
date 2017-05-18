@@ -173,8 +173,9 @@ class ExtensionController < ApplicationController
 
             if sfa.present?
               puts "Auto-linking SFDC Account '#{sfa.salesforce_account_name}' to new Account '#{domain}'." 
-              sfa.update(contextsmith_account_id: @account.id) 
-              SalesforceController.import_sfdc_contacts_and_add_as_members(client: client, account: @account, sfdc_account: sfa)
+              sfa.account = @account
+
+              SalesforceController.import_sfdc_contacts_and_add_as_members(client: client, account: @account, sfdc_account: sfa) if sfa.save
             end
           end
         else

@@ -151,7 +151,7 @@
                 <ul class="nav nav-tabs m-b-sm m-t-md">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">Activities</a></li>
                     <li role="presentation" class="<%= is_active_action('alerts_tasks') %>"><a href="<%= extension_alerts_tasks_path(internal: params[:internal], external: params[:external]) %>"> To Do & Alerts</a></li>
-                    <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">People</a></li>
+                    <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li>
                 </ul>
 
             <% end %>
@@ -174,6 +174,15 @@
             labelField: 'name',
             searchField: ['name'],
             create: false,
+            sortField: [
+                {
+                    field: 'name',
+                    direction: 'asc'
+                },
+                {
+                    field: '$score'
+                }
+            ],
             render: {
               item: function(item, escape) {
                 return '<div>' +
