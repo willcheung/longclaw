@@ -1,9 +1,9 @@
 class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
+  before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
   before_action :get_account_types, only: [:no_account]
-  before_action :set_salesforce_user
 
   def test
     render layout: "empty"
@@ -137,9 +137,49 @@ class ExtensionController < ApplicationController
         order_domain_frequency = domains.map { |domain| "domain = '#{domain}' DESC" }.join(',')
         # find all accounts within current_user org whose domain is the email domain for external emails, in the order of domain frequency
         accounts = Account.where(domain: domains, organization: current_user.organization).order(order_domain_frequency)
-        # if no accounts are found that match our external email domains at this point, redirect to extension#no_account page to allow user to create this account
-        redirect_to extension_no_account_path(URI.escape(domains.first, ".")) + "\?" + { internal: params[:internal], external: params[:external] }.to_param and return if accounts.blank?
-        @account = accounts.first
+        # If no accounts are found that match our external email domains at this point, first see if we can match with a SFDC account.  If cannot, redirect to extension#no_account page to allow user to manually create this account.
+        if accounts.blank?
+          domain = domains.first
+          no_account_path = extension_no_account_path(URI.escape(domain, ".")) + "\?" + { internal: params[:internal], external: params[:external] }.to_param  # URL path for the "No Existing Account/Create Account" page 
+          
+          redirect_to no_account_path and return if !current_user.power_or_trial_only? || @salesforce_user.nil?  # abort if user isn't Power or Trial/Chrome user, or if not connected to SFDC
+          
+          client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+          sfdc_account_id = match_and_return_sfdc_account(client, ex_emails)
+          redirect_to no_account_path and return if sfdc_account_id.nil?  # abort if SFDC connection was invalid or SFDC Account link candidate cannot be determined
+
+          # Create a new CS Account and link to the identified SFDC Account
+          @account = Account.new(
+              name: domain,
+              domain: domain,
+              owner_id: current_user.id, 
+              category: Account::CATEGORY[:Customer],
+              created_by: current_user.id,
+              updated_by: current_user.id,
+              organization_id: current_user.organization_id,
+              status: 'Active'
+          )
+
+          if !@account.save
+            puts "Error creating account!"
+            redirect_to no_account_path and return
+          else
+            # Create a stream for the account now so that we can add members to it in the next few instructions
+            create_project  # uses @account
+            @project.subscribers.create(user: current_user)
+
+            sfa = SalesforceAccount.find_by(contextsmith_organization_id: current_user.organization_id, salesforce_account_id: sfdc_account_id)
+
+            if sfa.present?
+              puts "Auto-linking SFDC Account '#{sfa.salesforce_account_name}' to new Account '#{domain}'." 
+              sfa.update(contextsmith_account_id: @account.id) 
+              SalesforceController.import_sfdc_contacts_and_add_as_members(client: client, account: @account, sfdc_account: sfa)
+            end
+          end
+        else
+          @account = accounts.first
+        end 
       end
     end
     @account ||= contacts.first.account
@@ -147,6 +187,7 @@ class ExtensionController < ApplicationController
 
     if @project.blank?
       create_project
+      @project.subscribers.create(user: current_user) # why was this missing before??
     elsif params[:action] == "account" 
       # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
       # since project already exists, any new external members found should be added as suggested members, let user confirm
@@ -156,15 +197,111 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
+  def match_and_return_sfdc_account(client, emails=[])
+
+    return nil if client.nil? || emails.blank?  # if connection invalid or no emails passed
+
+    client = SalesforceService.connect_salesforce(current_user.organization_id)
+    query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email"
+    #query_statement = "SELECT AccountId, Email FROM Contact WHERE Email = 'jsmith@smithy.com' GROUP BY AccountId, Email ORDER BY AccountId, Email"
+    sfcd_contacts_results = SalesforceService.query_salesforce(client, query_statement)
+
+    return nil if sfcd_contacts_results.nil? || sfcd_contacts_results.length == 0 #no contacts found
+
+    contacts_with_accounts = sfcd_contacts_results.each_with_object([]) { |r, memo| memo << [r[:AccountId],r[:Email]] }
+    #puts contacts_with_accounts
+
+    return if contacts_with_accounts.nil?
+
+    #### Match by e-mail
+    print "Attempting to match contacts by e-mail..."  
+
+    contacts_by_account_h = contacts_with_accounts.each_with_object({}) { |p, memo| memo[p[0]] = memo[p[0]].nil? ? [p[1]] : memo[p[0]] << p[1] }
+    #puts "contacts_by_account: #{contacts_by_account_h}"
+
+    account_contact_matches_by_email = {}
+    emails.each do |e| 
+      contacts_by_account_h.each do |account, contacts|
+        account_contact_matches_by_email[account] = account_contact_matches_by_email[account].nil? ? 1 : account_contact_matches_by_email[account] + 1 if contacts.include? (e)
+      end
+    end
+
+    account_contact_matches_by_email = account_contact_matches_by_email.to_a.sort_by {|r| r[1]}.reverse  #sort by most-frequent first
+    #puts "E-mail matches by account: #{account_contact_matches_by_email}" 
+    if account_contact_matches_by_email.empty?
+      #puts "No match!" # continue to domain matching
+    elsif account_contact_matches_by_email.length == 1 || account_contact_matches_by_email.first[1] != account_contact_matches_by_email.second[1]
+      puts "Matched! " + account_contact_matches_by_email.first[0]
+      return account_contact_matches_by_email.first[0]
+    else
+      #puts "Ambiguous, because tied!" # continue to domain matching
+    end
+
+    #### Match by domain
+    print "unsuccessful. Trying to match contacts by domain..."
+    
+    domains = emails.map {|e| get_domain(e)}
+    domains = domains.each_with_object({}) do |d, memo|
+      memo[d] = memo[d].nil? ? 1 : memo[d] + 1
+    end
+    #puts "domains: #{domains}"
+    #puts "contacts_with_accounts: #{contacts_with_accounts}"
+
+    accounts_by_contact_domain_h = contacts_with_accounts.each_with_object({}) do |cp, memo|
+      c_account = cp[0]
+      c_domain = get_domain(cp[1])
+      if memo[c_domain].nil? 
+        memo[c_domain] = {c_account => 1}
+      else
+        memo[c_domain][c_account] = memo[c_domain][c_account].nil? ? 1 : memo[c_domain][c_account] + 1
+      end
+    end 
+    # { "AccountA" => {"aol.com"=>1, "apple.com"=>1}, 
+    #   "AccountB" => {"gmail.com"=>1}, 
+    #   "AccountC" => {"aol.com"=>2} }  -->
+    # { "aol.com"   => {"AccountA"=>1, "AccountC"=>2}, 
+    #   "apple.com" => {"AccountA"=>1},
+    #   "gmail.com" => {"AccountB"=>1} }
+    #puts "accounts_by_contact_domain: #{accounts_by_contact_domain_h}"
+
+    account_wt_match_score_by_domain = {}
+    domains.each do |d,dc| 
+      #puts "domain=#{d}, count=#{dc}"
+      #puts "accounts_by_contact_domain_h[d]=#{accounts_by_contact_domain_h[d]}"
+      accounts_by_contact_domain_h[d].each do |h|
+        #print "\th: #{h}  "
+        account = h[0]
+        account_wt_match_score_by_domain[account] = dc * h[1] + (account_wt_match_score_by_domain[account].nil? ? 0 : account_wt_match_score_by_domain[account])
+        #puts "\taccount_wt_match_score_by_domain: #{account_wt_match_score_by_domain}"
+      end if accounts_by_contact_domain_h[d].present?
+    end
+    # [ "AccountC" => 4,
+    #   "AccountA" => 2 + 1 = 3, 
+    #   "AccountB" => 1 ]
+
+    account_wt_match_score_by_domain = account_wt_match_score_by_domain.to_a.sort_by {|r| r[1]}.reverse  #sort by most-frequent first
+    #puts "account_wt_match_score_by_domain: #{account_wt_match_score_by_domain}"
+    if account_wt_match_score_by_domain.empty?
+      #puts "Still no match!"
+    elsif account_wt_match_score_by_domain.length == 1 || account_wt_match_score_by_domain.first[1] != account_wt_match_score_by_domain.second[1]
+      puts "Matched! " + account_wt_match_score_by_domain.first[0]
+      return account_wt_match_score_by_domain.first[0]
+    else
+      #puts "Still tied!"
+    end
+    puts "unsuccessful. No SFDC Accounts were found to match these contacts during search!"
+    nil
+  end
+
   def get_account_types
     custom_lists = current_user.organization.get_custom_lists_with_options
     @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
   end
 
   def set_salesforce_user
-    @salesforce_user = nil
+    #@salesforce_user = nil
 
-    return if current_user.nil?
+    return if @salesforce_user.present? || current_user.nil?
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
 
