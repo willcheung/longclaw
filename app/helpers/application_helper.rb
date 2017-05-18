@@ -157,7 +157,7 @@ module ApplicationHelper
         else
           return "All"
         end
-      else # ramaining > 0
+      else # remaining > 0
         if cc_size > remaining
           if trailing_text=="other"
             return get_first_names(from, to, cc[0..(remaining-1)]) + " and " + pluralize(cc_size - remaining, 'other')
