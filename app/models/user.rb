@@ -823,17 +823,6 @@ class User < ActiveRecord::Base
   end
 
   #Ahoy Events to track usage for users
-  def self.get_events(activity_email)
-    query = <<-SQL
-    select to_char("time", 'MM/DD') as "date", users.email, cast(count(*) as integer) as events 
-      from ahoy_events  join users on users.id=ahoy_events.user_id 
-      where users.email = '#{activity_email}'
-      group by to_char("time", 'MM/DD'), users.email 
-      order by "date" asc
-      limit 14;
-    SQL
-    find_by_sql(query)
-  end
 
   def self.all_ahoy_events
     query = <<-SQL
