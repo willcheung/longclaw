@@ -92,7 +92,7 @@
                                                             <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td class="contact-type">
                                                             <% if contact.is_source_from_salesforce? %>
-                                                                <img id="sfdc-icon" style="width:16px" src="/assets/images/salesforce.png" style="width:0px;" title="Source: Salesforce"/>
+                                                                <img id="sfdc-icon" style="width:15px" src="/assets/images/salesforce.png" style="width:0px;" title="Source: Salesforce"/>
                                                             <% else %>
                                                                 <i class="fa fa-envelope"> </i>
                                                             <% end %>

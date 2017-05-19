@@ -146,7 +146,7 @@ class ExtensionController < ApplicationController
           
           client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-          sfdc_account_id = match_and_return_sfdc_account(client, ex_emails)
+          sfdc_account_id = find_matching_sfdc_account(client, ex_emails)
           redirect_to no_account_path and return if sfdc_account_id.nil?  # abort if SFDC connection was invalid or SFDC Account link candidate cannot be determined
 
           # Create a new CS Account and link to the identified SFDC Account
@@ -198,27 +198,25 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  def match_and_return_sfdc_account(client, emails=[])
+  #### Find and return the most likely SFDC Account given an array of contact e-mails
+  def find_matching_sfdc_account(client, emails=[])
 
-    return nil if client.nil? || emails.blank?  # if connection invalid or no emails passed
+    return nil if client.nil? || emails.blank?  # abort if connection invalid or no emails passed
 
     client = SalesforceService.connect_salesforce(current_user.organization_id)
-    query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email"
-    #query_statement = "SELECT AccountId, Email FROM Contact WHERE Email = 'jsmith@smithy.com' GROUP BY AccountId, Email ORDER BY AccountId, Email"
+    query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email" # Use GROUP BY as a workaround to get Salesforce to SELECT distinct AccountID's and Email's
     sfcd_contacts_results = SalesforceService.query_salesforce(client, query_statement)
 
-    return nil if sfcd_contacts_results.nil? || sfcd_contacts_results.length == 0 #no contacts found
+    return nil if sfcd_contacts_results.nil? || sfcd_contacts_results.length == 0 # abort if SFDC query error or if no contacts were found
 
     contacts_with_accounts = sfcd_contacts_results.each_with_object([]) { |r, memo| memo << [r[:AccountId],r[:Email]] }
-    #puts contacts_with_accounts
 
     return if contacts_with_accounts.nil?
 
-    #### Match by e-mail
+    #### Match SFDC Account by contact e-mail
     print "Attempting to match contacts by e-mail..."  
 
-    contacts_by_account_h = contacts_with_accounts.each_with_object({}) { |p, memo| memo[p[0]] = memo[p[0]].nil? ? [p[1]] : memo[p[0]] << p[1] }
-    #puts "contacts_by_account: #{contacts_by_account_h}"
+    contacts_by_account_h = contacts_with_accounts.each_with_object({}) { |p, memo| memo[p[0]] = memo[p[0]].nil? ? [p[1]] : memo[p[0]] << p[1] }  # obtain a hash of contact e-mails with AccountId as the keys
 
     account_contact_matches_by_email = {}
     emails.each do |e| 
@@ -227,26 +225,24 @@ class ExtensionController < ApplicationController
       end
     end
 
-    account_contact_matches_by_email = account_contact_matches_by_email.to_a.sort_by {|r| r[1]}.reverse  #sort by most-frequent first
+    account_contact_matches_by_email = account_contact_matches_by_email.to_a.sort_by {|r| r[1]}.reverse  # sort by most-frequent first
     #puts "E-mail matches by account: #{account_contact_matches_by_email}" 
     if account_contact_matches_by_email.empty?
-      #puts "No match!" # continue to domain matching
+      #puts "No match!"  # continue with domain matching
     elsif account_contact_matches_by_email.length == 1 || account_contact_matches_by_email.first[1] != account_contact_matches_by_email.second[1]
-      puts "Matched! " + account_contact_matches_by_email.first[0]
+      puts "SFDC account match was found! " + account_contact_matches_by_email.first[0]
       return account_contact_matches_by_email.first[0]
     else
-      #puts "Ambiguous, because tied!" # continue to domain matching
+      #puts "Ambiguous, because tied!"  # continue with domain matching
     end
 
-    #### Match by domain
+    #### Match SFDC Account by contact e-mail domains
     print "unsuccessful. Trying to match contacts by domain..."
     
     domains = emails.map {|e| get_domain(e)}
     domains = domains.each_with_object({}) do |d, memo|
       memo[d] = memo[d].nil? ? 1 : memo[d] + 1
     end
-    #puts "domains: #{domains}"
-    #puts "contacts_with_accounts: #{contacts_with_accounts}"
 
     accounts_by_contact_domain_h = contacts_with_accounts.each_with_object({}) do |cp, memo|
       c_account = cp[0]
@@ -256,13 +252,10 @@ class ExtensionController < ApplicationController
       else
         memo[c_domain][c_account] = memo[c_domain][c_account].nil? ? 1 : memo[c_domain][c_account] + 1
       end
-    end 
-    # { "AccountA" => {"aol.com"=>1, "apple.com"=>1}, 
-    #   "AccountB" => {"gmail.com"=>1}, 
-    #   "AccountC" => {"aol.com"=>2} }  -->
-    # { "aol.com"   => {"AccountA"=>1, "AccountC"=>2}, 
-    #   "apple.com" => {"AccountA"=>1},
-    #   "gmail.com" => {"AccountB"=>1} }
+    end # obtain a hash of another hash (AccountId's with the total occurence of domains found in contact e-mails) with domains as the keys. 
+    # e.g.,:  { "aol.com"   => {"AccountA"=>1, "AccountC"=>2}, 
+    #           "apple.com" => {"AccountA"=>1},
+    #           "gmail.com" => {"AccountB"=>1} }
     #puts "accounts_by_contact_domain: #{accounts_by_contact_domain_h}"
 
     account_wt_match_score_by_domain = {}
@@ -270,27 +263,24 @@ class ExtensionController < ApplicationController
       #puts "domain=#{d}, count=#{dc}"
       #puts "accounts_by_contact_domain_h[d]=#{accounts_by_contact_domain_h[d]}"
       accounts_by_contact_domain_h[d].each do |h|
-        #print "\th: #{h}  "
+        #print "\t h: #{h}  "
         account = h[0]
         account_wt_match_score_by_domain[account] = dc * h[1] + (account_wt_match_score_by_domain[account].nil? ? 0 : account_wt_match_score_by_domain[account])
-        #puts "\taccount_wt_match_score_by_domain: #{account_wt_match_score_by_domain}"
+        #puts "\t account_wt_match_score_by_domain: #{account_wt_match_score_by_domain}"
       end if accounts_by_contact_domain_h[d].present?
     end
-    # [ "AccountC" => 4,
-    #   "AccountA" => 2 + 1 = 3, 
-    #   "AccountB" => 1 ]
 
-    account_wt_match_score_by_domain = account_wt_match_score_by_domain.to_a.sort_by {|r| r[1]}.reverse  #sort by most-frequent first
+    account_wt_match_score_by_domain = account_wt_match_score_by_domain.to_a.sort_by {|r| r[1]}.reverse  # sort by most-frequent first
     #puts "account_wt_match_score_by_domain: #{account_wt_match_score_by_domain}"
     if account_wt_match_score_by_domain.empty?
-      #puts "Still no match!"
+      # puts "Still no match!"  # match unsuccessful
     elsif account_wt_match_score_by_domain.length == 1 || account_wt_match_score_by_domain.first[1] != account_wt_match_score_by_domain.second[1]
-      puts "Matched! " + account_wt_match_score_by_domain.first[0]
+      puts "SFDC account match was found! " + account_wt_match_score_by_domain.first[0]
       return account_wt_match_score_by_domain.first[0]
     else
-      #puts "Still tied!"
+      # puts "Still tied!"  # match unsuccessful
     end
-    puts "unsuccessful. No SFDC Accounts were found to match these contacts during search!"
+    puts "unsuccessful. No SFDC Accounts were found to likely match these contacts during search!"
     nil
   end
 
@@ -300,8 +290,6 @@ class ExtensionController < ApplicationController
   end
 
   def set_salesforce_user
-    #@salesforce_user = nil
-
     return if @salesforce_user.present? || current_user.nil?
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
