@@ -375,7 +375,7 @@ class ExtensionController < ApplicationController
   def create_and_return_internal_users(internal_members_a)
     new_users = []
     internal_members_a.each do |u|
-      next if User.find_by_email(email).present? 
+      next if User.find_by_email(u[:email]).present? 
 
       name = u[:full_name].split(" ")
       first_name = name[0].nil? ? '' : name[0]
