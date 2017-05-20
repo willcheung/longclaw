@@ -9,11 +9,11 @@
 
 <hr/>
 
-<table class="center">
+<table class="center"> <!--table-striped -->
     <% @users.sort_by {|u| u.first_name.upcase}.each do |u| %>
     <tr>
         <% full_name = get_full_name(u) %>
-        <td><%= (full_name == " ") ? u.email : full_name %></td>
+        <td style="word-break: break-all"><%= (full_name == " ") ? u.email : full_name %></td>
         <td style="text-align:center">
             <% if u.onboarding_step == -1 && !u.cluster_create_date.nil? %>
                 Joined! <i class="fa fa-thumbs-o-up"/>

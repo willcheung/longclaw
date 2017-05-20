@@ -31,25 +31,14 @@ class ExtensionController < ApplicationController
     @users = []
     new_internal_users = []
 
-    if params[:internal].size == 1
-      full_name = params[:internal]["0"][0]
-      email = params[:internal]["0"][1] 
+    params[:internal].each do |key, u|
+      full_name = u[0]
+      email = u[1] 
       user = User.find_by_email(email)
       if user.present?
         @users << user
       else
         new_internal_users << {full_name: full_name, email: email}
-      end
-    else
-      params[:internal].each do |u|
-        full_name = u[1][0]
-        email = u[1][1] 
-        user = User.find_by_email(email)
-        if user.present?
-          @users << user
-        else
-          new_internal_users << {full_name: full_name, email: email}
-        end
       end
     end
 
@@ -220,13 +209,11 @@ class ExtensionController < ApplicationController
     #### Match SFDC Account by contact e-mail
     print "Attempting to match contacts by e-mail..."  
 
-    contacts_by_account_h = contacts_with_accounts.each_with_object({}) { |p, memo| memo[p[0]] = memo[p[0]].nil? ? [p[1]] : memo[p[0]] << p[1] }  # obtain a hash of contact e-mails with AccountId as the keys
+    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new {|h, k| h[k]=[]}) { |p, memo| memo[p[0]] = memo[p[0]] << p[1] }  # obtain a hash of contact e-mails with AccountId as the keys
 
-    account_contact_matches_by_email = {}
+    account_contact_matches_by_email = Hash.new(0)
     emails.each do |e| 
-      contacts_by_account_h.each do |account, contacts|
-        account_contact_matches_by_email[account] = account_contact_matches_by_email[account].nil? ? 1 : account_contact_matches_by_email[account] + 1 if contacts.include? (e)
-      end
+      contacts_by_account_h.each { |account, contacts| account_contact_matches_by_email[account] += 1 if contacts.include? (e) }
     end
 
     account_contact_matches_by_email = account_contact_matches_by_email.to_a.sort_by {|r| r[1]}.reverse  # sort by most-frequent first
@@ -244,9 +231,7 @@ class ExtensionController < ApplicationController
     print "unsuccessful. Trying to match contacts by domain..."
     
     domains = emails.map {|e| get_domain(e)}
-    domains = domains.each_with_object({}) do |d, memo|
-      memo[d] = memo[d].nil? ? 1 : memo[d] + 1
-    end
+    domains = domains.each_with_object(Hash.new(0)) { |d, memo| memo[d] += 1 }
 
     accounts_by_contact_domain_h = contacts_with_accounts.each_with_object({}) do |cp, memo|
       c_account = cp[0]
