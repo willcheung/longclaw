@@ -28,30 +28,33 @@ class ExtensionController < ApplicationController
   end
 
   def private_domain
-    # VPL @users = []
-    # @nonusers = []
-    # #p "params[:internal]: #{params[:internal]}"
-    # if params[:internal].size == 1
-    #   #name = params[:internal]["0"][0]
-    #   email = params[:internal]["0"][1] 
-    #   user = User.find_by_email(email)
-    #   if user.present?
-    #     @users << user
-    #   else
-    #     @nonusers << email
-    #   end
-    # else
-    #   params[:internal].each do |u|
-    #     name = u[1][0]
-    #     email = u[1][1] 
-    #     user = User.find_by_email(email)
-    #     if user.present?
-    #       @users << user
-    #     else
-    #       @nonusers << email
-    #     end
-    #   end
-    # end
+    @users = []
+    new_internal_users = []
+
+    if params[:internal].size == 1
+      full_name = params[:internal]["0"][0]
+      email = params[:internal]["0"][1] 
+      user = User.find_by_email(email)
+      if user.present?
+        @users << user
+      else
+        new_internal_users << {full_name: full_name, email: email}
+      end
+    else
+      params[:internal].each do |u|
+        full_name = u[1][0]
+        email = u[1][1] 
+        user = User.find_by_email(email)
+        if user.present?
+          @users << user
+        else
+          new_internal_users << {full_name: full_name, email: email}
+        end
+      end
+    end
+
+    # Create previously unidentified internal members as new Users
+    @users.concat create_and_return_internal_users(new_internal_users)
   end
 
   def account
@@ -107,12 +110,13 @@ class ExtensionController < ApplicationController
     ### after Rails parses the params, params[:internal] and params[:external] are both hashes with the structure { "0" => ['Name(?)', 'email@address.com'] }
 
     # If there are no external users specified, redirect to extension#private_domain page
-    redirect_to extension_private_domain_path and return if params[:external].blank?
-    external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
+    redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
 
+    external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
     ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
+
     # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#private_domain page
-    redirect_to extension_private_domain_path and return if ex_emails.blank?
+    redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if ex_emails.blank? 
 
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
@@ -365,6 +369,28 @@ class ExtensionController < ApplicationController
     external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
     end
+  end
+
+  # Parameters:  internal_members_a - An array of hashes {full_name: full_name, email: email} to indicate potential new users
+  def create_and_return_internal_users(internal_members_a)
+    new_users = []
+    internal_members_a.each do |u|
+      next if User.find_by_email(email).present? 
+
+      name = u[:full_name].split(" ")
+      first_name = name[0].nil? ? '' : name[0]
+      last_name = name[1].nil? ? '' : name[1]
+      u = User.create(
+        first_name:  first_name,
+        last_name:  last_name,
+        email:  u[:email],
+        organization_id:  current_user.organization_id,
+        invited_by_id:  current_user.id,
+        invitation_created_at:  Time.current
+      )
+      new_users << u
+    end
+    new_users
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

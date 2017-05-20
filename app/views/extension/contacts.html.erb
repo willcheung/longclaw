@@ -20,7 +20,7 @@
 <p class="text-center">
     <button 
     <%= "disabled " if @salesforce_user.nil? || !@linked_to_sfdc  %>
-    id="salesforce-ext-export-cs-contacts" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="margin-left:14px" btnLabel="Export Contacts to Salesforce">
+    id="salesforce-ext-export-cs-contacts" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="margin-left:6%" btnLabel="Export Contacts to Salesforce">
     <i class="fa fa-refresh"></i>&nbsp;Export Contacts to Salesforce
     </button>
     <% if (@salesforce_user && !@linked_to_sfdc) || (@salesforce_user.nil? && @enable_sfdc_login_and_linking) %>
