@@ -47,10 +47,10 @@
                             <td style="text-align:center"><%= u.department %></td>
                         <% end %>
                         <td style="text-align:center">
-                            <% if u.onboarding_step == -1 and !u.cluster_create_date.nil?%>
+                            <% if u.onboarding_step == -1 && !u.cluster_create_date.nil? %>
                                 <%= u.cluster_create_date.to_date %>
                             <% else %>
-                                <%= link_to 'Invite', "/settings/invite_user/#{u.id}", 'class' => 'btn btn-primary btn-sm', 'method' => 'post', 'remote' => true, 'id' => "#{u.id}", 'data-toggle' => "tooltip", 'data-placement' => "right", 'data-original-title' => "We will send an email invitation." %>
+                                <%= link_to 'Invite', "/settings/invite_user/#{u.id}", 'class' => 'btn btn-primary btn-sm', 'method' => 'post', 'remote' => true, 'id' => "#{u.id}", 'data-toggle' => "tooltip", 'data-placement' => "right", 'data-original-title' => "We will send an e-mail invitation." %>
                             <% end %>
                         </td>
                         <td><%= u.time_zone %></td>

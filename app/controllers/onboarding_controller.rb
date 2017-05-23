@@ -128,7 +128,7 @@ class OnboardingController < ApplicationController
         url = Rails.env.development? ? "http://#{request.host}:3000/onboarding/confirm_projects": "https://#{request.host}/onboarding/confirm_projects"
         UserMailer.welcome_email(user, num_of_projects, url).deliver_later
         
-        format.json { render json: 'Email sent to ' + user.email, status: 200 }
+        format.json { render json: 'E-mail sent to ' + user.email, status: 200 }
 
       rescue => e
         format.json { render json: 'ERROR: Something went wrong: ' + e.to_s, status: 500}
