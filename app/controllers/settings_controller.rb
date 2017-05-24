@@ -208,8 +208,8 @@ class SettingsController < ApplicationController
 		if @super_admin.include?(current_user.email)
 			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
 			@institution = Organization.all
-			@latest_user_activity = User.latest_activities
-			activity_org = User.all_ahoy_events
+			@latest_user_activity = Ahoy::Event.latest_activities
+			activity_org = Ahoy::Event.all_ahoy_events
 			@event_date = activity_org.map(&:date)
 			@event_count = activity_org.map{ |n| n['events']}
 		else
