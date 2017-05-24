@@ -6,24 +6,20 @@
             <% if params[:c] %>
                 <h1><big><%= params[:c] %> team, Welcome to ContextSmith!</big></h1>
             <% else %>
-                <h1><big>Sign up for ContextSmith free trial</big></h1>
+                <h1><big>Sign up to use ContextSmith for free</big></h1>
             <% end %>
             <br/>
 
-            <% if params[:c] %>
-                <p>ContextSmith is a smarter way to manage your key accounts and expansion.</p>
-            <% else %>
-                <p>ContextSmith is a smarter way to manage your accounts. Our 14-day free trial includes:</p>
-            <% end %>
+            <p>ContextSmith is a smarter way to land and expand your accounts.</p>
             <ul style="line-height: 25px" class="m-t-md">
-                <li>Track activities from emails, meetings, and Salesforce in a single timeline.</li>
-                <li>Discover new contacts on your key accounts.</li>
+                <li>Track everyone's sales activities in a single timeline.</li>
+                <li>Sends daily status about your deals.</li>
+                <li>Discover new contacts in your accounts.</li>
                 <li>Manage customer relationship with zero data entry.</li>
-                <li>Automatic status reports so you know who has the ball.</li>
             </ul>
 
             <p class="m-t-md">
-                ContextSmith works in the background of the email client you already use, so you can get started quickly and stay ahead of your customers. <% unless params[:c] %>Start your free trial today!<% end %>
+                ContextSmith works in the background. Get started right now and get ahead!
             </p>
 
         </div>
@@ -38,7 +34,7 @@
                 <% elsif params[:m] %>
                     <h1 class="text-center">Thank you for installing!</h1>
                 <% else %>
-                    <p class="oauth text-center"><small>14-day free trial. No credit card required. </small></p>
+                    <p class="oauth text-center"><small>No credit card required. </small></p>
                 <% end %>
 
                 <div class="text-center">
@@ -79,7 +75,7 @@
     <hr class="m-t-xl m-b-xl"/>
     <h2 class="m-b-md"> Frequently Asked Questions</h2>
 
-    <div class="row">
+    <div class="row m-t-lg">
 
         <div class="col-md-4">
             <h3>How does ContextSmith work?</h3>

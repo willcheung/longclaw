@@ -64,12 +64,12 @@ class UserMailer < ApplicationMailer
 
     if @user.organization.users.registered.size > 3
       registered_users = @user.organization.users.registered.map(&:first_name)[0..2].join(', ')
-      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} teammates are already using ContextSmith to track the pulse of your customers."
+      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} teammates are already using ContextSmith to stay on top of accounts and sell smarter."
     elsif @user.organization.users.registered.size == 1
-      @colleagues = "Join #{invited_by.split(' ').first} and team to track the pulse of your customers."
+      @colleagues = "Join #{invited_by.split(' ').first} is using ContextSmith to stay on top of accounts and sell smarter."
     else
       registered_users = @user.organization.users.registered.map(&:first_name).join(' and ')
-      @colleagues = registered_users + " are already using ContextSmith to track the pulse of your customers."
+      @colleagues = registered_users + " are already using ContextSmith to stay on top of accounts and sell smarter."
     end
 
     track user: user # ahoy_email tracker
