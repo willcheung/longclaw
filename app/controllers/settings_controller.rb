@@ -210,15 +210,8 @@ class SettingsController < ApplicationController
 			@institution = Organization.all
 			@latest_user_activity = User.latest_activities
 			activity_org = User.all_ahoy_events
-			event_date = []
-			event_count = []
-			activity_org.each do |u|
-				event_date << u.date
-				event_count << u['events']
-			end
-			@event_date = event_date.reverse
-			@event_count = event_count.reverse
-	
+			@event_date = activity_org.map(&:date)
+			@event_count = activity_org.map{ |n| n['events']}
 		else
 			redirect_to root_path
 		end

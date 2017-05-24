@@ -11,7 +11,7 @@ class ProjectsController < ApplicationController
   # GET /projects.json
   def index
     @title = "Streams"
-
+    
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
 

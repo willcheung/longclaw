@@ -23,12 +23,5 @@ module Ahoy
     belongs_to :visit
     belongs_to :user
 
-    scope :clicks, -> { where name: "$click"}
-    scope :views, -> { where name: "$view"}
-    scope :changes, -> { where name: "$change"}
-    scope :submits, -> { where name: "$submit"}
-    scope :allow_refresh_inbox, -> { where refresh_inbox: true }
-
-
   end
 end

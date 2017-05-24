@@ -830,7 +830,7 @@ class User < ActiveRecord::Base
     from ahoy_events 
     where time > current_date - interval '30' day and not properties @> '{"page":"/settings/user_analytics"}' 
     group by to_char(time, 'MM/DD')
-    order by "date" desc 
+    order by "date" asc
     limit 14;
     SQL
     find_by_sql(query)

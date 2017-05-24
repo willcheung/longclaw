@@ -170,7 +170,7 @@ Highcharts.chart('activity-container', {
         backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
     },
     xAxis: {
-        categories: <%= @event_date.map.to_json.html_safe %>
+        categories: <%= @event_date.to_json.html_safe %>
     },
     yAxis: {
         title: {
@@ -192,7 +192,7 @@ Highcharts.chart('activity-container', {
     series: [{
         color: '#b3ff99',
         name: 'Ahoy Event Activity',
-        data: <%= @event_count.map.to_json.html_safe %>
+        data: <%= @event_count.to_json.html_safe %>
     }]
 });
 
