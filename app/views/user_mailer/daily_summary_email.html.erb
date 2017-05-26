@@ -23,28 +23,13 @@
       <% @upcoming_meetings.each do |a| %>
         <tr>
         <!-- Meeting -->
-          <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/meeting_icon.png" alt="Meeting">
+          <td style="text-align:left;font-size:20px;line-height:19px;border-collapse:collapse;border-spacing:0;padding-top:10px;">
+            <span><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></span>
           </td>
-          <td style="min-width:400px;">
-
-            <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
-               <tbody>
-                  <tr>
-                    <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;border-bottom:1px solid #bbbbbb;">
-                      <strong style="font-weight:bold;"><%= a.title %></strong>
-                      &nbsp;&nbsp;&nbsp;
-                      <span><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:left;font-size:12px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;padding:5px 0;">
-                      <%= get_calendar_member_names(a.to, 'other', 2) %>
-                    </td>
-                  </tr>
-                </tbody>
-            </table>
-
+          <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;padding-bottom:10px;">
+            <span style="font-size:17px;"><%= a.title %></span>
+            <br>
+            <span style="font-size:13px;color:#aaaaaa;"><%= get_calendar_member_names(a.to, 'other', 2) %></span>
           </td>
         </tr>
       <% end %>
@@ -67,37 +52,12 @@
   <!-- Stream divider (horizontal bar) -->
   <div style="padding:30px 0px;margin:0;<% unless i == 0 %>border-top:2px dotted #DDD;<% end %>">
 
-    <!-- Stream Name & Metrics -->
+    <!-- Stream Name -->
     <table cellpadding="0" cellspacing="0" border="0" style="width:100%;padding:20px 0;background-color:#FFF;vertical-align:top;margin-bottom:10px;">
       <tbody>
         <tr>
           <td style="padding-bottom:5px;text-align:center;">
             <a href="<%= project_url(p.id) %>" style="text-overflow:ellipsis;font-size:32px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></a>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <table border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0;width:100%;">
-               <tbody>
-                  <tr style="">
-                    <% risk_score = @risk_scores[p.id] %>
-                    <td style="color:<%= risk_color(risk_score, true) %>;font-size:24px;font-weight:200;padding-right:8px;text-align:center;min-width:95px;max-width:100px;">
-                      <span style="display:block;"><%= risk_score %></span>
-                      <span style="font-size:14px;display:block;"><%= risk_level(risk_score) %></span>
-                    </td>
-                    <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;min-width:95px;max-width:100px;">
-                      <% open_alerts_count = p.notifications.select { |n| n.category == Notification::CATEGORY[:Alert] && !n.is_complete }.count %> <!-- # workaround for weird "notifications.risks" bug that selects ["project_id", nil] -->
-                      <span style="display:block;"><%= open_alerts_count %></span>
-                      <span style="font-size:14px;display:block;">Open <%= 'Alert'.pluralize(open_alerts_count) %></span>
-                    </td>
-                    <td style="color:#898e95;font-size:24px;font-weight:200;padding-right:8px;text-align:center;min-width:125px;max-width:130px;">
-                      <% open_notification_count = p.notifications.reject { |n| n.is_complete }.length %>
-                      <span style="display:block;"><%= open_notification_count %></span>
-                      <span style="font-size:14px;display:block;">Open <%= 'Task'.pluralize(open_notification_count) %></span>
-                    </td>
-                  </tr>
-               </tbody>
-            </table>
           </td>
         </tr>
       </tbody>
