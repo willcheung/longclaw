@@ -125,8 +125,8 @@ class ContextsmithService
     return [] if sources.empty?
     ex_clusters = [project.contacts.pluck(:email)]
 
-    puts "Calling backend service: " + final_url
     final_url = base_url + params + in_domain
+    puts "Calling backend service: " + final_url
 
     begin
       uri = URI(final_url)

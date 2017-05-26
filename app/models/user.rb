@@ -87,8 +87,32 @@ class User < ActiveRecord::Base
   end
 
   def upcoming_meetings
-    Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current.midnight..Time.current.end_of_day))
-    .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{self.email}\"}]'::jsonb").order(:last_sent_date)
+    visible_projects = Project.visible_to(organization_id, id)
+
+    meetings_in_cs = Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current.midnight..1.day.from_now), project_id: visible_projects.ids)
+      .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{email}\"}]'::jsonb").order(:last_sent_date)
+    calendar_meetings = ContextsmithService.load_calendar_for_user(self).reverse
+    # p meetings_in_cs.pluck(:last_sent_date)
+    # p calendar_meetings.map(&:last_sent_date)
+
+    # merge calendar_meetings with meetings_in_cs
+    meetings_in_cs.each do |mic|
+      # find matching meetings between meetings_in_cs and calendar_meetings based on backend_id
+      i = calendar_meetings.index { |cm| cm.backend_id == mic.backend_id }
+      if i.nil?
+        # no match found, insert the meeting_in_cs in the right place
+        i = calendar_meetings.index { |cm| cm.last_sent_date > mic.last_sent_date }
+        i = -1 if i.nil?
+        calendar_meetings.insert(i, mic)
+      else
+        # match found, replace the calendar_meeting with the meeting_in_cs, but use the time from calendar_meeting and update it in DB
+        mic.update(last_sent_date: calendar_meetings[i].last_sent_date, last_sent_date_epoch: calendar_meetings[i].last_sent_date_epoch, email_messages: calendar_meetings[i].email_messages)
+        calendar_meetings[i] = mic
+      end
+      p i
+    end
+
+    calendar_meetings
   end
 
   def self.from_omniauth(auth, organization_id, user_id=nil)
