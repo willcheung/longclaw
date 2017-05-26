@@ -57,7 +57,11 @@ $(document).ready(function(){
   $('.category_filter').on('change',function(evt,params){
     var taskType="";
     if(params){
-        window.location.replace("/accounts?type="+params["selected"]);    
+        window.location.replace("/accounts?account_type="+params["selected"]);    
+    }
+    else if(typeof(params) == 'undefined') {
+      taskType = "none";
+      window.location.replace("/accounts?account_type="+taskType);  
     }
     else{
       window.location.replace("/accounts");

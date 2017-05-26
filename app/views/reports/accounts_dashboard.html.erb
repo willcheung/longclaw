@@ -11,7 +11,7 @@
             <div class="col-md-12 m-t-sm filter-space">
                 <!-- Account Type -->
                 <select id="account-filter" class="category_filter col-md-3" data-placeholder="Select Account Type">
-                    <option value=""></option> <!-- no filter -->
+                     <option value=""></option>  <!-- no filter -->
                     <% @account_types.each do |k,v| %>
                       <option <% if params[:account] == v %> selected <% end %> ><%= v %></option>
                     <% end %>

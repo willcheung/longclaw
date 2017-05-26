@@ -20,9 +20,9 @@
         <div class="col-lg-2 filter-group">
           <div class="font-bold m-b-xs">Filter:</div>
           <select class="category_filter col-lg-12" data-placeholder="Select Type">
-            <option value="0"></option>
+            <option value ></option>
             <% @account_types.each{|k,v|    %>
-            <option value="<%=v %>"  <% if params[:type] == v  %> selected   <% end %> ><%=v %></option>
+            <option value="<%=v %>"  <% if params[:account_type] == v  %> selected   <% end %> ><%=v %></option>
              <% } %> 
           </select>    
         </div>

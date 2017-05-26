@@ -1,14 +1,17 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: [:show, :edit, :update, :destroy, :set_salesforce_account] 
   before_action :get_custom_fields_and_lists, only: [:index, :show]
+  before_action :manage_filter_state
 
   # GET /accounts
   # GET /accounts.json
   def index
     @title = 'Accounts'
-
-    if params[:type]
-      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ? AND accounts.category = ?", current_user.organization_id, params[:type]).order('accounts.name')
+    if params[:account_type] == "none"
+      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
+    elsif params[:account_type]
+      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ? AND accounts.category = ?", current_user.organization_id, params[:account_type]).order('accounts.name')
+      
     else
       @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
     end
@@ -142,4 +145,14 @@ class AccountsController < ApplicationController
       @custom_lists = current_user.organization.get_custom_lists_with_options
       @account_types = !@custom_lists.blank? ? @custom_lists["Account Type"] : {}
     end
+
+    def manage_filter_state
+    if params[:account_type] 
+      cookies[:account_type] = {value: params[:account_type]}
+    else
+      if cookies[:account_type]
+        params[:account_type] = cookies[:account_type]
+      end
+    end
+  end
 end
