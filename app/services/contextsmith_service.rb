@@ -1,6 +1,3 @@
-require "erb"
-include ERB::Util
-
 class ContextsmithService
 
   def self.load_emails_from_backend(project, max=100, query=nil, save_in_db=true, after=nil, is_time=true, neg_sentiment=0, request=true, is_test=false)
@@ -39,29 +36,26 @@ class ContextsmithService
   def self.get_emails_from_backend_with_callback(user)
     max = ENV["max_emails"] ? ENV["max_emails"].to_i : 10000
     base_url = ENV["csback_base_url"] + "/newsfeed/cluster"
+    callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
 
     if Rails.env.production?
-      callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
-      token_emails = [{ token: user.fresh_token, email: user.email }]
+      sources = [{ token: user.fresh_token, email: user.email, kind: 'gmail' }]
       in_domain = ""
     elsif Rails.env.test? # Test / DEBUG 
-      callback_url = "#{ENV['BASE_URL']}/onboarding/#{user.id}/create_clusters.json"
-      token_emails = [{ token: user.fresh_token, email: user.email }]
+      sources = [{ token: user.fresh_token, email: user.email, kind: 'gmail' }]
       in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
     else # Dev environment
-      callback_url = "http://localhost:3000/onboarding/#{user.id}/create_clusters.json"
       u = User.find_by_email('indifferenzetester@gmail.com')
-      token_emails = [{ token: u.fresh_token, email: u.email }]
+      sources = [{ token: u.fresh_token, email: u.email, kind: 'gmail' }]
       in_domain = "&in_domain=comprehend.com"
     end
-    ### TODO: add "&request=true" to final_url
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&preview=true&time=true&neg_sentiment=0&cluster_method=BY_EMAIL_DOMAIN&max=" + max.to_s + "&callback=" + callback_url + in_domain
+    final_url = base_url + "?preview=true&time=true&neg_sentiment=0&cluster_method=BY_EMAIL_DOMAIN&max=" + max.to_s + "&callback=" + callback_url + in_domain
     puts "Calling backend service for clustering: " + final_url
-    #puts "Callback URL set as: " + callback_url
 
-    url = URI.parse(final_url)
-    req = Net::HTTP::Get.new(url.to_s)
-    res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
+    uri = URI(final_url)
+    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+    req.body = { sources: sources }.to_json
+    res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
   end
 
 
@@ -71,39 +65,30 @@ class ContextsmithService
     #puts "********** We are in load_from_backend() ! ************"
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
-    token_emails = []
+    sources = []
     if Rails.env.development?
-      token_emails << { token: "test", email: "indifferenzetester@gmail.com" }
+      sources << { token: "test", email: "indifferenzetester@gmail.com", kind: "gmail" }
     else
       project.users.registered.not_disabled.allow_refresh_inbox.each do |u|
         success = true
         success = u.refresh_token! if u.token_expired?
-        token_emails << { token: u.oauth_access_token, email: u.email } if success
+        sources << { token: u.oauth_access_token, email: u.email, kind: "gmail" } if success
       end
     end
-    return [] if token_emails.empty?
+    return [] if sources.empty?
 
-    ex_clusters = project.contacts.pluck(:email)
-    
-    new_ex_clusters = Hash.new { |h,k| h[k] = [] }
-    ex_clusters.each do |e|
-      result = e.split('@')
-      new_ex_clusters[result[1]] << result[0]
-    end
-
-    final_cluster = []
-    new_ex_clusters.each do |key, value|
-      # Each domain will only contain email handle, except last element of the string.  ex: "[wcheung|klu|vluong@contextsmith.com]"
-      final_cluster.push(value.join('|') + "@"+ key)
-    end
+    ex_clusters = [project.contacts.pluck(:email)]
        
-    final_url = base_url + "?token_emails=" + token_emails.to_json + "&ex_clusters=" + url_encode([final_cluster].to_s) + in_domain + params
+    final_url = base_url + "?" + in_domain + params
     puts "Calling backend service: " + final_url
 
     begin
-      url = URI.parse(final_url)
-      req = Net::HTTP::Get.new(url.to_s)
-      res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
+      uri = URI(final_url)
+      req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+      req.body = { sources: sources, external_clusters: ex_clusters }.to_json
+      res = Net::HTTP.start(uri.host, uri.port 
+        #, use_ssl: uri.scheme == "https"
+        ) { |http| http.request(req) }
       data = JSON.parse(res.body.to_s)
     rescue => e
       puts "ERROR: Something went wrong: " + e.message

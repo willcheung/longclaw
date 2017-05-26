@@ -1,35 +1,35 @@
 <div class="vertical-timeline-block extension-block <%= 'future-activity' if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %>">
 
     <% if a.category == Activity::CATEGORY[:Conversation] %>
-        <div class="vertical-timeline-icon secondary-bg">
+        <div class="vertical-timeline-icon secondary-bg" id="<%=a.id%>">
             <i class="fa fa-envelope"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Note] %>
-        <div class="vertical-timeline-icon sticky-bg">
+        <div class="vertical-timeline-icon sticky-bg" id="<%=a.id%>">
             <i class="fa fa-sticky-note"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Meeting] %>
-        <div class="vertical-timeline-icon warning-bg">
+        <div class="vertical-timeline-icon warning-bg" id="<%=a.id%>">
             <i class="fa fa-calendar"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:JIRA] %>
-        <div class="vertical-timeline-icon jira-bg">
+        <div class="vertical-timeline-icon jira-bg" id="<%=a.id%>">
             <i class="jira-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Zendesk] %>
-        <div class="vertical-timeline-icon zd-bg">
+        <div class="vertical-timeline-icon zd-bg" id="<%=a.id%>">
             <i class="zd-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
-        <div class="vertical-timeline-icon salesforce-bg">
+        <div class="vertical-timeline-icon salesforce-bg" id="<%=a.id%>">
             <i class="salesforce-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Basecamp2] %>
-        <div class="vertical-timeline-icon basecamp2-bg">
+        <div class="vertical-timeline-icon basecamp2-bg" id="<%=a.id%>">
             <i class="basecamp2-logo"></i>
         </div>
     <% elsif a.category == Activity::CATEGORY[:Alert] %>
-        <div class="vertical-timeline-icon danger-bg">
+        <div class="vertical-timeline-icon danger-bg" id="<%=a.id%>">
             <i class="fa fa-exclamation"></i>
         </div>
     <% end %>
@@ -38,7 +38,7 @@
         <% if a.category == Activity::CATEGORY[:Conversation] %>
             <h4><strong><%= truncate(a.title, length: 35, separator: ' ') %></strong> (<%= a.email_messages.size %>)</h4>
             <% m = a.email_messages.last %>
-            <small><span class="message-author" href="#" title="temp"> <%= m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal %></span>&nbsp;to&nbsp;<%= get_conversation_member_names([], m.to, m.cc, 'other', 1) %><span class="time-ago" style="float:right"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</span><br/></small>
+            <small><span class="message-author" href="#" title="temp"> <%= m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal %></span>&nbsp;to&nbsp;<span data-toggle="tooltip" data-placement="top" data-original-title="<%= get_conversation_member_names([], m.to, m.cc, '', 99) %>"><%= get_conversation_member_names([], m.to, m.cc, 'other', 1) %></span> &nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;<span class="time-ago"><%= time_ago_in_words(Time.zone.at(m.sentDate)) %> ago</span><br/></small>
             <%= if m.content.nil? || m.content.is_a?(String)
                    get_expandable_text_html(text: m.content, id: a.id, length: 100, max_length: 500, separator: ' ').html_safe
                 else
@@ -94,4 +94,3 @@
         <% end %>
     </div>
 </div>
-

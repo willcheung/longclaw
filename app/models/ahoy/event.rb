@@ -22,5 +22,31 @@ module Ahoy
 
     belongs_to :visit
     belongs_to :user
+
+
+	  def self.all_ahoy_events
+	    query = <<-SQL
+		    select to_char(time, 'MM/DD') as "date", cast(count(ahoy_events.*) as integer) as events
+		    from ahoy_events 
+		    where time > current_date - interval '30' day and not properties @> '{"page":"/settings/user_analytics"}' 
+		    group by to_char(time, 'MM/DD')
+		    order by "date" asc
+		    limit 14;
+	    SQL
+	    find_by_sql(query)
+	  end
+
+	  def self.latest_activities
+	    query = <<-SQL
+		    select to_char(time, 'MM/DD') as "date", ahoy_events.* as events, users.email
+		    from ahoy_events
+		    join users on users.id=ahoy_events.user_id 
+		    where time > current_date - interval '30' day and not properties @> '{"page":"/settings/user_analytics"}' and not users.email like '%contextsmith.com'
+		    group by to_char(time, 'MM/DD'), ahoy_events.id,users.email 
+		    order by "date" desc;
+	    SQL
+	    find_by_sql(query)
+	  end
+
   end
 end

@@ -16,11 +16,11 @@
 </dd>
 <% end %>
 
-<p class="text-center m-t-md"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>/arg" target="_blank">View Relationship Graph &rarr;</a></button></p>
+<p class="text-center m-t-md"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= account_path(@project.account) %>" target="_blank">View/edit Contacts &rarr;</a></p>
 <p class="text-center">
     <button 
     <%= "disabled " if @salesforce_user.nil? || !@linked_to_sfdc  %>
-    id="salesforce-ext-export-cs-contacts" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Export Contacts to Salesforce">
+    id="salesforce-ext-export-cs-contacts" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="margin-left:6%" btnLabel="Export Contacts to Salesforce">
     <i class="fa fa-refresh"></i>&nbsp;Export Contacts to Salesforce
     </button>
     <% if (@salesforce_user && !@linked_to_sfdc) || (@salesforce_user.nil? && @enable_sfdc_login_and_linking) %>
@@ -29,7 +29,7 @@
         "></i>
     <% else %>
         <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
-        <%= @salesforce_user ? (@linked_to_sfdc ? "Send Contacts to Salesforce." : "-") : (@enable_sfdc_login_and_linking ? "-" : "To export Contacts to the linked Salesforce Account, please contact ContextSmith support or your ContextSmith administrator.") %>
+        <%= @salesforce_user ? (@linked_to_sfdc ? "Send Contacts to linked Salesforce Account." : "-") : (@enable_sfdc_login_and_linking ? "-" : "To export Contacts to the linked Salesforce Account, please contact ContextSmith support or your ContextSmith administrator.") %>
         "></i>
     <% end %>
 </p>

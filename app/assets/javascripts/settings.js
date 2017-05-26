@@ -1,3 +1,4 @@
+//= require highcharts-sparkline/highcharts-sparkline.js
 $('[data-toggle="tooltip"]').tooltip();
 
 $(document).ready(function() {
@@ -34,6 +35,15 @@ $(document).ready(function() {
         labelField: 'name',
         searchField: ['name'],
         create: false,
+        sortField: [
+            {
+                field: 'name',
+                direction: 'asc'
+            },
+            {
+                field: '$score'
+            }
+        ],
         render: {
           item: function(item, escape) {
             return '<div>' +
@@ -191,6 +201,15 @@ $(document).ready(function() {
         labelField: 'name',
         searchField: ['name'],
         create: false,
+        sortField: [
+            {
+                field: 'name',
+                direction: 'asc'
+            },
+            { 
+                field: '$score' 
+            }
+        ],
         render: {
           item: function(item, escape) {
             return '<div>' +
