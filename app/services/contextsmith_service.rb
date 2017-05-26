@@ -8,7 +8,7 @@ class ContextsmithService
     is_time = is_time.nil? ? "" : ("&time=" + is_time.to_s)
     request = request.nil? ? "": ("&request=" + request.to_s)
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
-    params = "&max=" + max.to_s + after + query + is_time + neg_sentiment + request
+    params = "?max=" + max.to_s + after + query + is_time + neg_sentiment + request
 
     #puts "~~~~~~ ContextsmithService will now call load_from_backend(). ~~~~~~"
     load_from_backend(project, base_url, params) do |data|
@@ -25,12 +25,59 @@ class ContextsmithService
   # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
   def self.load_calendar_from_backend(project, max=100, after=150.days.ago.to_i, before=1.5.days.from_now.to_i, save_in_db=true)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
-    params =  "&max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
+    params =  "?max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
     
     load_from_backend(project, base_url, params) do |data| 
       puts "Found #{data[0]['conversations'].size} calendar events!\n"
       Activity.load_calendar(data, project, save_in_db)
     end
+  end
+
+  def self.load_calendar_for_user(user, max: 100, after: Time.current.to_i, before: 1.day.from_now.to_i, save_in_db: false)
+    base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
+    params =  "?max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
+    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
+
+    if user.nil? || Rails.env.development?
+      source = [{ token: "test", email: "indifferenzetester@gmail.com", kind: "gmail" }]
+      self_cluster = [["indifferenzetester@gmail.com"]]
+    else
+      success = user.token_expired? ? user.refresh_token! : true
+      return [] unless success
+      source = [{ token: user.oauth_access_token, email: user.email, kind: "gmail" }]
+      self_cluster = [[user.email]]
+    end
+
+    final_url = base_url + params + in_domain
+    puts "Calling backend service: " + final_url
+    
+    uri = URI(final_url)
+    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+    req.body = { sources: source, external_clusters: self_cluster }.to_json
+    res = Net::HTTP.start(uri.host, uri.port 
+      #, use_ssl: uri.scheme == "https"
+      ) { |http| http.request(req) }
+    data = JSON.parse(res.body.to_s)
+
+    if data.nil? or data.empty?
+      puts "No data or nil returned!\n"
+      return []
+    elsif data.kind_of?(Array)
+      Activity.load_calendar(data, Hashie::Mash.new(id: '00000000-0000-0000-0000-000000000000'), save_in_db)
+    elsif data['code'] == 401
+      puts "Error: #{data['message']}\n"
+      return []
+    elsif data['code'] == 404
+      puts "#{data['message']}\n"
+      return []
+    else
+      puts "Unhandled backend response."
+      return []
+    end
+
+  rescue => e
+    puts "ERROR: Something went wrong: " + e.message
+    puts e.backtrace.join("\n")
   end
 
   def self.get_emails_from_backend_with_callback(user)
@@ -76,11 +123,10 @@ class ContextsmithService
       end
     end
     return [] if sources.empty?
-
     ex_clusters = [project.contacts.pluck(:email)]
-       
-    final_url = base_url + "?" + in_domain + params
+
     puts "Calling backend service: " + final_url
+    final_url = base_url + params + in_domain
 
     begin
       uri = URI(final_url)
