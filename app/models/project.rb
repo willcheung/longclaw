@@ -46,7 +46,8 @@ class Project < ActiveRecord::Base
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
   has_many  :notifications_for_daily_email, -> {
-    where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc)
+    where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
+      Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Notification::CATEGORY[:Alert])
     .order(:is_complete, :original_due_date)
   }, class_name: "Notification"
   #has_many  :notifications_for_weekly_email, -> {
@@ -69,8 +70,8 @@ class Project < ActiveRecord::Base
   #    'jsonb_array_length(email_messages) AS num_messages',
   #    'email_messages->-1 AS last_msg') }, class_name: "Activity"
   has_many  :other_activities_for_daily_email, -> {
-    from_yesterday.reverse_chronological
-    .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
+    from_yesterday.reverse_chronological.where.not(category: Activity::CATEGORY[:Conversation])
+    .where.not("(category = 'Alert' AND jsonb_array_length(email_messages) > 0 AND email_messages->0 ? 'days_inactive')") }, class_name: "Activity"
   #has_many  :other_activities_for_weekly_email, -> {
   #  from_lastweek.reverse_chronological
   #  .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
