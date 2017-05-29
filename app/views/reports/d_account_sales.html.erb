@@ -144,10 +144,6 @@
                         </div>
 
                         <div class="row m-t-md">
-                            <div id="risk-detection-chart" style="height:220px;overflow:visible"></div>
-                        </div>
-
-                        <div class="row m-t-md">
 
                             <div id="activities-chart" style="height:220px"></div>
                         </div>
@@ -410,7 +406,7 @@
 
         $('#risk-chart').highcharts({
             title: {
-                text: "Risk Score Trend",
+                text: "Risk Score (Last 14 days)",
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -504,7 +500,7 @@
                 ]
 
             });
-
+/*
         $('#risk-detection-chart').highcharts({
             chart: {
                 events:{
@@ -593,7 +589,7 @@
                 marker : {symbol : 'square', radius: 6 }
             }]
         });
-
+*/
         $('#activities-chart').highcharts({
             chart: {
                 events:{
@@ -607,7 +603,7 @@
                 enabled: false
             },
             title: {
-                text: "Engagement",
+                text: "Activities (Last 14 days)",
                     align: 'left',
                     margin: 0,
                     x: 35,

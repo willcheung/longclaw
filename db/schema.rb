@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170508212705) do
+ActiveRecord::Schema.define(version: 20170528070528) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -123,6 +123,7 @@ ActiveRecord::Schema.define(version: 20170508212705) do
     t.text     "background_info"
     t.string   "department"
     t.string   "external_source_id"
+    t.string   "buyer_role"
   end
 
   add_index "contacts", ["account_id", "email"], name: "index_contacts_on_account_id_and_email", unique: true, using: :btree
@@ -277,13 +278,9 @@ ActiveRecord::Schema.define(version: 20170508212705) do
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                         default: "",               null: false
     t.uuid     "account_id"
-    t.string   "project_code"
     t.boolean  "is_public",                                    default: true
     t.string   "status",                                       default: "Active"
     t.text     "description"
-    t.date     "start_date"
-    t.date     "end_date"
-    t.integer  "budgeted_hours"
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
@@ -296,10 +293,13 @@ ActiveRecord::Schema.define(version: 20170508212705) do
     t.date     "contract_start_date"
     t.date     "contract_end_date"
     t.decimal  "contract_arr",        precision: 14, scale: 2
-    t.decimal  "contract_mrr",        precision: 12, scale: 2
     t.integer  "renewal_count"
     t.boolean  "has_case_study",                               default: false,            null: false
     t.boolean  "is_referenceable",                             default: false,            null: false
+    t.decimal  "amount",              precision: 14, scale: 2
+    t.string   "stage"
+    t.date     "close_date"
+    t.decimal  "expected_revenue",    precision: 14, scale: 2
   end
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
