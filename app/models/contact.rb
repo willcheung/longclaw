@@ -75,7 +75,7 @@ class Contact < ActiveRecord::Base
 
     data_hash.each do |d|
       d.newExternalMembers.each do |mem|
-        contact = find_or_create_from_email_info(mem.address, mem.personal, project)
+        contact = find_or_create_from_email_info(mem.address, mem.personal, project, ProjectMember::STATUS[:Pending], "Email")
         contacts << contact if contact
       end unless d.newExternalMembers.nil?
     end

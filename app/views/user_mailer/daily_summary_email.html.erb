@@ -21,7 +21,7 @@
     <tbody style="width:100%;display:table;">
 
       <% @upcoming_meetings.each do |a| %>
-        <tr>
+        <tr style="height:50px;min-height:50px;">
         <!-- Meeting -->
           <td style="text-align:left;font-size:20px;line-height:19px;border-collapse:collapse;border-spacing:0;padding-top:10px;">
             <span><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></span>
@@ -62,6 +62,50 @@
         </tr>
       </tbody>
     </table>
+
+  <!-- Contacts -->
+  <% unless p.contacts.empty? %>
+  <div style="margin:0;font-size:14px;">
+    <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+      <tbody style="width:100%;display:table;">
+        <tr>
+          <td style="vertical-align:middle;">
+            <span style="font-size:15px;font-weight:bold;">New Contacts:</span>
+          </td>
+          <td class="expander"></td>
+          <td style="padding:6px;text-align:right;">
+            <a href="<%= account_url(p.account_id) %>" style="display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">Go to Contacts »</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+      <tbody style="width:100%;display:table;">
+
+      <% p.contacts.each do |c| %>
+        <tr>
+          <td><%= get_full_name(c) %></td>
+          <td><%= c.email %></td>
+          <td style="color:#aaaaaa;font-size:12px;">
+          <%= case c.source
+              when "Email", "Chrome"
+                "Found by ContextSmith in emails"
+              # when "Chrome"
+              #   "Found by CS Chrome Extension in emails"
+              when "Salesforce"
+                "Found by syncing Salesforce contacts"
+              when nil
+                "Manually entered into ContextSmith"
+              else
+                "Unknown source"
+              end %>    
+            </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+  <% end %>
 
   <!-- Activities -->
   <% unless p.activities.empty? %>

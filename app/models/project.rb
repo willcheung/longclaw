@@ -76,6 +76,9 @@ class Project < ActiveRecord::Base
   #  from_lastweek.reverse_chronological
   #  .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
 
+  belongs_to  :account_with_contacts_for_daily_email, -> { includes(:contacts).where(contacts: { created_at: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }) }, class_name: "Account", foreign_key: "account_id"
+  # has_many  :contacts_for_daily_email, -> { where(created_at: (Time.current.yesterday.midnight..Time.current.yesterday.end_of_day)) }, through: "account", source: :contacts, class_name: 'Contact'
+
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
   # v2: "_all" version, ignores status
