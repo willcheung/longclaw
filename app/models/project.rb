@@ -121,7 +121,6 @@ class Project < ActiveRecord::Base
   scope :is_confirmed, -> { where is_confirmed: true }
 
   validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
-  validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
