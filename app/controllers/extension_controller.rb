@@ -198,18 +198,18 @@ class ExtensionController < ApplicationController
 
     client = SalesforceService.connect_salesforce(current_user.organization_id)
     query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email" # Use GROUP BY as a workaround to get Salesforce to SELECT distinct AccountID's and Email's
-    sfcd_contacts_results = SalesforceService.query_salesforce(client, query_statement)
+    sfdc_contacts_results = SalesforceService.query_salesforce(client, query_statement)
 
-    return nil if sfcd_contacts_results.nil? || sfcd_contacts_results.length == 0 # abort if SFDC query error or if no contacts were found
+    return nil if sfdc_contacts_results.nil? || sfdc_contacts_results.length == 0 # abort if SFDC query error or if no contacts were found
 
-    contacts_with_accounts = sfcd_contacts_results.each_with_object([]) { |r, memo| memo << [r[:AccountId],r[:Email]] }
+    contacts_with_accounts = sfdc_contacts_results.map { |r| [r[:AccountId],r[:Email]] }
 
     return if contacts_with_accounts.nil?
 
     #### Match SFDC Account by contact e-mail
     print "Attempting to match contacts by e-mail..."  
 
-    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new {|h, k| h[k]=[]}) { |p, memo| memo[p[0]] = memo[p[0]] << p[1] }  # obtain a hash of contact e-mails with AccountId as the keys
+    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new(Array.new)) { |p, memo| memo[p[0]] += [p[1]] }  # obtain a hash of contact e-mails with AccountId as the keys
 
     account_contact_matches_by_email = Hash.new(0)
     emails.each do |e| 
