@@ -10,7 +10,7 @@ jQuery(document).ready(function($) {
   $("#search-account-projects").chosen();
   $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
   $('.owner_box').chosen({ allow_single_deselect: true});
-  $('.status_box').chosen({ allow_single_deselect: true});
+  $('.status_box').chosen({ disable_search: true, allow_single_deselect: true});
   $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
   $('.owner_filter').chosen({ disable_search: true, allow_single_deselect: true});
 

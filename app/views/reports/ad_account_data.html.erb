@@ -1,13 +1,13 @@
 <div id="account-header">
     <div class="row m-b-sm">
         <div class="col-lg-12">
-            <h2><%= @project.name %></h2>
+            <h2><a href="<%= project_path(@project) %>"><%= @project.name %></a></h2>
         </div>
     </div>
 
     <div class="ibox-content">
         <div class="row">
-            <div class="col-md-4 text-center">
+            <div class="col-md-3 text-center">
                 <div class="metric <%= risk_color(@risk_score) %>">
                     <div class="metric-title">
                         <h4><%= risk_level(@risk_score) %></h4>
@@ -18,7 +18,7 @@
                 </div>
             </div>
 
-            <div class="col-md-4 text-center">
+            <div class="col-md-3 text-center">
                 <div class="metric text-danger">
                     <div class="metric-title">
                         <h4>Open Smart Tasks</h4>
@@ -29,13 +29,24 @@
                 </div>
             </div>
 
-            <div class="col-md-4 text-center">
+            <div class="col-md-3 text-center">
                 <div class="metric">
                     <div class="metric-title">
-                        <h4>Last Touch</h4>
+                        <h4>Days to Close</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="line-height:50px;"><%= @last_activity_date ? time_ago_in_words(@last_activity_date) + " ago" : "--" %></h2>
+                        <h2 style="font-weight:600;font-size:46px"><% if @project.close_date.nil? %> - <% else %><%= @project.close_date - Date.today %><% end %></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>Deal Size</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px;"><% if @project.amount.nil? %> - <% else %>$<%= number_to_human("12345") %><% end %></h2>
                     </div>
                 </div>
             </div>
@@ -270,7 +281,7 @@
 
         $('#risk-chart').highcharts({
             title: {
-                text: "Risk Score Trend",
+                text: "Risk Score (Last 14 days)",
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -458,7 +469,7 @@
                 enabled: false
             },
             title: {
-                text: "Engagement",
+                text: "Activities (Last 14 days)",
                     align: 'left',
                     margin: 0,
                     x: 35,

@@ -16,6 +16,7 @@
 #  background_info    :text
 #  department         :string
 #  external_source_id :string
+#  buyer_role         :string
 #
 # Indexes
 #
@@ -53,14 +54,11 @@ class Contact < ActiveRecord::Base
 
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
+  ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', Coach: 'Coach', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
 
   def is_source_from_salesforce?
     return self.source == "Salesforce"
   end
-
-  # def is_source_from_chrome?
-  #   return self.source == "Chrome"
-  # end
 
   def is_internal_user?
     return false
