@@ -7,7 +7,7 @@ development:
   # uncomment when running locally: csback_base_url: http://localhost:8888
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
   mailchimp_email_list_id: 0b8529ba9c
-  csback_script_base_url: http://104.198.4.24:80
+  csback_script_base_url: http://104.198.4.24:8888
   salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
   salesforce_client_secret: 3550523996344810646
   salesforce_sandbox_client_id: 3MVG982oBBDdwyHiqGsOXQz6wLLinqrWyAUQRz19HeA2MWIjX0iGa6PfE1LbD8x98nmuNETFb1_.0YyxfaIPo
@@ -27,8 +27,8 @@ test:
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
-  csback_base_url: https://104.198.4.24:80
-  csback_script_base_url: https://104.198.4.24:80
+  csback_base_url: https://104.198.4.24:8888
+  csback_script_base_url: https://104.198.4.24:8888
 
 production:
   google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com

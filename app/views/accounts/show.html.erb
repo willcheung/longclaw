@@ -78,6 +78,7 @@
                                                             <th>First Name</th>
                                                             <th>Last Name</th>
                                                             <th>Title</th>
+                                                            <th>Buyer Role</th>
                                                             <th></th>
                                                             <th>Email</th>
                                                             <th>Phone</th>
@@ -90,6 +91,7 @@
                                                             <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :buyer_role, :as => :select, :collection => Contact::ROLE, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
                                                             <td class="contact-type">
                                                             <% if contact.is_source_from_salesforce? %>
                                                                 <img id="sfdc-icon" style="width:15px" src="/assets/images/salesforce.png" style="width:0px;" title="Source: Salesforce"/>
