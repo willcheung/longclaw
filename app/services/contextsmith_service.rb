@@ -51,13 +51,18 @@ class ContextsmithService
     final_url = base_url + params + in_domain
     puts "Calling backend service: " + final_url
     
-    uri = URI(final_url)
-    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
-    req.body = { sources: source, external_clusters: self_cluster }.to_json
-    res = Net::HTTP.start(uri.host, uri.port 
-      #, use_ssl: uri.scheme == "https"
-      ) { |http| http.request(req) }
-    data = JSON.parse(res.body.to_s)
+    begin
+      uri = URI(final_url)
+      req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+      req.body = { sources: source, external_clusters: self_cluster }.to_json
+      res = Net::HTTP.start(uri.host, uri.port 
+        #, use_ssl: uri.scheme == "https"
+        ) { |http| http.request(req) }
+      data = JSON.parse(res.body.to_s)
+    rescue => e
+      puts "ERROR: Something went wrong: " + e.message
+      puts e.backtrace.join("\n")
+    end
 
     if data.nil? or data.empty?
       puts "No data or nil returned!\n"
@@ -74,11 +79,8 @@ class ContextsmithService
       puts "Unhandled backend response."
       return []
     end
-
-  rescue => e
-    puts "ERROR: Something went wrong: " + e.message
-    puts e.backtrace.join("\n")
   end
+
 
   def self.get_emails_from_backend_with_callback(user)
     max = ENV["max_emails"] ? ENV["max_emails"].to_i : 10000

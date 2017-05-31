@@ -89,9 +89,11 @@ class User < ActiveRecord::Base
   def upcoming_meetings
     visible_projects = Project.visible_to(organization_id, id)
 
-    meetings_in_cs = Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current.midnight..1.day.from_now), project_id: visible_projects.ids)
+    meetings_in_cs = Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current..1.day.from_now), project_id: visible_projects.ids)
       .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{email}\"}]'::jsonb").order(:last_sent_date)
-    calendar_meetings = ContextsmithService.load_calendar_for_user(self).reverse
+    calendar_meetings = ContextsmithService.load_calendar_for_user(self).each do |a|
+      a.last_sent_date = Time.current.midnight + a.last_sent_date.hour.hours + a.last_sent_date.min.minutes
+    end.sort_by(&:last_sent_date)
     # p meetings_in_cs.pluck(:last_sent_date)
     # p calendar_meetings.map(&:last_sent_date)
 
@@ -109,7 +111,6 @@ class User < ActiveRecord::Base
         mic.update(last_sent_date: calendar_meetings[i].last_sent_date, last_sent_date_epoch: calendar_meetings[i].last_sent_date_epoch, email_messages: calendar_meetings[i].email_messages)
         calendar_meetings[i] = mic
       end
-      p i
     end
 
     calendar_meetings
