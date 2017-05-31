@@ -38,7 +38,7 @@
                   </div>
               </nav>
               <% if @salesforce_connection_error %> 
-                <div class="box-shadow" style="border:1px solid red;border-radius:10px;line-height:3;margin:2px 0;padding:6px 18px">
+                <div style="border:1px solid red;border-radius:10px;line-height:3;margin:2px 0;padding:6px 18px">
                   <i class="fa fa-exclamation-circle fa-2x" style="color:red"></i> — Salesforce connection error occurred.  Try <a href="<%= settings_salesforce_accounts_path %>">disconnecting and reconnecting to Salesforce</a>.
                 </div>
               <% else %>

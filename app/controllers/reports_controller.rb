@@ -44,7 +44,7 @@ class ReportsController < ApplicationController
     @data = [] and return if users.blank?  #quit early if all projects are filtered out
 
     case @sort
-    when "Accounts Managed"
+    when "Opportunities"
       accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
       @data = accounts_managed.map do |uid, num_accounts|
         user = users.find { |usr| usr.id == uid }
@@ -83,17 +83,17 @@ class ReportsController < ApplicationController
       end
       @data.sort_by! { |d| d.total }.reverse!
       @categories = @data.first.y.map(&:category)
-    when "New Alerts/Tasks (Last 14d)"
+    when "New Alerts & Tasks (Last 14d)"
       new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = new_tasks.map do |u|
         Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
       end
-    when "Closed Alerts/Tasks (Last 14d)"
+    when "Closed Alerts & Tasks (Last 14d)"
       closed_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS TRUE AND EXTRACT(EPOCH FROM notifications.complete_date) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = closed_tasks.map do |u|
         Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
       end
-    when "Open Alerts/Tasks"
+    when "Open Alerts & Tasks"
       open_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS FALSE").group('users.id').order("task_count DESC")
       @data = open_tasks.map do |u|
         Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
@@ -111,6 +111,7 @@ class ReportsController < ApplicationController
 
     @open_alerts = @user.notifications.open.risks.count
     @accounts_managed = @user.projects_owner_of.count
+    @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
 
     @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
 
@@ -229,12 +230,12 @@ class ReportsController < ApplicationController
         y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: y, color: 'blue' })
       end
-    when "Engagement Last 14d"
+    when "Activities (Last 14d)"
       project_engagement = Project.find_include_sum_activities(projects.pluck(:id), 14*24)
       @data = project_engagement.map do |p|
         Hashie::Mash.new({ id: p.id, name: p.name, y: p.num_activities, color: 'blue'})
       end
-    when "Negative Sentiment / Engagement %"
+    when "Negative Sentiment / Activities %"
       project_engagement = Project.find_include_sum_activities(projects.pluck(:id))
       project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Alert]}'").group("projects.id")
       @data = project_engagement.map do |e|

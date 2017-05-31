@@ -11,7 +11,7 @@ class ProjectsController < ApplicationController
   # GET /projects.json
   def index
     @title = "Streams"
-
+    
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
 
@@ -392,7 +392,7 @@ class ProjectsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def project_params
-    params.require(:project).permit(:name, :description, :is_public, :project_code, :account_id, :budgeted_hours, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :contract_mrr, :renewal_count, :has_case_study, :is_referenceable)
+    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date)
   end
 
   # A list of the param names that can be used for filtering the Project list

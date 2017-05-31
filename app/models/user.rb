@@ -56,6 +56,8 @@ class User < ActiveRecord::Base
   has_many    :notifications, foreign_key: "assign_to", dependent: :nullify
   has_many    :oauth_users
   has_many    :custom_configurations, dependent: :destroy
+  has_many    :events
+
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column

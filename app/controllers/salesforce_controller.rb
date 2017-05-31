@@ -135,27 +135,8 @@ class SalesforceController < ApplicationController
 
       # For Power Users and trial/Chrome Users: Automatically import SFDC contacts, then add all SFDC contacts as pending members ('Suggested People') in all streams in the linked CS account 
       if current_user.power_or_trial_only?
-        puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked an account to a SFDC account. Attempting to automatically load SFDC contacts..."
-        account = salesforce_account.account 
-        client = SalesforceService.connect_salesforce(current_user.organization_id)
-
-        unless client.nil?  #successful connection established
-          errors = Contact.load_salesforce_contacts(client, salesforce_account.contextsmith_account_id, salesforce_account.salesforce_account_id)
-          if errors.nil? 
-            puts "Contacts successfully loaded."
-          else # Salesforce query error occurred
-            puts "Error in Contact.load_salesforce_contacts()! Attempted to load contacts from Salesforce Account \"#{salesforce_account.salesforce_account_name}\" (sfdc_id='#{salesforce_account.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{salesforce_account.contextsmith_account_id}')."
-          end
-        end
-
-        # Add SFDC contacts to pending members ('Suggested People') of all streams in this CS account if not already a member of the stream, even SFDC contacts to whom the current user does not have visibility!
-        sfdc_contacts = account.contacts.select { |c| c.is_source_from_salesforce? }
-        account.projects.each do |p|
-          project_contact_ids = p.contacts_all.pluck(:contact_id)
-
-          sfdc_contacts.each { |sfc| ProjectMember.create(project: p, contact: sfc, status: ProjectMember::STATUS[:Pending]) unless project_contact_ids.include?(sfc.id)  # if contact is not a project member in this stream, add as a suggested member
-          }
-        end
+        puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked Account '#{salesforce_account.account.name}' to SFDC Account '#{salesforce_account.salesforce_account_name}'!"
+        SalesforceController.import_sfdc_contacts_and_add_as_members(client: SalesforceService.connect_salesforce(current_user.organization_id), account: salesforce_account.account, sfdc_account: salesforce_account) 
       end
     end
 
@@ -499,6 +480,29 @@ class SalesforceController < ApplicationController
     sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
 
     return {sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata}
+  end
+
+  # Import SFDC contacts from sfdc_account, then add all SFDC contacts as pending members ('Suggested People') in all streams in the linked CS account 
+  def self.import_sfdc_contacts_and_add_as_members(client: , account: , sfdc_account: )
+    puts "Automatically importing SFDC contacts from SFDC Account '#{ sfdc_account.salesforce_account_name }' into Account '#{ account.name }' and adding SFDC contacts as pending members of its streams..."
+
+    unless client.nil?  # if valid connection 
+      errors = Contact.load_salesforce_contacts(client, sfdc_account.contextsmith_account_id, sfdc_account.salesforce_account_id)
+      if errors.nil? 
+        puts "Contacts successfully loaded."
+      else # Salesforce query error occurred
+        puts "Error in Contact.load_salesforce_contacts()! Attempted to load contacts from Salesforce Account \"#{sfdc_account.salesforce_account_name}\" (sfdc_id='#{sfdc_account.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{sfdc_account.contextsmith_account_id}')."
+      end
+    end
+
+    # Add all SFDC contacts found in CS account to pending members of all streams in this CS account if not already a member of the stream, even SFDC contacts to whom the current user does not have visibility!
+    sfdc_contacts = account.contacts.select { |c| c.is_source_from_salesforce? }
+    account.projects.each do |p|
+      project_contact_ids = p.contacts_all.pluck(:contact_id)
+
+      sfdc_contacts.each { |sfc| ProjectMember.create(project: p, contact: sfc, status: ProjectMember::STATUS[:Pending]) unless project_contact_ids.include?(sfc.id)  # if contact is not a project member in this stream, add as a suggested member
+      }
+    end
   end
 
   private

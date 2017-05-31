@@ -16,6 +16,7 @@
 #  background_info    :text
 #  department         :string
 #  external_source_id :string
+#  buyer_role         :string
 #
 # Indexes
 #
@@ -31,7 +32,7 @@ class Contact < ActiveRecord::Base
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
   # v2: "_all" version, ignores status
-  has_many   :project_members, -> { confirmed }, dependent: :destroy, class_name: "ProjectMember"
+  has_many   :project_members, -> { confirmed }, class_name: "ProjectMember", dependent: :destroy
   has_many   :project_members_all, class_name: "ProjectMember", dependent: :destroy
   has_many   :projects, through: "project_members"
   has_many   :visible_projects, -> { is_active.is_confirmed }, through: "project_members", source: :project
@@ -53,14 +54,11 @@ class Contact < ActiveRecord::Base
 
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
+  ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', Coach: 'Coach', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
 
   def is_source_from_salesforce?
     return self.source == "Salesforce"
   end
-
-  # def is_source_from_chrome?
-  #   return self.source == "Chrome"
-  # end
 
   def is_internal_user?
     return false
