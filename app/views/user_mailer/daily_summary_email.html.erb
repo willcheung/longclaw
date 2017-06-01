@@ -35,7 +35,7 @@
             <% if a.id.nil? %>
               Found in your calendar
             <% else %>
-              Found in ContextSmith, view the 
+              Last activity <%= time_ago_in_words(@project_days_inactive[a.project_id]) %> ago, view in 
               <a href="<%= project_url(a.project_id) %>" style="display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">Stream</a>
             <% end %>    
             </span>

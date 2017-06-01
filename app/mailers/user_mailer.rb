@@ -14,10 +14,10 @@ class UserMailer < ApplicationMailer
     @user = user
     @subs = user.valid_streams_subscriptions.daily
     @upcoming_meetings = user.upcoming_meetings
-
+    @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]], last_sent_date: Time.current..2.days.from_now }).group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
+ 
+    puts "Checking daily subscription for #{user.email}"
     unless @subs.blank? && @upcoming_meetings.blank?
-      puts "Checking daily subscription for #{user.email}"
-      # @current_user_timezone = user.time_zone
       @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email, :account_with_contacts_for_daily_email)
       @updates_today = @updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
