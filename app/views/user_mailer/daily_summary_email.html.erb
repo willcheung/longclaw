@@ -23,8 +23,8 @@
       <% @upcoming_meetings.each do |a| %>
         <tr style="height:50px;min-height:50px;">
         <!-- Meeting -->
-          <td style="text-align:left;font-size:20px;line-height:19px;border-collapse:collapse;border-spacing:0;padding-top:20px;">
-            <span><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></span>
+          <td style="text-align:left;font-size:20px;line-height:19px;border-collapse:collapse;border-spacing:0;min-width:85px;">
+            <span style="font-size:20px;"><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></span>
           </td>
           <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;padding-bottom:10px;">
             <span style="font-size:17px;"><%= a.title %></span>
@@ -36,7 +36,7 @@
               Found in your calendar
             <% else %>
               Last activity <%= time_ago_in_words(@project_days_inactive[a.project_id]) %> ago, view in 
-              <a href="<%= project_url(a.project_id) %>" style="display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">Stream</a>
+              <a href="<%= project_url(a.project_id) %>" style="display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">ContextSmith</a>
             <% end %>    
             </span>
           </td>
@@ -98,13 +98,13 @@
           <td style="color:#aaaaaa;font-size:12px;">
           <%= case c.source
               when "Email", "Chrome"
-                "Found by ContextSmith in emails"
+                "Found in emails"
               # when "Chrome"
               #   "Found by CS Chrome Extension in emails"
               when "Salesforce"
-                "Found by syncing Salesforce contacts"
+                "Synced from Salesforce"
               when nil
-                "Manually entered into ContextSmith"
+                "Manually entered"
               else
                 "Unknown source"
               end %>    
