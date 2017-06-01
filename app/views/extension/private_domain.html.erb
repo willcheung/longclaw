@@ -19,7 +19,7 @@
             <% if u.onboarding_step == -1 && !u.cluster_create_date.nil? %>
                 Joined! <i class="fa fa-thumbs-o-up"/>
             <% else %>
-                <%= link_to 'Invite', "/settings/invite_user/#{u.id}", 'class' => 'btn btn-primary btn-sm', 'method' => 'post', 'remote' => true, 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an e-mail invitation." %>
+                <%= link_to 'Invite', "/settings/invite_user/#{u.id}", 'class' => 'btn btn-primary btn-sm invite-btn', 'method' => 'post', 'remote' => true, 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an e-mail invitation." %>
             <% end %>
         </td>
     </tr>
@@ -37,7 +37,7 @@
 
 <script>
     $(document).ready(function(){
-        $(".btn").click(function() {
+        $(".invite-btn").click(function() {
             $(this).html("Resend");
             $(this).attr("data-original-title","E-mail invitation was sent. We will re-send the invitation.");
         });
