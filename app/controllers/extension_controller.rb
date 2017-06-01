@@ -3,6 +3,7 @@ class ExtensionController < ApplicationController
 
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
+  before_action :set_sfdc_status_and_accounts, only: [:account, :alerts_tasks, :contacts, :metrics]
   before_action :get_account_types, only: [:no_account]
 
   def test
@@ -40,7 +41,7 @@ class ExtensionController < ApplicationController
       else
         new_internal_users << {full_name: full_name, email: email}
       end
-    end
+    end if params[:internal].present?
 
     # Create previously unidentified internal members as new Users
     @users.concat create_and_return_internal_users(new_internal_users)
@@ -90,6 +91,21 @@ class ExtensionController < ApplicationController
   end
 
   private
+
+  def set_salesforce_user
+    return if @salesforce_user.present? || current_user.nil?
+
+    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
+
+    if current_user.admin?
+      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
+    elsif current_user.power_or_trial_only?  # individual power user or trial/Chrome user
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
+    end
+  end
 
   def set_account_and_project
     # p "*** set account and project ***"
@@ -191,25 +207,25 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  #### Find and return the most likely SFDC Account given an array of contact e-mails
+  # Find and return the most likely SFDC Account given an array of contact e-mails
   def find_matching_sfdc_account(client, emails=[])
 
     return nil if client.nil? || emails.blank?  # abort if connection invalid or no emails passed
 
     client = SalesforceService.connect_salesforce(current_user.organization_id)
     query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email" # Use GROUP BY as a workaround to get Salesforce to SELECT distinct AccountID's and Email's
-    sfcd_contacts_results = SalesforceService.query_salesforce(client, query_statement)
+    sfdc_contacts_results = SalesforceService.query_salesforce(client, query_statement)
 
-    return nil if sfcd_contacts_results.nil? || sfcd_contacts_results.length == 0 # abort if SFDC query error or if no contacts were found
+    return nil if sfdc_contacts_results.nil? || sfdc_contacts_results.length == 0 # abort if SFDC query error or if no contacts were found
 
-    contacts_with_accounts = sfcd_contacts_results.each_with_object([]) { |r, memo| memo << [r[:AccountId],r[:Email]] }
+    contacts_with_accounts = sfdc_contacts_results.map { |r| [r[:AccountId],r[:Email]] }
 
     return if contacts_with_accounts.nil?
 
     #### Match SFDC Account by contact e-mail
     print "Attempting to match contacts by e-mail..."  
 
-    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new {|h, k| h[k]=[]}) { |p, memo| memo[p[0]] = memo[p[0]] << p[1] }  # obtain a hash of contact e-mails with AccountId as the keys
+    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new(Array.new)) { |p, memo| memo[p[0]] += [p[1]] }  # obtain a hash of contact e-mails with AccountId as the keys
 
     account_contact_matches_by_email = Hash.new(0)
     emails.each do |e| 
@@ -278,20 +294,8 @@ class ExtensionController < ApplicationController
     @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
   end
 
-  def set_salesforce_user
-    return if @salesforce_user.present? || current_user.nil?
-
-    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
-
-    if current_user.admin?
-      # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
-      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
-    elsif current_user.power_or_trial_only?  # individual power user or trial/Chrome user
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
-      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
-    end
-
+  # Set the various status flags and complete operations related to SFDC and linked SFDC entity
+  def set_sfdc_status_and_accounts
     @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
     @linked_to_sfdc = @project && (!@project.salesforce_opportunity.nil? || @project.account.salesforce_accounts.present?)
     @enable_sfdc_login_and_linking = current_user.admin? || current_user.power_or_trial_only?
