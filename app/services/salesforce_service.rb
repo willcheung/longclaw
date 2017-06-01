@@ -35,13 +35,16 @@ class SalesforceService
                              instance_url: salesforce_user.oauth_instance_url,
                              api_version: '38.0')
       begin
-        puts "SalesforceService: Refreshing access token. Client established using Restforce gem.  Accessing user_info..."
-        puts "SalesforceService: Daily SFDC API requests Max=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
-        client.user_info
-      rescue
+        puts "SalesforceService.connect_salesforce(): Refreshing access token. Client established using Restforce gem.  Accessing user_info... #{ client.user_info }"
+      rescue => e
+        puts "*** SalesforceService error: Salesforce connection error!  Details: #{ e.to_s } ***"
         client = nil
-        puts "*** SalesforceService error: Salesforce connection error! ***"
-      end      
+      end
+      begin
+        puts "SalesforceService.connect_salesforce(): Daily SFDC API Requests Max/Limit=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
+      rescue => e
+        puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits: #{ e.to_s }. However, the SFDC connection was successfully established!"
+      end
     end
 
     #return nil  # simulates a Salesforce connection error

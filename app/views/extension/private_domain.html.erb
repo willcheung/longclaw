@@ -9,16 +9,17 @@
 
 <hr/>
 
-<table class="center"> <!--table-striped -->
+<table class="center table-striped">
     <% @users.sort_by {|u| u.first_name.upcase}.each do |u| %>
     <tr>
         <% full_name = get_full_name(u) %>
-        <td style="word-break: break-all"><%= (full_name == " ") ? u.email : full_name %></td>
-        <td style="text-align:center">
+        <% display_name = (full_name == " ") ? u.email : full_name %>
+        <td style="width:160px; padding:0.7em; display:inline-block; overflow:hidden; text-overflow:ellipsis" title="<%= display_name %>"><%= (display_name.gsub ' ', '&nbsp;').html_safe %></td>
+        <td style="width:110px; text-align:center">
             <% if u.onboarding_step == -1 && !u.cluster_create_date.nil? %>
                 Joined! <i class="fa fa-thumbs-o-up"/>
             <% else %>
-                <%= link_to 'Invite', "/settings/invite_user/#{u.id}", 'class' => 'btn btn-primary btn-sm', 'method' => 'post', 'remote' => true, 'id' => "#{u.id}", 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an e-mail invitation." %>
+                <%= link_to 'Invite', "/settings/invite_user/#{u.id}", 'class' => 'btn btn-primary btn-sm invite-btn', 'method' => 'post', 'remote' => true, 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an e-mail invitation." %>
             <% end %>
         </td>
     </tr>
@@ -33,3 +34,12 @@
         padding: 0.25em 1em;
     }
 </style>
+
+<script>
+    $(document).ready(function(){
+        $(".invite-btn").click(function() {
+            $(this).html("Resend");
+            $(this).attr("data-original-title","E-mail invitation was sent. We will re-send the invitation.");
+        });
+    });
+</script>
