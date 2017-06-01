@@ -43,7 +43,7 @@ class SalesforceService
       begin
         puts "SalesforceService.connect_salesforce(): Daily SFDC API Requests Max/Limit=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
       rescue => e
-        puts "*** SalesforceService error: Error during query of Daily SFDC API Requests limits: #{ e.to_s }. SFDC connection successfully established! ***"
+        puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits: #{ e.to_s }. However, the SFDC connection was successfully established!"
       end
     end
 
