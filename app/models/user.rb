@@ -95,6 +95,7 @@ class User < ActiveRecord::Base
       .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{email}\"}]'::jsonb").order(:last_sent_date)
     calendar_meetings = ContextsmithService.load_calendar_for_user(self).each do |a|
       a.last_sent_date = Time.current.midnight + a.last_sent_date.hour.hours + a.last_sent_date.min.minutes
+      a.last_sent_date += 1.day if a.last_sent_date < Time.current
     end.sort_by(&:last_sent_date)
     # p meetings_in_cs.pluck(:last_sent_date)
     # p calendar_meetings.map(&:last_sent_date)
