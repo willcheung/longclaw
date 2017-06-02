@@ -1,4 +1,5 @@
 <% m = get_user_or_contact_from_pm(pm) %>
+<% if m.present? %>
 <div class="row m-b-sm member <%= pm.id %>">
     <div class="col-xs-2">
         <%= get_profile_pic(get_full_name(m), m.email) %>
@@ -48,3 +49,7 @@
     </div>
     <% end %>
 </div>
+<% else %>
+    <% puts "ERROR: Something wrong with ProjectMember(id=#{pm.id.inspect}, project_id=#{pm.project_id.inspect}, user_id=#{pm.user_id.inspect}, contact_id=#{pm.contact_id.inspect}), rendering skipped!" %>
+<% end %>
+
