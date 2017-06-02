@@ -14,7 +14,7 @@ class UserMailer < ApplicationMailer
     @user = user
     @subs = user.valid_streams_subscriptions.daily
     @upcoming_meetings = user.upcoming_meetings
-    @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]], last_sent_date: Time.current..2.days.from_now }).group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
+    @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not("activities.category IN (#{Activity::CATEGORY[:Note]}, #{Activity::CATEGORY[:Alert]}) OR activities.last_sent_date BETWEEN CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP + INTERVAL '7 days'").group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
  
     puts "Checking daily subscription for #{user.email}"
     unless @subs.blank? && @upcoming_meetings.blank?
@@ -47,7 +47,7 @@ class UserMailer < ApplicationMailer
 
     unless @subs.blank?
       puts "Checking weekly subscription for #{user.email}"
-      # @current_user_timezone = user.time_zone
+      @current_user_timezone = user.time_zone
       @projects = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id").order(:name)
       # @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
 
