@@ -13,44 +13,27 @@ module Devise
       #
       # If the authentication fails you should return false
       #
+
       def oathkeeper_authentication(authentication_hash)
-        # Your logic to authenticate with the external webservice
-        puts "========================", "OathkeeperAuthenticatable Models/Concern .oathkeeper_authentication", "========================="
-        p "testing auth fail..."
+        puts "OathkeeperAuthenticatable Models/Concern .oathkeeper_authentication", "========================="
+        puts "authentication_hash: ", authentication_hash
+        
+        # p "Testing real calls to Oathkeeper"
+        base_url = ENV["csback_base_url"] + "/newsfeed/auth"
+        uri = URI(base_url)
+        req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+        # Real auth success
+        req.body = { kind: "exchange", email: authentication_hash[:email], password: authentication_hash[:password] }.to_json
+        res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+        # p res
+
+        data = JSON.parse(res.body.to_s)
+        p data
+        p data["logged_in"]
+
+        # Fail always for now
         false
       end
-
-      # module ClassMethods
-      #   ####################################
-      #   # Overriden methods from Devise::Models::Authenticatable
-      #   ####################################
-
-      #   #
-      #   # This method is called from:
-      #   # Warden::SessionSerializer in devise
-      #   #
-      #   # It takes as many params as elements had the array
-      #   # returned in serialize_into_session
-      #   #
-      #   # Recreates a resource from session data
-      #   #
-      #   def serialize_from_session(id)
-      #     resource = self.new
-      #     resource.id = id
-      #     resource
-      #   end
-
-      #   #
-      #   # Here you have to return and array with the data of your resource
-      #   # that you want to serialize into the session
-      #   #
-      #   # You might want to include some authentication data
-      #   #
-      #   def serialize_into_session(record)
-      #     [record.id]
-      #   end
-
-      # end
     end
   end
 end

@@ -1,12 +1,17 @@
 class SessionsController < Devise::SessionsController  
-  respond_to :html
 
-  def new 	
-  	super
+  def new
+    p 'Our SessionsController#new'
+    super
   end
   
   def destroy
-    reset_session
+    p 'Our SessionsController#destroy'
+    super
+  end
+  
+  def create
+    p 'Our SessionsController#create'
     super
   end
 
