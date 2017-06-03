@@ -45,7 +45,8 @@ class Project < ActiveRecord::Base
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
   has_many  :notifications_for_daily_email, -> {
-    where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc)
+    where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
+      Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Notification::CATEGORY[:Alert])
     .order(:is_complete, :original_due_date)
   }, class_name: "Notification"
   #has_many  :notifications_for_weekly_email, -> {
@@ -68,11 +69,14 @@ class Project < ActiveRecord::Base
   #    'jsonb_array_length(email_messages) AS num_messages',
   #    'email_messages->-1 AS last_msg') }, class_name: "Activity"
   has_many  :other_activities_for_daily_email, -> {
-    from_yesterday.reverse_chronological
-    .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
+    from_yesterday.reverse_chronological.where.not(category: Activity::CATEGORY[:Conversation])
+    .where.not("(category = 'Alert' AND jsonb_array_length(email_messages) > 0 AND email_messages->0 ? 'days_inactive')") }, class_name: "Activity"
   #has_many  :other_activities_for_weekly_email, -> {
   #  from_lastweek.reverse_chronological
   #  .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
+
+  belongs_to  :account_with_contacts_for_daily_email, -> { includes(:contacts).where(contacts: { created_at: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }) }, class_name: "Account", foreign_key: "account_id"
+  # has_many  :contacts_for_daily_email, -> { where(created_at: (Time.current.yesterday.midnight..Time.current.yesterday.end_of_day)) }, through: "account", source: :contacts, class_name: 'Contact'
 
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -91,8 +95,8 @@ class Project < ActiveRecord::Base
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
         .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
-        .where('project_members.status = ? AND accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
-            ProjectMember::STATUS[:Confirmed], organization_id, user_id, user_id)
+        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public = true OR projects.owner_id = ? OR (project_members.status = ? AND project_members.user_id = ?))',
+            organization_id, user_id, ProjectMember::STATUS[:Confirmed], user_id)
         .group('projects.id')
   }
   scope :visible_to_admin, -> (organization_id) {
