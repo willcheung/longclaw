@@ -114,7 +114,7 @@ class Activity < ActiveRecord::Base
             title: c.subject,
             note: '',
             is_public: is_public_flag,
-            backend_id: c.id,
+            backend_id: c.conversationId,
             last_sent_date: Time.at(c.lastSentDate),
             last_sent_date_epoch: c.lastSentDate,
             from: c.messages.last.from, # take from last message
@@ -168,7 +168,7 @@ class Activity < ActiveRecord::Base
             title: c.subject,
             note: '',
             is_public: true,
-            backend_id: c.id,
+            backend_id: c.conversationId,
             last_sent_date: Time.at(c.lastSentDate).utc,
             last_sent_date_epoch: c.lastSentDate,
             from: event.from,
