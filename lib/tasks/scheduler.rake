@@ -45,7 +45,7 @@ namespace :scheduler do
             Organization.is_active.each do |org|
                 org.accounts.each do |acc| 
                     acc.projects.is_active.each do |proj|
-                        puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
+                        puts "Org: " + org.name + ", Account: " + acc.name + ", Project/Stream: " + proj.name
                         ContextsmithService.load_emails_from_backend(proj)
                         sleep(1)
                     end
@@ -61,7 +61,7 @@ namespace :scheduler do
         Organization.is_active.each do |org|
             org.accounts.each do |acc| 
                 acc.projects.is_active.each do |proj|
-                    puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project " + proj.name
+                    puts "Loading project...\nOrg: " + org.name + ", Account: " + acc.name + ", Project/Stream: " + proj.name
                     ContextsmithService.load_calendar_from_backend(proj, 300)
                     sleep(1)
                 end
