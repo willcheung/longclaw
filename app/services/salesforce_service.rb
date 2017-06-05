@@ -189,7 +189,7 @@ class SalesforceService
       #   error += "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while updating SFDC Contact! Contact skipped."
       #   update_result = "N/A (duplicate contact; skipped!)"
       else
-        error += "Export Contacts to Salesforce error while updating a SFDC Contact: (#{ e.to_s }) 
+        error += "Export Contacts to Salesforce error while updating a SFDC Contact: (#{ e.to_s })"
         update_result = nil
       end
       error += "sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
