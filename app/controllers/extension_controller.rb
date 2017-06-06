@@ -207,7 +207,7 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # Find and return the most likely SFDC Account given an array of contact e-mails
+  # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact e-mails; returns nil if one cannot be determined.
   def find_matching_sfdc_account(client, emails=[])
 
     return nil if client.nil? || emails.blank?  # abort if connection invalid or no emails passed
