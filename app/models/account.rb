@@ -118,8 +118,8 @@ class Account < ActiveRecord::Base
             query_statement = "SELECT " + account_custom_field_names.join(", ") + " FROM Account WHERE Id = '#{sfdc_account_id}' LIMIT 1"
             sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
 
-            unless sObjects_result.nil?
-                sObj = sObjects_result.first
+            unless sObjects_result[:status] == "ERROR"
+                sObj = sObjects_result[:result].first
                 account_custom_fields.each do |cf|
                     #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id)
                     #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"

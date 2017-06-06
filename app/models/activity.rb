@@ -221,9 +221,9 @@ class Activity < ActiveRecord::Base
     
     activities = SalesforceService.query_salesforce(client, query_statement)
 
-    unless activities.nil?  # unless failed Salesforce query
-      unless activities.first.nil?  # in case custom filters results in no record being selected
-        activities.first.each do |a|
+    unless activities[:status] == "ERROR"  # unless failed Salesforce query
+      unless activities[:result].first.nil?  # in case custom filters results in no record being selected
+        activities[:result].first.each do |a|
           if a.first == "ActivityHistories"
             if !a.second.nil?
               a.second.each do |c|
@@ -274,8 +274,8 @@ class Activity < ActiveRecord::Base
     tasks_to_delete = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
     #tasks = client.query(delete_tasks_query_stmt)
 
-    unless tasks_to_delete.nil?  # unless failed Salesforce query
-      tasks_to_delete.each { |t| t.destroy}
+    unless tasks_to_delete[:status] == "ERROR"  # unless failed Salesforce query
+      tasks_to_delete[:result].each { |t| t.destroy}
     else  # Salesforce query failure
       return "Attempted to delete old SFDC tasks matching query=\"#{delete_tasks_query_stmt}\""  # proprogate query to caller
     end

@@ -40,9 +40,9 @@ class SalesforceOpportunity < ActiveRecord::Base
     	query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"
 
     	opportunities = SalesforceService.query_salesforce(client, query_statement)
+    	return if opportunities[:status] == "ERROR"
 
-    	# TODO: Catch SalesforceService.query_salesforce.nil? error
-    	opportunities.each do |opp|
+    	opportunities[:result].each do |opp|
     		val << "('#{opp.Id}', 
     						'#{opp.AccountId}', 
     						#{SalesforceOpportunity.sanitize(opp.Name)}, 

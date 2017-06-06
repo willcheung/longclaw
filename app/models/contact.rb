@@ -132,12 +132,12 @@ class Contact < ActiveRecord::Base
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"  # Unused: Description, LeadSource
 
     contacts = SalesforceService.query_salesforce(client, query_statement)
-    #contacts = nil #simulate SFDC query error
-    unless contacts.blank?  # unless failed Salesforce query
+    #contacts = { status: "ERROR", result: "Simulated Salesforce error", detail: "None" } #simulate SFDC query error
+    unless contacts[:status] == "ERROR" # unless failed Salesforce query
       emails_processed = {}
 
       # Keep the first contact (alphabetically, by Last then First Name) from contacts with identical e-mails; ignore contacts with no e-mail field
-      contacts.each do |c|
+      contacts[:result].each do |c|
         email = Contact.sanitize(c[:Email]) 
         if c[:Email].present? && emails_processed[email].nil?
           firstname = self.capitalize_first_only(c[:FirstName])

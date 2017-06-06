@@ -53,20 +53,27 @@ class SalesforceService
 
   # Parameters: client - connection to Salesforce
   #             query_statement - string statement to submit to SFDC
+  # Returns:    A hash that represents the query status/result from execution of the query_statement. Consists of:
+  #             status - string "SUCCESS" if successful, or "ERROR" otherwise
+  #             result - if status == "SUCCESS", contains the result of the query, otherwise, contains the title of the error
+  #             detail - if status == "ERROR", contains the details of the error
   def self.query_salesforce(client, query_statement)
-    query_result = nil
+    result = nil
 
     if (!client.nil?)
       begin
         query_result = client.query(query_statement)
+        result = { status: "SUCCESS", result: query_result, detail: "" }
       rescue => e
-        query_result = nil
+        result = { status: "ERROR", result: "SalesforceService error", detail: "Salesforce query error: (#{ e.to_s }) Query: #{ query_statement }" }
         puts "*** SalesforceService error: Salesforce query error! (#{ e.to_s }) Query: #{query_statement}"
-      end     
+      end
+    else
+      result = { status: "ERROR", result: "SalesforceService error", detail: "No Salesforce connection" }
     end
 
-    #return nil  # simulates a Salesforce query error
-    return query_result
+    #return { status: "ERROR", result: "Simulated Salesforce error", detail: "None" }  # simulate a Salesforce query error
+    return result
   end
 
   # This is used to export/create CS activity or contacts to the linked/mapped SFDC account/opportunity.  If succesful, returns the sObject SFDC id that was created; otherwise, returns nil for failures.
@@ -138,13 +145,13 @@ class SalesforceService
     
     query_result = self.query_salesforce(client, query_statement)
 
-    if query_result.nil?
+    if query_result[:status] == "ERROR"
       puts "*** SalesforceService error: Export Contacts to Salesforce error while querying SFDC. Standard SFDC columns were used, but query will still fail if somehow not all columns were set up on Salesforce!  Check query on SFDC Developer console or check Contact fields on Salesforce.com.  query_statement: #{ query_statement }, sObject_meta: #{ params }, sObject_fields: #{ params[:sObject_fields] }"
       return nil  # propogate error to caller
     end
 
-    unless query_result.size == 0   
-      c = query_result.first  # pick one matched Contact
+    unless query_result[:result].size == 0   
+      c = query_result[:result].first  # pick one matched Contact
       upsert_result = update_sfdc_contact(client: client, sfdc_contact_id: c[:Id], sfdc_account_id: sfdc_account_id, params: params)
     else
       begin

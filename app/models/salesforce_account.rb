@@ -75,9 +75,8 @@ class SalesforceAccount < ActiveRecord::Base
       
       salesforce_accounts = SalesforceService.query_salesforce(client, query_statement)
 
-      # TODO: Catch SalesforceService.query_salesforce.nil? error
       # puts query_statement 
-      # puts "salesforce_accounts.length => #{salesforce_accounts.length}"
+      # puts "salesforce_accounts result length => #{salesforce_accounts[:result].length}"
 
       # call GC
       salesforce_account_objects = []
@@ -88,10 +87,10 @@ class SalesforceAccount < ActiveRecord::Base
       # puts "result => #{GC::Profiler.result}"
 
       # start transaction
-      if salesforce_accounts.nil? or salesforce_accounts.length==0 
+      if salesforce_accounts[:status] == "ERROR" || salesforce_accounts[:result].length == 0 
         break
       else  
-        salesforce_accounts.each do |s|
+        salesforce_accounts[:result].each do |s|
           if last_Created_Id.nil?
             last_Created_Id = s.Id
           elsif last_Created_Id < s.Id

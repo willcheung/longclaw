@@ -216,9 +216,9 @@ class ExtensionController < ApplicationController
     query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email" # Use GROUP BY as a workaround to get Salesforce to SELECT distinct AccountID's and Email's
     sfdc_contacts_results = SalesforceService.query_salesforce(client, query_statement)
 
-    return nil if sfdc_contacts_results.nil? || sfdc_contacts_results.length == 0 # abort if SFDC query error or if no contacts were found
+    return nil if sfdc_contacts_results[:status] == "ERROR" || sfdc_contacts_results[:result].length == 0 # abort if SFDC query error or if no contacts were found
 
-    contacts_with_accounts = sfdc_contacts_results.map { |r| [r[:AccountId],r[:Email]] }
+    contacts_with_accounts = sfdc_contacts_results[:result].map { |r| [r[:AccountId],r[:Email]] }
 
     return if contacts_with_accounts.nil?
 

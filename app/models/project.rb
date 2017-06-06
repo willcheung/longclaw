@@ -760,14 +760,13 @@ class Project < ActiveRecord::Base
   # Updates all mapped custom fields of a single SF opportunity -> CS stream
   def self.load_salesforce_fields(salesforce_client, project_id, sfdc_opportunity_id, stream_custom_fields)
     unless (salesforce_client.nil? or project_id.nil? or sfdc_opportunity_id.nil? or stream_custom_fields.nil? or stream_custom_fields.empty?)
-      stream_custom_field_names = []
-      stream_custom_fields.each { |cf| stream_custom_field_names << cf.salesforce_field }
+      stream_custom_field_names = stream_custom_fields.collect { |cf| cf.salesforce_field }
 
       query_statement = "SELECT " + stream_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
       sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
 
-      unless sObjects_result.nil?
-        sObj = sObjects_result.first
+      unless sObjects_result[:status] == "ERROR"
+        sObj = sObjects_result[:result].first
         stream_custom_fields.each do |cf|
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
           #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
