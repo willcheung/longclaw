@@ -43,7 +43,7 @@ class SalesforceService
       begin
         puts "SalesforceService.connect_salesforce(): Daily SFDC API Requests Max/Limit=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
       rescue => e
-        puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits: #{ e.to_s }. However, the SFDC connection was successfully established!"
+        puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established!"
       end
     end
 
@@ -59,9 +59,9 @@ class SalesforceService
     if (!client.nil?)
       begin
         query_result = client.query(query_statement)
-      rescue  
+      rescue => e
         query_result = nil
-        puts "*** SalesforceService error: Salesforce query error! Query: #{query_statement}"
+        puts "*** SalesforceService error: Salesforce query error! (#{ e.to_s }) Query: #{query_statement}"
       end     
     end
 
@@ -96,8 +96,8 @@ class SalesforceService
             puts "*** SalesforceService error: Update Salesforce Activity error while creating SFDC ActivityHistory. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
             update_result = nil
           end
-        rescue  
-          puts "*** SalesforceService error: Update Salesforce Activity error while creating SFDC ActivityHistory. sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
+        rescue => e
+          puts "*** SalesforceService error: Update Salesforce Activity error while creating SFDC ActivityHistory. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
           update_result = nil
         end
       when "contacts"
@@ -162,7 +162,7 @@ class SalesforceService
           puts "Contact successfully created!"
           return upsert_result  #return "N/A (duplicate contact; skipped!)"
         else
-          puts "*** SalesforceService error: Export Contacts to Salesforce error while creating a new SFDC Contact: \"#{e}\". sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
+          puts "*** SalesforceService error: Export Contacts to Salesforce error while creating a new SFDC Contact. (#{ e.to_s }). sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }" 
         end
         upsert_result = nil
       end
@@ -183,13 +183,13 @@ class SalesforceService
     rescue => e
       error = "*** SalesforceService error: "
       if (e.to_s[0...25]) == "FIELD_INTEGRITY_EXCEPTION" # In case SFDC Contact was deleted on Salesforce, or external SFDC Id of Contact is invalid
-        puts error + "Export Contacts to Salesforce error -- invalid salesforce Contact Id -- while updating SFDC Contact! (#{e})  Will attempt to upsert Contact using e-mail instead."
+        puts error + "Export Contacts to Salesforce error -- invalid salesforce Contact Id -- while updating SFDC Contact! (#{ e.to_s })  Will attempt to upsert Contact using e-mail instead."
         return upsert_sfdc_contact(client: client, sfdc_account_id: sfdc_account_id, email: params[:Email], params: params)
       # elsif (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
       #   error += "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while updating SFDC Contact! Contact skipped."
       #   update_result = "N/A (duplicate contact; skipped!)"
       else
-        error += "Export Contacts to Salesforce error while updating a SFDC Contact: \"#{e}\"" 
+        error += "Export Contacts to Salesforce error while updating a SFDC Contact: (#{ e.to_s })"
         update_result = nil
       end
       error += "sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"

@@ -366,9 +366,6 @@
                     <span style="font-weight:bold;font-size:14px;line-height:15px;">
                       <%= n.name %>
                     </span>
-                    <% if n.created_at.between?(Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc) %>
-                      <span style="font-size:9px;font-weight:600;padding:0px 2px;text-shadow:none;color:green;background-color:white;border:2px green solid;border-radius:0.25em;">New</span>
-                    <% end %>
                     <br>
                     <% if n.category == Notification::CATEGORY[:Alert] %>
                       <!-- Alert notification detail -->
