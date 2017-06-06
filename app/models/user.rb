@@ -139,8 +139,57 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.find_basecamp
-    
+  def self.find_for_oathkeeper_auth(auth, time_zone='UTC')
+    # info = auth.info
+    # credentials = auth.credentials
+    # user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
+
+    # if user
+    #   if credentials["refresh_token"].nil? or credentials["refresh_token"].empty?
+    #     user.update_attributes(oauth_access_token: credentials["token"],
+    #                            oauth_expires_at: Time.at(credentials["expires_at"]),
+    #                            time_zone: time_zone)
+    #   else
+    #     user.update_attributes(oauth_access_token: credentials["token"],
+    #                            oauth_expires_at: Time.at(credentials["expires_at"]),
+    #                            oauth_refresh_token: credentials["refresh_token"],
+    #                            time_zone: time_zone)
+    #   end
+    #   return user
+    # else
+    #   # Considered referred user if email exists but not oauth elements
+    #   referred_user = User.where(:email => auth.info.email).first
+    #   user_attributes = {
+    #     first_name: info["first_name"],
+    #     last_name: info["last_name"],
+    #     oauth_provider: auth.provider,
+    #     email: info["email"],
+    #     image_url: info["image"],
+    #     oauth_provider_uid: auth.uid,
+    #     password: Devise.friendly_token[0,20],
+    #     oauth_access_token: credentials["token"],
+    #     oauth_refresh_token: credentials["refresh_token"],
+    #     oauth_expires_at: Time.at(credentials["expires_at"]),
+    #     onboarding_step: Utils::ONBOARDING[:fill_in_info],
+    #     role: OTHER_ROLE[:Trial],
+    #     is_disabled: false,
+    #     time_zone: time_zone
+    #   }
+
+    #   if referred_user
+    #     # Change referred_user into real user
+    #     referred_user.update_attributes(user_attributes)
+
+    #     return referred_user
+    #   else # New User
+    #     user = User.create(user_attributes)
+
+    #     org = Organization.create_or_update_user_organization(get_domain(info["email"]), user)
+    #     user.update_attributes(organization_id: org.id)
+
+    #     return user
+    #   end
+    # end
   end
 
   def self.find_for_google_oauth2(auth, time_zone='UTC')
