@@ -159,8 +159,8 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts.
-  def refresh_salesforce
+  # Import/load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts.
+  def import_salesforce
     case params[:entity_type]
     when "accounts"
       SalesforceAccount.load_accounts(current_user.organization_id)
@@ -169,7 +169,7 @@ class SalesforceController < ApplicationController
     when "contacts"
       # Load SFDC Contacts into CS Accounts, depending on the explicit (primary) mapping of a SFDC Account (first one) to a CS account.
       account_mapping = []
-      method_name = "refresh_salesforce#contacts()"
+      method_name = "import_salesforce#contacts()"
       accounts = Account.visible_to(current_user)
       accounts.each do |a|
         account_mapping << [a, a.salesforce_accounts.first] if a.salesforce_accounts.present?
@@ -200,7 +200,7 @@ class SalesforceController < ApplicationController
     when "activities"
       # Load SFDC Activities into CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
       # Note: Ignores exported CS data residing on SFDC
-      method_name = "refresh_salesforce#activities()"
+      method_name = "import_salesforce#activities()"
       filter_predicate_str = {}
       filter_predicate_str["entity"] = params[:entity_pred].strip
       filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
