@@ -53,30 +53,34 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   ################################################################################################## 
   # This class method finds SFDC accounts and creates a local model
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
+  #             result - if successful, contains the # of accounts added/updated; if an error occurred, contains the title of the error.
+  #             detail - details of any errors.
 	def self.load_accounts(organization_id, query_range=500)
 		client = SalesforceService.connect_salesforce(organization_id)
-    return if client.nil?
+    return { status: "ERROR", result: "SalesforceService.connect_salesforce error", detail: "Failed to connect in load_accounts." } if client.nil?
 
     firstQuery = true   
     last_Created_Id = nil
+    total_accounts = 0
 
     # GC::Profiler.enable
     # GC::Profiler.clear
 
-
     while true
       # Query salesforce
       if firstQuery
-        query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT " + query_range.to_s
+        query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT #{query_range.to_s}"
         firstQuery = false
       else
-        query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT " + query_range.to_s
+        query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT #{query_range.to_s}"
       end
       
-      salesforce_accounts = SalesforceService.query_salesforce(client, query_statement)
-
-      # puts query_statement 
-      # puts "salesforce_accounts result length => #{salesforce_accounts[:result].length}"
+      query_result = SalesforceService.query_salesforce(client, query_statement)
+      # puts "query_statement: #{ query_statement }" 
+      # puts "query_result: #{ query_result }"
+      # puts "# of query_result accounts this loop => #{query_result[:result].length}"
 
       # call GC
       salesforce_account_objects = []
@@ -87,40 +91,47 @@ class SalesforceAccount < ActiveRecord::Base
       # puts "result => #{GC::Profiler.result}"
 
       # start transaction
-      if salesforce_accounts[:status] == "ERROR" || salesforce_accounts[:result].length == 0 
-        break
-      else  
-        salesforce_accounts[:result].each do |s|
-          if last_Created_Id.nil?
-            last_Created_Id = s.Id
-          elsif last_Created_Id < s.Id
-            last_Created_Id = s.Id
-          end
-
-          salesforce_updated_at = DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time    
-          val << "('#{s.Id}', #{SalesforceAccount.sanitize(s.Name)}, '#{organization_id}', '#{salesforce_updated_at}','#{Time.now}', '#{Time.now}' )"
-
-          salesforce_account_objects << SalesforceAccount.new(salesforce_account_id: s.Id,
-                                                              salesforce_account_name: s.Name,
-                                                              contextsmith_organization_id: organization_id,
-                                                              salesforce_updated_at: salesforce_updated_at)    
+      if query_result[:status] == "ERROR"
+        return { status: "ERROR", result: query_result[:result], detail: "Failed query_salesforce in load_accounts. #{query_result[:detail]}" }
+      elsif query_result[:result].length == 0  # batch loop is completed
+        if total_accounts == 0
+          return { status: "SUCCESS", result: "Warning: 0 accounts added.", detail: "No Salesforce Accounts found!" }
+        else
+          return { status: "SUCCESS", result: "#{total_accounts} accounts added/updated.", detail: nil }
+        end
+      end
+        
+      query_result[:result].each do |s|
+        if last_Created_Id.nil?
+          last_Created_Id = s.Id
+        elsif last_Created_Id < s.Id
+          last_Created_Id = s.Id
         end
 
-        # puts "val.length => #{val.length}"
-        # puts "salesforce_account_objects.length => #{salesforce_account_objects.length}"
-    
-        insert = 'INSERT INTO "salesforce_accounts" ("salesforce_account_id", "salesforce_account_name", "contextsmith_organization_id", "salesforce_updated_at", "created_at", "updated_at") VALUES'
-        on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
-        values = val.join(', ')
+        salesforce_updated_at = DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time    
+        val << "('#{s.Id}', #{SalesforceAccount.sanitize(s.Name)}, '#{organization_id}', '#{salesforce_updated_at}','#{Time.now}', '#{Time.now}' )"
 
-        if !val.empty?
-          SalesforceAccount.transaction do
-            # Insert activities into database
-            SalesforceAccount.connection.execute([insert,values,on_conflict].join(' '))
-          end
+        salesforce_account_objects << SalesforceAccount.new(salesforce_account_id: s.Id,
+                                                            salesforce_account_name: s.Name,
+                                                            contextsmith_organization_id: organization_id,
+                                                            salesforce_updated_at: salesforce_updated_at)    
+      end
 
-          val = []
+      # puts "val.length => #{val.length}"
+      # puts "salesforce_account_objects.length => #{salesforce_account_objects.length}"
+  
+      insert = 'INSERT INTO "salesforce_accounts" ("salesforce_account_id", "salesforce_account_name", "contextsmith_organization_id", "salesforce_updated_at", "created_at", "updated_at") VALUES'
+      on_conflict = 'ON CONFLICT (salesforce_account_id) DO UPDATE SET salesforce_account_name = EXCLUDED.salesforce_account_name, contextsmith_organization_id = EXCLUDED.contextsmith_organization_id, salesforce_updated_at = EXCLUDED.salesforce_updated_at'
+      values = val.join(', ')
+
+      if !val.empty?
+        SalesforceAccount.transaction do
+          # Insert activities into database
+          SalesforceAccount.connection.execute([insert,values,on_conflict].join(' '))
         end
+
+        total_accounts += query_result[:result].length
+        val = []
       end
     end
 	end

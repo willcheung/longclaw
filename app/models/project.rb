@@ -757,13 +757,23 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all mapped custom fields of a single SF opportunity -> CS stream
-  def self.load_salesforce_fields(salesforce_client, project_id, sfdc_opportunity_id, stream_custom_fields)
-    unless (salesforce_client.nil? or project_id.nil? or sfdc_opportunity_id.nil? or stream_custom_fields.nil? or stream_custom_fields.empty?)
+  # Updates all mapped custom fields of a single SFDC opportunity -> CS stream
+  # Parameters:   client - connection to Salesforce
+  #               project_id - CS project/stream id          
+  #               sfdc_opportunity_id - SFDC opportunity sObjectId
+  #               stream_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS project/stream.
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if load was successful; otherwise, "ERROR" 
+  #             result - if status == "ERROR", contains the title of the error
+  #             detail - if status == "ERROR", contains the details of the error
+  def self.load_salesforce_fields(client, project_id, sfdc_opportunity_id, stream_custom_fields)
+    result = nil
+
+    unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || stream_custom_fields.nil? || stream_custom_fields.empty?)
       stream_custom_field_names = stream_custom_fields.collect { |cf| cf.salesforce_field }
 
       query_statement = "SELECT " + stream_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
-      sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
+      sObjects_result = SalesforceService.query_salesforce(client, query_statement)
 
       unless sObjects_result[:status] == "ERROR"
         sObj = sObjects_result[:result].first
@@ -773,11 +783,15 @@ class Project < ActiveRecord::Base
           #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
           CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
         end
+        result = { status: "SUCCESS" }
       else
-        return "stream_custom_field_names=" + stream_custom_field_names.to_s # proprogate list of field names to caller
+        result = { status: "ERROR", result: sObjects_result[:result], detail: sObjects_result[:detail] + " stream_custom_field_names=" + stream_custom_field_names.to_s }
       end
+    else
+      result = { status: "SUCCESS", result: "Warning: 0 fields updated.", detail: "No fields to import!" }
     end
-    nil # successful request
+
+    result
   end
 
   private

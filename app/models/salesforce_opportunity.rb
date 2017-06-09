@@ -28,21 +28,33 @@ class SalesforceOpportunity < ActiveRecord::Base
   belongs_to  :project, foreign_key: "contextsmith_project_id"
 
   # This class method finds SFDC opportunities and creates a local model
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
+  #             result - if successful, contains the # of opportunities added/updated; if an error occurred, contains the title of the error.
+  #             detail - contains the details of an error.
 	def self.load_opportunities(organization_id, query_range=500)
-  	val = []
+    val = []
 
-  	client = SalesforceService.connect_salesforce(organization_id)
-    return if client.nil?
+    client = SalesforceService.connect_salesforce(organization_id)
+    return { status: "ERROR", result: "SalesforceService.connect_salesforce error", detail: "Failed to connect in load_opportunities." } if client.nil?
 
     sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: organization_id).is_linked
+    total_opportunities = 0
 
     sfdc_accounts.each do |a|
-    	query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"
+      query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"
 
-    	opportunities = SalesforceService.query_salesforce(client, query_statement)
-    	return if opportunities[:status] == "ERROR"
+      query_result = SalesforceService.query_salesforce(client, query_statement)
+      puts "query_statement: #{ query_statement }" 
+      puts "query_result: #{ query_result }"
+      puts "query_result result length => #{query_result[:result].length}"
 
-    	opportunities[:result].each do |opp|
+      if query_result[:status] == "ERROR"
+        return { status: "ERROR", result: query_result[:result], detail: "Failed query_salesforce in load_opportunities. #{query_result[:detail]}" } if client.nil?
+        #break
+      end
+
+    	query_result[:result].each do |opp|
     		val << "('#{opp.Id}', 
     						'#{opp.AccountId}', 
     						#{SalesforceOpportunity.sanitize(opp.Name)}, 
@@ -63,9 +75,12 @@ class SalesforceOpportunity < ActiveRecord::Base
         SalesforceOpportunity.transaction do
           SalesforceOpportunity.connection.execute([insert,values,on_conflict].join(' '))
         end
+
+        total_opportunities += query_result[:result].length
         val = []
       end
+    end  # End: sfdc_accounts.each do |a|
 
-    end
+    return { status: "SUCCESS", result: "#{total_opportunities} opportunities added/updated." }
 	end
 end
