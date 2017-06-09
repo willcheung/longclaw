@@ -56,6 +56,9 @@
                         <button class="btn btn-lg btn-primary oauth" onclick="location.href='https://mail.google.com'"><i class="fa fa-envelope-o oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Go to Gmail</span></button>
                     <% else %>
                         <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
+
+                        <a class="btn btn-lg btn-primary oauth m-t-lg"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log In Using Outlook</span></a>
+                        <%= render "users/form_exchange" %>
                     <% end %>
                 </div>
 

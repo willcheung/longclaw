@@ -1,5 +1,6 @@
 <% remote ||= false %>
-<%= simple_form_for :user, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user'}  do |f| %>
+<% url ||= :users %>
+<%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user'}  do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
       <span class="help-block" style="color:red"></span>
