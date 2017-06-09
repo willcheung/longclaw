@@ -2,6 +2,7 @@ class SessionsController < Devise::SessionsController
   
   def create      
     resource = warden.authenticate!(auth_options)
+    puts "===SessionsController#create===", "resource.oathkeeper_auth_info: #{resource.oathkeeper_auth_info.inspect}" 
     resource = resource_class.update_for_oathkeeper_auth(resource, sign_up_params, (cookies[:timezone] || 'UTC'))
     # not sure why, but session not started properly after warden.authenticate! if signing up a new user
     # current workaround is to sign out here and sign in again below, which means the user.sign_in_count will be double the actual number

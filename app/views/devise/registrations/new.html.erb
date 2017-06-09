@@ -53,11 +53,11 @@
                             }
                         </script>
                     <% elsif params[:m] %>
-                        <button class="btn btn-lg btn-primary oauth" onclick="location.href='https://mail.google.com'"><i class="fa fa-envelope-o oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Go to Gmail</span></button>
+                        <a class="btn btn-lg btn-primary oauth" href="https://mail.google.com"><i class="fa fa-envelope-o oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Go to Gmail</span></a>
                     <% else %>
-                        <button class="btn btn-lg btn-primary oauth" onclick="location.href='<%= user_omniauth_authorize_url(:google_oauth2) %>'"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></button>
+                        <a class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></a>
 
-                        <a class="btn btn-lg btn-primary oauth m-t-lg"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log In Using Outlook</span></a>
+                        <a class="btn btn-lg btn-primary oauth m-t-lg"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Outlook</span></a>
                         <%= render "users/form_exchange" %>
                     <% end %>
                 </div>
@@ -68,11 +68,6 @@
                     <p style="font-size:14px" class="text-center m-t-md">ContextSmith will show up on the right sidebar of your Gmail.</p>
                 <% else %>
                     <p style="font-size:12px" class="text-center"><small>By clicking this button you are agreeing to our <a href="https://www.contextsmith.com/terms/">Terms of Service</a>.</small></p>
-
-                    <p class="text-muted text-center m-t-xl">
-                        <small>Microsoft Outlook customer?</small>
-                    </p>
-                    <div class="text-center"><a class="btn btn-sm btn-white" href="mailto:support@contextsmith.com?subject=Joining Outlook waitlist">Sign up on our waitlist</a></div>
                 <% end %>
             </div>
         </div>
