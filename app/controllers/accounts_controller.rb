@@ -1,7 +1,7 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: [:show, :edit, :update, :destroy, :set_salesforce_account] 
   before_action :get_custom_fields_and_lists, only: [:index, :show]
-  before_action :manage_filter_state
+  before_action :manage_filter_state, only: [:index]
 
   # GET /accounts
   # GET /accounts.json
@@ -11,7 +11,6 @@ class AccountsController < ApplicationController
       @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
     elsif params[:account_type]
       @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ? AND accounts.category = ?", current_user.organization_id, params[:account_type]).order('accounts.name')
-      
     else
       @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
     end

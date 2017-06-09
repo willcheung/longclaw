@@ -6,9 +6,8 @@ class ProjectsController < ApplicationController
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
   before_action :get_custom_fields_and_lists, only: [:index, :show, :pinned_tab, :tasks_tab, :arg_tab, :insights_tab]
-  before_action :owner_filter_state
-  before_action :type_filter_state
-
+  before_action :project_filter_state, only: [:index]
+  
 
   # GET /projects
   # GET /projects.json
@@ -20,38 +19,15 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters
-    # if params[:owner]
-    #   if params["owner"]=="none"
-    #     projects = projects.where(owner_id: nil)
-    #   elsif params[:owner]=="all"
-    #   else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-    #     projects = projects.where(owner_id: params[:owner]);
-    #   end
-    # end 
-
-    # Incrementally apply type and owner filters
-
-     if params[:owner] != 0 && params[:type] == "none"
-      if params[:owner]=="none"
-        projects = projects.where(owner_id: nil)
-      elsif params[:owner]=="all"
-      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-        projects = projects.where(owner_id: params[:owner]);
-      end
-    elsif params[:owner] == "0" && params[:type] != "none"
+    if params[:owner] == 0
+      projects = projects.where(owner_id: nil)
+    elsif params[:owner]=="all" || params[:owner] == "none"
+    else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+      projects = projects.where(owner_id: params[:owner])
+    end
+    if params[:type] != "none"
       projects = projects.where(category: params[:type])
-    else params[:owner] && params[:type]
-      if params[:owner] =="all" && params[:type] != "none"
-        projects = projects.where(category: params[:type])
-      elsif params[:owner] == "none"
-        projects = projects.where(owner_id: nil).where( category: params[:type])
-      elsif params[:owner] != 0 && params[:type] != "none"
-        projects = projects.where(category: params[:type]).where(owner_id: params[:owner])
-      else params[:type] != "none"
-        projects = projects.where(category: params[:type])
-      end
-    end 
-
+    end
     # all projects and their accounts, sorted by account name alphabetically
     @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN activities ON projects.id = activities.project_id LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
@@ -431,19 +407,16 @@ class ProjectsController < ApplicationController
     @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}
   end
 
-  def owner_filter_state
+  def project_filter_state
     if params[:owner] 
-      cookies[:owner] = {value: params[:owner] }
+      cookies[:owner] = {value: params[:owner]}
     else
       if cookies[:owner]
         params[:owner] = cookies[:owner]
       end
     end
-  end
-
-   def type_filter_state
     if params[:type] 
-      cookies[:type] = {value: params[:type] }
+      cookies[:type] = {value: params[:type]}
     else
       if cookies[:type]
         params[:type] = cookies[:type]
