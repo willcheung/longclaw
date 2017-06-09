@@ -50,7 +50,7 @@ Longclaw::Application.routes.draw do
 
     resources :basecamp, only: [:index]
     get "basecamp_controller/index"
-    post "/sync_stream" => 'basecamps#link_basecamp2_account'
+    post "/link_stream" => 'basecamps#link_basecamp2_account'
     post "/refresh_stream" => 'basecamps#refresh_stream'
     post "/link_basecamp2_account" => 'basecamps#link_basecamp2_account'
     delete "/delete_basecamp2_account/:id" => 'basecamps#remove_basecamp2_account'
@@ -72,6 +72,7 @@ Longclaw::Application.routes.draw do
       get "basecamp2_activity"
       get "salesforce_fields" 
       get "super_user"
+      get "user_analytics"
       post "invite_user/:user_id" => 'settings#invite_user'
     end
 

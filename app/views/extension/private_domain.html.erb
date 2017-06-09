@@ -1,7 +1,45 @@
-<h3 class="text-center middle-box"><strong>This looks like an internal e-mail conversation or person.</strong></h3>
 
-<h3 class="text-center" style="margin:40px 0; line-height:1.25em">ContextSmith does not track any internal e-mails to protect your privacy and reduce noise.</h3>
+<h3 class="text-center" style="margin-top: 30px"><strong>This looks like an internal e-mail.</strong></h3>
+<h4 class="text-center" style="line-height:1.25em; color: #999">ContextSmith does not track any internal e-mails to protect your privacy.</h4>
 
-<h3 class="text-center" style="line-height: 1.25em">Please mouse-over an e-mail recipient or open a customer e-mail to get more context from a timeline and contacts.</h3>
+
+<h3 class="text-center middle-box" style="line-height:1.25em">Invite your colleagues to collaborate<br/> and track all sales activity.</h3>
+
+<!--<h3 class="text-center" style="line-height: 1.25em">Please mouse-over an e-mail recipient or open a customer e-mail to get more context from a timeline and contacts.</h3>-->
 
 <hr/>
+
+<table class="center table-striped">
+    <% @users.sort_by {|u| u.first_name.upcase}.each do |u| %>
+    <tr>
+        <% full_name = get_full_name(u) %>
+        <% display_name = (full_name == " ") ? u.email : full_name %>
+        <td style="width:160px; padding:0.7em; display:inline-block; overflow:hidden; text-overflow:ellipsis" title="<%= display_name %>"><%= (display_name.gsub ' ', '&nbsp;').html_safe %></td>
+        <td style="width:110px; text-align:center">
+            <% if u.onboarding_step == -1 && !u.cluster_create_date.nil? %>
+                Joined! <i class="fa fa-thumbs-o-up"/>
+            <% else %>
+                <%= link_to 'Invite', "/settings/invite_user/#{u.id}", 'class' => 'btn btn-primary btn-sm invite-btn', 'method' => 'post', 'remote' => true, 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an e-mail invitation." %>
+            <% end %>
+        </td>
+    </tr>
+    <% end %>
+</table>
+
+<style>
+    table.center {
+        margin: 0 auto;
+    }
+    table, td, th {
+        padding: 0.25em 1em;
+    }
+</style>
+
+<script>
+    $(document).ready(function(){
+        $(".invite-btn").click(function() {
+            $(this).html("Resend");
+            $(this).attr("data-original-title","E-mail invitation was sent. We will re-send the invitation.");
+        });
+    });
+</script>

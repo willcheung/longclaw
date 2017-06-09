@@ -11,17 +11,6 @@
     <div class="ibox-content">
         <div class="row">
             <div class="col-md-3 text-center">
-                <!-- <div class="metric">
-                    <div class="metric-title">
-                        <h4>On Target</h4>
-                    </div>
-                    <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px">85%</h2>
-                    </div>
-                </div> -->
-            </div>
-
-            <div class="col-md-3 text-center">
                 <div class="metric text-danger">
                     <div class="metric-title">
                         <h4>Open Alerts</h4>
@@ -35,7 +24,7 @@
             <div class="col-md-3 text-center">
                 <div class="metric">
                     <div class="metric-title">
-                        <h4>Accounts Managed</h4>
+                        <h4>Opportunities</h4>
                     </div>
                     <div class="metric-content">
                         <h2 style="font-weight:600;font-size:46px"><%= @accounts_managed %></h2>
@@ -44,14 +33,25 @@
             </div>
 
             <div class="col-md-3 text-center">
-                <!-- <div class="metric">
+                <div class="metric">
                     <div class="metric-title">
-                        <h4>Revenue Managed</h4>
+                        <h4>Expected Revenue</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
+                        <h2 style="font-weight:600;font-size:46px;"><% if @sum_expected_revenue.nil? %> - <% else %>$<%= number_to_human(@sum_expected_revenue) %><% end %></h2>
                     </div>
-                </div> -->
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>On Target</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px">-</h2>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -61,7 +61,6 @@
     
 <div id="user-charts">
     <div class="ibox-content">
-        <h2>Activities Volume</h2>
         
         <div class="row m-t-md">
             <div id="activities-chart" style="height:240px"></div>
@@ -75,7 +74,6 @@
 
     <div class="ibox-content">
         <div class="row">
-            <h2>Alerts and Tasks</h2>
             <div id="tasks-trend" style="height:280px"></div>
         </div>
     </div>
@@ -95,11 +93,15 @@
             },
             credits: false,
             title: {
-                text: 'Interaction Time per Account',
+                text: 'Hours Spent (Last 14 days)',
+                align: 'left',
                 style: {
                     color: '#777777',
                     fontSize: '16px'
                 }
+            },
+            tooltip: {
+                valueSuffix: ' hours'
             },
             xAxis: {
                 categories: <%= @interaction_time_per_account.map(&:name).to_json.html_safe %>,
@@ -136,7 +138,12 @@
 
         $('#tasks-trend').highcharts({
             title: {
-                text: ''
+                text: 'Alerts and Tasks',
+                align: 'left',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
             },
             credits: false,
             xAxis: {
@@ -196,7 +203,8 @@
                 enabled: false
             },
             title: {
-                text: "Touches By Day",
+                text: "Activities (Last 14 days)",
+                align: 'left',
                 style: {
                     color: '#777777',
                     fontSize: '16px'

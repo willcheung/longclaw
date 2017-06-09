@@ -14,25 +14,25 @@ class UserMailer < ApplicationMailer
     @user = user
     @subs = user.valid_streams_subscriptions.daily
     @upcoming_meetings = user.upcoming_meetings
-
+    @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not("activities.category IN ('#{Activity::CATEGORY[:Note]}', '#{Activity::CATEGORY[:Alert]}') OR activities.last_sent_date BETWEEN CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP + INTERVAL '7 days'").group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
+ 
+    puts "Checking daily subscription for #{user.email}"
     unless @subs.blank? && @upcoming_meetings.blank?
-      puts "Checking daily subscription for #{user.email}"
-      @current_user_timezone = user.time_zone
-      @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email)
-      @updates_today = @updates_today.order(:name).map do |proj|
+      @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email, :account_with_contacts_for_daily_email)
+      @updates_today = @updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
         temp = proj.dup
         # temp = Project.new     # another option
         # assign relations before id
-        temp.activities = (proj.conversations_for_daily_email.visible_to(user.email) + proj.other_activities_for_daily_email.visible_to(user.email)).sort  {|a,b| b.last_sent_date <=> a.last_sent_date }
+        temp.activities = (proj.conversations_for_daily_email.visible_to(user.email) + proj.other_activities_for_daily_email.visible_to(user.email)).sort_by {|a| a.last_sent_date }.reverse
         temp.notifications = proj.notifications_for_daily_email
-        temp.account = proj.account
+        temp.contacts = proj.account_with_contacts_for_daily_email.blank? ? [] : proj.account_with_contacts_for_daily_email.contacts
         # CAUTION: if id is assigned before the relations, assigned relation will be overwritten in actual record
         temp.id = proj.id
         temp
       end
-      @updates_today.reject! { |proj| proj.activities.blank? && proj.notifications.blank? }
-      @risk_scores = Project.new_risk_score(@updates_today.map(&:id), user.time_zone) unless @updates_today.blank?
+
+      @updates_today = @updates_today.reject { |proj| proj.activities.blank? && proj.notifications.blank? && proj.contacts.blank? }.sort_by { |proj| proj.activities.size + proj.notifications.size + proj.contacts.size }.reverse
 
       track user: user # ahoy_email tracker
       puts "Emailing daily summary to #{user.email}"
@@ -64,12 +64,12 @@ class UserMailer < ApplicationMailer
 
     if @user.organization.users.registered.size > 3
       registered_users = @user.organization.users.registered.map(&:first_name)[0..2].join(', ')
-      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} teammates are already using ContextSmith to track the pulse of your customers."
+      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} teammates are already using ContextSmith to stay on top of accounts and sell smarter."
     elsif @user.organization.users.registered.size == 1
-      @colleagues = "Join #{invited_by.split(' ').first} and team to track the pulse of your customers."
+      @colleagues = "Join #{invited_by.split(' ').first} is using ContextSmith to stay on top of accounts and sell smarter."
     else
       registered_users = @user.organization.users.registered.map(&:first_name).join(' and ')
-      @colleagues = registered_users + " are already using ContextSmith to track the pulse of your customers."
+      @colleagues = registered_users + " are already using ContextSmith to stay on top of accounts and sell smarter."
     end
 
     track user: user # ahoy_email tracker

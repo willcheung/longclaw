@@ -64,7 +64,7 @@
                   </select>
                 </div>
                 <div class="basecamp2_account col-lg-3" style="margin-right:0px; margin-left:15px; padding:0px; display: inline;">     
-                    <%= form_tag("/sync_stream/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
+                    <%= form_tag("/link_stream/", :method => "post", id: "search-form", class: "fix-height", remote: false) do %>
                     <input name="basecamp_account_id" type="hidden" value="">
                     <input name"project_id" type="hidden" value"">
                     <input name="account_id" type="hidden" value="">  
@@ -131,31 +131,31 @@
 
 
     
-    $('#basecamp2-refresh').click(function(){
-    $.ajax('/basecamp2_refresh', {
-        async: true,
-        method: "POST",
-        beforeSend: function () {
-            $('#basecamp2-refresh .fa.fa-refresh').addClass('fa-spin');
-        },
-        complete: function() {
-            $('#basecamp2-refresh .fa.fa-refresh').removeClass('fa-spin');
-        }
-    });
-});
+//     $('#basecamp2-refresh').click(function(){
+//     $.ajax('/basecamp2_refresh', {
+//         async: true,
+//         method: "POST",
+//         beforeSend: function () {
+//             $('#basecamp2-refresh .fa.fa-refresh').addClass('fa-spin');
+//         },
+//         complete: function() {
+//             $('#basecamp2-refresh .fa.fa-refresh').removeClass('fa-spin');
+//         }
+//     });
+// });
 
-  $('#basecamp2-activity-refresh').click(function(){
-    $.ajax('/basecamp2_activities_refresh', {
-        async: true,
-        method: "POST",
-        beforeSend: function () {
-            $('#basecamp2-activity-refresh .fa.fa-refresh').addClass('fa-spin');
-        },
-        complete: function() {
-            $('#basecamp2-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
-        }
-    });
-});
+//   $('#basecamp2-activity-refresh').click(function(){
+//     $.ajax('/basecamp2_activities_refresh', {
+//         async: true,
+//         method: "POST",
+//         beforeSend: function () {
+//             $('#basecamp2-activity-refresh .fa.fa-refresh').addClass('fa-spin');
+//         },
+//         complete: function() {
+//             $('#basecamp2-activity-refresh .fa.fa-refresh').removeClass('fa-spin');
+//         }
+//     });
+// });
 
 
 

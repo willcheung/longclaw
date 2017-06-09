@@ -11,7 +11,7 @@ class ProjectsController < ApplicationController
   # GET /projects.json
   def index
     @title = "Streams"
-
+    
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
 
@@ -33,7 +33,6 @@ class ProjectsController < ApplicationController
     # all projects and their accounts, sorted by account name alphabetically
     @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN activities ON projects.id = activities.project_id LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
-    
     unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
@@ -392,7 +391,7 @@ class ProjectsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def project_params
-    params.require(:project).permit(:name, :description, :is_public, :project_code, :account_id, :budgeted_hours, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :contract_mrr, :renewal_count, :has_case_study, :is_referenceable)
+    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date)
   end
 
   # A list of the param names that can be used for filtering the Project list
