@@ -1,16 +1,11 @@
 <% remote ||= false %>
-<% url ||= :users %>
+<% url ||= user_session_path %>
 <%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user'}  do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
       <span class="help-block" style="color:red"></span>
-      <!-- < %= f.input :first_name, wrapper_html: { class: 'col-md-6'} %> -->
-      <!-- < %= f.input :last_name, wrapper_html: { class: 'col-md-6'} %> -->
       <%= f.input :email, wrapper_html: { class: 'col-md-4'}, :required => true %>
       <%= f.input :password, wrapper_html: { class: 'col-md-4'}, :required => true %>
-      <!-- < %= f.input :title, wrapper_html: { class: 'col-md-4'} %> -->
-      <!-- < %= f.input :phone, wrapper_html: { class: 'col-md-4'} %> -->
-      <!-- < %= f.input :account_id, as: :hidden, input_html: { value: params[:id] }, wrapper_html: { class: 'col-md-4'} %> -->
 
   <div class="clearfix">&nbsp;</div>  
     <%= f.button :submit, "Log In", class: 'btn btn-sm btn-primary pull-right form-group' %>

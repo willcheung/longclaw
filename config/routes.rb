@@ -4,7 +4,7 @@ Longclaw::Application.routes.draw do
     get "extension/account" => "extension#new"
   end
 
-  devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions", :registrations => "registrations" }
+  devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
   # You can have the root of your site routed with "root"
 
   authenticate :user do
