@@ -14,7 +14,7 @@
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  is_confirmed        :boolean
-#  category            :string           default("Implementation")
+#  category            :string           default("Opportunity")
 #  deleted_at          :datetime
 #  renewal_date        :date
 #  contract_start_date :date
