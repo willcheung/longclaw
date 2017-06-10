@@ -186,7 +186,7 @@ class SalesforceController < ApplicationController
 
             if load_result[:status] == "ERROR"
               failure_method_location = "Contact.load_salesforce_contacts()"
-              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}'). #{ load_result[:result] } Details: #{ load_result[:detail] }"
+              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
               render_internal_server_error(method_name, failure_method_location, error_detail)
               return
             end
@@ -490,7 +490,7 @@ class SalesforceController < ApplicationController
       if load_result[:status] == "SUCCESS"
         puts "Contacts successfully loaded."
       else # Salesforce error occurred
-        puts "Error in Contact.load_salesforce_contacts()! Attempted to load contacts from Salesforce Account \"#{sfdc_account.salesforce_account_name}\" (sfdc_id='#{sfdc_account.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{sfdc_account.contextsmith_account_id}'). Error: #{load_result[:result]} Details: #{ load_result[:detail] }"
+        puts "Error calling Contact.load_salesforce_contacts() in SalesforceController#import_sfdc_contacts_and_add_as_members! Attempted to load Contacts from Salesforce Account \"#{sfdc_account.salesforce_account_name}\" (sfdc_id='#{sfdc_account.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{sfdc_account.contextsmith_account_id}').  #{load_result[:result]} Details: #{ load_result[:detail] }"
       end
     end
 

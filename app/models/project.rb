@@ -763,20 +763,20 @@ class Project < ActiveRecord::Base
   #               sfdc_opportunity_id - SFDC opportunity sObjectId
   #               stream_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS project/stream.
   # Returns:   A hash that represents the execution status/result. Consists of:
-  #             status - string "SUCCESS" if load was successful; otherwise, "ERROR" 
+  #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
   def self.load_salesforce_fields(client, project_id, sfdc_opportunity_id, stream_custom_fields)
     result = nil
 
-    unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || stream_custom_fields.nil? || stream_custom_fields.empty?)
+    unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || stream_custom_fields.blank?)
       stream_custom_field_names = stream_custom_fields.collect { |cf| cf.salesforce_field }
 
       query_statement = "SELECT " + stream_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
-      sObjects_result = SalesforceService.query_salesforce(client, query_statement)
+      query_result = SalesforceService.query_salesforce(client, query_statement)
 
-      unless sObjects_result[:status] == "ERROR"
-        sObj = sObjects_result[:result].first
+      if query_result[:status] == "SUCCESS"
+        sObj = query_result[:result].first
         stream_custom_fields.each do |cf|
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
           #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
@@ -785,10 +785,15 @@ class Project < ActiveRecord::Base
         end
         result = { status: "SUCCESS" }
       else
-        result = { status: "ERROR", result: sObjects_result[:result], detail: sObjects_result[:detail] + " stream_custom_field_names=" + stream_custom_field_names.to_s }
+        result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " stream_custom_field_names=" + stream_custom_field_names.to_s }
       end
     else
-      result = { status: "SUCCESS", result: "Warning: 0 fields updated.", detail: "No fields to import!" }
+      if client.nil?
+        result = { status: "ERROR", result: "Error", detail: "Parameter 'client' passed to Project.load_salesforce_fields is invalid." } 
+      else
+        # Ignores if other parameters were not passed properly to load_salesforce_fields
+        result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
+      end
     end
 
     result

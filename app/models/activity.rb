@@ -202,7 +202,7 @@ class Activity < ActiveRecord::Base
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
-  #             detail - Contains a list of errors or informational/warning messages
+  #             detail - Contains any error or informational/warning messages.
   def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
     val = []
     result = nil
@@ -262,7 +262,7 @@ class Activity < ActiveRecord::Base
         if val.count > 0
           result = { status: "SUCCESS", result: "No. of rows UPSERTed into Activities = #{val.count}", detail: "#{ query_result[:detail] }" }
         else
-          result = { status: "SUCCESS", result: "Warning: 0 rows inserted.", detail: "No SFDC activity to import!" }
+          result = { status: "SUCCESS", result: "Warning: no rows inserted.", detail: "No SFDC activity to import!" }
         end
       end
     else  # SFDC query failure
@@ -282,14 +282,15 @@ class Activity < ActiveRecord::Base
     delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'"
     delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
     delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
-    puts "Deleting tasks returned from SFDC query \'#{delete_tasks_query_stmt}\'...."
-    tasks_to_delete = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
+    puts "Deleting all existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce.  SFDC query=\'#{delete_tasks_query_stmt}\'...."
+    query_result = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
     #tasks = client.query(delete_tasks_query_stmt)
 
-    unless tasks_to_delete[:status] == "ERROR"  # unless failed Salesforce query
-      tasks_to_delete[:result].each { |t| t.destroy}
-    else  # Salesforce query failure
-      return "Attempted to delete old SFDC tasks matching query=\"#{delete_tasks_query_stmt}\""  # proprogate query to caller
+    if query_result[:status] == "SUCCESS"
+      query_result[:result].each { |t| t.destroy }
+      puts "Deletion completed!"
+    else  # SFDC query failure
+      puts "Error occured while attempted to delete SFDC Tasks on Salesforce.  #{ query_result[:result] } Detail: #{ query_result[:detail] } "  # proprogate query to caller
     end
   end
 
@@ -302,12 +303,12 @@ class Activity < ActiveRecord::Base
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if operation is successful with no errors (activities exported or no activities to export); ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
-  #             detail - Contains a list of errors or informational/warning messages.
+  #             detail - a list of errors or informational/warning messages.
   def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil)
     result = { status: "SUCCESS", result: [], detail: [] }
 
     project.activities.each do |a|
-      # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task
+      # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.
       description = a.category + " activity (imported from ContextSmith) ——\n"
       activity_date = Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d")
       if a.category == Activity::CATEGORY[:Conversation]
@@ -364,22 +365,22 @@ class Activity < ActiveRecord::Base
           next # if any other Activity type (e.g., Salesforce), skip to the next Activity!
       end
 
-      # Second, put the fields into a hash object
+      # Second, put the fields into a hash object.
       sObject_meta = { id: sfdc_id, type: type }
       sObject_fields = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "#{CS_ACTIVITY_SFDC_EXPORT_PREFIX} #{a.category}: #{a.title}", priority: 'Normal', description: description }
       # puts "----> sObject_meta:\n #{sObject_meta}\n"
       # puts "----> sObject_fields:\n #{sObject_fields}\n"
 
-      # Finally, send information in hashes to be created as (completed) Tasks in SFDC
+      # Finally, send information in hashes to be created as (completed) Tasks in SFDC.
       update_result = SalesforceService.update_salesforce(client: client, sObject_meta: sObject_meta, update_type: "activity", sObject_fields: sObject_fields)
 
       if update_result[:status] == "SUCCESS"  # unless failed Salesforce query
         puts "-> a SFDC Task was created from a ContextSmith activity. New Task Id='#{ update_result[:result] }'."
-        # don't set result[:status] back to SUCCESS if export for another activity failed
+        # Don't set result[:status] back to SUCCESS if the export of a previous activity had an ERROR!
         result[:result] += [update_result[:result]]
         result[:detail] += [update_result[:detail]]
       else  # Salesforce update failure
-        puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
+        # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
         result[:status] = "ERROR"
         result[:result] += [update_result[:result]] 
         result[:detail] += [update_result[:detail] + " sObject_fields=#{ sObject_fields }"]

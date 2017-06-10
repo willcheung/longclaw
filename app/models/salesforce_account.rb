@@ -91,15 +91,8 @@ class SalesforceAccount < ActiveRecord::Base
       # puts "result => #{GC::Profiler.result}"
 
       # start transaction
-      if query_result[:status] == "ERROR"
-        return { status: "ERROR", result: query_result[:result], detail: "Failed query_salesforce in load_accounts. #{query_result[:detail]}" }
-      elsif query_result[:result].length == 0  # batch loop is completed
-        if total_accounts == 0
-          return { status: "SUCCESS", result: "Warning: 0 accounts added.", detail: "No Salesforce Accounts found!" }
-        else
-          return { status: "SUCCESS", result: "#{total_accounts} accounts added/updated.", detail: nil }
-        end
-      end
+      return { status: "ERROR", result: query_result[:result], detail: "Failed query_salesforce in load_accounts. #{query_result[:detail]}" } if query_result[:status] == "ERROR"
+      break if query_result[:result].length == 0  # batch loop is completed
         
       query_result[:result].each do |s|
         if last_Created_Id.nil?
@@ -133,6 +126,12 @@ class SalesforceAccount < ActiveRecord::Base
         total_accounts += query_result[:result].length
         val = []
       end
+    end # End: while true
+
+    if total_accounts > 0
+      return { status: "SUCCESS", result: "#{total_accounts} accounts added/updated.", detail: nil }
+    else
+      return { status: "SUCCESS", result: "Warning: no accounts added." }
     end
 	end
 end

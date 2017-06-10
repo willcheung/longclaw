@@ -32,7 +32,7 @@ class SalesforceOpportunity < ActiveRecord::Base
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of opportunities added/updated; if an error occurred, contains the title of the error.
   #             detail - contains the details of an error.
-	def self.load_opportunities(organization_id, query_range=500)
+  def self.load_opportunities(organization_id, query_range=500)
     val = []
 
     client = SalesforceService.connect_salesforce(organization_id)
@@ -45,14 +45,11 @@ class SalesforceOpportunity < ActiveRecord::Base
       query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"
 
       query_result = SalesforceService.query_salesforce(client, query_statement)
-      puts "query_statement: #{ query_statement }" 
-      puts "query_result: #{ query_result }"
-      puts "query_result result length => #{query_result[:result].length}"
-
-      if query_result[:status] == "ERROR"
-        return { status: "ERROR", result: query_result[:result], detail: "Failed query_salesforce in load_opportunities. #{query_result[:detail]}" } if client.nil?
-        #break
-      end
+      # puts "query_statement: #{ query_statement }" 
+      # puts "query_result: #{ query_result }"
+      # puts "query_result result length => #{query_result[:result].length}"
+      
+      return { status: "ERROR", result: query_result[:result], detail: "Failed query_salesforce in load_opportunities. #{query_result[:detail]}" } if query_result[:status] == "ERROR"
 
     	query_result[:result].each do |opp|
     		val << "('#{opp.Id}', 
@@ -81,6 +78,10 @@ class SalesforceOpportunity < ActiveRecord::Base
       end
     end  # End: sfdc_accounts.each do |a|
 
-    return { status: "SUCCESS", result: "#{total_opportunities} opportunities added/updated." }
+    if total_opportunities > 0
+      return { status: "SUCCESS", result: "#{total_opportunities} opportunities added/updated." }
+    else
+      return { status: "SUCCESS", result: "Warning: no opportunities added." }
+    end
 	end
 end

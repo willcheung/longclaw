@@ -129,7 +129,7 @@ class Contact < ActiveRecord::Base
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
-  #             detail - Contains a list of errors or informational/warning messages
+  #             detail - Contains any error or informational/warning messages.
   def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
     result = nil
@@ -211,7 +211,7 @@ class Contact < ActiveRecord::Base
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
-  #             detail - if status == "ERROR", contains a list of all errors.
+  #             detail - a list of all errors, or an empty list if no errors occurred. 
   def self.export_cs_contacts(client, account_id, sfdc_account_id)
     result = { status: "SUCCESS", result: [], detail: [] }
 
@@ -225,7 +225,6 @@ class Contact < ActiveRecord::Base
       #puts "----> sObject_fields:\t #{sObject_fields}\n"
       sObject_fields[:external_sfdc_id] = c.external_source_id if c.is_source_from_salesforce?
       update_result = SalesforceService.update_salesforce(client: client, update_type: "contacts", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
-      #puts ">>> update_result: #{update_result}"
 
       if update_result[:status] == "SUCCESS"
         puts "-> a SFDC Contact (#{c.last_name}, #{c.first_name}, #{c.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ update_result[:result] }'."
@@ -233,14 +232,14 @@ class Contact < ActiveRecord::Base
         result[:result] += [update_result[:result]]
         result[:detail] += [update_result[:detail]] # may contain messages, even with SUCCESS
       else  # Salesforce query failure
-        puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
+        # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
         result[:status] = "ERROR"
         result[:result] += [update_result[:result]] 
         result[:detail] += [update_result[:detail] + " sObject_fields=#{ sObject_fields }"]
       end
     end # End: Account.find(account_id).contacts.each do
 
-    return result
+    result
   end
 
   private

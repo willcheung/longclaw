@@ -60,7 +60,7 @@ class SalesforceService
   def self.query_salesforce(client, query_statement)
     result = nil
 
-    # return { status: "ERROR", result: "SalesforceService error", detail: "Simulated SFDC query_statement error!" }  # simulate a Salesforce query error
+    # return { status: "ERROR", result: "SalesforceService error", detail: "Simulated SFDC query_salesforce error!" }  # simulate a Salesforce query error
 
     if (!client.nil?)
       begin
@@ -71,7 +71,7 @@ class SalesforceService
         puts "*** SalesforceService error: Salesforce query error! (#{ e.to_s }) Query: #{query_statement}"
       end
     else
-      result = { status: "ERROR", result: "SalesforceService error", detail: "No Salesforce connection" }
+      result = { status: "ERROR", result: "SalesforceService error", detail: "Invalid Salesforce connection was passed to SalesforceService.query_salesforce." }
     end
 
     return result
@@ -126,11 +126,9 @@ class SalesforceService
         else
           update_result = upsert_sfdc_contact(client: client, sfdc_account_id: params[:sObject_meta][:id], email: params[:sObject_fields][:Email], params: params[:sObject_fields])
         end
-
-        # update_result = { status: "ERROR", result: "Salesforce error", detail: "This is just a simulated Salesforce error" }  # simulates a SFDC error
-        #puts "$$$ update_result: #{ update_result }"
-
         # update_result[:result] contains the new Contact's sObject Id
+        # update_result = { status: "ERROR", result: "Salesforce error", detail: "This is just a simulated Salesforce error" }  # simulated SFDC error
+
         if update_result[:status] == "SUCCESS"
           result = { status: "SUCCESS", result: update_result[:result], detail: update_result[:detail] }
         else
@@ -144,7 +142,7 @@ class SalesforceService
         result = { status: "ERROR", result: "SalesforceService error", detail: detail }
       end 
     else
-      detail = "SFDC Client passed to update_salesforce is not valid!"
+      detail = "Invalid Salesforce connection was passed to SalesforceService.update_salesforce."
       puts "*** SalesforceService error: #{ detail }"
       result = { status: "ERROR", result: "SalesforceService error", detail: detail }
     end
@@ -161,7 +159,7 @@ class SalesforceService
   #               params - a hash that contains the Contact information (e.g., FirstName, Email, etc.)
   # Returns:    A hash that represents the execution status/result of the upsert. Consists of:
   #               status - "SUCCESS" if successful, or "ERROR" otherwise
-  #               result - if status == "SUCCESS", contains the sObject Id of Contact created, otherwise, contains the title of the error
+  #               result - if status == "SUCCESS", contains the sObject Id of Contact created; otherwise, contains the title of the error
   #               detail - if status == "ERROR", contains the details of the error; if a duplicate contact was detected during create SFDC Contact, a warning is here warning user that Contacts may not be properly copied because a "Contact Duplicate Rule" in SFDC settings might be preventing us from creating new SFDC Contacts. This will contain a message stating if the retry was successful or failed.
 
   # TODO: Use SFDC duplicates warning to tell user "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
@@ -187,8 +185,7 @@ class SalesforceService
       end
     else
       begin
-        puts "* Contact #{ email } in SFDC Account #{ sfdc_account_id } not found. Creating a new Contact... *"
-        #puts "...with params: #{params}"
+        puts "* Contact #{ email } in SFDC Account #{ sfdc_account_id } not found. Creating a new Contact..."
         upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
         # upsert_result is the Contact's SFDC sObject Id
         result = { status: "SUCCESS", result: upsert_result, detail: "" }
@@ -206,9 +203,9 @@ class SalesforceService
             puts "*** SalesforceService error: #{ detail }"
             result = { status: "ERROR", result: "SalesforceService error", detail: detail }
           end
-        else # unknown/unhandled error
+        else # all other errors
           detail = "Export Contacts to Salesforce error while creating a new SFDC Contact. (#{ e.to_s }). sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
-          puts "*** SalesforceService error: #{ detail }"
+          puts "*** SalesforceService error: upsert_sfdc_contact #{ detail }"
           result = { status: "ERROR", result: "SalesforceService error", detail: detail }
         end
       end
@@ -224,7 +221,7 @@ class SalesforceService
   #                             params - a hash that contains the Contact information (e.g., FirstName, LastName, Email, etc.)
   # Returns:   A hash that represents the execution status/result of the update. Consists of:
   #             status - "SUCCESS" if successful, or "ERROR" otherwise
-  #             result - if status == "SUCCESS", contains the sObject Id of Contact created, otherwise, contains the title of the error
+  #             result - if status == "SUCCESS", contains the sObject Id of Contact created; otherwise, contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error; if a sfdc_contact_id was invalid, and the retry using upsert is successful, this will contain a message stating an upsert was performed instead and was successful.
   def self.update_sfdc_contact(client: , sfdc_contact_id: , sfdc_account_id: , params: )
     result = nil
