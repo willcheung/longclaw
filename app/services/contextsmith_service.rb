@@ -10,8 +10,7 @@ class ContextsmithService
     neg_sentiment = neg_sentiment.nil? ? "": ("&neg_sentiment=" + neg_sentiment.to_s)
     params = "?max=" + max.to_s + after + query + is_time + neg_sentiment + request
 
-    #puts "~~~~~~ ContextsmithService will now call load_from_backend(). ~~~~~~"
-    load_from_backend(project, base_url, params) do |data|
+    load_for_project_from_backend(project, base_url + params) do |data|
       puts "Found #{data[0]['conversations'].size} conversations!\n"
       Contact.load(data, project, save_in_db)
       # always load activity before notification
@@ -19,7 +18,6 @@ class ContextsmithService
       Notification.load(data, project, is_test)
       result
     end
-    #puts "~~~~~~ load_from_backend() processing exited! ~~~~~~"
   end
   
   # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
@@ -27,7 +25,7 @@ class ContextsmithService
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
     params =  "?max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
     
-    load_from_backend(project, base_url, params) do |data| 
+    load_for_project_from_backend(project, base_url + params) do |data| 
       puts "Found #{data[0]['conversations'].size} calendar events!\n"
       Activity.load_calendar(data, project, save_in_db)
     end
@@ -36,7 +34,7 @@ class ContextsmithService
   def self.load_calendar_for_user(user, max: 100, after: Time.current.to_i, before: 1.day.from_now.to_i, save_in_db: false)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
     params =  "?max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
-    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
+    # in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
     if user.nil? || Rails.env.development?
       source = [{ token: "test", email: "indifferenzetester@gmail.com", kind: "gmail" }]
@@ -48,37 +46,38 @@ class ContextsmithService
       self_cluster = [[user.email]]
     end
 
-    final_url = base_url + params + in_domain
-    puts "Calling backend service: " + final_url
+    # final_url = base_url + params + in_domain
+    # puts "Calling backend service: " + final_url
     
-    begin
-      uri = URI(final_url)
-      req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
-      req.body = { sources: source, external_clusters: self_cluster }.to_json
-      res = Net::HTTP.start(uri.host, uri.port 
-        #, use_ssl: uri.scheme == "https"
-        ) { |http| http.request(req) }
-      data = JSON.parse(res.body.to_s)
-    rescue => e
-      puts "ERROR: Something went wrong: " + e.message
-      puts e.backtrace.join("\n")
-    end
+    # begin
+    #   uri = URI(final_url)
+    #   req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+    #   req.body = { sources: source, external_clusters: self_cluster }.to_json
+    #   res = Net::HTTP.start(uri.host, uri.port 
+    #     #, use_ssl: uri.scheme == "https"
+    #     ) { |http| http.request(req) }
+    #   data = JSON.parse(res.body.to_s)
+    # rescue => e
+    #   puts "ERROR: Something went wrong: " + e.message
+    #   puts e.backtrace.join("\n")
+    # end
 
-    if data.nil? or data.empty?
-      puts "No data or nil returned!\n"
-      return []
-    elsif data.kind_of?(Array)
-      Activity.load_calendar(data, Hashie::Mash.new(id: '00000000-0000-0000-0000-000000000000'), save_in_db)
-    elsif data['code'] == 401
-      puts "Error: #{data['message']}\n"
-      return []
-    elsif data['code'] == 404
-      puts "#{data['message']}\n"
-      return []
-    else
-      puts "Unhandled backend response."
-      return []
-    end
+    # if data.nil? or data.empty?
+    #   puts "No data or nil returned!\n"
+    #   return []
+    # elsif data.kind_of?(Array)
+    #   Activity.load_calendar(data, Hashie::Mash.new(id: '00000000-0000-0000-0000-000000000000'), save_in_db)
+    # elsif data['code'] == 401
+    #   puts "Error: #{data['message']}\n"
+    #   return []
+    # elsif data['code'] == 404
+    #   puts "#{data['message']}\n"
+    #   return []
+    # else
+    #   puts "Unhandled backend response."
+    #   return []
+    # end
+    load_from_backend(source, self_cluster, base_url + params) { |data| puts "yield from load_calendar_for_user"; Activity.load_calendar(data, Hashie::Mash.new(id: '00000000-0000-0000-0000-000000000000'), save_in_db) }
   end
 
 
@@ -107,13 +106,9 @@ class ContextsmithService
     res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
   end
 
-
   private
 
-  def self.load_from_backend(project, base_url, params)
-    #puts "********** We are in load_from_backend() ! ************"
-    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
-
+  def self.load_for_project_from_backend(project, url)
     sources = []
     if Rails.env.development?
       sources << { token: "test", email: "indifferenzetester@gmail.com", kind: "gmail" }
@@ -127,8 +122,17 @@ class ContextsmithService
     return [] if sources.empty?
     ex_clusters = [project.contacts.pluck(:email)]
 
-    final_url = base_url + params + in_domain
+    load_from_backend(sources, ex_clusters, url) { |data| puts "yield from load_for_project_from_backend"; yield data }
+  end
+
+  def self.load_from_backend(sources, ex_clusters, url)
+    in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
+
+    final_url = url + in_domain
     puts "Calling backend service: " + final_url
+
+    p sources
+    p ex_clusters
 
     begin
       uri = URI(final_url)
@@ -159,4 +163,5 @@ class ContextsmithService
       return []
     end
   end
+
 end
