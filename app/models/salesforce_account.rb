@@ -59,7 +59,10 @@ class SalesforceAccount < ActiveRecord::Base
   #             detail - details of any errors.
 	def self.load_accounts(organization_id, query_range=500)
 		client = SalesforceService.connect_salesforce(organization_id)
-    return { status: "ERROR", result: "SalesforceService.connect_salesforce error", detail: "Failed to connect in load_accounts." } if client.nil?
+    if client.nil?
+      puts "** SalesforceService error: During loading SFDC accounts, an attempt to connect to Salesforce using SalesforceService.connect_salesforce in SalesforceAccount.load_accounts failed!"
+      return { status: "ERROR", result: "SalesforceService Connection error", detail: "During loading SFDC accounts, an attempt to connect to Salesforce failed." } 
+    end
 
     firstQuery = true   
     last_Created_Id = nil
@@ -91,7 +94,10 @@ class SalesforceAccount < ActiveRecord::Base
       # puts "result => #{GC::Profiler.result}"
 
       # start transaction
-      return { status: "ERROR", result: query_result[:result], detail: "Failed query_salesforce in load_accounts. #{query_result[:detail]}" } if query_result[:status] == "ERROR"
+      if query_result[:status] == "ERROR"
+        puts "** SalesforceService error: During loading SFDC accounts, a query to Salesforce using SalesforceService.query_salesforce in SalesforceAccount.load_accounts had errors!  #{ query_result[:result] } Detail: #{ query_result[:detail] }"
+        return { status: "ERROR", result: query_result[:result], detail: "During loading SFDC accounts, a query to Salesforce had errors. Detail: #{query_result[:detail]}" } 
+      end
       break if query_result[:result].length == 0  # batch loop is completed
         
       query_result[:result].each do |s|

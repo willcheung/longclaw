@@ -137,14 +137,12 @@ class SalesforceService
           result = { status: "ERROR", result: "SalesforceService error", detail: detail }
         end
       else
-        detail = "Wrong parameter passed to update_salesforce: params[:update_type]=#{ params[:update_type] }"
-        puts "*** SalesforceService error: #{ detail }"
-        result = { status: "ERROR", result: "SalesforceService error", detail: detail }
+        puts "*** ContextSmith error: Parameter params[:update_type] passed to SalesforceService.update_salesforce is invalid!  params[:update_type]=#{ params[:update_type] }"
+        result = { status: "ERROR", result: "SalesforceService error", detail: "Parameter passed to an internal function is invalid." }
       end 
     else
-      detail = "Invalid Salesforce connection was passed to SalesforceService.update_salesforce."
-      puts "*** SalesforceService error: #{ detail }"
-      result = { status: "ERROR", result: "SalesforceService error", detail: detail }
+      puts "** ContextSmith error: Parameter 'client' passed to SalesforceService.update_salesforce is invalid!"
+      result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
     end
 
     result

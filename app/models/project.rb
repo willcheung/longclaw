@@ -789,7 +789,8 @@ class Project < ActiveRecord::Base
       end
     else
       if client.nil?
-        result = { status: "ERROR", result: "Error", detail: "Parameter 'client' passed to Project.load_salesforce_fields is invalid." } 
+        puts "** ContextSmith error: Parameter 'client' passed to Project.load_salesforce_fields is invalid!"
+        result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
       else
         # Ignores if other parameters were not passed properly to load_salesforce_fields
         result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }

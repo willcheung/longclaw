@@ -36,7 +36,10 @@ class SalesforceOpportunity < ActiveRecord::Base
     val = []
 
     client = SalesforceService.connect_salesforce(organization_id)
-    return { status: "ERROR", result: "SalesforceService.connect_salesforce error", detail: "Failed to connect in load_opportunities." } if client.nil?
+    if client.nil?
+      puts "** SalesforceService error: During loading SFDC opportunities, an attempt to connect to Salesforce using SalesforceService.connect_salesforce in SalesforceOpportunity.load_opportunities failed!"
+      return { status: "ERROR", result: "SalesforceService Connection error", detail: "During loading SFDC opportunities, an attempt to connect to Salesforce failed." } 
+    end
 
     sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: organization_id).is_linked
     total_opportunities = 0
@@ -49,7 +52,10 @@ class SalesforceOpportunity < ActiveRecord::Base
       # puts "query_result: #{ query_result }"
       # puts "query_result result length => #{query_result[:result].length}"
       
-      return { status: "ERROR", result: query_result[:result], detail: "Failed query_salesforce in load_opportunities. #{query_result[:detail]}" } if query_result[:status] == "ERROR"
+      if query_result[:status] == "ERROR"
+        puts "** SalesforceService error: During loading SFDC opportunities, a query to Salesforce using SalesforceService.query_salesforce in SalesforceOpportunity.load_opportunities had errors!  #{ query_result[:result] } Detail: #{ query_result[:detail] }"
+        return { status: "ERROR", result: query_result[:result], detail: "During loading SFDC opportunities, a query to Salesforce had errors. Detail: #{ query_result[:detail] }" } 
+      end
 
     	query_result[:result].each do |opp|
     		val << "('#{opp.Id}', 
