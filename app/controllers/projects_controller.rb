@@ -31,7 +31,7 @@ class ProjectsController < ApplicationController
     end
 
     # all projects and their accounts, sorted by account name alphabetically
-    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN activities ON projects.id = activities.project_id LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
     unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
@@ -39,7 +39,6 @@ class ProjectsController < ApplicationController
       @sparkline = Project.count_activities_by_day_sparkline(projects.map(&:id), current_user.time_zone)
       @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
-      @rag_status = Project.current_rag_score(projects.map(&:id))
     end
 
     # new project modal
@@ -288,11 +287,13 @@ class ProjectsController < ApplicationController
     @project_open_risks_count = @project.notifications.open.risks.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
-    project_rag_score = @project.activities.latest_rag_score.first
 
-    if project_rag_score
-      @project_rag_status = project_rag_score['rag_score']
-    end
+    # Removing RAG status - old metric
+    # project_rag_score = @project.activities.latest_rag_score.first
+
+    # if project_rag_score
+    #   @project_rag_status = project_rag_score['rag_score']
+    # end
 
     # old metrics
     # @project_last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")

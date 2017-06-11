@@ -62,7 +62,7 @@
                 <div class="col-xs-4">
                     <div class="metric text-danger">
                         <span class="metric-title" align="center">
-                            <div>Open Smart Tasks</div>
+                            <div>Open Alerts & Tasks</div>
                         </span>
                         <span class="metric-content" align="center">
                             <div><%= @project_open_tasks_count %></div>
@@ -91,7 +91,7 @@
             <ul class="nav nav-tabs">
                   <li class="nav-tab"><a id="newsfeed-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=show" class="white-bg"><i class="fa fa-comments"></i> Activities</a></li>
                   <li class="nav-tab"><a id="pinned-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=pinned_tab" class="white-bg"><i class="fa fa-thumb-tack"></i> Key Activities (<%= @project_pinned_count %>)</a></li>
-                  <li class="nav-tab"><a id="tasks-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=tasks_tab" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks (<%= @project_open_tasks_count %>)</a></li>
+                  <li class="nav-tab"><a id="tasks-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=tasks_tab" class="white-bg"><i class="fa fa-list-ul"></i> Alerts & Tasks (<%= @project_open_tasks_count %>)</a></li>
                   <li class="nav-tab"><a id="arg-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=arg_tab" class="white-bg"><i class="fa fa-users"></i> Relationship Graph</a></li>
                   <li class="nav-tab"><a id="insights-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=insights_tab" class="white-bg"><i class="fa fa-lightbulb-o"></i> Insights</a></li>
                 </ul>
