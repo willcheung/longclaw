@@ -228,8 +228,9 @@ class SalesforceService
       result = { status: "SUCCESS", result: sfdc_contact_id, detail: "" }
     rescue => e
       detail = ""
-      if (e.to_s[0...9]) == "NOT_FOUND" # If SFDC Contact was deleted on Salesforce (invalidating the Id saved) or external SFDC Id of Contact is invalid
+      if (e.to_s[0...9]) == "NOT_FOUND" || (e.to_s[0...27]) == "INVALID_CROSS_REFERENCE_KEY" # If SFDC Contact was deleted on Salesforce (invalidating the Id saved) or external SFDC Id of Contact is invalid
       #(e.to_s[0...25]) == "FIELD_INTEGRITY_EXCEPTION"   # Is this obsolete??
+
         detail += "Export Contacts to Salesforce error -- invalid salesforce Contact Id -- while updating SFDC Contact! (#{ e.to_s }) Attemping to upsert Contact using e-mail instead. "
         upsert_result = upsert_sfdc_contact(client: client, sfdc_account_id: sfdc_account_id, email: params[:Email], params: params)
         if upsert_result[:status] == "SUCCESS"
