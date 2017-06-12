@@ -273,6 +273,8 @@ class SalesforceService
 
   # Changes value 'val' to a valid value to be used in a SFDC field. e.g., escapes single quotes
   def self.clean_SFDC_field(val)
-    val.gsub!("'", "\\\\'")
+    if val.present?
+      val.gsub!("'", "\\\\'") 
+    end
   end
 end
