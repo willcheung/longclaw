@@ -173,6 +173,7 @@ class SalesforceService
     result = nil
 
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email}' ORDER BY LastName, FirstName"  # Unused: Description    
+    puts "query_statement: #{ query_statement }"
     query_result = self.query_salesforce(client, query_statement)
 
     if query_result[:status] == "ERROR"
