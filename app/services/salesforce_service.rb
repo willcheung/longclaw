@@ -121,13 +121,15 @@ class SalesforceService
         #puts ">>> params[external_sfdc_id]=#{ params[:external_sfdc_id] }" 
         #puts "Contact: #{ params[:sObject_fields][:FirstName] } #{ params[:sObject_fields][:LastName] } (external_sfdc_id: #{ params[:sObject_fields][:external_sfdc_id] })"
 
-        puts clean_SFDC_field(params[:FirstName]) if params[:FirstName].present?
-        puts clean_SFDC_field(params[:LastName]) if params[:LastName].present?
-        puts clean_SFDC_field(params[:Email]) if params[:Email].present?
-        puts clean_SFDC_field(params[:Title]) if params[:Title].present?
-        puts clean_SFDC_field(params[:Department]) if params[:Department].present?
-        puts clean_SFDC_field(params[:Phone]) if params[:Phone].present?
-        puts clean_SFDC_field(params[:MobilePhone]) if params[:MobilePhone].present?
+        puts "\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*"
+        puts "FirstName: #{clean_SFDC_field(params[:FirstName])}" if params[:FirstName].present?
+        puts "LastName: #{clean_SFDC_field(params[:LastName])}" if params[:LastName].present?
+        puts "Email: #{clean_SFDC_field(params[:Email])}" if params[:Email].present?
+        puts "Title: #{clean_SFDC_field(params[:Title])}" if params[:Title].present?
+        puts "Department: #{clean_SFDC_field(params[:Department])}" if params[:Department].present?
+        puts "Phone: #{clean_SFDC_field(params[:Phone])}" if params[:Phone].present?
+        puts "MobilePhone: #{clean_SFDC_field(params[:MobilePhone])}" if params[:MobilePhone].present?
+        puts "\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*"
 
         if (params[:sObject_fields][:external_sfdc_id].present?) # contact is SFDC contact
           update_result = update_sfdc_contact(client: client, sfdc_contact_id: params[:sObject_fields][:external_sfdc_id], sfdc_account_id: params[:sObject_meta][:id], params: params[:sObject_fields])
