@@ -62,7 +62,7 @@ module Devise
       protected
 
       def password_digest(password)
-        password.reverse
+        password
       end
     end
   end
