@@ -121,6 +121,18 @@ class SalesforceService
         #puts ">>> params[external_sfdc_id]=#{ params[:external_sfdc_id] }" 
         #puts "Contact: #{ params[:sObject_fields][:FirstName] } #{ params[:sObject_fields][:LastName] } (external_sfdc_id: #{ params[:sObject_fields][:external_sfdc_id] })"
 
+        puts "params[:LastName]: #{params[:LastName]}"
+        puts "params[:Email]: #{params[:Email]}"
+        clean_SFDC_field(params[:FirstName])
+        clean_SFDC_field(params[:LastName])
+        clean_SFDC_field(params[:Email])
+        clean_SFDC_field(params[:Title])
+        clean_SFDC_field(params[:Department])
+        clean_SFDC_field(params[:Phone])
+        clean_SFDC_field(params[:MobilePhone])
+        puts "params[:LastName] (after): #{params[:LastName]}"
+        puts "params[:Email] (after): #{params[:Email]}"
+
         if (params[:sObject_fields][:external_sfdc_id].present?) # contact is SFDC contact
           update_result = update_sfdc_contact(client: client, sfdc_contact_id: params[:sObject_fields][:external_sfdc_id], sfdc_account_id: params[:sObject_meta][:id], params: params[:sObject_fields])
         else
@@ -261,5 +273,10 @@ class SalesforceService
     client = self.connect_salesforce(current_user.organization_id)
     # Find the SFDC opportunities/accounts mapped to project
     # Then call Activity.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil
+  end
+
+  # Changes val to a valid value to be used in a SFDC field
+  def clean_SFDC_field(val)
+    val.gsub!("'", "\\\\'")
   end
 end
