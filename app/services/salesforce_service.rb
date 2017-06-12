@@ -121,14 +121,6 @@ class SalesforceService
         #puts ">>> params[external_sfdc_id]=#{ params[:external_sfdc_id] }" 
         #puts "Contact: #{ params[:sObject_fields][:FirstName] } #{ params[:sObject_fields][:LastName] } (external_sfdc_id: #{ params[:sObject_fields][:external_sfdc_id] })"
 
-        puts clean_SFDC_field(params[:sObject_fields][:FirstName]) if params[:sObject_fields][:FirstName].present?
-        puts clean_SFDC_field(params[:sObject_fields][:LastName]) if params[:sObject_fields][:LastName].present?
-        puts clean_SFDC_field(params[:sObject_fields][:Email]) if params[:sObject_fields][:Email].present?
-        puts clean_SFDC_field(params[:sObject_fields][:Title]) if params[:sObject_fields][:Title].present?
-        puts clean_SFDC_field(params[:sObject_fields][:Department]) if params[:sObject_fields][:Department].present?
-        puts clean_SFDC_field(params[:sObject_fields][:Phone]) if params[:sObject_fields][:Phone].present?
-        puts clean_SFDC_field(params[:sObject_fields][:MobilePhone]) if params[:sObject_fields][:MobilePhone].present?
-
         if (params[:sObject_fields][:external_sfdc_id].present?) # contact is SFDC contact
           update_result = update_sfdc_contact(client: client, sfdc_contact_id: params[:sObject_fields][:external_sfdc_id], sfdc_account_id: params[:sObject_meta][:id], params: params[:sObject_fields])
         else
@@ -171,9 +163,10 @@ class SalesforceService
   # TODO: Use SFDC duplicates warning to tell user "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , email: , params: )
     result = nil
+    email_escaped = return_escaped_SFDC_field(email)
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email}' ORDER BY LastName, FirstName"  # Unused: Description    
-    puts "query_statement: #{ query_statement }"
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email_escaped}' ORDER BY LastName, FirstName"  # Unused: Description    
+    #puts "query_statement: #{ query_statement }"
     query_result = self.query_salesforce(client, query_statement)
 
     if query_result[:status] == "ERROR"
@@ -273,10 +266,11 @@ class SalesforceService
   end
 
   # Changes value 'val' to a valid value to be used in a SFDC field. e.g., escapes single quotes
-  def self.clean_SFDC_field(val)
+  def self.return_escaped_SFDC_field(val)
     if val.present?
-      val.gsub!("'", "\\\\'") 
+      val.gsub("'", "\\\\'") 
+    else
+      val
     end
-    val
   end
 end
