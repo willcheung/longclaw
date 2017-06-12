@@ -275,8 +275,8 @@ class SalesforceService
     # Then call Activity.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil
   end
 
-  # Changes val to a valid value to be used in a SFDC field
-  def clean_SFDC_field(val)
+  # Changes value 'val' to a valid value to be used in a SFDC field. e.g., escapes single quotes
+  def self.clean_SFDC_field(val)
     val.gsub!("'", "\\\\'")
   end
 end
