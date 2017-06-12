@@ -163,9 +163,8 @@ class SalesforceService
   # TODO: Use SFDC duplicates warning to tell user "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , email: , params: )
     result = nil
-    email_escaped = return_escaped_SFDC_field(email)
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{email_escaped}' ORDER BY LastName, FirstName"  # Unused: Description    
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{ return_escaped_SFDC_field(email) }' ORDER BY LastName, FirstName"  # Unused: Description    
     #puts "query_statement: #{ query_statement }"
     query_result = self.query_salesforce(client, query_statement)
 
@@ -186,7 +185,7 @@ class SalesforceService
     else
       begin
         puts "* Contact #{ email } in SFDC Account #{ sfdc_account_id } not found. Creating a new Contact..."
-        upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
+        upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: email, Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
         # upsert_result is the Contact's SFDC sObject Id
         result = { status: "SUCCESS", result: upsert_result, detail: "" }
       rescue => e
@@ -194,7 +193,7 @@ class SalesforceService
           detail = "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only minimal Contact fields (e.g., FirstName, LastName, and Email) ... "
           begin
             # Attempt to create Contact with only minimal Contact fields
-            upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: params[:Email]) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
+            upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName], Email: email) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
             detail += "Contact successfully created."
             puts "*** SalesforceService warning: #{ detail }"
             result = { status: "SUCCESS", result: upsert_result, detail: detail }
