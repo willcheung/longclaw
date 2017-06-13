@@ -126,9 +126,7 @@ class ContextsmithService
     end
   end
 
-  private
-
-  def user_auth_params(user)
+  def self.user_auth_params(user)
     case user.oauth_provider
     when User::AUTH_TYPE[:Gmail]
       success = user.token_expired? ? user.refresh_token! : true
