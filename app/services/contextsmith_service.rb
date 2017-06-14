@@ -94,7 +94,6 @@ class ContextsmithService
     puts "Calling backend service: " + final_url
 
     p sources
-    # p ex_clusters
 
     begin
       uri = URI(final_url)

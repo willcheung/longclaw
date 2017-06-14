@@ -1,6 +1,6 @@
 <% remote ||= false %>
 <% url ||= user_session_path %>
-<%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user'}  do |f| %>
+<%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user', style: "display:none;"}  do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
       <span class="help-block" style="color:red"></span>
@@ -12,3 +12,9 @@
  
 
 <% end %>
+<script type="text/javascript">
+  $('#outlook-login').click(function () {
+    $(this).hide();
+    $('#new_user').show();
+  })
+</script>

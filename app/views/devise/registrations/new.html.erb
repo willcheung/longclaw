@@ -53,7 +53,7 @@
                     <% else %>
                         <a class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></a>
 
-                        <a class="btn btn-lg btn-primary oauth m-t-lg"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Outlook</span></a>
+                        <button id="outlook-login" class="btn btn-lg btn-primary oauth m-t-lg"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Outlook</span></button>
                         <%= render "users/form_exchange" %>
                     <% end %>
                 </div>
