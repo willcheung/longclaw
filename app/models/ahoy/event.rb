@@ -28,10 +28,9 @@ module Ahoy
 	    query = <<-SQL
 		    select to_char(time, 'MM/DD') as "date", cast(count(ahoy_events.*) as integer) as events
 		    from ahoy_events 
-		    where time > current_date - interval '30' day and not properties @> '{"page":"/settings/user_analytics"}' 
+		    where time > current_date - interval '14' day and not properties @> '{"page":"/settings/user_analytics"}' 
 		    group by to_char(time, 'MM/DD')
-		    order by "date" asc
-		    limit 14;
+		    order by "date" asc;
 	    SQL
 	    find_by_sql(query)
 	  end

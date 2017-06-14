@@ -18,7 +18,7 @@
                     <a href="<%= root_path %>"><i class="fa fa-home"></i> <span class="nav-label">Home</span></a>
                 </li>
                 <li class="<%= is_active_controller('projects') %>">
-                    <a href="<%= projects_path %>/?owner=<%= current_user.id %>"><i class="fa fa-comments"></i> <span class="nav-label">Streams</span></a>
+                    <a href="<%= projects_path %>"><i class="fa fa-comments"></i> <span class="nav-label">Streams</span></a>
                 </li>
                 <li class="<%= is_active_controller('notifications') %>">
                     <a href="<%= notifications_path %>/?type=incomplete&assignee=me"><i class="fa fa-list-ul"></i> <span class="nav-label">Alerts & Tasks</span></a>
