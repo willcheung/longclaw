@@ -7,27 +7,6 @@
 
     <div class="ibox-content">
         <div class="row">
-            <div class="col-md-3 text-center">
-                <div class="metric <%= risk_color(@risk_score) %>">
-                    <div class="metric-title">
-                        <h4><%= risk_level(@risk_score) %></h4>
-                    </div>
-                    <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><%= @risk_score %></h2>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3 text-center">
-                <div class="metric text-danger">
-                    <div class="metric-title">
-                        <h4>Open Smart Tasks</h4>
-                    </div>
-                    <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><%= @open_tasks_count %></h2>
-                    </div>
-                </div>
-            </div>
 
             <div class="col-md-3 text-center">
                 <div class="metric">
@@ -50,6 +29,29 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric <%= risk_color(@risk_score) %>">
+                    <div class="metric-title">
+                        <h4><%= risk_level(@risk_score) %></h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px"><%= @risk_score %></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric text-danger">
+                    <div class="metric-title">
+                        <h4>Open Alerts & Tasks</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px"><%= @open_tasks_count %></h2>
+                    </div>
+                </div>
+            </div>
+            
         </div>
         <div class="row text-center">
             <h3><%= link_to "See Alerts & Next Steps &rarr;".html_safe, project_path(@project)+"/tasks", class: "btn btn-outline btn-primary btn-xs" %></h3>
@@ -60,9 +62,6 @@
 
 <div id="account-charts">
     <div id="charts-container" class="ibox-content">
-        <div class="row m-t-md">
-            <div id="risk-chart" style="height:240px;margin-right:13px;margin-left:5px"></div>
-        </div>
 
         <!-- <div class="row m-t-md">
             <div id="risk-detection-chart" style='margin-right:10px;margin-left:14px;'></div>
@@ -70,6 +69,10 @@
 
         <div class="row m-t-md">
             <div id="activities-chart"></div>
+        </div>
+
+        <div class="row m-t-md">
+            <div id="risk-chart" style="height:240px;margin-right:13px;margin-left:5px"></div>
         </div>
 
         <div class="row m-t-lg text-center">

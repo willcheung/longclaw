@@ -157,8 +157,8 @@ class ReportsController < ApplicationController
       end
     end
     @interaction_time_per_account.sort_by! { |it| it.total }.reverse!
-    # take the top 7 interaction time per account, currently allotted space only fits about 7 categories on xAxis before labels are cut off
-    @interaction_time_per_account = @interaction_time_per_account.take(7)
+    # take the top 10 interaction time per account, currently allotted space only fits about 10 categories on xAxis before labels are cut off
+    @interaction_time_per_account = @interaction_time_per_account.take(10)
 
     render layout: false
   end
