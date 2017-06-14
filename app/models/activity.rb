@@ -377,13 +377,13 @@ class Activity < ActiveRecord::Base
       if update_result[:status] == "SUCCESS"  # unless failed Salesforce query
         puts "-> a SFDC Task was created from a ContextSmith activity. New Task Id='#{ update_result[:result] }'."
         # Don't set result[:status] back to SUCCESS if the export of a previous activity had an ERROR!
-        result[:result] += [update_result[:result]]
-        result[:detail] += [update_result[:detail]]
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail]
       else  # Salesforce update failure
         # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
         result[:status] = "ERROR"
-        result[:result] += [update_result[:result]] 
-        result[:detail] += [update_result[:detail] + " sObject_fields=#{ sObject_fields }"]
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail] + " sObject_fields=#{ sObject_fields }"
       end
     end # project.activities.each do
 
