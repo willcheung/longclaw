@@ -229,13 +229,13 @@ class Contact < ActiveRecord::Base
       if update_result[:status] == "SUCCESS"
         puts "-> a SFDC Contact (#{c.last_name}, #{c.first_name}, #{c.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ update_result[:result] }'."
         # don't set result[:status] back to SUCCESS if export for another contact failed
-        result[:result] += [update_result[:result]]
-        result[:detail] += [update_result[:detail]] # may contain messages, even with SUCCESS
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail]  # may contain messages, even with SUCCESS
       else  # Salesforce query failure
         # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
         result[:status] = "ERROR"
-        result[:result] += [update_result[:result]] 
-        result[:detail] += [update_result[:detail] + " sObject_fields=#{ sObject_fields }"]
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail] + " sObject_fields=#{ sObject_fields }"
       end
     end # End: Account.find(account_id).contacts.each do
 
