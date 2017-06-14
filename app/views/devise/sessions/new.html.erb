@@ -9,7 +9,7 @@
         <a class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log In Using Google</span></a>
 
       	<button id="outlook-login" class="btn btn-lg btn-primary oauth m-t-lg"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log In Using Outlook</span></button>
-        <%= render "users/form_exchange" %>
+        <%= render "users/form_exchange", button_text: "Log In" %>
 
         <p class="m-t-lg"> Don't have an account? <a href="<%= new_user_registration_path %>"> Sign up here. </p>
   	

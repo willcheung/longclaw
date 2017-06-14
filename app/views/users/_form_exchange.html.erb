@@ -1,20 +1,24 @@
 <% remote ||= false %>
 <% url ||= user_session_path %>
-<%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user', style: "display:none;"}  do |f| %>
+<% button_text ||= 'Log In' %>
+<%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user', style: "display:none;", class: "form-horizontal"}, wrapper: :horizontal_form  do |f| %>
+<hr>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
-      <span class="help-block" style="color:red"></span>
-      <%= f.input :email, wrapper_html: { class: 'col-md-4'}, :required => true %>
-      <%= f.input :password, wrapper_html: { class: 'col-md-4'}, :required => true %>
+  <span class="help-block" style="color:red"></span>
+  <%= f.input :email, :required => true %>
+  <%= f.input :password, :required => true %>
 
-  <div class="clearfix">&nbsp;</div>  
-    <%= f.button :submit, "Log In", class: 'btn btn-sm btn-primary pull-right form-group' %>
+  <%= f.button :button, button_text, id: "outlook-login-button", class: 'btn btn-primary' %>
  
-
 <% end %>
 <script type="text/javascript">
   $('#outlook-login').click(function () {
     $(this).hide();
     $('#new_user').show();
-  })
+  });
+
+  $('#new_user').submit(function () {
+    $('#outlook-login-button').html('<i class="fa fa-spinner fa-pulse"></i>').prop("disabled", true)
+  });
 </script>
