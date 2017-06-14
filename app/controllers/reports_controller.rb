@@ -1,6 +1,5 @@
 class ReportsController < ApplicationController
   before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
-  before_action :get_cookies_title_team, only: [:team_dashboard, :td_sort_data]
   
   def team_dashboard
     users = current_user.organization.users
@@ -23,85 +22,22 @@ class ReportsController < ApplicationController
   def td_sort_data
     @sort = params[:sort]
     users = current_user.organization.users
-    puts "===============td_sort_data is getting called team #{params[:team]} ----title: #{params[:title]}========================"
-
-    # Setting cookies to remember filter settings
-    if params[:team]
+    
+    if params[:team].present?
       if params[:team] == "none"
-        puts "this params is picked up as NONe!!!!!!!!!"
-        # cookies.delete :team
+        users = users.where(department: nil)
       else
-        puts "====TEAM===seting the cookie team========="
-        if params[:team] == ""
-        cookies[:team] = {value: "none", expires: 3.months.from_now, domain: 'domain.com'   }
-        puts "this is the new cookie: "
-        else
-          cookies[:team] = { value: params[:team],expires: 3.months.from_now, domain: 'domain.com' }
-        end
-      end
-    else
-      if cookies[:team]
-        puts "-----setting cookie: #{cookies[:team]} to the NEW team params"
-        params[:team] = cookies[:team]
+        users = users.where(department: params[:team])
       end
     end
 
-    if params[:title]
-      puts "=======set the cookie=========Target2-"
+    if params[:title].present?
       if params[:title] == "none"
-        puts "this is params picked up as none.........."
+        users = users.where(title: nil)
       else
-        puts "setting the cookie target ---------"
-        cookies[:title] = {value: params[:title], expires: 3.months.from_now, domain: 'domain.com' }
-      end
-    else
-      if cookies[:title]
-        puts "--TITLE:---setting cookie: #{cookies[:title]} to the NEW title params"
-        params[:title] = cookies[:title]
+        users = users.where(title: params[:title])
       end
     end
-
-    puts "====doing the search on title: #{params[:title]}==team: #{params[:team]}======="
-
-    # Saves team and title filter
-    if params[:team].present? && params[:title].present?
-      puts "=========running both team and title searches"
-      users = users.where(department: params[:team]).where(title: params[:title])
-    elsif params[:team].present? || params[:title].present?
-      if params[:team].present?
-        if params[:team] == "none"
-          users = users.where(department: nil)
-        else
-          puts " -=-=--==-===-=-calling: users = users.where(department: params[:team])"
-          users = users.where(department: params[:team])
-        end
-      else params[:title].present?
-        if params[:title] == "none"
-          users = users.where(title: nil)
-        else
-          puts " -=-=--==-===-=-calling: users = users.where(title: params[:title]) "
-          users = users.where(title: params[:title])
-        end
-      end
-    else
-      puts "--------nothing happened....----target 4=-------------"
-    end
-
-    # if params[:team].present?
-    #   if params[:team] == "none"
-    #     users = users.where(department: nil)
-    #   else
-    #     users = users.where(department: params[:team])
-    #   end
-    # end
-
-    # if params[:title].present?
-    #   if params[:title] == "none"
-    #     users = users.where(title: nil)
-    #   else
-    #     users = users.where(title: params[:title])
-    #   end
-    # end
 
     @data = [] and return if users.blank?  #quit early if all projects are filtered out
 
@@ -488,22 +424,4 @@ class ReportsController < ApplicationController
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
   end
 
-  def get_cookies_title_team
-    puts "--------get_title_team------any cookies?:title: #{cookies[:title]}---team:#{cookies[:team]}---"
-     if params[:title] 
-      cookies[:title] = {value: params[:title], expires: 3.months.from_now, domain: 'domain.com'   }
-    else
-      if cookies[:title]
-        params[:title] = cookies[:title]
-      end
-    end
-     if params[:team] 
-      cookies[:team] = {value: params[:team], expires: 3.months.from_now, domain: 'domain.com'   }
-    else
-      if cookies[:team]
-        params[:team] = cookies[:team]
-      end
-    end
-
-  end
 end
