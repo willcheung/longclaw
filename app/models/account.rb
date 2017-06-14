@@ -109,29 +109,47 @@ class Account < ActiveRecord::Base
         end
     end
 
-    # Updates all mapped custom fields of a single SF account -> CS account
-    def self.load_salesforce_fields(salesforce_client, account_id, sfdc_account_id, account_custom_fields)
-        unless (salesforce_client.nil? or account_id.nil? or sfdc_account_id.nil? or account_custom_fields.nil? or account_custom_fields.empty?)
-            account_custom_field_names = []
-            account_custom_fields.each { |cf| account_custom_field_names << cf.salesforce_field}
+    # Updates all mapped custom fields of a single SFDC account -> CS account
+    # Parameters:   client - connection to Salesforce
+    #               account_id - CS account id          
+    #               sfdc_account_id - SFDC account sObjectId
+    #               account_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS account.
+    # Returns:   A hash that represents the execution status/result. Consists of:
+    #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
+    #             result - if status == "ERROR", contains the title of the error
+    #             detail - if status == "ERROR", contains the details of the error
+    def self.load_salesforce_fields(client, account_id, sfdc_account_id, account_custom_fields)
+        result = nil
+
+        unless (client.nil? || account_id.nil? || sfdc_account_id.nil? || account_custom_fields.blank?)
+            account_custom_field_names = account_custom_fields.collect { |cf| cf.salesforce_field }
 
             query_statement = "SELECT " + account_custom_field_names.join(", ") + " FROM Account WHERE Id = '#{sfdc_account_id}' LIMIT 1"
-            sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
+            query_result = SalesforceService.query_salesforce(client, query_statement)
 
-            unless sObjects_result.nil?
-                sObj = sObjects_result.first
+            if query_result[:status] == "SUCCESS"
+                sObj = query_result[:result].first
                 account_custom_fields.each do |cf|
-                    #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id)
-                    #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
-                    #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+                    # csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id)
+                    # print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
+                    # print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
                     CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id).update(value: sObj[cf.salesforce_field])
                 end
+                result = { status: "SUCCESS" }
             else
-                return "account_custom_field_names=" + account_custom_field_names.to_s # proprogate list of field names to caller
+                result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " account_custom_field_names=" + account_custom_field_names.to_s }
+            end
+        else
+            if client.nil?
+                puts "** ContextSmith error: Parameter 'client' passed to Account.load_salesforce_fields is invalid!"
+                result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
+            else
+                # Ignores if other parameters were not passed properly to load_salesforce_fields
+                result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
             end
         end
 
-        nil # successful request
+        result
     end
 
     private

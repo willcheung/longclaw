@@ -207,7 +207,7 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # Find and return the most likely SFDC Account given an array of contact e-mails
+  # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact e-mails; returns nil if one cannot be determined.
   def find_matching_sfdc_account(client, emails=[])
 
     return nil if client.nil? || emails.blank?  # abort if connection invalid or no emails passed
@@ -216,9 +216,9 @@ class ExtensionController < ApplicationController
     query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email" # Use GROUP BY as a workaround to get Salesforce to SELECT distinct AccountID's and Email's
     sfdc_contacts_results = SalesforceService.query_salesforce(client, query_statement)
 
-    return nil if sfdc_contacts_results.nil? || sfdc_contacts_results.length == 0 # abort if SFDC query error or if no contacts were found
+    return nil if sfdc_contacts_results[:status] == "ERROR" || sfdc_contacts_results[:result].length == 0 # abort if SFDC query error or if no contacts were found
 
-    contacts_with_accounts = sfdc_contacts_results.map { |r| [r[:AccountId],r[:Email]] }
+    contacts_with_accounts = sfdc_contacts_results[:result].map { |r| [r[:AccountId],r[:Email]] }
 
     return if contacts_with_accounts.nil?
 

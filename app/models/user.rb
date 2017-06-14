@@ -81,7 +81,7 @@ class User < ActiveRecord::Base
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
-  OTHER_ROLE = { Trial: 'Trial', Chromeuser: "Chrome user" }
+  OTHER_ROLE = { Trial: 'Trial', Chromeuser: "Chrome user" }  # TODO: remove "Chrome user"
   WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
 
   def valid_streams_subscriptions
@@ -873,7 +873,7 @@ class User < ActiveRecord::Base
     self.role == OTHER_ROLE[:Trial]
   end
 
-  # Trial user = Chrome User (TODO: make "Chrome user" role obsolete)
+  # Trial user = Chrome User (TODO: remove "Chrome user")
   def power_or_trial_only?
     [ROLE[:Poweruser], OTHER_ROLE[:Chromeuser], OTHER_ROLE[:Trial]].include? (self.role) 
   end

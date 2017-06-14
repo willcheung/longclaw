@@ -126,18 +126,23 @@ class Contact < ActiveRecord::Base
   #              account_id - the CS account to which this copies Contacts
   #              sfdc_account_id - id of SFDC account from which this copies Contacts 
   #              limit (optional) - the max number of Contacts to process
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if successful, or "ERROR" otherwise
+  #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
+  #             detail - Contains any error or informational/warning messages.
   def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
+    result = nil
 
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"  # Unused: Description, LeadSource
 
-    contacts = SalesforceService.query_salesforce(client, query_statement)
-    #contacts = nil #simulate SFDC query error
-    unless contacts.blank?  # unless failed Salesforce query
+    query_result = SalesforceService.query_salesforce(client, query_statement)
+
+    if query_result[:status] == "SUCCESS"
       emails_processed = {}
 
       # Keep the first contact (alphabetically, by Last then First Name) from contacts with identical e-mails; ignore contacts with no e-mail field
-      contacts.each do |c|
+      query_result[:result].each do |c|
         email = Contact.sanitize(c[:Email]) 
         if c[:Email].present? && emails_processed[email].nil?
           firstname = self.capitalize_first_only(c[:FirstName])
@@ -188,21 +193,28 @@ class Contact < ActiveRecord::Base
           end
         end
       end
-      puts "************* Result of SFDC query \"#{query_statement}\":"
-      puts "-> # of rows UPSERTed into Contacts = #{val.count} total *************"
-    else  # Salesforce query failure
-      return "query=\"#{query_statement}\""  # proprogate query to caller
+      # puts "**** Result of SFDC query \"#{query_statement}\":"
+      # puts "-> # of rows UPSERTed into Contacts = #{val.count} total ****"
+      result = { status: "SUCCESS", result: "No. of rows UPSERTed into Contacts = #{val.count}", detail: "#{ query_result[:detail] }" }
+    else  # SFDC query failure
+      result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
     end
 
-    nil # successful request
+    result
   end
 
-  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.  Returns nil if successful, otherwise returns the error (string).
-  # Parameters:  client - connection to Salesforce
-  #              account_id - the CS account from which this exports contacts
-  #              sfdc_account_id - id of SFDC account to which this exports contacts 
-  #              limit (optional) - the max number of contacts to process
+  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.
+  # Parameters: client - connection to Salesforce
+  #             account_id - the CS account from which this exports contacts
+  #             sfdc_account_id - id of SFDC account to which this exports contacts 
+  #             limit (optional) - the max number of contacts to process
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
+  #             detail - a list of all errors, or an empty list if no errors occurred. 
   def self.export_cs_contacts(client, account_id, sfdc_account_id)
+    result = { status: "SUCCESS", result: [], detail: [] }
+
     Account.find(account_id).contacts.each do |c|
       #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
 
@@ -212,17 +224,22 @@ class Contact < ActiveRecord::Base
       #puts "----> sObject_meta:\t #{sObject_meta}\n"
       #puts "----> sObject_fields:\t #{sObject_fields}\n"
       sObject_fields[:external_sfdc_id] = c.external_source_id if c.is_source_from_salesforce?
-      results = SalesforceService.update_salesforce(client: client, sObject_meta: sObject_meta, update_type: "contacts", sObject_fields: sObject_fields)
-      
-      unless results.nil?  # unless failed Salesforce query
-        puts "-> a SFDC Contact (#{c.last_name}, #{c.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{results}'."
+      update_result = SalesforceService.update_salesforce(client: client, update_type: "contacts", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+
+      if update_result[:status] == "SUCCESS"
+        puts "-> a SFDC Contact (#{c.last_name}, #{c.first_name}, #{c.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ update_result[:result] }'."
+        # don't set result[:status] back to SUCCESS if export for another contact failed
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail]  # may contain messages, even with SUCCESS
       else  # Salesforce query failure
-        #return "None"  #no error details to propogate to caller
-        return "sObject_fields=#{sObject_fields}"  #parameter details to propogate to caller
+        # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
+        result[:status] = "ERROR"
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail] + " sObject_fields=#{ sObject_fields }"
       end
     end # End: Account.find(account_id).contacts.each do
 
-    nil # successful creation from request
+    result
   end
 
   private
