@@ -101,11 +101,7 @@ class SalesforceAccount < ActiveRecord::Base
       break if query_result[:result].length == 0  # batch loop is completed
         
       query_result[:result].each do |s|
-        if last_Created_Id.nil?
-          last_Created_Id = s.Id
-        elsif last_Created_Id < s.Id
-          last_Created_Id = s.Id
-        end
+        last_Created_Id = s.Id if last_Created_Id.nil? || last_Created_Id < s.Id
 
         salesforce_updated_at = DateTime.strptime(s.LastModifiedDate, '%Y-%m-%dT%H:%M:%S.%L%z').to_time    
         val << "('#{s.Id}', #{SalesforceAccount.sanitize(s.Name)}, '#{organization_id}', '#{salesforce_updated_at}','#{Time.now}', '#{Time.now}' )"

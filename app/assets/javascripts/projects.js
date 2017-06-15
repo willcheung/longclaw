@@ -211,16 +211,23 @@ jQuery(document).ready(function($) {
     if (params) {
         taskType = "type=" + params["selected"];
     }
+     if (typeof(params) == 'undefined') {
+      taskType = "type=" + "none";
+    }
 
     newURL(window.location.search, "type", taskType);
   });
   
   $('.owner_filter').on('change',function(evt, params){
     var taskType = "";
-
+    
     if (params) {
         taskType = "owner=" + params["selected"];
     }
+    if (typeof(params) == 'undefined') {
+      taskType = "owner=" + 0;
+    }
+
 
     newURL(window.location.search, "owner", taskType);
   });
