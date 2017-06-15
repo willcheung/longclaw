@@ -162,9 +162,9 @@ class SettingsController < ApplicationController
 				@salesforce_connection_error = true
 			else
 				# add ("nil") options to remove mapping 
-				@sf_fields[:sf_account_fields] << ["","(none)"] 
-				@sf_fields[:sf_opportunity_fields] << ["","(none)"] 
-				@sf_fields[:sf_contact_fields] << ["","(none)"] 
+				@sf_fields[:sf_account_fields] << ["","(Unmapped)"] 
+				@sf_fields[:sf_opportunity_fields] << ["","(Unmapped)"] 
+				@sf_fields[:sf_contact_fields] << ["","(Unmapped)"] 
 				#puts "******** @sf_fields *** #{@sf_fields} *******"
 			end
 		end

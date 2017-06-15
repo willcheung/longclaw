@@ -2,17 +2,16 @@
 #
 # Table name: entity_fields_metadata
 #
-#  id                       :integer          not null, primary key
-#  organization_id          :uuid             not null
-#  entity_type              :string           not null
-#  name                     :string           not null
-#  default_value            :string
-#  custom_lists_metadata_id :integer
-#  salesforce_field         :string
-#  read_permission_role     :string           not null
-#  update_permission_role   :string           not null
-#  created_at               :datetime         not null
-#  updated_at               :datetime         not null
+#  id                     :integer          not null, primary key
+#  organization_id        :uuid             not null
+#  entity_type            :string           not null
+#  name                   :string           not null
+#  default_value          :string
+#  salesforce_field       :string
+#  read_permission_role   :string           not null
+#  update_permission_role :string           not null
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
 #
 # Indexes
 #
@@ -20,14 +19,14 @@
 #
 
 class EntityFieldsMetadatum < ActiveRecord::Base
+  before_save :no_salesforce_field
+
   belongs_to :organization
-  belongs_to :custom_lists_metadatum, foreign_key: "custom_lists_metadata_id"
-  # To do: use 'default' value column
 
   validates :entity_type, presence: true
   validates :name, presence: true, length: { maximum: 30 }
-  validates :read_permission_role, presence: true
-  validates :update_permission_role, presence: true
+  validates :read_permission_role, presence: true    # Currently unused
+  validates :update_permission_role, presence: true  # Currently unused
 
   ENTITY_TYPE = { Account: 'Account', Stream: 'Stream', Contact: 'Contact' }
 
@@ -40,8 +39,19 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       meta = Contact::FIELDS_META if etype == EntityFieldsMetadatum::ENTITY_TYPE[:Contact]
 
       meta.each do |fname|
-        organization.entity_fields_metadatum.create!(entity_type: etype, name: fname, read_permission_role: User::ROLE[:Poweruser], update_permission_role: User::ROLE[:Poweruser])
+        organization.entity_fields_metadatum.create!(entity_type: etype, name: fname, read_permission_role: User::ROLE[:Observer], update_permission_role: User::ROLE[:Poweruser])
       end if meta.present?
     end 
+  end
+
+  def self.get_sfdc_fields_mapping_for(organization)
+    self.all.where.not("salesforce_field is null").pluck(:name, :salesforce_field)
+  end
+
+  private
+
+  # if user tries to save/update a field to '', make it "null" instead
+  def no_salesforce_field
+    self.salesforce_field = nil if !salesforce_field.nil? && salesforce_field.empty?
   end
 end

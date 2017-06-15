@@ -36,6 +36,6 @@ class EntityFieldsMetadataController < ApplicationController
   end
 
   def entity_fields_metadatum_params
-    params.require(:entity_fields_metadatum).permit(:name, :default_value, :custom_lists_metadata_id, :salesforce_field, :read_permission_role, :update_permission_role)
+    params.require(:entity_fields_metadatum).permit(:name, :default_value, :salesforce_field, :read_permission_role, :update_permission_role)
   end
 end
