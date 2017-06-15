@@ -407,26 +407,29 @@ $(document).ready(function() {
         });
     });
 
-    $('.salesforce-account-field-name,.salesforce-opportunity-field-name').change(function() {
+    $('.salesforce-account-field-name,.salesforce-opportunity-field-name,.salesforce-contact-field-name').change(function() {
         var selectorStr, entity_type_btn_str;
         if ($(this).attr("class").includes("salesforce-account-field-name")) {
           selectorStr = "#salesforce-fields-refresh-accounts-btn";
           entity_type_btn_str = "Accounts";
         } 
-        else {
+        else if ($(this).attr("class").includes("salesforce-opportunity-field-name")) {
           selectorStr = "#salesforce-fields-refresh-projects-btn";
           entity_type_btn_str = "Streams";
-        }
+        } 
+        //else {
+        //  selectorStr = "#salesforce-fields-refresh-contacts-btn";
+        //  entity_type_btn_str = "Contacts";
+        //}
 
         // Reset button style to initial state
         $(selectorStr).css("margin-left","0px")
         $(selectorStr).removeClass('success-btn-highlight error-btn-highlight');
         $(selectorStr).addClass('btn-primary btn-outline');
-        $(selectorStr).html("<i class='fa fa-refresh'></i> Refresh ContextSmith " + entity_type_btn_str)
+        $(selectorStr).html("<i class='fa fa-refresh'></i> Refresh ContextSmith "+entity_type_btn_str);
         
-        var exclamation_triangle_warning = document.getElementById("exclamation-triangle-warning-cfid"+ $(this).attr("cf_id"));
+        var exclamation_triangle_warning = $(this).attr("f_id") ? document.getElementById("exclamation-triangle-warning-fid"+$(this).attr("f_id")) : document.getElementById("exclamation-triangle-warning-cfid"+$(this).attr("cf_id"));
         if (exclamation_triangle_warning != undefined)
             exclamation_triangle_warning.style.display = "none"; // remove warning
     });
-
 } );

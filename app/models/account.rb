@@ -52,6 +52,7 @@ class Account < ActiveRecord::Base
 
     STATUS = %w(Active Inactive Dead)
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
+    FIELDS_META = [ "name", "description", "website", "phone", "address", "notes", "domain", "category", "revenue_potential" ]
 
     def self.create_from_clusters(external_members, owner_id, organization_id)
         domain_grouped_external_members = external_members.group_by { |x| get_domain(x.address) }
@@ -118,7 +119,7 @@ class Account < ActiveRecord::Base
     #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
     #             result - if status == "ERROR", contains the title of the error
     #             detail - if status == "ERROR", contains the details of the error
-    def self.load_salesforce_fields(client, account_id, sfdc_account_id, account_custom_fields)
+    def self.load_salesforce_fields(client: , account_id: , sfdc_account_id: , account_custom_fields: )
         result = nil
 
         unless (client.nil? || account_id.nil? || sfdc_account_id.nil? || account_custom_fields.blank?)
@@ -142,7 +143,7 @@ class Account < ActiveRecord::Base
         else
             if client.nil?
                 puts "** ContextSmith error: Parameter 'client' passed to Account.load_salesforce_fields is invalid!"
-                result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
+                result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
             else
                 # Ignores if other parameters were not passed properly to load_salesforce_fields
                 result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }

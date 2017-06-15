@@ -48,7 +48,7 @@ class SalesforceService
     end
 
     #return nil  # simulates a Salesforce connection error
-    return client
+    client
   end
 
   # Parameters: client - connection to Salesforce
@@ -74,7 +74,7 @@ class SalesforceService
       result = { status: "ERROR", result: "SalesforceService error", detail: "Invalid Salesforce connection was passed to SalesforceService.query_salesforce." }
     end
 
-    return result
+    result
   end
 
   # This is used to export/create a single CS activity or a contact to the linked/mapped SFDC account/opportunity. 

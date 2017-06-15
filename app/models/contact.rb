@@ -55,6 +55,7 @@ class Contact < ActiveRecord::Base
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
   ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', Coach: 'Coach', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
+  FIELDS_META = [ "first_name", "last_name", "email", "phone", "title", "source", "mobile", "background_info", "department", "buyer_role" ]
 
   def is_source_from_salesforce?
     return self.source == "Salesforce"

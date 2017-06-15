@@ -128,6 +128,7 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  FIELDS_META = [ "name", "description", "category", "renewal_date", "contract_start_date", "contract_end_date", "contract_arr", "renewal_count", "has_case_study", "is_referenceable", "amount", "stage", "close_date", "expected_revenue" ]
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
 
   attr_accessor :num_activities_prev, :pct_from_prev
@@ -766,7 +767,7 @@ class Project < ActiveRecord::Base
   #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
-  def self.load_salesforce_fields(client, project_id, sfdc_opportunity_id, stream_custom_fields)
+  def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , stream_custom_fields: )
     result = nil
 
     unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || stream_custom_fields.blank?)
@@ -790,7 +791,7 @@ class Project < ActiveRecord::Base
     else
       if client.nil?
         puts "** ContextSmith error: Parameter 'client' passed to Project.load_salesforce_fields is invalid!"
-        result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
+        result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
       else
         # Ignores if other parameters were not passed properly to load_salesforce_fields
         result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }

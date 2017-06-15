@@ -7,7 +7,7 @@
 #  entity_type              :string           not null
 #  name                     :string           not null
 #  data_type                :string           not null
-#  update_permission_level  :string           not null
+#  update_permission_role   :string           not null
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  default_value            :string
