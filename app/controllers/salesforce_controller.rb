@@ -333,14 +333,15 @@ class SalesforceController < ApplicationController
   end
 
   # Native CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS stream, or a field of a SFDC account to a field of a CS account. 
-  # Parameters: entity_type: = "accounts" or "projects".
+  # Parameters:   params[:entity_type] - "accounts" or "projects" or "contacts".
+  #               params[:field_type] - "standard" or "custom"
   # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS stream, an update will be carried out for each mapping.
   def refresh_fields
     method_name = "refresh_fields()"
     if params[:entity_type] == "accounts"
       if params[:field_type] == "standard"
         account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
-        puts "account_standard_fields: #{account_standard_fields}"
+        #puts "account_standard_fields: #{account_standard_fields}"
       else
         account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
       end
@@ -373,7 +374,7 @@ class SalesforceController < ApplicationController
                   return
                 end
               end
-            end
+            end # End: accounts.each do |s|
           end
         else
           render_service_unavailable_error(method_name)
@@ -382,28 +383,41 @@ class SalesforceController < ApplicationController
       end
     elsif params[:entity_type] == "projects"
       if params[:field_type] == "standard"
-        puts "Standard #{params[:entity_type]} fields all the wayyyyy!!!"
+        stream_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Stream])
+        puts "stream_standard_fields: #{stream_standard_fields}"
+      else
+        stream_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
       end
-      stream_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
 
-      unless stream_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
+      unless (params[:field_type] == "standard" && stream_standard_fields.empty?) || (params[:field_type] == "custom" && stream_custom_fields.empty?) # Nothing to do if no mappings are found
         @client = SalesforceService.connect_salesforce(current_user.organization_id)
         #@client=nil # simulates a Salesforce connection error
 
         unless @client.nil?  # unless connection error
           streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity)
-          streams.each do |s|
-            unless s.salesforce_opportunity.nil?
-              #print "***** SFDC stream:\"", s.salesforce_opportunity.name, "\" --> CS opportunity:\"", s.name, "\" *****\n"
-              load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, stream_custom_fields: stream_custom_fields)
 
-              if load_result[:status] == "ERROR"
-                method_location = "Project.load_salesforce_fields()"
-                error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                render_internal_server_error(method_name, method_location, error_detail)
-                return
-              end
+          if params[:field_type] == "standard"
+            update_result = Project.update_fields_from_sfdc(client: @client, streams: streams, sfdc_fields_mapping: stream_standard_fields)
+            if update_result[:status] == "ERROR"
+              method_location = "Project.update_fields_from_sfdc()"
+              error_detail = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+              render_internal_server_error(method_name, method_location, error_detail)
+              return
             end
+          else # params[:field_type] == "custom"
+            streams.each do |s|
+              unless s.salesforce_opportunity.nil?
+                #print "***** SFDC stream:\"", s.salesforce_opportunity.name, "\" --> CS opportunity:\"", s.name, "\" *****\n"
+                load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, stream_custom_fields: stream_custom_fields)
+
+                if load_result[:status] == "ERROR"
+                  method_location = "Project.load_salesforce_fields()"
+                  error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                  render_internal_server_error(method_name, method_location, error_detail)
+                  return
+                end
+              end
+            end # End: streams.each do |s|
           end
         else
           render_service_unavailable_error(method_name)
