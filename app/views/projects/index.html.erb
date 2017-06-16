@@ -31,9 +31,6 @@
           </select>
           <select class="owner_filter col-sm-3" data-placeholder="Select Owner">
             <option value="0"></option>
-             <option value="all" <% if params[:owner]=="all" %> selected  <% end %> >
-              All Streams
-            </option>
             <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >  
               Owner: Me
             </option>

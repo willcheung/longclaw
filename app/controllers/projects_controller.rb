@@ -19,16 +19,13 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters
-    if params[:owner] != 0
+    if params[:owner] != "0"
       if params[:owner] == "none"
         projects = projects.where(owner_id: nil)
       else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-        if params[:owner] != "all"
-        projects = projects.where(owner_id: params[:owner])
-        end
+          projects = projects.where(owner_id: params[:owner])
       end
     end
-    
     if params[:type] != "none"
       projects = projects.where(category: params[:type])
     end
