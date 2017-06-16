@@ -24,11 +24,10 @@ class ProjectsController < ApplicationController
         projects = projects.where(owner_id: nil)
       else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
         if params[:owner] != "all"
-        projects = projects.where(owner_id: params[:owner])
+          projects = projects.where(owner_id: params[:owner])
         end
       end
     end
-    
     if params[:type] != "none"
       projects = projects.where(category: params[:type])
     end
