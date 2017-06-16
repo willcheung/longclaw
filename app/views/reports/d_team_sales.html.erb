@@ -64,7 +64,7 @@
                 <div id="account-header" style="display:none;">
                     <div class="row m-b-sm">
                         <div class="col-lg-8">
-                            <h1>Will Charleston</h1>
+                            <h1>Neil Anderson</h1>
                         </div>
                         <div class="col-lg-4 m-t-md">
                             <span class="label">Last 14 days</span>
@@ -80,6 +80,17 @@
                                     </div>
                                     <div class="metric-content">
                                         <h2 style="font-weight:600;font-size:46px">85%</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric">
+                                    <div class="metric-title">
+                                        <h4>Expected Revenue</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
                                     </div>
                                 </div>
                             </div>
@@ -106,16 +117,6 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3 text-center">
-                                <div class="metric">
-                                    <div class="metric-title">
-                                        <h4>Expected Revenue</h4>
-                                    </div>
-                                    <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                     </div>
@@ -124,13 +125,13 @@
                 
                 <div id="account-charts" style="display:none;">
                     <div class="ibox-content">
-                        
+
                         <div class="row m-t-md">
-                            <div id="activities-chart" style="height:240px"></div>
+                            <div id="customers-volume-chart" style="height:350px"></div>
                         </div>
 
                         <div class="row m-t-md">
-                            <div id="customers-volume-chart" style="height:280px"></div>
+                            <div id="activities-chart" style="height:240px"></div>
                         </div>
 
                     </div>
@@ -161,13 +162,12 @@
                 text: ''
             },
             xAxis: {
-                categories: ['Will Charleston', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Batman', 'Bruce Wallus',
+                categories: ['Neil Anderson', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Batman', 'Bruce Wallus',
                               'Wonder Woman', 'Harry Potterson','Luke Walker', 'Danny Adobe', 'Rick Martin', 'Natale Sales'],
                 crosshair: true
             },
             yAxis: {
                 min: 0,
-                max: 100,
                 opposite: true,
                 title: {
                     text: ''
@@ -199,8 +199,13 @@
             },
             series: [{
                 type: 'bar',
-                name: 'Emails',
-                data: [43, 40, 40, 37, 36, 27, 34, 22, 20, 20, 13, 10, 6, 10, 5, 1]
+                name: 'Emails Sent',
+                data: [13, 20, 18, 17, 16, 8, 14, 8, 9, 8, 7, 4, 1, 1, 1, 1]
+            },
+            {
+                type: 'bar',
+                name: 'Emails Received',
+                data: [17, 10, 7, 9, 8, 6, 3, 2, 2, 2, 0, 1, 2, 0, 0, 0]
             },
             {
                 type: 'bar',
@@ -209,21 +214,8 @@
             },
             {
                 type: 'bar',
-                name: 'Alerts Closed',
-                data: <%= 14.times.map{ Random.rand(5) }  %>
-            },
-            {
-                type: 'bar',
                 name: 'Tasks Closed',
                 data: <%= 14.times.map{ Random.rand(5) }  %>
-            },
-            {
-                name: 'Average',
-                type: 'line',
-                lineWidth: 2,
-                color: '#7cb5ec',
-                marker: { enabled: false, radius: 0 },
-                data: [33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33]
             }]
         });
     });
@@ -249,12 +241,24 @@
                 }
             },
             xAxis: {
-                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise']
+                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise', 'Acme Inc.', 'GVC'],
+                labels: {
+                    formatter: function() {
+                        return '<a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e">'+this.value+'</a>';
+                        //return '<a href="'+ categoryLinks[this.value] +'">'+this.value +'</a>';
+                    }
+                }
             },
             yAxis: {
                 min: 0,
                 title: {
                     text: ''
+                },
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
+                    }
                 }
             },
             legend: {
@@ -266,11 +270,16 @@
                 }
             },
             series: [{
-                name: 'Emails',
-                data: [0.5, 1, 2.2, 2.8, 3]
-            }, {
-                name: 'Meetings',
-                data: [0, 1, 0, 0.5, 2]
+                name: 'Send Emails',
+                data: [2.1, 1.8, 1.5, 1.5, 1.2, 0.4, 0.2]
+            },
+            {
+                name: 'Receive Emails',
+                data: [1, .6, .5, .5, .4, 0, 0]
+            }, 
+            {
+                name: 'Meetings & Calls',
+                data: [2, 0.5, 1, 1, 0, 0, 0]
             }]
         });
 
@@ -378,28 +387,21 @@
             },
             series: [{
                 type: 'column',
-                name: 'Email',
+                name: 'Sent Emails',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(10) }  %>
             },
             {
                 type: 'column',
-                name: 'Meeting',
+                name: 'Received Emails',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(2) }  %>
+                data: <%= 14.times.map{ Random.rand(5) }  %>
             },
             {
                 type: 'column',
-                name: 'Support Ticket',
-                pointInterval: <%= 1.day * 1000 %>,
-                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(2) }  %>
-            },
-            {
-                type: 'column',
-                name: 'Alerts Closed',
+                name: 'Meetings',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(2) }  %>

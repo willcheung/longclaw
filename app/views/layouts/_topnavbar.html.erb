@@ -18,10 +18,10 @@
                     <a href="<%= root_path %>"><i class="fa fa-home"></i> <span class="nav-label">Home</span></a>
                 </li>
                 <li class="<%= is_active_controller('projects') %>">
-                    <a href="<%= projects_path %>/?owner=<%= current_user.id %>"><i class="fa fa-comments"></i> <span class="nav-label">Streams</span></a>
+                    <a href="<%= projects_path %>"><i class="fa fa-comments"></i> <span class="nav-label">Streams</span></a>
                 </li>
                 <li class="<%= is_active_controller('notifications') %>">
-                    <a href="<%= notifications_path %>/?type=incomplete&assignee=me"><i class="fa fa-list-ul"></i> <span class="nav-label">Smart Tasks</span></a>
+                    <a href="<%= notifications_path %>/?type=incomplete&assignee=me"><i class="fa fa-list-ul"></i> <span class="nav-label">Alerts & Tasks</span></a>
                 </li>
                 <li class="<%= is_active_controller('reports') %> dropdown">
                     <a role="button" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-bar-chart"></i> <span class="nav-label">Dashboard</span> <span class="caret"></span></a>

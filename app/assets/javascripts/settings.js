@@ -110,7 +110,7 @@ $(document).ready(function() {
 
         // console.log("$(this).attr('id'): " + self.attr("id"));
         
-        $.ajax('/salesforce/refresh/' + entity_type, {
+        $.ajax('/salesforce/import/' + entity_type, {
             async: true,
             method: "POST",
             beforeSend: function () {
@@ -310,7 +310,7 @@ $(document).ready(function() {
 
         if (self.attr("id").includes("salesforce-activity-refresh")) {
             error500_msg = "Salesforce query error";
-            requestURL = "/salesforce/refresh/activities";
+            requestURL = "/salesforce/import/activities";
             request_data = { entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() };
         }
         else {

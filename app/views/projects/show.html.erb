@@ -34,7 +34,27 @@
     </div>
     <div class="col-lg-5">
         <div class="row">
-            <div class="col-xs-3">
+            <div class="col-md-3">
+                <div class="metric">
+                    <div class="metric-title" align="center">
+                        <h5>Stage</h5>
+                    </div>
+                    <div class="metric-content" align="center">
+                        <h4><%= (@project.stage.nil? or @project.stage.empty?) ? "-" : @project.stage %></h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric">
+                    <div class="metric-title" align="center">
+                        <h5>Deal Size</h5>
+                    </div>
+                    <div class="metric-content" align="center">
+                        <h3><%= (@project.amount.nil?) ? "-" : "$"+number_to_human(@project.amount) %></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="metric <%= risk_color(@project_risk_score) %>">
                     <div class="metric-title" align="center">
                         <h5>Risk Score</h5>
@@ -44,23 +64,13 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-4">
+            <div class="col-md-3">
                 <div class="metric text-danger">
                     <div class="metric-title" align="center">
-                        <h5>Open Smart Tasks</h5>
+                        <h5>Open Alerts</h5>
                     </div>
                     <div class="metric-content" align="center">
                         <h3><%= @project_open_tasks_count %></h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xs-2">
-                <div class="metric">
-                    <div class="metric-title" align="center">
-                        <h5>Status</h5>
-                    </div>
-                    <div class="metric-content" align="center">
-                      <div class="large-circle rag-circle<%=@project_rag_status%>"></div>
                     </div>
                 </div>
             </div>
@@ -75,7 +85,7 @@
                     <ul class="nav nav-tabs">
                         <li class="nav-tab"><a id="newsfeed-link" href="<%= project_path(@project) %>" class="white-bg"><i class="fa fa-comments"></i> Activities</a></li>
                         <li class="nav-tab"><a id="pinned-link" href="<%= project_path(@project) %>/pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Key Activities (<%= @project_pinned_count %>)</a></li>
-                        <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks (<%= @project_open_tasks_count %>)</a></li>
+                        <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Alerts & Tasks (<%= @project_open_tasks_count %>)</a></li>
                         <li class="nav-tab"><a id="arg-link" href="<%= project_path(@project) %>/arg" class="white-bg"><i class="fa fa-users"></i> Relationship Graph</a></li>
                         <li class="nav-tab"><a id="insights-link" href="<%= project_path(@project) %>/insights" class="white-bg"><i class="fa fa-lightbulb-o"></i> Insights</a></li>
                     </ul>

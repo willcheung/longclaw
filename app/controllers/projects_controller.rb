@@ -6,32 +6,32 @@ class ProjectsController < ApplicationController
   before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
   before_action :get_custom_fields_and_lists, only: [:index, :show, :pinned_tab, :tasks_tab, :arg_tab, :insights_tab]
+  before_action :project_filter_state, only: [:index]
+  
 
   # GET /projects
   # GET /projects.json
   def index
     @title = "Streams"
-    
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
-
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    
+
     # Incrementally apply filters
-    if !params[:owner].nil?
-      if params["owner"]=="none"
+    if params[:owner] != "0"
+      if params[:owner] == "none"
         projects = projects.where(owner_id: nil)
-      elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-        projects = projects.where(owner_id: params[:owner]);
+      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+          projects = projects.where(owner_id: params[:owner])
       end
-    end 
-    if params[:type]
+    end
+    if params[:type] != "none"
       projects = projects.where(category: params[:type])
     end
-
+    
     # all projects and their accounts, sorted by account name alphabetically
-    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN activities ON projects.id = activities.project_id LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
     unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
@@ -39,7 +39,6 @@ class ProjectsController < ApplicationController
       @sparkline = Project.count_activities_by_day_sparkline(projects.map(&:id), current_user.time_zone)
       @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
-      @rag_status = Project.current_rag_score(projects.map(&:id))
     end
 
     # new project modal
@@ -288,11 +287,13 @@ class ProjectsController < ApplicationController
     @project_open_risks_count = @project.notifications.open.risks.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
-    project_rag_score = @project.activities.latest_rag_score.first
 
-    if project_rag_score
-      @project_rag_status = project_rag_score['rag_score']
-    end
+    # Removing RAG status - old metric
+    # project_rag_score = @project.activities.latest_rag_score.first
+
+    # if project_rag_score
+    #   @project_rag_status = project_rag_score['rag_score']
+    # end
 
     # old metrics
     # @project_last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
@@ -405,4 +406,22 @@ class ProjectsController < ApplicationController
     @custom_lists = current_user.organization.get_custom_lists_with_options
     @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}
   end
+
+  def project_filter_state
+    if params[:owner] 
+      cookies[:owner] = {value: params[:owner]}
+    else
+      if cookies[:owner]
+        params[:owner] = cookies[:owner]
+      end
+    end
+    if params[:type] 
+      cookies[:type] = {value: params[:type]}
+    else
+      if cookies[:type]
+        params[:type] = cookies[:type]
+      end
+    end
+  end
+
 end
