@@ -63,7 +63,7 @@
     <div class="ibox-content">
 
         <div class="row m-t-md">
-            <div id="customers-interaction-chart" style="height:360px"></div>
+            <div id="customers-interaction-chart" style="height:400px"></div>
         </div>
 
         <div class="row m-t-md">
@@ -110,6 +110,12 @@
                 min: 0,
                 title: {
                     text: ''
+                },
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
+                    }
                 }
             },
             legend: {
