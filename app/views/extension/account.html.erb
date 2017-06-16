@@ -4,8 +4,25 @@
   <% end %>
 </div>
 
-<p class="text-center"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>" target="_blank">View more and filter timeline &rarr;</a></button></p>
+<p class="text-center"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>" target="_blank">View more and filter timeline &rarr;</a></p>
 
 <!-- <p>Email me: <input type="checkbox" name=""> weekly <input type="checkbox" name=""> daily</p> -->
 
 <!-- <button class="btn btn-primary">Sync Activites with Salesforce</button> -->
+
+<!-- TODO: move this script to extension.js -->
+<script type="text/javascript">
+    function toggle_visibility_for_pair(id1, id2) {
+        toggle_visibility(id1);
+        toggle_visibility(id2);
+    }
+
+    function toggle_visibility(id) {
+        //console.log("toggling: " + id)
+        var e = document.getElementById(id);
+        if(e.style.display == 'block')
+            e.style.display = 'none';
+        else
+            e.style.display = 'block';
+    }
+</script>

@@ -6,24 +6,20 @@
             <% if params[:c] %>
                 <h1><big><%= params[:c] %> team, Welcome to ContextSmith!</big></h1>
             <% else %>
-                <h1><big>Sign up for ContextSmith free trial</big></h1>
+                <h1><big>Sign up to use ContextSmith for free</big></h1>
             <% end %>
             <br/>
 
-            <% if params[:c] %>
-                <p>ContextSmith is a smarter way to manage your key accounts and expansion.</p>
-            <% else %>
-                <p>ContextSmith is a smarter way to manage your accounts. Our 14-day free trial includes:</p>
-            <% end %>
+            <p>ContextSmith is a smarter way to land and expand your accounts.</p>
             <ul style="line-height: 25px" class="m-t-md">
-                <li>Track account touch points in a single timeline.</li>
-                <li>Discover actionable insights about your key accounts.</li>
+                <li>Track everyone's sales activities in a single timeline.</li>
+                <li>Sends daily status about your deals.</li>
+                <li>Discover new contacts in your accounts.</li>
                 <li>Manage customer relationship with zero data entry.</li>
-                <li>Automatic status reports so you know who has the ball.</li>
             </ul>
 
             <p class="m-t-md">
-                ContextSmith works in the background of the email client you already use, so you can get started quickly and stay ahead of your customers. <% unless params[:c] %>Start your free trial today!<% end %>
+                ContextSmith works in the background. Get started right now and get ahead!
             </p>
 
         </div>
@@ -38,7 +34,7 @@
                 <% elsif params[:m] %>
                     <h1 class="text-center">Thank you for installing!</h1>
                 <% else %>
-                    <p class="oauth text-center"><small>14-day free trial. No credit card required. </small></p>
+                    <p class="oauth text-center"><small>No credit card required. </small></p>
                 <% end %>
 
                 <div class="text-center">
@@ -69,7 +65,7 @@
                     <p class="text-muted text-center m-t-xl">
                         <small>Microsoft Outlook customer?</small>
                     </p>
-                    <div class="text-center"><a class="btn btn-sm btn-white" href="http://resources.contextsmith.com/exchange">Sign up on our waitlist</a></div>
+                    <div class="text-center"><a class="btn btn-sm btn-white" href="mailto:support@contextsmith.com?subject=Joining Outlook waitlist">Sign up on our waitlist</a></div>
                 <% end %>
             </div>
         </div>
@@ -77,23 +73,42 @@
 
     <% unless params[:c] or params[:m] %>
     <hr class="m-t-xl m-b-xl"/>
-    <div class="row">
-      <h2 class="m-b-md"> Frequently Asked Questions</h2>
+    <h2 class="m-b-md"> Frequently Asked Questions</h2>
 
-      <div class="col-md-4">
-        <h3>Is there a catch?</h3>
-        <p>No — no catch here. We do not ask for credit card information to start a free trial. We only collect work email and CRM (if applicable) to help you track customer communications and time spent with them.</p>
-      </div>
+    <div class="row m-t-lg">
 
-      <div class="col-md-4">
-        <h3>What happens at the end of my trial?</h3>
-        <p>Don’t worry, we’ll email you when your trial is nearing its end. Once it expires, you can upgrade to a paid plan.</p>
-      </div>
+        <div class="col-md-4">
+            <h3>How does ContextSmith work?</h3>
+            <p>ContextSmith accelerates sales by automatically tracking activities from emails, meetings, and syncing them with Salesforce. We enable the reps to find new contacts and opportunities that are typically missed multiple email threads.</p>
+        </div>
 
-      <div class="col-md-4">
-        <h3>Is ContextSmith platform secure?</h3>
-        <p>Absolutely. We repespect and protect the privacy of your important business data. Your contact information and email data are yours alone and safe with us. We are also EU – U.S. Privacy Shield certified. Take a look at our <a target="_blank" href="https://www.contextsmith.com/privacy/">privacy policy</a>.</p>
-      </div>
+        <div class="col-md-4">
+            <h3>Is ContextSmith platform secure?</h3>
+            <p>Absolutely. We repespect and protect your important business data. We don't save your password. Your data is encrypted and transmitted using SSL. We are also EU – U.S. Privacy Shield certified. Take a look at our <a target="_blank" href="https://www.contextsmith.com/privacy/">privacy policy</a></p>
+        </div>
+
+        <div class="col-md-4">
+            <h3>What do you do with the data?</h3>
+            <p>Your contact information and email data are yours alone and safe with us. We use the data to improve your business and productivity, and never for anything else. Take a look at our <a target="_blank" href="https://www.contextsmith.com/privacy/">privacy policy</a>.</p>
+        </div>
+
+    </div>
+    <div class="row m-t-lg">
+        <div class="col-md-4">
+            <h3>Do you provide training and support?</h3>
+            <p>We have great success and support teams. And we're also constantly investing in our <a href="https://contextsmith.zendesk.com/agent/" target="_blank">knowledge base articles</a>.</p>
+        </div>
+
+        <div class="col-md-4">
+            <h3>What happens at the end of my trial?</h3>
+            <p>Don’t worry, we’ll email you when your trial is nearing its end. Once it expires, you can upgrade to a paid plan, starting at $29/month.</p>
+        </div>
+
+        <div class="col-md-4">
+            <h3>Do you support Outlook?</h3>
+            <p>Not yet, but soon!  <a href="mailto:support@contextsmith.com?subject=Joining Outlook waitlist">Send an email</a> to us and we will notify you when we release.</p>
+        </div>
+
     </div>
     <% end %>
 

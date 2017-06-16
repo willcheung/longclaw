@@ -46,7 +46,7 @@
                         <th>Medium Threshold</th>
                         <th>High Threshold</th>
                         <th>Risk Score Weight</th>
-                        <th>Add to Smart Tasks</th>
+                        <th>Add as Alert</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,14 +57,6 @@
                         <td><input type="text" name="settings[NegSentiment][high_threshold]" class="form-control" value="<%= @risk_settings[:NegSentiment].high_threshold %>"></td>
                         <td>-</td>
                         <td><input type="checkbox" name="settings[NegSentiment][notify_task]" <%= "checked" if @risk_settings[:NegSentiment].notify_task %>></td>
-                    </tr>
-                    <tr>
-                        <td>% Negative Sentiment</td>
-                        <td><%= @avg_p_neg_sentiment %>% (Last 30d)</td>
-                        <td><input type="text" name="settings[PctNegSentiment][medium_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].medium_threshold*100 %>%"></td>
-                        <td><input type="text" name="settings[PctNegSentiment][high_threshold]" class="form-control" value="<%= @risk_settings[:PctNegSentiment].high_threshold*100 %>%"></td>
-                        <td><input type="text" name="settings[PctNegSentiment][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:PctNegSentiment].weight*100 %>%"></td>
-                        <td><input type="checkbox" name="settings[PctNegSentiment][notify_task]" <%= "checked" if @risk_settings[:PctNegSentiment].notify_task %>></td>
                     </tr>
                     <tr>
                         <td>Days Inactive</td>
@@ -81,6 +73,14 @@
                         <td><%= Project::RAGSTATUS[:Red] %></td>
                         <td><input type="text" name="settings[RAGStatus][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:RAGStatus].weight*100 %>%"></td>
                         <td><input type="checkbox" name="settings[RAGStatus][notify_task]" <%= "checked" if @risk_settings[:RAGStatus].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Days To Close</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysClose][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysClose].medium_threshold.round %>"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysClose][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysClose].high_threshold.round %>"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysClose][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:DaysClose].weight*100 %>%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysClose][notify_task]" <%= "checked" if @risk_settings[:DaysClose].notify_task %>></td>
                     </tr>
                     <tr>
                         <td class="text-muted"><i class="fa fa-plug"></i> Days Until Renewal</td>

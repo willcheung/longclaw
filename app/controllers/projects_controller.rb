@@ -33,16 +33,14 @@ class ProjectsController < ApplicationController
     end
     
     # all projects and their accounts, sorted by account name alphabetically
-    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("COUNT(DISTINCT activities.id) AS activity_count, project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN activities ON projects.id = activities.project_id LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
-    
     unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @sparkline = Project.count_activities_by_day_sparkline(projects.map(&:id), current_user.time_zone)
       @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
       @open_risk_count = Project.open_risk_count(projects.map(&:id))
-      @rag_status = Project.current_rag_score(projects.map(&:id))
     end
 
     # new project modal
@@ -85,26 +83,26 @@ class ProjectsController < ApplicationController
     # Engagement Volume Chart
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
-    activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
+    # activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
 
     # TODO: Generate data for Risk Volume Chart in SQL query
     # Risk Volume Chart
-    risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
-    risks_by_date = Array.new(14, 0)
-    risk_notifications.each do |r|
-      # risks_by_date based on number of days since 14 days ago
-      day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
-      risks_by_date[day_index] += 1
-    end
+    # risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
+    # risks_by_date = Array.new(14, 0)
+    # risk_notifications.each do |r|
+    #   # risks_by_date based on number of days since 14 days ago
+    #   day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
+    #   risks_by_date[day_index] += 1
+    # end
 
-    @risk_activity_engagement = []
-    risks_by_date.zip(activity_engagement).each do | a, b|
-      if b == 0
-        @risk_activity_engagement.push(0)
-      else
-        @risk_activity_engagement.push(a/b.to_f * 100)
-      end
-    end
+    # @risk_activity_engagement = []
+    # risks_by_date.zip(activity_engagement).each do | a, b|
+    #   if b == 0
+    #     @risk_activity_engagement.push(0)
+    #   else
+    #     @risk_activity_engagement.push(a/b.to_f * 100)
+    #   end
+    # end
 
     #Shows the total email usage report
     @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
@@ -213,9 +211,7 @@ class ProjectsController < ApplicationController
               new_member = @project.project_members.new(contact: input)
             end
           if @project.save
-            #Big First Refresh, potentially won't need big refresh in the refresh method above
-            #ContextsmithService.load_emails_from_backend(@project, nil, 2000)
-            #ContextsmithService.load_calendar_from_backend(@project, Time.current.to_i, 150.days.ago.to_i, 1000)
+            # Big First Refresh, potentially won't need big refresh in the refresh method above
             ContextsmithService.load_emails_from_backend(@project, 2000)
             ContextsmithService.load_calendar_from_backend(@project, 1000)
             format.html { redirect_to @project, notice: 'Project was successfully created.' }
@@ -293,11 +289,13 @@ class ProjectsController < ApplicationController
     @project_open_risks_count = @project.notifications.open.risks.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
-    project_rag_score = @project.activities.latest_rag_score.first
 
-    if project_rag_score
-      @project_rag_status = project_rag_score['rag_score']
-    end
+    # Removing RAG status - old metric
+    # project_rag_score = @project.activities.latest_rag_score.first
+
+    # if project_rag_score
+    #   @project_rag_status = project_rag_score['rag_score']
+    # end
 
     # old metrics
     # @project_last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
@@ -396,7 +394,7 @@ class ProjectsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def project_params
-    params.require(:project).permit(:name, :description, :is_public, :project_code, :account_id, :budgeted_hours, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :contract_mrr, :renewal_count, :has_case_study, :is_referenceable)
+    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date)
   end
 
   # A list of the param names that can be used for filtering the Project list

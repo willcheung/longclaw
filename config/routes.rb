@@ -42,8 +42,8 @@ Longclaw::Application.routes.draw do
     get "salesforce/disconnect/:id" => 'salesforce#disconnect', as: "salesforce_disconnect"
     post "/link_salesforce_account" => 'salesforce#link_salesforce_account'
     post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
-    post "/salesforce/refresh/:entity_type" => 'salesforce#refresh_salesforce'
-    post "/salesforce_activityhistory_update" => 'salesforce#export_activities'
+    post "/salesforce/import/:entity_type" => 'salesforce#import_salesforce'
+    post "/salesforce/update/:entity_type" => 'salesforce#export_salesforce'
     post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
@@ -122,6 +122,7 @@ Longclaw::Application.routes.draw do
       get 'contacts'
       get 'metrics'
       get 'no_account/:domain', to: 'extension#no_account', as: :no_account
+      get 'private_domain'
       get 'project_error'
       post 'create_account'
     end

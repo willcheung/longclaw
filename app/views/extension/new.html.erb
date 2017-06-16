@@ -3,12 +3,15 @@
        <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
       <div class="ibox-content middle-box">
       
-      	<h1 class="logo-name oauth" style="font-size:25px;">Sign Up or Sign In</h1>
-      	<p class="oauth">&nbsp;</p>
+      	<h1 class="logo-name oauth" style="font-size:19px;">Welcome to ContextSmith!</h1>
+      	<p class="oauth">Sign up for a free trial below.<br/>No credit card required.</p>
 
-      	<a class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log In Using Google</span></a>
+      	<a class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Sign Up Using Google</span></a>
   	 
-        <div class="m-b-lg m-t-lg">&nbsp;</div>
+        <p class="m-t-md">Existing users? Click below to log in.</p>
+        <a class="btn btn-sm btn-default oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;"><i class="fa fa-google oauth" style="font-size:18px;"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log in Using Google</span></a>
+
+        <p class="oauth" style="font-size:10px;margin-top:60px;">By clicking sign up, you agree to our <a href="https://www.contextsmith.com/terms/" target="_blank">Terms of Service</a>.</p>
   	</div>
 
   	<p class="m-t"><small><a href="http://www.contextsmith.com">ContextSmith.com</a> &nbsp;&nbsp;ContextSmith, Inc. © 2017</small> </p>

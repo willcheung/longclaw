@@ -5,29 +5,28 @@
 #  id                  :uuid             not null, primary key
 #  name                :string           default(""), not null
 #  account_id          :uuid
-#  project_code        :string
 #  is_public           :boolean          default(TRUE)
 #  status              :string           default("Active")
 #  description         :text
-#  start_date          :date
-#  end_date            :date
-#  budgeted_hours      :integer
 #  created_by          :uuid
 #  updated_by          :uuid
 #  owner_id            :uuid
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  is_confirmed        :boolean
-#  category            :string           default("Implementation")
+#  category            :string           default("Opportunity")
 #  deleted_at          :datetime
 #  renewal_date        :date
 #  contract_start_date :date
 #  contract_end_date   :date
 #  contract_arr        :decimal(14, 2)
-#  contract_mrr        :decimal(12, 2)
 #  renewal_count       :integer
 #  has_case_study      :boolean          default(FALSE), not null
 #  is_referenceable    :boolean          default(FALSE), not null
+#  amount              :decimal(14, 2)
+#  stage               :string
+#  close_date          :date
+#  expected_revenue    :decimal(14, 2)
 #
 # Indexes
 #
@@ -46,7 +45,8 @@ class Project < ActiveRecord::Base
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
   has_many  :notifications, dependent: :destroy
   has_many  :notifications_for_daily_email, -> {
-    where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc)
+    where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
+      Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Notification::CATEGORY[:Alert])
     .order(:is_complete, :original_due_date)
   }, class_name: "Notification"
   #has_many  :notifications_for_weekly_email, -> {
@@ -69,11 +69,14 @@ class Project < ActiveRecord::Base
   #    'jsonb_array_length(email_messages) AS num_messages',
   #    'email_messages->-1 AS last_msg') }, class_name: "Activity"
   has_many  :other_activities_for_daily_email, -> {
-    from_yesterday.reverse_chronological
-    .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
+    from_yesterday.reverse_chronological.where.not(category: Activity::CATEGORY[:Conversation])
+    .where.not("(category = 'Alert' AND jsonb_array_length(email_messages) > 0 AND email_messages->0 ? 'days_inactive')") }, class_name: "Activity"
   #has_many  :other_activities_for_weekly_email, -> {
   #  from_lastweek.reverse_chronological
   #  .where.not(category: Activity::CATEGORY[:Conversation]) }, class_name: "Activity"
+
+  belongs_to  :account_with_contacts_for_daily_email, -> { includes(:contacts).where(contacts: { created_at: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }) }, class_name: "Account", foreign_key: "account_id"
+  # has_many  :contacts_for_daily_email, -> { where(created_at: (Time.current.yesterday.midnight..Time.current.yesterday.end_of_day)) }, through: "account", source: :contacts, class_name: 'Contact'
 
   ### project_members/contacts/users relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -92,8 +95,8 @@ class Project < ActiveRecord::Base
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
         .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
-        .where('project_members.status = ? AND accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?) OR project_members.user_id = ?)',
-            ProjectMember::STATUS[:Confirmed], organization_id, user_id, user_id)
+        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public = true OR projects.owner_id = ? OR (project_members.status = ? AND project_members.user_id = ?))',
+            organization_id, user_id, ProjectMember::STATUS[:Confirmed], user_id)
         .group('projects.id')
   }
   scope :visible_to_admin, -> (organization_id) {
@@ -122,7 +125,6 @@ class Project < ActiveRecord::Base
   scope :is_confirmed, -> { where is_confirmed: true }
 
   validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
-  validates :budgeted_hours, numericality: { only_integer: true, allow_blank: true }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
@@ -173,16 +175,15 @@ class Project < ActiveRecord::Base
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
-    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
-    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    project_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).sum('jsonb_array_length(activities.email_messages)')
-    project_risks = projects.includes(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).group('activities.id')
-    project_p_neg_sentiment = project_risks.each_with_object({}) do |p, result|
-      risks = p.activities.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
-        .map { |a| scale_sentiment_score(a.sentiment_score) }.select{ |score| score > sentiment_setting.high_threshold }.count
-      result[p.id] = calculate_score_by_setting(risks.to_f/project_engagement[p.id], pct_neg_sentiment_setting)
-    end
-      
+    # sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
+    # pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    # project_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).sum('jsonb_array_length(activities.email_messages)')
+    # project_risks = projects.includes(:activities).where(activities: { category: Activity::CATEGORY[:Conversation] }).group('activities.id')
+    # project_p_neg_sentiment = project_risks.each_with_object({}) do |p, result|
+    #   risks = p.activities.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+    #     .map { |a| scale_sentiment_score(a.sentiment_score) }.select{ |score| score > sentiment_setting.high_threshold }.count
+    #   result[p.id] = calculate_score_by_setting(risks.to_f/project_engagement[p.id], pct_neg_sentiment_setting)
+    # end
 
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
@@ -196,23 +197,23 @@ class Project < ActiveRecord::Base
     project_rag_status.each { |pid, rag_score| project_rag_status[pid] = calculate_score_by_setting(rag_score, rag_status_setting) }
 
     # Overall Score
-    overall = [project_p_neg_sentiment, project_inactivity_risk, project_rag_status].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
+    overall = [project_inactivity_risk, project_rag_status].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
     overall.each { |pid, score| overall[pid] = score.round }
   end
 
   def new_risk_score(time_zone)
     risk_settings = RiskSetting.where(level: self.account.organization)
     # Risk / Engagement Ratio
-    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
-    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    engagement = self.conversations.sum('jsonb_array_length(activities.email_messages)')
-    if engagement.zero?
-      percent_neg_sentiment = 0
-    else
-      risks = self.conversations.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
-        .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
-      percent_neg_sentiment = Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
-    end
+    # sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
+    # pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    # engagement = self.conversations.sum('jsonb_array_length(activities.email_messages)')
+    # if engagement.zero?
+    #   percent_neg_sentiment = 0
+    # else
+    #   risks = self.conversations.select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+    #     .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
+    #   percent_neg_sentiment = Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
+    # end
 
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
@@ -226,31 +227,31 @@ class Project < ActiveRecord::Base
     rag_score = (rag_status ? Project.calculate_score_by_setting(rag_status.rag_score, rag_score_setting) : 0)
 
     # Overall Score
-    (percent_neg_sentiment + inactivity_risk + rag_score).round
+    (inactivity_risk + rag_score).round
   end
 
   def new_risk_score_trend(time_zone, day_range=14)
     risk_settings = RiskSetting.where(level: self.account.organization)
     
     # Risk / Engagement Ratio
-    sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
-    pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
-    total_engagement = self.conversations
-    if total_engagement.count.zero?
-      pct_neg_sentiment_by_day = Array.new(day_range, 0)
-    else
-      pct_neg_sentiment_by_day = ((day_range - 1).days.ago.in_time_zone(time_zone).to_date..Time.current.in_time_zone(time_zone).to_date).map do |date|
-        engagement = total_engagement.where(last_sent_date: Time.at(0)..date).sum('jsonb_array_length(activities.email_messages)')
-        if engagement.zero?
-          0
-        else
-          risks = total_engagement.where(last_sent_date: Time.at(0)..date)
-            .select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
-            .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
-          Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
-        end
-      end
-    end
+    # sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:NegSentiment] }
+    # pct_neg_sentiment_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    # total_engagement = self.conversations
+    # if total_engagement.count.zero?
+    #   pct_neg_sentiment_by_day = Array.new(day_range, 0)
+    # else
+    #   pct_neg_sentiment_by_day = ((day_range - 1).days.ago.in_time_zone(time_zone).to_date..Time.current.in_time_zone(time_zone).to_date).map do |date|
+    #     engagement = total_engagement.where(last_sent_date: Time.at(0)..date).sum('jsonb_array_length(activities.email_messages)')
+    #     if engagement.zero?
+    #       0
+    #     else
+    #       risks = total_engagement.where(last_sent_date: Time.at(0)..date)
+    #         .select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score")
+    #         .map { |a| scale_sentiment_score(a.sentiment_score) }.select { |score| score > sentiment_setting.high_threshold }.count
+    #       Project.calculate_score_by_setting(risks.to_f/engagement, pct_neg_sentiment_setting)
+    #     end
+    #   end
+    # end
     
     # Days Inactive
     days_inactive_setting = risk_settings.find { |rs| rs.metric == RiskSetting::METRIC[:DaysInactive] }
@@ -271,7 +272,7 @@ class Project < ActiveRecord::Base
     end
     rag_score_by_day.map! { |score| Project.calculate_score_by_setting(score, rag_score_setting) }
 
-    [rag_score_by_day, days_inactive_by_day, pct_neg_sentiment_by_day].transpose.map(&:sum)
+    [rag_score_by_day, days_inactive_by_day].transpose.map(&:sum)
   end
 
   def self.current_rag_score(array_of_project_ids)
@@ -323,7 +324,7 @@ class Project < ActiveRecord::Base
     tempSet = Set.new
     activities.each do |a|
       a.email_addresses.each do |e|
-        tempSet.add(e) unless get_domain(e) == 'resources.calendar.google.com' # exclude Google Calendar resource emails
+        tempSet.add(e) unless e.blank? || get_domain(e) == 'resources.calendar.google.com' # exclude Google Calendar resource emails
       end
       tempSet.add(a.user.email) if a.user # Add Note Authors
     end
@@ -756,28 +757,47 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all mapped custom fields of a single SF opportunity -> CS stream
-  def self.load_salesforce_fields(salesforce_client, project_id, sfdc_opportunity_id, stream_custom_fields)
-    unless (salesforce_client.nil? or project_id.nil? or sfdc_opportunity_id.nil? or stream_custom_fields.nil? or stream_custom_fields.empty?)
-      stream_custom_field_names = []
-      stream_custom_fields.each { |cf| stream_custom_field_names << cf.salesforce_field }
+  # Updates all mapped custom fields of a single SFDC opportunity -> CS stream
+  # Parameters:   client - connection to Salesforce
+  #               project_id - CS project/stream id          
+  #               sfdc_opportunity_id - SFDC opportunity sObjectId
+  #               stream_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS project/stream.
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
+  #             result - if status == "ERROR", contains the title of the error
+  #             detail - if status == "ERROR", contains the details of the error
+  def self.load_salesforce_fields(client, project_id, sfdc_opportunity_id, stream_custom_fields)
+    result = nil
+
+    unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || stream_custom_fields.blank?)
+      stream_custom_field_names = stream_custom_fields.collect { |cf| cf.salesforce_field }
 
       query_statement = "SELECT " + stream_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
-      sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
+      query_result = SalesforceService.query_salesforce(client, query_statement)
 
-      unless sObjects_result.nil?
-        sObj = sObjects_result.first
+      if query_result[:status] == "SUCCESS"
+        sObj = query_result[:result].first
         stream_custom_fields.each do |cf|
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
           #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
           #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
           CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
         end
+        result = { status: "SUCCESS" }
       else
-        return "stream_custom_field_names=" + stream_custom_field_names.to_s # proprogate list of field names to caller
+        result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " stream_custom_field_names=" + stream_custom_field_names.to_s }
+      end
+    else
+      if client.nil?
+        puts "** ContextSmith error: Parameter 'client' passed to Project.load_salesforce_fields is invalid!"
+        result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
+      else
+        # Ignores if other parameters were not passed properly to load_salesforce_fields
+        result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
       end
     end
-    nil # successful request
+
+    result
   end
 
   private

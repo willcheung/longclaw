@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170418203416) do
+ActiveRecord::Schema.define(version: 20170603004643) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -111,17 +111,19 @@ ActiveRecord::Schema.define(version: 20170418203416) do
 
   create_table "contacts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.uuid     "account_id"
-    t.string   "first_name",                 default: "", null: false
-    t.string   "last_name",                  default: "", null: false
-    t.string   "email",                      default: "", null: false
-    t.string   "phone",           limit: 32, default: "", null: false
-    t.string   "title",                      default: "", null: false
-    t.datetime "created_at",                              null: false
-    t.datetime "updated_at",                              null: false
+    t.string   "first_name",                    default: "", null: false
+    t.string   "last_name",                     default: "", null: false
+    t.string   "email",                         default: "", null: false
+    t.string   "phone",              limit: 32, default: "", null: false
+    t.string   "title",                         default: "", null: false
+    t.datetime "created_at",                                 null: false
+    t.datetime "updated_at",                                 null: false
     t.string   "source"
-    t.string   "mobile",          limit: 32
+    t.string   "mobile",             limit: 32
     t.text     "background_info"
     t.string   "department"
+    t.string   "external_source_id"
+    t.string   "buyer_role"
   end
 
   add_index "contacts", ["account_id", "email"], name: "index_contacts_on_account_id_and_email", unique: true, using: :btree
@@ -274,31 +276,30 @@ ActiveRecord::Schema.define(version: 20170418203416) do
   add_index "project_subscribers", ["user_id"], name: "index_project_subscribers_on_email", using: :btree
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",                                         default: "",               null: false
+    t.string   "name",                                         default: "",            null: false
     t.uuid     "account_id"
-    t.string   "project_code"
     t.boolean  "is_public",                                    default: true
     t.string   "status",                                       default: "Active"
     t.text     "description"
-    t.date     "start_date"
-    t.date     "end_date"
-    t.integer  "budgeted_hours"
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
-    t.datetime "created_at",                                                              null: false
-    t.datetime "updated_at",                                                              null: false
+    t.datetime "created_at",                                                           null: false
+    t.datetime "updated_at",                                                           null: false
     t.boolean  "is_confirmed"
-    t.string   "category",                                     default: "Implementation"
+    t.string   "category",                                     default: "Opportunity"
     t.datetime "deleted_at"
     t.date     "renewal_date"
     t.date     "contract_start_date"
     t.date     "contract_end_date"
     t.decimal  "contract_arr",        precision: 14, scale: 2
-    t.decimal  "contract_mrr",        precision: 12, scale: 2
     t.integer  "renewal_count"
-    t.boolean  "has_case_study",                               default: false,            null: false
-    t.boolean  "is_referenceable",                             default: false,            null: false
+    t.boolean  "has_case_study",                               default: false,         null: false
+    t.boolean  "is_referenceable",                             default: false,         null: false
+    t.decimal  "amount",              precision: 14, scale: 2
+    t.string   "stage"
+    t.date     "close_date"
+    t.decimal  "expected_revenue",    precision: 14, scale: 2
   end
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
@@ -319,6 +320,7 @@ ActiveRecord::Schema.define(version: 20170418203416) do
   end
 
   add_index "risk_settings", ["level_type", "level_id"], name: "index_risk_settings_on_level_type_and_level_id", using: :btree
+  add_index "risk_settings", ["metric", "is_positive", "level_type", "level_id"], name: "idx_risk_settings_uniq", unique: true, using: :btree
 
   create_table "salesforce_accounts", force: :cascade do |t|
     t.string   "salesforce_account_id",        default: "", null: false

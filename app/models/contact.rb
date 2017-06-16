@@ -2,19 +2,21 @@
 #
 # Table name: contacts
 #
-#  id              :uuid             not null, primary key
-#  account_id      :uuid
-#  first_name      :string           default(""), not null
-#  last_name       :string           default(""), not null
-#  email           :string           default(""), not null
-#  phone           :string(32)       default(""), not null
-#  title           :string           default(""), not null
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  source          :string
-#  mobile          :string(32)
-#  background_info :text
-#  department      :string
+#  id                 :uuid             not null, primary key
+#  account_id         :uuid
+#  first_name         :string           default(""), not null
+#  last_name          :string           default(""), not null
+#  email              :string           default(""), not null
+#  phone              :string(32)       default(""), not null
+#  title              :string           default(""), not null
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  source             :string
+#  mobile             :string(32)
+#  background_info    :text
+#  department         :string
+#  external_source_id :string
+#  buyer_role         :string
 #
 # Indexes
 #
@@ -30,7 +32,7 @@ class Contact < ActiveRecord::Base
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
   # v2: "_all" version, ignores status
-  has_many   :project_members, -> { confirmed }, dependent: :destroy, class_name: "ProjectMember"
+  has_many   :project_members, -> { confirmed }, class_name: "ProjectMember", dependent: :destroy
   has_many   :project_members_all, class_name: "ProjectMember", dependent: :destroy
   has_many   :projects, through: "project_members"
   has_many   :visible_projects, -> { is_active.is_confirmed }, through: "project_members", source: :project
@@ -39,7 +41,8 @@ class Contact < ActiveRecord::Base
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
   validates_format_of :email,:with => Devise::email_regexp
 
-  scope  :imported_from_salesforce, -> { where source: 'Salesforce' }
+  scope  :source_from_salesforce, -> { where source: 'Salesforce' }
+  scope  :not_source_from_salesforce, -> { where("source != 'Salesforce' OR source is null") }
 
   # TODO: Create a general visible_to scope for a general "role" checker
   scope :visible_to, -> (user) {
@@ -48,6 +51,18 @@ class Contact < ActiveRecord::Base
           .where(accounts: {organization_id: user.organization_id})
           .group('contacts.id')
   }
+
+  PHONE_LEN_MAX = 32
+  MOBILE_LEN_MAX = 32
+  ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', Coach: 'Coach', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
+
+  def is_source_from_salesforce?
+    return self.source == "Salesforce"
+  end
+
+  def is_internal_user?
+    return false
+  end
 
   # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Stream as suggested members.  
   def self.load(data, project, save_in_db=true)
@@ -58,7 +73,7 @@ class Contact < ActiveRecord::Base
 
     data_hash.each do |d|
       d.newExternalMembers.each do |mem|
-        contact = find_or_create_from_email_info(mem.address, mem.personal, project)
+        contact = find_or_create_from_email_info(mem.address, mem.personal, project, ProjectMember::STATUS[:Pending], "Email")
         contacts << contact if contact
       end unless d.newExternalMembers.nil?
     end
@@ -70,25 +85,24 @@ class Contact < ActiveRecord::Base
     org = project.account.organization
     domain = get_domain(address)
     if valid_domain?(domain)
-      subdomain = domain
-      domain = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
+      primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
 
       ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
       # find account this new member should belong to
-      account = org.accounts.find_by_domain(domain)
+      account = org.accounts.find_by_domain(primary_domain)
       # create a new account for this domain if one doesn't exist yet
       unless account
         account = Account.create(
-          domain: domain,
-          name: domain,
-          category: "Customer",
+          domain: primary_domain,
+          name: primary_domain,
+          category: Account::CATEGORY[:Customer], # TODO: 'Customer' may not be in Org's custom list of Account Types (Categories)!!
           address: "",
-          website: "http://www.#{domain}",
+          website: "http://www.#{primary_domain}",
           owner_id: project.owner_id,
           organization: org,
           created_by: project.owner_id)
-        subdomain_msg = domain != subdomain ? " (subdomain: #{subdomain})" : ""
-        puts "** Created a new account for domain='#{domain}'#{subdomain_msg}, organization='#{org}'. **"
+        subdomain_msg = primary_domain != domain ? " (subdomain: #{domain})" : ""
+        puts "** Created a new account for domain='#{primary_domain}'#{subdomain_msg}, organization='#{org}'. **"
       end
 
       # find or create contact for this member
@@ -107,48 +121,58 @@ class Contact < ActiveRecord::Base
     end
   end
 
-	def is_internal_user?
-		return false
-	end
-
-  # Takes Contacts in SFDC account and copies them into a CS account, overwriting all existing contact fields to matched (same email in an account) Contacts.
+  # Takes Contacts (with an e-mail address) in a SFDC account and copies them to a CS account, overwriting all existing Contact fields to each "matched" (same e-mail in the account) Contact.  i.e., if there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one.
   # Parameters:  client - connection to Salesforce
-  #              account_id - the CS account to which this copies contacts
-  #              sfdc_account_id - id of SFDC account from which this copies contacts 
-  #              limit (optional) - the max number of contacts to process
+  #              account_id - the CS account to which this copies Contacts
+  #              sfdc_account_id - id of SFDC account from which this copies Contacts 
+  #              limit (optional) - the max number of Contacts to process
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if successful, or "ERROR" otherwise
+  #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
+  #             detail - Contains any error or informational/warning messages.
   def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
+    result = nil
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, Description FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, FirstName, LastName LIMIT #{limit}"
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"  # Unused: Description, LeadSource
 
-    contacts = SalesforceService.query_salesforce(client, query_statement)
-    #contacts = nil #simulate SFDC query error
-    unless contacts.blank?  # unless failed Salesforce query
+    query_result = SalesforceService.query_salesforce(client, query_statement)
+
+    if query_result[:status] == "SUCCESS"
       emails_processed = {}
 
-      # Keep the first contact (alphabetically, by First then Last Name) from contacts with identical e-mails; ignore contacts with no e-mail field
-      contacts.each do |c|
-        email = Contact.sanitize(c[:Email])
+      # Keep the first contact (alphabetically, by Last then First Name) from contacts with identical e-mails; ignore contacts with no e-mail field
+      query_result[:result].each do |c|
+        email = Contact.sanitize(c[:Email]) 
         if c[:Email].present? && emails_processed[email].nil?
           firstname = self.capitalize_first_only(c[:FirstName])
           lastname = self.capitalize_first_only(c[:LastName])
+          #lead_source = c[:LeadSource]
+          #lead_source = "Salesforce" if lead_source.blank?
+          #lead_source = "" if lead_source == "ContextSmith"
+
           val << "('#{account_id}', 
                     #{c[:FirstName].blank? ? '\'\'' : Contact.sanitize(firstname)},
                     #{c[:LastName].blank? ? '\'\'' : Contact.sanitize(lastname)},
                     #{c[:Email].blank? ? '\'\'' : email},
                     #{c[:Title].blank? ? '\'\'' : Contact.sanitize(c[:Title])},
                     #{c[:Department].blank? ? 'null' : Contact.sanitize(c[:Department])},
-                    #{c[:Phone].blank? ? '\'\'' : Contact.sanitize(c[:Phone])},
+                    #{c[:Phone].blank? ? '\'\'' : Contact.sanitize(c[:Phone][0...PHONE_LEN_MAX])},
+                    #{c[:MobilePhone].blank? ? 'null' : Contact.sanitize(c[:MobilePhone][0...MOBILE_LEN_MAX])},
                     'Salesforce',
-                    #{c[:MobilePhone].blank? ? 'null' : Contact.sanitize(c[:MobilePhone])},
+                    #{"'#{c[:Id]}'"},
+                    '#{Time.now}',
+                    '#{Time.now}')"
+          ####### Unused: 
                     #{c[:Description].blank? ? 'null' : Contact.sanitize(c[:Description])},
-                    '#{Time.now}', '#{Time.now}')"
+                    #{lead_source.blank? ? 'null' : Contact.sanitize(lead_source)},
+                    #{(c[:LeadSource]=="Chrome" || c[:LeadSource]=="ContextSmith") ? 'null' : "'#{c[:Id]}'" },
           emails_processed[email] = email 
         end
       end
 
-      insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "source", "mobile", "background_info", "created_at", "updated_at") VALUES'
-      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, title = EXCLUDED.title, department = EXCLUDED.department, phone = EXCLUDED.phone, source = EXCLUDED.source, mobile = EXCLUDED.mobile, background_info = EXCLUDED.background_info, updated_at = EXCLUDED.updated_at'
+      insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "mobile", "source", "external_source_id", "created_at", "updated_at") VALUES'  # Unused: "background_info" 
+      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, title = EXCLUDED.title, department = EXCLUDED.department, phone = EXCLUDED.phone, mobile = EXCLUDED.mobile, external_source_id = EXCLUDED.external_source_id, updated_at = EXCLUDED.updated_at'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
       values = val.join(', ')
       #puts "And inserting values....  \"#{values}\""
 
@@ -169,22 +193,53 @@ class Contact < ActiveRecord::Base
           end
         end
       end
-      puts "************* Result of SFDC query \"#{query_statement}\":"
-      puts "-> # of rows UPSERTed into Contacts = #{val.count} total *************"
-    else  # Salesforce query failure
-      return "query=\"#{query_statement}\""  # proprogate query to caller
+      # puts "**** Result of SFDC query \"#{query_statement}\":"
+      # puts "-> # of rows UPSERTed into Contacts = #{val.count} total ****"
+      result = { status: "SUCCESS", result: "No. of rows UPSERTed into Contacts = #{val.count}", detail: "#{ query_result[:detail] }" }
+    else  # SFDC query failure
+      result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
     end
 
-    nil # successful request
+    result
   end
 
-  # Takes Contacts in a CS account and exports them into a SFDC account, overwriting all existing contact fields
-  # Parameters:  client - connection to Salesforce
-  #              account_id - the CS account from which this exports contacts
-  #              sfdc_account_id - id of SFDC account to which this exports contacts 
-  #              limit (optional) - the max number of contacts to process
-  def self.export_cs_contacts(client, account_id, sfdc_account_id, limit=100)
+  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.
+  # Parameters: client - connection to Salesforce
+  #             account_id - the CS account from which this exports contacts
+  #             sfdc_account_id - id of SFDC account to which this exports contacts 
+  #             limit (optional) - the max number of contacts to process
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
+  #             detail - a list of all errors, or an empty list if no errors occurred. 
+  def self.export_cs_contacts(client, account_id, sfdc_account_id)
+    result = { status: "SUCCESS", result: [], detail: [] }
 
+    Account.find(account_id).contacts.each do |c|
+      #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
+
+      sObject_meta = { id: sfdc_account_id, type: "Account" }
+      sObject_fields = { FirstName: c.first_name, LastName: c.last_name.empty? ? "(none)" : c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
+      # Unused: LeadSource: c.source, Description: c.background_info
+      #puts "----> sObject_meta:\t #{sObject_meta}\n"
+      #puts "----> sObject_fields:\t #{sObject_fields}\n"
+      sObject_fields[:external_sfdc_id] = c.external_source_id if c.is_source_from_salesforce?
+      update_result = SalesforceService.update_salesforce(client: client, update_type: "contacts", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+
+      if update_result[:status] == "SUCCESS"
+        puts "-> a SFDC Contact (#{c.last_name}, #{c.first_name}, #{c.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ update_result[:result] }'."
+        # don't set result[:status] back to SUCCESS if export for another contact failed
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail]  # may contain messages, even with SUCCESS
+      else  # Salesforce query failure
+        # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
+        result[:status] = "ERROR"
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail] + " sObject_fields=#{ sObject_fields }"
+      end
+    end # End: Account.find(account_id).contacts.each do
+
+    result
   end
 
   private

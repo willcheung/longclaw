@@ -54,38 +54,42 @@ class Account < ActiveRecord::Base
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
 
     def self.create_from_clusters(external_members, owner_id, organization_id)
-        grouped_external_members = external_members.group_by{ |x| get_domain(x.address) }
+        domain_grouped_external_members = external_members.group_by { |x| get_domain(x.address) }
+        domain_grouped_external_members.keep_if do |domain, person_array|
+            valid = valid_domain?(domain)
+            p "** Skipped processing the invalid domain='#{domain}'. **" if !valid
+            valid
+        end
+        grouped_external_members = Hash.new(Array.new)
+        domain_grouped_external_members.each do |domain, person_array|
+            primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into one primary domain
+            p "** subdomain '#{domain}' detected! external members to be merged with primary domain '#{primary_domain}'. **" if primary_domain != domain
+            grouped_external_members[primary_domain] += person_array
+        end
         existing_accounts = Account.where(domain: grouped_external_members.keys, organization_id: organization_id).includes(:contacts)
         existing_domains = existing_accounts.map(&:domain)
 
         # Create missing accounts
-        (grouped_external_members.keys - existing_domains).each do |d|
-            if valid_domain?(d)
-                subdomain = d
-                d = get_domain_from_subdomain(subdomain) # roll up subdomains into domains
-                org_info = get_org_info(d)
+        (grouped_external_members.keys - existing_domains).each do |domain|
+            org_info = get_org_info(domain)
 
-                account = Account.new(domain: d, 
-                                      name: org_info[0], 
-                                      category: "Customer",
-                                      address: org_info[1],
-                                      website: "http://www.#{d}",
-                                      owner_id: owner_id, 
-                                      organization_id: organization_id,
-                                      created_by: owner_id)
-                account.save(validate: false)
+            account = Account.new(domain: domain, 
+                                  name: org_info[0], 
+                                  category: Account::CATEGORY[:Customer], # TODO: 'Customer' may not be in Org's custom list of Account Types (Categories)!!
+                                  address: org_info[1],
+                                  website: "http://www.#{domain}",
+                                  owner_id: owner_id, 
+                                  organization_id: organization_id,
+                                  created_by: owner_id)
+            account.save(validate: false)
 
-                subdomain_msg = d != subdomain ? " (subdomain: #{subdomain})" : ""
-                puts "** Created a new account for domain='#{d}'#{subdomain_msg}, organization_id='#{organization_id}'. **"
+            puts "** Created a new account for domain='#{domain}', organization_id='#{organization_id}'. **"
 
-                grouped_external_members[d].each do |c|
-                    # Create contacts
-                    account.contacts.create(first_name: get_first_name(c.personal),
-                                            last_name: get_last_name(c.personal),
-                                            email: c.address)
-                end
-            else
-                puts "** Skipped processing the invalid domain='#{d}'. **"
+            grouped_external_members[domain].each do |c|
+                # Create contacts
+                account.contacts.create(first_name: get_first_name(c.personal),
+                                        last_name: get_last_name(c.personal),
+                                        email: c.address)
             end
         end
 
@@ -105,29 +109,47 @@ class Account < ActiveRecord::Base
         end
     end
 
-    # Updates all mapped custom fields of a single SF account -> CS account
-    def self.load_salesforce_fields(salesforce_client, account_id, sfdc_account_id, account_custom_fields)
-        unless (salesforce_client.nil? or account_id.nil? or sfdc_account_id.nil? or account_custom_fields.nil? or account_custom_fields.empty?)
-            account_custom_field_names = []
-            account_custom_fields.each { |cf| account_custom_field_names << cf.salesforce_field}
+    # Updates all mapped custom fields of a single SFDC account -> CS account
+    # Parameters:   client - connection to Salesforce
+    #               account_id - CS account id          
+    #               sfdc_account_id - SFDC account sObjectId
+    #               account_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS account.
+    # Returns:   A hash that represents the execution status/result. Consists of:
+    #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
+    #             result - if status == "ERROR", contains the title of the error
+    #             detail - if status == "ERROR", contains the details of the error
+    def self.load_salesforce_fields(client, account_id, sfdc_account_id, account_custom_fields)
+        result = nil
+
+        unless (client.nil? || account_id.nil? || sfdc_account_id.nil? || account_custom_fields.blank?)
+            account_custom_field_names = account_custom_fields.collect { |cf| cf.salesforce_field }
 
             query_statement = "SELECT " + account_custom_field_names.join(", ") + " FROM Account WHERE Id = '#{sfdc_account_id}' LIMIT 1"
-            sObjects_result = SalesforceService.query_salesforce(salesforce_client, query_statement)
+            query_result = SalesforceService.query_salesforce(client, query_statement)
 
-            unless sObjects_result.nil?
-                sObj = sObjects_result.first
+            if query_result[:status] == "SUCCESS"
+                sObj = query_result[:result].first
                 account_custom_fields.each do |cf|
-                    #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id)
-                    #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
-                    #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+                    # csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id)
+                    # print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
+                    # print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
                     CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id).update(value: sObj[cf.salesforce_field])
                 end
+                result = { status: "SUCCESS" }
             else
-                return "account_custom_field_names=" + account_custom_field_names.to_s # proprogate list of field names to caller
+                result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " account_custom_field_names=" + account_custom_field_names.to_s }
+            end
+        else
+            if client.nil?
+                puts "** ContextSmith error: Parameter 'client' passed to Account.load_salesforce_fields is invalid!"
+                result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
+            else
+                # Ignores if other parameters were not passed properly to load_salesforce_fields
+                result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
             end
         end
 
-        nil # successful request
+        result
     end
 
     private

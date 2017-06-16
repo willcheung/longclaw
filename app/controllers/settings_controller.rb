@@ -8,7 +8,7 @@ class SettingsController < ApplicationController
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 
 		if (@salesforce_user.nil? && # could not connect via organization/admin login
-				current_user.power_or_chrome_user_only?)  # AND is an individual (power user or chrome user)
+				current_user.power_or_trial_only?)  # AND is an individual (power user or trial/Chrome user)
 			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
 			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @individual_salesforce_user.nil?
 		end
@@ -33,15 +33,6 @@ class SettingsController < ApplicationController
     else
       @avg_neg_sentiment_scores = tmp_score.nan? ? 0 : scale_sentiment_score(tmp_score)
     end
-
-		# Average PctNegSentiment Last 30d
-		total_engagement = projects.joins(:activities).where(activities: { category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current }).sum('jsonb_array_length(activities.email_messages)')
-		if total_engagement.zero?
-			@avg_p_neg_sentiment = 0.0
-		else
-			total_risks = Activity.where(project_id: projects.ids, category: Activity::CATEGORY[:Conversation], last_sent_date: 30.days.ago.midnight..Time.current).select("(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score").map { |a| a.sentiment_score }.select { |score| score < -0.75 }.count
-			@avg_p_neg_sentiment = (total_risks.to_f/total_engagement*100).round(1)
-	  end
 
     # Average Days Inactive
     projects_inactivity = projects.group('projects.id').joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum('activities.last_sent_date') # get last_sent_date of last activity for each project
@@ -109,6 +100,7 @@ class SettingsController < ApplicationController
 
 			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("upper(accounts.name)")
 		end
+		@linked_to_sfdc = @salesforce_link_accounts.present?
 	end
 
 	# Map CS Streams with Salesforce Opportunities: "One CS Stream can link to many Salesforce Opportunities"

@@ -21,8 +21,8 @@
             <% if current_user.role != User::ROLE[:Admin] %>
               Must be a Salesforce admin to access Organization Salesforce Integration.  <a href="<%= settings_path %>">Return to Settings</a>
             <% elsif @salesforce_user.nil? %> 
-              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%> ">Login to Salesforce</a>
-              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/salesforcesandbox">Login to Salesforce Sandbox</a> <br>
+              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%> ">Log in to Salesforce</a>
+              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
               Must be a Salesforce admin. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
             <% else %>
               <!-- Salesforce nav to Account / Opportunities -->
@@ -38,7 +38,7 @@
                   </div>
               </nav>
               <% if @salesforce_connection_error %> 
-                <div class="box-shadow" style="border:1px solid red;border-radius:10px;line-height:3;margin:2px 0;padding:6px 18px">
+                <div style="border:1px solid red;border-radius:10px;line-height:3;margin:2px 0;padding:6px 18px">
                   <i class="fa fa-exclamation-circle fa-2x" style="color:red"></i> — Salesforce connection error occurred.  Try <a href="<%= settings_salesforce_accounts_path %>">disconnecting and reconnecting to Salesforce</a>.
                 </div>
               <% else %>

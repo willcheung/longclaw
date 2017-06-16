@@ -157,7 +157,7 @@ module ApplicationHelper
         else
           return "All"
         end
-      else # ramaining > 0
+      else # remaining > 0
         if cc_size > remaining
           if trailing_text=="other"
             return get_first_names(from, to, cc[0..(remaining-1)]) + " and " + pluralize(cc_size - remaining, 'other')
@@ -249,5 +249,25 @@ module ApplicationHelper
   		flash_messages << text.html_safe if message
   	end
   	flash_messages.join("\n").html_safe
+  end
+
+  # Generates formatted (with HTML tags), expandable and collapsible text.  Uses simple_format() to break newlines, and truncate() to break up content.
+  # Parameters:   text - the text content to display truncated
+  #               id - used as the unique identifier in DOM
+  #               length (optional) - length at which to truncate text, defaults to 100
+  #               max_length (optional) - maximum length of the text to display, defaults to the length of text
+  #               separator (optional) - the separator option in the truncate() function, defaults to empty string
+  # Note:  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
+  def get_expandable_text_html(text: , id: , length: 100, max_length: text.length, separator: '')
+    # Do some newline processing to ensure proper conversion to <br> by simple_format later
+    text.gsub!(/\r\n/, "\n")  # convert the carriage-return + newline sequences (e.g., from SFDC activity) into single newlines
+    text.gsub!(/\n+/, "\n")   # convert double newlines into single ones 
+
+    id = id.to_s
+    html = "<span id=\"" + id + "-short\" style=\"display:block\">" + simple_format(truncate(text, length: length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span')
+    html += "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[more]</a></span>" + 
+            "<span id=\""+ id +"-full\" style=\"display: none\">" + simple_format(truncate(text, length: max_length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span') + 
+            "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[less]</a></span>" if text.length >length
+    return html
   end
 end

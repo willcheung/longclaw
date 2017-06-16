@@ -246,6 +246,9 @@ hr.message-divider {
 .social-comment textarea {
   font-size: 12px;
 }
+.chat-discussion {
+  word-wrap: break-word;
+}
 .chat-discussion .action-links {
   font-size: 12px;
   padding: 15px 0;
@@ -572,6 +575,10 @@ a.suggested-action:hover, a.suggested-action:focus {
     opacity: 0.5;
     pointer-events: none;
     cursor: default;
+}
+
+.future-activity {
+  opacity: 0.5;
 }
 
 /** Chrome Extension **/

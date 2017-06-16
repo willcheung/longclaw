@@ -78,19 +78,29 @@
                                                             <th>First Name</th>
                                                             <th>Last Name</th>
                                                             <th>Title</th>
+                                                            <th>Buyer Role</th>
                                                             <th></th>
                                                             <th>Email</th>
+                                                            <th>Phone</th>
                                                             <th></th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <% @account_contacts.each do |contact| %>
+                                                        <% @account_contacts.sort_by {|c| [c.last_name.upcase, c.first_name.upcase]}.each do |contact| %>
                                                         <tr>
                                                             <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
-                                                            <td class="contact-type"><i class="fa fa-envelope"> </i></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :buyer_role, :as => :select, :collection => Contact::ROLE, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
+                                                            <td class="contact-type">
+                                                            <% if contact.is_source_from_salesforce? %>
+                                                                <img id="sfdc-icon" style="width:15px" src="/assets/images/salesforce.png" style="width:0px;" title="Source: Salesforce"/>
+                                                            <% else %>
+                                                                <i class="fa fa-envelope"> </i>
+                                                            <% end %>
+                                                            </td>
                                                             <td class="contact-info"><%= best_in_place contact, :email, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-email-activator" %><i id="contact-<%= contact.id %>-email-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
+                                                            <td class="contact-info"><%= best_in_place contact, :phone, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-phone-activator" %><i id="contact-<%= contact.id %>-phone-activator" class="fa fa-pencil bip_activator m-l-xs edit-contact"></td>
                                                             <td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, contact, method: :delete, data: {confirm: "About to delete this contact. Are you sure?"} %></td>
                                                         </tr>
                                                         <% end %>

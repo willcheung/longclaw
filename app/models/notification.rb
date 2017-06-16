@@ -43,7 +43,7 @@ class Notification < ActiveRecord::Base
     alert_settings = RiskSetting.where(level: project.account.organization)
     
     neg_sentiment_setting = alert_settings.find { |as| as.metric == RiskSetting::METRIC[:NegSentiment] }
-    pct_neg_sentiment_setting = alert_settings.find { |as| as.metric == RiskSetting::METRIC[:PctNegSentiment] }
+    # pct_neg_sentiment_setting = alert_settings.find { |as| as.metric == RiskSetting::METRIC[:PctNegSentiment] }
     if neg_sentiment_setting.notify_task
       data_hash = data.map { |hash| Hashie::Mash.new(hash) }
       data_hash.each do |d|
@@ -58,12 +58,12 @@ class Notification < ActiveRecord::Base
     end
 
     # % Negative Sentiment Alerts
-    if pct_neg_sentiment_setting.notify_task
-      load_alert_for_pct_neg_sentiment(project, pct_neg_sentiment_setting, neg_sentiment_setting)
-    end
+    # if pct_neg_sentiment_setting.notify_task
+    #   load_alert_for_pct_neg_sentiment(project, pct_neg_sentiment_setting, neg_sentiment_setting)
+    # end
   end
 
-  #
+
   def self.load_alert_for_days_inactive(organization)
     days_inactive_setting = RiskSetting.find_by(level: organization, metric: RiskSetting::METRIC[:DaysInactive])
     return unless days_inactive_setting.notify_task
@@ -79,7 +79,8 @@ class Notification < ActiveRecord::Base
       project_owner = p.owner_id || '00000000-0000-0000-0000-000000000000'
       name = "Inactive for #{days_inactive} days!"
       description = "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days."
-
+      
+      # # # # TODO: decide what to display if last_activity is not a Conversation.
       last_activity = p.activities.where.not(category: Activity::CATEGORY[:Note]).first
       if last_activity.category == Activity::CATEGORY[:Conversation]
         message_id = last_activity.email_messages.last.messageId
@@ -126,48 +127,47 @@ class Notification < ActiveRecord::Base
     end
   end
 
-  #
-  def self.load_alert_for_pct_neg_sentiment(project, alert_setting, sentiment_setting)
-    engagement_volume = project.conversations.sum('jsonb_array_length(email_messages)')
-    neg_sentiments = project.conversations.select(:id, :backend_id, "(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score, jsonb_array_elements(email_messages)->>'messageId' AS message_id")
-      .each { |a| a.sentiment_score = scale_sentiment_score(a.sentiment_score) }.select { |a| a.sentiment_score > sentiment_setting.high_threshold }
-    pct_neg_sentiment = neg_sentiments.count.to_f/engagement_volume
+  # def self.load_alert_for_pct_neg_sentiment(project, alert_setting, sentiment_setting)
+  #   engagement_volume = project.conversations.sum('jsonb_array_length(email_messages)')
+  #   neg_sentiments = project.conversations.select(:id, :backend_id, "(jsonb_array_elements(jsonb_array_elements(email_messages)->'sentimentItems')->>'score')::float AS sentiment_score, jsonb_array_elements(email_messages)->>'messageId' AS message_id")
+  #     .each { |a| a.sentiment_score = scale_sentiment_score(a.sentiment_score) }.select { |a| a.sentiment_score > sentiment_setting.high_threshold }
+  #   pct_neg_sentiment = neg_sentiments.count.to_f/engagement_volume
 
-    return if pct_neg_sentiment < alert_setting.medium_threshold
-    level = pct_neg_sentiment < alert_setting.high_threshold ? "Medium" : "High"
+  #   return if pct_neg_sentiment < alert_setting.medium_threshold
+  #   level = pct_neg_sentiment < alert_setting.high_threshold ? "Medium" : "High"
 
-    last_neg_sentiment_activity = neg_sentiments.first
-    project_owner = project.owner_id || '00000000-0000-0000-0000-000000000000'
-    name = "% Negative Sentiment threshold exceeded!"
-    description = "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%"
+  #   last_neg_sentiment_activity = neg_sentiments.first
+  #   project_owner = project.owner_id || '00000000-0000-0000-0000-000000000000'
+  #   name = "% Negative Sentiment threshold exceeded!"
+  #   description = "% Negative Sentiment for #{project.name} exceeded #{level} Threshold at #{(pct_neg_sentiment*100).round(1)}%"
 
-    # Create an event in Timeline
-    project.activities.create(
-      posted_by: project_owner,
-      category: Activity::CATEGORY[:Alert],
-      email_messages: [{pct_neg_sentiment: (pct_neg_sentiment*100).round(1)}],
-      is_public: true,
-      title: name,
-      note: description,
-      last_sent_date: Time.now.utc,
-      last_sent_date_epoch: Time.now.utc.to_i
-    )
+  #   # Create an event in Timeline
+  #   project.activities.create(
+  #     posted_by: project_owner,
+  #     category: Activity::CATEGORY[:Alert],
+  #     email_messages: [{pct_neg_sentiment: (pct_neg_sentiment*100).round(1)}],
+  #     is_public: true,
+  #     title: name,
+  #     note: description,
+  #     last_sent_date: Time.now.utc,
+  #     last_sent_date_epoch: Time.now.utc.to_i
+  #   )
 
-    project.notifications.find_or_initialize_by(
-      category: CATEGORY[:Alert],
-      label: "PctNegSentiment",
-      is_complete: false,
-      completed_by: nil,
-      complete_date: nil
-    ).update(
-      name: name,
-      description: description,
-      assign_to: project_owner,
-      message_id: nil,
-      conversation_id: nil,
-      activity_id: -1
-    )
-  end
+  #   project.notifications.find_or_initialize_by(
+  #     category: CATEGORY[:Alert],
+  #     label: "PctNegSentiment",
+  #     is_complete: false,
+  #     completed_by: nil,
+  #     complete_date: nil
+  #   ).update(
+  #     name: name,
+  #     description: description,
+  #     assign_to: project_owner,
+  #     message_id: nil,
+  #     conversation_id: nil,
+  #     activity_id: -1
+  #   )
+  # end
 
   def self.load_alert_for_each_message(project_id, conversation_id, contextMessage, alert_setting, test=false, day_range=7)
     # avoid redundant

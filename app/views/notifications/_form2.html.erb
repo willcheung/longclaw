@@ -7,7 +7,7 @@
           <i class="fa fa-check-square-o"></i>
         </button>
       </span>
-      <%= f.input :name, label: false, input_html: { class: "input-border" }, placeholder: "Add a To-Do for this Stream. (Press enter to save)" %>
+      <%= f.input :name, label: false, input_html: { class: "input-border" }, placeholder: "Type here to add a To-Do for this Stream. (Press Enter to save)" %>
     </div>
   </div>
   <%= f.input :project_id, label: false, as: :hidden, input_html: { value: @project.id } %>

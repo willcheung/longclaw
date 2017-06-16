@@ -48,8 +48,8 @@
                     <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Type">
                         <option selected>Risk Score</option>
                         <option>Days Inactive</option>
-                        <option>Engagement Last 14d</option>
-                        <option>Negative Sentiment / Engagement %</option>
+                        <option>Activities (Last 14d)</option>
+                        <option>Negative Sentiment / Activities %</option>
                         <option>Total Open Alerts</option>
                         <option>Total Overdue Tasks</option>
                     </select>
@@ -68,7 +68,10 @@
         </div>
 </div>
 
-<script>
+<%= render "teaser" if current_user.trial? %>
+
+<script type="text/javascript">
+
     $(document).ready(function() {
         $('#sort-type, #account-filter, #owner-filter, #category-filter').change( function () {
             // Clear stream data ("right") chart

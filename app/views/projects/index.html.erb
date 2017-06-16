@@ -91,13 +91,12 @@
                                 <tr>
                                     <th></th>
                                     <th>Stream</th>
-                                    <th>Type</th>
+                                    <th>Stage</th>
+                                    <th>Deal Size</th>
                                     <th>Owner</th>
                                     <th></th>
-                                    <th></th>
                                     <th>Risk Score</th>
-                                    <th>Open Smart Tasks</th>
-                                    <th>Status</th>
+                                    <th>Open Alert</th>
                                     <th>Last 7d Activity</th>
                                     <th>Days Inactive</th>
                                     <th></th>
@@ -114,15 +113,14 @@
                                             <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                             <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a><small></div>
                                         </td>
-                                        <td style="width: 120px"><%= p.category %></td>
+                                        <td style="width: 120px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
+                                        <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
                                         <td>
                                             <div><%= get_full_name(p.project_owner) %></div>
                                         </td>
                                         <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
-                                        <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
                                         <td style="text-align: center;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
                                         <td style="text-align: center;" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                        <td style="text-align:center"><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id].to_i%></div></td>
                                         <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
 
                                         <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
