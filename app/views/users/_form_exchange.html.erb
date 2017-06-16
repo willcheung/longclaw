@@ -5,11 +5,14 @@
 <hr>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
-  <span class="help-block" style="color:red"></span>
+  <span class="help-block" style="color:red"><%= @error %></span>
   <%= f.input :email, :required => true %>
   <%= f.input :password, :required => true %>
+  <% if @hostname %>
+  <%= f.input :hostname, :placeholder => 'e.g. https://outlook.office365.com/EWS/Exchange.asmx' %>
+  <% end %>
 
-  <%= f.button :button, button_text, id: "outlook-login-button", class: 'btn btn-primary' %>
+  <%= f.button :button, button_text, id: "outlook-login-submit", class: 'btn btn-primary' %>
  
 <% end %>
 <script type="text/javascript">
@@ -18,7 +21,11 @@
     $('#new_user').show();
   });
 
+<% if @error %>
+  $('#outlook-login').click();
+<% end %>
+
   $('#new_user').submit(function () {
-    $('#outlook-login-button').html('<i class="fa fa-spinner fa-pulse"></i>').prop("disabled", true)
+    $('#outlook-login-submit').html('<i class="fa fa-spinner fa-pulse"></i>').prop("disabled", true);
   });
 </script>

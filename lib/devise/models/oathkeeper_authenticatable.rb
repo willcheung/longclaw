@@ -6,15 +6,15 @@ module Devise
       extend ActiveSupport::Concern
 
       included do
-        attr_accessor :oathkeeper_auth_info
+        attr_accessor :auth_response
+        attr_accessor :hostname
       end
 
       class_methods do
         def update_for_oathkeeper_auth(resource, auth, time_zone='UTC')
-          puts "update_for_oathkeeper_auth", "================"
-          auth.merge!(resource.oathkeeper_auth_info)
+          auth.merge!(resource.auth_response)
+          auth.merge!({ "url" => resource.hostname }) if resource.hostname.present?
           resource = resource.id ? find(resource.id) : find_by_email(auth["email"])
-          # resource ||= find_by_email(auth["email"])
           if resource.encrypted_password.blank? && resource.oauth_provider.blank?
             org = Organization.create_or_update_user_organization(get_domain(auth["email"]), resource)
             resource.assign_attributes(
@@ -39,19 +39,26 @@ module Devise
 
       # If the authentication is successful you should return a resource instance
       # If the authentication fails you should return false
-      def oathkeeper_authentication(password)        
+      def oathkeeper_authentication(password, hostname)        
         base_url = ENV["csback_base_url"] + "/newsfeed/auth"
         puts "Requesting authorization from " + base_url
-        # body = { kind: "exchange", email: self.email, password: password, url: self.oauth_provider_uid }
-        # body.merge!({ url: self.oauth_provider_uid }) if self.oauth_provider_uid
+        body = { kind: "exchange", email: self.email, password: password }
+        # if hostname is submitted with form and is not an empty string, use it
+        # else if hostname was saved with user in column oauth_provider_uid and not submitted with form, use it
+        # otherwise, either a registering a new user or existing user doesn't know their hostname, autodiscover
+        if hostname.present?
+          body.merge!({ url: hostname })
+          self.hostname = hostname
+        elsif self.oauth_provider_uid.present? && hostname.nil?
+          body.merge!({ url: self.oauth_provider_uid })
+        end
 
         uri = URI(base_url)
         req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
-        req.body = { kind: "exchange", email: self.email, password: password, url: self.oauth_provider_uid }.to_json
+        req.body = body.to_json
         res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
         data = JSON.parse(res.body.to_s)
-        # p data
-        self.oathkeeper_auth_info = data
+        self.auth_response = data
         data["logged_in"]
       end
 
