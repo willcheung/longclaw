@@ -338,24 +338,40 @@ class SalesforceController < ApplicationController
   def refresh_fields
     method_name = "refresh_fields()"
     if params[:entity_type] == "accounts"
-      account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
+      if params[:field_type] == "standard"
+        account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
+        puts "account_standard_fields: #{account_standard_fields}"
+      else
+        account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
+      end
 
-      unless account_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
+      unless (params[:field_type] == "standard" && account_standard_fields.empty?) || (params[:field_type] == "custom" && account_custom_fields.empty?) # Nothing to do if no mappings are found
         @client = SalesforceService.connect_salesforce(current_user.organization_id)
         #@client=nil # simulates a Salesforce connection error
 
         unless @client.nil?  # unless connection error
           accounts = Account.where("accounts.organization_id = ? and status = 'Active'", current_user.organization_id)
-          accounts.each do |a|
-            unless a.salesforce_accounts.first.nil? 
-              #print "***** SFDC account:\"", a.salesforce_accounts.first.salesforce_account_name, "\" --> CS account:\"", a.name, "\" *****\n"
-              load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
 
-              if load_result[:status] == "ERROR"
-                method_location = "Account.load_salesforce_fields()"
-                error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                render_internal_server_error(method_name, method_location, error_detail)
-                return
+          if params[:field_type] == "standard"
+            update_result = Account.update_fields_from_sfdc(client: @client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
+            if update_result[:status] == "ERROR"
+              method_location = "Account.update_fields_from_sfdc()"
+              error_detail = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+              render_internal_server_error(method_name, method_location, error_detail)
+              return
+            end
+          else # params[:field_type] == "custom"
+            accounts.each do |a|
+              unless a.salesforce_accounts.first.nil? 
+                #print "***** SFDC account:\"", a.salesforce_accounts.first.salesforce_account_name, "\" --> CS account:\"", a.name, "\" *****\n"
+                load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
+
+                if load_result[:status] == "ERROR"
+                  method_location = "Account.load_salesforce_fields()"
+                  error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                  render_internal_server_error(method_name, method_location, error_detail)
+                  return
+                end
               end
             end
           end
@@ -365,6 +381,9 @@ class SalesforceController < ApplicationController
         end
       end
     elsif params[:entity_type] == "projects"
+      if params[:field_type] == "standard"
+        puts "Standard #{params[:entity_type]} fields all the wayyyyy!!!"
+      end
       stream_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
 
       unless stream_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
@@ -391,8 +410,10 @@ class SalesforceController < ApplicationController
           return
         end
       end
+    elsif params[:entity_type] == "contacts" && params[:field_type] == "standard"
+      puts "Standard #{params[:entity_type]} fields all the wayyyyy!!!"
     else
-      print "Invalid parameter passed to refresh_fields().  entity_type=", params[:entity_type], "!\n"
+      puts "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
     end
 
     render :text => ' '

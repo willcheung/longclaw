@@ -44,8 +44,11 @@ class EntityFieldsMetadatum < ActiveRecord::Base
     end 
   end
 
-  def self.get_sfdc_fields_mapping_for(organization)
-    self.all.where.not("salesforce_field is null").pluck(:name, :salesforce_field)
+  # Returns a list of [mapped SFDC entity field name, CS entity field name] pairs, for a particular entity type (i.e., Account, Stream, or Contact).
+  # Parameters:   organization_id - the Id of the organization
+  #               entity_type - EntityFieldsMetadatum::ENTITY_TYPE 
+  def self.get_sfdc_fields_mapping_for(organization_id:, entity_type:)
+    self.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", organization_id, entity_type).pluck(:salesforce_field, :name)
   end
 
   private

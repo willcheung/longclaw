@@ -758,7 +758,7 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all mapped custom fields of a single SFDC opportunity -> CS stream
+  # Updates all custom CS Stream fields mapped to SFDC Opportunity fields for a single CS Stream/SFDC Opportunity pair.
   # Parameters:   client - connection to Salesforce
   #               project_id - CS project/stream id          
   #               sfdc_opportunity_id - SFDC opportunity sObjectId

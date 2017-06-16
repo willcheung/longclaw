@@ -357,23 +357,29 @@ $(document).ready(function() {
     ////////////////////////////////////////
     // ../settings/salesforce_fields
     ////////////////////////////////////////
-    $('#salesforce-fields-refresh-accounts-btn,#salesforce-fields-refresh-projects-btn').click(function() {
+    $('#salesforce-standard-fields-update-accounts-btn,#salesforce-standard-fields-update-projects-btn,#salesforce-standard-fields-update-contacts-btn,#salesforce-custom-fields-refresh-accounts-btn,#salesforce-custom-fields-refresh-projects-btn').click(function() {
         var self = $(this);
         var entity_type, entity_type_btn_str;
 
-        if (self.attr("id").includes("salesforce-fields-refresh-accounts-btn")) {
+        var field_type = self.attr("id").includes("standard") ? "standard" : "custom";
+
+        if (self.attr("id").includes("accounts")) {
             entity_type = "accounts";
             entity_type_btn_str = "Accounts";
         } 
-        else {
+        else if (self.attr("id").includes("projects")) {
             entity_type = "projects";
             entity_type_btn_str = "Streams";
+        } 
+        else {
+            entity_type = "contacts";
+            entity_type_btn_str = "Contacts";
         }
 
-        $.ajax('/salesforce_fields_refresh?entity_type=' + entity_type, {
+        $.ajax('/salesforce_fields_refresh', {
             async: true,
             method: "POST",
-            data: "",
+            data: { "field_type": field_type, "entity_type": entity_type },
             beforeSend: function () {
                 self.css("pointer-events", "none");
                 self.css("margin-left","0px");
@@ -409,16 +415,18 @@ $(document).ready(function() {
 
     $('.salesforce-account-field-name,.salesforce-opportunity-field-name,.salesforce-contact-field-name').change(function() {
         var selectorStr, entity_type_btn_str;
+        var field_type = ($(this).attr("f_id") != undefined) ? "standard" : "custom";
+
         if ($(this).attr("class").includes("salesforce-account-field-name")) {
-          selectorStr = "#salesforce-fields-refresh-accounts-btn";
-          entity_type_btn_str = "Accounts";
+            selectorStr = "#salesforce-"+field_type+"-fields-refresh-accounts-btn";
+            entity_type_btn_str = "Accounts";
         } 
         else if ($(this).attr("class").includes("salesforce-opportunity-field-name")) {
-          selectorStr = "#salesforce-fields-refresh-projects-btn";
-          entity_type_btn_str = "Streams";
+            selectorStr = "#salesforce-"+field_type+"-fields-refresh-projects-btn";
+            entity_type_btn_str = "Streams";
         } 
         //else {
-        //  selectorStr = "#salesforce-fields-refresh-contacts-btn";
+        //  selectorStr = "#salesforce-custom-fields-refresh-contacts-btn";
         //  entity_type_btn_str = "Contacts";
         //}
 
@@ -428,7 +436,7 @@ $(document).ready(function() {
         $(selectorStr).addClass('btn-primary btn-outline');
         $(selectorStr).html("<i class='fa fa-refresh'></i> Refresh ContextSmith "+entity_type_btn_str);
         
-        var exclamation_triangle_warning = $(this).attr("f_id") ? document.getElementById("exclamation-triangle-warning-fid"+$(this).attr("f_id")) : document.getElementById("exclamation-triangle-warning-cfid"+$(this).attr("cf_id"));
+        var exclamation_triangle_warning = field_type == "standard" ? document.getElementById("exclamation-triangle-warning-fid"+$(this).attr("f_id")) : document.getElementById("exclamation-triangle-warning-cfid"+$(this).attr("cf_id"));
         if (exclamation_triangle_warning != undefined)
             exclamation_triangle_warning.style.display = "none"; // remove warning
     });
