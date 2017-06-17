@@ -781,7 +781,7 @@ class Project < ActiveRecord::Base
       unless sfdc_ids_mapping.empty? 
         query_statement = "SELECT Id, " + sfdc_fields_mapping.keys.join(", ") + " FROM Opportunity WHERE Id IN ('" + sfdc_ids_mapping.keys.join("', '") + "')"
         query_result = SalesforceService.query_salesforce(client, query_statement)
-        # puts "*** query: '#{query_statement}' ***"
+        # puts "*** query: \"#{query_statement}\" ***"
         # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
 
         if query_result[:status] == "SUCCESS"
@@ -789,8 +789,15 @@ class Project < ActiveRecord::Base
           query_result[:result].each do |r|
             # CS_UUID = sfdc_ids_mapping[r.Id] , SFDC_Id = r.Id
             sfdc_fields_mapping.each do |k,v|
-              # k (SFDC field name) , v (CS field name),  r[k] (SFDC field value)
-              changed_values_hash_list.push({ sfdc_ids_mapping[r.Id] => { v => r[k] } })
+              # k (SFDC field name) , v (CS field name), r[k] (SFDC field value)
+              if r[k].is_a?(Restforce::Mash) # the value is a Salesforce sObject
+                sfdc_val = []
+                r[k].each { |k,v| sfdc_val.push(v.to_s) if v.present? }
+                sfdc_val = sfdc_val.join(", ")
+              else
+                sfdc_val = r[k]
+              end
+              changed_values_hash_list.push({ sfdc_ids_mapping[r.Id] => { v => sfdc_val } })
             end
           end
           # puts "changed_values_hash_list: #{ changed_values_hash_list }"

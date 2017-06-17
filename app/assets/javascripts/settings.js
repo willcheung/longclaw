@@ -357,7 +357,7 @@ $(document).ready(function() {
     ////////////////////////////////////////
     // ../settings/salesforce_fields
     ////////////////////////////////////////
-    $('#salesforce-standard-fields-update-accounts-btn,#salesforce-standard-fields-update-projects-btn,#salesforce-standard-fields-update-contacts-btn,#salesforce-custom-fields-refresh-accounts-btn,#salesforce-custom-fields-refresh-projects-btn').click(function() {
+    $('#salesforce-standard-fields-refresh-accounts-btn,#salesforce-standard-fields-refresh-projects-btn,#salesforce-standard-fields-refresh-contacts-btn,#salesforce-custom-fields-refresh-accounts-btn,#salesforce-custom-fields-refresh-projects-btn').click(function() {
         var self = $(this);
         var entity_type, entity_type_btn_str;
 
