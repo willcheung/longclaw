@@ -125,7 +125,7 @@ class ExtensionController < ApplicationController
 
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
-    order_emails_by_domain_freq = ex_emails.map { |email| "email = '#{email}' DESC" }.join(',')
+    order_emails_by_domain_freq = ex_emails.map { |email| "email = #{Contact.sanitize(email)} DESC" }.join(',')
     # find all contacts within current_user org that match the external emails, in the order of ex_emails
     contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
     if contacts.present?
@@ -363,8 +363,9 @@ class ExtensionController < ApplicationController
   # Parameters:  internal_members_a - An array of hashes {full_name: full_name, email: email} to indicate potential new users
   def create_and_return_internal_users(internal_members_a)
     new_users = []
+    #puts "internal_members_a: #{internal_members_a}"
     internal_members_a.each do |u|
-      next if User.find_by_email(u[:email]).present? 
+      next if User.find_by_email(u[:email]).present?
 
       name = u[:full_name].split(" ")
       first_name = name[0].nil? ? '' : name[0]
