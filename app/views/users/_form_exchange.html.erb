@@ -1,6 +1,8 @@
 <% remote ||= false %>
 <% url ||= user_session_path %>
 <% button_text ||= 'Log In' %>
+
+<button id="outlook-login" class="btn btn-lg btn-primary oauth m-t-lg"><img src="/assets/images/outlook-logo-white.png" width="26" height="26" /></i>&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Outlook</span></button>
 <%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user', style: "display:none;", class: "form-horizontal"}, wrapper: :horizontal_form  do |f| %>
 <hr>
 
