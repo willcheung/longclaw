@@ -132,7 +132,7 @@ class ContextsmithService
       return nil unless success
       { token: user.oauth_access_token, email: user.email, kind: "gmail" }
     when User::AUTH_TYPE[:Exchange]
-      { password: user.encrypted_password, email: user.email, kind: "exchange", url: user.oauth_provider_uid }
+      { password: user.password, email: user.email, kind: "exchange", url: user.oauth_provider_uid }
     end
   end
 

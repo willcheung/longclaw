@@ -36,6 +36,7 @@
 #  mark_private           :boolean          default(FALSE), not null
 #  role                   :string
 #  refresh_inbox          :boolean          default(TRUE), not null
+#  encrypted_password_iv  :string
 #
 # Indexes
 #
@@ -71,6 +72,7 @@ class User < ActiveRecord::Base
   scope :not_disabled, -> { where is_disabled: false }
   scope :allow_refresh_inbox, -> { where refresh_inbox: true }
   scope :onboarded, -> { where onboarding_step: Utils::ONBOARDING[:onboarded] }
+  scope :exchange_auth, -> { where oauth_provider: AUTH_TYPE[:Exchange] }
 
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
          :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce, :salesforce_sandbox]
@@ -78,6 +80,7 @@ class User < ActiveRecord::Base
   validates :email, uniqueness: true
 
   # attr_encrypted :oauth_access_token
+  attr_encrypted :password, key: ENV['encryption_key'], if: proc { |user| user.oauth_provider == User::AUTH_TYPE[:Exchange] }
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
@@ -100,8 +103,6 @@ class User < ActiveRecord::Base
       a.last_sent_date = Time.current.midnight + a.last_sent_date.hour.hours + a.last_sent_date.min.minutes
       a.last_sent_date += 1.day if a.last_sent_date < Time.current
     end.sort_by(&:last_sent_date)
-    # p meetings_in_cs.pluck(:last_sent_date)
-    # p calendar_meetings.map(&:last_sent_date)
 
     # merge calendar_meetings with meetings_in_cs
     meetings_in_cs.each do |mic|

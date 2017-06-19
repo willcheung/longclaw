@@ -62,15 +62,6 @@ module Devise
         data["logged_in"]
       end
 
-      def valid_password?(password)
-        Devise.secure_compare(encrypted_password, password_digest(password))
-      end
-
-      protected
-
-      def password_digest(password)
-        password
-      end
     end
   end
 end
