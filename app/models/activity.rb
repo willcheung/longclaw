@@ -64,7 +64,8 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-  CS_ACTIVITY_SFDC_EXPORT_PREFIX = "ContextSmith —"
+  CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = "CS"
+  CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX = "(imported from ContextSmith) ——"
   CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
 
   #
@@ -220,9 +221,9 @@ class Activity < ActiveRecord::Base
 
     # Note: we avoid importing exported CS data residing on SFDC
     if type == "Account"
-      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%')) #{activityhistory_predicate} limit #{limit}) FROM Account WHERE Id='#{sfdc_id}' #{entity_predicate}"  
+      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{activityhistory_predicate} limit #{limit}) FROM Account WHERE Id='#{sfdc_id}' #{entity_predicate}"  
     elsif type == "Opportunity"
-      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%')) #{activityhistory_predicate} limit #{limit}) FROM Opportunity WHERE Id='#{sfdc_id}' #{entity_predicate}"
+      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{activityhistory_predicate} limit #{limit}) FROM Opportunity WHERE Id='#{sfdc_id}' #{entity_predicate}"
     end
     
     #puts "query_statement: #{ query_statement }"
@@ -279,7 +280,7 @@ class Activity < ActiveRecord::Base
   #               to_date (optional) - the end date of a date range (e.g., "2018-01-01")
   # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
   def self.delete_cs_activities(client, type="Account", from_date=nil, to_date=nil)
-    delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'"
+    delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
     delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
     delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
     puts "Deleting all existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce.  SFDC query=\'#{delete_tasks_query_stmt}\'...."
@@ -309,15 +310,18 @@ class Activity < ActiveRecord::Base
 
     project.activities.each do |a|
       # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.
+      subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " " + a.category + ": "+ a.title
       description = a.category + " activity (imported from ContextSmith) ——\n"
       activity_date = Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d")
       if a.category == Activity::CATEGORY[:Conversation]
+          subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " E-mail: "+ a.title
+          description = "E-mail activity #{CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX}\n"
           #activity_date = Time.zone.at(m.sentDate).strftime("%b %d")
           description += "Description:  \"#{ a.title }:\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }"
           description += !a.is_public ? "  (private)\n" : "\n"
           a.email_messages.each do |m|
             description += "—————————————————————————\n"
-            description += "Sender/addressees: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
+            description += "Sender/Recipients: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
             description += "Date: " + Time.zone.at(m.sentDate).strftime("%b %d") +"\n"
             description += "Content: " + strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
           end
@@ -367,7 +371,7 @@ class Activity < ActiveRecord::Base
 
       # Second, put the fields into a hash object.
       sObject_meta = { id: sfdc_id, type: type }
-      sObject_fields = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: "#{CS_ACTIVITY_SFDC_EXPORT_PREFIX} #{a.category}: #{a.title}", priority: 'Normal', description: description }
+      sObject_fields = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: subject, priority: 'Normal', description: description }
       # puts "----> sObject_meta:\n #{sObject_meta}\n"
       # puts "----> sObject_fields:\n #{sObject_fields}\n"
 
@@ -668,4 +672,12 @@ class Activity < ActiveRecord::Base
     end
   end
 
+  def self.get_CS_export_prefix_SOQL_predicate_string
+    soql_predicate = []
+    CATEGORY.each do |k, v|
+      v = "E-mail" if v == CATEGORY[:Conversation]
+      soql_predicate << "Subject like '#{CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX} #{v}:%'"
+    end
+    soql_predicate.join(" OR ")
+  end
 end

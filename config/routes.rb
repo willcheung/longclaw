@@ -70,7 +70,7 @@ Longclaw::Application.routes.draw do
       get "basecamp"
       get "basecamp2_projects"
       get "basecamp2_activity"
-      get "salesforce_fields" 
+      get "salesforce_fields/:type" => "settings#salesforce_fields", as: "salesforce_fields"
       get "super_user"
       get "user_analytics"
       post "invite_user/:user_id" => 'settings#invite_user'
@@ -127,6 +127,7 @@ Longclaw::Application.routes.draw do
       post 'create_account'
     end
 
+    resources :entity_fields_metadatum, controller: 'entity_fields_metadata', only: [:create, :update, :destroy] #for /settings/salesforce_fields/standard
     resources :custom_fields, only: [:update]
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
     resources :custom_lists, only: [:create, :update, :destroy]
