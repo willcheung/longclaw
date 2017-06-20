@@ -48,7 +48,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
   # Parameters:   organization_id - the Id of the organization
   #               entity_type - EntityFieldsMetadatum::ENTITY_TYPE 
   def self.get_sfdc_fields_mapping_for(organization_id:, entity_type:)
-    self.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", organization_id, entity_type).pluck(:salesforce_field, :name)
+    self.where(organization_id: organization_id, entity_type: entity_type).where.not(salesforce_field: nil).pluck(:salesforce_field, :name)
   end
 
   private
