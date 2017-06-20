@@ -70,7 +70,11 @@ class ContextsmithService
     elsif data.kind_of?(Array)
       Activity.load_calendar(data, Hashie::Mash.new(id: '00000000-0000-0000-0000-000000000000'), save_in_db)
     elsif data['code'] == 401
-      puts "Error: #{data['message']}\n"
+      if data['message'] == "Invalid Credentials"
+        puts "Warning: Invalid Credentials\n"  # avoid reporting as Error, just as a warning
+      else
+        puts "Error: #{data['message']}\n"
+      end
       return []
     elsif data['code'] == 404
       puts "#{data['message']}\n"
