@@ -113,6 +113,7 @@ class SettingsController < ApplicationController
 
 	def salesforce_activities
 		if current_user.role == User::ROLE[:Admin]
+			@CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = Activity::CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX
 			@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active projects because "admin" role can see everything
 
 			# Load previous queries if it was saved

@@ -170,7 +170,7 @@
             activityhistory_predicate = " AND (" + activityhistory_predicate + ")";
         
 
-        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Subject LIKE '#{CS_ACTIVITY_SFDC_EXPORT_PREFIX}%'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
+        $("#salesforce-activity-query-preview").html("SELECT Name, (select Id, ... FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND Description LIKE '<%= @CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX %> ActivityType: %'))" + activityhistory_predicate + ") FROM SalesforceEntity WHERE Id='sfdc_id'" + entity_predicate);
     }
 
     $(document).ready(function() {
