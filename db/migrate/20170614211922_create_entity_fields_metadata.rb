@@ -3,7 +3,7 @@ class CreateEntityFieldsMetadata < ActiveRecord::Migration
     create_table :entity_fields_metadata do |t|
       t.uuid    :organization_id, null:false
       t.string  :entity_type, null:false              # EntityFieldsMetadatum::ENTITY_TYPE
-      t.string  :name, null:false                     # Entity::FIELDS_META
+      t.string  :name, null:false                     # Entity::MAPPABLE_FIELDS_META
       t.string  :default_value
       t.string  :salesforce_field
       t.string  :read_permission_role, null:false     # User::ROLE

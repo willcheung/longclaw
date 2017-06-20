@@ -30,13 +30,13 @@ class EntityFieldsMetadatum < ActiveRecord::Base
 
   ENTITY_TYPE = { Account: 'Account', Stream: 'Stream', Contact: 'Contact' }
 
-  # Create default entity fields metadata info for a new organization
+  # Create default mappable entity fields metadata info for a new organization
   def self.create_default_for(organization)
     organization.entity_fields_metadatum.delete_all  #clear all old meta fields
     EntityFieldsMetadatum::ENTITY_TYPE.values.each do |etype|
-      meta = Account::FIELDS_META if etype == EntityFieldsMetadatum::ENTITY_TYPE[:Account]
-      meta = Project::FIELDS_META if etype == EntityFieldsMetadatum::ENTITY_TYPE[:Stream]
-      meta = Contact::FIELDS_META if etype == EntityFieldsMetadatum::ENTITY_TYPE[:Contact]
+      meta = Account::MAPPABLE_FIELDS_META if etype == EntityFieldsMetadatum::ENTITY_TYPE[:Account]
+      meta = Project::MAPPABLE_FIELDS_META if etype == EntityFieldsMetadatum::ENTITY_TYPE[:Stream]
+      meta = Contact::MAPPABLE_FIELDS_META if etype == EntityFieldsMetadatum::ENTITY_TYPE[:Contact]
 
       meta.each do |fname|
         organization.entity_fields_metadatum.create!(entity_type: etype, name: fname, read_permission_role: User::ROLE[:Observer], update_permission_role: User::ROLE[:Poweruser])
