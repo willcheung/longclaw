@@ -24,7 +24,7 @@ class ReportsController < ApplicationController
   def td_sort_data
     @sort = params[:sort]
     users = current_user.organization.users
-
+    
     if params[:team].present?
       if params[:team] == "none"
         users = users.where(department: nil)
@@ -157,8 +157,8 @@ class ReportsController < ApplicationController
       end
     end
     @interaction_time_per_account.sort_by! { |it| it.total }.reverse!
-    # take the top 7 interaction time per account, currently allotted space only fits about 7 categories on xAxis before labels are cut off
-    @interaction_time_per_account = @interaction_time_per_account.take(7)
+    # take the top 10 interaction time per account, currently allotted space only fits about 10 categories on xAxis before labels are cut off
+    @interaction_time_per_account = @interaction_time_per_account.take(10)
 
     render layout: false
   end
@@ -432,4 +432,5 @@ class ReportsController < ApplicationController
   def get_owners_in_org
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
   end
+
 end

@@ -34,8 +34,8 @@ jQuery(document).ready(function($) {
   $('#projects-table').DataTable( {
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,4,5,6,7,8,9,10,11,12]},
-      { orderable: false, targets: [0,4,5,9,11,12] }
+      { searchable: false, targets: [0,5,6,7,8,9,10,11]},
+     { orderable: false, targets: [0,5,8,10,11] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -211,16 +211,23 @@ jQuery(document).ready(function($) {
     if (params) {
         taskType = "type=" + params["selected"];
     }
+     if (typeof(params) == 'undefined') {
+      taskType = "type=" + "none";
+    }
 
     newURL(window.location.search, "type", taskType);
   });
   
   $('.owner_filter').on('change',function(evt, params){
     var taskType = "";
-
+    
     if (params) {
         taskType = "owner=" + params["selected"];
     }
+    if (typeof(params) == 'undefined') {
+      taskType = "owner=" + 0;
+    }
+
 
     newURL(window.location.search, "owner", taskType);
   });
