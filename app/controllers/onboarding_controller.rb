@@ -22,6 +22,8 @@ class OnboardingController < ApplicationController
             end 
             # MailChimp API call takes a few minutes before contact is added to the mailchimp list
         end
+      # Alert the CS team when a new user has signed up to our platform! Need to revise once this becomes too noisey
+      UserMailer.alert_cs_team(current.user).deliver_now
     end
 
 	def tutorial
