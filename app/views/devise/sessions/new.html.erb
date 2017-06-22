@@ -6,9 +6,8 @@
       	<h1 class="logo-name oauth">Log In</h1>
       	<p class="oauth">Welcome back!</p>
 
-        <a class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log In Using Google</span></a>
 
-        <%= render "users/form_exchange", button_text: "Log In" %>
+        <%= render "users/form_login", button_text: "Log In" %>
 
         <p class="m-t-lg"> Don't have an account? <a href="<%= new_user_registration_path %>"> Sign up here. </p>
   	

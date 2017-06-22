@@ -2,9 +2,11 @@
 <% url ||= user_session_path %>
 <% button_text ||= 'Log In' %>
 
+<a id="google-login" class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Google</span></a>
+
 <button id="outlook-login" class="btn btn-lg btn-primary oauth m-t-lg"><img src="/assets/images/outlook-logo-white.png" width="26" height="26" /></i>&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Outlook</span></button>
+
 <%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user', style: "display:none;", class: "form-horizontal"}, wrapper: :horizontal_form  do |f| %>
-<hr>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
   <span class="help-block" style="color:red"><%= @error %></span>
@@ -20,6 +22,7 @@
 <script type="text/javascript">
   $('#outlook-login').click(function () {
     $(this).hide();
+    $('#google-login').hide();
     $('#new_user').show();
   });
 
