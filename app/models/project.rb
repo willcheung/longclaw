@@ -671,9 +671,13 @@ class Project < ActiveRecord::Base
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
+    # puts "Available accounts:"
+    # puts accounts.pluck(:domain)
 
     project_domains.each do |p|
       external_members, internal_members = get_project_members(data, p)
+      puts "Project domain: #{p}"
+      puts "Found account match: #{accounts.find {|a| a.domain == p}.name}"
       project = Project.new(name: (accounts.find {|a| a.domain == p}).name,
                            status: "Active",
                            category: "Opportunity",
