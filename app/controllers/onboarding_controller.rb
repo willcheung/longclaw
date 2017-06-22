@@ -6,24 +6,24 @@ class OnboardingController < ApplicationController
 	layout 'empty', except: ['tutorial']
 
     def fill_in_info
-        # change user onboarding status and cluster_create_date becomes join date
+      # change user onboarding status and cluster_create_date becomes join date
       current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:tutorial]) if current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
-        if ENV["RAILS_ENV"] == 'production'
-            list_id = ENV['mailchimp_email_list_id']
-            # Using MailChimp for email automation. User's domain will be sent to ContextSmith Trial Newsletter
-            uri = URI('https://us13.api.mailchimp.com/3.0/lists/' + list_id + '/members/')
-            res = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
-              req = Net::HTTP::Post.new(uri)
-              req['Content-Type'] = 'application/json'
-              req.basic_auth 'anystring', ENV["mailchimp_api_key"]
-              json_data = {'email_address' => current_user.email, 'status' => 'subscribed', "merge_fields" => {"FNAME"=>"#{current_user.first_name}","LNAME" => "#{current_user.last_name}"} }.to_json
-              req.body = json_data
-              response = http.request(req) # Net::HTTPResponse object 
-            end 
-            # MailChimp API call takes a few minutes before contact is added to the mailchimp list
-        end
+      if ENV["RAILS_ENV"] == 'production'
+        list_id = ENV['mailchimp_email_list_id']
+        # Using MailChimp for email automation. User's domain will be sent to ContextSmith Trial Newsletter
+        uri = URI('https://us13.api.mailchimp.com/3.0/lists/' + list_id + '/members/')
+        res = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
+          req = Net::HTTP::Post.new(uri)
+          req['Content-Type'] = 'application/json'
+          req.basic_auth 'anystring', ENV["mailchimp_api_key"]
+          json_data = {'email_address' => current_user.email, 'status' => 'subscribed', "merge_fields" => {"FNAME"=>"#{current_user.first_name}","LNAME" => "#{current_user.last_name}"} }.to_json
+          req.body = json_data
+          response = http.request(req) # Net::HTTPResponse object 
+        end 
+        # MailChimp API call takes a few minutes before contact is added to the mailchimp list
+      end
       # Alert the CS team when a new user has signed up to our platform! Need to revise once this becomes too noisey
-      UserMailer.alert_cs_team(current.user).deliver_now
+      UserMailer.update_cs_team(current_user).deliver_now
     end
 
 	def tutorial
