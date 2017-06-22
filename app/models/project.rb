@@ -671,20 +671,19 @@ class Project < ActiveRecord::Base
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
-    # puts "Available accounts:"
-    # puts accounts.pluck(:domain)
 
     project_domains.each do |p|
       external_members, internal_members = get_project_members(data, p)
       puts "Project domain: #{p}"
-      puts "Found account match: #{accounts.find {|a| a.domain == p}.name}"
-      project = Project.new(name: (accounts.find {|a| a.domain == p}).name,
+      puts "Found account match: #{accounts.find {|a| a.domain == get_domain_from_subdomain(p)}.name}"
+      p_account = accounts.find { |a| a.domain == get_domain_from_subdomain(p) }
+      project = Project.new(name: p_account.name,
                            status: "Active",
                            category: "Opportunity",
                            created_by: user_id,
                            updated_by: user_id,
                            owner_id: user_id,
-                           account_id: (accounts.find {|a| a.domain == p}).id,
+                           account_id: p_account.id,
                            is_public: true,
                            is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
                           )
