@@ -676,7 +676,7 @@ class Project < ActiveRecord::Base
       external_members, internal_members = get_project_members(data, p)
       puts "Project domain: #{p}"
       puts "Found account match: #{accounts.find {|a| a.domain == get_domain_from_subdomain(p)}.name}"
-      p_account = accounts.find { |a| a.domain == get_domain_from_subdomain(p) }
+      p_account = accounts.find { |a| a.domain == p }
       project = Project.new(name: p_account.name,
                            status: "Active",
                            category: "Opportunity",

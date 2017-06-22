@@ -33,9 +33,7 @@ module ContextSmithParser
 	end
 
 	def get_project_top_domain(data)
-		project_domains = []
-		data.each { |p| project_domains << p["topExternalMemberDomain"] }
-		return project_domains
+		data.map { |p| get_domain_from_subdomain(p["topExternalMemberDomain"]) }
 	end
 
 	def get_project_conversations(data, project_domain)
