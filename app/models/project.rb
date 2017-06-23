@@ -128,6 +128,7 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  MAPPABLE_FIELDS_META = [ "name", "description", "category", "renewal_date", "contract_start_date", "contract_end_date", "contract_arr", "renewal_count", "has_case_study", "is_referenceable", "amount", "stage", "close_date", "expected_revenue" ]
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
 
   attr_accessor :num_activities_prev, :pct_from_prev
@@ -757,7 +758,72 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all mapped custom fields of a single SFDC opportunity -> CS stream
+  # Updates all (standard) CS Stream fields from all mapped SFDC Opportunity fields.
+  # Parameters:   client - connection to Salesforce
+  #               streams - collection of CS Projects/Streams to process
+  #               sfdc_fields_mapping - A list of [Mapped SFDC Opportunity field name, CS Stream field name] pairs
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
+  #             result - if status == "ERROR", contains the title of the error
+  #             detail - if status == "ERROR", contains the details of the error
+  def self.update_fields_from_sfdc(client: , streams: , sfdc_fields_mapping: )
+    result = nil
+
+    unless (client.nil? || streams.nil? || sfdc_fields_mapping.blank?)
+      sfdc_fields_mapping = sfdc_fields_mapping.to_h
+      sfdc_ids_mapping = streams.collect { |s| s.salesforce_opportunity.nil? ? nil : [s.salesforce_opportunity.salesforce_opportunity_id, s.id] }.compact  # a list of [linked SFDC sObject Id, CS Stream id] pairs
+      sfdc_ids_mapping = sfdc_ids_mapping.to_h
+
+      # puts "sfdc_fields_mapping: #{ sfdc_fields_mapping }"
+      # puts "SFDC opportunity field names: #{ sfdc_fields_mapping.keys }"
+      # puts "sfdc_ids_mapping: #{ sfdc_ids_mapping }"
+      # puts "SFDC opportunity ids: #{ sfdc_ids_mapping.keys }"
+      unless sfdc_ids_mapping.empty? 
+        query_statement = "SELECT Id, " + sfdc_fields_mapping.keys.join(", ") + " FROM Opportunity WHERE Id IN ('" + sfdc_ids_mapping.keys.join("', '") + "')"
+        query_result = SalesforceService.query_salesforce(client, query_statement)
+        # puts "*** query: \"#{query_statement}\" ***"
+        # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
+
+        if query_result[:status] == "SUCCESS"
+          changed_values_hash_list = []
+          query_result[:result].each do |r|
+            # CS_UUID = sfdc_ids_mapping[r.Id] , SFDC_Id = r.Id
+            sfdc_fields_mapping.each do |k,v|
+              # k (SFDC field name) , v (CS field name), r[k] (SFDC field value)
+              if r[k].is_a?(Restforce::Mash) # the value is a Salesforce sObject
+                sfdc_val = []
+                r[k].each { |k,v| sfdc_val.push(v.to_s) if v.present? }
+                sfdc_val = sfdc_val.join(", ")
+              else
+                sfdc_val = r[k]
+              end
+              changed_values_hash_list.push({ sfdc_ids_mapping[r.Id] => { v => sfdc_val } })
+            end
+          end
+          # puts "changed_values_hash_list: #{ changed_values_hash_list }"
+
+          changed_values_hash_list.each { |h| Project.update(h.keys, h.values) }
+          result = { status: "SUCCESS" }
+        else
+          result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " query_statement=" + query_statement }
+        end
+      else  # No mapped Streams -> SFDC Opportunities
+          result = { status: "SUCCESS" }  
+      end
+    else
+      if client.nil?
+        puts "** ContextSmith error: Parameter 'client' passed to Project.update_fields_from_sfdc is invalid!"
+        result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
+      else
+        # Ignores if other parameters were not passed properly to update_fields_from_sfdc
+        result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
+      end
+    end
+
+    result
+  end
+
+  # Updates all custom CS Stream fields mapped to SFDC Opportunity fields for a single CS Stream/SFDC Opportunity pair.
   # Parameters:   client - connection to Salesforce
   #               project_id - CS project/stream id          
   #               sfdc_opportunity_id - SFDC opportunity sObjectId
@@ -766,7 +832,7 @@ class Project < ActiveRecord::Base
   #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
-  def self.load_salesforce_fields(client, project_id, sfdc_opportunity_id, stream_custom_fields)
+  def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , stream_custom_fields: )
     result = nil
 
     unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || stream_custom_fields.blank?)
@@ -790,7 +856,7 @@ class Project < ActiveRecord::Base
     else
       if client.nil?
         puts "** ContextSmith error: Parameter 'client' passed to Project.load_salesforce_fields is invalid!"
-        result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
+        result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
       else
         # Ignores if other parameters were not passed properly to load_salesforce_fields
         result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }

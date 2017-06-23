@@ -297,7 +297,7 @@ span.best_in_place.btn {
 .social-comment .delete-comment,
 .task-name .edit-task,
 .task-desc .edit-task,
-.contact-info .edit-contact {
+.editable-field .editable-field-activator {
   color: transparent;
 }
 .project-people .member:hover .delete-member,
@@ -309,7 +309,7 @@ span.best_in_place.btn {
 .task-desc { font-weight: 300; }
 .task-name:hover .edit-task,
 .task-desc:hover .edit-task,
-.contact-info:hover .edit-contact {
+.editable-field:hover .editable-field-activator {
   color: #999;
 }
 #projects-table th, #accounts-table th {
@@ -687,4 +687,10 @@ a.suggested-action:hover, a.suggested-action:focus {
 
 .top-navigation .nav.nav-tabs > li.active {
   border-bottom: none;
+}
+
+.hr-divider {
+  padding: 0.5em 0;
+  margin-bottom: 1.5em;
+  border-bottom: 1px dotted grey;
 }

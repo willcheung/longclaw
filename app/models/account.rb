@@ -52,6 +52,7 @@ class Account < ActiveRecord::Base
 
     STATUS = %w(Active Inactive Dead)
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
+    MAPPABLE_FIELDS_META = [ "name", "description", "website", "phone", "address", "notes", "domain", "category", "revenue_potential" ]
 
     def self.create_from_clusters(external_members, owner_id, organization_id)
         domain_grouped_external_members = external_members.group_by { |x| get_domain(x.address) }
@@ -109,7 +110,72 @@ class Account < ActiveRecord::Base
         end
     end
 
-    # Updates all mapped custom fields of a single SFDC account -> CS account
+    # Updates all (standard) CS Account fields from all mapped SFDC Account fields.
+    # Parameters:   client - connection to Salesforce
+    #               accounts - collection of CS Accounts to process
+    #               sfdc_fields_mapping - A list of [Mapped SFDC Account field name, CS Account field name] pairs
+    # Returns:   A hash that represents the execution status/result. Consists of:
+    #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
+    #             result - if status == "ERROR", contains the title of the error
+    #             detail - if status == "ERROR", contains the details of the error
+    def self.update_fields_from_sfdc(client: , accounts: , sfdc_fields_mapping: )
+        result = nil
+
+        unless (client.nil? || accounts.nil? || sfdc_fields_mapping.blank?)
+            sfdc_fields_mapping = sfdc_fields_mapping.to_h
+            sfdc_ids_mapping = accounts.collect { |a| a.salesforce_accounts.first.nil? ? nil : [a.salesforce_accounts.first.salesforce_account_id, a.id] }.compact  # a list of [linked SFDC sObject Id, CS Account id] pairs
+            sfdc_ids_mapping = sfdc_ids_mapping.to_h
+
+            # puts "sfdc_fields_mapping: #{ sfdc_fields_mapping }"
+            # puts "SFDC account field names: #{ sfdc_fields_mapping.keys }"
+            # puts "sfdc_ids_mapping: #{ sfdc_ids_mapping }"
+            # puts "SFDC account ids: #{ sfdc_ids_mapping.keys }"
+            unless sfdc_ids_mapping.empty? 
+                query_statement = "SELECT Id, " + sfdc_fields_mapping.keys.join(", ") + " FROM Account WHERE Id IN ('" + sfdc_ids_mapping.keys.join("', '") + "')"
+                query_result = SalesforceService.query_salesforce(client, query_statement)
+                # puts "*** query: \"#{query_statement}\" ***"
+                # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
+
+                if query_result[:status] == "SUCCESS"
+                    changed_values_hash_list = []
+                    query_result[:result].each do |r|
+                        # CS_UUID = sfdc_ids_mapping[r.Id] , SFDC_Id = r.Id
+                        sfdc_fields_mapping.each do |k,v|
+                            # k (SFDC field name) , v (CS field name), r[k] (SFDC field value)
+                            if r[k].is_a?(Restforce::Mash) # the value is a Salesforce sObject
+                                sfdc_val = []
+                                r[k].each { |k,v| sfdc_val.push(v.to_s) if v.present? }
+                                sfdc_val = sfdc_val.join(", ")
+                            else
+                                sfdc_val = r[k]
+                            end
+                            changed_values_hash_list.push({ sfdc_ids_mapping[r.Id] => { v => sfdc_val } })
+                        end
+                    end
+                    puts "changed_values_hash_list: #{ changed_values_hash_list }"
+
+                    changed_values_hash_list.each { |h| Account.update(h.keys, h.values) }
+                    result = { status: "SUCCESS" }
+                else
+                    result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " query_statement=" + query_statement }
+                end
+            else  # No mapped Accounts -> SFDC Accounts
+                result = { status: "SUCCESS" }  
+            end
+        else
+            if client.nil?
+                puts "** ContextSmith error: Parameter 'client' passed to Account.update_fields_from_sfdc is invalid!"
+                result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
+            else
+                # Ignores if other parameters were not passed properly to update_fields_from_sfdc
+                result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
+            end
+        end
+
+        result
+    end
+
+    # Updates all custom CS Account fields mapped to SFDC account fields for a single CS account/SFDC account pair.
     # Parameters:   client - connection to Salesforce
     #               account_id - CS account id          
     #               sfdc_account_id - SFDC account sObjectId
@@ -118,7 +184,7 @@ class Account < ActiveRecord::Base
     #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
     #             result - if status == "ERROR", contains the title of the error
     #             detail - if status == "ERROR", contains the details of the error
-    def self.load_salesforce_fields(client, account_id, sfdc_account_id, account_custom_fields)
+    def self.load_salesforce_fields(client: , account_id: , sfdc_account_id: , account_custom_fields: )
         result = nil
 
         unless (client.nil? || account_id.nil? || sfdc_account_id.nil? || account_custom_fields.blank?)
@@ -142,7 +208,7 @@ class Account < ActiveRecord::Base
         else
             if client.nil?
                 puts "** ContextSmith error: Parameter 'client' passed to Account.load_salesforce_fields is invalid!"
-                result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
+                result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
             else
                 # Ignores if other parameters were not passed properly to load_salesforce_fields
                 result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }

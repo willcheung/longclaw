@@ -19,6 +19,7 @@ class Organization < ActiveRecord::Base
   has_many :oauth_users, foreign_key: "organization_id", dependent: :destroy
   has_many :salesforce_accounts, foreign_key: "contextsmith_organization_id", dependent: :destroy
   has_many :risk_settings, as: :level, dependent: :destroy
+  has_many :entity_fields_metadatum, dependent: :destroy
   has_many :custom_fields_metadatum, dependent: :destroy
   has_many :custom_fields, through: :custom_fields_metadatum
   has_many :custom_lists_metadatum, dependent: :destroy
@@ -29,7 +30,7 @@ class Organization < ActiveRecord::Base
 
   validates :domain, uniqueness: true
 
-  # Returns new_org if there's no existing one.  If there is, return existing one.
+  # Returns a new Organization if there's no existing one.  If there is, return the existing one.
   def self.create_or_update_user_organization(domain, user)
     existing_org = Organization.find_by_domain(domain)
 
@@ -39,9 +40,10 @@ class Organization < ActiveRecord::Base
       org_info = get_org_info(domain)
       new_org = Organization.create(name: org_info[0], domain: domain, owner_id: user.id)
 
-      # Create default risk settings and system Custom Lists for the brand new org
+      # Create default risk settings, system Custom Lists, and CS Entity fields metadata for the brand new org
       RiskSetting.create_default_for(new_org)
       CustomListsMetadatum.create_default_for(new_org)
+      EntityFieldsMetadatum.create_default_for(new_org)
       return new_org
     end
   end
