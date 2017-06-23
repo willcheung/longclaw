@@ -1,5 +1,6 @@
 class SessionsController < Devise::SessionsController
 
+  # SessionsController overridden here to handle login errors for Exchange users only
   def new
     # flash[:alert] contains errors when failing oathkeeper_authenticatable strategy
     auth_error = flash[:alert]
@@ -24,6 +25,7 @@ class SessionsController < Devise::SessionsController
     super
   end
   
+  # SessionsController overridden here to create new users for Exchange login only, Google login users handled in OmniauthCallbacksController
   def create      
     resource = warden.authenticate!(auth_options)
     resource = resource_class.update_for_oathkeeper_auth(resource, sign_in_params, (cookies[:timezone] || 'UTC'))
