@@ -113,6 +113,7 @@ class SettingsController < ApplicationController
 
 	def salesforce_activities
 		if current_user.role == User::ROLE[:Admin]
+			@CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = Activity::CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX
 			@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active projects because "admin" role can see everything
 
 			# Load previous queries if it was saved
@@ -138,24 +139,34 @@ class SettingsController < ApplicationController
 
 	def salesforce_fields
 		if current_user.role == User::ROLE[:Admin]
-			# We don't save SFDC custom fields (i.e., in PG), so we must query Salesforce for these every time.
-			cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
-			@cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
-			@cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+      @user_roles = User::ROLE.map { |r| [r[1],r[1]] }
 
+      if params[:type] == "standard"
+        cs_entity_fields = current_user.organization.entity_fields_metadatum.order(:name)
+        @cs_account_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
+        @cs_stream_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Stream])
+        @cs_contact_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Contact])
+      elsif params[:type] == "custom"
+        cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
+        @cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
+        @cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+      end
+
+      # We don't save SFDC custom fields (i.e., in our backend / PG), so we query SFDC every time!
 			if (params[:sf_custom_fields_only] == "true")
-				@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, true)
+        @sf_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id, custom_fields_only: true)
 			else
-				@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
+        @sf_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id)
 			end
 
 			if @sf_fields.nil?  # SFDC connection error
 				@salesforce_connection_error = true
 			else
 				# add ("nil") options to remove mapping 
-				@sf_fields[:sf_account_fields] << ["","(none)"] 
-				@sf_fields[:sf_opportunity_fields] << ["","(none)"] 
-				#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
+				@sf_fields[:sf_account_fields] << ["","(Unmapped)"] 
+				@sf_fields[:sf_opportunity_fields] << ["","(Unmapped)"] 
+				@sf_fields[:sf_contact_fields] << ["","(Unmapped)"] 
+				#puts "******** @sf_fields *** #{@sf_fields} *******"
 			end
 		end
 	end

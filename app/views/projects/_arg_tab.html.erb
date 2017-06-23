@@ -603,16 +603,16 @@
                                 <tr>
                                     <% if !pm.contact.nil? %>
                                         <% contact = pm.contact %>
-                                        <td class="contact-info"><%= contact.first_name + ' ' + contact.last_name %></td>
-                                        <td class="contact-info"><%= contact.title %></td>
-                                        <td class="contact-info"><%= contact.buyer_role %></td>
+                                        <td class="editable-field"><%= contact.first_name + ' ' + contact.last_name %></td>
+                                        <td class="editable-field"><%= contact.title %></td>
+                                        <td class="editable-field"><%= contact.buyer_role %></td>
                                         <!-- hardcoded data!!! -->
-                                        <td class="contact-info">Will Cheung</td>
-                                        <td class="contact-info"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
-                                        <td class="contact-info"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td class="editable-field">Will Cheung</td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
                                         <td style="text-align: center;"><%= rand(0..5) %></td>
-                                        <td class="contact-info"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
-                                        <td class="contact-info"><% if pm.contact.first_name == "Nigel" or pm.contact.first_name == "Tony" %><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %><% end %></td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td class="editable-field"><% if pm.contact.first_name == "Nigel" or pm.contact.first_name == "Tony" %><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %><% end %></td>
                                     <% end %>
                                 </tr>
                             <% end %>
