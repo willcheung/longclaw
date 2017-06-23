@@ -67,7 +67,7 @@ class Account < ActiveRecord::Base
             grouped_external_members[primary_domain] += person_array
         end
         existing_accounts = Account.where(domain: grouped_external_members.keys, organization_id: organization_id).includes(:contacts)
-        existing_domains = existing_accounts.map(&:domain)
+        existing_domains = existing_accounts.pluck(:domain)
 
         # Create missing accounts
         (grouped_external_members.keys - existing_domains).each do |domain|
@@ -95,7 +95,7 @@ class Account < ActiveRecord::Base
 
         # Create contacts for existing accounts
         existing_accounts.each do |a|
-            existing_emails = a.contacts.map(&:email)
+            existing_emails = a.contacts.pluck(:email)
             external_emails = grouped_external_members[a.domain].map(&:address)
             missing_emails = external_emails - existing_emails
 

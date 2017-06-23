@@ -673,9 +673,6 @@ class Project < ActiveRecord::Base
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
 
     project_domains.each do |p|
-      external_members, internal_members = get_project_members(data, p)
-      puts "Project domain: #{p}"
-      puts "Found account match: #{accounts.find {|a| a.domain == get_domain_from_subdomain(p)}.name}"
       p_account = accounts.find { |a| a.domain == p }
       project = Project.new(name: p_account.name,
                            status: "Active",
@@ -691,6 +688,7 @@ class Project < ActiveRecord::Base
       if project.save
         # Project members
         # assuming contacts and users have already been inserted, we just need to link them
+        external_members, internal_members = get_project_members(data, p)
         contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
         users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
 

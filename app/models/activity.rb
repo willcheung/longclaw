@@ -67,7 +67,6 @@ class Activity < ActiveRecord::Base
   CS_ACTIVITY_SFDC_EXPORT_PREFIX = "ContextSmith —"
   CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
 
-  #
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
     val = []
@@ -79,9 +78,7 @@ class Activity < ActiveRecord::Base
         is_public_flag = true
         c.messages.last.isPrivate ? is_public_flag = false : true  # check if last message is private
 
-
         # if last message is a private message (one to one email), check user settings
-
         if is_public_flag==false
           sender = User.find_by(email: c.messages.last.from[0]['address'])
           if !sender.nil? and !sender.blank?
