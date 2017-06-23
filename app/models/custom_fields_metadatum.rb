@@ -7,7 +7,7 @@
 #  entity_type              :string           not null
 #  name                     :string           not null
 #  data_type                :string           not null
-#  update_permission_level  :string           not null
+#  update_permission_role   :string           not null
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  default_value            :string
@@ -30,6 +30,7 @@ class CustomFieldsMetadatum < ActiveRecord::Base
 	# To do: use 'default' value column
 
 	validates :name, presence: true, length: { maximum: 30 }
+	validates :update_permission_role, presence: true   # Currently unused
 
 	ENTITY_TYPE = { Account: 'Account', Project: 'Stream' }
 	DATA_TYPE = { Text: 'Text', Number: 'Number', List: 'List' } # To do: add Lookup("User"), Date/Time, Checkbox
