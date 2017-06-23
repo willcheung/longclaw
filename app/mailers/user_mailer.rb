@@ -85,4 +85,10 @@ class UserMailer < ApplicationMailer
     track user: @user # ahoy_email tracker
     mail(to: @user.email, subject: "#{get_full_name(assigner)} assigned a task to you: #{@task.name}")
   end
+
+  def update_cs_team(user)
+    @user = user
+    track user: @user # ahoy_email tracker
+    mail(to:"support@contextsmith.com", subject: "#{get_full_name(@user)} signed up to ContextSmith")
+  end
 end
