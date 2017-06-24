@@ -1,3 +1,10 @@
+Devise.add_module(:oathkeeper_authenticatable, {
+    strategy: true,
+    controller: :sessions,
+    model: 'devise/models/oathkeeper_authenticatable', #<- same string you'd use to `require` this model
+    route: :session,
+  })
+
 # Use this hook to configure devise mailer, warden hooks and so forth.
 # Many of these configuration options can be set straight in your model.
 Devise.setup do |config|
@@ -52,7 +59,7 @@ Devise.setup do |config|
   # It can be set to an array that will enable params authentication only for the
   # given strategies, for example, `config.params_authenticatable = [:database]` will
   # enable it only for database (email + password) authentication.
-  # config.params_authenticatable = true
+  config.params_authenticatable = [ :oathkeeper ]
 
   # Tell if authentication through HTTP Auth is enabled. False by default.
   # It can be set to an array that will enable http authentication only for the
@@ -94,7 +101,7 @@ Devise.setup do |config|
   # a value less than 10 in other environments. Note that, for bcrypt (the default
   # encryptor), the cost increases exponentially with the number of stretches (e.g.
   # a value of 20 is already extremely slow: approx. 60 seconds for 1 calculation).
-  config.stretches = Rails.env.test? ? 1 : 10
+  # config.stretches = Rails.env.test? ? 1 : 10
 
   # Setup a pepper to generate the encrypted password.
   # config.pepper = '483b00f000fd80575609d688e3cf612413111a997ad16acd3f1228b5a48dab1b7d389ae6f9b774dcca87007c10d2c055610edb76dab3bdc38d74dc2ae1846ed9'
@@ -244,20 +251,20 @@ Devise.setup do |config|
             'profile'],
     skip_jwt: true
   }
-  Devise.setup do |config|
-    config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
-    config.omniauth :salesforce, ENV['salesforce_client_id'], ENV['salesforce_client_secret']
-    config.omniauth :salesforce_sandbox, ENV['salesforce_sandbox_client_id'], ENV['salesforce_sandbox_client_secret']
-  end
+  # Devise.setup do |config|
+  config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
+  config.omniauth :salesforce, ENV['salesforce_client_id'], ENV['salesforce_client_secret']
+  config.omniauth :salesforce_sandbox, ENV['salesforce_sandbox_client_id'], ENV['salesforce_sandbox_client_secret']
+  # end
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or
   # change the failure app, you can configure them inside the config.warden block.
   #
-  # config.warden do |manager|
+  config.warden do |manager|
   #   manager.intercept_401 = false
-  #   manager.default_strategies(scope: :user).unshift :some_external_strategy
-  # end
+    manager.default_strategies(scope: :user).unshift :oathkeeper_authenticatable
+  end
 
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine

@@ -4,13 +4,13 @@ Longclaw::Application.routes.draw do
     get "extension/account" => "extension#new"
   end
 
-  devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
+  devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
   # You can have the root of your site routed with "root"
 
   authenticate :user do
     # Rails 4 users must specify the 'as' option to give it a unique name
     root :to => "home#index", :as => "authenticated_root"
-    get "home/daily_summary"
+    # get "home/daily_summary"
 
     resources :accounts
     post "/account_bulk" => 'accounts#bulk'
@@ -89,7 +89,7 @@ Longclaw::Application.routes.draw do
     resources :organizations
 
     scope "search", controller: :search, as: 'search' do
-      get "results"
+      # get "results"
       get "autocomplete_project_name"
       get "autocomplete_project_subs"
       get "autocomplete_project_member"
@@ -120,7 +120,7 @@ Longclaw::Application.routes.draw do
       get 'account'
       get 'alerts_tasks'
       get 'contacts'
-      get 'metrics'
+      # get 'metrics'
       get 'no_account/:domain', to: 'extension#no_account', as: :no_account
       get 'private_domain'
       get 'project_error'
