@@ -68,14 +68,14 @@
 </div>
 
 <script>
-    function handle_SF_Custom_Fields_Only_filter_toggle_click(checkbox) {
+    function handle_SFDC_Custom_Fields_Only_filter_toggle_click(checkbox) {
         $("#filter_toggle").css("pointer-events", "none");  //disable clicks on filter toggle switch
 
         document.getElementById('filter_toggle_refresh').style.display = "inline";  // show fa-refresh icon
         document.getElementById('filter_toggle_refresh').className = document.getElementById('filter_toggle_refresh').className + " fa-spin";
 
         if (checkbox.checked)
-            window.location.replace("<%= settings_salesforce_fields_path(params[:type]) %>?sf_custom_fields_only=true");
+            window.location.replace("<%= settings_salesforce_fields_path(params[:type]) %>?sfdc_custom_fields_only=true");
         else
             window.location.replace("<%= settings_salesforce_fields_path(params[:type]) %>");
     };
