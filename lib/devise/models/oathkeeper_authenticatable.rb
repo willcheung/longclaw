@@ -43,10 +43,17 @@ module Devise
         base_url = ENV["csback_base_url"] + "/newsfeed/auth"
         puts "Requesting authorization from " + base_url
         body = { kind: "exchange", email: self.email, password: password }
-        # if hostname is submitted with form and is not an empty string, use it
+        # if hostname is submitted with form and is not an empty string, check whether it is full url or a partial url
+        # if full url was submitted as hostname, use it
+        # if partial url was submitted as hostname, try to extract just the hostname part and build the expected url based on default Exchange url format
         # else if hostname was saved with user in column oauth_provider_uid and not submitted with form, use it
-        # otherwise, either a registering a new user or existing user doesn't know their hostname, autodiscover
+        # otherwise, either registering a new user or existing user doesn't know their hostname, autodiscover
         if hostname.present?
+          uri = Addressable::URI.heuristic_parse(hostname)
+          if uri.scheme.nil? || uri.scheme != hostname[0...uri.scheme.length]
+            hostname = uri.hostname if uri.hostname.present?
+            hostname = "https://#{hostname}/EWS/Exchange.asmx"
+          end
           body.merge!({ url: hostname })
           self.hostname = hostname
         elsif self.oauth_provider_uid.present? && hostname.nil?
