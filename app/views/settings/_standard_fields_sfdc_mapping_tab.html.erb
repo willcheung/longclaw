@@ -49,7 +49,7 @@
       <% else %>
         <% @cs_account_fields.each.with_index do |f,i| %>
           <tr>
-            <td><%= f.name %></td>
+            <td><%= f.name.gsub('_', ' ').capitalize %></td>
             <!-- <td class="editable-field"><%= best_in_place f, :default_value, :as => 'input', :place_holder => '(none)', :activator => "#field-#{f.id}-default_value-activator" %><i id="field-<%= f.id %>-default_value-activator" class="fa fa-pencil bip_activator m-l-xs"></td> --> <!-- editable-field-activator -->
             <td> <!-- salesforce_field_name -->
               <%= best_in_place f, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_account_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-account-field-name', :style => "color:#DDD;", :f_id => "#{f.id}" %>
@@ -106,7 +106,7 @@
       <% else %>
         <% @cs_stream_fields.each.with_index do |f,i| %>
           <tr>
-            <td><%= f.name %></td>
+            <td><%= f.name.gsub('_', ' ').capitalize %></td>
             <!-- <td class="editable-field"><%= best_in_place f, :default_value, :as => 'input', :place_holder => '(none)', :activator => "#field-#{f.id}-default_value-activator" %><i id="field-<%= f.id %>-default_value-activator" class="fa fa-pencil bip_activator m-l-xs"></td> --> <!-- editable-field-activator -->
             <td> <!-- salesforce_field_name -->
               <%= best_in_place f, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_opportunity_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-opportunity-field-name', :style => "color:#DDD;", :f_id => "#{f.id}" %>
@@ -163,7 +163,7 @@
       <% else %>
         <% @cs_contact_fields.each.with_index do |f,i| %>
           <tr>
-            <td><%= f.name %></td>
+            <td><%= f.name.gsub('_', ' ').capitalize %></td>
             <!-- <td class="editable-field"><%= best_in_place f, :default_value, :as => 'input', :place_holder => '(none)', :activator => "#field-#{f.id}-default_value-activator" %><i id="field-<%= f.id %>-default_value-activator" class="fa fa-pencil bip_activator m-l-xs"></td> --> <!-- editable-field-activator --> 
             <td> <!-- salesforce_field_name -->
               <%= best_in_place f, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_contact_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-contact-field-name', :style => "color:#DDD;", :f_id => "#{f.id}" %>
