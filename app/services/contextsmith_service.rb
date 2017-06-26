@@ -85,7 +85,8 @@ class ContextsmithService
   end
 
   def self.load_from_backend(sources, ex_clusters, url)
-    return [] if sources.compact!.empty?
+    sources.compact!
+    return [] if sources.empty?
 
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
