@@ -127,7 +127,7 @@ class OnboardingController < ApplicationController
         # Send welcome email with confirm_projects link
         num_of_projects = Project.where(created_by: user.id, is_confirmed: false).includes(:users, :contacts, :account).count(:projects)
         puts("Sending onboarding email to #{user.email}")
-        url = Rails.env.development? ? "http://#{request.host}:3000/onboarding/confirm_projects": "https://#{request.host}/onboarding/confirm_projects"
+        url = ENV["BASE_URL"] + "/onboarding/confirm_projects"
         UserMailer.welcome_email(user, num_of_projects, url).deliver_later
         
         format.json { render json: 'E-mail sent to ' + user.email, status: 200 }
