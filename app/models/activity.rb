@@ -373,7 +373,7 @@ class Activity < ActiveRecord::Base
       # puts "----> sObject_fields:\n #{sObject_fields}\n"
 
       # Finally, send information in hashes to be created as (completed) Tasks in SFDC.
-      update_result = SalesforceService.update_salesforce(client: client, sObject_meta: sObject_meta, update_type: "activity", sObject_fields: sObject_fields)
+      update_result = SalesforceService.update_salesforce(client: client, update_type: "activity", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
       if update_result[:status] == "SUCCESS"  # unless failed Salesforce query
         puts "-> a SFDC Task was created from a ContextSmith activity. New Task Id='#{ update_result[:result] }'."

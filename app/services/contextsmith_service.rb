@@ -78,15 +78,15 @@ class ContextsmithService
       sources = [{ token: "test", email: "indifferenzetester@gmail.com", kind: "gmail" }]
     else
       sources = project.users.registered.not_disabled.allow_refresh_inbox.map { |u| user_auth_params(u) }
-      sources.compact!
     end
-    return [] if sources.empty?
     ex_clusters = [project.contacts.pluck(:email)]
 
     load_from_backend(sources, ex_clusters, url) { |data| yield data }
   end
 
   def self.load_from_backend(sources, ex_clusters, url)
+    return [] if sources.compact!.empty?
+
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
     final_url = url + in_domain
@@ -128,11 +128,13 @@ class ContextsmithService
     case user.oauth_provider
     when User::AUTH_TYPE[:Gmail]
       success = user.token_expired? ? user.refresh_token! : true
-      return nil unless success
+      unless success
+        puts "Warning: Gmail token refresh failed for: #{ user.first_name } #{ user.last_name } #{ user.email } (Organization=#{ user.organization.name }, Role=#{ user.role.nil? ? "nil" : user.role }, Onboarding Step=#{ user.onboarding_step.nil? ? "nil" : user.onboarding_step }, Last sign-in=#{ user.last_sign_in_at.nil? ? "none" : user.last_sign_in_at })."
+        return nil 
+      end
       { token: user.oauth_access_token, email: user.email, kind: "gmail" }
     when User::AUTH_TYPE[:Exchange]
       { password: user.password, email: user.email, kind: "exchange", url: user.oauth_provider_uid }
     end
   end
-
 end
