@@ -13,7 +13,7 @@
   <%= f.input :email, :required => true %>
   <%= f.input :password, :required => true %>
   <% if @hostname %>
-  <%= f.input :hostname, :placeholder => 'e.g. https://outlook.office365.com/EWS/Exchange.asmx' %>
+  <%= f.input :hostname, :label => 'Hostname/URL', :placeholder => 'e.g. outlook.office365.com' %>
   <% end %>
 
   <%= f.button :button, button_text, id: "outlook-login-submit", class: 'btn btn-primary' %>
