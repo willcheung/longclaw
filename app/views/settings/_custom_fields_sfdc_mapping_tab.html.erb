@@ -1,9 +1,9 @@
 <div id="filter_toggle" style="padding:0.5em 0 0;margin-bottom:1em;border-bottom:1px dotted grey;">
   <label class="filter-switch">
-    <input type="checkbox" onclick="javascript:handle_SF_Custom_Fields_Only_filter_toggle_click(this);" <% if params[:sf_custom_fields_only] == "true" %> checked <% end %>
+    <input type="checkbox" onclick="javascript:handle_SFDC_Custom_Fields_Only_filter_toggle_click(this);" <% if params[:sfdc_custom_fields_only] == "true" %> checked <% end %>
     />
     <div class="filter-slider round"></div>
-    <span style="font-weight:normal;position:absolute;top:3px;left:48px;width:256px">Only list custom Salesforce fields <% if params[:sf_custom_fields_only] == "true" %>(filter on)<% else %>(filter off)<% end %></span>
+    <span style="font-weight:normal;position:absolute;top:3px;left:48px;width:256px">Only list custom Salesforce fields <% if params[:sfdc_custom_fields_only] == "true" %>(filter on)<% else %>(filter off)<% end %></span>
     <i id="filter_toggle_refresh" class='fa fa-refresh' style='display:none;font-weight:normal;position:absolute;top:5px;left:304px'></i>
   </label>
 </div>
@@ -43,8 +43,8 @@
             <td><%= cf.name %></td>
             <td><%= cf.data_type %></td>
             <td> <!-- salesforce_field_name -->
-              <%= best_in_place cf, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_account_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-account-field-name', :style => "color:#DDD;", :cf_id => "#{cf.id}" %>
-              <% if !cf.salesforce_field.nil? and @sf_fields[:sf_account_fields_metadata][cf.salesforce_field].nil? %>
+              <%= best_in_place cf, :salesforce_field, :as => :select, :collection => @sfdc_fields[:sfdc_account_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-account-field-name', :style => "color:#DDD;", :cf_id => "#{cf.id}" %>
+              <% if !cf.salesforce_field.nil? and @sfdc_fields[:sfdc_account_fields_metadata][cf.salesforce_field].nil? %>
                 <i id="exclamation-triangle-warning-cfid<%=cf.id%>" style="color:#3d8dc5" class="fa fa-exclamation-triangle text-primary" data-toggle="tooltip" data-placement="right" data-original-title='Invalid Salesforce field mapping detected! Please pick a valid field from the list.'></i>
               <% end %>
             </td>
@@ -93,14 +93,14 @@
             <td><%= cf.name %></td>
             <td><%= cf.data_type %></td>
             <td> <!-- salesforce_field_name -->
-              <%= best_in_place cf, :salesforce_field, :as => :select, :collection => @sf_fields[:sf_opportunity_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-opportunity-field-name', :style => "color:#DDD;", :cf_id => "#{cf.id}" %>
-              <% if !cf.salesforce_field.nil? and @sf_fields[:sf_opportunity_fields_metadata][cf.salesforce_field].nil? %>
+              <%= best_in_place cf, :salesforce_field, :as => :select, :collection => @sfdc_fields[:sfdc_opportunity_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-opportunity-field-name', :style => "color:#DDD;", :cf_id => "#{cf.id}" %>
+              <% if !cf.salesforce_field.nil? and @sfdc_fields[:sfdc_opportunity_fields_metadata][cf.salesforce_field].nil? %>
                 <i id="exclamation-triangle-warning-cfid<%=cf.id%>" style="color:#3d8dc5" class="fa fa-exclamation-triangle text-primary" data-toggle="tooltip" data-placement="right" data-original-title='Invalid Salesforce field mapping detected! Please pick a valid field from the list.'></i>
               <% end %>
             </td>
             <td>
-              <!--< % if not @sf_fields[:sf_opportunity_fields_metadata][cf.salesforce_field].nil? %>
-                <span id="salesforce-field-datatype-cfid< %=cf.id%>">< %= @sf_fields[:sf_opportunity_fields_metadata][cf.salesforce_field]["type"] %></span>
+              <!--< % if not @sfdc_fields[:sfdc_opportunity_fields_metadata][cf.salesforce_field].nil? %>
+                <span id="salesforce-field-datatype-cfid< %=cf.id%>">< %= @sfdc_fields[:sfdc_opportunity_fields_metadata][cf.salesforce_field]["type"] %></span>
               < % end %>-->
             </td>
           </tr>

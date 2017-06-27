@@ -846,8 +846,8 @@ class Project < ActiveRecord::Base
         sObj = query_result[:result].first
         stream_custom_fields.each do |cf|
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
-          #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
-          #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+          #print "----> CS_fieldname=\"", cf.name, "\" SFDC_fieldname=\"", cf.salesforce_field, "\"\n"
+          #print "   .. CS_fieldvalue=\"", csfield.value, "\" SFDC_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
           CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
         end
         result = { status: "SUCCESS" }

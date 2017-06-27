@@ -7,16 +7,17 @@
                   <div style="color: #222222; font-family: 'Helvetica', 'Arial', sans-serif; font-weight: normal; text-align: left; line-height: 19px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="left">
                     <strong>New User Information:</strong>
                     <br/>
-                    First: <%= @user.first_name %>
-                    <br/>
-                    Last: <%= @user.last_name %>
-                    <br/>
-                    Email: <%= @user.email %>
-                    <br/>
-                    TimeStamp: <%= Time.now.getutc%>
+                    First: <%= @user.first_name %><br/>
+                    Last: <%= @user.last_name %><br/>
+                    E-mail: <%= @user.email %><br/>
+                    Organization: <%= @user.organization.name %><br/>
+                    Title: <%= @user.title.nil? ? "None" : @user.title %><br/>
+                    Role: <%= @user.role.nil? ? "None" : @user.role %><br/>
+                    Created At: <%= @user.created_at %><br/>
+                    TimeStamp: <%= Time.now.getutc %><br/>
                     <br/>
                     Best,<br/>
-                    Mr.Smith
+                    Mr. Smith
                   </div>
               </td>
               <td class="expander" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; visibility: hidden; width: 0px; color: #222222;font-weight: normal; line-height: 19px; font-size: 14px; margin: 0; padding: 0;" align="left" valign="top"></td>
