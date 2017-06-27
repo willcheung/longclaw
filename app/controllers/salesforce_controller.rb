@@ -2,7 +2,7 @@ class SalesforceController < ApplicationController
   layout "empty", only: [:index]
 
   # For accessing Streams#show page+tabs from a Salesforce Visualforce iframe page
-  # e.g., the route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_stream_id> ("&actiontype=" is optional)
+  # The route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_stream_id> ("&actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
   def index
     @category_param = []
     @filter_email = []
