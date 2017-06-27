@@ -36,6 +36,7 @@
 #  mark_private           :boolean          default(FALSE), not null
 #  role                   :string
 #  refresh_inbox          :boolean          default(TRUE), not null
+#  encrypted_password_iv  :string
 #
 # Indexes
 #

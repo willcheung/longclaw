@@ -791,7 +791,7 @@ class Project < ActiveRecord::Base
             # CS_UUID = sfdc_ids_mapping[r.Id] , SFDC_Id = r.Id
             sfdc_fields_mapping.each do |k,v|
               # k (SFDC field name) , v (CS field name), r[k] (SFDC field value)
-              if r[k].is_a?(Restforce::Mash) # the value is a Salesforce sObject
+              if r[k].is_a?(Restforce::Mash) # the value is a Salesforce sObject, so try to resolve each attribute of the sObject into a String of the fields delimited by commas
                 sfdc_val = []
                 r[k].each { |k,v| sfdc_val.push(v.to_s) if v.present? }
                 sfdc_val = sfdc_val.join(", ")
@@ -848,7 +848,13 @@ class Project < ActiveRecord::Base
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
           #print "----> CS_fieldname=\"", cf.name, "\" SFDC_fieldname=\"", cf.salesforce_field, "\"\n"
           #print "   .. CS_fieldvalue=\"", csfield.value, "\" SFDC_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
-          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
+          new_value = sObj[cf.salesforce_field]
+          if new_value.is_a?(Restforce::Mash) # the value is a Salesforce sObject, so try to resolve each attribute of the sObject into a String of the fields delimited by commas
+            sfdc_val = []
+            new_value.each { |k,v| sfdc_val.push(v.to_s) if v.present? }
+            new_value = sfdc_val.join(", ")
+          end
+          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value)
         end
         result = { status: "SUCCESS" }
       else
