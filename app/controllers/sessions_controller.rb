@@ -6,11 +6,12 @@ class SessionsController < Devise::SessionsController
     auth_error = flash[:alert]
     if auth_error.present? && auth_error != 'You need to sign in or sign up before continuing.'
       if auth_error[0..18] == 'The request failed.' # hostname was provided but auth request unsuccessful
-        if auth_error[-4..-1] == 'null' || auth_error[-14..-1] == '(404)Not found' # hostname was empty string or email+hostname was not found
+        if auth_error[-17..-1] == '(401)Unauthorized' # email+hostname was found, but password incorrect
+          @error = 'The password you entered is incorrect. Try again.'
+          @hostname = true if params[:user][:hostname]
+        else # if auth_error[-4..-1] == 'null' || auth_error[-14..-1] == '(404)Not found' # hostname was empty string or email+hostname was not found
           @error = 'Error: User could not be resolved with current hostname. Please input a new hostname or leave hostname blank to try autodiscover.'
           @hostname = true
-        elsif auth_error[-17..-1] == '(401)Unauthorized' # email+hostname was found, but password incorrect
-          @error = 'The password you entered is incorrect. Try again.'
         end
       elsif auth_error == 'Invalid credentials' # hostname was autodiscovered, but password incorrect
         @error = 'The password you entered is incorrect. Try again.'
@@ -47,6 +48,13 @@ class SessionsController < Devise::SessionsController
       ahoy.track("Error logging in", message: "Can't persist user!")
       redirect_to new_user_registration_path
     end
+  end
+
+  protected
+
+  def sign_in_params
+    devise_parameter_sanitizer.for(:sign_in) << :hostname
+    super
   end
 
 end
