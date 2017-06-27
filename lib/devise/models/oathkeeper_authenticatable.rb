@@ -47,7 +47,7 @@ module Devise
         # if full url was submitted as hostname, use it
         # if partial url was submitted as hostname, try to extract just the hostname part and build the expected url based on default Exchange url format
         # else if hostname was saved with user in column oauth_provider_uid and not submitted with form, use it
-        # otherwise, either registering a new user or existing user doesn't know their hostname, autodiscover
+        # otherwise, either registering a new user or existing user doesn't know their hostname, don't include url in request body to trigger url autodiscovery from oathkeeper
         if hostname.present?
           uri = Addressable::URI.heuristic_parse(hostname)
           if uri.scheme.nil? || uri.scheme != hostname[0...uri.scheme.length]
