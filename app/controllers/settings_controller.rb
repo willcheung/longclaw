@@ -137,6 +137,7 @@ class SettingsController < ApplicationController
 		end
 	end
 
+	# Map SFDC entity fields to standard or custom CS entity fields
 	def salesforce_fields
 		if current_user.role == User::ROLE[:Admin]
       @user_roles = User::ROLE.map { |r| [r[1],r[1]] }
@@ -159,9 +160,11 @@ class SettingsController < ApplicationController
         @sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id)
 			end
 
-			if @sfdc_fields.nil?  # SFDC connection error
+			if @sfdc_fields.empty?  # SFDC connection error
 				@salesforce_connection_error = true
 			else
+				EntityFieldsMetadatum.create_default_for(current_user.organization) if current_user.organization.entity_fields_metadatum.first.present?  # SFDC connection exists, so check if mapping exists; if not, create a default mapping to SFDC fields
+
 				# add ("nil") options to remove mapping 
 				@sfdc_fields[:sfdc_account_fields] << ["","(Unmapped)"] 
 				@sfdc_fields[:sfdc_opportunity_fields] << ["","(Unmapped)"] 

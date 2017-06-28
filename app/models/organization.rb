@@ -43,7 +43,7 @@ class Organization < ActiveRecord::Base
       # Create default risk settings, system Custom Lists, and CS Entity fields metadata for the brand new org
       RiskSetting.create_default_for(new_org)
       CustomListsMetadatum.create_default_for(new_org)
-      EntityFieldsMetadatum.create_default_for(new_org)
+      #EntityFieldsMetadatum.create_default_for(new_org)  # defer until connect to SFDC and visit "Settings > Salesforce Integration > Map Fields" page
       return new_org
     end
   end
