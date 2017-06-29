@@ -1,5 +1,5 @@
 class CustomFieldsController < ApplicationController
-  before_action :find_custom_field, only: [:update]
+  before_action :set_custom_field, only: [:update]
 
   def update
     if @custom_field
@@ -19,7 +19,7 @@ class CustomFieldsController < ApplicationController
 
   private
 
-  def find_custom_field
+  def set_custom_field
     @custom_field = current_user.organization.custom_fields.find(params[:id])
   end
 

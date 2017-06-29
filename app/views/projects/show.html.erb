@@ -173,21 +173,15 @@
                     <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["close_date"] %>:</strong>
                         <span class="pull-right">
-                            <% if @project.close_date.nil? %>
-                                <%= best_in_place @project, :close_date, :as => :date, :place_holder => '-', :activator => "#project-close-date-activator" %>
-                            <% else %>
-                                <%=best_in_place @project, :close_date, :as => :date, :place_holder => '-', :display_with => Proc.new { |p| p.strftime("%D") }, :activator => "#project-close-date-activator" %>
-                            <% end %>
+                            <%=best_in_place @project, :close_date, :as => :date, :place_holder => '-', :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-close-date-activator" %>
                             <i id="project-close-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                         </span>
                     </li>                    
                     <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["renewal_date"] %>:</strong>
                         <span class="pull-right">
-                            <% if @project.renewal_date.nil? %>
-                                <%= best_in_place @project, :renewal_date, :as => :date, :place_holder => '-', :activator => "#project-renewal-date-activator" %>
-                            <% else %>
-                                <%=best_in_place @project, :renewal_date, :as => :date, :place_holder => '-', :display_with => Proc.new { |p| p.strftime("%D") }, :activator => "#project-renewal-date-activator" %>
+                            <%=best_in_place @project, :renewal_date, :as => :date, :place_holder => '-', :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-renewal-date-activator" %>
+                            <% unless @project_renewal_date.nil? %>
                                 <!-- TODO: Use jQuery to dynamically update these warnings -->
                                 <% if @project_renewal_date < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d') %>
                                     <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="tooltip" data-placement="bottom" data-original-title="Date has passed!"></i>

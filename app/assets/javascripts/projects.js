@@ -236,8 +236,6 @@ jQuery(document).ready(function($) {
     $('.chosen-container-single').css('cursor', 'pointer');
     $('.chosen-single').css('cursor', 'pointer');
   });
-
-  $.datepicker.setDefaults({ dateFormat: $.datepicker.ISO_8601 });
 });
 
 // Takes the query string and removes a parameter matching 'paramStr', retaining all other params
