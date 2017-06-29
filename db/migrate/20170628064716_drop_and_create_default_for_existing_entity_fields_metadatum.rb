@@ -1,4 +1,4 @@
-class RemoveNameAndDomainMappableFieldsMeta < ActiveRecord::Migration
+class DropAndCreateDefaultForExistingEntityFieldsMetadatum < ActiveRecord::Migration
   def change
     reversible do |dir|
       dir.up do
@@ -7,7 +7,7 @@ class RemoveNameAndDomainMappableFieldsMeta < ActiveRecord::Migration
         end
       end
       dir.down do
-      	# Don't undo any mapping
+        # Don't undo any mapping
       end
     end
   end

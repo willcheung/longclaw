@@ -36,12 +36,19 @@ class EntityFieldsMetadatum < ActiveRecord::Base
 
     organization.entity_fields_metadatum.destroy_all  #discard all old meta fields
     ENTITY_TYPE.values.each do |etype|
-      meta = Account::MAPPABLE_FIELDS_META if etype == ENTITY_TYPE[:Account]
-      meta = Project::MAPPABLE_FIELDS_META if etype == ENTITY_TYPE[:Stream]
-      meta = Contact::MAPPABLE_FIELDS_META if etype == ENTITY_TYPE[:Contact]
+      case etype
+      when ENTITY_TYPE[:Account]
+        meta = Account::MAPPABLE_FIELDS_META
+      when ENTITY_TYPE[:Stream]
+        meta = Project::MAPPABLE_FIELDS_META
+      when ENTITY_TYPE[:Contact]
+        meta = Contact::MAPPABLE_FIELDS_META
+      else
+        meta = []  #error; no-op
+      end
 
-      meta.each do |fname|
-        organization.entity_fields_metadatum.create!(entity_type: etype, name: fname, read_permission_role: User::ROLE[:Observer], update_permission_role: User::ROLE[:Poweruser])
+      meta.keys.each do |name|
+        organization.entity_fields_metadatum.create!(entity_type: etype, name: name, read_permission_role: User::ROLE[:Observer], update_permission_role: User::ROLE[:Poweruser])
       end if meta.present?
     end
 
@@ -73,12 +80,12 @@ class EntityFieldsMetadatum < ActiveRecord::Base
 
       # Map the CS Contact field to the SFDC Contact field. The following lines may need to change if Contact::MAPPABLE_FIELDS_META changes
       #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "source").update(salesforce_field: "LeadSource") if sfdc_contact_fields.include? "LeadSource"
+      #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "mobile").update(salesforce_field: "MobilePhone") if sfdc_contact_fields.include? "MobilePhone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "background_info").update(salesforce_field: "Description") if sfdc_contact_fields.include? "Description"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "department").update(salesforce_field: "Department") if sfdc_contact_fields.include? "Department"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "email").update(salesforce_field: "Email") if sfdc_contact_fields.include? "Email"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "first_name").update(salesforce_field: "FirstName") if sfdc_contact_fields.include? "FirstName"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "last_name").update(salesforce_field: "LastName") if sfdc_contact_fields.include? "LastName"
-      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "mobile").update(salesforce_field: "MobilePhone") if sfdc_contact_fields.include? "MobilePhone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "phone").update(salesforce_field: "Phone") if sfdc_contact_fields.include? "Phone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "title").update(salesforce_field: "Title") if sfdc_contact_fields.include? "Title"
     end

@@ -14,8 +14,10 @@
 	        <small>
 		        <%= best_in_place n, :original_due_date, :as => :date, :place_holder => 'set due date', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime("%a, %b %-d")}, :activator => "#task-#{n.id}-due-date-activator" %>
 		        <% if !n.is_complete && Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+                    <!-- TODO: Use jQuery to dynamically update these warnings -->
 		            <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="overdue" data-placement="bottom" data-original-title="Overdue!"></i>
 		        <% elsif !n.is_complete && Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') == Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+                    <!-- TODO: Use jQuery to dynamically update these warnings -->
 		            <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:#33adff" data-toggle="overdue" data-placement="bottom" data-original-title="Due Today!"></i>
 		        <% else %>
 		        <% end %>

@@ -37,7 +37,7 @@
             <div class="col-md-3">
                 <div class="metric">
                     <div class="metric-title" align="center">
-                        <h5>Stage</h5>
+                        <h5><%= Project::MAPPABLE_FIELDS_META["stage"] %></h5>
                     </div>
                     <div class="metric-content" align="center">
                         <h4><%= (@project.stage.nil? or @project.stage.empty?) ? "-" : @project.stage %></h4>
@@ -47,7 +47,7 @@
             <div class="col-md-3">
                 <div class="metric">
                     <div class="metric-title" align="center">
-                        <h5>Deal Size</h5>
+                        <h5><%= Project::MAPPABLE_FIELDS_META["amount"] %></h5>
                     </div>
                     <div class="metric-content" align="center">
                         <h3><%= (@project.amount.nil?) ? "-" : "$"+number_to_human(@project.amount) %></h3>
@@ -132,16 +132,16 @@
                     </span>
                 </div>
 
+                <!-- Stream-level standard fields -->
                 <div class="m-t-md">
-                    <strong>Description:</strong>
+                    <strong><%= Project::MAPPABLE_FIELDS_META["description"] %>:</strong>
                     <i id="proj-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                 </div>
-
                 <small><%= best_in_place @project, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#proj-desc-activator' %></small>
 
                 <ul class="list-group clear-list m-t-sm">
                     <li class="list-group-item m-b-sm first-item">
-                        <strong>Type:</strong>
+                        <strong><%= Project::MAPPABLE_FIELDS_META["category"] %>:</strong>
                         <span class="pull-right"><%= best_in_place @project, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                     </li>
                     <li class="list-group-item m-b-sm">
@@ -163,8 +163,45 @@
                             <% end %>
                         </span>
                     </li>
-
-                    <!-- Stream custom fields -->
+                   <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["expected_revenue"] %>:</strong>
+                        <span class="pull-right">
+                            <%=best_in_place @project, :expected_revenue, :as => :input,:place_holder => '-', :activator => "#project-expected-revenue-activator" %>
+                                <i id="project-expected-revenue-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                        </span>
+                    </li>
+                    <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["close_date"] %>:</strong>
+                        <span class="pull-right">
+                            <% if @project.close_date.nil? %>
+                                <%= best_in_place @project, :close_date, :as => :date, :place_holder => '-', :activator => "#project-close-date-activator" %>
+                            <% else %>
+                                <%=best_in_place @project, :close_date, :as => :date, :place_holder => '-', :display_with => Proc.new { |p| p.strftime("%D") }, :activator => "#project-close-date-activator" %>
+                            <% end %>
+                            <i id="project-close-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                        </span>
+                    </li>                    
+                    <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["renewal_date"] %>:</strong>
+                        <span class="pull-right">
+                            <% if @project.renewal_date.nil? %>
+                                <%= best_in_place @project, :renewal_date, :as => :date, :place_holder => '-', :activator => "#project-renewal-date-activator" %>
+                            <% else %>
+                                <%=best_in_place @project, :renewal_date, :as => :date, :place_holder => '-', :display_with => Proc.new { |p| p.strftime("%D") }, :activator => "#project-renewal-date-activator" %>
+                                <!-- TODO: Use jQuery to dynamically update these warnings -->
+                                <% if @project_renewal_date < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d') %>
+                                    <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="tooltip" data-placement="bottom" data-original-title="Date has passed!"></i>
+                                <% elsif @project_renewal_date == Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+                                    <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:#33adff" data-toggle="tooltip" data-placement="bottom" data-original-title="Today"></i>
+                                <% elsif @project_renewal_date <= Time.zone.at(Time.now.utc + 10.days).strftime('%Y-%m-%d')  %>
+                                    <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:orange" data-toggle="tooltip" data-placement="bottom" data-original-title="Due in 10 days"></i>
+                                <% end %>
+                            <% end %>
+                            <i id="project-renewal-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                        </span>
+                    </li>      
+                    <!-- End: Stream-level standard fields -->
+                    <!-- Stream-level custom fields -->
                     <% @project.custom_fields.each.with_index do |cf, i| %>
                         <li class="list-group-item m-b-sm">
                             <strong><%= cf.custom_fields_metadatum.name %>:</strong>
@@ -204,6 +241,7 @@
                         </dd>
                     </dl>
 
+                    <!-- Continue Stream-level standard fields (date/timestamps) -->
                     <li class="list-group-item small m-t-md first-item">
                         <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
                         Last Updated:

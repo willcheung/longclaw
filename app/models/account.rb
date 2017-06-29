@@ -52,7 +52,7 @@ class Account < ActiveRecord::Base
 
     STATUS = %w(Active Inactive Dead)
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
-    MAPPABLE_FIELDS_META = [ "description", "website", "phone", "address", "notes", "category", "revenue_potential" ]
+    MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "website" => "Website", "phone" => "Phone", "address" => "Address" }  # "notes" => "Notes", "revenue_potential" => "Revenue Potential"
 
     def self.create_from_clusters(external_members, owner_id, organization_id)
         domain_grouped_external_members = external_members.group_by { |x| get_domain(x.address) }

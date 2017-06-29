@@ -283,6 +283,8 @@ class ProjectsController < ApplicationController
   end
 
   def get_show_data
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d') 
+
     # metrics
     @project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
@@ -393,7 +395,7 @@ class ProjectsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def project_params
-    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date)
+    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date, :expected_revenue)
   end
 
   # A list of the param names that can be used for filtering the Project list
