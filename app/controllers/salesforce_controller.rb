@@ -16,10 +16,10 @@ class SalesforceController < ApplicationController
       @id_param_present = true
       # Set this salesforce id to contextsmith account id and then try to find a SF account mapping
       @salesforce_id = params[:id]  
-      sf_account = SalesforceAccount.eager_load(:account).find_by(salesforce_account_id: @salesforce_id, contextsmith_organization_id: current_user.organization_id)
-      return if sf_account.nil?  # invalid SFDC id or id cannot be found
+      sfdc_account = SalesforceAccount.eager_load(:account).find_by(salesforce_account_id: @salesforce_id, contextsmith_organization_id: current_user.organization_id)
+      return if sfdc_account.nil?  # invalid SFDC id or id cannot be found
 
-      cs_account = sf_account.account
+      cs_account = sfdc_account.account
       return if cs_account.nil?  # no CS accounts mapped to this Salesforce account
     end
 
@@ -475,60 +475,60 @@ class SalesforceController < ApplicationController
   end
 
   # Gets Salesforce (custom) fields in the form of the following hash:
-  #   :sf_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
-  #   :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
-  #   :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
-  #   :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
-  #   :sf_contact_fields -- a list of SFDC contact field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
-  #   :sf_contact_fields_metadata -- similar to :sf_account_fields_metadata for sf_contact_fields
+  #   :sfdc_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
+  #   :sfdc_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
+  #   :sfdc_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sfdc_account_fields
+  #   :sfdc_opportunity_fields_metadata -- similar to :sfdc_account_fields_metadata for sfdc_opportunity_fields
+  #   :sfdc_contact_fields -- a list of SFDC contact field names mapped to the field labels (visible to the user) in a similar to :sfdc_account_fields
+  #   :sfdc_contact_fields_metadata -- similar to :sfdc_account_fields_metadata for sfdc_contact_fields
   def self.get_salesforce_fields(organization_id: , custom_fields_only: false)
     client = SalesforceService.connect_salesforce(organization_id)
 
     return nil if client.nil?
 
-    sf_account_fields = {}
-    sf_account_fields_metadata = {}
-    sf_opportunity_fields = {}
-    sf_opportunity_fields_metadata = {}
-    sf_contact_fields = {}
-    sf_contact_fields_metadata = {}
+    sfdc_account_fields = {}
+    sfdc_account_fields_metadata = {}
+    sfdc_opportunity_fields = {}
+    sfdc_opportunity_fields_metadata = {}
+    sfdc_contact_fields = {}
+    sfdc_contact_fields_metadata = {}
 
     entity_describe = client.describe('Account')
     entity_describe.fields.each do |f|
-      sf_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
       metadata["updateable"] = f.updateable
       metadata["nillable"] = f.nillable
-      sf_account_fields_metadata[f.name] = metadata
+      sfdc_account_fields_metadata[f.name] = metadata
     end
     entity_describe = client.describe('Opportunity')
     entity_describe.fields.each do |f|
-      sf_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
       metadata["updateable"] = f.updateable
       metadata["nillable"] = f.nillable
-      sf_opportunity_fields_metadata[f.name] = metadata
+      sfdc_opportunity_fields_metadata[f.name] = metadata
     end
     entity_describe = client.describe('Contact')
     entity_describe.fields.each do |f|
-      sf_contact_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_contact_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
       metadata["updateable"] = f.updateable
       metadata["nillable"] = f.nillable
-      sf_contact_fields_metadata[f.name] = metadata
+      sfdc_contact_fields_metadata[f.name] = metadata
     end
 
-    sf_account_fields = sf_account_fields.sort_by { |k,v| v.upcase }
-    sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
-    sf_contact_fields = sf_contact_fields.sort_by { |k,v| v.upcase }
+    sfdc_account_fields = sfdc_account_fields.sort_by { |k,v| v.upcase }
+    sfdc_opportunity_fields = sfdc_opportunity_fields.sort_by { |k,v| v.upcase }
+    sfdc_contact_fields = sfdc_contact_fields.sort_by { |k,v| v.upcase }
 
-    return { sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata, sf_contact_fields: sf_contact_fields, sf_contact_fields_metadata: sf_contact_fields_metadata }
+    return { sfdc_account_fields: sfdc_account_fields, sfdc_account_fields_metadata: sfdc_account_fields_metadata, sfdc_opportunity_fields: sfdc_opportunity_fields, sfdc_opportunity_fields_metadata: sfdc_opportunity_fields_metadata, sfdc_contact_fields: sfdc_contact_fields, sfdc_contact_fields_metadata: sfdc_contact_fields_metadata }
   end
 
   # Import SFDC contacts from sfdc_account, then add all SFDC contacts as pending members ('Suggested People') in all streams in the linked CS account 

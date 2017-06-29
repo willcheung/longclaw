@@ -21,7 +21,7 @@ gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankan
 gem 'puma'                        # Web server
 gem 'acts_as_commentable'
 gem 'pg_search'
-# gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
+gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
 # gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
 gem 'omniauth-salesforce'
 gem 'restforce', '~> 2.5.0'  #saleforce REST gem

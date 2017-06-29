@@ -4,10 +4,7 @@
   <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
     <th class="center" style="width:2%;padding:0 10px;white-space:nowrap;vertical-align:middle">
       <center>
-        <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">
-          Daily Summary<br>
-          <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= Time.current.yesterday.strftime('%A, %B %d') %></span>
-        </h1>
+        <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">Daily Summary</h1>
       <center>
     </th>
     <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
@@ -53,9 +50,11 @@
 
 <!-- Summary -->
 <% if @updates_today.empty? %>
-  <h2 style="font-size:22px;font-weight:200;color:#333333;text-align:center;margin-top:20px;">No updates today</h2>
+  <h2 style="font-size:22px;font-weight:200;color:#333333;text-align:center;margin-top:20px;">No updates for yesterday.</h2>
 <% else %>
-  <h2 style="font-size:22px;font-weight:200;color:#333333;text-align:center;margin-top:20px;">Yesterday's updates:</h2>
+  <h2 style="font-size:22px;font-weight:200;color:#333333;text-align:center;margin-top:20px;">Yesterday's updates:<br/>
+    <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= Time.current.yesterday.strftime('%A, %B %d') %></span>
+  </h2>
 <% end %>
 
 <!-- Project/stream detail -->

@@ -674,14 +674,14 @@ class Project < ActiveRecord::Base
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
 
     project_domains.each do |p|
-      external_members, internal_members = get_project_members(data, p)
-      project = Project.new(name: (accounts.find {|a| a.domain == p}).name,
+      p_account = accounts.find { |a| a.domain == p }
+      project = Project.new(name: p_account.name,
                            status: "Active",
                            category: "Opportunity",
                            created_by: user_id,
                            updated_by: user_id,
                            owner_id: user_id,
-                           account_id: (accounts.find {|a| a.domain == p}).id,
+                           account_id: p_account.id,
                            is_public: true,
                            is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
                           )
@@ -689,6 +689,7 @@ class Project < ActiveRecord::Base
       if project.save
         # Project members
         # assuming contacts and users have already been inserted, we just need to link them
+        external_members, internal_members = get_project_members(data, p)
         contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
         users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
 
@@ -845,8 +846,8 @@ class Project < ActiveRecord::Base
         sObj = query_result[:result].first
         stream_custom_fields.each do |cf|
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
-          #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
-          #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+          #print "----> CS_fieldname=\"", cf.name, "\" SFDC_fieldname=\"", cf.salesforce_field, "\"\n"
+          #print "   .. CS_fieldvalue=\"", csfield.value, "\" SFDC_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
           CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
         end
         result = { status: "SUCCESS" }

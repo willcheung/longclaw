@@ -68,7 +68,7 @@ class Account < ActiveRecord::Base
             grouped_external_members[primary_domain] += person_array
         end
         existing_accounts = Account.where(domain: grouped_external_members.keys, organization_id: organization_id).includes(:contacts)
-        existing_domains = existing_accounts.map(&:domain)
+        existing_domains = existing_accounts.pluck(:domain)
 
         # Create missing accounts
         (grouped_external_members.keys - existing_domains).each do |domain|
@@ -96,7 +96,7 @@ class Account < ActiveRecord::Base
 
         # Create contacts for existing accounts
         existing_accounts.each do |a|
-            existing_emails = a.contacts.map(&:email)
+            existing_emails = a.contacts.pluck(:email)
             external_emails = grouped_external_members[a.domain].map(&:address)
             missing_emails = external_emails - existing_emails
 
@@ -197,8 +197,8 @@ class Account < ActiveRecord::Base
                 sObj = query_result[:result].first
                 account_custom_fields.each do |cf|
                     # csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id)
-                    # print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
-                    # print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+                    # print "----> CS_fieldname=\"", cf.name, "\" SFDC_fieldname=\"", cf.salesforce_field, "\"\n"
+                    # print "   .. CS_fieldvalue=\"", csfield.value, "\" SFDC_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
                     CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id).update(value: sObj[cf.salesforce_field])
                 end
                 result = { status: "SUCCESS" }

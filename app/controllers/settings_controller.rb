@@ -152,21 +152,21 @@ class SettingsController < ApplicationController
         @cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
       end
 
-      # We don't save SFDC custom fields (i.e., in our backend / PG), so we query SFDC every time!
-			if (params[:sf_custom_fields_only] == "true")
-        @sf_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id, custom_fields_only: true)
+      # We don't save SFDC custom fields (i.e., in our backend), so we query SFDC every time! :(
+			if (params[:sfdc_custom_fields_only] == "true")
+        @sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id, custom_fields_only: true)
 			else
-        @sf_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id)
+        @sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id)
 			end
 
-			if @sf_fields.nil?  # SFDC connection error
+			if @sfdc_fields.nil?  # SFDC connection error
 				@salesforce_connection_error = true
 			else
 				# add ("nil") options to remove mapping 
-				@sf_fields[:sf_account_fields] << ["","(Unmapped)"] 
-				@sf_fields[:sf_opportunity_fields] << ["","(Unmapped)"] 
-				@sf_fields[:sf_contact_fields] << ["","(Unmapped)"] 
-				#puts "******** @sf_fields *** #{@sf_fields} *******"
+				@sfdc_fields[:sfdc_account_fields] << ["","(Unmapped)"] 
+				@sfdc_fields[:sfdc_opportunity_fields] << ["","(Unmapped)"] 
+				@sfdc_fields[:sfdc_contact_fields] << ["","(Unmapped)"] 
+				#puts "******** @sfdc_fields *** #{@sfdc_fields} *******"
 			end
 		end
 	end

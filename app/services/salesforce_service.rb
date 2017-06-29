@@ -164,7 +164,7 @@ class SalesforceService
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , email: , params: )
     result = nil
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{ return_escaped_SFDC_field(email) }' ORDER BY LastName, FirstName"  # Unused: Description    
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{ return_escaped_SFDC_field_val(email) }' ORDER BY LastName, FirstName"  # Unused: Description    
     #puts "query_statement: #{ query_statement }"
     query_result = self.query_salesforce(client, query_statement)
 
@@ -265,7 +265,7 @@ class SalesforceService
   end
 
   # Changes value 'val' to a valid value to be used in a SFDC field. e.g., escapes single quotes
-  def self.return_escaped_SFDC_field(val)
+  def self.return_escaped_SFDC_field_val(val)
     if val.present?
       val.gsub("'", "\\\\'") 
     else

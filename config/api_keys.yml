@@ -20,6 +20,7 @@ development:
   BASE_URL: http://localhost:3000
   # tells the backend to limit emails to this number
   max_emails: 500
+  encryption_key: ;?\x8E\xF4\xEC\xCB\xB7B\x17%\t\x9A\x8F\x01\x16y\xB4^\xBENo\x872\x03\xC3\xCCW\xE6\xB7\xCCDO
 
 test:
   google_client_id: 9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com

@@ -109,6 +109,7 @@
               <span style="margin:0 0.4em;font-size:24px;border-left:1px solid #CCC;"></span>
               <span style="font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
             </div>
+            <!-- RAG Status circle (hidden) -->
             <% case Project.current_rag_score([p.id])[p.id] %>
               <% when 1 %>
                 <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_RED_CIRCLE_STYLE %>
@@ -123,8 +124,8 @@
                 <% @RAG_CIRCLE_STYLE = @RAG_STATUS_CIRCLE_STYLE + @RAG_WHITE_CIRCLE_STYLE %>
                 <% @RAG_Status =  "None" %>
             <% end %>
-            <div style="float:right;color:#FFF">.</div> <!-- to fix Chrome bug on RAG circle-->
-            <div style="display:inline-block;float:right;margin-right:2px; <%= @RAG_CIRCLE_STYLE %>" title="Status: <%= @RAG_Status %>"></div>
+            <div style="display:none;float:right;color:#FFF">.</div> <!-- to fix Chrome bug on RAG circle-->
+            <div style="display:none;float:right;margin-right:2px; <%= @RAG_CIRCLE_STYLE %>" title="Status: <%= @RAG_Status %>"></div> <!-- originally "display:inline-block;" -->
           </div>
         </tr>
         <tr>
