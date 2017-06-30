@@ -1,4 +1,5 @@
 class ProjectsController < ApplicationController
+  before_action :check_params_for_valid_dates, only: [:update]
   before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
@@ -12,6 +13,7 @@ class ProjectsController < ApplicationController
   # GET /projects
   # GET /projects.json
   def index
+    @MEMBERS_LIST_LIMIT = 8 # Max number of Stream members to show in mouse-over tooltip
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
     # Get an initial list of visible projects
@@ -289,6 +291,8 @@ class ProjectsController < ApplicationController
   end
 
   def get_show_data
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
+
     # metrics
     @project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.risks.count
@@ -381,7 +385,7 @@ class ProjectsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def project_params
-    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date)
+    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date, :expected_revenue)
   end
 
   # A list of the param names that can be used for filtering the Project list
@@ -413,4 +417,24 @@ class ProjectsController < ApplicationController
     end
   end
 
+  # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
+  def check_params_for_valid_dates
+    params["project"][:close_date] = parse_valid_date(params["project"][:close_date]) if params["project"][:close_date].present?
+    params["project"][:renewal_date] = parse_valid_date(params["project"][:renewal_date]) if params["project"][:renewal_date].present?
+  end
+
+  # Attempt to parse a Date from datestr using recognized formats %Y-%m-%d or %m/%d/%Y, then return the parsed Date. Otherwise, return nil.
+  def parse_valid_date(datestr)
+    return nil if datestr.nil?
+
+    parsed_date = nil
+    begin
+      parsed_date = Date.strptime(datestr, '%Y-%m-%d')
+    rescue ArgumentError => e
+      parsed_date = Date.strptime(datestr, '%m/%d/%Y')
+    rescue => e
+      # Do nothing
+    end
+    parsed_date
+  end
 end

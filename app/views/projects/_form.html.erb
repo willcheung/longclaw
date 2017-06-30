@@ -2,7 +2,7 @@
 
   <span class="help-block" style="color:red"></span>
   <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
-  <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: @stream_types, selected: @project.category %>
+  <%= f.input :category, label: Project::MAPPABLE_FIELDS_META["category"], wrapper_html: { class: 'col-md-4'}, collection: @stream_types, selected: @project.category %>
   <% if @account.blank? %>
     <%= f.input :account_id, wrapper_html: { class: 'col-md-8'}, collection: @account_names, selected: @project.account.nil? ? @account_names[0] : @project.account.id %>
   <% else %>

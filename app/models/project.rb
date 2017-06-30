@@ -128,7 +128,8 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
-  MAPPABLE_FIELDS_META = [ "name", "description", "category", "renewal_date", "contract_start_date", "contract_end_date", "contract_arr", "renewal_count", "has_case_study", "is_referenceable", "amount", "stage", "close_date", "expected_revenue" ]
+  MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue" }  # "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count", 
+
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
 
   attr_accessor :num_activities_prev, :pct_from_prev
@@ -794,7 +795,7 @@ class Project < ActiveRecord::Base
             # CS_UUID = sfdc_ids_mapping[r.Id] , SFDC_Id = r.Id
             sfdc_fields_mapping.each do |k,v|
               # k (SFDC field name) , v (CS field name), r[k] (SFDC field value)
-              if r[k].is_a?(Restforce::Mash) # the value is a Salesforce sObject
+              if r[k].is_a?(Restforce::Mash) # the value is a Salesforce sObject, so try to resolve each attribute of the sObject into a String of the fields delimited by commas
                 sfdc_val = []
                 r[k].each { |k,v| sfdc_val.push(v.to_s) if v.present? }
                 sfdc_val = sfdc_val.join(", ")
@@ -851,7 +852,13 @@ class Project < ActiveRecord::Base
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
           #print "----> CS_fieldname=\"", cf.name, "\" SFDC_fieldname=\"", cf.salesforce_field, "\"\n"
           #print "   .. CS_fieldvalue=\"", csfield.value, "\" SFDC_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
-          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
+          new_value = sObj[cf.salesforce_field]
+          if new_value.is_a?(Restforce::Mash) # the value is a Salesforce sObject, so try to resolve each attribute of the sObject into a String of the fields delimited by commas
+            sfdc_val = []
+            new_value.each { |k,v| sfdc_val.push(v.to_s) if v.present? }
+            new_value = sfdc_val.join(", ")
+          end
+          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value)
         end
         result = { status: "SUCCESS" }
       else

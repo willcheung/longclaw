@@ -81,7 +81,11 @@
                 <div style="">
                     <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
                     <div>
-                        <h3 class="m-t-sm m-l" style="margin-bottom: 9px"><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
+                        <h3 class="m-t-sm m-l" style="margin-bottom: 9px" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="
+                        <strong><%= Project::MAPPABLE_FIELDS_META["stage"] %></strong>: <%= @project.stage.nil? ? "-" : @project.stage %></br> 
+                        <strong><%= Project::MAPPABLE_FIELDS_META["amount"] %></strong>: <%= (@project.amount.nil?) ? "-" : "$"+number_to_human(@project.amount) %></br>
+                        <%= "<strong>People:</strong><br/> #{ (@members.collect {|u| get_full_name(u) == ' ' ? u.email : get_full_name(u)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (@all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if @all_members.size > @MEMBERS_LIST_LIMIT } ".html_safe unless @all_members.size == 0 %>
+                        "><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a> <% if @project.status != 'Active' %><small style="color:red">(Inactive)</small><% end %></h3>
                         <div class="text-mute-gray" style="font-size: 10px">
                             <span style="display:block"><strong>Owner:</strong>&nbsp;&nbsp;<%= @project.project_owner.present? ? get_full_name(@project.project_owner) : "(None)" %></span>
 

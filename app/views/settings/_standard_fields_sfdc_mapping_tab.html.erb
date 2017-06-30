@@ -47,9 +47,9 @@
           <td>No ContextSmith Account fields metadata info!  Please contact your administrator to set these up.</td><td></td><td></td><td></td><td></td><td></td>
         </tr>
       <% else %>
-        <% @cs_account_fields.each.with_index do |f,i| %>
+        <% @cs_account_fields.sort_by{|f| Account::MAPPABLE_FIELDS_META[f.name].upcase }.each.with_index do |f,i| %>
           <tr>
-            <td><%= f.name.gsub('_', ' ').capitalize %></td>
+            <td><%= Account::MAPPABLE_FIELDS_META[f.name] %></td>
             <!-- <td class="editable-field"><%= best_in_place f, :default_value, :as => 'input', :place_holder => '(none)', :activator => "#field-#{f.id}-default_value-activator" %><i id="field-<%= f.id %>-default_value-activator" class="fa fa-pencil bip_activator m-l-xs"></td> --> <!-- editable-field-activator -->
             <td> <!-- salesforce_field_name -->
               <%= best_in_place f, :salesforce_field, :as => :select, :collection => @sfdc_fields[:sfdc_account_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-account-field-name', :style => "color:#DDD;", :f_id => "#{f.id}" %>
@@ -104,9 +104,9 @@
           <td>No ContextSmith Stream fields metadata info!  Please contact your administrator to set these up.</a></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
       <% else %>
-        <% @cs_stream_fields.each.with_index do |f,i| %>
+        <% @cs_stream_fields.sort_by{|f| Project::MAPPABLE_FIELDS_META[f.name].upcase }.each.with_index do |f,i| %>
           <tr>
-            <td><%= f.name.gsub('_', ' ').capitalize %></td>
+            <td><%= Project::MAPPABLE_FIELDS_META[f.name] %></td>
             <!-- <td class="editable-field"><%= best_in_place f, :default_value, :as => 'input', :place_holder => '(none)', :activator => "#field-#{f.id}-default_value-activator" %><i id="field-<%= f.id %>-default_value-activator" class="fa fa-pencil bip_activator m-l-xs"></td> --> <!-- editable-field-activator -->
             <td> <!-- salesforce_field_name -->
               <%= best_in_place f, :salesforce_field, :as => :select, :collection => @sfdc_fields[:sfdc_opportunity_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-opportunity-field-name', :style => "color:#DDD;", :f_id => "#{f.id}" %>
@@ -161,9 +161,9 @@
           <td>No ContextSmith Contact fields metadata info!  Please contact your administrator to set these up.</a></td><td></td><td></td><td></td><td></td><td></td>
         </tr>
       <% else %>
-        <% @cs_contact_fields.each.with_index do |f,i| %>
+        <% @cs_contact_fields.sort_by{|f| Contact::MAPPABLE_FIELDS_META[f.name].upcase }.each.with_index do |f,i| %>
           <tr>
-            <td><%= f.name.gsub('_', ' ').capitalize %></td>
+            <td><%= Contact::MAPPABLE_FIELDS_META[f.name] %></td>
             <!-- <td class="editable-field"><%= best_in_place f, :default_value, :as => 'input', :place_holder => '(none)', :activator => "#field-#{f.id}-default_value-activator" %><i id="field-<%= f.id %>-default_value-activator" class="fa fa-pencil bip_activator m-l-xs"></td> --> <!-- editable-field-activator --> 
             <td> <!-- salesforce_field_name -->
               <%= best_in_place f, :salesforce_field, :as => :select, :collection => @sfdc_fields[:sfdc_contact_fields], :class => 'btn btn-default btn-sm fa-caret-down salesforce-contact-field-name', :style => "color:#DDD;", :f_id => "#{f.id}" %>

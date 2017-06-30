@@ -62,11 +62,12 @@
                                 <tr>
                                     <th></th>
                                     <th>Account Name</th>
-                                    <th style="width:65px">Type</th>
+                                    <th style="width:65px"><%= Account::MAPPABLE_FIELDS_META["category"] %></th>
                                     <th>Owner</th>
+                                    <th></th>
                                     <th style="text-align:center">Streams</th>
                                     <th style="text-align:center">Days Inactive</th>
-                                    <th>Website</th>
+                                    <th><%= Account::MAPPABLE_FIELDS_META["website"] %></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -78,6 +79,10 @@
                                     <td><a href="<%= account_path(a.id) %>"><%= a.name %></a><a class="pull-right edit" href="<%= edit_account_path(a) %>" style="display: none;"><i class="fa fa-pencil"></i></a></td>
                                     <td style="width:65px"><%= a.category %></td>
                                     <td><%= get_full_name(a.user) %></td>
+                                    <td style="width: 40px"><span
+                                    <% contacts = a.contacts.first(@CONTACTS_LIST_LIMIT) %>
+                                    <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>Contacts:</strong><br/> #{ (contacts.collect {|c| get_full_name(c) == ' ' ? c.email : get_full_name(c)}).sort_by{|c| c.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (a.contacts.size - @CONTACTS_LIST_LIMIT).to_s + " more...</span>") if a.contacts.size > @CONTACTS_LIST_LIMIT } \"".html_safe unless a.contacts.size == 0 %>
+                                        ><i class="fa fa-users" style="color:#888"></i> <%= (a.contacts.size) %></span></td>
                                     <td style="text-align:center"><%= a.projects.visible_to(current_user.organization_id, current_user.id).count(:id).size %></td>
                                     <td style="text-align:center"><%= @account_last_activity[a.id].nil? ? "" : ((Time.current - @account_last_activity[a.id])/86400).to_i %></td>
                                     <td><%= a.website %></td>

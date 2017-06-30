@@ -6,6 +6,7 @@ class AccountsController < ApplicationController
   # GET /accounts
   # GET /accounts.json
   def index
+    @CONTACTS_LIST_LIMIT = 8 # Max number of Contacts to show in mouse-over tooltip
     @title = 'Accounts'
     if params[:account_type] == "none"
       @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
