@@ -197,13 +197,17 @@ class ExtensionController < ApplicationController
 
     if @project.blank?
       create_project
-      @project.subscribers.create(user: current_user) # why was this missing before??
+      @project.subscribers.create(user: current_user)
     elsif params[:action] == "account" 
       # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
       # since project already exists, any new external members found should be added as suggested members, let user confirm
       create_people
     end
     
+    @MEMBERS_LIST_LIMIT = 8
+    @all_members = @project.users + @project.contacts
+    @members = @all_members.first(@MEMBERS_LIST_LIMIT) # same value as 
+
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 

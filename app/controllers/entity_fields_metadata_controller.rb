@@ -1,5 +1,5 @@
 class EntityFieldsMetadataController < ApplicationController
-  before_action :find_entity_fields_metadatum, only: [:update, :destroy]
+  before_action :set_entity_fields_metadatum, only: [:update, :destroy]
 
   def create
     current_user.organization.entity_fields_metadatum.create(name:"New list")
@@ -31,7 +31,7 @@ class EntityFieldsMetadataController < ApplicationController
 
   private
 
-  def find_entity_fields_metadatum
+  def set_entity_fields_metadatum
     @entity_fields_metadatum = current_user.organization.entity_fields_metadatum.find(params[:id])
   end
 
