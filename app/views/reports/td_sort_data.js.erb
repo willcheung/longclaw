@@ -3,7 +3,7 @@ chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
 while(chart.series.length > 1) {
   chart.series[1].remove();
 }
-<% if @sort == "Activities (Last 14d)" %>
+<% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
   chart.series[0].hide();
   <% @categories.each.with_index do |c, i| %>
   chart.addSeries({
@@ -19,7 +19,7 @@ while(chart.series.length > 1) {
     ]
   }, false)
   <% end %>
-<% elsif @sort == "Time Spent (Last 14d)" %>
+<% elsif @metric == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
   chart.series[0].hide();
   <% @categories.each do |c| %>
   chart.addSeries({
@@ -38,7 +38,7 @@ while(chart.series.length > 1) {
 <% else %>
   chart.series[0].show();
   chart.series[0].update({
-    name: "<%= @sort %>",
+    name: "<%= @metric %>",
     data: [ <% @data.each do |d| %>
     {
       y: <%= d.y %>,
@@ -48,4 +48,5 @@ while(chart.series.length > 1) {
   }, false);
 <% end %>
 
+chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
 chart.redraw();
