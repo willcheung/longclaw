@@ -12,7 +12,6 @@ class ProjectsController < ApplicationController
   # GET /projects
   # GET /projects.json
   def index
-    @title = "Streams"
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
     # Get an initial list of visible projects
@@ -264,12 +263,20 @@ class ProjectsController < ApplicationController
 
   # Handle bulk operations
   def bulk
-    newArray = params["selected"].map { |key, value| key }
+    render :json => { success: true }.to_json and return if params['project_ids'].blank?
+    bulk_projects = Project.visible_to(current_user.organization_id, current_user.id).where(id: params['project_ids'])
 
-    if(params["operation"]=="delete")
-      bulk_delete(newArray)
+    case params['operation']
+    when 'delete'
+      bulk_projects.destroy_all
+    when 'category'
+      bulk_projects.update_all(category: params['value'])
+    when 'owner'
+      bulk_projects.update_all(owner_id: params['value'])
+    when 'status'
+      bulk_projects.update_all(status: params['value'])
     else
-      bulk_update(params["operation"], newArray, params["value"])
+      puts 'Invalid bulk operation, no operation performed'
     end
 
     render :json => {:success => true, :msg => ''}.to_json
@@ -349,24 +356,6 @@ class ProjectsController < ApplicationController
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
-  end
-
-  def bulk_update(field, array_of_ids, new_value)
-    if(!array_of_ids.nil?)
-      if field == "category"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(category: new_value)
-      elsif field == "owner"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(owner_id: new_value)
-      elsif field == "status"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(status: new_value)
-      end
-    end
-  end
-
-  def bulk_delete(array_of_ids)
-    if(!array_of_ids.nil?)
-      Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).destroy_all
-    end
   end
 
   # Use callbacks to share common setup or constraints between actions.
