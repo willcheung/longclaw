@@ -93,16 +93,22 @@ class AccountsController < ApplicationController
   end
 
   # Handle bulk operations
-  def bulk 
-    newArray = params["selected"].map { |key, value| key }
+  def bulk
+    render :json => { success: true }.to_json and return if params['account_ids'].blank?
+    bulk_accounts = Account.visible_to(current_user).where(id: params['account_ids'])
 
-    if(params["operation"]=="delete")
-      bulk_delete(newArray)
-    else
-      bulk_update(params["operation"], newArray, params["value"])
+    case params['operation']
+      when 'delete'
+        bulk_accounts.destroy_all
+      when 'category'
+        bulk_accounts.update_all(category: params['value'])
+      when 'owner'
+        bulk_accounts.update_all(owner_id: params['value'])
+      else
+        puts 'Invalid bulk operation, no operation performed'
     end
 
-    render :json => {:success => true, :msg => ''}.to_json 
+    render :json => {:success => true, :msg => ''}.to_json
   end
 
   def set_salesforce_account
@@ -111,21 +117,6 @@ class AccountsController < ApplicationController
   end
 
   private
-    def bulk_update(field, array_of_ids, new_value)
-      if(!array_of_ids.nil?)
-        if field == "category"
-          Account.visible_to(current_user).where(id: array_of_ids).update_all(category: new_value)
-        elsif field == "owner"
-          Account.visible_to(current_user).where(id: array_of_ids).update_all(owner_id: new_value)
-        end
-      end
-    end
-
-    def bulk_delete(array_of_ids)
-      if(!array_of_ids.nil?)
-        Account.visible_to(current_user).where(id: array_of_ids).destroy_all
-      end
-    end
 
     # Use callbacks to share common setup or constraints between actions.
     def set_account
