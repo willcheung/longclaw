@@ -35,9 +35,9 @@ class ProjectsController < ApplicationController
     unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
-      @sparkline = Project.count_activities_by_day_sparkline(projects.map(&:id), current_user.time_zone)
-      @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
-      @open_risk_count = Project.open_risk_count(projects.map(&:id))
+      @sparkline = Project.count_activities_by_day_sparkline(projects.ids, current_user.time_zone)
+      @risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @open_risk_count = Project.open_risk_count(projects.ids)
     end
 
     # new project modal

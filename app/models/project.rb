@@ -173,6 +173,9 @@ class Project < ActiveRecord::Base
 
     return [] if projects.empty?   # quit early if there are no projects
 
+    # Initialize all scores with 0
+    project_base = projects.sum(0)
+
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
     # Risk / Engagement Ratio
@@ -198,7 +201,7 @@ class Project < ActiveRecord::Base
     project_rag_status.each { |pid, rag_score| project_rag_status[pid] = calculate_score_by_setting(rag_score, rag_status_setting) }
 
     # Overall Score
-    overall = [project_inactivity_risk, project_rag_status].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
+    overall = [project_base, project_inactivity_risk, project_rag_status].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
     overall.each { |pid, score| overall[pid] = score.round }
   end
 
