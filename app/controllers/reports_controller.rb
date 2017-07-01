@@ -56,6 +56,7 @@ class ReportsController < ApplicationController
 
     @data = [] and return if users.blank?  #quit early if all projects are filtered out
 
+    sort_data_by_total = false
     case @metric
     when TEAM_DASHBOARD_METRIC[:opportunities]
       accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
@@ -85,7 +86,7 @@ class ReportsController < ApplicationController
         time_hash = meeting_t.merge(email_t)
         Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
       end
-      @data.sort_by! { |d| d.total }.reverse!
+      sort_data_by_total = true
       @categories = ["Meetings", "Read Emails", "Sent Emails"]
     when TEAM_DASHBOARD_METRIC[:activities_last14d]
       user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
@@ -94,7 +95,7 @@ class ReportsController < ApplicationController
         user = users.find { |usr| usr.id == uid }
         Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
       end
-      @data.sort_by! { |d| d.total }.reverse!
+      sort_data_by_total = true
       @categories = @data.first.y.map(&:category)
     when TEAM_DASHBOARD_METRIC[:new_alerts_tasks_last14d]
       new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
@@ -114,6 +115,14 @@ class ReportsController < ApplicationController
     else # Invalid
       @data = []
     end
+
+    # sort using tiebreaker: user name, case-insensitive in alphabetical order
+    if sort_data_by_total
+      @data.sort!{ |d1, d2| (d1.total != d2.total) ? d2.total <=> d1.total : d1.name.upcase <=> d2.name.upcase }
+    else
+      @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }  
+    end
+
     # TODO: real left chart pagination
     @data = @data.take(25)
   end
@@ -240,6 +249,9 @@ class ReportsController < ApplicationController
     else # Invalid
       @data = []
     end
+
+    @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }  # sort using tiebreaker: stream name, case-insensitive in alphabetical order
+
     # TODO: real left chart pagination
     @data = @data.take(25)
   end

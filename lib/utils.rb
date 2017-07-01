@@ -12,9 +12,13 @@ module Utils
 	end
 
 	def get_full_name(user)
-		return "" if user.nil?
+    return "" if user.nil?
 
-		[user.first_name, user.last_name].join(" ") if user.first_name.empty? && user.last_name.empty?
+    if user.first_name.blank? && user.last_name.blank?
+        user.email
+    else
+      [user.first_name, user.last_name].join(" ")
+    end
 	end
 
 	def get_first_name(name)
