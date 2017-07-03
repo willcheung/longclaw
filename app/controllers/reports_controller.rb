@@ -2,7 +2,7 @@ class ReportsController < ApplicationController
   before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
 
   ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :risk_score => "Risk Score", :days_inactive => "Days Inactive", :negative_sentiment_activities_pct => "Negative Sentiment / Activities %", :total_open_alerts => "Total Open Alerts", :total_overdue_tasks => "Total Overdue Tasks" }
-  TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :new_alerts_tasks_last14d => "New Alerts & Tasks (Last 14d)", :closed_alerts_last14d => "Closed Alerts (Last 14d)", :open_alerts => "Open Alerts"}
+  TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :new_alerts_last14d => "New Alerts (Last 14d)", :closed_alerts_last14d => "Closed Alerts (Last 14d)", :open_alerts => "Open Alerts"}
 
   # "accounts_dashboard" is actually referring to account streams, AKA projects
   def accounts_dashboard
@@ -18,19 +18,9 @@ class ReportsController < ApplicationController
     users = current_user.organization.users
     @departments = users.pluck(:department).compact.uniq
     @titles = users.pluck(:title).compact.uniq
-    user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
-    @data = [] and @categories = [] and return if user_activities.blank?
 
-    @data = user_activities.map do |uid, activities|
-      user = users.find { |usr| usr.id == uid }
-      Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
-    end
-    @data.sort_by! { |d| d.total }.reverse!
-    @categories = @data.first.y.map(&:category)
-
-    # TODO: real left chart pagination
-    @data = @data.take(25)
-    # td_sort_data
+    params[:sort] = TEAM_DASHBOARD_METRIC[:activities_last14d]
+    td_sort_data
   end
 
   # for loading left-chart on team_dashboard
@@ -97,7 +87,7 @@ class ReportsController < ApplicationController
       end
       sort_data_by_total = true
       @categories = @data.first.y.map(&:category)
-    when TEAM_DASHBOARD_METRIC[:new_alerts_tasks_last14d]
+    when TEAM_DASHBOARD_METRIC[:new_alerts_last14d]
       new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = new_tasks.map do |u|
         Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
@@ -119,12 +109,11 @@ class ReportsController < ApplicationController
     # sort using tiebreaker: user name, case-insensitive in alphabetical order
     if sort_data_by_total
       @data.sort!{ |d1, d2| (d1.total != d2.total) ? d2.total <=> d1.total : d1.name.upcase <=> d2.name.upcase }
-    else
+    else  # sort by y instead
       @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }  
     end
 
-    # TODO: real left chart pagination
-    @data = @data.take(25)
+    @data = @data.take(25)  # TODO: real left chart pagination
   end
 
   def td_user_data
@@ -251,9 +240,8 @@ class ReportsController < ApplicationController
     end
 
     @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }  # sort using tiebreaker: stream name, case-insensitive in alphabetical order
-
-    # TODO: real left chart pagination
-    @data = @data.take(25)
+    
+    @data = @data.take(25)  # TODO: real left chart pagination
   end
 
   # for loading right panel on accounts_dashboard ("account" in this case is an account stream, internally known as a project)

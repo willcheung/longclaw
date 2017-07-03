@@ -7,7 +7,7 @@ var barColors = {
 var chart = $('#left-chart').highcharts();
 chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
 chart.series[0].update({ 
-  name: "<%= @metric %>",
+  name: "<%= @metric.html_safe %>",
   data: [ <% @data.each do |d| %>
   {
     y: <%= d.y %>,

@@ -47,7 +47,7 @@
                 <h4 class="m-l-md">Metric:
                     <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
                     <% ReportsController::ACCOUNT_DASHBOARD_METRIC.each do |k,label| %>
-                        <option <%= "selected" if params[:sort] == k %>><%= label %></option>
+                        <option <%= "selected" if params[:sort] == label %>><%= label %></option>
                     <% end %>
                     </select>
                 </h4>
@@ -122,7 +122,7 @@
                 enabled: false
             },
             series: [{
-                name: '<%= @metric %>',
+                name: '<%= @metric.html_safe %>',
                 data: [
                 <% @data.each do |r| %>
                 {

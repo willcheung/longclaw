@@ -38,7 +38,8 @@ while(chart.series.length > 1) {
 <% else %>
   chart.series[0].show();
   chart.series[0].update({
-    name: "<%= @metric %>",
+    name: "<%= @metric.html_safe %>",
+    color: "<%= highcharts_series_color("Default") %>",
     data: [ <% @data.each do |d| %>
     {
       y: <%= d.y %>,
