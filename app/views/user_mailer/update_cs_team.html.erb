@@ -10,7 +10,9 @@
                     First: <%= @user.first_name %><br/>
                     Last: <%= @user.last_name %><br/>
                     E-mail: <%= @user.email %><br/>
+                    <% if @user.organization.present? %>
                     Organization: <%= @user.organization.name %><br/>
+                    <% end %>
                     Title: <%= @user.title.nil? ? "None" : @user.title %><br/>
                     Role: <%= @user.role.nil? ? "None" : @user.role %><br/>
                     Created At: <%= @user.created_at %><br/>

@@ -1,7 +1,7 @@
 class ReportsController < ApplicationController
   before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
 
-  ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :risk_score => "Risk Score", :days_inactive => "Days Inactive", :negative_sentiment_activities_pct => "Negative Sentiment / Activities %", :total_open_alerts => "Total Open Alerts", :total_overdue_tasks => "Total Overdue Tasks" }
+  ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :risk_score => "Risk Score", :days_inactive => "Days Inactive", :negative_sentiment_activities_pct => "Negative Sentiment / Activities %", :open_alerts => "Open Alerts", :overdue_tasks => "Overdue Tasks" }
   TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :new_alerts_last14d => "New Alerts (Last 14d)", :closed_alerts_last14d => "Closed Alerts (Last 14d)", :open_alerts => "Open Alerts"}
 
   # "accounts_dashboard" is actually referring to account streams, AKA projects
@@ -227,12 +227,12 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: e.id, name: e.name, y: (risk.risk_count.to_f/e.num_activities*100).round(2), color: 'blue'})
       end
       @data.sort_by! { |d| d.y }.reverse!
-    when ACCOUNT_DASHBOARD_METRIC[:total_open_alerts]
+    when ACCOUNT_DASHBOARD_METRIC[:open_alerts]
       open_task_counts = Project.count_tasks_per_project(projects.pluck(:id))
       @data = open_task_counts.map do |r|
         Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'blue'})
       end
-    when ACCOUNT_DASHBOARD_METRIC[:total_overdue_tasks]
+    when ACCOUNT_DASHBOARD_METRIC[:overdue_tasks]
       overdue_tasks = projects.select("COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.is_complete IS FALSE AND EXTRACT(EPOCH FROM notifications.original_due_date) < #{Time.current.to_i}").group("projects.id").order("task_count DESC")
       @data = overdue_tasks.map do |t|
         Hashie::Mash.new({ id: t.id, name: t.name, y: t.task_count, color: 'blue'})
@@ -420,9 +420,9 @@ class ReportsController < ApplicationController
   end
 
   def getTickIntervalForMetric(metric)
-    if [ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d], ReportsController::ACCOUNT_DASHBOARD_METRIC[:total_open_alerts], ReportsController::ACCOUNT_DASHBOARD_METRIC[:total_overdue_tasks]].include? metric 
+    if [ACCOUNT_DASHBOARD_METRIC[:activities_last14d], ACCOUNT_DASHBOARD_METRIC[:open_alerts], ACCOUNT_DASHBOARD_METRIC[:overdue_tasks]].include? metric 
       5
-    elsif [ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d], ReportsController::TEAM_DASHBOARD_METRIC[:new_alerts_last14d], ReportsController::TEAM_DASHBOARD_METRIC[:closed_alerts_last14d], ReportsController::TEAM_DASHBOARD_METRIC[:open_alerts]].include? metric 
+    elsif [TEAM_DASHBOARD_METRIC[:activities_last14d], TEAM_DASHBOARD_METRIC[:new_alerts_last14d], TEAM_DASHBOARD_METRIC[:closed_alerts_last14d], TEAM_DASHBOARD_METRIC[:open_alerts]].include? metric 
       5
     else
       "null"
