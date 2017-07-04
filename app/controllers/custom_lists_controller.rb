@@ -1,5 +1,5 @@
 class CustomListsController < ApplicationController
-	before_action :find_custom_list, only: [:update, :destroy]
+	before_action :set_custom_list, only: [:update, :destroy]
 
 	def create
 		custom_lists_metadatum = current_user.organization.custom_lists_metadatum.find(params[:custom_lists_metadatum_id])
@@ -33,7 +33,7 @@ class CustomListsController < ApplicationController
 
 	private
 
-	def find_custom_list
+	def set_custom_list
 		@custom_list_option = current_user.organization.custom_lists.find(params[:id])
 	end
 

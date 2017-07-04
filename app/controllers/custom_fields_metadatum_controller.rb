@@ -1,5 +1,5 @@
 class CustomFieldsMetadatumController < ApplicationController
-  before_action :find_custom_fields_metadata, only: [:update, :destroy]
+  before_action :set_custom_fields_metadata, only: [:update, :destroy]
 
   #Note: Probably should check if requestor has permission and visibility to view/edit a custom field.
   def create
@@ -39,7 +39,7 @@ class CustomFieldsMetadatumController < ApplicationController
 
   private
 
-  def find_custom_fields_metadata
+  def set_custom_fields_metadata
     @custom_fields_metadata = current_user.organization.custom_fields_metadatum.find(params[:id])
   end
 

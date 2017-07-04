@@ -2,7 +2,7 @@ class SalesforceController < ApplicationController
   layout "empty", only: [:index]
 
   # For accessing Streams#show page+tabs from a Salesforce Visualforce iframe page
-  # e.g., the route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_stream_id> ("&actiontype=" is optional)
+  # The route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_stream_id> ("&actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
   def index
     @category_param = []
     @filter_email = []
@@ -481,10 +481,11 @@ class SalesforceController < ApplicationController
   #   :sfdc_opportunity_fields_metadata -- similar to :sfdc_account_fields_metadata for sfdc_opportunity_fields
   #   :sfdc_contact_fields -- a list of SFDC contact field names mapped to the field labels (visible to the user) in a similar to :sfdc_account_fields
   #   :sfdc_contact_fields_metadata -- similar to :sfdc_account_fields_metadata for sfdc_contact_fields
+  # Returns {} if there is no SFDC connection detected for this Organization, or if there was a SFDC connection error.
   def self.get_salesforce_fields(organization_id: , custom_fields_only: false)
     client = SalesforceService.connect_salesforce(organization_id)
 
-    return nil if client.nil?
+    return {} if client.nil?
 
     sfdc_account_fields = {}
     sfdc_account_fields_metadata = {}

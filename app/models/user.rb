@@ -36,6 +36,7 @@
 #  mark_private           :boolean          default(FALSE), not null
 #  role                   :string
 #  refresh_inbox          :boolean          default(TRUE), not null
+#  encrypted_password_iv  :string
 #
 # Indexes
 #
@@ -695,7 +696,7 @@ class User < ActiveRecord::Base
             GROUP BY recipient) as t
           GROUP BY recipient
         ) as t2 ON t.sender = t2.recipient)t3
-        WHERE email IN ('#{array_of_user_emails.join("','")}')
+        WHERE email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
         ORDER BY total DESC
         limit 5;
     SQL
@@ -804,7 +805,7 @@ class User < ActiveRecord::Base
                   jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t,
                   backend_id
             FROM user_meeting ) t
-        WHERE email in ('#{array_of_user_emails.join("','")}')
+        WHERE email in (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
         GROUP BY backend_id, t.email, t.start_t, t.end_t ) as t2
         GROUP BY t2.email
         ORDER BY email DESC;

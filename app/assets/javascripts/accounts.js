@@ -15,7 +15,7 @@ $(document).ready(function(){
     responsive: true,
     columnDefs: [
       { searchable: false, targets: [0,4,5]},
-      { orderable: false, targets: [0] }
+      { orderable: false, targets: [0,4] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
