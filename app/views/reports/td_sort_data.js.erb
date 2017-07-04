@@ -49,5 +49,7 @@ while(chart.series.length > 1) {
   }, false);
 <% end %>
 
+chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
+//console.log("datamax=" + chart.yAxis[0].dataMax);
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
 chart.redraw();

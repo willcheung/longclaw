@@ -26,6 +26,7 @@ class ReportsController < ApplicationController
   # for loading left-chart on team_dashboard
   def td_sort_data
     @metric = params[:sort]
+    @metric_tick_interval = getTickIntervalForMetric(@metric)
     users = current_user.organization.users
     
     if params[:team].present?
@@ -177,6 +178,7 @@ class ReportsController < ApplicationController
   # for loading left-chart on accounts_dashboard
   def ad_sort_data
     @metric = params[:sort]
+    @metric_tick_interval = getTickIntervalForMetric(@metric)
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
     projects = projects.where(category: params[:category]) if params[:category].present?
@@ -417,4 +419,13 @@ class ReportsController < ApplicationController
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
   end
 
+  def getTickIntervalForMetric(metric)
+    if [ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d], ReportsController::ACCOUNT_DASHBOARD_METRIC[:total_open_alerts], ReportsController::ACCOUNT_DASHBOARD_METRIC[:total_overdue_tasks]].include? metric 
+      5
+    elsif [ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d], ReportsController::TEAM_DASHBOARD_METRIC[:new_alerts_last14d], ReportsController::TEAM_DASHBOARD_METRIC[:closed_alerts_last14d], ReportsController::TEAM_DASHBOARD_METRIC[:open_alerts]].include? metric 
+      5
+    else
+      "null"
+    end
+  end
 end

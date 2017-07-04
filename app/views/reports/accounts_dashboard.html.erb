@@ -105,7 +105,7 @@
             plotOptions: {
                 series: {
                     cursor: 'pointer',
-                    // pointWidth: 20,
+                    maxPointWidth: 75,
                     point: {
                         events: {
                             click: function () {
@@ -143,6 +143,7 @@
         });
 
         var chart = Highcharts.charts[$("#left-chart").data('highchartsChart')];
+        chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
         chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
     });
 

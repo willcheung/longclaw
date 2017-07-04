@@ -115,7 +115,7 @@ class ContextsmithService
       yield data
     elsif data['code'] == 401
       if data['message'] == "Invalid Credentials"
-        puts "Caution: Invalid Credentials encountered.\n" 
+        puts "Caution: Invalid Credentials encountered.\n"
       else
         puts "Error: #{data['message']}\n"
       end
