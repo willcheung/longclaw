@@ -114,11 +114,7 @@ class ContextsmithService
     elsif data.kind_of?(Array)
       yield data
     elsif data['code'] == 401
-      if data['message'] == "Invalid Credentials"
-        puts "Caution: Invalid Credentials encountered.\n"
-      else
-        puts "Error: #{data['message']}\n"
-      end
+      puts "Error: #{data['message']}\n"
       return []
     elsif data['code'] == 404
       puts "#{data['message']}\n"

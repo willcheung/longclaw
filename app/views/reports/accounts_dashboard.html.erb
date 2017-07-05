@@ -100,7 +100,12 @@
                 gridLineWidth: 0
             },
             legend: {
-                enabled: false
+                enabled: true,
+                verticalAlign: 'top',
+                itemStyle: {
+                    fontWeight: 'light',
+                    fontSize: 12         
+                }
             },
             plotOptions: {
                 series: {
@@ -142,7 +147,7 @@
             }]
         });
 
-        var chart = Highcharts.charts[$("#left-chart").data('highchartsChart')];
+        var chart = $('#left-chart').highcharts();
         chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
         chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
     });

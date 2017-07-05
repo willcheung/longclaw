@@ -1,8 +1,8 @@
 class ReportsController < ApplicationController
   before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
 
-  ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :risk_score => "Risk Score", :days_inactive => "Days Inactive", :negative_sentiment_activities_pct => "Negative Sentiment / Activities %", :open_alerts => "Open Alerts", :overdue_tasks => "Overdue Tasks" }
-  TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :new_alerts_last14d => "New Alerts (Last 14d)", :closed_alerts_last14d => "Closed Alerts (Last 14d)", :open_alerts => "Open Alerts"}
+  ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :risk_score => "Risk Score", :days_inactive => "Days Inactive", :negative_sentiment_activities_pct => "Negative Sentiment / Activities %", :open_alerts => "Total Open Alerts", :overdue_tasks => "Total Overdue Tasks" }
+  TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :new_alerts_and_tasks_last14d => "New Alerts & Tasks (Last 14d)", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks"}
 
   # "accounts_dashboard" is actually referring to account streams, AKA projects
   def accounts_dashboard
@@ -23,7 +23,7 @@ class ReportsController < ApplicationController
     td_sort_data
   end
 
-  # for loading left-chart on team_dashboard
+  # for loading metrics (left panel) on Team Dashboard
   def td_sort_data
     @metric = params[:sort]
     @metric_tick_interval = getTickIntervalForMetric(@metric)
@@ -88,17 +88,17 @@ class ReportsController < ApplicationController
       end
       sort_data_by_total = true
       @categories = @data.first.y.map(&:category)
-    when TEAM_DASHBOARD_METRIC[:new_alerts_last14d]
+    when TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d]
       new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = new_tasks.map do |u|
         Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
       end
-    when TEAM_DASHBOARD_METRIC[:closed_alerts_last14d]
+    when TEAM_DASHBOARD_METRIC[:closed_alerts_and_tasks_last14d]
       closed_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS TRUE AND EXTRACT(EPOCH FROM notifications.complete_date) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = closed_tasks.map do |u|
         Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
       end
-    when TEAM_DASHBOARD_METRIC[:open_alerts]
+    when TEAM_DASHBOARD_METRIC[:open_alerts_and_tasks]
       open_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS FALSE").group('users.id').order("task_count DESC")
       @data = open_tasks.map do |u|
         Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
@@ -117,11 +117,12 @@ class ReportsController < ApplicationController
     @data = @data.take(25)  # TODO: real left chart pagination
   end
 
+  # for loading User details (right panel) on Team Dashboard
   def td_user_data
     @user = User.where(organization_id: current_user.organization_id).find(params[:id])
     @error = "Oops, something went wrong. Try again." and return if @user.blank?
 
-    @open_alerts = @user.notifications.open.risks.count
+    @open_alerts = @user.notifications.open.count  #tasks and alerts
     @accounts_managed = @user.projects_owner_of.count
     @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
 
@@ -175,7 +176,7 @@ class ReportsController < ApplicationController
     render layout: false
   end
 
-  # for loading left-chart on accounts_dashboard
+  # for loading metrics (left panel) on Accounts Stream Dashboard
   def ad_sort_data
     @metric = params[:sort]
     @metric_tick_interval = getTickIntervalForMetric(@metric)
@@ -246,7 +247,7 @@ class ReportsController < ApplicationController
     @data = @data.take(25)  # TODO: real left chart pagination
   end
 
-  # for loading right panel on accounts_dashboard ("account" in this case is an account stream, internally known as a project)
+  # for loading "account" details (right panel) on Accounts Stream Dashboard ("account" in this case is an account stream, internally known as a project)
   def ad_account_data
     @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
 
@@ -422,7 +423,7 @@ class ReportsController < ApplicationController
   def getTickIntervalForMetric(metric)
     if [ACCOUNT_DASHBOARD_METRIC[:activities_last14d], ACCOUNT_DASHBOARD_METRIC[:open_alerts], ACCOUNT_DASHBOARD_METRIC[:overdue_tasks]].include? metric 
       5
-    elsif [TEAM_DASHBOARD_METRIC[:activities_last14d], TEAM_DASHBOARD_METRIC[:new_alerts_last14d], TEAM_DASHBOARD_METRIC[:closed_alerts_last14d], TEAM_DASHBOARD_METRIC[:open_alerts]].include? metric 
+    elsif [TEAM_DASHBOARD_METRIC[:activities_last14d], TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d], TEAM_DASHBOARD_METRIC[:closed_alerts_and_tasks_last14d], TEAM_DASHBOARD_METRIC[:open_alerts_and_tasks]].include? metric 
       5
     else
       "null"

@@ -9,6 +9,7 @@ while(chart.series.length > 1) {
   chart.addSeries({
     name: "<%= c %>",
     color: "<%= highcharts_series_color(c) %>",
+    // showInLegend: false,
     data: [ 
     <% @data.each do |d| %>
     {
@@ -25,6 +26,7 @@ while(chart.series.length > 1) {
   chart.addSeries({
     name: "<%= c %>",
     color: "<%= highcharts_series_color(c) %>",
+    //showInLegend: false,
     data: [ 
     <% @data.each do |d| %>
     {

@@ -91,7 +91,12 @@
                 gridLineWidth: 0
             },
             legend: {
-                enabled: false
+                enabled: true,
+                verticalAlign: 'top',
+                itemStyle: {
+                    fontWeight: 'light',
+                    fontSize: 12         
+                }
             },
             plotOptions: {
                 series: {
@@ -108,20 +113,28 @@
                             }
                         }
                     }
-                }   
+                },
+                column: {
+                    events: {
+
+                    }
+                },
+                allowPointSelect: false
             },
             credits: {
                 enabled: false
             },
             series: [{
                 name: 'Series 1',
-                visible: false
+                visible: false,
+                showInLegend: false
             },
             <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
                 <% @categories.each.with_index do |c, i| %>
                 {
                     name: "<%= c %>",
                     color: "<%= highcharts_series_color(c) %>",
+                    //showInLegend: false,
                     data: [ 
                     <% @data.each do |d| %>
                     {
@@ -137,6 +150,7 @@
                 {
                     name: "<%= c %>",
                     color: "<%= highcharts_series_color(c) %>",
+                    //showInLegend: false,
                     data: [ 
                     <% @data.each do |d| %>
                     {
@@ -163,7 +177,7 @@
             ]
         });
 
-        var chart = Highcharts.charts[$("#left-chart").data('highchartsChart')];
+        var chart = $('#left-chart').highcharts();
         chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
         chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
     });
