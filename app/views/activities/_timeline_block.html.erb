@@ -72,6 +72,12 @@
                                 <span class="message-content">
                                     <%= smart_email_body(m, @users_reverse.present?) %>
                                 </span>
+                                <% if m.attachments? %>
+                                <hr class="message-divider"/>
+                                  <% m.attachments.each do |att| %>
+                                  <p><i class="fa fa-paperclip fa-rotate-90"></i>&nbsp;<%= att.name %></p>
+                                  <% end %>
+                                <% end %>
                             </div>
                         </div>
                     </div>
