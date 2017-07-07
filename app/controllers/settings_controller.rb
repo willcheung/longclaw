@@ -163,7 +163,7 @@ class SettingsController < ApplicationController
 			if @sfdc_fields.empty?  # SFDC connection error
 				@salesforce_connection_error = true
 			else
-				EntityFieldsMetadatum.create_default_for(current_user.organization) if current_user.organization.entity_fields_metadatum.first.present?  # SFDC connection exists, so check if mapping exists; if not, create a default mapping to SFDC fields
+				EntityFieldsMetadatum.create_default_for(current_user.organization) if current_user.organization.entity_fields_metadatum.first.blank?  # SFDC connection exists, so check if mapping exists; if not, create a default mapping to SFDC fields
 
 				# add ("nil") options to remove mapping 
 				@sfdc_fields[:sfdc_account_fields] << ["","(Unmapped)"] 
