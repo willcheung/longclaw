@@ -53,7 +53,7 @@
     <% end %>
 
     <% open_tasks = p.notifications.reject { |n| n.is_complete || (n.category != Notification::CATEGORY[:Alert] && n.category != Notification::CATEGORY[:Todo])} %>
-    <% open_alerts = p.notifications.risks.reject {|n| n.is_complete } %>
+    <% open_alerts = p.notifications.alerts.reject {|n| n.is_complete } %>
     <% open_alerts_last_week_count = p.get_alerts_in_range(@current_user_timezone,nil,7).reject {|n| n.is_complete }.count %>
     <% alerts_pct_chg = nil %>
     <% alerts_pct_chg = ((open_alerts.count-open_alerts_last_week_count)/open_alerts_last_week_count.to_f * 100).to_i  if open_alerts_last_week_count != 0 %>

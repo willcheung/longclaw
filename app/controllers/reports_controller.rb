@@ -109,7 +109,7 @@ class ReportsController < ApplicationController
     @user = User.where(organization_id: current_user.organization_id).find(params[:id])
     @error = "Oops, something went wrong. Try again." and return if @user.blank?
 
-    @open_alerts = @user.notifications.open.risks.count
+    @open_alerts = @user.notifications.open.alerts.count
     @accounts_managed = @user.projects_owner_of.count
     @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
 
@@ -272,29 +272,7 @@ class ReportsController < ApplicationController
     # Engagement Volume Chart
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
-    # Total activities by Conversation
-    # activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
 
-    # # TODO: Generate data for Risk Volume Chart in SQL query
-    # # Risk Volume Chart
-    # risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
-    # risks_by_date = Array.new(14, 0)
-    # risk_notifications.each do |r|
-    #   # risks_by_date based on number of days since 14 days ago
-    #   day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
-    #   risks_by_date[day_index] += 1
-    # end
-
-
-    # # Calculates the Risk Volume / Activity Engagment through Conversation
-    # @risk_activity_engagement = []
-    # risks_by_date.zip(activity_engagement).each do | a, b|
-    #   if b == 0
-    #     @risk_activity_engagement.push(0)
-    #   else
-    #     @risk_activity_engagement.push(a/b.to_f * 100)
-    #   end
-    # end
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
     # Read and Sent times
@@ -322,108 +300,6 @@ class ReportsController < ApplicationController
     @team_leaderboard = @team_leaderboard[0...5]
 
     render layout: false
-  end
-
-  def touches_by_team
-    # TODO: find way to get number of projects for each user listed here
-    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
-    @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
-  end
-
-  def accounts
-    # if params[:type]
-    #   # Filter
-    #   account_type_filter = "accounts.category = '#{params[:type]}'"
-    # else
-    #   account_type_filter = ""
-    # end
-    # @projects = Project.visible_to(current_user.organization_id, current_user.id).where(account_type_filter)
-
-
-
-    # set static boolean based on environment and pass to find_include_sum_activities
-    static = Rails.env.development?
-    # Load all projects visible to user
-    @projects = Project.visible_to(current_user.organization_id, current_user.id)
-    @project_all_touches = []
-    @project_all_chg_touches = []
-    ###### Report Data ######
-    if !@projects.empty?
-      # equivalent to Project.find_include_sum_activities(7*24, @projects.map(&:id))
-      # @project_all_touches = Project.find_include_sum_activities(0, static, 90*24, @projects.map(&:id))
-      # sorted high to low by num_activities
-      # @project_all_touches.sort! { |x, y| x.num_activities.to_i <=> y.num_activities.to_i }.reverse!
-
-      # project_prev_all_touches = Project.find_include_sum_activities(7*24, static, 14*24, @projects.map(&:id))
-      # project_chg_activities = Project.calculate_pct_from_prev(@project_all_touches, project_prev_all_touches)
-      # # sorted high to low by pct_from_prev
-      # project_chg_activities.sort! { |x, y| x.pct_from_prev.to_f <=> y.pct_from_prev.to_f }.reverse!
-      # if project_chg_activities.length > 10
-      #   # take first and last 5 from sorted array == most /least
-      #   project_chg_activities_top = project_chg_activities[0, 5]
-      # else
-      #   project_chg_activities_top = project_chg_activities
-      # end
-      # @project_top_chg_touches = {}
-      # @project_top_chg_touches[:pos] = project_chg_activities_top.select { |x| x.pct_from_prev > 0 }
-      # @project_top_chg_touches[:no] = project_chg_activities_top.select { |x| x.pct_from_prev == 0 }
-      # @project_top_chg_touches[:neg] = project_chg_activities_top.select { |x| x.pct_from_prev < 0 }
-
-      # @project_all_chg_touches = {}
-      # @project_all_chg_touches[:pos] = project_chg_activities.select { |x| x.pct_from_prev > 0 }
-      # @project_all_chg_touches[:no] = project_chg_activities.select { |x| x.pct_from_prev == 0 }
-      # @project_all_chg_touches[:neg] = project_chg_activities.select { |x| x.pct_from_prev < 0 }
-    end
-  end
-
-  def team
-    # Placeholder stuff from home_controller
-    # Load all projects visible to user
-    @projects = Project.visible_to(current_user.organization_id, current_user.id)
-    @projects_min_scores = Hash.new()
-    project_tasks = Notification.where(project_id: @projects.pluck(:id))
-    @open_tasks = project_tasks.open.count
-    @closed_tasks = project_tasks.where(is_complete: true, complete_date: (7.days.ago..Time.current)).count
-    @open_risks = project_tasks.open.risks.count
-    @overdue_tasks = project_tasks.where("is_complete = false and original_due_date::date < ?", Date.today).count
-
-    ###### Dashboard Metrics ######
-    if !@projects.empty?
-
-      project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
-
-      # Top Active Streams
-      @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
-      @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
-
-      project_prev_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 14*24, 7*24)
-      project_chg_activities = Project.calculate_pct_from_prev(project_sum_activities, project_prev_sum_activities)
-      # Top Movers
-      @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
-      @project_min_chg = project_chg_activities.min_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev <= 0 }
-
-      # How Busy Are We? Chart
-      @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.pluck(:id), current_user.time_zone)
-
-      # Team Leaderboard
-      @team_leaderboard = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
-      @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace email with user full name
-
-      # Risk Score Trend
-      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.pluck(:id), current_user.time_zone)
-
-      # Top Risks
-      projects_risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse[0...5]
-      ### NOT using built in Ruby max_by function due to bug
-      projects_risks_counts = Project.count_tasks_per_project(@projects.pluck(:id))
-      @top_risks = projects_risk_scores.map do |p|
-        rc = projects_risks_counts.find { |r| r.id == p[0] }
-        { id: p[0], risk_score: p[1], name: rc.name, open_risks: rc.open_risks }
-      end
-    end
-  end
-
-  def lifecycle
   end
 
   #### Private helper functions ####

@@ -9,7 +9,7 @@ class HomeController < ApplicationController
     project_tasks = Notification.where(project_id: @projects.pluck(:id))
     # Unused metrics
     #@open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)
-    #@open_risks = project_tasks.open.risks
+    #@open_risks = project_tasks.open.alerts
     @overdue_tasks = project_tasks.open.where("original_due_date::date <= ?", Date.today).where("assign_to='#{current_user.id}'")
     @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'")
     # Need this to show project name and user name

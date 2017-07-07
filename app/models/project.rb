@@ -763,9 +763,9 @@ class Project < ActiveRecord::Base
   # days_ago_end: end of created_at date range in number of days ago from today, non-inclusive! (default:"yesterday")
   def get_alerts_in_range(time_zone, days_ago_start=nil, days_ago_end=0)
     if (days_ago_start.nil?)
-      self.notifications.risks.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+      self.notifications.alerts.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
     else
-      self.notifications.risks.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+      self.notifications.alerts.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
     end
   end
 
