@@ -483,8 +483,13 @@ class Activity < ActiveRecord::Base
   end
 
   ### methods to batch change jsonb columns
+  # convenience method to make input easier compared to time_shift
+  def time_jump(date)
+    time_shift((date - self.last_sent_date).round)
+  end
+
   # updates all sent_date related fields for the activity by sec (time in seconds)
-  def timejump(sec)
+  def time_shift(sec)
     self.last_sent_date += sec
     self.last_sent_date_epoch = (self.last_sent_date_epoch.to_i + sec).to_s
     em = self.email_messages

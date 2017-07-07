@@ -737,9 +737,15 @@ class Project < ActiveRecord::Base
     return project_chg_activities
   end
 
-  ### method to batch update activities in a project by time (in seconds)
-  def timejump(sec)
-    self.activities.each { |a| a.timejump(sec) }
+  # convenience method to make input easier compared to time_shift
+  def time_jump(date)
+    latest_activity_date = activities.first.last_sent_date
+    activities.each { |a| a.time_shift((date - latest_activity_date).round) }
+  end
+
+  ### method to batch update sent_date-related attributes of all activities in a project by a scalar value (in seconds)
+  def time_shift(sec)
+    activities.each { |a| a.time_shift(sec) }
   end
 
   ### method to batch update activities in a project by person
