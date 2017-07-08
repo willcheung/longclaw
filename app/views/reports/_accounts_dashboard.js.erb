@@ -1,0 +1,58 @@
+// Shared metric update code (left panel) between accounts_dashboard.html.erb & ad_sort_data.js.erb
+var chart = $('#left-chart').highcharts();
+var barColors = { 
+  default: '<%= highcharts_series_color() %>', 
+  highRisk: '#ED5565',
+  mediumRisk: '#FFA500',
+  lowRisk: '#A1C436'
+};
+chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
+chart.series[1].update({ 
+  name: "<%= @metric.html_safe %>",
+  data: [ <% @data.each do |d| %>
+  {
+    y: <%= d.y %>,
+    color: barColors["<%= d.color %>"],
+    id: "<%= d.id %>"
+  },
+  <% end %> ]
+}, false);
+
+// Hide/show legend
+for (var i=1; i < chart.series.length; i++) {
+  chart.series[i].update({ 
+    showInLegend: <%= (@metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d]) ? 'true' : 'false' %>,
+  });
+}
+
+// Set-up average "Risk Score" line
+<% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:risk_score] %>
+  // chart.yAxis[0].update({min: 0, max: 100}, false);
+  // update average line and unhide
+  chart.series[0].setData(<%= Array.new(@data.length, @average).to_json.html_safe %>)
+  chart.series[0].show();
+<% else %>
+  // chart.yAxis[0].update({min: undefined, max: undefined}, false);
+  chart.series[0].hide();  // hide average line
+<% end %>
+
+chart.xAxis[0].update({min: undefined, max: undefined}, false);
+chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
+chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
+
+// Click on axis label
+$('.highcharts-xaxis-labels text').click(function() {
+    $.get("ad_account_data/" + get_category_uuid($(this).text()), function (data) {
+        $("#account-data").html(data);
+        renderCharts(this.y);
+    })
+});
+
+function get_category_uuid (catname) {
+  var map = {
+  <% @data.each do |d| %>
+    "<%= d.name.html_safe %>": "<%= d.id %>",
+  <% end %>
+  };
+  return map[catname];
+}

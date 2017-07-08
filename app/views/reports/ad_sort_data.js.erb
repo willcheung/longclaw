@@ -4,10 +4,10 @@ var barColors = {
   mediumRisk: '#FFA500',
   lowRisk: '#A1C436'
 };
-var chart = $('#left-chart').highcharts()
+var chart = $('#left-chart').highcharts();
 chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
 chart.series[0].update({ 
-  name: "<%= @sort %>",
+  name: "<%= @metric.html_safe %>",
   data: [ <% @data.each do |d| %>
   {
     y: <%= d.y %>,
@@ -17,13 +17,16 @@ chart.series[0].update({
   <% end %> ]
 }, false);
 
-<% if @sort == "Negative Sentiment Score" || @sort == "Risk Score" %>
+<% if @metric == "Negative Sentiment Score" || @metric == "Risk Score" %>
 chart.yAxis[0].update({min: 0, max: 100}, false);
+// set average line and unhide
 chart.series[1].setData(<%= Array.new(@data.length, @average).to_json.html_safe %>)
 chart.series[1].show();
 <% else %>
 chart.yAxis[0].update({min: undefined, max: undefined}, false);
-chart.series[1].hide();
+chart.series[1].hide();  // hide average line
 <% end %>
 
+chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
+chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
 chart.redraw();

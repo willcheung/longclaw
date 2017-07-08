@@ -45,6 +45,8 @@ module ApplicationHelper
       '#00cccc'
     when 'Read Emails'
       '#995cd6'
+    else
+      '#7cb5ec'
     end
   end
 
