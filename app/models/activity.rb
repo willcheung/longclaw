@@ -42,7 +42,8 @@ class Activity < ActiveRecord::Base
   belongs_to :project
   belongs_to :oauth_user
   has_many :comments, dependent: :destroy
-  has_many :notifications, dependent: :destroy
+  has_many :notifications, -> { non_attachments }, dependent: :destroy
+  has_many :attachments, -> { attachments }, class_name: 'Notification'
 
   scope :pinned, -> { where is_pinned: true }
   scope :last_active_on, -> { maximum "last_sent_date" }
@@ -54,7 +55,6 @@ class Activity < ActiveRecord::Base
   scope :reverse_chronological, -> { order last_sent_date: :desc }
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
-
 
   acts_as_commentable
 

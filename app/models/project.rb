@@ -43,12 +43,14 @@ class Project < ActiveRecord::Base
   belongs_to  :account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
-  has_many  :notifications, dependent: :destroy
+
+  has_many  :notifications, -> { non_attachments }, dependent: :destroy
+  has_many  :notifications_all, class_name: 'Notification', dependent: :destroy
+  has_many  :attachments, -> { attachments }, class_name: 'Notification'
   has_many  :notifications_for_daily_email, -> {
-    where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
+    non_attachments.where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
       Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Notification::CATEGORY[:Alert])
-    .order(:is_complete, :original_due_date)
-  }, class_name: "Notification"
+    .order(:is_complete, :original_due_date) }, class_name: "Notification"
   #has_many  :notifications_for_weekly_email, -> {
   #  where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc - 1.weeks, Time.current.yesterday.end_of_day.utc)
   #  .order(:is_complete, :original_due_date)
