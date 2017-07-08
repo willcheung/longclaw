@@ -76,39 +76,6 @@ class ProjectsController < ApplicationController
     render "show"
   end
 
-  def insights_tab
-    @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
-
-    # Engagement Volume Chart
-    @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
-    @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
-
-    #Shows the total email usage report
-    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
-    @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
-
-    # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
-    # Most Active Contributors & Activities By Team
-    user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)
-    @team_leaderboard = []
-    @activities_by_dept = Hash.new(0)
-    activities_by_dept_total = 0
-    user_num_activities.each do |u|
-      user = User.find_by_email(u.email)
-      u.email = get_full_name(user) if user
-      @team_leaderboard << u
-      dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
-      @activities_by_dept[dept] += u.inbound_count + u.outbound_count
-      activities_by_dept_total += u.inbound_count + u.outbound_count
-    end
-    # Convert Activities By Team to %
-    @activities_by_dept.each { |dept, count| @activities_by_dept[dept] = (count.to_f/activities_by_dept_total*100).round(1)  }
-    # Only show top 5 for Most Active Contributors
-    @team_leaderboard = @team_leaderboard[0...5]
-
-    render "show"
-  end
-
   def arg_tab # Account Relationship Graph
     @data = @project.activities.where(category: %w(Conversation Meeting))
 
