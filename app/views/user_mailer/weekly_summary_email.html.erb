@@ -25,7 +25,7 @@
 
 <!-- Summary -->
 <div style="margin-bottom:30px;min-width:560px;max-width:100%;">
-  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following <%= pluralize(@projects.length, 'stream') %>:</h2>
+  <h2 style="margin:6px 0 9px;font-size:22px;font-weight:200;margin-bottom:20px;color:#333333">You are following <%= pluralize(@projects.length, 'opportunity') %>:</h2>
 
   <!-- Project/stream detail -->
   <% @projects.each.with_index do |p,i| %>
@@ -104,7 +104,7 @@
         <tr>
           <div style="border-bottom:1px solid #c1c1c1;padding-bottom: 5px;">
             <div style="display: inline-block; padding-top: 19px; height: 100%;">
-              <span style="color:#666;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %> stream</span>
+              <span style="color:#666;text-overflow:ellipsis;font-size:24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></span>
               <!-- ## account name-->
               <span style="margin:0 0.4em;font-size:24px;border-left:1px solid #CCC;"></span>
               <span style="font-size:14px;font-weight:bold;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;"><%= p.account.name %></span>
@@ -353,7 +353,7 @@
     <!-- "See more of this Stream" button -->
     <div style="height:40px;width:100%;margin:2em auto">
       <span style="margin-left:<%=15-(p.name.length/4)%>em">
-        <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 7px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" stream in ContextSmith app'>See more <%= p.name %> stream &rarr;</a> 
+        <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 7px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" opportunity in ContextSmith app'>See more <%= p.name %> &rarr;</a> 
       </span>
     </div>
 
@@ -383,5 +383,5 @@
 
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
 <tr><td><p style="color:#333;font-weight: normal; text-align: left; line-height: 20px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="center">
-Click <a target="_blank" href="<%= projects_url %>"><span style="text-decoration:underline">here to Subscribe or Unsubscribe</span></a> to weekly and daily stream alerts.
+Click <a target="_blank" href="<%= projects_url %>"><span style="text-decoration:underline">here to Subscribe or Unsubscribe</span></a> to weekly and daily summary.
 </p></td></tr></table>

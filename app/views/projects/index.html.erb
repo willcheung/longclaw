@@ -1,18 +1,18 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>Streams</h2>
+        <h2>Opportunities</h2>
         <ol class="breadcrumb">
             <li>
                 <a href="<%= root_path %>">Home</a>
             </li>
             <li class="active">
-                <strong>Streams</strong>
+                <strong>Opportunities</strong>
             </li>
         </ol>
     </div>
     <% if current_user.power_user? %>
     <div class="col-lg-2">
-        <%= link_to '+ New Stream', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+        <%= link_to '+ New Opportunity', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>
     <% end %>
 </div>
@@ -87,7 +87,7 @@
                             <thead>
                                 <tr>
                                     <th></th>
-                                    <th>Stream</th>
+                                    <th>Name</th>
                                     <th><%= Project::MAPPABLE_FIELDS_META["stage"] %></th>
                                     <th><%= Project::MAPPABLE_FIELDS_META["amount"] %></th>
                                     <th>Owner</th>
