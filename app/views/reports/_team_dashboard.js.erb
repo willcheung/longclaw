@@ -55,3 +55,20 @@ while(chart.series.length > 1) {
 chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
 //console.log("datamax=" + chart.yAxis[0].dataMax);
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110)); //set graph height
+
+// handle clicking on user label
+$('.highcharts-xaxis-labels text').click(function() {
+    $.get("td_user_data/" + get_category_uuid($(this).text()), function (data) {
+        $("#user-data").html(data);
+        renderCharts(this.y);
+    })
+});
+
+function get_category_uuid (catname) {
+  var map = {
+  <% @data.each do |d| %>
+    "<%= d.name.html_safe %>": "<%= d.id %>",
+  <% end %>
+  };
+  return map[catname];
+}

@@ -467,7 +467,17 @@ class SalesforceController < ApplicationController
     # delete salesforce oauth_user
     SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).destroy_all   # will unlink all accounts for the Organization if somebody from the Organization d/c's from their SFDC account!
     salesforce_user = OauthUser.find_by(id: params[:id])
-    salesforce_user.destroy if salesforce_user.present?
+    if salesforce_user.present?
+      salesforce_user.destroy
+      # Unmap SFDC fields to standard fields
+      current_user.organization.entity_fields_metadatum.each do |fm|
+        fm.update(salesforce_field: nil)
+      end
+      # Unmap SFDC fields to custom fields
+      current_user.organization.custom_fields_metadatum.each do |fm|
+        fm.update(salesforce_field: nil)
+      end
+    end
 
     respond_to do |format|
       format.html { redirect_to(request.referer || settings_path) }

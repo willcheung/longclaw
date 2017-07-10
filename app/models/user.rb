@@ -398,7 +398,7 @@ class User < ActiveRecord::Base
                 AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                 AND (messages ->> 'sentDate')::integer > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
           ) AS emails
-        ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{self.time_zone}') = time_series.days AND '#{self.email}' IN (emails.from, emails.to, emails.cc)
+        ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{self.time_zone}') = time_series.days AND #{User.sanitize(self.email)} IN (emails.from, emails.to, emails.cc)
       GROUP BY days, category
       ORDER BY days ASC
       )
@@ -410,7 +410,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Meeting]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1..-2]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS meetings
@@ -426,7 +426,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:JIRA]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1..-2]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS jiras
@@ -442,7 +442,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Salesforce]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1..-2]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS salesforces
@@ -458,7 +458,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Zendesk]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1..-2]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS zendesks
@@ -474,7 +474,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Basecamp2]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1..-2]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS basecamp2s
@@ -755,7 +755,7 @@ class User < ActiveRecord::Base
         FROM (
           SELECT DISTINCT message_id, project_id, word_count
           FROM user_emails
-          WHERE "from" = '#{self.email}'
+          WHERE "from" = #{User.sanitize(self.email)}
         ) outbound_emails
         GROUP BY project_id, message_id
         UNION ALL
@@ -763,7 +763,7 @@ class User < ActiveRecord::Base
         FROM (
           SELECT DISTINCT message_id, project_id, word_count
           FROM user_emails
-          WHERE '#{self.email}' IN ("to", "cc")
+          WHERE #{User.sanitize(self.email)} IN ("to", "cc")
         ) inbound_emails
         GROUP BY project_id, message_id
       ) AS wc_table
@@ -833,7 +833,7 @@ class User < ActiveRecord::Base
       LATERAL jsonb_array_elements(email_messages) messages
       WHERE activities.category = '#{Activity::CATEGORY[:Meeting]}'
       AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
-      AND "from" || "to" || cc @> '[{"address":"#{self.email}"}]'::jsonb
+      AND "from" || "to" || cc @> '[{"address":"#{User.sanitize(self.email)[1..-2]}"}]'::jsonb
       AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{self.organization.accounts.ids.join("','")}'))
       GROUP BY 1
     SQL

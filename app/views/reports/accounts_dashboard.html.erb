@@ -68,7 +68,6 @@
 <%= render "teaser" if current_user.trial? %>
 
 <script type="text/javascript">
-
     $(document).ready(function() {
         $('#sort-type, #account-filter, #owner-filter, #category-filter').change( function () {
             // Clear stream data ("right") chart
@@ -127,29 +126,22 @@
                 enabled: false
             },
             series: [{
-                name: '<%= @metric.html_safe %>',
-                data: [
-                <% @data.each do |r| %>
-                {
-                    y: <%= r.y %>,
-                    color: "<%= risk_color(r.y, true) %>",
-                    id: "<%= r.id %>"
-                },
-                <% end %>
-                ],
-            }, {
                 name: 'Average',
                 type: 'line',
                 lineWidth: 2,
                 color: '#7cb5ec',
                 marker: { enabled: false, radius: 0 },
-                data: <%= Array.new(@data.length, @average).to_json.html_safe %>
+                data: <%= Array.new(@data.length, @average).to_json.html_safe %>,
+                zIndex: 2,
+                showInLegend: false
+            }, {
+                name: '',  // to be updated below
+                data: [],
+                zIndex: 1
             }]
         });
 
-        var chart = $('#left-chart').highcharts();
-        chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
-        chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
+        <%= render partial: "reports/accounts_dashboard.js" %>
     });
 
 </script>

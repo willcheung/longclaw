@@ -78,7 +78,6 @@
                 text: ''
             },
             xAxis: {
-                categories: <%= @data.map(&:name).to_json.html_safe %>,
                 crosshair: true
             },
             yAxis: {
@@ -177,9 +176,7 @@
             ]
         });
 
-        var chart = $('#left-chart').highcharts();
-        chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
-        chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
+        <%= render partial: "reports/team_dashboard.js" %>
     });
 
 </script>
