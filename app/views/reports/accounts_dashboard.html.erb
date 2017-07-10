@@ -133,7 +133,7 @@
                 marker: { enabled: false, radius: 0 },
                 data: <%= Array.new(@data.length, @average).to_json.html_safe %>,
                 zIndex: 2,
-                showInLegend: false
+                showInLegend: false  // for "Activities (Last 14d)" metric, hide average
             }, {
                 name: '',  // to be updated below
                 data: [],

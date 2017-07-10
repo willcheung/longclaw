@@ -18,10 +18,10 @@ chart.series[1].update({
   <% end %> ]
 }, false);
 
-// Hide/show legend
+// Hide/show legend for all data series (i.e., except "average" series)
 for (var i=1; i < chart.series.length; i++) {
   chart.series[i].update({ 
-    showInLegend: <%= (@metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d]) ? 'true' : 'false' %>,
+    showInLegend: <%= (@metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] && @data.present?) ? 'true' : 'false' %>,
   });
 }
 

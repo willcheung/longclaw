@@ -4,6 +4,15 @@ class ReportsController < ApplicationController
   ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :risk_score => "Risk Score", :days_inactive => "Days Inactive", :negative_sentiment_activities_pct => "Negative Sentiment / Activities %", :open_alerts => "Total Open Alerts", :overdue_tasks => "Total Overdue Tasks" }
   TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :new_alerts_and_tasks_last14d => "New Alerts & Tasks (Last 14d)", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks"}
 
+  def team_dashboard
+    users = current_user.organization.users
+    @departments = users.pluck(:department).compact.uniq
+    @titles = users.pluck(:title).compact.uniq
+
+    params[:sort] = TEAM_DASHBOARD_METRIC[:activities_last14d]
+    td_sort_data
+  end
+
   # "accounts_dashboard" is actually referring to account streams, AKA projects
   def accounts_dashboard
     custom_lists = current_user.organization.get_custom_lists_with_options
@@ -12,15 +21,6 @@ class ReportsController < ApplicationController
 
     params[:sort] = ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
     ad_sort_data 
-  end
-
-  def team_dashboard
-    users = current_user.organization.users
-    @departments = users.pluck(:department).compact.uniq
-    @titles = users.pluck(:title).compact.uniq
-
-    params[:sort] = TEAM_DASHBOARD_METRIC[:activities_last14d]
-    td_sort_data
   end
 
   # for loading metrics (left panel) on Team Dashboard
