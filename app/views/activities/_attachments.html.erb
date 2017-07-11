@@ -1,0 +1,17 @@
+<% if attachments.present? %>
+<div style="border-top: 1px solid #e7eaec;">
+  <% attachments.each do |att| %>
+    <div class="p-xxs">
+      <span class="fa-stack">
+        <i class="fa fa-circle fa-stack-2x text-danger"></i>
+        <i class="fa fa-paperclip fa-rotate-90 fa-stack-1x fa-inverse"></i>
+      </span>
+      <%= att.name %>
+      <% email = JSON.parse(att.description) %>
+      <div class="visible-xs-block"></div>
+      <span class="message-author m-l-lg"> <%= email['from'][0]['personal'].nil? ? email['from'][0]['address'] : email['from'][0]['personal'] %> </span> to <%= get_conversation_member_names([], email['to'], email['cc'], "All") %>
+      on <%= att.sent_date.strftime('%b %d, %l:%M%P') %>
+    </div>
+  <% end %>
+</div>
+<% end %>

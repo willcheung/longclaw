@@ -139,10 +139,14 @@ class Notification < ActiveRecord::Base
     sent_date = Time.at(message.sentDate).utc
 
     message.attachments.each do |att|
-      att.from = message.from.first
+      # avoid creating redundant notifications
+      next if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: message.messageId, category: CATEGORY[:Attachment], label: att.checksum
+      att.from = message.from
+      att.to = message.to
+      att.cc = message.cc
       Notification.create(
           category: CATEGORY[:Attachment],
-          label: att.urn,
+          label: att.checksum,
           name: att.name,
           description: att.to_json,
           message_id: message.messageId,

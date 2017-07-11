@@ -274,7 +274,7 @@ class ProjectsController < ApplicationController
   end
 
   def load_timeline
-    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments)
+    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :attachments, :comments)
     # filter by categories
     @filter_category = []
     if params[:category].present?
