@@ -202,7 +202,7 @@ class Project < ActiveRecord::Base
     project_rag_status.each { |pid, rag_score| project_rag_status[pid] = calculate_score_by_setting(rag_score, rag_status_setting) }
 
     # Overall Score
-    overall = [project_base, project_inactivity_risk, project_rag_status].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
+    overall = [project_base, project_inactivity_risk, project_rag_status].each_with_object({}) { |current_hash, result_hash| result_hash.merge!(current_hash) { |pid, h1, h2| h1 + h2 } }
     overall.each { |pid, score| overall[pid] = score.round }
   end
 
