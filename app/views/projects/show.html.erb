@@ -15,7 +15,7 @@
         <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) or current_user.admin? %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
             <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-primary btn-outline m-t-n-sm", id: "btn-refresh" %>
-            <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails and meetings from members."></i>
+            <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest e-mails and meetings from members."></i>
         <% end %>
         <ol class="breadcrumb">
             <li>
@@ -253,7 +253,7 @@
                 </div>
                 <div class="col-sm-10">
                     <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested People</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be part of this account stream. Click the ✔ or X to confirm or reject our suggestions."></i>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your e-mails who might be part of this account stream. Click the ✔ or X to confirm or reject our suggestions."></i>
                 </div>
             </div>
             <!-- empty span here for proper toggle-open event handler traversal -->
@@ -371,7 +371,7 @@
 
                 <div class="col-lg-12">
                     <div class="input-group m-b">
-                        <input type="text" class="form-control" placeholder="Enter email address...">
+                        <input type="text" class="form-control" placeholder="Enter e-mail address...">
                         <div class="input-group-btn">
                             <button data-toggle="dropdown" class="btn btn-white dropdown-toggle" type="button" aria-expanded="false">Permission <span class="caret"></span></button>
                             <ul class="dropdown-menu">

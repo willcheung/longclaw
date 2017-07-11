@@ -89,7 +89,7 @@ class SalesforceController < ApplicationController
           end
         end
 
-        #Shows the total email usage report
+        #Shows the total e-mail usage report
         @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
         @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
         

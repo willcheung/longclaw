@@ -291,13 +291,13 @@
                 outbound: 0
             };
         });
-        // Add node info for each source and target from email data
+        // Add node info for each source and target from e-mail data
         links.forEach(function(link) {
             link.source = nodeByEmail(link.source, +link.count, 0);
             link.target = nodeByEmail(link.target, 0, +link.count);
         });
         function nodeByEmail(email, outbound, inbound) {
-            // Dynamically create nodes with dummy info when email address in email data not added as project member
+            // Dynamically create nodes with dummy info when e-mail address in e-mail data not added as project member
             if (!nodesByEmail[email]) {
                 nodesByEmail[email] = {
                     email: email,

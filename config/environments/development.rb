@@ -16,7 +16,7 @@ Longclaw::Application.configure do
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = true
 
-  # Use letter_opener to preview email
+  # Use letter_opener to preview e-mail
   config.action_mailer.delivery_method = :letter_opener
 
   # Print deprecation notices to the Rails logger.

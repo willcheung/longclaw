@@ -153,7 +153,7 @@ class SalesforceService
   # Finds a Contact in SFDC Account that matches an e-mail address.  If found, performs an update on the SFDC Contact.  If multiple Contacts are found, picks only one (first one alphabetically by LastName, then FirstName). If not found, a new SFDC Contact is created/inserted.  Returns nil if there is an error, or the Contact's SFDC/sObject id if successful.
   # Parameters:   client - connection to Salesforce
   #              sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
-  #               email  - string, the email to search for to determine the contact to upsert
+  #               email  - string, the e-mail to search for to determine the contact to upsert
   #               params - a hash that contains the Contact information (e.g., FirstName, Email, etc.)
   # Returns:    A hash that represents the execution status/result of the upsert. Consists of:
   #               status - "SUCCESS" if successful, or "ERROR" otherwise
@@ -213,7 +213,7 @@ class SalesforceService
     result
   end
 
-  # Updates a Salesforce Contact with info in params. If the SFDC sfdc_contact_id cannot be found, try to find it using Contact's email in the SFDC Account
+  # Updates a Salesforce Contact with info in params. If the SFDC sfdc_contact_id cannot be found, try to find it using Contact's e-mail in the SFDC Account
   # Parameters (all required):  client - connection to Salesforce
   #                             sfdc_contact_id - the external sObject id that identifies the Salesforce Contact to update
   #                             sfdc_account_id - the SFDC/sObject id of the Salesforce Account where the Contact resides

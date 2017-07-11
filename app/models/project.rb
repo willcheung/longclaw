@@ -353,7 +353,7 @@ class Project < ActiveRecord::Base
   # Subquery is based on email_activities_last_14d view.
   def daily_activities(time_zone)
     query = <<-SQL
-      -- Email conversations
+      -- E-mail conversations
       (
       SELECT date(to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}') as last_sent_date,
              '#{Activity::CATEGORY[:Conversation]}' as category,
@@ -471,7 +471,7 @@ class Project < ActiveRecord::Base
         SELECT '#{self.id}'::uuid as project_id, generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') as days
        )
       (
-      -- Email Conversation using emails_activities_last_14d view
+      -- E-mail Conversation using emails_activities_last_14d view
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Conversation]}' as category, count(activities.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id
@@ -644,7 +644,7 @@ class Project < ActiveRecord::Base
     result.each { |pid, project| result[pid] = project.map(&:num_activities) }
   end
 
-  # Top Active Streams/Engagement Last 7d
+  # Top Active Streams/Engagement (in range of hours)
   def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
     hours_ago_end = hours_ago_end.hours.ago.to_i
     hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
