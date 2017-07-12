@@ -1,6 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>Account Stream Dashboard</h2>
+        <h2>Opportunities Dashboard</h2>
     </div>
 </div>
 
@@ -17,7 +17,7 @@
                     <% end %>
                 </select>
                 <!-- Stream Type -->
-                <select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Stream Type">
+                <select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Opportunity Type">
                     <option value=""></option> <!-- no filter -->
                     <% @stream_types.each do |k,v|    %>
                       <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>
@@ -58,7 +58,7 @@
             <div class="col-lg-7" style="margin-top:45px;">
                 <div id="account-data">
                     <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
+                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
                     </div>
                 </div>
             </div>
@@ -72,7 +72,7 @@
     $(document).ready(function() {
         $('#sort-type, #account-filter, #owner-filter, #category-filter').change( function () {
             // Clear stream data ("right") chart
-            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
+            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
 
             // Build URL for AJAX call for filtered data
             var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param({ account: $('#account-filter').val(), category: $('#category-filter').val(), owner: $('#owner-filter').val() });

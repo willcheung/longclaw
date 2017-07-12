@@ -14,7 +14,7 @@
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  is_confirmed        :boolean
-#  category            :string           default("Opportunity")
+#  category            :string           default("New Business")
 #  deleted_at          :datetime
 #  renewal_date        :date
 #  contract_start_date :date
@@ -127,7 +127,7 @@ class Project < ActiveRecord::Base
   validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
-  CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
   MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue" }  # "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count", 
 
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
@@ -681,7 +681,7 @@ class Project < ActiveRecord::Base
       p_account = accounts.find { |a| a.domain == p }
       project = Project.new(name: p_account.name,
                            status: "Active",
-                           category: "Opportunity",
+                           category: "New Business",
                            created_by: user_id,
                            updated_by: user_id,
                            owner_id: user_id,

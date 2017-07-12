@@ -26,8 +26,8 @@
             </div>
             <div class="col-md-6">
                 <ul class="list-group clear-list">
-                    <li class="list-group-item first-item"><strong>Account Streams I'm a part of: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or you contribute to these streams."></i></strong> <br> <small><%= @current_user_projects.pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
-                    <li class="list-group-item"><strong>Account Streams to which I subscribe: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these active and confirmed streams to receive Daily or Weekly updates."></i></strong><br> <small><%= @current_user_subscriptions.select('projects.name').pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
+                    <li class="list-group-item first-item"><strong>Opportunities I'm a part of: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or you contribute to these opportunities."></i></strong> <br> <small><%= @current_user_projects.pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
+                    <li class="list-group-item"><strong>Opportunities I subscribed to: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these active opportunities to receive Daily or Weekly updates."></i></strong><br> <small><%= @current_user_subscriptions.select('projects.name').pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
                 </ul>
             </div>
             <span>&nbsp;</span>

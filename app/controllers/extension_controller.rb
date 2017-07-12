@@ -77,7 +77,7 @@ class ExtensionController < ApplicationController
       if @account.save
         if create_project
           @project.subscribers.create(user: current_user)
-          format.html { redirect_to extension_account_path(internal: params[:internal], external: params[:external]), notice: 'Account Stream was successfully created.' }
+          format.html { redirect_to extension_account_path(internal: params[:internal], external: params[:external]), notice: 'Opportunity was successfully created.' }
           format.js
         else
           format.html { render action: 'no_account' }

@@ -4,7 +4,7 @@ class ReportsController < ApplicationController
   ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :risk_score => "Risk Score", :days_inactive => "Days Inactive", :negative_sentiment_activities_pct => "Negative Sentiment / Activities %", :open_alerts => "Total Open Alerts", :overdue_tasks => "Total Overdue Tasks" }
   TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :new_alerts_and_tasks_last14d => "New Alerts & Tasks (Last 14d)", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks"}
 
-  # "accounts_dashboard" is actually referring to account streams, AKA projects
+  # "accounts_dashboard" is actually referring to opportunities, AKA projects
   def accounts_dashboard
     custom_lists = current_user.organization.get_custom_lists_with_options
     @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
@@ -247,7 +247,7 @@ class ReportsController < ApplicationController
     @data = @data.take(25)  # TODO: real left chart pagination
   end
 
-  # for loading "account" details (right panel) on Accounts Stream Dashboard ("account" in this case is an account stream, internally known as a project)
+  # for loading "account" details (right panel) on Opportunities Dashboard ("account" in this case is an opportunities, internally known as a project)
   def ad_account_data
     @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
 
@@ -379,7 +379,7 @@ class ReportsController < ApplicationController
 
       project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
 
-      # Top Active Streams
+      # Top Active Opportunities
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
       @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
 
