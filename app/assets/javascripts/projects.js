@@ -1,16 +1,16 @@
 //= require highcharts-sparkline/highcharts-sparkline.js
 
-var checkCounter = 0;
+var checkedProjectIds = [];
 var URL_PREFIX = "/projects";
 
 $('[data-toggle="tooltip"]').tooltip();
 
-jQuery(document).ready(function($) {
+$(document).ready(function($) {
 
   $("#search-account-projects").chosen();
-  $('.category_box').chosen({ disable_search: true, allow_single_deselect: true});
-  $('.owner_box').chosen({ allow_single_deselect: true});
-  $('.status_box').chosen({ disable_search: true, allow_single_deselect: true});
+  $('#bulk-category').chosen({ disable_search: true, allow_single_deselect: true});
+  $('#bulk-owner').chosen({ allow_single_deselect: true});
+  $('#bulk-status').chosen({ disable_search: true, allow_single_deselect: true});
   $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
   $('.owner_filter').chosen({ disable_search: true, allow_single_deselect: true});
 
@@ -140,70 +140,33 @@ jQuery(document).ready(function($) {
 
 
   /* Handle bulk action */
-  $('.bulk-project').change(function(){
-    if($(this).is(":checked")){
-      checkCounter++;
+  $('#projects-table tbody').on('change', '.bulk-project', function () {
+    if ($(this).prop("checked")) {
+      checkedProjectIds.push($(this).val());
     }
-    else{
-      checkCounter--;
+    else {
+      var i = checkedProjectIds.indexOf($(this).val());
+      if (i !== -1) {
+        checkedProjectIds.splice(i, 1);
+      }
     }
 
-    if(checkCounter>0)
-    {
-      // $('.bulk-group').css('visibility','visible');
-      $('#bulk-delete').prop("disabled",false);
-      $('#bulk-type').prop("disabled",false).trigger("chosen:updated");
-      $('#bulk-owner').prop("disabled",false).trigger("chosen:updated");
-      $('#bulk-status').prop("disabled",false).trigger("chosen:updated");
+    if (checkedProjectIds.length > 0) {
+      $('.bulk-action').prop("disabled",false).trigger('chosen:updated');
     }
-    else
-    {
-      // $('.bulk-group').css('visibility','hidden');
-      $('#bulk-delete').prop("disabled",true);
-      $('#bulk-type').prop("disabled",true).trigger("chosen:updated");
-      $('#bulk-owner').prop("disabled",true).trigger("chosen:updated");
-      $('#bulk-status').prop("disabled",true).trigger("chosen:updated");
+    else {
+      $('.bulk-action').prop("disabled",true).trigger('chosen:updated');
     }
-    // console.log("checkCounter" + checkCounter);
-
   });
 
   $('#bulk-delete').click(function(){
-    if(bulkOperation("delete",  null, "/project_bulk")==true){
-      window.location.replace(document.location.href); //reload page, keep filter params
-    }
-    else{
-      console.log("bulk error");
-    }
+    bulkOperation("delete",  null);
   });
 
-  $('.category_box').on('change',function(evt,params){
-      if(bulkOperation("category",  params["selected"], "/project_bulk")==true){
-        window.location.replace(document.location.href); //reload page, keep filter params
-      }
-      else{
-        console.log("bulk error");
-      }
+  $('select.bulk-action').chosen().change( function (evt, params) {
+    var op = $(this).prop('id').substring(5);
+    bulkOperation(op, params.selected);
   });
-
-  $('.owner_box').on('change',function(evt,params){
-      if(bulkOperation("owner",  params["selected"], "/project_bulk")==true){
-        window.location.replace(document.location.href); //reload page, keep filter params
-      }
-      else{
-        console.log("bulk error");
-      }
-  });
-
-  $('.status_box').on('change',function(evt,params){
-      if(bulkOperation("status",  params["selected"], "/project_bulk")==true){
-        window.location.replace(document.location.href); //reload page, keep filter params
-      }
-      else{
-        console.log("bulk error");
-      }
-  });
-
 
   $('.category_filter').on('change',function(evt, params){
     var taskType = "";
@@ -290,43 +253,22 @@ function newURL(fullQueryStr, changedParamStr, newParamValueStr) {
     window.location.replace(finalURL);
 }
 
-function bulkOperation(operation, value, url){
-  var array = [];
-  var i = 0;
-  $('.bulk-project:checked').each(function(){
-    array[i] = $(this).val();
-    i++;
-  });
-
+function bulkOperation (operation, value) {
   var temp = {
-    selected: array,
+    project_ids: checkedProjectIds,
     operation: operation,
     value: value
   };
 
-  msg= JSON.stringify(temp);
-  // console.log(msg);
+  var data = $.param(temp);
 
-  var result = false;
-
-  $.ajax({
-      type: "POST",
-      url: url,
-      contentType: 'application/json',
-      dataType: 'json',
-      data: msg,
-      async: false,
-      success: function(){
-        // alert("success!");
-        result = true;
-      },
-      error: function(){
-        // alert("bulk error");
-        result = false;
-      }
-  });
-
-  return result;
+  $.post("/project_bulk", data, 'json')
+    .done(function () {
+      window.location.replace(document.location.href); // reload page, keep filter params
+    })
+    .fail(function () {
+      console.log("bulk error");
+    });
 }
 
 function toggleSection(toggleSectionParentDOMObj) {
