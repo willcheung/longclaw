@@ -32,7 +32,7 @@ class CustomFieldsMetadatum < ActiveRecord::Base
 	validates :name, presence: true, length: { maximum: 30 }
 	validates :update_permission_role, presence: true   # Currently unused
 
-	ENTITY_TYPE = { Account: 'Account', Project: 'Stream' }
+	ENTITY_TYPE = { Account: 'Account', Project: 'Opportunity' }
 	DATA_TYPE = { Text: 'Text', Number: 'Number', List: 'List' } # To do: add Lookup("User"), Date/Time, Checkbox
 
 	# Checks the string 'type' to see if it is a valid ENTITY_TYPE.  If 'type' is valid, returns the ENTITY_TYPE (key); otherwise, returns nil. Use match_external_value=true to validate 'type' with the mapped value (the external value displayed to the user) instead of the key.

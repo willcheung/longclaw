@@ -48,7 +48,7 @@
             <div class="col-md-7" style="margin-top:45px;">
                 <div id="user-data">
                     <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
+                        <h3>&larr; Click on a bar to see details about the rep.</h3>
                     </div>
                 </div>
             </div>
@@ -63,7 +63,7 @@
 
         $('#sort-type, #team-filter, #title-filter').change( function () {
             // Clear stream data ("right") chart
-            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
+            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the rep.</h3></div>");
 
             // Build URL for AJAX call for filtered data
             var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param({ team: $('#team-filter').val(), title: $('#title-filter').val() });

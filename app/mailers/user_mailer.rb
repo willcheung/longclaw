@@ -7,7 +7,7 @@ class UserMailer < ApplicationMailer
     @url = url
 
     track user: user # ahoy_email tracker
-    mail(to: @user.email, subject: "Your Account Streams are ready at ContextSmith")
+    mail(to: @user.email, subject: "Your Accounts are created in ContextSmith")
   end
 
   def daily_summary_email(user)
