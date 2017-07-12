@@ -279,7 +279,14 @@ class ProjectsController < ApplicationController
     @filter_category = []
     if params[:category].present?
       @filter_category = params[:category].split(',')
-      activities = activities.where(category: @filter_category)
+      # special case: if Attachments category selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
+      if @filter_category.include?(Notification::CATEGORY[:Attachment])
+        where_categories = @filter_category - [Notification::CATEGORY[:Attachment]]
+        category_condition = "activities.category IN ('#{where_categories.join("','")}') OR activities.category = '#{Activity::CATEGORY[:Conversation]}' AND att_filter.id IS NOT NULL"
+        activities = activities.joins("LEFT JOIN notifications AS att_filter ON att_filter.activity_id = activities.id AND att_filter.category = '#{Notification::CATEGORY[:Attachment]}'").where(category_condition).distinct
+      else
+        activities = activities.where(category: @filter_category)
+      end
     end
     # filter by people
     @filter_email = []
