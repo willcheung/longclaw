@@ -43,8 +43,6 @@ class Notification < ActiveRecord::Base
   CATEGORY = { Notification: 'Notification', Action: 'Smart Action', Todo: 'To-do', Alert: 'Alert', Opportunity: 'Opportunity', Attachment: 'Attachment' }.freeze
 
   def self.load(data, project, test=false, day_range=7)
-    alert_settings = RiskSetting.where(level: project.account.organization)
-    
     neg_sentiment_setting = RiskSetting.find_by(level: project.account.organization, metric: RiskSetting::METRIC[:NegSentiment])
 
     data_hash = data.map { |hash| Hashie::Mash.new(hash) }
@@ -53,11 +51,11 @@ class Notification < ActiveRecord::Base
         c.messages.each do |message|
           # load attachments
           if message.attachments.present?
-            load_attachment_for_each_message(project.id, c.conversationId, message)
+            load_attachment_for_each_message(project, c.conversationId, message)
           end
 
           if neg_sentiment_setting.notify_task && message.sentimentItems.present?
-            load_alert_for_each_message(project.id, c.conversationId, message, neg_sentiment_setting, test, day_range)
+            load_alert_for_each_message(project, c.conversationId, message, neg_sentiment_setting, test, day_range)
           end
         end
       end
@@ -127,20 +125,18 @@ class Notification < ActiveRecord::Base
     end
   end
 
-  def self.load_attachment_for_each_message(project_id, conversation_id, message)
+  def self.load_attachment_for_each_message(project, conversation_id, message)
     # get activity id. If no such activity exist in front end(could be caused by users deleting this activity), ignore this attachment
-    activity = Activity.find_by(category: Activity::CATEGORY[:Conversation], backend_id: conversation_id, project_id: project_id)
+    activity = Activity.find_by(category: Activity::CATEGORY[:Conversation], backend_id: conversation_id, project: project)
     return if activity.blank?
 
-    assign_to = User.find_by email: message.from[0].address
-    assign_to = User.find_by email: message.to[0].address if assign_to.nil? && message.to
-    assign_to = assign_to.blank? ? nil : assign_to.id
+    assign_to = User.find_by(email: message.from[0].address, organization: project.account.organization) || User.find_by(email: message.to[0].address, organization: project.account.organization) if message.to
 
     sent_date = Time.at(message.sentDate)
 
     message.attachments.each do |att|
       # avoid creating redundant notifications
-      next if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: message.messageId, category: CATEGORY[:Attachment], label: att.checksum
+      next if Notification.find_by project: project, conversation_id: conversation_id, message_id: message.messageId, category: CATEGORY[:Attachment], label: att.checksum
       att.from = message.from
       att.to = message.to
       att.cc = message.cc
@@ -150,23 +146,23 @@ class Notification < ActiveRecord::Base
           name: att.name,
           description: att.to_json,
           message_id: message.messageId,
-          project_id: project_id,
+          project: project,
           conversation_id: conversation_id,
           sent_date: sent_date,
           is_complete: true,
-          assign_to: assign_to,
+          assign_to_user: assign_to,
           has_time: false,
           activity_id: activity.id
       )
     end
   end
 
-  def self.load_alert_for_each_message(project_id, conversation_id, contextMessage, alert_setting, test=false, day_range=7)
+  def self.load_alert_for_each_message(project, conversation_id, contextMessage, alert_setting, test=false, day_range=7)
     # avoid redundant
-    return if Notification.find_by project_id: project_id, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Alert]
+    return if Notification.find_by project: project, conversation_id: conversation_id, message_id: contextMessage.messageId, category: CATEGORY[:Alert]
 
     # get activity id. If no such activity exist in front end(could be caused by users deleting this activity), ignore this risk
-    activity = Activity.find_by(category: Activity::CATEGORY[:Conversation], backend_id: conversation_id, project_id: project_id)
+    activity = Activity.find_by(category: Activity::CATEGORY[:Conversation], backend_id: conversation_id, project: project)
     return if activity.blank?
 
     score = contextMessage.sentimentItems[0].score.to_f
@@ -174,9 +170,7 @@ class Notification < ActiveRecord::Base
     # Ignore anything less than alert setting high threshold.
     return if scaled_score < alert_setting.high_threshold 
 
-    assign_to = User.find_by email: contextMessage.from[0].address
-    assign_to = User.find_by email: contextMessage.to[0].address if assign_to.nil? && contextMessage.to
-    assign_to = assign_to.blank? ? nil : assign_to.id
+    assign_to = User.find_by(email: contextMessage.from[0].address, organization: project.account.organization) || User.find_by(email: contextMessage.to[0].address, organization: project.account.organization) if contextMessage.to
 
     s = contextMessage.sentimentItems[0]
     context_start = s.sentence.beginOffset.to_i
@@ -200,11 +194,11 @@ class Notification < ActiveRecord::Base
       name: contextMessage.subject,
       description: description,
       message_id: contextMessage.messageId,
-      project_id: project_id,
+      project: project,
       conversation_id: conversation_id,
       sent_date: sent_date,
       is_complete: is_complete,
-      assign_to: assign_to,
+      assign_to_user: assign_to,
       content_offset: context_start,
       has_time: false,
       score: scaled_score,
