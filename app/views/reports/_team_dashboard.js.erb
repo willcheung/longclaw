@@ -1,3 +1,4 @@
+// Shared metric update code (left panel) between team_dashboard.html.erb & td_sort_data.js.erb
 var chart = $('#left-chart').highcharts();
 chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
 while(chart.series.length > 1) {
@@ -40,8 +41,8 @@ while(chart.series.length > 1) {
 <% else %>
   chart.series[0].show();
   chart.series[0].update({
-    name: "<%= @metric.html_safe %>",
-    color: "<%= highcharts_series_color("Default") %>",
+    name: '<%= @metric.html_safe %>',
+    color: '<%= highcharts_series_color() %>',
     data: [ <% @data.each do |d| %>
     {
       y: <%= d.y %>,
@@ -53,5 +54,4 @@ while(chart.series.length > 1) {
 
 chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
 //console.log("datamax=" + chart.yAxis[0].dataMax);
-chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
-chart.redraw();
+chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110)); //set graph height

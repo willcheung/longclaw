@@ -14,7 +14,7 @@
                         <h4>Days to Close</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><% if @project.close_date.nil? %> - <% else %><%= @project.close_date - Date.today %><% end %></h2>
+                        <h2 style="font-weight:600;font-size:46px"><% if @project.close_date.nil? %> - <% else %><%= (@project.close_date - Date.today).to_i %><% end %></h2>
                     </div>
                 </div>
             </div>
@@ -22,10 +22,10 @@
             <div class="col-md-3 text-center">
                 <div class="metric">
                     <div class="metric-title">
-                        <h4>Deal Size</h4>
+                        <h4><%= Project::MAPPABLE_FIELDS_META["amount"] %></h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px;"><% if @project.amount.nil? %> - <% else %>$<%= number_to_human("12345") %><% end %></h2>
+                        <h2 style="font-weight:600;font-size:46px;"><% if @project.amount.nil? %> - <% else %>$<%= number_to_human(@project.amount) %><% end %></h2>
                     </div>
                 </div>
             </div>
@@ -44,7 +44,7 @@
             <div class="col-md-3 text-center">
                 <div class="metric text-danger">
                     <div class="metric-title">
-                        <h4>Open Alerts & Tasks</h4>
+                        <h4>Open Alerts</h4>
                     </div>
                     <div class="metric-content">
                         <h2 style="font-weight:600;font-size:46px"><%= @open_tasks_count %></h2>
@@ -94,7 +94,7 @@
 <script type="text/javascript">
 
     /***********
-    Sychronize Charts
+    Synchronize Charts
     ************/
 
      /**
@@ -542,7 +542,6 @@
                 }
             }]
         });
-
     };
 
 </script>

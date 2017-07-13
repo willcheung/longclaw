@@ -14,6 +14,7 @@ class ProjectsController < ApplicationController
   # GET /projects.json
   def index
     @MEMBERS_LIST_LIMIT = 8 # Max number of Stream members to show in mouse-over tooltip
+    @title = "Opportunities"
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
     # Get an initial list of visible projects

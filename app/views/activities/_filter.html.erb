@@ -30,8 +30,8 @@
                 <% if u.first_name.include?('@')%>
                     <%= u.first_name %>
                 <% else %>
-                    <%= get_full_name(u)+' @'+  get_short_name(get_domain(u.email)) %>
-                <% end %>         
+                    <%= get_full_name(u) + ' @' + get_short_name(get_domain(u.email)) %>
+                <% end %>
               </option>
             <% end %>
           </select>

@@ -4,8 +4,8 @@
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>My Account Streams</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total Number of Account Streams that you own."></i>
+                    <h5>My Opportunities</h5>
+                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total Number of Opportunities that you own."></i>
                 </div>
                 <div class="ibox-content">
                     <h1 class="no-margins"><%= @projects.empty? ? "0" : @projects.size %></h1>
@@ -46,7 +46,7 @@
                 <!-- <h2>Open and Alerts</h2> -->
                     <div class="col-lg-12 m-b-md">
                         <% if @open_total_tasks.empty? %>
-                            <p>Great, we did not find any risks or alerts from your account streams.</p>
+                            <p>Great, no open tasks on your Opportunities.</p>
                         <% else %>
                             <%= render "notifications/table", :notifications => @open_total_tasks %>
                         <% end %>
@@ -75,13 +75,13 @@
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
             <div class="ibox-title">
-                <h2>My Account Streams</h2>
+                <h2>My Opportunities</h2>
             </div>
             <div class="ibox-content">
                 <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th>Stream</th>
+                            <th>Name</th>
                             <th><%= Project::MAPPABLE_FIELDS_META["category"] %></th>
                             <th></th>
                             <th></th>
@@ -123,13 +123,13 @@
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
             <div class="ibox-title">
-                <h2>My Stream Subscriptions</h2>
+                <h2>My Subscribed Opportunity</h2>
             </div>
             <div class="ibox-content">
                 <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th>Stream</th>
+                            <th>Name</th>
                             <th><%= Project::MAPPABLE_FIELDS_META["category"] %></th>
                             <th></th>
                             <th></th>
@@ -180,7 +180,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td>* = You own this stream</td>
+                            <td>* = You own this opportunity</td>
                             <td></td>
                             <td></td>
                             <td></td>

@@ -30,18 +30,15 @@
     <div class="row border-bottom white-bg dashboard-header">
             <!-- LEFT -->
             <div class="col-md-5">
-                <h4 class="m-l-md">Sort by: 
-                <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Type">
-                    <option selected>Activities (Last 14d)</option>
-                    <option>Time Spent (Last 14d)</option>
-                    <option>Opportunities</option>
-                    <option>New Alerts & Tasks (Last 14d)</option>
-                    <option>Closed Alerts & Tasks (Last 14d)</option>
-                    <option>Open Alerts & Tasks</option>
+                <h4 class="m-l-md">Metric: 
+                <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
+                <% ReportsController::TEAM_DASHBOARD_METRIC.each do |k,label| %>
+                    <option <%= "selected" if params[:sort] == label %>><%= label %></option>
+                <% end %>
                     <!-- <option>Revenue Managed</option> -->
                     <!-- <option>Revenue per Hour Spent (Last 14d)</option> -->
                     <!-- <option>On Target</option> -->
-                  </select>    
+                </select>
                
                 </h4>
                 <div id="left-chart" class="left-chart" style="height:1200px;"></div>
@@ -51,7 +48,7 @@
             <div class="col-md-7" style="margin-top:45px;">
                 <div id="user-data">
                     <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
+                        <h3>&larr; Click on a bar to see details about the rep.</h3>
                     </div>
                 </div>
             </div>
@@ -66,7 +63,7 @@
 
         $('#sort-type, #team-filter, #title-filter').change( function () {
             // Clear stream data ("right") chart
-            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
+            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the rep.</h3></div>");
 
             // Build URL for AJAX call for filtered data
             var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param({ team: $('#team-filter').val(), title: $('#title-filter').val() });
@@ -94,13 +91,18 @@
                 gridLineWidth: 0
             },
             legend: {
-                enabled: false
+                enabled: true,
+                verticalAlign: 'top',
+                itemStyle: {
+                    fontWeight: 'light',
+                    fontSize: 12         
+                }
             },
             plotOptions: {
                 series: {
                     stacking: 'normal',
                     cursor: 'pointer',
-                    // pointWidth: 20,
+                    maxPointWidth: 75,
                     point: {
                         events: {
                             click: function () {
@@ -111,33 +113,74 @@
                             }
                         }
                     }
-                }   
+                },
+                column: {
+                    events: {
+
+                    }
+                },
+                allowPointSelect: false
             },
             credits: {
                 enabled: false
             },
             series: [{
                 name: 'Series 1',
-                visible: false
+                visible: false,
+                showInLegend: false
             },
-            <% @categories.each.with_index do |c, i| %>
-            {
-                name: "<%= c %>",
-                color: "<%= highcharts_series_color(c) %>",
-                data: [ 
-                <% @data.each do |d| %>
+            <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
+                <% @categories.each.with_index do |c, i| %>
                 {
-                  y: <%= d.y[i].num_activities %>,
-                  id: "<%= d.id %>"
-                }, 
-                <% end %> 
-                ]
-            },
+                    name: "<%= c %>",
+                    color: "<%= highcharts_series_color(c) %>",
+                    //showInLegend: false,
+                    data: [ 
+                    <% @data.each do |d| %>
+                    {
+                      y: <%= d.y[i].num_activities %>,
+                      id: "<%= d.id %>"
+                    }, 
+                    <% end %> 
+                    ]
+                },
+                <% end %>
+            <% elsif @metric == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
+                <% @categories.each do |c| %>
+                {
+                    name: "<%= c %>",
+                    color: "<%= highcharts_series_color(c) %>",
+                    //showInLegend: false,
+                    data: [ 
+                    <% @data.each do |d| %>
+                    {
+                      y: <%= d.y[c] %>,
+                      id: "<%= d.id %>"
+                    }, 
+                    <% end %> 
+                    ]
+                },
+                <% end %>
+            <% else %>
+                {
+                    name: "<%= @metric.html_safe %>",
+                    color: "<%= highcharts_series_color("Default") %>",
+                    data: [ <% @data.each do |d| %>
+                    {
+                      y: <%= d.y %>,
+                      id: "<%= d.id %>"
+                    },
+                    <% end %> 
+                    ]
+                },
             <% end %>
             ]
         });
-    });
 
+        var chart = $('#left-chart').highcharts();
+        chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
+        chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
+    });
 
 </script>
 
