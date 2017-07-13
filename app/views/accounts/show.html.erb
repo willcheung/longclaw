@@ -22,7 +22,7 @@
 
     <% if current_user.power_user? %>
     <div class="col-lg-2">
-        <%= link_to '+ New Stream', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+        <%= link_to '+ New Opportunity', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>
     <% end %>
     <div class="col-lg-2">
@@ -36,7 +36,7 @@
             <div class="ibox">
                 <div class="ibox-content">
                     <div class="m-lg m-t-xs">
-                         <h4><strong>Active Streams</strong></h4>
+                         <h4><strong>Active Opportunities</strong></h4>
                             <div class="row">
                                 <div class="col-md-12">
                                 <ul class="todo-list medium-list m-t">
@@ -51,7 +51,7 @@
                                             </li>
                                          <% end %>
                                     <% else %>
-                                        <p class="m-t-md">No active Streams.</p>
+                                        <p class="m-t-md">No active Opportunities.</p>
                                     <% end %>
                                 </ul>
                             </div>

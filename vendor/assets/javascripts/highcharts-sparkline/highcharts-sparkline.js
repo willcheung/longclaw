@@ -48,7 +48,7 @@ Highcharts.SparkLine = function (a, b, c) {
                     text: null
                 },
                 tickPositions: [0],
-                softMax: 1
+                softMax: 5
             },
             legend: {
                 enabled: false

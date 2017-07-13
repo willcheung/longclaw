@@ -14,7 +14,7 @@ class ProjectsController < ApplicationController
   # GET /projects.json
   def index
     @MEMBERS_LIST_LIMIT = 8 # Max number of Stream members to show in mouse-over tooltip
-    @title = "Streams"
+    @title = "Opportunities"
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
     # Get an initial list of visible projects
@@ -38,9 +38,9 @@ class ProjectsController < ApplicationController
     unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
-      @sparkline = Project.count_activities_by_day_sparkline(projects.map(&:id), current_user.time_zone)
-      @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
-      @open_risk_count = Project.open_risk_count(projects.map(&:id))
+      @sparkline = Project.count_activities_by_day_sparkline(projects.ids, current_user.time_zone)
+      @risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @open_risk_count = Project.open_risk_count(projects.ids)
     end
 
     # new project modal
@@ -266,12 +266,20 @@ class ProjectsController < ApplicationController
 
   # Handle bulk operations
   def bulk
-    newArray = params["selected"].map { |key, value| key }
+    render :json => { success: true }.to_json and return if params['project_ids'].blank?
+    bulk_projects = Project.visible_to(current_user.organization_id, current_user.id).where(id: params['project_ids'])
 
-    if(params["operation"]=="delete")
-      bulk_delete(newArray)
+    case params['operation']
+    when 'delete'
+      bulk_projects.destroy_all
+    when 'category'
+      bulk_projects.update_all(category: params['value'])
+    when 'owner'
+      bulk_projects.update_all(owner_id: params['value'])
+    when 'status'
+      bulk_projects.update_all(status: params['value'])
     else
-      bulk_update(params["operation"], newArray, params["value"])
+      puts 'Invalid bulk operation, no operation performed'
     end
 
     render :json => {:success => true, :msg => ''}.to_json
@@ -284,7 +292,7 @@ class ProjectsController < ApplicationController
   end
 
   def get_show_data
-    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d') 
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
 
     # metrics
     @project_risk_score = @project.new_risk_score(current_user.time_zone)
@@ -353,24 +361,6 @@ class ProjectsController < ApplicationController
     @activities_by_month = activities.group_by {|a| Time.zone.at(a.last_sent_date).strftime('%^B %Y') }
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
-  end
-
-  def bulk_update(field, array_of_ids, new_value)
-    if(!array_of_ids.nil?)
-      if field == "category"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(category: new_value)
-      elsif field == "owner"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(owner_id: new_value)
-      elsif field == "status"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(status: new_value)
-      end
-    end
-  end
-
-  def bulk_delete(array_of_ids)
-    if(!array_of_ids.nil?)
-      Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).destroy_all
-    end
   end
 
   # Use callbacks to share common setup or constraints between actions.
