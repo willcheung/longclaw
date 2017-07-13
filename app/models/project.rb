@@ -356,6 +356,8 @@ class Project < ActiveRecord::Base
 
   # Used for exploding all activities of a given project without time bound, specifically for time series filter.
   # Subquery is based on email_activities_last_14d view.
+  # NOTE: to_timestamp converts epoch to timestamp with UTC timezone, but Activity.last_sent_date usually saved as timestamp without timezone
+  # Therefore we need to convert Activity.last_sent_date to timestamp with UTC timezone, then convert to timestamp with user timezone
   def daily_activities(time_zone)
     query = <<-SQL
       -- Email conversations
@@ -388,90 +390,90 @@ class Project < ActiveRecord::Base
       UNION ALL
       (
       -- Meetings
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Meeting]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Notes
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Note]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- JIRA
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:JIRA]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Salesforce
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Salesforce]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Zendesk
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Zendesk]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Alert
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Alert]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Alert]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Basecamp2
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Basecamp2]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Attachment
-      SELECT date(sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Notification::CATEGORY[:Attachment]}' as category,
             count(*) as activity_count
       FROM notifications
       WHERE category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}'
-      GROUP BY date(sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
     SQL
 

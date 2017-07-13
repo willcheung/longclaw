@@ -136,7 +136,7 @@ class Notification < ActiveRecord::Base
     assign_to = User.find_by email: message.to[0].address if assign_to.nil? && message.to
     assign_to = assign_to.blank? ? nil : assign_to.id
 
-    sent_date = Time.at(message.sentDate).utc
+    sent_date = Time.at(message.sentDate)
 
     message.attachments.each do |att|
       # avoid creating redundant notifications
