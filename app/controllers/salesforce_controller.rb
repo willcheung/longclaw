@@ -62,55 +62,6 @@ class SalesforceController < ApplicationController
       elsif @actiontype == "tasks_tab"
         # show every risk regardless of private conversation
         @notifications = @project.notifications
-      elsif @actiontype == "insights_tab"
-        @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
-
-        # Engagement Volume Chart
-        @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
-        @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
-        activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
-
-        # TODO: Generate data for Risk Volume Chart in SQL query
-        # Risk Volume Chart
-        risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
-        risks_by_date = Array.new(14, 0)
-        risk_notifications.each do |r|
-          # risks_by_date based on number of days since 14 days ago
-          day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
-          risks_by_date[day_index] += 1
-        end
-
-        @risk_activity_engagement = []
-        risks_by_date.zip(activity_engagement).each do | a, b|
-          if b == 0
-            @risk_activity_engagement.push(0)
-          else
-            @risk_activity_engagement.push(a/b.to_f * 100)
-          end
-        end
-
-        #Shows the total email usage report
-        @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
-        @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
-        
-        # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
-        # Most Active Contributors & Activities By Team
-        user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)
-        @team_leaderboard = []
-        @activities_by_dept = Hash.new(0)
-        activities_by_dept_total = 0
-        user_num_activities.each do |u|
-          user = User.find_by_email(u.email)
-          u.email = get_full_name(user) if user
-          @team_leaderboard << u
-          dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
-          @activities_by_dept[dept] += u.inbound_count + u.outbound_count
-          activities_by_dept_total += u.inbound_count + u.outbound_count
-        end
-        # Convert Activities By Team to %
-        @activities_by_dept.each { |dept, count| @activities_by_dept[dept] = (count.to_f/activities_by_dept_total*100).round(1)  }
-        # Only show top 5 for Most Active Contributors
-        @team_leaderboard = @team_leaderboard[0...5]
       elsif @actiontype == "arg_tab" # Account Relationship Graph
         @data = @project.activities.where(category: %w(Conversation Meeting))
       end
@@ -557,10 +508,11 @@ class SalesforceController < ApplicationController
 
   private
 
+  ### TODO: get_show_data and load_timeline are copies from ProjectsController, should be combined for better maintenance/to keep in sync with projects#show
   def get_show_data
     # metrics
     @project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_open_risks_count = @project.notifications.open.risks.count
+    @project_open_risks_count = @project.notifications.open.alerts.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
     project_rag_score = @project.activities.latest_rag_score.first
