@@ -53,6 +53,8 @@ class ProjectsController < ApplicationController
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
     @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
+    # get categories for category filter
+    @categories = @activities_by_category_date.keys
   end
 
   def filter_timeline

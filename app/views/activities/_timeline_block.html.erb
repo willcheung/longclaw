@@ -40,7 +40,7 @@
             elsif Time.zone.at(a.last_sent_date).to_date == (Date.current + 1.day)
                 "Tomorrow"
             else
-                Time.zone.at(a.last_sent_date).strftime("%b %d") 
+                Time.zone.at(a.last_sent_date).strftime("%b %d")
             end %><br />
         <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span>

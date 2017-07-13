@@ -462,6 +462,17 @@ class Project < ActiveRecord::Base
       GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
       ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
       )
+      UNION ALL
+      (
+      -- Attachment
+      SELECT date(sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Notification::CATEGORY[:Attachment]}' as category,
+            count(*) as activity_count
+      FROM notifications
+      WHERE category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}'
+      GROUP BY date(sent_date AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(sent_date AT TIME ZONE '#{time_zone}')
+      )
     SQL
 
     Activity.find_by_sql(query)
