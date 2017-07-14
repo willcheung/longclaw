@@ -40,7 +40,7 @@ chart.xAxis[0].update({min: undefined, max: undefined}, false);
 chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
 
-// handle clicking on stream label
+// handle clicking on opportunity label
 $('.highcharts-xaxis-labels text').click(function() {
     $.get("ad_account_data/" + get_category_uuid($(this).text()), function (data) {
         $("#account-data").html(data);

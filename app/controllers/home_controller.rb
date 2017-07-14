@@ -3,7 +3,7 @@ class HomeController < ApplicationController
   before_action :check_user_onboarding, only: :index
 
   def index
-    # Load all projects/streams visible to user
+    # Load all projects/opportunity visible to user
     visible_projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
     @projects = visible_projects.owner_of(current_user.id)
     project_tasks = Notification.where(project_id: @projects.pluck(:id))
@@ -15,11 +15,11 @@ class HomeController < ApplicationController
     # Need this to show project name and user name
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
     @users_reverse = get_current_org_users
-    # Load all projects/streams to which the user is subscribed
+    # Load all projects/opportunity to which the user is subscribed
     @subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly").sort_by { |p| p.name.upcase }
 
     custom_lists = current_user.organization.get_custom_lists_with_options
-    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    @opportunity_types = !custom_lists.blank? ? custom_lists["Opportunity Type"] : {}
 
     # Calculate project metrics
     unless @projects.empty? && @subscribed_projects.empty?

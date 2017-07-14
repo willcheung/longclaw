@@ -13,7 +13,7 @@ class ProjectsController < ApplicationController
   # GET /projects
   # GET /projects.json
   def index
-    @MEMBERS_LIST_LIMIT = 8 # Max number of Stream members to show in mouse-over tooltip
+    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
     @title = "Opportunities"
     # for filter and bulk owner assignment
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
@@ -163,7 +163,7 @@ class ProjectsController < ApplicationController
   end
 
   def refresh
-    # big refresh when no activities (normally a new stream), small refresh otherwise
+    # big refresh when no activities (normally a new Opportunity), small refresh otherwise
     if @project.activities.count == 0
       puts "<><> Big asynchronous refresh incoming... <><>"
       ContextsmithService.load_emails_from_backend(@project, 2000)
@@ -205,7 +205,7 @@ class ProjectsController < ApplicationController
     @project.subscribers.new(user: current_user)
 
       respond_to do |format|
-        if params[:commit] == 'Create Stream' 
+        if params[:commit] == 'Create with account contacts' 
           members = @project.account.contacts
             members.each do |input|
               new_member = @project.project_members.new(contact: input)
@@ -214,7 +214,7 @@ class ProjectsController < ApplicationController
             # Big First Refresh, potentially won't need big refresh in the refresh method above
             ContextsmithService.load_emails_from_backend(@project, 2000)
             ContextsmithService.load_calendar_from_backend(@project, 1000)
-            format.html { redirect_to @project, notice: 'Project was successfully created.' }
+            format.html { redirect_to @project, notice: 'Opportunity was successfully created.' }
             format.js
             #format.json { render action: 'show', status: :created, location: @project }
           else
@@ -222,13 +222,13 @@ class ProjectsController < ApplicationController
             format.js { render json: @project.errors, status: :unprocessable_entity }
             #format.json { render json: @project.errors, status: :unprocessable_entity }
           end
-        else params[:commit] == 'Custom Stream'
+        else  # params[:commit] == 'Blank Opportunity'
           if @project.save
-            format.html { redirect_to @project, notice: 'Project was successfully created.' }
+            format.html { redirect_to @project, notice: 'Opportunity was successfully created.' }
             format.js
             #format.json { render action: 'show', status: :created, location: @project 
           else
-            puts "Fail project saved"
+            puts "Failure to save opportunity"
             format.html { render action: 'new' }
             format.js { render json: @project.errors, status: :unprocessable_entity }
             #format.json { render json: @project.errors, status: :unprocessable_entity }
@@ -396,9 +396,9 @@ class ProjectsController < ApplicationController
 
   def get_custom_fields_and_lists
     custom_lists = current_user.organization.get_custom_lists_with_options
-    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    @opportunity_types = !custom_lists.blank? ? custom_lists["Opportunity Type"] : {}
     @custom_lists = current_user.organization.get_custom_lists_with_options
-    @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}
+    @opportunity_types = !@custom_lists.blank? ? @custom_lists["Opportunity Type"] : {}
   end
 
   def project_filter_state

@@ -44,10 +44,10 @@
 
                 <div class="contextsmith_account col-lg-3" style="margin-right:0px; margin-left:0px; padding:0px; display: inline;">
                 <% if @basecamp2_user %>
-                  <select class="contextsmith_account_box" data-placeholder="Select Contextsmith Stream">
+                  <select class="contextsmith_account_box" data-placeholder="Select Contextsmith Opportunity">
                     <option value="0"></option>
-                    <% if !@streams.nil?  %>
-                      <% @streams.each do |a| %>
+                    <% if !@opportunities.nil?  %>
+                      <% @opportunities.each do |a| %>
                         <option value="<%=a.id %>"><%=a.name %></option>
                       <% end %>
                     <% end  %>

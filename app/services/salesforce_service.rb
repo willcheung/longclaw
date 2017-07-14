@@ -256,7 +256,7 @@ class SalesforceService
   end
 
   # Call this from ProjectsController#refresh !!
-  # Parameters: project - the CS stream that we will attempt to refresh from SFDC
+  # Parameters: project - the CS Opportunity that we will attempt to refresh from SFDC
   #             query?
   def self.load_activity_from_salesforce(project, query=nil, save_in_db=true, after=nil, is_time=true, request=true, is_test=false)
     client = self.connect_salesforce(current_user.organization_id)

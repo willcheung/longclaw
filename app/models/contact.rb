@@ -65,7 +65,7 @@ class Contact < ActiveRecord::Base
     return false
   end
 
-  # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Stream as suggested members.  
+  # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Opportunity as suggested members.  
   def self.load(data, project, save_in_db=true)
     contacts = []
     current_org = project.account.organization

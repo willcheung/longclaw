@@ -45,7 +45,7 @@ class OnboardingController < ApplicationController
 		end
 	end
 
-	# Allow user to confirm processed clusters (in the form of streams/projects)
+	# Allow user to confirm processed clusters (in the form of opportunities/projects)
 	def confirm_projects
 		return_vals = User.confirm_projects_for_user(current_user)
 
@@ -72,7 +72,7 @@ class OnboardingController < ApplicationController
 
       respond_to do |format|
         if user and data.kind_of?(Array)   
-            puts("Creating Streams for #{user.email}")
+            puts("Creating Opportunities for #{user.email}")
 
             uniq_external_members, uniq_internal_members = get_all_members(data)
 

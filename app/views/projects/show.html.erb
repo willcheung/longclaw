@@ -132,7 +132,7 @@
                     </span>
                 </div>
 
-                <!-- Stream-level standard fields -->
+                <!-- Opportunity-level standard fields -->
                 <div class="m-t-md">
                     <strong><%= Project::MAPPABLE_FIELDS_META["description"] %>:</strong>
                     <i id="proj-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
@@ -142,7 +142,7 @@
                 <ul class="list-group clear-list m-t-sm">
                     <li class="list-group-item m-b-sm first-item">
                         <strong><%= Project::MAPPABLE_FIELDS_META["category"] %>:</strong>
-                        <span class="pull-right"><%= best_in_place @project, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
+                        <span class="pull-right"><%= best_in_place @project, :category, :as => :select, :collection => @opportunity_types, :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                     </li>
                     <li class="list-group-item m-b-sm">
                         <strong>Open Collaboration:</strong>
@@ -194,8 +194,8 @@
                             <i id="project-renewal-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                         </span>
                     </li>      
-                    <!-- End: Stream-level standard fields -->
-                    <!-- Stream-level custom fields -->
+                    <!-- End: Opportunity-level standard fields -->
+                    <!-- Opportunity-level custom fields -->
                     <% @project.custom_fields.each.with_index do |cf, i| %>
                         <li class="list-group-item m-b-sm">
                             <strong><%= cf.custom_fields_metadatum.name %>:</strong>
@@ -235,7 +235,7 @@
                         </dd>
                     </dl>
 
-                    <!-- Continue Stream-level standard fields (date/timestamps) -->
+                    <!-- Continue Opportunity-level standard fields (date/timestamps) -->
                     <li class="list-group-item small m-t-md first-item">
                         <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
                         Last Updated:
@@ -265,7 +265,7 @@
                     <% end %>
                 </dd>
             </dl>
-            <!-- STREAM MEMBERS SECTION -->
+            <!-- OPPORTUNITY MEMBERS SECTION -->
             <div class="row m-t-md toggle-open">
                 <div class="col-sm-2">
                     <span class="fa fa-caret-right toggle-icon"></span>
@@ -301,7 +301,7 @@
                 </div>
                 <div class="col-sm-10">
                     <strong><span id="ps-daily-subs"><%= @daily_subscribers.length %></span> Daily Followers</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this stream every day."></i>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this opportunity every day."></i>
                 </div>
             </div>
             <div class="row">
@@ -329,7 +329,7 @@
                 </div>
                 <div class="col-sm-10">
                     <strong><span id="ps-weekly-subs"><%= @weekly_subscribers.length %></span> Weekly Followers</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this stream every week."></i>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Internal users who will receive updates about this opportunity every week."></i>
                 </div>
             </div>
             <div class="row">
@@ -361,12 +361,12 @@
     <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title">Share this stream</h4>
+            <h4 class="modal-title">Share this opportunity</h4>
         </div>
         <div class="modal-body">
             <div class="row m-b-sm">
                 <div class="col-lg-12">
-                    <h3>Grant access to this stream</h3>
+                    <h3>Grant access to this opportunity</h3>
                 </div>
 
                 <div class="col-lg-12">
