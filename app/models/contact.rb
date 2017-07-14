@@ -90,7 +90,7 @@ class Contact < ActiveRecord::Base
 
       ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
       # find account this new member should belong to
-      account = org.accounts.find_by_domain(primary_domain)
+      account = org.accounts.find_by_domain(primary_domain) || org.accounts.find_by_name(primary_domain)
       # create a new account for this domain if one doesn't exist yet
       unless account
         account = Account.create(

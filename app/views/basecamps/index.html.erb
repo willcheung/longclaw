@@ -91,10 +91,8 @@
              
             <%= render 'projects/timeline' if @actiontype == "show" %> 
             <%= render 'projects/pinned_tab', pinned_activities: @pinned_activities if @actiontype == "pinned" %> 
-            <%= render 'notifications/project' if @actiontype == "tasks" %> 
-            <%= render 'projects/insights_tab', project_id: @project.id if @actiontype == "insights" %>
-
-           
+            <%= render 'notifications/project' if @actiontype == "tasks" %>
+            <!-- is the ARG tab missing here? -->
         </div>
       </div>   
       <% end %>
