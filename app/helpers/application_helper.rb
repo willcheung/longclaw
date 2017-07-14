@@ -41,9 +41,13 @@ module ApplicationHelper
       "#91e8e1"
     when 'Meetings'
       '#ffb833'
-    when 'Sent Emails'
+    when 'Sent E-mails'
       '#00cccc'
-    when 'Read Emails'
+    when 'E-mails Sent'
+      '#00cccc'
+    when 'Read E-mails'
+      '#995cd6'
+    when 'E-mails Received'
       '#995cd6'
     else
       '#7cb5ec'  # light blue

@@ -87,7 +87,13 @@
                 title: {
                     text: ''
                 },
-                gridLineWidth: 0
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
             },
             legend: {
                 enabled: true,
@@ -124,7 +130,7 @@
                 enabled: false
             },
             series: [{
-                name: 'Series 1',
+                name: 'Main Series',
                 visible: false,
                 showInLegend: false
             },

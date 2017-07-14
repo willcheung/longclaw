@@ -8,7 +8,7 @@ class ReportsController < ApplicationController
   def accounts_dashboard
     custom_lists = current_user.organization.get_custom_lists_with_options
     @account_types = !custom_lists.blank? ? custom_lists["Account Type"] : {}
-    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    @opportunity_types = !custom_lists.blank? ? custom_lists["Opportunity Type"] : {}
 
     params[:sort] = ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
     ad_sort_data
@@ -23,12 +23,13 @@ class ReportsController < ApplicationController
     td_sort_data
   end
 
-  # for loading metrics (left panel) on Team Dashboard
+  # for loading metrics data (left panel) on Team Dashboard
   def td_sort_data
     @metric = params[:sort]
     @metric_tick_interval = getTickIntervalForMetric(@metric)
     users = current_user.organization.users
     
+    # Incrementally apply filters
     if params[:team].present?
       if params[:team] == "none"
         users = users.where(department: nil)
@@ -47,14 +48,17 @@ class ReportsController < ApplicationController
 
     @data = [] and return if users.blank?  #quit early if all projects are filtered out
 
-    sort_data_by_total = false
+    #sort_data_by_total = false
     case @metric
-    when TEAM_DASHBOARD_METRIC[:opportunities]
-      accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
-      @data = accounts_managed.map do |uid, num_accounts|
+    when TEAM_DASHBOARD_METRIC[:activities_last14d]
+      user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
+      @data = [] and @categories = [] and return if user_activities.blank?
+      @data = user_activities.map do |uid, activities|
         user = users.find { |usr| usr.id == uid }
-        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: num_accounts })
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
       end
+      #sort_data_by_total = true
+      @categories = @data.first.y.map(&:category)
     when TEAM_DASHBOARD_METRIC[:time_spent_last14d]
       account_ids = current_user.organization.accounts.ids
       user_emails = current_user.organization.users.pluck(:email)
@@ -64,12 +68,12 @@ class ReportsController < ApplicationController
       @data = users.map do |user|
         email_t = email_time.find { |et| et.email == user.email }
         if email_t.nil?
-          email_t = { "Read Emails": 0, "Sent Emails": 0 }
+          email_t = { "Read E-mails": 0, "Sent E-mails": 0 }
         else
           # TODO: figure out why some email_t are not nil but email_t.inbound or email_t.outbound are nil (Issue #692)
           email_t = { 
-            "Read Emails": email_t.inbound.nil? ? 0 : [(email_t.inbound / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max,
-            "Sent Emails": email_t.outbound.nil? ? 0 : [(email_t.outbound / User::WORDS_PER_HOUR[:Write]).round(2), 0.001].max
+            "Read E-mails": email_t.inbound.nil? ? 0 : [(email_t.inbound / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max,
+            "Sent E-mails": email_t.outbound.nil? ? 0 : [(email_t.outbound / User::WORDS_PER_HOUR[:Write]).round(2), 0.001].max
           }
         end
         meeting_t = meeting_time.find { |mt| mt.email == user.email }
@@ -77,17 +81,14 @@ class ReportsController < ApplicationController
         time_hash = meeting_t.merge(email_t)
         Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
       end
-      sort_data_by_total = true
-      @categories = ["Meetings", "Read Emails", "Sent Emails"]
-    when TEAM_DASHBOARD_METRIC[:activities_last14d]
-      user_activities = User.count_all_activities_by_user(current_user.organization.accounts.ids, users.ids).group_by { |u| u.id }
-      @data = [] and @categories = [] and return if user_activities.blank?
-      @data = user_activities.map do |uid, activities|
+      #sort_data_by_total = true
+      @categories = ["Meetings", "Read E-mails", "Sent E-mails"]
+    when TEAM_DASHBOARD_METRIC[:opportunities]
+      accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
+      @data = accounts_managed.map do |uid, num_accounts|
         user = users.find { |usr| usr.id == uid }
-        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: num_accounts })
       end
-      sort_data_by_total = true
-      @categories = @data.first.y.map(&:category)
     when TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d]
       new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = new_tasks.map do |u|
@@ -106,10 +107,14 @@ class ReportsController < ApplicationController
     else # Invalid
       @data = []
     end
-
-    # sort using tiebreaker: user name, case-insensitive in alphabetical order
-    if sort_data_by_total
-      @data.sort!{ |d1, d2| (d1.total != d2.total) ? d2.total <=> d1.total : d1.name.upcase <=> d2.name.upcase }
+    
+    if @categories # instead of sort_data_by_total
+      @data.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: user name, case-insensitive in alphabetical order
+      if @metric == TEAM_DASHBOARD_METRIC[:activities_last14d]
+        @categories_with_data = @data.inject([]) do |memo, p|
+          memo | p.y.select {|a| a.num_activities > 0}.map(&:category)
+        end  # get (and show in legend) only categories that have data
+      end
     else  # sort by y instead
       @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }
     end
@@ -176,7 +181,7 @@ class ReportsController < ApplicationController
     render layout: false
   end
 
-  # for loading metrics (left panel) on Accounts Stream Dashboard
+  # for loading metrics data (left panel) on Accounts Opportunities Dashboard
   def ad_sort_data
     @metric = params[:sort]
     @metric_tick_interval = getTickIntervalForMetric(@metric)
@@ -196,12 +201,17 @@ class ReportsController < ApplicationController
 
     @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
+    #sort_data_by_total = false
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
-      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), 14*24)
-      @data = project_engagement.map do |p|
-        Hashie::Mash.new({ id: p.id, name: p.name, y: p.num_activities, color: 'default'})
+      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), 14*24).group_by { |p| p.id }
+      @data = [] and @categories = [] and return if project_engagement.blank?
+      @data = project_engagement.map do |pid, activities|
+        opportunity = projects.find { |p| p.id == pid }
+        Hashie::Mash.new({ id: opportunity.id, name: opportunity.name, y: activities, total: activities.sum(&:num_activities) })
       end
+      #sort_data_by_total = true
+      @categories = @data.first.y.map(&:category)
     when ACCOUNT_DASHBOARD_METRIC[:risk_score]
       risk_scores = projects.nil? ? [] : Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
       total_risk_scores = 0
@@ -242,8 +252,18 @@ class ReportsController < ApplicationController
       @data = []
     end
 
-    @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }  # sort using tiebreaker: stream name, case-insensitive in alphabetical order
+    if @categories # instead of sort_data_by_total
+      @data.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+      if @metric == ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
+        @categories_with_data = @data.inject([]) do |memo, p|
+          memo | p.y.select {|a| a.num_activities > 0}.map(&:category)
+        end  # get (and show in legend) only categories that have data
+      end
+    else  # sort by y instead
+      @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }  
+    end
 
+    #puts "**************** @data: #{@data}"
     @data = @data.take(25)  # TODO: real left chart pagination
   end
 
@@ -287,6 +307,108 @@ class ReportsController < ApplicationController
     @team_leaderboard = @team_leaderboard[0...5]
 
     render layout: false
+  end
+
+  def touches_by_team
+    # TODO: find way to get number of projects for each user listed here
+    @team_touches = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
+    @team_touches.each { |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace e-mail with user full name
+  end
+
+  def accounts
+    # if params[:type]
+    #   # Filter
+    #   account_type_filter = "accounts.category = '#{params[:type]}'"
+    # else
+    #   account_type_filter = ""
+    # end
+    # @projects = Project.visible_to(current_user.organization_id, current_user.id).where(account_type_filter)
+
+
+
+    # set static boolean based on environment and pass to find_include_sum_activities
+    static = Rails.env.development?
+    # Load all projects visible to user
+    @projects = Project.visible_to(current_user.organization_id, current_user.id)
+    @project_all_touches = []
+    @project_all_chg_touches = []
+    ###### Report Data ######
+    if !@projects.empty?
+      # equivalent to Project.find_include_sum_activities(7*24, @projects.map(&:id))
+      # @project_all_touches = Project.find_include_sum_activities(0, static, 90*24, @projects.map(&:id))
+      # sorted high to low by num_activities
+      # @project_all_touches.sort! { |x, y| x.num_activities.to_i <=> y.num_activities.to_i }.reverse!
+
+      # project_prev_all_touches = Project.find_include_sum_activities(7*24, static, 14*24, @projects.map(&:id))
+      # project_chg_activities = Project.calculate_pct_from_prev(@project_all_touches, project_prev_all_touches)
+      # # sorted high to low by pct_from_prev
+      # project_chg_activities.sort! { |x, y| x.pct_from_prev.to_f <=> y.pct_from_prev.to_f }.reverse!
+      # if project_chg_activities.length > 10
+      #   # take first and last 5 from sorted array == most /least
+      #   project_chg_activities_top = project_chg_activities[0, 5]
+      # else
+      #   project_chg_activities_top = project_chg_activities
+      # end
+      # @project_top_chg_touches = {}
+      # @project_top_chg_touches[:pos] = project_chg_activities_top.select { |x| x.pct_from_prev > 0 }
+      # @project_top_chg_touches[:no] = project_chg_activities_top.select { |x| x.pct_from_prev == 0 }
+      # @project_top_chg_touches[:neg] = project_chg_activities_top.select { |x| x.pct_from_prev < 0 }
+
+      # @project_all_chg_touches = {}
+      # @project_all_chg_touches[:pos] = project_chg_activities.select { |x| x.pct_from_prev > 0 }
+      # @project_all_chg_touches[:no] = project_chg_activities.select { |x| x.pct_from_prev == 0 }
+      # @project_all_chg_touches[:neg] = project_chg_activities.select { |x| x.pct_from_prev < 0 }
+    end
+  end
+
+  def team
+    # Placeholder stuff from home_controller
+    # Load all projects visible to user
+    @projects = Project.visible_to(current_user.organization_id, current_user.id)
+    @projects_min_scores = Hash.new()
+    project_tasks = Notification.where(project_id: @projects.pluck(:id))
+    @open_tasks = project_tasks.open.count
+    @closed_tasks = project_tasks.where(is_complete: true, complete_date: (7.days.ago..Time.current)).count
+    @open_risks = project_tasks.open.risks.count
+    @overdue_tasks = project_tasks.where("is_complete = false and original_due_date::date < ?", Date.today).count
+
+    ###### Dashboard Metrics ######
+    if !@projects.empty?
+
+      project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
+
+      # Top Active Opportunities
+      @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
+      @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
+
+      project_prev_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 14*24, 7*24)
+      project_chg_activities = Project.calculate_pct_from_prev(project_sum_activities, project_prev_sum_activities)
+      # Top Movers
+      @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
+      @project_min_chg = project_chg_activities.min_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev <= 0 }
+
+      # How Busy Are We? Chart
+      @all_activities_trend = Project.count_total_activities_by_day(current_user.organization.accounts.pluck(:id), current_user.time_zone)
+
+      # Team Leaderboard
+      @team_leaderboard = User.count_activities_by_user_flex(current_user.organization.accounts.pluck(:id), current_user.organization.domain)
+      @team_leaderboard.collect{ |u| u.email = get_full_name(User.find_by_email(u.email)) } # replace e-mail with user full name
+
+      # Risk Score Trend
+      @projects_min_scores = Project.find_min_risk_score_by_day(@projects.pluck(:id), current_user.time_zone)
+
+      # Top Risks
+      projects_risk_scores = Project.current_risk_score(@projects.pluck(:id), current_user.time_zone).sort_by { |pid, score| score }.reverse[0...5]
+      ### NOT using built in Ruby max_by function due to bug
+      projects_risks_counts = Project.count_tasks_per_project(@projects.pluck(:id))
+      @top_risks = projects_risk_scores.map do |p|
+        rc = projects_risks_counts.find { |r| r.id == p[0] }
+        { id: p[0], risk_score: p[1], name: rc.name, open_risks: rc.open_risks }
+      end
+    end
+  end
+
+  def lifecycle
   end
 
   #### Private helper functions ####

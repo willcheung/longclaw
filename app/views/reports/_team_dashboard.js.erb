@@ -1,16 +1,19 @@
 // Shared metric update code (left panel) between team_dashboard.html.erb & td_sort_data.js.erb
 var chart = $('#left-chart').highcharts();
 chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
+
+//clear all old series
 while(chart.series.length > 1) {
   chart.series[1].remove();
 }
+
 <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
   chart.series[0].hide();
   <% @categories.each.with_index do |c, i| %>
   chart.addSeries({
     name: "<%= c %>",
-    color: "<%= highcharts_series_color(c) %>",
-    // showInLegend: false,
+    color: "<%= highcharts_series_color(c) %>", //set color according to category
+    showInLegend: <%= @categories_with_data.include? c %>,
     data: [ 
     <% @data.each do |d| %>
     {
@@ -26,8 +29,8 @@ while(chart.series.length > 1) {
   <% @categories.each do |c| %>
   chart.addSeries({
     name: "<%= c %>",
-    color: "<%= highcharts_series_color(c) %>",
-    //showInLegend: false,
+    color: "<%= highcharts_series_color(c) %>",  //set color according to category
+    showInLegend: true,
     data: [ 
     <% @data.each do |d| %>
     {

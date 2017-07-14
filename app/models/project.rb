@@ -126,7 +126,7 @@ class Project < ActiveRecord::Base
   scope :is_active, -> { where status: 'Active' }
   scope :is_confirmed, -> { where is_confirmed: true }
 
-  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
+  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an opportunity with the same name." }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
@@ -662,13 +662,57 @@ class Project < ActiveRecord::Base
     result.each { |pid, project| result[pid] = project.map(&:num_activities) }
   end
 
-  # Top Active Streams/Engagement (in range of hours)
+  # Top Active Opportunities/Engagement (within a range of specified hours)
   def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
     hours_ago_end = hours_ago_end.hours.ago.to_i
     hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
 
     query = <<-SQL
-      SELECT projects.*, COUNT(*) AS num_activities
+      WITH emails AS 
+      (
+        SELECT project_id,
+            messages ->> 'messageId'::text AS message_id,
+            jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+            CASE
+              WHEN messages -> 'to' IS NULL THEN NULL
+              ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+            END AS to,
+            CASE
+              WHEN messages -> 'cc' IS NULL THEN NULL
+              ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+            END AS cc
+        FROM activities,
+        LATERAL jsonb_array_elements(email_messages) messages
+        WHERE category = 'Conversation'
+          AND project_id IN ('#{array_of_project_ids.join("','")}')
+          AND ((messages ->> 'sentDate')::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end})
+      )
+      (
+        SELECT projects.id, projects.name, emails_aggr.category, emails_aggr.num_activities
+        FROM projects
+        INNER JOIN
+        (
+          SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
+          FROM users
+          LEFT JOIN emails
+          ON users.email IN (emails.to, emails.cc) AND users.email NOT IN (emails.from)
+          WHERE users.email like '%contextsmith.com'
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT emails.message_id) > 0
+          UNION ALL
+          SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
+          FROM users
+          LEFT JOIN emails
+          ON (users.email IN (emails.from))
+          WHERE users.email like '%contextsmith.com'
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT emails.message_id) > 0
+        ) AS emails_aggr
+        ON projects.id = emails_aggr.project_id
+      ) 
+      UNION ALL 
+      (
+      SELECT projects.id, projects.name, t.category, COUNT(*) AS num_activities
       FROM (
         SELECT id,
                category,
@@ -679,10 +723,10 @@ class Project < ActiveRecord::Base
         WHERE project_id IN ('#{array_of_project_ids.join("','")}')
         ) t
       JOIN projects ON projects.id = t.project_id
-      WHERE (t.category = '#{Activity::CATEGORY[:Conversation]}' AND (sent_date::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
-      OR (t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
-      GROUP BY projects.id
+      WHERE t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
+      GROUP BY projects.id, projects.name, t.category
       ORDER BY num_activities DESC
+      )
     SQL
     return Project.find_by_sql(query)
   end
@@ -784,26 +828,26 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all (standard) CS Stream fields from all mapped SFDC Opportunity fields.
+  # Updates all (standard) CS Opportunity fields from all mapped SFDC Opportunity fields.
   # Parameters:   client - connection to Salesforce
-  #               streams - collection of CS Projects/Streams to process
-  #               sfdc_fields_mapping - A list of [Mapped SFDC Opportunity field name, CS Stream field name] pairs
+  #               opportunities - collection of CS Projects/Opportunities to process
+  #               sfdc_fields_mapping - A list of [Mapped SFDC Opportunity field name, CS Opportunity field name] pairs
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
-  def self.update_fields_from_sfdc(client: , streams: , sfdc_fields_mapping: )
+  def self.update_fields_from_sfdc(client: , opportunities: , sfdc_fields_mapping: )
     result = nil
 
-    unless (client.nil? || streams.nil? || sfdc_fields_mapping.blank?)
+    unless (client.nil? || opportunities.nil? || sfdc_fields_mapping.blank?)
       sfdc_fields_mapping = sfdc_fields_mapping.to_h
-      sfdc_ids_mapping = streams.collect { |s| s.salesforce_opportunity.nil? ? nil : [s.salesforce_opportunity.salesforce_opportunity_id, s.id] }.compact  # a list of [linked SFDC sObject Id, CS Stream id] pairs
+      sfdc_ids_mapping = opportunities.collect { |s| s.salesforce_opportunity.nil? ? nil : [s.salesforce_opportunity.salesforce_opportunity_id, s.id] }.compact  # a list of [linked SFDC sObject Id, CS Opportunity id] pairs
       sfdc_ids_mapping = sfdc_ids_mapping.to_h
 
       # puts "sfdc_fields_mapping: #{ sfdc_fields_mapping }"
-      # puts "SFDC opportunity field names: #{ sfdc_fields_mapping.keys }"
+      # puts "SFDC Opportunity field names: #{ sfdc_fields_mapping.keys }"
       # puts "sfdc_ids_mapping: #{ sfdc_ids_mapping }"
-      # puts "SFDC opportunity ids: #{ sfdc_ids_mapping.keys }"
+      # puts "SFDC Opportunity ids: #{ sfdc_ids_mapping.keys }"
       unless sfdc_ids_mapping.empty? 
         query_statement = "SELECT Id, " + sfdc_fields_mapping.keys.join(", ") + " FROM Opportunity WHERE Id IN ('" + sfdc_ids_mapping.keys.join("', '") + "')"
         query_result = SalesforceService.query_salesforce(client, query_statement)
@@ -833,7 +877,7 @@ class Project < ActiveRecord::Base
         else
           result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " query_statement=" + query_statement }
         end
-      else  # No mapped Streams -> SFDC Opportunities
+      else  # No mapped CS Opportunities -> SFDC Opportunities
           result = { status: "SUCCESS" }  
       end
     else
@@ -849,27 +893,27 @@ class Project < ActiveRecord::Base
     result
   end
 
-  # Updates all custom CS Stream fields mapped to SFDC Opportunity fields for a single CS Stream/SFDC Opportunity pair.
+  # Updates all custom CS Opportunity fields mapped to SFDC Opportunity fields for a single CS Opportunity/SFDC Opportunity pair.
   # Parameters:   client - connection to Salesforce
-  #               project_id - CS project/stream id          
+  #               project_id - CS project/opportunity id          
   #               sfdc_opportunity_id - SFDC opportunity sObjectId
-  #               stream_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS project/stream.
+  #               opportunity_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS project/opportunity.
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
-  def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , stream_custom_fields: )
+  def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
     result = nil
 
-    unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || stream_custom_fields.blank?)
-      stream_custom_field_names = stream_custom_fields.collect { |cf| cf.salesforce_field }
+    unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || opportunity_custom_fields.blank?)
+      opportunity_custom_field_names = opportunity_custom_fields.collect { |cf| cf.salesforce_field }
 
-      query_statement = "SELECT " + stream_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
+      query_statement = "SELECT " + opportunity_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
       query_result = SalesforceService.query_salesforce(client, query_statement)
 
       if query_result[:status] == "SUCCESS"
         sObj = query_result[:result].first
-        stream_custom_fields.each do |cf|
+        opportunity_custom_fields.each do |cf|
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
           #print "----> CS_fieldname=\"", cf.name, "\" SFDC_fieldname=\"", cf.salesforce_field, "\"\n"
           #print "   .. CS_fieldvalue=\"", csfield.value, "\" SFDC_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
@@ -883,7 +927,7 @@ class Project < ActiveRecord::Base
         end
         result = { status: "SUCCESS" }
       else
-        result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " stream_custom_field_names=" + stream_custom_field_names.to_s }
+        result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " opportunity_custom_field_names=" + opportunity_custom_field_names.to_s }
       end
     else
       if client.nil?
@@ -917,7 +961,7 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Create all custom fields for a new Stream
+  # Create all custom fields for a new Opportunity
   def create_custom_fields
     CustomFieldsMetadatum.where(organization:self.account.organization, entity_type: "Project").each { |cfm| CustomField.create(organization:self.account.organization, custom_fields_metadatum:cfm, customizable:self) }
   end
