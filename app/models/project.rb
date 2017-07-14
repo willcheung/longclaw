@@ -663,10 +663,10 @@ class Project < ActiveRecord::Base
   end
 
   # Top Active Opportunities/Engagement (within a range of specified hours)
-  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
+  # TODO: Fix and don't match using current_user's domain.  This method won't work for those with 'gmail.com' domain (or any domain that is ambiguous if internal or external user!!!)
+  def self.find_include_sum_activities(array_of_project_ids, domain, hours_ago_start=false, hours_ago_end=0)
     hours_ago_end = hours_ago_end.hours.ago.to_i
     hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
-
     query = <<-SQL
       WITH emails AS 
       (
@@ -686,30 +686,34 @@ class Project < ActiveRecord::Base
         WHERE category = 'Conversation'
           AND project_id IN ('#{array_of_project_ids.join("','")}')
           AND ((messages ->> 'sentDate')::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end})
+      ), emails_sent AS (
+        SELECT DISTINCT project_id, message_id
+          FROM users
+          INNER JOIN emails
+          ON (users.email IN (emails.from))
+          WHERE users.email like '%#{domain}'
+      ), emails_received AS (
+        SELECT project_id, message_id FROM emails
+        EXCEPT
+        SELECT project_id, message_id FROM emails_sent
       )
       (
-        SELECT projects.id, projects.name, emails_aggr.category, emails_aggr.num_activities
+        SELECT projects.id, projects.name, message_ids_by_category.category, message_ids_by_category.num_activities
         FROM projects
         INNER JOIN
         (
-          SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
-          FROM users
-          LEFT JOIN emails
-          ON users.email IN (emails.to, emails.cc) AND users.email NOT IN (emails.from)
-          WHERE users.email like '%contextsmith.com'
+         SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_sent
           GROUP BY project_id, category
-          HAVING COUNT(DISTINCT emails.message_id) > 0
+          HAVING COUNT(DISTINCT message_id) > 0
           UNION ALL
-          SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
-          FROM users
-          LEFT JOIN emails
-          ON (users.email IN (emails.from))
-          WHERE users.email like '%contextsmith.com'
+         SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_received
           GROUP BY project_id, category
-          HAVING COUNT(DISTINCT emails.message_id) > 0
-        ) AS emails_aggr
-        ON projects.id = emails_aggr.project_id
-      ) 
+          HAVING COUNT(DISTINCT message_id) > 0
+        ) AS message_ids_by_category
+        ON message_ids_by_category.project_id = projects.id
+      )
       UNION ALL 
       (
       SELECT projects.id, projects.name, t.category, COUNT(*) AS num_activities

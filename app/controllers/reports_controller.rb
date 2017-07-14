@@ -204,7 +204,7 @@ class ReportsController < ApplicationController
     #sort_data_by_total = false
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
-      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), 14*24).group_by { |p| p.id }
+      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), current_user.organization.domain, 14*24).group_by { |p| p.id }
       @data = [] and @categories = [] and return if project_engagement.blank?
       @data = project_engagement.map do |pid, activities|
         opportunity = projects.find { |p| p.id == pid }
@@ -231,7 +231,7 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: y, color: 'default' })
       end
     when ACCOUNT_DASHBOARD_METRIC[:negative_sentiment_activities_pct]
-      project_engagement = Project.find_include_sum_activities(projects.pluck(:id))
+      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), current_user.organization.domain)
       project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Alert]}'").group("projects.id")
       @data = project_engagement.map do |e|
         risk = project_risks.find { |r| r.id == e.id }
@@ -375,13 +375,13 @@ class ReportsController < ApplicationController
     ###### Dashboard Metrics ######
     if !@projects.empty?
 
-      project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 7*24)
+      project_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), current_user.organization.domain, 7*24)
 
       # Top Active Opportunities
       @project_max = project_sum_activities.max_by(5) { |x| x.num_activities }
       @project_min = project_sum_activities.min_by(5) { |x| x.num_activities }
 
-      project_prev_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), 14*24, 7*24)
+      project_prev_sum_activities = Project.find_include_sum_activities(@projects.pluck(:id), current_user.organization.domain, 14*24, 7*24)
       project_chg_activities = Project.calculate_pct_from_prev(project_sum_activities, project_prev_sum_activities)
       # Top Movers
       @project_max_chg = project_chg_activities.max_by(5) { |x| x.pct_from_prev }.select { |x| x.pct_from_prev >= 0 }
