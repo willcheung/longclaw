@@ -43,12 +43,14 @@ class Project < ActiveRecord::Base
   belongs_to  :account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
-  has_many  :notifications, dependent: :destroy
+
+  has_many  :notifications, -> { non_attachments }, dependent: :destroy
+  has_many  :notifications_all, class_name: 'Notification', dependent: :destroy
+  has_many  :attachments, -> { attachments }, class_name: 'Notification'
   has_many  :notifications_for_daily_email, -> {
-    where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
+    non_attachments.where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
       Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Notification::CATEGORY[:Alert])
-    .order(:is_complete, :original_due_date)
-  }, class_name: "Notification"
+    .order(:is_complete, :original_due_date) }, class_name: "Notification"
   #has_many  :notifications_for_weekly_email, -> {
   #  where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc - 1.weeks, Time.current.yesterday.end_of_day.utc)
   #  .order(:is_complete, :original_due_date)
@@ -354,6 +356,8 @@ class Project < ActiveRecord::Base
 
   # Used for exploding all activities of a given project without time bound, specifically for time series filter.
   # Subquery is based on email_activities_last_14d view.
+  # NOTE: to_timestamp converts epoch to timestamp with UTC timezone, but Activity.last_sent_date usually saved as timestamp without timezone
+  # Therefore we need to convert Activity.last_sent_date to timestamp with UTC timezone, then convert to timestamp with user timezone
   def daily_activities(time_zone)
     query = <<-SQL
       -- E-mail conversations
@@ -386,79 +390,90 @@ class Project < ActiveRecord::Base
       UNION ALL
       (
       -- Meetings
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Meeting]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Notes
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Note]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- JIRA
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:JIRA]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Salesforce
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Salesforce]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Zendesk
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Zendesk]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Alert
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Alert]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Alert]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Basecamp2
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Basecamp2]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
+      )
+      UNION ALL
+      (
+      -- Attachment
+      SELECT date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Notification::CATEGORY[:Attachment]}' as category,
+            count(*) as activity_count
+      FROM notifications
+      WHERE category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}'
+      GROUP BY date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
     SQL
 
@@ -737,9 +752,15 @@ class Project < ActiveRecord::Base
     return project_chg_activities
   end
 
-  ### method to batch update activities in a project by time (in seconds)
-  def timejump(sec)
-    self.activities.each { |a| a.timejump(sec) }
+  # convenience method to make input easier compared to time_shift
+  def time_jump(date)
+    latest_activity_date = activities.first.last_sent_date
+    activities.each { |a| a.time_shift((date - latest_activity_date).round) }
+  end
+
+  ### method to batch update sent_date-related attributes of all activities in a project by a scalar value (in seconds)
+  def time_shift(sec)
+    activities.each { |a| a.time_shift(sec) }
   end
 
   ### method to batch update activities in a project by person
@@ -757,9 +778,9 @@ class Project < ActiveRecord::Base
   # days_ago_end: end of created_at date range in number of days ago from today, non-inclusive! (default:"yesterday")
   def get_alerts_in_range(time_zone, days_ago_start=nil, days_ago_end=0)
     if (days_ago_start.nil?)
-      self.notifications.risks.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+      self.notifications.alerts.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
     else
-      self.notifications.risks.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+      self.notifications.alerts.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
     end
   end
 

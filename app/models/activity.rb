@@ -42,7 +42,8 @@ class Activity < ActiveRecord::Base
   belongs_to :project
   belongs_to :oauth_user
   has_many :comments, dependent: :destroy
-  has_many :notifications, dependent: :destroy
+  has_many :notifications, -> { non_attachments }, dependent: :destroy
+  has_many :attachments, -> { attachments }, class_name: 'Notification'
 
   scope :pinned, -> { where is_pinned: true }
   scope :last_active_on, -> { maximum "last_sent_date" }
@@ -55,7 +56,6 @@ class Activity < ActiveRecord::Base
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
 
-
   acts_as_commentable
 
   pg_search_scope :search_note,
@@ -66,7 +66,7 @@ class Activity < ActiveRecord::Base
 
   CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = "CS"
   CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX = "(imported from ContextSmith) ——"
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2' }
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -483,8 +483,13 @@ class Activity < ActiveRecord::Base
   end
 
   ### methods to batch change jsonb columns
+  # convenience method to make input easier compared to time_shift
+  def time_jump(date)
+    time_shift((date - self.last_sent_date).round)
+  end
+
   # updates all sent_date related fields for the activity by sec (time in seconds)
-  def timejump(sec)
+  def time_shift(sec)
     self.last_sent_date += sec
     self.last_sent_date_epoch = (self.last_sent_date_epoch.to_i + sec).to_s
     em = self.email_messages

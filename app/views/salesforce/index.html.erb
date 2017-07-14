@@ -29,13 +29,11 @@
                 <% if p.id == @project.id %> 
                   <span style="font-size: 15px; font-weight: bold"><%=p.name%></span>
                 <% else %>
-                  <span style="font-size: 15px; text-decoration: underline">
-                  <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> "><%=p.name%></a></span>
+                  <span style="font-size: 15px; text-decoration: underline"><a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> "><%=p.name%></a></span>
                 <% end %>
-                &nbsp;&nbsp;<% if i < @opportunities_mapped.size - 1 %>|<%end %>&nbsp;&nbsp;
-                </span>
+                &nbsp;&nbsp;<% if i < @opportunities_mapped.size - 1 %>|<% end %>&nbsp;&nbsp;
               <% end %>
-              <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%> "><span class="fa fa-refresh pull-right"> Refresh view</a></span>
+                <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%> "><i class="fa fa-refresh pull-right"></i> Refresh view</a>
             <% end %>              
           </ul>
         </div>
@@ -119,8 +117,7 @@
             <%= render 'projects/pinned_tab', pinned_activities: @pinned_activities if @actiontype == "pinned_tab" %>
             <%= render 'notifications/project' if @actiontype == "tasks_tab" %>
             <%= render 'projects/arg_tab', project_id: @project.id if @actiontype == "arg_tab" %>
-            <%= render 'projects/insights_tab', project_id: @project.id if @actiontype == "insights_tab" %>
-           
+
         </div>
       </div>  
     <% end %>

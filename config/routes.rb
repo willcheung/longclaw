@@ -22,7 +22,6 @@ Longclaw::Application.routes.draw do
         get "render_pinned_tab"
         get "pinned" => 'projects#pinned_tab'
         get "tasks" => 'projects#tasks_tab'
-        get "insights" => 'projects#insights_tab'
         get "arg" => 'projects#arg_tab'
         get "filter" => 'projects#filter_timeline'
         get "more" => 'projects#more_timeline'

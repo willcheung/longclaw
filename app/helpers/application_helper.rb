@@ -35,7 +35,7 @@ module ApplicationHelper
       "#1798c1"
     when Activity::CATEGORY[:Zendesk]
       "#78a300"
-    when Activity::CATEGORY[:Alert]
+    when Activity::CATEGORY[:Alert], Notification::CATEGORY[:Attachment]
       "#ed5565"
     when Activity::CATEGORY[:Basecamp2]
       "#91e8e1"

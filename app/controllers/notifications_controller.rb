@@ -106,17 +106,18 @@ class NotificationsController < ApplicationController
   def create
     o_due_date = nil
     r_date = nil
-    if !params[:notification]["original_due_date"].blank?
+    if params[:notification]["original_due_date"].present?
       o_due_date = params[:notification]["original_due_date"].to_time.utc
       r_date = params[:notification]["original_due_date"].to_time.yesterday.utc
     end
 
-    @notification = Notification.new(notification_params.merge(category: 'To-do',
+    @notification = Notification.new(notification_params.merge(
+      category: Notification::CATEGORY[:Todo],
       original_due_date: o_due_date,
       remind_date: r_date,
       has_time: false,
       assign_to: current_user.id
-      ))
+    ))
 
     # send notification e-mail for the assign_to user
     send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id

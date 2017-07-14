@@ -12,7 +12,7 @@
         </div>
         <div class="m-l-md"> 
           <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
-            <% Activity::CATEGORY.each do |k,v| %>
+            <% @categories.each do |v| %>
               <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
             <% end %> 
           </select>
