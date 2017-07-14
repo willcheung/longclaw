@@ -55,7 +55,7 @@ class ProjectsController < ApplicationController
     # get data for time series filter
     @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
     # get categories for category filter
-    @categories = @activities_by_category_date.keys
+    @categories = @activities_by_category_date.keys << Activity::CATEGORY[:Pinned]
   end
 
   def filter_timeline
@@ -283,10 +283,19 @@ class ProjectsController < ApplicationController
     if params[:category].present?
       @filter_category = params[:category].split(',')
       # special case: if Attachments category selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
-      if @filter_category.include?(Notification::CATEGORY[:Attachment])
-        where_categories = @filter_category - [Notification::CATEGORY[:Attachment]]
-        category_condition = "activities.category IN ('#{where_categories.join("','")}') OR activities.category = '#{Activity::CATEGORY[:Conversation]}' AND att_filter.id IS NOT NULL"
-        activities = activities.joins("LEFT JOIN notifications AS att_filter ON att_filter.activity_id = activities.id AND att_filter.category = '#{Notification::CATEGORY[:Attachment]}'").where(category_condition).distinct
+      if @filter_category.include?(Notification::CATEGORY[:Attachment]) || @filter_category.include?(Activity::CATEGORY[:Pinned])
+        where_categories = @filter_category - [Notification::CATEGORY[:Attachment], Activity::CATEGORY[:Pinned]]
+        category_condition = "activities.category IN ('#{where_categories.join("','")}')"
+
+        if @filter_category.include?(Notification::CATEGORY[:Attachment])
+          category_condition += " OR activities.category = '#{Activity::CATEGORY[:Conversation]}' AND att_filter.id IS NOT NULL"
+          activities = activities.joins("LEFT JOIN notifications AS att_filter ON att_filter.activity_id = activities.id AND att_filter.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+        end
+        if @filter_category.include?(Activity::CATEGORY[:Pinned])
+          category_condition += " OR activities.is_pinned IS TRUE"
+        end
+
+        activities = activities.where(category_condition)
       else
         activities = activities.where(category: @filter_category)
       end
