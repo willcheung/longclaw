@@ -40,7 +40,7 @@
             elsif Time.zone.at(a.last_sent_date).to_date == (Date.current + 1.day)
                 "Tomorrow"
             else
-                Time.zone.at(a.last_sent_date).strftime("%b %d") 
+                Time.zone.at(a.last_sent_date).strftime("%b %d")
             end %><br />
         <small><%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %></small>
     </span>
@@ -72,6 +72,12 @@
                                 <span class="message-content">
                                     <%= smart_email_body(m, @users_reverse.present?) %>
                                 </span>
+                                <% if m.attachments? %>
+                                <hr class="message-divider"/>
+                                  <% m.attachments.each do |att| %>
+                                  <p><i class="fa fa-paperclip fa-rotate-90"></i>&nbsp;<%= att.name %></p>
+                                  <% end %>
+                                <% end %>
                             </div>
                         </div>
                     </div>
@@ -92,6 +98,7 @@
                     <% end %>
                 </div>
             </div> <!-- chat discussion -->
+            <%= render 'activities/attachments', attachments: a.attachments %>
         <% unless (params[:action] == "daily_summary" || params[:actiontype] == "show") %> <!-- for Home > Daily summary, or for Salesforce Controller -->
             <div class="tasks-footer tasks-footer-<%= a.id %>"><%= render "notifications/table", :multi_table => "timeline-block-notification-table", :notifications => a.notifications %></div>
         <% end %>

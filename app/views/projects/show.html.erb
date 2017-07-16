@@ -87,7 +87,6 @@
                         <li class="nav-tab"><a id="pinned-link" href="<%= project_path(@project) %>/pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Key Activities (<%= @project_pinned_count %>)</a></li>
                         <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Alerts & Tasks (<%= @project_open_tasks_count %>)</a></li>
                         <li class="nav-tab"><a id="arg-link" href="<%= project_path(@project) %>/arg" class="white-bg"><i class="fa fa-users"></i> Relationship Graph</a></li>
-                        <li class="nav-tab"><a id="insights-link" href="<%= project_path(@project) %>/insights" class="white-bg"><i class="fa fa-lightbulb-o"></i> Insights</a></li>
                     </ul>
                 </div>
             </div>
@@ -96,7 +95,6 @@
             <%= render 'pinned_tab', pinned_activities: @pinned_activities if params[:action] == "pinned_tab" %>
             <%= render 'notifications/project' if params[:action] == "tasks_tab" %>
             <%= render 'arg_tab', project_id: @project.id if params[:action] == "arg_tab" %>
-            <%= render 'insights_tab', project_id: @project.id if params[:action] == "insights_tab" %>
 
         </div>
     </div>
