@@ -168,6 +168,27 @@ $(function () {
         ]
       },
       <% end %>
+      <% if @pinned_activities.present? %>
+      {
+        type: 'flags',
+        name: 'Key Activities',
+        color: '#333333',
+        fillColor: 'rgba(255,255,255,0.8)',
+        shape: 'squarepin',
+        data: [
+          <% @pinned_activities.each do |p| %>
+          {
+            x: <%= p.last_sent_date.to_i * 1000 %>,
+//            title: '📌',
+            title: '🔑',
+            text: '<%= p.category %>'
+          },
+          <% end %>
+//        text: p.text? p.note?
+//        id: p.id, so that this can be a link and let people jump to this pinned activity?
+        ]
+      },
+      <% end %>
       // Dummy data series to make sure axis still shown when there is no data
       {     
         type: 'column',

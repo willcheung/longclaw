@@ -54,8 +54,10 @@ class ProjectsController < ApplicationController
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
     @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
+    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).reverse
     # get categories for category filter
-    @categories = @activities_by_category_date.keys << Activity::CATEGORY[:Pinned]
+    @categories = @activities_by_category_date.keys
+    @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
   end
 
   def filter_timeline
