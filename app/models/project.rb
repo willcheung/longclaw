@@ -662,9 +662,34 @@ class Project < ActiveRecord::Base
     result.each { |pid, project| result[pid] = project.map(&:num_activities) }
   end
 
+  # Top Active Streams/Engagement Last 7d
+  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
+    hours_ago_end = hours_ago_end.hours.ago.to_i
+    hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
+
+    query = <<-SQL
+      SELECT projects.*, COUNT(*) AS num_activities
+      FROM (
+        SELECT id,
+               category,
+               project_id,
+               last_sent_date,
+               jsonb_array_elements(email_messages) ->> 'sentDate' AS sent_date
+        FROM activities
+        WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+        ) t
+      JOIN projects ON projects.id = t.project_id
+      WHERE (t.category = '#{Activity::CATEGORY[:Conversation]}' AND (sent_date::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
+      OR (t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
+      GROUP BY projects.id
+      ORDER BY num_activities DESC
+    SQL
+    return Project.find_by_sql(query)
+  end
+
   # Top Active Opportunities/Engagement (within a range of specified hours)
   # TODO: Fix and don't match using current_user's domain.  This method won't work for those with 'gmail.com' domain (or any domain that is ambiguous if internal or external user!!!)
-  def self.find_include_sum_activities(array_of_project_ids, domain, hours_ago_start=false, hours_ago_end=0)
+  def self.count_activities_by_category(array_of_project_ids, domain, hours_ago_start=false, hours_ago_end=0)
     hours_ago_end = hours_ago_end.hours.ago.to_i
     hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
     query = <<-SQL

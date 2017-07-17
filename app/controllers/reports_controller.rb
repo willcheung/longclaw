@@ -204,7 +204,7 @@ class ReportsController < ApplicationController
     #sort_data_by_total = false
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
-      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), current_user.organization.domain, 14*24).group_by { |p| p.id }
+      project_engagement = Project.count_activities_by_category(projects.pluck(:id), current_user.organization.domain, 14*24).group_by { |p| p.id }
       @data = [] and @categories = [] and return if project_engagement.blank?
       @data = project_engagement.map do |pid, activities|
         opportunity = projects.find { |p| p.id == pid }
@@ -231,7 +231,7 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: proj.id, name: proj.name, y: y, color: 'default' })
       end
     when ACCOUNT_DASHBOARD_METRIC[:negative_sentiment_activities_pct]
-      project_engagement = Project.find_include_sum_activities(projects.pluck(:id), current_user.organization.domain)
+      project_engagement = Project.find_include_sum_activities(projects.pluck(:id))
       project_risks = projects.select("COUNT(DISTINCT notifications.id) AS risk_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.category = '#{Notification::CATEGORY[:Alert]}'").group("projects.id")
       @data = project_engagement.map do |e|
         risk = project_risks.find { |r| r.id == e.id }
