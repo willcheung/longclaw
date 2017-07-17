@@ -43,7 +43,7 @@ class ContactsController < ApplicationController
   # PATCH/PUT /contacts/1.json
   def update
     respond_to do |format|
-      #if Contact.where(id: @contact.id).update_all(contact_params)  #allows updating Contact if email is null
+      #if Contact.where(id: @contact.id).update_all(contact_params)  #allows updating Contact if e-mail is null
       if @contact.update(contact_params)
         format.html { redirect_to @contact, notice: 'Contact was successfully updated.' }
         format.json { respond_with_bip(@contact) }

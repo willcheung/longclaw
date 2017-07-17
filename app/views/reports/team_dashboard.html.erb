@@ -62,7 +62,7 @@
     $(function () {
 
         $('#sort-type, #team-filter, #title-filter').change( function () {
-            // Clear stream data ("right") chart
+            // Clear Opportunity data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the rep.</h3></div>");
 
             // Build URL for AJAX call for filtered data
@@ -78,7 +78,6 @@
                 text: ''
             },
             xAxis: {
-                categories: <%= @data.map(&:name).to_json.html_safe %>,
                 crosshair: true
             },
             yAxis: {
@@ -88,7 +87,13 @@
                 title: {
                     text: ''
                 },
-                gridLineWidth: 0
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
             },
             legend: {
                 enabled: true,
@@ -125,7 +130,7 @@
                 enabled: false
             },
             series: [{
-                name: 'Series 1',
+                name: 'Main Series',
                 visible: false,
                 showInLegend: false
             },
@@ -134,7 +139,7 @@
                 {
                     name: "<%= c %>",
                     color: "<%= highcharts_series_color(c) %>",
-                    //showInLegend: false,
+                    // showInLegend: false,
                     data: [ 
                     <% @data.each do |d| %>
                     {
@@ -150,7 +155,7 @@
                 {
                     name: "<%= c %>",
                     color: "<%= highcharts_series_color(c) %>",
-                    //showInLegend: false,
+                    // showInLegend: false,
                     data: [ 
                     <% @data.each do |d| %>
                     {
@@ -177,9 +182,7 @@
             ]
         });
 
-        var chart = $('#left-chart').highcharts();
-        chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
-        chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
+        <%= render partial: "reports/team_dashboard.js" %>
     });
 
 </script>

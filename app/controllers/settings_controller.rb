@@ -103,10 +103,10 @@ class SettingsController < ApplicationController
 		@linked_to_sfdc = @salesforce_link_accounts.present?
 	end
 
-	# Map CS Streams with Salesforce Opportunities: "One CS Stream can link to many Salesforce Opportunities"
+	# Map CS Opportunity with Salesforce Opportunities: "One CS Opportunity can link to many Salesforce Opportunities"
 	def salesforce_opportunities
 		if current_user.role == User::ROLE[:Admin]
-			@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active projects because "admin" role can see everything
+			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active opportunities because "admin" role can see everything
 			@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
 		end
 	end
@@ -114,7 +114,7 @@ class SettingsController < ApplicationController
 	def salesforce_activities
 		if current_user.role == User::ROLE[:Admin]
 			@CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = Activity::CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX
-			@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active projects because "admin" role can see everything
+			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active opportunities because "admin" role can see everything
 
 			# Load previous queries if it was saved
 			custom_config = current_user.organization.custom_configurations.where("organization_id = '#{current_user.organization_id}' AND config_type LIKE '/settings/salesforce_activities#%'")
@@ -145,12 +145,12 @@ class SettingsController < ApplicationController
       if params[:type] == "standard"
         cs_entity_fields = current_user.organization.entity_fields_metadatum.order(:name)
         @cs_account_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
-        @cs_stream_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Stream])
+        @cs_stream_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
         @cs_contact_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Contact])
       elsif params[:type] == "custom"
         cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
         @cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
-        @cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+        @cs_opportunity_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
       end
 
       # We don't save SFDC custom fields (i.e., in our backend), so we query SFDC every time! :(
@@ -177,7 +177,7 @@ class SettingsController < ApplicationController
 	def basecamp
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 		# Filter only the users Accounts
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active
+		@opportunities = Project.visible_to_admin(current_user.organization_id).is_active
 		# @accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 		callback_pin = params[:code]
 		# Check if Oauth_user has been created

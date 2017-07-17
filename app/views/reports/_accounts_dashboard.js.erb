@@ -7,7 +7,30 @@ var barColors = {
   lowRisk: '#A1C436'
 };
 chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
-chart.series[1].update({ 
+
+//clear all old series
+while(chart.series.length > 1) {
+  chart.series[1].remove();
+}
+
+<% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
+  <% @categories.each.with_index do |c, i| %>
+  chart.addSeries({
+    name: "<%= c %>",
+    color: "<%= highcharts_series_color(c) %>", //set color according to category
+    // showInLegend: false,
+    data: [ 
+    <% @data.each do |d| %>
+    {
+      y: <%= d.y[i].num_activities %>,
+      id: "<%= d.id %>"
+    }, 
+    <% end %> 
+    ]
+  }, false)
+  <% end unless @categories.blank? %>
+<% else %>
+chart.addSeries({
   name: "<%= @metric.html_safe %>",
   data: [ <% @data.each do |d| %>
   {
@@ -15,15 +38,18 @@ chart.series[1].update({
     color: barColors["<%= d.color %>"],
     id: "<%= d.id %>"
   },
-  <% end %> ]
+  <% end %> 
+  ]
 }, false);
+<% end %>
 
-// Hide/show legend
+// Hide/show legend for all data series (i.e., except "average" series)
 for (var i=1; i < chart.series.length; i++) {
   chart.series[i].update({ 
-    showInLegend: <%= (@metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d]) ? 'true' : 'false' %>,
+    showInLegend: <%= (@metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] && @data.present?) ? 'true' : 'false' %>,
   });
 }
+// showInLegend: < %= @categories_with_data.include? c %>,
 
 // Set-up average "Risk Score" line
 <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:risk_score] %>
@@ -40,7 +66,7 @@ chart.xAxis[0].update({min: undefined, max: undefined}, false);
 chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
 
-// Click on axis label
+// handle clicking on opportunity label
 $('.highcharts-xaxis-labels text').click(function() {
     $.get("ad_account_data/" + get_category_uuid($(this).text()), function (data) {
         $("#account-data").html(data);

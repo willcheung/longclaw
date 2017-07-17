@@ -119,7 +119,7 @@ class NotificationsController < ApplicationController
       assign_to: current_user.id
     ))
 
-    # send notification email for the assign_to user
+    # send notification e-mail for the assign_to user
     send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id
 
     respond_to do |format|
@@ -144,7 +144,7 @@ class NotificationsController < ApplicationController
 
     @users_reverse = get_current_org_users
 
-    # send notification email for the assign_to user
+    # send notification e-mail for the assign_to user
     send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id
 
     respond_to do |format|
@@ -175,7 +175,7 @@ class NotificationsController < ApplicationController
                           original_due_date: due_date.to_date)
     end
 
-    # send notification email for the new assign_to user
+    # send notification e-mail for the new assign_to user
     send_email = notification_params[:assign_to].present? && notification_params[:assign_to] != @notification.assign_to && notification_params[:assign_to] != current_user.id
 
     respond_to do |format|

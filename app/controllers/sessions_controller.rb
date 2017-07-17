@@ -15,7 +15,7 @@ class SessionsController < Devise::SessionsController
         end
       elsif auth_error == 'Invalid credentials' # hostname was autodiscovered, but password incorrect
         @error = 'The password you entered is incorrect. Try again.'
-      elsif auth_error == 'Unable to auto-discover the URL' # hostname could not be autodiscovered from email
+      elsif auth_error == 'Unable to auto-discover the URL' # hostname could not be autodiscovered from e-mail
         @error = 'Error: Hostname could not be found for this user. Please input a hostname or try another username.'
         @hostname = true
       else

@@ -122,9 +122,9 @@ Devise.setup do |config|
   # before confirming their account.
   # config.confirm_within = 3.days
 
-  # If true, requires any email changes to be confirmed (exactly the same way as
+  # If true, requires any e-mail changes to be confirmed (exactly the same way as
   # initial account confirmation) to be applied. Requires additional unconfirmed_email
-  # db field (see migrations). Until confirmed, new email is stored in
+  # db field (see migrations). Until confirmed, new e-mail is stored in
   # unconfirmed_email column, and copied to email column on successful confirmation.
   # config.reconfirmable = true
 
@@ -149,7 +149,7 @@ Devise.setup do |config|
   # Range for password length.
   config.password_length = 8..128
 
-  # Email regex used to validate email formats. It simply asserts that
+  # Email regex used to validate e-mail formats. It simply asserts that
   # one (and only one) @ exists in the given string. This is mainly
   # to give user feedback and not to assert the e-mail validity.
   # config.email_regexp = /\A[^@]+@[^@]+\z/

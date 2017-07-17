@@ -272,11 +272,11 @@
                 data: <%= @meeting_report.to_json.html_safe %> 
             }, {
                 name: 'Sent',
-                color: "<%= highcharts_series_color('Sent Emails') %>",
+                color: "<%= highcharts_series_color('Sent E-mails') %>",
                 data: <%= @in_outbound_report['outbound'].to_json.html_safe %>
             }, {
                 name: 'Read',
-                color: "<%= highcharts_series_color('Read Emails') %>",
+                color: "<%= highcharts_series_color('Read E-mails') %>",
                 data: <%= @in_outbound_report['inbound'].to_json.html_safe %>
             }]
         });
