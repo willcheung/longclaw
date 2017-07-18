@@ -369,7 +369,7 @@ $(document).ready(function() {
         } 
         else if (self.attr("id").includes("projects")) {
             entity_type = "projects";
-            entity_type_btn_str = "Streams";
+            entity_type_btn_str = "Opportunities";
         } 
         else {
             entity_type = "contacts";
@@ -423,7 +423,7 @@ $(document).ready(function() {
         } 
         else if ($(this).attr("class").includes("salesforce-opportunity-field-name")) {
             selectorStr = "#salesforce-"+field_type+"-fields-refresh-projects-btn";
-            entity_type_btn_str = "Streams";
+            entity_type_btn_str = "Opportunities";
         } 
         //else {
         //  selectorStr = "#salesforce-custom-fields-refresh-contacts-btn";

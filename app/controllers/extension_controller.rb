@@ -129,10 +129,10 @@ class ExtensionController < ApplicationController
     # find all contacts within current_user org that match the external emails, in the order of ex_emails
     contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
     if contacts.present?
-      # get all streams that these contacts are members of
+      # get all opportunities that these contacts are members of
       projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
       if projects.present?
-        # set most frequent project as stream
+        # set most frequent project as opportunity
         @project = projects.group_by(&:id).values.max_by(&:size).first
         @account = @project.account
       end
@@ -174,7 +174,7 @@ class ExtensionController < ApplicationController
             puts "Error creating account!"
             redirect_to no_account_path and return
           else
-            # Create a stream for the account now so that we can add members to it in the next few instructions
+            # Create an Opportunity for the Account now so that we can add members to it in the next few instructions
             create_project  # uses @account
             @project.subscribers.create(user: current_user)
 
@@ -316,7 +316,7 @@ class ExtensionController < ApplicationController
     # p "*** creating project for account #{@account.name} ***"
     @project = @account.projects.new(
       name: @account.name,
-      description: "Default stream for #{@account.name}",
+      description: "Default opportunity for #{@account.name}",
       created_by: current_user.id,
       updated_by: current_user.id,
       owner_id: current_user.id,

@@ -228,13 +228,13 @@
                 data: [2, 1.5, 0, 0, 1.25, 2, 0, 1, .5, 1, 1.25, .5, 1, 1.5, .25, 0]
             },{
                 type: 'bar',
-                name: 'Send Emails',
+                name: 'Send E-mails',
                 color: '#5DADE2',
                 data: [13, 20, 18, 17, 16, 12, 10, 10, 9, 8, 8, 9, 5, 3, 4, 4]
             },
             {
                 type: 'bar',
-                name: 'Receive Emails',
+                name: 'Receive E-mails',
                 color: '#3498DB',
                 data: [17.2, 10.4, 7.6, 9.1, 8.1, 7.0, 3.9, 2.3, 3.0, 2.8, 2.6, 3.8, 2.4, 0.1, 2.6, 2.5]
             },
@@ -311,12 +311,12 @@
                 color: '#E74C3C'
             },
             {
-                name: 'Send Emails',
+                name: 'Send E-mails',
                 data: [3.1, 2.8, 1.5, 1.5, 1.2, 0.4, 0.2],
                 color: '#5DADE2'
             },
             {
-                name: 'Receive Emails',
+                name: 'Receive E-mails',
                 data: [2, .6, .5, .5, .4, 0, 0],
                 color: '#3498DB'
             }, 
@@ -431,14 +431,14 @@
             },
             series: [{
                 type: 'column',
-                name: 'Sent Emails',
+                name: 'Sent E-mails',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(10) }  %>
             },
             {
                 type: 'column',
-                name: 'Received Emails',
+                name: 'Received E-mails',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(5) }  %>
