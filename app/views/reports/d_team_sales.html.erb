@@ -40,9 +40,9 @@
                     <option value="2">Opportunities</option>
                     <option value="2">Opportunity Revenue</option>
                     <option value="2">Revenue per Hour Spent (Last 14d)</option>
-                    <option value="2">Time Spent (Last 14d)</option>
+                    <option value="2" selected="true">Time Spent (Last 14d)</option>
                     <option value="2">On Target</option>
-                    <option value="1" selected="true">Activities (Last 14d)</option>
+                    <option value="1">Activities (Last 14d)</option>
                     <option value="2">New Alerts & Tasks (Last 14d)</option>
                     <option value="2">Closed Alerts & Tasks (Last 14d)</option>
                     <option value="3">Open Tasks</option>
@@ -96,23 +96,23 @@
                             </div>
 
                             <div class="col-md-3 text-center">
-                                <div class="metric text-danger">
-                                    <div class="metric-title">
-                                        <h4>Open Alerts</h4>
-                                    </div>
-                                    <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">3</h2>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3 text-center">
                                 <div class="metric">
                                     <div class="metric-title">
                                         <h4>Opportunities</h4>
                                     </div>
                                     <div class="metric-content">
                                         <h2 style="font-weight:600;font-size:46px">8</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric text-danger">
+                                    <div class="metric-title">
+                                        <h4>Open Alerts</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">3</h2>
                                     </div>
                                 </div>
                             </div>
@@ -162,8 +162,8 @@
                 text: ''
             },
             xAxis: {
-                categories: ['Neil Anderson', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Batman', 'Bruce Wallus',
-                              'Wonder Woman', 'Harry Potterson','Luke Walker', 'Danny Adobe', 'Rick Martin', 'Natale Sales'],
+                categories: ['Neil Anderson', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Stephanie Smiles', 'Bruce Wallus',
+                              'Whiteney Sales', 'Harry Potterson','Luke Walker', 'Danny Adobe', 'Rick Martin', 'Natale Salesy'],
                 crosshair: true
             },
             yAxis: {
@@ -172,7 +172,31 @@
                 title: {
                     text: ''
                 },
-                gridLineWidth: 0
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                },
+                gridLineWidth: 0,
+                plotLines: [{
+                    color: '#FF0000', // Red
+                    width: 2,
+                    value: 31.5,
+                    zIndex: 5,
+                    label: {
+                        text: 'Average 31.5',
+                        verticalAlign: 'top',
+                        textAlign: 'right',
+                        y: 120
+                    }
+                }]
+            },
+            tooltip: {
+                shared: true,
+                valueSuffix: ' hrs',
+                hideDelay: '100',
+                followPointer: true
             },
             legend: {
                 enabled: true,
@@ -199,23 +223,26 @@
             },
             series: [{
                 type: 'bar',
-                name: 'Emails Sent',
-                data: [13, 20, 18, 17, 16, 8, 14, 8, 9, 8, 7, 4, 1, 1, 1, 1]
+                name: 'Send Attachment',
+                color: '#E74C3C',
+                data: [2, 1.5, 0, 0, 1.25, 2, 0, 1, .5, 1, 1.25, .5, 1, 1.5, .25, 0]
+            },{
+                type: 'bar',
+                name: 'Send Emails',
+                color: '#5DADE2',
+                data: [13, 20, 18, 17, 16, 12, 10, 10, 9, 8, 8, 9, 5, 3, 4, 4]
             },
             {
                 type: 'bar',
-                name: 'Emails Received',
-                data: [17, 10, 7, 9, 8, 6, 3, 2, 2, 2, 0, 1, 2, 0, 0, 0]
+                name: 'Receive Emails',
+                color: '#3498DB',
+                data: [17.2, 10.4, 7.6, 9.1, 8.1, 7.0, 3.9, 2.3, 3.0, 2.8, 2.6, 3.8, 2.4, 0.1, 2.6, 2.5]
             },
             {
                 type: 'bar',
-                name: 'Calls',
-                data: [7, 6, 6, 4, 5, 13, 6, 8, 4, 2, 0, 2, 1, 1, 0, 0]
-            },
-            {
-                type: 'bar',
-                name: 'Tasks Closed',
-                data: <%= 14.times.map{ Random.rand(5) }  %>
+                name: 'Meetings & Calls',
+                color: '#F5B041',
+                data: [14, 12, 12, 9, 10, 14, 18, 17, 11, 9, 8, 7, 3, 2, 2, 2]
             }]
         });
     });
@@ -241,13 +268,13 @@
                 }
             },
             xAxis: {
-                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise', 'Acme Inc.', 'GVC'],
-                labels: {
-                    formatter: function() {
-                        return '<a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e">'+this.value+'</a>';
-                        //return '<a href="'+ categoryLinks[this.value] +'">'+this.value +'</a>';
-                    }
-                }
+                categories: ['<strong>Stark Industries</strong> - $750k, Aug 1', '<strong>Hooli</strong> - $120k, Aug 30', '<strong>Pied Piper</strong> - $45k, Sep 1', '<strong>Global Dynamics</strong> - $500k Jun 1', '<strong>Wayne Enterprise</strong> - $20k, Jun 14', '<strong>Acme Inc.</strong> - $500k, Aug 15', '<strong>GVC</strong> - $50k, Jul 20']
+            },
+            tooltip: {
+                shared: true,
+                valueSuffix: ' hrs',
+                hideDelay: '100',
+                followPointer: true
             },
             yAxis: {
                 min: 0,
@@ -257,7 +284,7 @@
                 stackLabels: {
                     enabled: true,
                     style: {
-                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
                     }
                 }
             },
@@ -266,20 +293,37 @@
             },
             plotOptions: {
                 series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.href = "https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e";
+                            }
+                        }
+                    },
                     stacking: 'normal'
                 }
             },
-            series: [{
+            series: [
+            {
+                name: 'Send Attachment',
+                data: [.25, .5, 0, .5, .25, 0, .25],
+                color: '#E74C3C'
+            },
+            {
                 name: 'Send Emails',
-                data: [2.1, 1.8, 1.5, 1.5, 1.2, 0.4, 0.2]
+                data: [3.1, 2.8, 1.5, 1.5, 1.2, 0.4, 0.2],
+                color: '#5DADE2'
             },
             {
                 name: 'Receive Emails',
-                data: [1, .6, .5, .5, .4, 0, 0]
+                data: [2, .6, .5, .5, .4, 0, 0],
+                color: '#3498DB'
             }, 
             {
                 name: 'Meetings & Calls',
-                data: [2, 0.5, 1, 1, 0, 0, 0]
+                data: [4, 2.5, 3.2, 1, 0, 0, 0],
+                color: '#F5B041'
             }]
         });
 
