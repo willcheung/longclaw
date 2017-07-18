@@ -723,7 +723,7 @@ class Project < ActiveRecord::Base
         SELECT project_id, message_id FROM emails_sent
       )
       (
-        SELECT projects.id, projects.name, message_ids_by_category.category, message_ids_by_category.num_activities
+        SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
         FROM projects
         INNER JOIN
         (
@@ -736,8 +736,8 @@ class Project < ActiveRecord::Base
           FROM emails_received
           GROUP BY project_id, category
           HAVING COUNT(DISTINCT message_id) > 0
-        ) AS message_ids_by_category
-        ON message_ids_by_category.project_id = projects.id
+        ) AS activity_count_by_category
+        ON activity_count_by_category.project_id = projects.id
       )
       UNION ALL 
       (
@@ -746,8 +746,7 @@ class Project < ActiveRecord::Base
         SELECT id,
                category,
                project_id,
-               last_sent_date,
-               jsonb_array_elements(email_messages) ->> 'sentDate' AS sent_date
+               last_sent_date
         FROM activities
         WHERE project_id IN ('#{array_of_project_ids.join("','")}')
         ) t
