@@ -24,12 +24,13 @@ while(chart.series.length > 1) {
       <% m = opp.y.find{|m| m.category == c}  %>  //find metric for this opportunity
       {
         y: <%= m.present? ? m.num_activities : 0 %>,
-        id: "<%= opp.id %>"
+        id: "<%= opp.id %>",
+        //name: "<%= opp.name %>"
       }, 
     <% end %> 
     ]
   }, false)
-  <% end %>
+  <% end unless @categories_with_data.blank? %>
 <% else %>
   chart.addSeries({
     name: "<%= @metric.html_safe %>",
