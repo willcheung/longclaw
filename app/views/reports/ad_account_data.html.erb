@@ -7,6 +7,16 @@
 
     <div class="ibox-content">
         <div class="row">
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4><%= Project::MAPPABLE_FIELDS_META["stage"] %></h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="margin:20px 0"><%= (@project.stage.nil? || @project.stage.empty?) ? "-" : @project.stage %></h2>
+                    </div>
+                </div>
+            </div>
 
             <div class="col-md-3 text-center">
                 <div class="metric">
@@ -14,7 +24,7 @@
                         <h4>Days to Close</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><% if @project.close_date.nil? %> - <% else %><%= (@project.close_date - Date.today).to_i %><% end %></h2>
+                        <h2 style="font-weight:600;font-size:46px"><%= @project.close_date.nil? ? "-" : (@project.close_date - Date.today).to_i %></h2>
                     </div>
                 </div>
             </div>
@@ -25,12 +35,12 @@
                         <h4><%= Project::MAPPABLE_FIELDS_META["amount"] %></h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px;"><% if @project.amount.nil? %> - <% else %>$<%= number_to_human(@project.amount) %><% end %></h2>
+                        <h2 style="font-weight:600;font-size:46px;"><%= @project.amount.nil? ? "-" : "$"+number_to_human(@project.amount) %></h2>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3 text-center">
+            <!-- <div class="col-md-3 text-center">
                 <div class="metric <%= risk_color(@risk_score) %>">
                     <div class="metric-title">
                         <h4><%= risk_level(@risk_score) %></h4>
@@ -39,7 +49,7 @@
                         <h2 style="font-weight:600;font-size:46px"><%= @risk_score %></h2>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <div class="col-md-3 text-center">
                 <div class="metric text-danger">
@@ -71,9 +81,9 @@
             <div id="activities-chart"></div>
         </div>
 
-        <div class="row m-t-md">
+        <!-- <div class="row m-t-md">
             <div id="risk-chart" style="height:240px;margin-right:13px;margin-left:5px"></div>
-        </div>
+        </div> -->
 
         <div class="row m-t-lg text-center">
             <h3><%= link_to "See activities &rarr;".html_safe, project_path(@project), class: "btn btn-outline btn-primary btn-xs" %></h3>
@@ -282,99 +292,99 @@
         });
 
 
-        $('#risk-chart').highcharts({
-            title: {
-                text: "Risk Score (Last 14 days)",
-                align: 'left',
-                margin: 0,
-                x: 35,
-                style: {
-                    color: '#555555',
-                    fontSize: '16px'
-                }
-            },
-            xAxis: {
-                type: 'datetime',
-                crosshair: true,
-                events: {
-                    setExtremes: syncExtremes
-                }
-            },
-            yAxis: {
-                title: {
-                    text: ''
-                },
-                labels: { enabled: true },
-                gridLineWidth: 0,
-                minorGridLineWidth: 0,
-                plotLines: [{
-                    value: 0,
-                    width: 1,
-                    color: '#808080'
-                }],
-                min: 0,
-                max: 100,
-                plotBands: [ { // Low Risk
-                    from: 0,
-                    to: 60,
-                    color: 'rgba(170, 252, 174, 0.1)',
-                    label: {
-                        text: 'Low Risk',
-                        style: {
-                            color: '#606060'
-                        }
-                    }
-                    }, { // Medium Risk
-                        from: 60,
-                        to: 80,
-                        color: 'rgba(246, 188, 42, 0.1)',
-                        label: {
-                            text: 'Medium Risk',
-                            style: {
-                                color: '#606060'
-                            }
-                        }
-                    }, { // High Risk
-                        from: 80,
-                        to: 100,
-                        color: 'rgba(246, 42, 46, 0.1)',
-                        label: {
-                            text: 'High Risk',
-                            style: {
-                                color: '#606060'
-                            }
-                        }
-                    }]
-                },
-                tooltip: {
-                    positioner: function () {
-                        return {
-                            x: this.chart.chartWidth - this.label.width, // right aligned
-                            y: -15 // align to title
-                        };
-                    },
-                    borderWidth: 0,
-                    backgroundColor: 'none',
-                    pointFormat: '{point.y}',
-                    xDateFormat: '%b %e',
-                    shadow: false,
-                    style: {
-                        fontSize: '16px',
-                        color: '#555555'
-                    }
-                },
-                credits: {
-                    enabled: false
-                },
-                legend: {
-                    enabled: false
-                },
-                series: [{
-                    pointInterval: <%= 1.day * 1000 %>,
-                    pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                    data: <%= @risk_score_trend %>
-                }]
-            });
+        // $('#risk-chart').highcharts({
+        //     title: {
+        //         text: "Risk Score (Last 14 days)",
+        //         align: 'left',
+        //         margin: 0,
+        //         x: 35,
+        //         style: {
+        //             color: '#555555',
+        //             fontSize: '16px'
+        //         }
+        //     },
+        //     xAxis: {
+        //         type: 'datetime',
+        //         crosshair: true,
+        //         events: {
+        //             setExtremes: syncExtremes
+        //         }
+        //     },
+        //     yAxis: {
+        //         title: {
+        //             text: ''
+        //         },
+        //         labels: { enabled: true },
+        //         gridLineWidth: 0,
+        //         minorGridLineWidth: 0,
+        //         plotLines: [{
+        //             value: 0,
+        //             width: 1,
+        //             color: '#808080'
+        //         }],
+        //         min: 0,
+        //         max: 100,
+        //         plotBands: [ { // Low Risk
+        //             from: 0,
+        //             to: 60,
+        //             color: 'rgba(170, 252, 174, 0.1)',
+        //             label: {
+        //                 text: 'Low Risk',
+        //                 style: {
+        //                     color: '#606060'
+        //                 }
+        //             }
+        //             }, { // Medium Risk
+        //                 from: 60,
+        //                 to: 80,
+        //                 color: 'rgba(246, 188, 42, 0.1)',
+        //                 label: {
+        //                     text: 'Medium Risk',
+        //                     style: {
+        //                         color: '#606060'
+        //                     }
+        //                 }
+        //             }, { // High Risk
+        //                 from: 80,
+        //                 to: 100,
+        //                 color: 'rgba(246, 42, 46, 0.1)',
+        //                 label: {
+        //                     text: 'High Risk',
+        //                     style: {
+        //                         color: '#606060'
+        //                     }
+        //                 }
+        //             }]
+        //         },
+        //         tooltip: {
+        //             positioner: function () {
+        //                 return {
+        //                     x: this.chart.chartWidth - this.label.width, // right aligned
+        //                     y: -15 // align to title
+        //                 };
+        //             },
+        //             borderWidth: 0,
+        //             backgroundColor: 'none',
+        //             pointFormat: '{point.y}',
+        //             xDateFormat: '%b %e',
+        //             shadow: false,
+        //             style: {
+        //                 fontSize: '16px',
+        //                 color: '#555555'
+        //             }
+        //         },
+        //         credits: {
+        //             enabled: false
+        //         },
+        //         legend: {
+        //             enabled: false
+        //         },
+        //         series: [{
+        //             pointInterval: <%= 1.day * 1000 %>,
+        //             pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+        //             data: <%= @risk_score_trend %>
+        //         }]
+        //     });
 
         // $('#risk-detection-chart').highcharts({
 

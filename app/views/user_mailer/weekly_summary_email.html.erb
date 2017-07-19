@@ -34,6 +34,7 @@
     <div style="margin:0;<% unless i == 0 %>padding:12px 0px;border-top:2px dotted #DDD;<% end %>"></div>
 
     <!-- Stream Name & Metrics -->
+    <!-- TODO: remove Risk Score trend -->
     <% risk_score_today = p.new_risk_score(@current_user_timezone) %>
     <% risk_score_trend = p.new_risk_score_trend(@current_user_timezone, 7) %>
     <% risk_score_lastweek = risk_score_trend[0].to_i %>

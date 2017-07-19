@@ -86,12 +86,25 @@
                 text: ''
             },
             xAxis: {
+                max: undefined,
                 //categories: <%= @data.map(&:name).to_json.html_safe %>,
-                crosshair: true
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        console.log("accounts_dashboard: " + this.value);
+                        var has_deal_size = this.value[1] != "";
+                        var has_close_date = this.value[2] != "";
+                        return "<b>" + this.value[0] + "</b><br/>" // proj_name
+                            + (has_deal_size || has_close_date ? " - " : "")
+                            + (has_deal_size ? this.value[1] : "")
+                            + ((has_deal_size && has_close_date) ? ", " : "")
+                            + (has_close_date ? this.value[2] : "");
+                    }
+                }
             },
             yAxis: {
-                min: null,
-                //max: null,
+                min: undefined,
+                //max: undefined,
                 opposite: true,
                 title: {
                     text: ''
@@ -103,7 +116,11 @@
                 stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        return Highcharts.numberFormat(Math.abs(this.total), 0, null, "");
+                        // var number = Highcharts.numberFormat(Math.abs(this.total), 0, null, "");
+                        // if (this.total < 0) 
+                        //     number = "(" + number + ")";
+                        // return number;
+                        return Highcharts.numberFormat(this.total, 0, null, "");
                     }
                 }
             },
@@ -134,21 +151,7 @@
             },
             credits: {
                 enabled: false
-            },
-            series: [{
-                name: 'Average',
-                type: 'line',
-                lineWidth: 2,
-                color: '#7cb5ec',
-                marker: { enabled: false, radius: 0 },
-                data: <%= Array.new(@data.length, @average).to_json.html_safe %>,
-                zIndex: 2,
-                showInLegend: false  // for "Activities (Last 14d)" metric, hide average
-            }, {
-                name: '',  // to be updated below
-                data: [],
-                zIndex: 1
-            }]
+            }
         });
 
         <%= render partial: "reports/accounts_dashboard.js" %>
