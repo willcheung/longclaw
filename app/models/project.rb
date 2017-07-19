@@ -501,61 +501,73 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
-      -- Meetings directly from actvities table
+      -- Meetings directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Meeting]}' as category, count(meetings.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as meetings
-        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- JIRA directly from actvities table
+      -- JIRA directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:JIRA]}' as category, count(jiras.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as jiras
-        ON jiras.project_id = time_series.project_id and date_trunc('day', jiras.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON jiras.project_id = time_series.project_id and date_trunc('day', jiras.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- Salesforce directly from actvities table
+      -- Salesforce directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Salesforce]}' as category, count(salesforces.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as salesforces
-        ON salesforces.project_id = time_series.project_id and date_trunc('day', salesforces.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON salesforces.project_id = time_series.project_id and date_trunc('day', salesforces.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- Zendesk directly from actvities table
+      -- Zendesk directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Zendesk]}' as category, count(zendesks.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as zendesks
-        ON zendesks.project_id = time_series.project_id and date_trunc('day', zendesks.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON zendesks.project_id = time_series.project_id and date_trunc('day', zendesks.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- Basecamp2 directly from actvities table
+      -- Basecamp2 directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Basecamp2]}' as category, count(basecamp2s.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
                 ) as basecamp2s
-        ON basecamp2s.project_id = time_series.project_id and date_trunc('day', basecamp2s.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON basecamp2s.project_id = time_series.project_id and date_trunc('day', basecamp2s.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
+      UNION ALL
+      (
+      -- Attachment directly from notifications table
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Notification::CATEGORY[:Attachment]}' as category, count(attachments.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT sent_date, project_id
+                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                ) as attachments
+        ON attachments.project_id = time_series.project_id and date_trunc('day', attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
@@ -619,9 +631,13 @@ class Project < ActiveRecord::Base
                    ) as emails
           ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
         LEFT JOIN (SELECT last_sent_date as sent_date
-                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'))
+                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'))
                   ) as other_activities
           ON date_trunc('day', other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+        LEFT JOIN (SELECT sent_date
+                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'))
+                ) as attachments
+          ON date_trunc('day', attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
         GROUP BY time_series.days
         ORDER BY time_series.days ASC
       )
@@ -753,6 +769,16 @@ class Project < ActiveRecord::Base
       JOIN projects ON projects.id = t.project_id
       WHERE t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
       GROUP BY projects.id, projects.name, t.category
+      ORDER BY num_activities DESC
+      )
+      UNION ALL
+      (
+      SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
+      FROM notifications
+      JOIN projects ON projects.id = notifications.project_id
+      WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
+      AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
+      GROUP BY projects.id, projects.name, notifications.category
       ORDER BY num_activities DESC
       )
     SQL
