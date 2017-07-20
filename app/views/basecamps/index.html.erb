@@ -84,13 +84,10 @@
          
             <ul class="nav nav-tabs">
                   <li class="nav-tab"><a id="newsfeed-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=show" class="white-bg"><i class="fa fa-comments"></i> Activities</a></li>
-                  <li class="nav-tab"><a id="pinned-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Key Activities (<%= @project_pinned_count %>)</a></li>
                   <li class="nav-tab"><a id="tasks-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=tasks" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks (<%= @project_open_tasks_count %>)</a></li>
-                  <li class="nav-tab"><a id="insights-link" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%>&actiontype=insights" class="white-bg"><i class="fa fa-lightbulb-o"></i> Insights</a></li>
                 </ul>
              
             <%= render 'projects/timeline' if @actiontype == "show" %> 
-            <%= render 'projects/pinned_tab', pinned_activities: @pinned_activities if @actiontype == "pinned" %> 
             <%= render 'notifications/project' if @actiontype == "tasks" %>
             <!-- is the ARG tab missing here? -->
         </div>

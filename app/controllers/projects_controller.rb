@@ -1,12 +1,12 @@
 class ProjectsController < ApplicationController
   before_action :check_params_for_valid_dates, only: [:update]
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
+  before_action :set_visible_project, only: [:show, :edit, :tasks_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
-  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
+  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
-  before_action :get_custom_fields_and_lists, only: [:index, :show, :pinned_tab, :tasks_tab, :arg_tab, :insights_tab]
+  before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
   before_action :project_filter_state, only: [:index]
   
 
@@ -68,12 +68,6 @@ class ProjectsController < ApplicationController
     respond_to :js
   end
 
-  def pinned_tab
-    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
-
-    render "show"
-  end
-
   def tasks_tab
     # show every risk regardless of private conversation
     @notifications = @project.notifications
@@ -125,11 +119,6 @@ class ProjectsController < ApplicationController
       ContextsmithService.load_calendar_from_backend(@project, 100, 1.day.ago.to_i)
     end
     redirect_to :back
-  end
-
-  def render_pinned_tab
-    @pinned_activities = @project.activities.pinned.includes(:comments)
-    respond_to :js
   end
 
   # GET /projects/new
