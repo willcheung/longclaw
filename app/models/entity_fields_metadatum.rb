@@ -28,7 +28,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
   validates :read_permission_role, presence: true    # Currently unused
   validates :update_permission_role, presence: true  # Currently unused
 
-  ENTITY_TYPE = { Account: 'Account', Stream: 'Stream', Contact: 'Contact' }
+  ENTITY_TYPE = { Account: 'Account', Project: 'Opportunity', Contact: 'Contact' }
 
   # Create default mappable entity fields metadata info for a new organization
   def self.create_default_for(organization)
@@ -39,7 +39,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       case etype
       when ENTITY_TYPE[:Account]
         meta = Account::MAPPABLE_FIELDS_META
-      when ENTITY_TYPE[:Stream]
+      when ENTITY_TYPE[:Project]
         meta = Project::MAPPABLE_FIELDS_META
       when ENTITY_TYPE[:Contact]
         meta = Contact::MAPPABLE_FIELDS_META
@@ -70,13 +70,13 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "phone").update(salesforce_field: "Phone") if sfdc_account_fields.include? "Phone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "website").update(salesforce_field: "Website") if sfdc_account_fields.include? "Website"
 
-      # Map the CS Stream field to the SFDC Opportunity field. The following lines may need to change if Project::MAPPABLE_FIELDS_META changes
-      #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Stream], name: "name").update(salesforce_field: "Name") if sfdc_opportunity_fields.include? "Name"
-      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Stream], name: "amount").update(salesforce_field: "Amount") if sfdc_opportunity_fields.include? "Amount"
-      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Stream], name: "close_date").update(salesforce_field: "CloseDate") if sfdc_opportunity_fields.include? "CloseDate"
-      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Stream], name: "description").update(salesforce_field: "Description") if sfdc_opportunity_fields.include? "Description"
-      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Stream], name: "expected_revenue").update(salesforce_field: "ExpectedRevenue") if sfdc_opportunity_fields.include? "ExpectedRevenue"
-      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Stream], name: "stage").update(salesforce_field: "StageName") if sfdc_opportunity_fields.include? "StageName"
+      # Map the CS Opportunity field to the SFDC Opportunity field. The following lines may need to change if Project::MAPPABLE_FIELDS_META changes
+      #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "name").update(salesforce_field: "Name") if sfdc_opportunity_fields.include? "Name"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "amount").update(salesforce_field: "Amount") if sfdc_opportunity_fields.include? "Amount"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "close_date").update(salesforce_field: "CloseDate") if sfdc_opportunity_fields.include? "CloseDate"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "description").update(salesforce_field: "Description") if sfdc_opportunity_fields.include? "Description"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "expected_revenue").update(salesforce_field: "ExpectedRevenue") if sfdc_opportunity_fields.include? "ExpectedRevenue"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "stage").update(salesforce_field: "StageName") if sfdc_opportunity_fields.include? "StageName"
 
       # Map the CS Contact field to the SFDC Contact field. The following lines may need to change if Contact::MAPPABLE_FIELDS_META changes
       #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "source").update(salesforce_field: "LeadSource") if sfdc_contact_fields.include? "LeadSource"
@@ -91,7 +91,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
     end
   end
 
-  # Returns a list of [mapped SFDC entity field name, CS entity field name] pairs, for a particular entity type (i.e., Account, Stream, or Contact).
+  # Returns a list of [mapped SFDC entity field name, CS entity field name] pairs, for a particular entity type (i.e., Account, Opportunity, or Contact).
   # Parameters:   organization_id - the Id of the organization
   #               entity_type - EntityFieldsMetadatum::ENTITY_TYPE 
   def self.get_sfdc_fields_mapping_for(organization_id:, entity_type:)

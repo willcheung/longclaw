@@ -34,7 +34,7 @@ class AccountsController < ApplicationController
     @project = Project.new(account: @account)
     @contact = Contact.new(account: @account)
 
-    @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}  #need this for New Stream modal
+    @opportunity_types = !@custom_lists.blank? ? @custom_lists["Opportunity Type"] : {}  #need this for New Opportunity modal
   end
 
   # GET /accounts/new

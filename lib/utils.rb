@@ -15,9 +15,9 @@ module Utils
     return "" if user.nil?
 
     if user.first_name.blank? && user.last_name.blank?
-        user.email
+      user.email
     else
-      [user.first_name, user.last_name].join(" ")
+      [user.first_name, user.last_name].join(" ").strip
     end
 	end
 

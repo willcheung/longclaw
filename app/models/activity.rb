@@ -190,9 +190,9 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Copies Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS stream.
+  # Copies Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS opportunity.
   # Parameters:   client - SFDC connection
-  #               project - the CS stream into which to load the SFDC activity
+  #               project - the CS opportunity into which to load the SFDC activity
   #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
   #               type - to specify loading from an SFDC "Account" or "Opportunity"
   #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
@@ -294,7 +294,7 @@ class Activity < ActiveRecord::Base
 
   # Bulk export CS Activities to a SFDC Account or Opportunity (as completed Tasks in ActivityHistory).
   # Parameters:   client - SFDC connection
-  #               project - the CS stream from which to export
+  #               project - the CS opportunity from which to export
   #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
   #               type - to specify exporting into an SFDC "Account" or "Opportunity"
   #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
