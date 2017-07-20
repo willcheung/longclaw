@@ -14,14 +14,14 @@
         <%= simple_form_for @project, remote: remote, html: {role: :form, 'data-model' => 'project'} do |f| %>
             <div class="modal-body">
               <div class="row">
-                <%# Render the new stream form (passing modal => true to enable remote => true) %>
+                <%# Render the new opportunity form (passing modal => true to enable remote => true) %>
                 <%= render 'projects/form', f: f, modal_id: modal_id %>
               </div>
             </div>
               <div class="modal-footer">            
 
                 <% if modal_id == 'edit_project_modal' %>
-                    <%= f.submit 'Update Oppotunity', class: 'btn btn-primary pull-left form-group' %>
+                    <%= f.submit 'Update Opportunity', class: 'btn btn-primary pull-left form-group' %>
                     <%= link_to "Delete Opportunity", @project, method: :delete, data: {confirm: "All data in this Opportunity will be deleted! Are you sure? \n\n(Pro Tip: You can also archive this opportunity.)"} %>
                 <% else %>  
                    <%= f.submit 'Create with account contacts', class: 'btn btn-primary pull-left form-group' %>

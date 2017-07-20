@@ -21,7 +21,7 @@ module ApplicationHelper
     num > 0 ? "<i class=\"fa fa-level-up\"></i>".html_safe : "<i class=\"fa fa-level-down\"></i>".html_safe
   end
 
-  def highcharts_series_color(category)
+  def highcharts_series_color(category="default")
     case category
     when Activity::CATEGORY[:Conversation]
       "#46C6C6"
@@ -41,12 +41,16 @@ module ApplicationHelper
       "#91e8e1"
     when 'Meetings'
       '#ffb833'
-    when 'Sent Emails'
+    when 'Sent E-mails'
       '#00cccc'
-    when 'Read Emails'
+    when 'E-mails Sent'
+      '#00cccc'
+    when 'Read E-mails'
+      '#995cd6'
+    when 'E-mails Received'
       '#995cd6'
     else
-      '#7cb5ec'
+      '#7cb5ec'  # light blue
     end
   end
 

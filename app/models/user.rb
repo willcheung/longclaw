@@ -189,7 +189,7 @@ class User < ActiveRecord::Base
       end
       return user
     else
-      # Considered referred user if email exists but not oauth elements
+      # Considered referred user if e-mail exists but not oauth elements
       referred_user = User.where(:email => auth.info.email).first
       user_attributes = {
         first_name: info["first_name"],
@@ -291,7 +291,7 @@ class User < ActiveRecord::Base
               #   # Considered existing projects because there are more than 1 shared members.
               #   overlapping_p << existing_project
               # elsif dc < 0.2 and dc > 0.0 and intersect == 1
-              #   # This is likely a one-time communication or a typo by email sender.
+              #   # This is likely a one-time communication or a typo by e-mail sender.
 
               #   # If the existing project already has current user, then likely this conversation is part of that project.
               #   if existing_project.users.map(&:email).include?(user.email)
@@ -398,7 +398,7 @@ class User < ActiveRecord::Base
                 AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                 AND (messages ->> 'sentDate')::integer > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
           ) AS emails
-        ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{self.time_zone}') = time_series.days AND '#{self.email}' IN (emails.from, emails.to, emails.cc)
+        ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{self.time_zone}') = time_series.days AND #{User.sanitize(self.email)} IN (emails.from, emails.to, emails.cc)
       GROUP BY days, category
       ORDER BY days ASC
       )
@@ -410,7 +410,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Meeting]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1...-1]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS meetings
@@ -426,7 +426,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:JIRA]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1...-1]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS jiras
@@ -442,7 +442,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Salesforce]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1...-1]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS salesforces
@@ -458,7 +458,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Zendesk]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1...-1]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS zendesks
@@ -474,7 +474,7 @@ class User < ActiveRecord::Base
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Basecamp2]}' 
-                  AND "from" || "to" || "cc" @> '[{"address": "#{self.email}"}]'::jsonb 
+                  AND "from" || "to" || "cc" @> '[{"address": "#{User.sanitize(self.email)[1...-1]}"}]'::jsonb 
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS basecamp2s
@@ -520,7 +520,7 @@ class User < ActiveRecord::Base
              COALESCE(t1.outbound_count,0) AS outbound_count,
              COALESCE(t1.outbound_count,0)+COALESCE(t2.inbound_count,0) AS total
       FROM
-      -- t1 counts all emails sent by each user (specified in "from" field) in the provided domain in the last 14 days across all accounts in the organization
+      -- t1 counts all e-mails sent by each user (specified in "from" field) in the provided domain in the last 14 days across all accounts in the organization
         (
           SELECT "from" AS outbound, count(DISTINCT message_id) AS outbound_count
           FROM email_activities
@@ -528,10 +528,10 @@ class User < ActiveRecord::Base
           GROUP BY "from" ORDER BY outbound_count DESC
         ) t1
       FULL OUTER JOIN
-      -- t2 counts all emails received by each user in the provided domain in the last 14 days across all accounts in the organization
+      -- t2 counts all e-mails received by each user in the provided domain in the last 14 days across all accounts in the organization
         (
           SELECT inbound, count(DISTINCT message_id) AS inbound_count FROM
-          -- t collects all emails received by each user (specified in either "to" or "cc" fields) in the provided domain in the last 14 days across all accounts in the organization
+          -- t collects all e-mails received by each user (specified in either "to" or "cc" fields) in the provided domain in the last 14 days across all accounts in the organization
           (
             SELECT "to" AS inbound, message_id FROM email_activities WHERE "to" LIKE '%#{domain}'
             UNION ALL
@@ -546,12 +546,13 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
+  # Count of number of activities for accounts in array_of_account_ids, and for users in array_of_user_ids, and between a range of days (default=last 14d)
   def self.count_all_activities_by_user(array_of_account_ids, array_of_user_ids, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     array_of_project_ids = Project.where(account_id: array_of_account_ids).pluck(:id)
     return [] if array_of_account_ids.blank? || array_of_user_ids.blank? || array_of_project_ids.blank?
     query = <<-SQL
       (
-        SELECT users.id, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
+        SELECT users.id, 'E-mails Received' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
         FROM users
         LEFT JOIN (
           SELECT messages ->> 'messageId'::text AS message_id,
@@ -570,7 +571,32 @@ class User < ActiveRecord::Base
           AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
           AND project_id IN ('#{array_of_project_ids.join("','")}')
         ) AS emails
-        ON users.email IN (emails.from, emails.to, emails.cc)
+        ON (users.email IN (emails.to, emails.cc) AND users.email NOT IN (emails.from))
+        WHERE users.id IN ('#{array_of_user_ids.join("','")}')
+        GROUP BY users.id, category
+      )
+      UNION ALL
+      (
+        SELECT users.id, 'E-mails Sent' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
+        FROM users
+        LEFT JOIN (
+          SELECT messages ->> 'messageId'::text AS message_id,
+                 jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+                 CASE
+                   WHEN messages -> 'to' IS NULL THEN NULL
+                   ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+                 END AS to,
+                 CASE
+                   WHEN messages -> 'cc' IS NULL THEN NULL
+                   ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+                 END AS cc
+          FROM activities,
+          LATERAL jsonb_array_elements(email_messages) messages
+          WHERE category = '#{Activity::CATEGORY[:Conversation]}'
+          AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+          AND project_id IN ('#{array_of_project_ids.join("','")}')
+        ) AS emails
+        ON users.email IN (emails.from)
         WHERE users.id IN ('#{array_of_user_ids.join("','")}')
         GROUP BY users.id, category
       )
@@ -642,7 +668,7 @@ class User < ActiveRecord::Base
   def self.team_usage_report(array_of_account_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
-      -- shows the total time usage be adding all the inbound emails and outbound emails as inbound and outbound
+      -- shows the total time usage be adding all the inbound e-mails and outbound e-mails as inbound and outbound
       WITH email_activities AS (
         SELECT  messages ->> 'messageId'::text AS message_id,
                 jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
@@ -755,7 +781,7 @@ class User < ActiveRecord::Base
         FROM (
           SELECT DISTINCT message_id, project_id, word_count
           FROM user_emails
-          WHERE "from" = '#{self.email}'
+          WHERE "from" = #{User.sanitize(self.email)}
         ) outbound_emails
         GROUP BY project_id, message_id
         UNION ALL
@@ -763,7 +789,7 @@ class User < ActiveRecord::Base
         FROM (
           SELECT DISTINCT message_id, project_id, word_count
           FROM user_emails
-          WHERE '#{self.email}' IN ("to", "cc")
+          WHERE #{User.sanitize(self.email)} IN ("to", "cc")
         ) inbound_emails
         GROUP BY project_id, message_id
       ) AS wc_table
@@ -833,7 +859,7 @@ class User < ActiveRecord::Base
       LATERAL jsonb_array_elements(email_messages) messages
       WHERE activities.category = '#{Activity::CATEGORY[:Meeting]}'
       AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
-      AND "from" || "to" || cc @> '[{"address":"#{self.email}"}]'::jsonb
+      AND "from" || "to" || cc @> '[{"address":"#{User.sanitize(self.email)[1...-1]}"}]'::jsonb
       AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{self.organization.accounts.ids.join("','")}'))
       GROUP BY 1
     SQL

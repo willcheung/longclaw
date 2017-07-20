@@ -39,10 +39,10 @@
 
               <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; padding:0px; display: inline;"> 
                 <div class="contextsmith_account col-lg-3" style="margin-right:0px; margin-left:0px; padding:0px; display: inline;">
-                  <select class="contextsmith_account_box" data-placeholder="Select Contextsmith Stream">
+                  <select class="contextsmith_account_box" data-placeholder="Select Contextsmith Opportunity">
                     <option value="0"></option>
-                    <% if !@streams.nil?  %>
-                      <% @streams.each do |s| %>
+                    <% if !@opportunities.nil?  %>
+                      <% @opportunities.each do |s| %>
                         <option value="<%=s.id %>"><%=s.name %></option>
                       <% end %>
                     <% end  %>
@@ -67,7 +67,7 @@
               <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
                   <thead>
                       <tr>
-                          <th>ContextSmith Stream</th>
+                          <th>ContextSmith Opportunity</th>
                           <th>Salesforce Account</th>
                           <th>Salesforce Opportunity</th>
                           <th></th>

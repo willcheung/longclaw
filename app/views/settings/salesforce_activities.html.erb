@@ -86,13 +86,13 @@
                 <p style="border-bottom:2px dotted #CCC"></p>
               </div>
               <div>
-                <span style="font-size:15px;font-weight:bold;padding-right:1em">Stream and Activities Mapping</span>
+                <span style="font-size:15px;font-weight:bold;padding-right:1em">Opportunity and Salesforce Entity Mapping</span>
                 <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th style="vertical-align: bottom">ContextSmith Stream</th>
+                            <th style="vertical-align: bottom">ContextSmith Opportunity</th>
                             <th>
-                              <span style="vertical-align: bottom; margin-right:5px">Salesforce Activities</span>
+                              <span style="vertical-align: bottom; margin-right:5px">Salesforce Entity</span>
                               <span style="display: inline-block;">
                                 <div>
                                   <button id="salesforce-activity-refresh" class="btn btn-sm btn-primary btn-outline" btnLabel="Refresh ContextSmith Activities" style="width: 18em;"><i class="fa fa-refresh"></i> Refresh ContextSmith Activities</button>
@@ -109,7 +109,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                      <% @streams.each do |s| %>
+                      <% @opportunities.each do |s| %>
                         <tr>
                           <td class="col-lg-5"><a href="<%= project_path(s) %>"><%= s.name %></a></td>
                           <% if s.salesforce_opportunity.nil? %>

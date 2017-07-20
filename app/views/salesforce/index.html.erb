@@ -9,7 +9,7 @@
       <div class="panel blank-panel">
         <div class="panel-heading">
           <ul class="nav nav-tabs">
-            <% if @id_param_present.blank? || !@is_mapped_to_CS_account || @streams_mapped.blank? %>
+            <% if @id_param_present.blank? || !@is_mapped_to_CS_account || @opportunities_mapped.blank? %>
               <span>
                 <img alt="image" style="width: 220px;display: block; margin: 10% auto;" src="/assets/logo.png">
               </span>
@@ -18,20 +18,20 @@
               <div class="text-center m-t-lg">
                 <h3>Invalid Salesforce identifier.</h3>
               </div>
-            <% elsif !@is_mapped_to_CS_account || @streams_mapped.blank? %>
+            <% elsif !@is_mapped_to_CS_account || @opportunities_mapped.blank? %>
               <div class="text-center m-t-lg">
-                <h3>No valid ContextSmith streams are mapped to this Salesforce Account or Salesforce Id cannot be found.</h3>
+                <h3>No valid ContextSmith opportunities are mapped to this Salesforce Account or Salesforce Id cannot be found.</h3>
               </div>
             <% else %>
-              <span>Streams:&nbsp;&nbsp;</span>
-              <!-- Show links to all connected CS streams at the top -->
-        	    <% @streams_mapped.each_with_index do |p, i| %>
+              <span>Opportunities:&nbsp;&nbsp;</span>
+              <!-- Show links to all connected CS opportunities at the top -->
+        	    <% @opportunities_mapped.each_with_index do |p, i| %>
                 <% if p.id == @project.id %> 
                   <span style="font-size: 15px; font-weight: bold"><%=p.name%></span>
                 <% else %>
                   <span style="font-size: 15px; text-decoration: underline"><a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=p.id%> "><%=p.name%></a></span>
                 <% end %>
-                &nbsp;&nbsp;<% if i < @streams_mapped.size - 1 %>|<% end %>&nbsp;&nbsp;
+                &nbsp;&nbsp;<% if i < @opportunities_mapped.size - 1 %>|<% end %>&nbsp;&nbsp;
               <% end %>
                 <a id="project_cluster" href="/salesforce/?id=<%=@salesforce_id %>&pid=<%=@project.id%> "><i class="fa fa-refresh pull-right"></i> Refresh view</a>
             <% end %>              
