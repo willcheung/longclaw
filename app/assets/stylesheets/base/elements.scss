@@ -1679,7 +1679,7 @@ a.forum-item-title:hover {
   clear: both;
 }
 
-#vertical-timeline {
+#vertical-timeline, #extension-timeline {
   position: relative;
   padding: 0;
 }
@@ -1750,7 +1750,6 @@ a.forum-item-title:hover {
   text-align: left;
   margin-left: -25px;
 }
-
 
 .vertical-timeline-icon {
   position: absolute;
@@ -1888,7 +1887,7 @@ a.forum-item-title:hover {
     width: 100%;
     right:0;
   }
-  .vertical-timeline-icon {
+  .vertical-timeline-block:not(.extension-block) .vertical-timeline-icon {
     display: none;
   }
   .vertical-timeline-content {

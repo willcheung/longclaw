@@ -11,6 +11,9 @@ gem 'sass-rails', '~>5.0.4'       # Use SCSS for stylesheets
 gem 'jbuilder', '~> 1.2' 					# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'devise', '~> 3.4.1' 					# User Authentication
 gem "omniauth-google-oauth2", :git => 'https://github.com/zquestz/omniauth-google-oauth2', :branch => 'master'
+gem 'oauth2', '~> 1.0'
+gem 'omniauth-oauth2', '~> 1.4' 
+gem 'hashie', '~> 3.4.3'
 gem "jquery-rails"
 gem 'best_in_place', '~> 3.1.0'
 gem 'ahoy_email'
@@ -18,7 +21,7 @@ gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankan
 gem 'puma'                        # Web server
 gem 'acts_as_commentable'
 gem 'pg_search'
-# gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
+gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
 # gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
 gem 'omniauth-salesforce'
 gem 'restforce', '~> 2.5.0'  #saleforce REST gem
@@ -45,6 +48,7 @@ group :development do
   gem 'ffaker'                    # generate fake data
   gem "letter_opener"             # email preview
   gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]  # Time zone info required for running app on Windows environment
+  gem 'thin'
 end
 
 group :production do

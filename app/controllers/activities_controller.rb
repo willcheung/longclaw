@@ -1,5 +1,5 @@
 class ActivitiesController < ApplicationController
- before_action :set_activity, only: [:update, :destroy]
+  before_action :set_activity, only: [:update, :destroy]
 
  	def create
  		project = Project.find_by_id(params[:project_id])

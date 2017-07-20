@@ -3,25 +3,38 @@ development:
   google_client_secret: kMCmqlzYF6pYp6L8-SIP8IGY
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
-  csback_base_url: http://104.198.4.24:80
-  csback_script_base_url: http://104.198.4.24:80
+  csback_base_url: http://104.198.4.24:8888
+  # uncomment when running locally: csback_base_url: http://localhost:8888
+  mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
+  mailchimp_email_list_id: 0b8529ba9c
+  csback_script_base_url: http://104.198.4.24:8888
   salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
   salesforce_client_secret: 3550523996344810646
   salesforce_sandbox_client_id: 3MVG982oBBDdwyHiqGsOXQz6wLLinqrWyAUQRz19HeA2MWIjX0iGa6PfE1LbD8x98nmuNETFb1_.0YyxfaIPo
   salesforce_sandbox_client_secret: 9048492794353274691
+  basecamp_client_id: a708737faac642403a3b8fb000585ace49fd1935
+  basecamp_client_secret: efd66e0c5c0ad9b43d5332646d994bf6eb4334a6
+  basecamp_authorization_url: https://launchpad.37signals.com/authorization/new
+  basecamp_token_url: https://launchpad.37signals.com/authorization/token
+  basecamp_redirect_uri: http://localhost:3000/users/auth/37signals/callback
   BASE_URL: http://localhost:3000
+  # tells the backend to limit emails to this number
+  max_emails: 500
+  encryption_key: ;?\x8E\xF4\xEC\xCB\xB7B\x17%\t\x9A\x8F\x01\x16y\xB4^\xBENo\x872\x03\xC3\xCCW\xE6\xB7\xCCDO
 
 test:
   google_client_id: 9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com
   google_client_secret: kMCmqlzYF6pYp6L8-SIP8IGY
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
-  csback_base_url: https://104.198.4.24:80
-  csback_script_base_url: https://104.198.4.24:80
+  mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
+  csback_base_url: https://104.198.4.24:8888
+  csback_script_base_url: https://104.198.4.24:8888
 
 production:
   google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
   google_client_secret: ZbgIgjg6M2LhCUc2RIIOS-TQ
+  mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: wndqLIBQRJbIsA9S3bM-1w
   csback_base_url: https://104.198.4.24:80

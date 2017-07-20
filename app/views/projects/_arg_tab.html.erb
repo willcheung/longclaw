@@ -387,7 +387,7 @@
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>Title: " + d.title + "<br>" + d.email + "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
+                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
                         .style("top", (nodeHighlighted?"190px":"70px"));
                   }
               })
@@ -454,7 +454,7 @@
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>Title: " + clickedOn.title + "<br>" + clickedOn.email + "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>" /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
@@ -573,9 +573,58 @@
 </script>
 <% else %>
   <div class="p-m m-l white-bg header-box">
-    <h4 class="text-center">You don't have any activities in this Stream!</h4>
+    <h4 class="text-center">Nothing to graph because there are no activities!</h4>
   </div>
 <% end %>
+
+<!-- Hardcoding data for demo purposes -->
+<% if ENV['RACK_ENV'] == 'development' or @project.id == '502b8160-0536-48da-9021-1561b957434e' %>
+<div id="contacts">
+    <div class="panel blank-panel">
+        <div class="panel-body">
+            <div class="ibox-content">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Title</th>
+                                <th>Buyer role</th>
+                                <th>Last touched by</th>
+                                <th>Last email sent</th>
+                                <th>Last email received</th>
+                                <th>Emails w/o replies (Last 14d)</th>
+                                <th>Last meeting</th>
+                                <th>Next meeting</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% (@suggested_members + @project_members).each do |pm| %>
+                                <tr>
+                                    <% if !pm.contact.nil? %>
+                                        <% contact = pm.contact %>
+                                        <td class="editable-field"><%= contact.first_name + ' ' + contact.last_name %></td>
+                                        <td class="editable-field"><%= contact.title %></td>
+                                        <td class="editable-field"><%= contact.buyer_role %></td>
+                                        <!-- hardcoded data!!! -->
+                                        <td class="editable-field">Will Cheung</td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td style="text-align: center;"><%= rand(0..5) %></td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td class="editable-field"><% if pm.contact.first_name == "Nigel" or pm.contact.first_name == "Tony" %><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %><% end %></td>
+                                    <% end %>
+                                </tr>
+                            <% end %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<% end %>
+
 <script type="text/javascript">
     $("#arg-link").parent().addClass("active");
 </script>

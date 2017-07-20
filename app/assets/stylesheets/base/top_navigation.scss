@@ -27,9 +27,23 @@
   color: $primary;
 }
 
+.navbar-nav > li:not(.active) a {
+  border-width: 0 0 3px 0;
+  border-style: solid;
+}
+
+.navbar-nav > li:not(.active) a:hover {
+  border-color: lighten($primary, 25%);
+}
+
+.navbar-nav > li:not(.active) a:not(hover) {
+  border-color: white;
+}
+
 .top-navigation .nav > li.active {
   background: #fff;
   border: none;
+  border-bottom: 3px $primary solid;
 }
 .top-navigation .nav > li.active > a {
   color: $primary;
@@ -53,7 +67,7 @@
 }
 
 .top-navigation .navbar-brand {
-  background: $primary;
+  background: #fff;
   color: #fff;
   padding: 15px 25px;
 }
@@ -79,10 +93,10 @@
 }
 
 .top-navigation .wrapper.wrapper-content {
-  padding: 40px;
+  padding: 20px 30px 30px 30px;
 }
 .top-navigation.body-small .wrapper.wrapper-content, .body-small  .top-navigation .wrapper.wrapper-content {
-  padding: 40px 0px 40px 0px;
+  padding: 20px 0px 30px 0px;
 }
 
 .navbar-toggle {

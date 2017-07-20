@@ -19,63 +19,60 @@
     <div class="ibox">
         <div class="ibox-content">
             <h1>Custom Fields</h1>
+            <h4><a href='<%= settings_custom_lists_path %>'>Edit Custom Lists <i class="fa fa-link"></i></a></h4>
             <%= form_for :custom_field_settings, html: { id: "custom-fields-form" } do %>
             <div class="form-inline">
                 <label>Entity Type:</label>
                 <select id="select-entity-type" class="form-control" name="entity_type" form="custom-fields-form">
                     <% CustomFieldsMetadatum::ENTITY_TYPE.each do |t| %>
-                        <option<%if t[0].to_s == @entity_type %> selected<%end%>>
-                            <%= t[1] %>
-                        </option>
+                        <option<%if t[0].to_s == @entity_type %> selected<%end%>> <%= t[1] %> </option>
                     <% end %>
                 </select>
-                <!--<button id="edit-btn" class="btn btn-info" style="display: none;">Edit</button>-->
-                <!--<button id="save-btn" form="custom-fields-form" class="btn btn-primary">Save</button>-->
             </div>
             <table class="table table-condensed responsive no-wrap m-t-sm">
                 <thead>
                     <tr>
-                        <th>Field Name</th>
-                        <th>Data Type</th>
+                        <th style="width:25%;min-width:10em">Field Name</th>
+                        <th style="width:10%;min-width:10em">Data Type</th>
+                        <th style="width:45%"></th>
                         <!--<th><i class="fa fa-lock fa-lg">&nbsp;</i>Edit Permission</th>-->
                         <!--<th><i class="fa fa-cogs">&nbsp;</i>External Column Mapping</th>-->
-                        <th></th>
+                        <th style="width:15%;min-width:7em"></th>
                     </tr>
                 </thead>
                 <tbody>
                     <% if @custom_fields.empty? %>
-                    <tr><th class="text-mute-gray" style="font-weight:normal;">No custom fields yet!&nbsp;&nbsp;Click the '+' below to add one.</th></tr>
+                        <tr><th class="text-mute-gray" style="font-weight:normal;">No custom fields yet!&nbsp;&nbsp;Click the '+' below to add one.</th></tr>
                     <% else %>
-                    <% @custom_fields.order(:created_at).each do |f|  %>
-                        <tr>
-                            <td><%= best_in_place f, :name, :as => 'input', :place_holder => '(none)', :activator => "#customfield-#{f.id}-name-activator" %><i id="customfield-<%= f.id %>-name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
-                            <td>
-                              <!--<select id="select-customfield-type1" class="form-control" name="level_type">
-                                <% CustomFieldsMetadatum::DATA_TYPE.each do |dtype| %>
-                                    <option <option<%if dtype[0].to_s == f.data_type %> selected<%end%>>
-                                        <%= dtype[1] %>
-                                    </option>
-                                <% end %>
-                              </select>-->
-                              <%= best_in_place f, :data_type, :as => :select, :collection => CustomFieldsMetadatum::DATA_TYPE, :class => 'btn btn-default btn-sm fa-caret-down' %>
-                            </td>
-                            <!--<td>
-                              <%= best_in_place f, :update_permission_level, :as => :select, :collection => User::ROLE, :class => 'btn btn-default btn-sm fa-caret-down' %>
-                            </td>-->
-                            <!--<td>-</td>-->
-                            <td>
-                              <%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, f, method: :delete, data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %>
-                            </td>
-                            <!--< %= link_to "<i class=\"fa fa-minus-square fa-2x\"></i>".html_safe, f, method: :delete, style: "color:#F66", data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %>-->
-                        </tr>
-                    <% end %>
+                        <% @custom_fields.order(:created_at).each do |f|  %>
+                            <tr>
+                                <td id="customfield-<%= f.id %>-name-activator"><%= best_in_place f, :name, :as => 'input', :place_holder => '(none)', :activator => "#customfield-#{f.id}-name-activator" %><i class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></td>
+                                <td><%= best_in_place f, :data_type, :as => :select, :collection => CustomFieldsMetadatum::DATA_TYPE, :class => 'btn btn-default btn-sm fa-caret-down customfield-datatype', :style => "color:#DDD;", :customfield_id => "#{f.id}" %></td>
+                                <td id="customfield-<%= f.id %>-customlist" class="data_type">
+                                    <% if f.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] %>
+                                        List: <%= best_in_place f, :custom_lists_metadata_id, :as => :select, :place_holder => '(unassigned)', :collection => @custom_lists, :class => 'btn btn-default btn-sm fa-caret-down customfield-customlist', :style => "color:black; background-color:#3C8DC5" %>
+                                        <% if f.custom_lists_metadata_id.nil? %>
+                                            <i style="color:#3d8dc5" class="fa fa-exclamation-triangle" data-toggle="tooltip" data-placement="right" data-original-title="You must assign a List to this field!"></i>
+                                        <% end %>
+                                    <% else %>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class='btn btn-default btn-sm element-disabled' style='width:5.5em;background-color:#3C8DC5'>&nbsp;</span>
+                                    <% end %>
+                                </td>
+                                <td style="display: none">
+                                  <%= best_in_place f, :update_permission_role, :as => :select, :collection => User.getRolesMap, :class => 'btn btn-default btn-sm fa-caret-down' %>
+                                </td>
+                                <!--<td>-</td>-->
+                                <td><%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, f, method: :delete, data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %></td>
+                            </tr>
+                        <% end %>
                     <% end %>
                     <tr>
                         <td></td>
                         <td></td>
+                        <td></td>
                         <!--<td></td>
                         <td></td>-->
-                        <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe,custom_fields_metadatum_index_path(entity_type: "#{@entity_type}"), method: :post, style: "color:#A1C436",title: "Add new field" %></td>
+                        <td><%= link_to "<i class=\"fa fa-plus-square fa-2x\"></i>".html_safe, custom_fields_metadatum_index_path(entity_type: "#{@entity_type}"), method: :post, style: "color:#A1C436",title: "Add new field" %></td>
                     </tr>
                 </tbody>
             </table>
@@ -86,5 +83,10 @@
 <script type="text/javascript">
     $('#select-entity-type').change( function() {
         window.location.replace("custom_fields?entity_type=" + $(this).val());
+    });
+
+    $('.customfield-datatype, .customfield-customlist').change( function() {
+        //console.log("Data type for custom field id=" + $(this).attr("customfield_id") + " was changed.");
+        window.location.reload();
     });
 </script>

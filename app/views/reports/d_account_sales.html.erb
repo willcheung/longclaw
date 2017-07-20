@@ -1,0 +1,688 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Accounts Dashboard</h2>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+
+    <div class="row">
+        <div class="col-lg-3 filter-space">
+            <div>
+                <div class="font-bold col-lg-3 m-t-sm">Region:</div>
+                <select class="category_filter col-lg-8">
+                    <% Account::CATEGORY.each{|k,v|    %>
+                    <option>Northeast</option>
+                    <option>West</option>
+                    <option>South</option>
+                    <option>APAC</option>
+                    <option>Europe</option>
+                     <% } %>
+                </select>
+            </div>
+        </div>
+        <div class="col-lg-3 filter-space">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Stage:</div>
+                <select class="category_filter col-lg-8">
+                    <option>Implementation</option>
+                    <option>Onboarding</option>
+                    <option>Closing</option>
+                    <option selected="true">Negotiation</option>
+                    <option>Support</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-lg-3 filter-space">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Owner:</div>
+                <select class="category_filter col-lg-8">
+                    <option>Justin</option>
+                    <option>Bob</option>
+                    <option>Henry</option>
+                    <option selected="true">Rachel</option>
+                    <option>Allison</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row border-bottom white-bg dashboard-header">
+            <div class="row">
+                <div class="col-lg-5">
+                    <h4 class="m-l-md">Metric:
+                    <select class="metric_filter col-lg-8" data-placeholder="Select Type">
+                        <option>Days Inactive</option>
+                        <option value="2">Time Spent (Last 14d)</option>
+                        <option value="2">Deal Size</option>
+                        <option value="2">Deal Size per Hour (Last 14d)</option>
+                        <option value="1" selected="true">Activities (Last 14d)</option>
+                        <option value="3">Risk Score</option>
+                        <!--<option>Days to Renewal</option>-->
+                        <option>Days to Close</option>
+                        <option value="4">Negative Sentiment</option>
+                        <option>Account Potential</option>
+                        <option value="5">Total Open Alerts</option>
+                        <option value="6">Total Overdue Tasks</option>
+                    </select>
+                    </h4>
+                </div>
+            </div>
+            <!-- LEFT -->
+            <div class="col-lg-5">
+                <div id="left-chart" class="left-chart" style="height:1200px;"></div>
+
+                <h5><a href="" class="btn btn-outline btn-primary btn-xs m-l-lg">&larr; Previous 25</a>
+                <a href="" class="btn btn-outline btn-primary btn-xs m-l-sm">Next 25 &rarr;</a></h5>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="col-lg-7" style="margin-top:45px;">
+                <div id="intro-account-header">
+                    <div class="row" style="margin-top:50px;">
+                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
+                    </div>
+                </div>
+
+                <div id="account-header" style="display:none;">
+                    <div class="row m-b-sm">
+                        <div class="col-lg-8">
+                            <h2 >Stark Industries</h2>
+                        </div>
+                        <div class="col-lg-4">
+                            <small>Date range: </small><input type="text" name="daterange" class="form-control daterange">
+                        </div>
+                    </div>
+
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="metric text-danger">
+                                    <div class="metric-title">
+                                        <h4>High Risk</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">80</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric text-danger">
+                                    <div class="metric-title">
+                                        <h4>Open Alerts</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">3</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric">
+                                    <div class="metric-title">
+                                        <!-- <h4>Days to Renewal</h4> -->
+                                        <h4>Days to Close</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">45</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric">
+                                    <div class="metric-title">
+                                        <h4>Deal Size</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px;">$1.15M</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row text-center m-t-md">
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/tasks" class="btn btn-outline btn-primary btn-xs">See Alerts and Next Steps &rarr;</a></h3>
+                        </div>
+                    </div>
+                </div>
+                <!-- end id="account-header" -->
+
+                <div id="account-charts" style="display:none;">
+                    <div id="charts-container" class="ibox-content">
+                        <div class="row m-t-md">
+                            <div id="risk-chart" style="height:220px;padding-right:15px;padding-left:5px;"></div>
+                        </div>
+
+                        <div class="row m-t-md">
+
+                            <div id="activities-chart" style="height:220px"></div>
+                        </div>
+
+                        <div class="row m-t-lg text-center">
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e" class="btn btn-outline btn-primary btn-xs">See activities &rarr;</a></h3>
+                        </div>
+                    </div>
+
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-6" id="activities-breakdown" style="height:200px"></div>
+                            <div class="col-lg-6" id="top-contributors" style="height:200px;"></div>
+                        </div>
+
+                        <div class="row m-t-lg text-center">
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/arg" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+<script>
+
+    $(function () {
+        $('#left-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['Stark Industries ($1.15M)', 'Hooli ($200K)', 'Pied Piper ($2.5M)', 'Umbrella Corp ($850K)', 'Nexus Corp ($500K)', 'Charleston Tech ($500K)', 'Bay Dynamics ($500K)', 'Acme Inc ($500K)', 'DKNY ($500K)', 'Ariel Clam Tech ($500K)',
+                              'SF Dynamics ($500K)', 'Patriots IT ($500K)','Boston Industries ($500K)', 'Dynobot ($500K)', 'Piper Tail ($500K)', 'Rectangle Corp ($500K)', 'NexusT Corp ($500K)', 'Spider Man Tech ($500K)', 'Accello ($500K)', 'Inferion Inc( $500K)', 'Infiniti ($500K)', 'Octavia Tech', 'Dirty Rock', 'Design Spaces', 'Newton Beach'],
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0
+            },
+            legend: {
+                enabled: true,
+                verticalAlign: 'top',
+                itemStyle: {
+                    fontWeight: 'light',
+                    fontSize: 12         
+                }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal',
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                                $("#account-header").show();
+                                $("#account-charts").show();
+                                $("#intro-account-header").hide();
+                                renderCharts(this.y);
+                                //alert('Category: ' + this.category + ', value: ' + this.y);
+                            }
+                        }
+                    }
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            series: [{
+                name: 'Emails Sent',
+                data: [14, 11, 14, 12, 8, 8, 8, 7, 10, 9, 8, 8, 7, 6, 5, 4, 5, 4]
+            }, {
+                name: 'Emails Received',
+                data: [8, 8, 4, 8, 6, 6, 5, 6, 1, 2, 1, 2, 1, 1, 1, 2, 1, 3]
+            }, {
+                name: 'Meetings',
+                data: [3, 4, 4, 2, 5, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0]
+            }, {
+                name: 'Salesforce Activities',
+                data: [3, 4, 4, 2, 5, 3, 3, 3, 2, 2, 3, 2, 1, 1, 2, 1, 1, 1]
+            }, {
+                name: 'Support Issues',
+                data: [2, 3, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+            }]
+        });
+    });
+
+    /***********
+    Sychronize Charts
+    ************/
+
+     /**
+     * In order to synchronize tooltips and crosshairs, override the
+     * built-in events with handlers defined on the parent element.
+     */
+    $('#charts-container').bind('mousemove touchmove touchstart', function (e) {
+        var chart,
+            point,
+            i,
+            event;
+
+        console.log(Highcharts.charts);
+
+        for (i = 3; i < Highcharts.charts.length; i = i + 1) { // i=3 to exclude first chart #left-chart
+            chart = Highcharts.charts[i];
+            event = chart.pointer.normalize(e.originalEvent); // Find coordinates within the chart
+            point = chart.series[0].searchPoint(event, true); // Get the hovered point
+
+            if (point) {
+                point.highlight(e);
+            }
+        }
+    });
+
+
+    /**
+     * Synchronize zooming through the setExtremes event handler.
+     */
+    function syncExtremes(e) {
+        var thisChart = this.chart;
+
+        if (e.trigger !== 'syncExtremes') { // Prevent feedback loop
+            Highcharts.each(Highcharts.charts, function (chart) {
+                if (chart !== thisChart) {
+                    if (chart.xAxis[0].setExtremes) { // It is null while updating
+                        chart.xAxis[0].setExtremes(e.min, e.max, undefined, false, { trigger: 'syncExtremes' });
+                    }
+                }
+            });
+        }
+    }
+
+    /*****
+    Render right charts
+    ******/
+
+    function renderCharts(riskScore) {
+        /**
+         * Override the reset function, we don't need to hide the tooltips and crosshairs.
+         */
+        Highcharts.Pointer.prototype.reset = function () {
+            return undefined;
+        };
+
+        /**
+         * Highlight a point by showing tooltip, setting hover state and draw crosshair
+         */
+        Highcharts.Point.prototype.highlight = function (event) {
+            this.onMouseOver(); // Show the hover marker
+            this.series.chart.tooltip.refresh(this); // Show the tooltip
+            this.series.chart.xAxis[0].drawCrosshair(event, this); // Show the crosshair
+        };
+
+
+        $('#activities-breakdown').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: 'Account Engagement (Last 14d)',
+                align: 'left',
+                margin: 10,
+                x: 35,
+                style: {
+                    color: '#555555',
+                    fontSize: '14px'
+                }
+            },
+            credits: { enabled: false },
+            xAxis: {
+                categories: ['Paul (VP Marketing)', 'Josh (Marketing Manager)', 'William (IT)', 'Chloe (VP Sales)', 'Ben (Director Demand Gen)']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Activities',
+                data: [5, 4, 4, 3, 1]
+            }]
+        });
+
+        $('#top-contributors').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: 'Team Time Spent (Last 14d)',
+                align: 'left',
+                margin: 10,
+                x: 35,
+                style: {
+                    color: '#555555',
+                    fontSize: '14px'
+                }
+            },
+            credits: { enabled: false },
+            xAxis: {
+                categories: ['Justin', 'Kelvin', 'Will', 'Richard', 'Ben']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Activities',
+                data: [7, 4, 4, 3, 2]
+            }]
+        });
+
+
+
+        $('#risk-chart').highcharts({
+            title: {
+                text: "Risk Score (Last 14 days)",
+                align: 'left',
+                margin: 0,
+                x: 35,
+                style: {
+                    color: '#555555',
+                    fontSize: '16px'
+                }
+            },
+            xAxis: {
+                type: 'datetime',
+                crosshair: true,
+                events: {
+                    setExtremes: syncExtremes
+                }
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+                labels: { enabled: true },
+                gridLineWidth: 0,
+                minorGridLineWidth: 0,
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }],
+                min: 0,
+                max: 100,
+                plotBands: [ { // Low Risk
+                    from: 0,
+                    to: 60,
+                    color: 'rgba(170, 252, 174, 0.1)',
+                    label: {
+                        text: 'Low Risk',
+                        style: {
+                            color: '#606060'
+                        }
+                    }
+                    }, { // Medium Risk
+                        from: 60,
+                        to: 80,
+                        color: 'rgba(246, 188, 42, 0.1)',
+                        label: {
+                            text: 'Medium Risk',
+                            style: {
+                                color: '#606060'
+                            }
+                        }
+                    }, { // High Risk
+                        from: 80,
+                        to: 100,
+                        color: 'rgba(246, 42, 46, 0.1)',
+                        label: {
+                            text: 'High Risk',
+                            style: {
+                                color: '#606060'
+                            }
+                        }
+                    }]
+                },
+                tooltip: {
+                    positioner: function () {
+                        return {
+                            x: this.chart.chartWidth - this.label.width, // right aligned
+                            y: -15 // align to title
+                        };
+                    },
+                    borderWidth: 0,
+                    backgroundColor: 'none',
+                    pointFormat: '{point.y}',
+                    xDateFormat: '%b %e',
+                    shadow: false,
+                    style: {
+                        fontSize: '16px',
+                        color: '#555555'
+                    }
+                },
+                credits: {
+                    enabled: false
+                },
+                legend: {
+                    enabled: false
+                },
+                series: [
+                    {
+                    pointInterval: <%= 1.day * 1000 %>,
+                    pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                    data: [30,30,60,60,65,75,90,90,90,80,80,80,80,75]
+                    }
+                ]
+
+            });
+/*
+        $('#risk-detection-chart').highcharts({
+            chart: {
+                events:{
+                  load: function(event) {
+                    var extremes = this.yAxis[0].getExtremes();
+                    this.yAxis[0].setExtremes(0, extremes.dataMax);
+                    }
+                },
+                spacingLeft:48,
+                marginLeft:48
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: "Alerts",
+                    align: 'left',
+                    margin: 0,
+                    x: 0,
+                    style: {
+                        color: '#555555',
+                        fontSize: '16px'
+                    }
+            },
+            xAxis: {
+                type: 'datetime',
+                crosshair: true,
+                events: {
+                    setExtremes: syncExtremes
+                }
+            },
+            yAxis: {
+                //categories: ['Neg Sentiment','Support Vol','Engagement Vol','Days to Renewal','Days Inactive'],
+                categories: ['Negative Sentiment','Competitor Mention','Engagement Vol','Days to Close','Days Inactive'],
+                tickLength: 3,
+                tickColor:'#000',
+                gridLineWidth:.5,
+                labels: { 
+                    enabled: true,
+                    align: 'left',
+                    x: -30,
+                    formatter: function() {
+                        return '<span title="My custom title">' + this.value + '</span>';
+                    },
+                },
+                minorGridLineWidth: 0,
+                title: {                
+                    text: ''
+                }
+            },
+            // yAxis: {
+            //     title: { text: '' },
+            //     labels: { enabled: true },
+            //     minorGridLineWidth: 0
+            // },
+            legend: {
+                enabled: true
+            },
+            plotOptions: {
+                type: 'scatter'
+            },
+            tooltip: {
+                pointFormat: '{}',
+                xDateFormat: '%b %e',
+                style: {
+                    fontSize: '12px',
+                    color: '#555555'
+                }
+            },
+            series: [{
+                type: 'scatter',
+                name: 'Exceeded High Threshold',
+                color: '#FF5050',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [[<%=10.days.ago.at_midnight.to_i * 1000%>,3],[<%=1.day.ago.at_midnight.to_i * 1000%>,1],[<%=6.days.ago.at_midnight.to_i * 1000%>,2]],
+                marker : {symbol : 'square', radius: 6 }
+            },
+            {
+                type: 'scatter',
+                name: 'Exceeded Medium Threshold',
+                color: '#FFA500',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [[<%=11.days.ago.at_midnight.to_i * 1000%>,1], [<%=14.days.ago.at_midnight.to_i * 1000%>,4],[<%=8.days.ago.at_midnight.to_i * 1000%>,2]],
+                marker : {symbol : 'square', radius: 6 }
+            }]
+        });
+*/
+        $('#activities-chart').highcharts({
+            chart: {
+                events:{
+                  load: function(event) {
+                    var extremes = this.yAxis[0].getExtremes();
+                    this.yAxis[0].setExtremes(0, extremes.dataMax);
+                    }
+                },
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: "Activities (Last 14 days)",
+                    align: 'left',
+                    margin: 0,
+                    x: 35,
+                    style: {
+                        color: '#555555',
+                        fontSize: '16px'
+                    }
+            },
+            xAxis: {
+                type: 'datetime',
+                crosshair: true,
+                events: {
+                    setExtremes: syncExtremes
+                }
+            },
+            yAxis: {
+                title: { text: '' },
+                labels: { enabled: true },
+                minorGridLineWidth: 0
+            },
+            legend: {
+                enabled: true
+            },
+            tooltip: {
+                positioner: function () {
+                    return {
+                        x: this.chart.chartWidth - this.label.width, // right aligned
+                        y: -15 // align to title
+                    };
+                },
+                borderWidth: 0,
+                backgroundColor: 'none',
+                pointFormat: '{point.stackTotal}',
+                xDateFormat: '%b %e',
+                shadow: false,
+                style: {
+                    fontSize: '16px',
+                    color: '#555555'
+                }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                type: 'column',
+                name: 'Email',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [0,0,6,5,6,7,12,15,10,10,12,8,5,1]
+            },
+            {
+                type: 'column',
+                name: 'Meeting',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [0,0,0,1,0,0,1,5,8,5,6,6,2,1]
+            },
+            {
+                type: 'column',
+                name: 'Salesforce Activity',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Support Issues',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [0,0,0,1,1,0,2,0,0,0,0,0,0,0]
+            },
+            {
+                type: 'spline',
+                name: '30-day Average',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [5,6.8,7,7,7,6.9,9,10.2,12.3,13.5,14.1,12,10,8],
+                marker: {
+                    lineWidth: 2,
+                    lineColor: Highcharts.getOptions().colors[4],
+                    fillColor: 'white'
+                }
+            }
+            ]
+        });
+
+    };
+
+</script>

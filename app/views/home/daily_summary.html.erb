@@ -42,7 +42,7 @@
                         <% if @projects_with_activities_today.nil? or (@projects_with_activities_today.size == 0 and @pinned_activities_today.empty?) %>
                             <h1 class="text-center">No updates</h1>
                         <% else %>
-                            <h1><%= pluralize(@projects_with_activities_today.size, 'account stream') %> with new activities</h1>
+                            <h1><%= pluralize(@projects_with_activities_today.size, 'opportunity') %> with new activities</h1>
                             <ul class="daily-summary">
                                 <% @projects_with_activities_today.each do |p| %>
                                 <li class="row">
@@ -107,9 +107,6 @@
 </div>
 
 <script>
-    /* Tooltip */
-    $('[data-toggle="tooltip"]').tooltip();
-
     /* Toggle Private */
     $('.best_in_place.toggle-private').on('ajax:success', function() {
         if ($(this).data('activity').is_public) {

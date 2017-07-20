@@ -1,18 +1,20 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>Streams</h2>
+        <h2>Opportunities</h2>
         <ol class="breadcrumb">
             <li>
                 <a href="<%= root_path %>">Home</a>
             </li>
             <li class="active">
-                <strong>Streams</strong>
+                <strong>Opportunities</strong>
             </li>
         </ol>
     </div>
+    <% if current_user.power_user? %>
     <div class="col-lg-2">
-        <%= link_to '+ New Stream', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+        <%= link_to '+ New Opportunity', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>
+    <% end %>
 </div>
 
 <div class="wrapper wrapper-content animated fadeInUp">
@@ -21,7 +23,7 @@
           <div class="font-bold m-b-xs">Filter:</div>
           <select class="category_filter col-sm-3" data-placeholder="Select Type">
             <option value="0"></option>
-            <% Project::CATEGORY.each do |k,v| %>
+            <% @stream_types.each do |k,v| %>
             <option value="<%= v %>" <% if params[:type] == v %>selected<% end %> >
               <%= v %>
             </option>
@@ -32,7 +34,6 @@
             <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >  
               Owner: Me
             </option>
-
             <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
               <% if u.id != current_user.id %>
                 <option value="<%= u.id %>" <% if params[:owner]==u.id %> selected <% end %> >
@@ -40,28 +41,37 @@
                 </option>
               <% end %>
             <% end %>
-
             <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >
               Unassigned
             </option>
           </select>
         </div>
+
+        <% if current_user.admin? %>
         <div class="col-lg-6 bulk-group">
             <div class="font-bold m-b-xs">Bulk Operation:</div>
-            <button type="button" class="btn btn-sm btn-white" id="bulk-delete" disabled> Delete </button>
-            <select class="category_box col-sm-3" data-placeholder="Change Type" id="bulk-type" disabled>
+            <button type="button" class="btn btn-sm btn-white bulk-action" id="bulk-delete" disabled> Delete </button>
+            <select class="bulk-action col-sm-3" data-placeholder="Change Category" id="bulk-category" disabled>
               <option value="0"></option>
-              <% Project::CATEGORY.each do |k,v| %>
+              <% @stream_types.each do |k,v| %>
               <option value="<%=v %>" ><%=v %></option>
               <% end %>
             </select>
-            <select class="owner_box col-sm-3" data-placeholder="Change Owner" id="bulk-owner" disabled>
+            <select class="bulk-action col-sm-3" data-placeholder="Change Owner" id="bulk-owner" disabled>
               <option value="0"></option>
               <% @owners.each do |u|    %>
               <option value="<%=u.id %>" ><%= get_full_name(u) %></option>
                <% end %>
             </select>
+            <select class="bulk-action col-sm-3" data-placeholder="Change Status" id="bulk-status" disabled>
+              <option value="0"></option>
+              <% Project::STATUS.each do |s|    %>
+              <option value="<%=s %>" ><%=s %></option>
+               <% end %>
+            </select>
         </div>
+        <% end %>
+
     </div>
 
     <div class="row">
@@ -77,14 +87,13 @@
                             <thead>
                                 <tr>
                                     <th></th>
-                                    <th>Stream</th>
-                                    <th>Type</th>
+                                    <th>Name</th>
+                                    <th><%= Project::MAPPABLE_FIELDS_META["stage"] %></th>
+                                    <th><%= Project::MAPPABLE_FIELDS_META["amount"] %></th>
                                     <th>Owner</th>
                                     <th></th>
-                                    <th></th>
                                     <th>Risk Score</th>
-                                    <th>Open Smart Tasks</th>
-                                    <th>Status</th>
+                                    <th>Open Alerts</th>
                                     <th>Last 7d Activity</th>
                                     <th>Days Inactive</th>
                                     <th></th>
@@ -93,28 +102,33 @@
                             </thead>
                             <tbody>
                                 <% @projects.each do |p| %>
-                                    <tr style="height:70px;">
-                                        <td><input type="checkbox" class="bulk-project" value="<%=p.id  %>"</td>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="bulk-project" value="<%= p.id %>" <% unless current_user.admin? %> hidden <% end %> />
+                                        </td>
                                         <td>
                                             <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
-                                            <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a><small></div>
+                                            <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                         </td>
-                                        <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
+                                        <td style="width: 120px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
+                                        <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
                                         <td>
                                             <div><%= get_full_name(p.project_owner) %></div>
                                         </td>
-                                        <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
-                                        <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
+                                        <td style="width: 40px"><span
+                                        <% all_members = p.users + p.contacts %>
+                                        <% members = all_members.first(@MEMBERS_LIST_LIMIT) %>
+                                        <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe unless all_members.size == 0 %>
+                                        ><i class="fa fa-users" style="color:#888"></i> <%= all_members.size %></span></td>
                                         <td style="text-align: center;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
                                         <td style="text-align: center;" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                        <td style="text-align:center"><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id].to_i%></div></td>
-                                        <td><div id="sparkline-<%= p.id.split('-').first %>" style="margin:auto;width:70%;padding-top:25px;"></div></td>
+                                        <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
 
                                         <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
                                         <td><% if p.is_public %>
-                                                <span class="label label-warning pull-right">Public</span>
+                                                <span class="label label-default pull-right">Public</span>
                                             <% else %>
-                                                <span class="label label-default pull-right">Private</span>
+                                                <span class="label label-warning pull-right">Private</span>
                                             <% end %>
                                         </td>
                                         <td style="width: 120px"> 
@@ -134,18 +148,6 @@
                                             </span>
                                         </td>
                                     </tr>
-
-                                    <script>        
-                                    $("#sparkline-<%= p.id.split('-').first %>").sparkline(<%= @metrics[p.id] %>, {       
-                                        type: 'bar',      
-                                        height: '20',     
-                                        barWidth: 12,     
-                                        barSpacing: 2,        
-                                        barColor: '#5DA5DA',      
-                                        zeroAxis: false,      
-                                        zeroColor: '#ed5565'      
-                                    });       
-                                    </script>
                                 <% end %>
                             </tbody>
                         </table>
@@ -156,7 +158,3 @@
     </div>
 </div>
 <%= render 'projects/modal', modal_id: 'new_project_modal', remote: true %>
-
-<script>
-$('[data-toggle="tooltip"]').tooltip();
-</script>

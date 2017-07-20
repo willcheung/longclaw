@@ -12,7 +12,7 @@
         </div>
         <div class="m-l-md"> 
           <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
-            <% Activity::CATEGORY.each do |k,v| %>
+            <% @categories.each do |v| %>
               <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
             <% end %> 
           </select>
@@ -30,8 +30,8 @@
                 <% if u.first_name.include?('@')%>
                     <%= u.first_name %>
                 <% else %>
-                    <%= get_full_name(u)+' @'+  get_short_name(get_domain(u.email)) %>
-                <% end %>         
+                    <%= get_full_name(u) + ' @' + get_short_name(get_domain(u.email)) %>
+                <% end %>
               </option>
             <% end %>
           </select>

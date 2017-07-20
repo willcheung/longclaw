@@ -25,8 +25,9 @@ class ContactsController < ApplicationController
   # POST /contacts.json
   def create
     @contact = Contact.new(contact_params)
+    account = Account.find(@contact.account_id)  # didn't verify account_id!
     respond_to do |format|
-      if @contact.save
+      if account.organization_id == current_user.organization_id && @contact.save
         format.html { redirect_to @contact, notice: 'Contact was successfully created.' }
         # format.json { render action: 'show', status: :created, location: @contact }
         format.js 
@@ -42,6 +43,7 @@ class ContactsController < ApplicationController
   # PATCH/PUT /contacts/1.json
   def update
     respond_to do |format|
+      #if Contact.where(id: @contact.id).update_all(contact_params)  #allows updating Contact if email is null
       if @contact.update(contact_params)
         format.html { redirect_to @contact, notice: 'Contact was successfully updated.' }
         format.json { respond_with_bip(@contact) }
@@ -65,11 +67,15 @@ class ContactsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_contact
-      @contact = Contact.find(params[:id])
+      begin
+        @contact = Contact.visible_to(current_user).find(params[:id])
+      rescue ActiveRecord::RecordNotFound
+        redirect_to root_url, :flash => { :error => "Contact not found or is private." }
+      end
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def contact_params
-      params.require(:contact).permit(:account_id, :first_name, :last_name, :email, :phone, :title)
+      params.require(:contact).permit(:account_id, :first_name, :last_name, :email, :phone, :title, :buyer_role, :department, :background_info)
     end
 end

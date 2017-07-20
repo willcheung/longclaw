@@ -7,6 +7,12 @@
   text-shadow: none;
   }
 
+.label-xs {
+  font-size: 8px;
+  font-weight: 500;
+  padding: 1px 4px;
+}
+
 .badge {
   background-color: $light-gray;
   color: $label-badget-color;
@@ -62,3 +68,17 @@
   background-color: #2a2e36;
   color: #8b91a0;
   }
+
+.label.label-outlined.label-primary {
+  border-color: $primary;
+  color: $primary
+}
+
+.label.label-outlined.label-danger {
+  border-color: $danger;
+  background-color: white;
+  color: $danger;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 2px;
+}

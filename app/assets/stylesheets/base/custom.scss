@@ -44,9 +44,9 @@ a.navbar-minimalize.btn-primary.btn-outline:focus:hover, a.navbar-minimalize.btn
   background-color: $primary;
 }
 
-.nav-header .logo {
+.navbar-header .logo {
   height: auto;
-  background: url('/assets/logo-white.png') center no-repeat;
+  background: url('/assets/logo.png') center no-repeat;
   background-size: 100px;
 }
 
@@ -160,7 +160,7 @@ h2.catchup-project:before {
   font-weight: 500;
 }
 
-button.oauth {
+a.btn.oauth, button.btn.oauth {
   -webkit-font-smoothing: auto;
   font-weight: 500;
   width: 100%;
@@ -246,6 +246,9 @@ hr.message-divider {
 .social-comment textarea {
   font-size: 12px;
 }
+.chat-discussion {
+  word-wrap: break-word;
+}
 .chat-discussion .action-links {
   font-size: 12px;
   padding: 15px 0;
@@ -294,8 +297,8 @@ span.best_in_place.btn {
 .social-comment .delete-comment,
 .task-name .edit-task,
 .task-desc .edit-task,
-.contact-info .edit-contact {
-  display: none;
+.editable-field .editable-field-activator {
+  color: transparent;
 }
 .project-people .member:hover .delete-member,
 .timeline-note:hover .delete-note,
@@ -306,8 +309,8 @@ span.best_in_place.btn {
 .task-desc { font-weight: 300; }
 .task-name:hover .edit-task,
 .task-desc:hover .edit-task,
-.contact-info:hover .edit-contact {
-  display: inline-block;
+.editable-field:hover .editable-field-activator {
+  color: #999;
 }
 #projects-table th, #accounts-table th {
   padding-top:20px;
@@ -547,4 +550,147 @@ a.suggested-action:hover, a.suggested-action:focus {
   margin-top:-12px;
   height:24px;
   width: 24px;
+}
+
+
+.vertical-timeline-icon.basecamp2-bg .basecamp2-logo{
+  background-image: url("images/basecamp2.png");
+  background-size: 24px;
+  background-repeat: no-repeat;
+  background-color: #fff;
+  background-position: center;
+  border-radius: 50%;
+  margin-top:-12px;
+  height:24px;
+  width: 24px;
+}
+
+.element-disabled {
+  opacity: 0.2;
+  pointer-events: none;
+  cursor: default;
+}
+
+.settings-element-disabled { 
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: default;
+}
+
+.future-activity {
+  opacity: 0.5;
+}
+
+/** Chrome Extension **/
+.extension-sidebar ul.nav.nav-tabs li a {
+  font-size: 11px;
+  padding: 8px 12px;
+}
+
+.extension-sidebar ul.nav.nav-tabs {
+  border-bottom: 0;
+}
+
+.vertical-timeline-block.extension-block {
+  margin-bottom: 2em;
+}
+
+.extension-timeline-content {
+  margin-left: 35px;
+
+  h4 {
+    display: inline-block;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  p {
+    font-weight:300;
+    margin: 6px 0;
+    color: #333;
+  }
+
+  p.time-ago {
+    font-size: 85%;
+    color: #888;
+    margin-top:10px;
+  }
+
+  small {
+    display: block;
+    margin-bottom: 5px;
+    color: #aaa;
+  }
+}
+
+#extension-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 11px;
+  height: 100%;
+  width: 3px;
+  background: #e7eaec;
+}
+
+#extension-timeline .vertical-timeline-icon {
+  width: 25px;
+  height: 25px;
+  border: 2px solid #f1f1f1;
+}
+
+.extension-sidebar .tasks {
+  margin: 20px 0;
+
+  .icheckbox_square-green {
+    float: left;
+  }
+
+  p {
+    margin-bottom: 0px;
+    line-height: 15px;
+  }
+
+  div.task {
+    margin-left: 28px;
+  }
+
+  small {
+    color: #999;
+  }
+
+  .task.checked, .task.checked small {
+    color: #bbb;
+  }
+}
+
+.extension-sidebar .task-form {
+  input {
+    width: 85%;
+    margin-left: 28px;
+    padding-top: 0;
+  }
+}
+
+#chrome-notification-bar {
+    text-align: center;
+    background-repeat:no-repeat;
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    height:20px;
+
+    span {
+      line-height: 22px;
+    }
+}
+
+.top-navigation .nav.nav-tabs > li.active {
+  border-bottom: none;
+}
+
+.hr-divider {
+  padding: 0.5em 0;
+  margin-bottom: 1.5em;
+  border-bottom: 1px dotted grey;
 }

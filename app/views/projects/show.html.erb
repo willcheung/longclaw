@@ -1,5 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <div class="col-lg-6">
+    <div class="col-lg-7">
+        <img class="pull-left m-r-sm m-t-sm" style="max-height:75px;max-width:75px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
         <h2 class="in-bl"><%= @project.name %></h2>
         <% if @user_subscription.present? && @user_subscription.daily %>
             <%= link_to "<i class=\"fa fa-check\"></i> Following daily".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id)+"?type=daily", remote: true, method: :delete, id: "project-show-unfollow-daily-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-l-md m-t-n-sm", title: "Following daily" %>
@@ -11,7 +12,7 @@
         <% else %>
             <%= link_to "<i class=\"fa fa-bell-o\"></i> Follow weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm", title: "Follow weekly" %>
         <% end %>
-        <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) %>
+        <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) or current_user.admin? %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
             <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-primary btn-outline m-t-n-sm", id: "btn-refresh" %>
             <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest emails and meetings from members."></i>
@@ -21,19 +22,39 @@
                 <a href="<%= root_path %>">Home</a>
             </li>
             <li>
-                <a href="<%= projects_path %>">Streams</a>
+                <a href="<%= projects_path %>">Opportunities</a>
             </li>
             <li>
                 <a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a>
             </li>
             <li class="active">
-                <%= @project.name %>
+                <strong><%= @project.name %></strong>
             </li>
         </ol>
     </div>
-    <div class="col-lg-6">
+    <div class="col-lg-5">
         <div class="row">
-            <div class="col-xs-3">
+            <div class="col-md-3">
+                <div class="metric">
+                    <div class="metric-title" align="center">
+                        <h5><%= Project::MAPPABLE_FIELDS_META["stage"] %></h5>
+                    </div>
+                    <div class="metric-content" align="center">
+                        <h4><%= (@project.stage.nil? or @project.stage.empty?) ? "-" : @project.stage %></h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric">
+                    <div class="metric-title" align="center">
+                        <h5><%= Project::MAPPABLE_FIELDS_META["amount"] %></h5>
+                    </div>
+                    <div class="metric-content" align="center">
+                        <h3><%= (@project.amount.nil?) ? "-" : "$"+number_to_human(@project.amount) %></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="metric <%= risk_color(@project_risk_score) %>">
                     <div class="metric-title" align="center">
                         <h5>Risk Score</h5>
@@ -43,23 +64,13 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-4">
+            <div class="col-md-3">
                 <div class="metric text-danger">
                     <div class="metric-title" align="center">
-                        <h5>Open Smart Tasks</h5>
+                        <h5>Open Alerts</h5>
                     </div>
                     <div class="metric-content" align="center">
                         <h3><%= @project_open_tasks_count %></h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xs-2">
-                <div class="metric">
-                    <div class="metric-title" align="center">
-                        <h5>Status</h5>
-                    </div>
-                    <div class="metric-content" align="center">
-                      <div class="large-circle rag-circle<%=@project_rag_status%>"></div>
                     </div>
                 </div>
             </div>
@@ -74,9 +85,8 @@
                     <ul class="nav nav-tabs">
                         <li class="nav-tab"><a id="newsfeed-link" href="<%= project_path(@project) %>" class="white-bg"><i class="fa fa-comments"></i> Activities</a></li>
                         <li class="nav-tab"><a id="pinned-link" href="<%= project_path(@project) %>/pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Key Activities (<%= @project_pinned_count %>)</a></li>
-                        <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Smart Tasks (<%= @project_open_tasks_count %>)</a></li>
+                        <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Alerts & Tasks (<%= @project_open_tasks_count %>)</a></li>
                         <li class="nav-tab"><a id="arg-link" href="<%= project_path(@project) %>/arg" class="white-bg"><i class="fa fa-users"></i> Relationship Graph</a></li>
-                        <li class="nav-tab"><a id="insights-link" href="<%= project_path(@project) %>/insights" class="white-bg"><i class="fa fa-lightbulb-o"></i> Insights</a></li>
                     </ul>
                 </div>
             </div>
@@ -85,7 +95,6 @@
             <%= render 'pinned_tab', pinned_activities: @pinned_activities if params[:action] == "pinned_tab" %>
             <%= render 'notifications/project' if params[:action] == "tasks_tab" %>
             <%= render 'arg_tab', project_id: @project.id if params[:action] == "arg_tab" %>
-            <%= render 'insights_tab', project_id: @project.id if params[:action] == "insights_tab" %>
 
         </div>
     </div>
@@ -107,33 +116,33 @@
                 <div class="m-t-md">
                     <strong>Linked to SFDC:</strong>
                     <span class="pull-right">
-                        <% if @project.salesforce_opportunity.nil? and @project.account.salesforce_accounts.empty? %>
+                        <% if @project.salesforce_opportunity.nil? && @project.account.salesforce_accounts.empty? %>
                             Not linked
                         <% else %>
                             <% if @project.salesforce_opportunity.nil? %>
-                                <%= @project.account.salesforce_accounts.map{ |n| n.salesforce_account_name }.join(', ') %>
+                                <% @project.account.salesforce_accounts.each do |sfa| %>
+                                  <a href="<%= @salesforce_base_URL + "/" + sfa.salesforce_account_id %>" title="View '<%= sfa.salesforce_account_name %>' in Salesforce" target="_blank"><%= sfa.salesforce_account_name %><br></a>
+                                <% end %> 
                             <% else %>
-                                <%= @project.salesforce_opportunity.name %>
+                                <a href="<%= @salesforce_base_URL + "/" + @project.salesforce_opportunity.salesforce_opportunity_id %>" title="View '<%= @project.salesforce_opportunity.name %>' in Salesforce" target="_blank"><%= @project.salesforce_opportunity.name %></a>
                             <% end %>
                         <% end %>
                     </span>
                 </div>
 
+                <!-- Stream-level standard fields -->
                 <div class="m-t-md">
-                    <strong>Description:</strong>
+                    <strong><%= Project::MAPPABLE_FIELDS_META["description"] %>:</strong>
                     <i id="proj-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                 </div>
-
                 <small><%= best_in_place @project, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#proj-desc-activator' %></small>
 
                 <ul class="list-group clear-list m-t-sm">
-                    <li class="list-group-item first-item">
-                        <strong>Type:</strong>
-                        <span class="pull-right">
-                            <%= best_in_place @project, :category, :as => :select, :collection => Project::CATEGORY, :class => 'btn btn-default btn-sm fa-caret-down' %>
-                        </span>
+                    <li class="list-group-item m-b-sm first-item">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["category"] %>:</strong>
+                        <span class="pull-right"><%= best_in_place @project, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                     </li>
-                    <li class="list-group-item first-item">
+                    <li class="list-group-item m-b-sm">
                         <strong>Open Collaboration:</strong>
                         <% if @project.is_public %>
                             <span class="label label-default pull-right" style="font-size:12px">Public</span>
@@ -141,29 +150,90 @@
                             <span class="label label-warning pull-right" style="font-size:12px">Private</span>
                         <% end %>
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item m-b-sm">
                         <strong>Owner:</strong>
                         <span class="pull-right">
-                            <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>
-                            <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                            <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) or current_user.admin? %>
+                                <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>
+                                <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                            <% else %>
+                                <%= get_full_name(@project.project_owner) %>
+                            <% end %>
                         </span>
                     </li>
-                    <li class="list-group-item">
-                        <strong>Account:</strong>
-                        <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
-                    </li>
-                    <!-- Custom fields -->
-                    <% @project.custom_fields.order(:created_at).each.with_index do |cf, i| %>
-                        <li class="list-group-item">
-                        <strong><%= cf.custom_fields_metadatum.name %>:</strong>
-                        <i id="acct-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
-                        <span class="pull-right m-r-xs">
-                            <%= best_in_place cf, :value, :as => :input, :place_holder => '(no value)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#acct-customfield#{i}-activator" %>
-                            <!-- , :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs' -->
+                   <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["expected_revenue"] %>:</strong>
+                        <span class="pull-right">
+                            <%=best_in_place @project, :expected_revenue, :as => :input,:place_holder => '-', :activator => "#project-expected-revenue-activator" %>
+                                <i id="project-expected-revenue-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                         </span>
+                    </li>
+                    <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["close_date"] %>:</strong>
+                        <span class="pull-right">
+                            <%=best_in_place @project, :close_date, :as => :date, :place_holder => '-', :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-close-date-activator" %>
+                            <i id="project-close-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                        </span>
+                    </li>                    
+                    <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["renewal_date"] %>:</strong>
+                        <span class="pull-right">
+                            <%=best_in_place @project, :renewal_date, :as => :date, :place_holder => '-', :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-renewal-date-activator" %>
+                            <% unless @project_renewal_date.nil? %>
+                                <!-- TODO: Use jQuery to dynamically update these warnings -->
+                                <% if @project_renewal_date < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d') %>
+                                    <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="tooltip" data-placement="bottom" data-original-title="Date has passed!"></i>
+                                <% elsif @project_renewal_date == Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+                                    <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:#33adff" data-toggle="tooltip" data-placement="bottom" data-original-title="Today"></i>
+                                <% elsif @project_renewal_date <= Time.zone.at(Time.now.utc + 10.days).strftime('%Y-%m-%d')  %>
+                                    <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:orange" data-toggle="tooltip" data-placement="bottom" data-original-title="Due in 10 days"></i>
+                                <% end %>
+                            <% end %>
+                            <i id="project-renewal-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                        </span>
+                    </li>      
+                    <!-- End: Stream-level standard fields -->
+                    <!-- Stream-level custom fields -->
+                    <% @project.custom_fields.each.with_index do |cf, i| %>
+                        <li class="list-group-item m-b-sm">
+                            <strong><%= cf.custom_fields_metadatum.name %>:</strong>
+                            <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and not cf.custom_fields_metadatum.custom_lists_metadatum.nil? and not cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty? %>
+                                <span class="pull-right md-m-0"><%= best_in_place cf, :value, :as => :select, :place_holder => '(none)', :collection => @custom_lists[cf.custom_fields_metadatum.custom_lists_metadatum.name], :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
+                            <% else %>
+                                <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and (cf.custom_fields_metadatum.custom_lists_metadatum.nil? or cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty?) %>
+                                    <i style="color:#3d8dc5" class="fa fa-exclamation-triangle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="This field's data type='List', but no list is assigned or the list assigned has no options."></i>
+                                <% end %>
+                                <i id="proj-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
+                                <span class="pull-right m-r-xs"><%= best_in_place cf, :value, :as => :input, :place_holder => '(none)', :display_with => :simple_format, :inner_class => 'col-sm-12', :activator => "#proj-customfield#{i}-activator" %></span>
+                            <% end %>
                         </li>
-                    <% end %>  
-                    <!-- End: custom field -->
+                    <% end %>
+
+                    <!-- Account and Account-level custom fields -->
+                    <div id="stream-account-custom-fields" class="list-group-item m-b-sm toggle-open" style="margin-left: -1em">
+                        <span class="col-sm-1 fa fa-caret-right toggle-icon" style="width:3%"></span>
+                        <div>
+                            <strong>Account:</strong>
+                            <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Account-level custom fields can be hidden/unhidden below. To edit these, go back to the Account page."></i>
+                            <span class="pull-right"><a href="<%= account_path(@project.account) %>"><%= @project.account.name %></a></span>
+                        </div>
+                    </div>
+                    <!-- empty span here for proper toggle-open event handler traversal -->
+                    <span></span>
+                    <dl class="no-display">
+                        <dd class="m-t-md">
+                            <% @project.account.custom_fields.each do |cf| %>
+                                <li class="list-group-item m-b-sm">
+                                    <div>
+                                    <strong><%= cf.custom_fields_metadatum.name %>:</strong>
+                                    <span class="pull-right m-r-xs"><%= cf.value %><% if cf.value.nil? or cf.value.empty? %>(none)<%end%></span>
+                                    </div>
+                                </li>
+                            <% end %>
+                        </dd>
+                    </dl>
+
+                    <!-- Continue Stream-level standard fields (date/timestamps) -->
                     <li class="list-group-item small m-t-md first-item">
                         <span class="pull-right"><%= @project.updated_at.to_date.to_formatted_s(:long) %></span>
                         Last Updated:
@@ -180,8 +250,8 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested Members</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be involved in this stream. Click the ✔ or X to confirm or reject our suggestions."></i>
+                    <strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested People</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your emails who might be part of this opportunity. Click the ✔ or X to confirm or reject our suggestions."></i>
                 </div>
             </div>
             <!-- empty span here for proper toggle-open event handler traversal -->
@@ -199,8 +269,8 @@
                     <span class="fa fa-caret-right toggle-icon"></span>
                 </div>
                 <div class="col-sm-10">
-                    <strong><span id="pm-length"><%= @project_members.length %></span> Members</strong>
-                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this project."></i>
+                    <strong><span id="pm-length"><%= @project_members.length %></span> People</strong>
+                    <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this opportunity."></i>
                 </div>
             </div>
             <div class="row member">
@@ -209,7 +279,7 @@
                 </div>
                 <div class="col-sm-9 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
-                         <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add members...">
+                         <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add people...">
                         <%= hidden_field_tag 'project_id', @project.id %>
                         <%= submit_tag "Add member", class: "hide-submit-button" %>
                     <%end%>
@@ -333,8 +403,6 @@
 </div>
 
 <script>
-    $('[data-toggle="tooltip"]').tooltip();
-
     /* Pins */
     $('.best_in_place.pin').on("ajax:success", function(){
         if ($(this).data('activity').is_pinned) {
@@ -363,16 +431,18 @@
         }
     });
 
-
-    /* Toggle Show Stream Subs */
-    $('.toggle-open').click( function () {
-        $(this).find(".toggle-icon").toggleClass("fa-caret-right fa-caret-down");
-        $(this).next().next().toggle(400);
-    })
-
     /* Spin the refresh icon to show that refresh is running */
     $('#btn-refresh').click( function () {
         $('.fa.fa-refresh').addClass('fa-spin');
     })
 
+    // Fix best_in_place bug/side-effect that adds paragraph tags to the .html of custom field dropdown lists, causing the value to be displayed awkwardly
+    $('.best_in_place').bind('ajax:success', function(){ 
+        this.innerHTML = this.innerHTML.replace('\<p\>', '').replace('\<\/p\>', '');
+    });
+
+    $(document).ready(function(){
+        /* Set the initial state of Account custom fields expandable section to expanded+showing */
+        toggleSection($("#stream-account-custom-fields"));
+    });
 </script>

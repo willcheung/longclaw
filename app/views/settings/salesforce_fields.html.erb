@@ -1,0 +1,82 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Salesforce Integration</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= settings_path%>">Settings</a>
+            </li>
+            <li class="active">
+                <strong>Salesforce Integration</strong>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox float-e-margins">
+        <div id="top" class="ibox-content">
+            <% if current_user.role != User::ROLE[:Admin] %>
+              Must be a Salesforce admin to access Organization Salesforce Integration.  <a href="<%= settings_path %>">Return to Settings</a>
+            <% elsif @salesforce_user.nil? %> 
+              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="<%=user_omniauth_authorize_url(:salesforce)%> ">Log in to Salesforce</a>
+              <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
+              Must be a Salesforce admin. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
+            <% else %>
+              <!-- Salesforce nav to Account / Opportunities -->
+              <nav class="navbar navbar-default">
+                  <!-- Collect the nav links, forms, and other content for toggling -->
+                  <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                      <li><a href="<%= settings_salesforce_accounts_path %>">Step 1: Map Accounts</a></li>
+                      <li><a href="<%= settings_salesforce_opportunities_path %>">Step 2: Map Opportunities</a></li>
+                      <li><a href="<%= settings_salesforce_activities_path %>">Step 3: Map Activities</a></li>
+                      <li class="active"><a href="<%= settings_salesforce_fields_path(:standard) %>">Step 4: Map Fields</a></li>
+                    </ul>
+                  </div>
+              </nav>
+              <% if @salesforce_connection_error %> 
+                <div style="border:1px solid red;border-radius:10px;line-height:3;margin:2px 0;padding:6px 18px">
+                  <i class="fa fa-exclamation-circle fa-2x" style="color:red"></i> — Salesforce connection error occurred.  Try <a href="<%= settings_salesforce_accounts_path %>">disconnecting and reconnecting to Salesforce</a>.
+                </div>
+              <% else %>
+                <div class="row">
+                  <div class="col-lg-9">
+                      <div class="wrapper animated fadeInUp">
+                          <div class="panel blank-panel">
+                              <div class="panel-heading">
+                                  <ul class="nav nav-tabs">
+                                      <li class="nav-tab <%= "active" if params[:type] == "standard" %>"><a id="newsfeed-link" href="<%= settings_salesforce_fields_path(:standard) %>" class="white-bg"><i class="fa fa-i-cursor"></i> Standard Fields</a></li>
+                                      <li class="nav-tab <%= "active" if params[:type] == "custom" %>"><a id="pinned-link" href="<%= settings_salesforce_fields_path(:custom) %>" class="white-bg"><i class="fa fa-wrench"></i> Custom Fields</a></li>
+                                  </ul>
+                              </div>
+                          </div>
+
+                          <div style="margin-left: 1.25em">
+                            <%= render 'standard_fields_sfdc_mapping_tab' if params[:type] == "standard" %>
+                            <%= render 'custom_fields_sfdc_mapping_tab' if params[:type] == "custom" %>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+              <%end%>
+            <%end%>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handle_SFDC_Custom_Fields_Only_filter_toggle_click(checkbox) {
+        $("#filter_toggle").css("pointer-events", "none");  //disable clicks on filter toggle switch
+
+        document.getElementById('filter_toggle_refresh').style.display = "inline";  // show fa-refresh icon
+        document.getElementById('filter_toggle_refresh').className = document.getElementById('filter_toggle_refresh').className + " fa-spin";
+
+        if (checkbox.checked)
+            window.location.replace("<%= settings_salesforce_fields_path(params[:type]) %>?sfdc_custom_fields_only=true");
+        else
+            window.location.replace("<%= settings_salesforce_fields_path(params[:type]) %>");
+    };
+</script>

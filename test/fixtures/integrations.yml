@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  contextsmith_account_id: 
+  external_account_id: 1
+  project_id: 
+  external_source: MyString
+
+two:
+  contextsmith_account_id: 
+  external_account_id: 1
+  project_id: 
+  external_source: MyString

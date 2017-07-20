@@ -1,0 +1,123 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>BaseCamp2 Integration</h2>
+        <ol class="breadcrumb">
+            <li>
+                <a href="<%= root_path %>">Home</a>
+            </li>
+            <li>
+                <a href="<%= settings_path%>">Settings</a>
+            </li>
+            <li class="active">
+                <strong>BaseCamp2 Integration</strong>
+                <%=@projects%>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="ibox float-e-margins">
+        <div class="ibox-content">
+          <% if @basecamp2_user %>
+              <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right"  style="font-size:12px;" href="/basecamp2/disconnect/<%=@basecamp2_user.id%>" data-method= "delete">Disconnect From Basecamp2 </a></span>
+
+
+            <i class="fa fa-check " aria-hidden='true' style='color:green; display:inline-block;'></i><p style='display:inline-block;'>Basecamp is Enabled in your Streams!</p>
+          <% else %>
+            <p>ContextSmith requires permission to connect to Basecamp.</p>
+            <a class="btn btn-primary btn-sm"  style="font-size:12px;" href="/users/auth/basecamp2">Connect to BaseCamp2</a><br>
+          <% end %>
+            <div>
+            Currently only supporting single ContextSmith Stream per BaseCamp2 Project Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
+            </div>
+
+              <nav class="navbar navbar-default">
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                  <ul class="nav navbar-nav">
+                    <li ><a href="/settings/basecamp">Step 1: Map Account</a></li>
+                    <li class="active"><a href="#">Step 2: Map Stream</a></li>
+<!--                     <li><a href="/settings/basecamp2_activity">Step 3: Manage Activity</a></li>
+ -->                  </ul>
+                </div>
+              </nav>
+            
+
+              <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; margin-top:15px; padding:0px; display: inline;">        
+            
+                  
+                  
+                </div>
+           
+                <div class="row col-lg-12" style="margin-right:0px; margin-left:3px; margin-bottom:15px; margin-top:15px; padding:0px; display: inline;"> 
+                  <!-- <p style="color: red;"> *Current No Account Selected </p> -->
+                </div>
+
+              
+
+              
+
+               <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
+                  <thead>
+                      <tr>
+                          <th>ContextSmith Streams</th>
+                          <th>
+                              <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Account</div>
+                              <!-- <div id="basecamp2-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Sync All Accounts</div>
+                              <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest Accounts from Basecamp2."></i>  -->                            
+                          </th>
+                          <th></th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                    <% if @basecamp_connections %>
+                      <% @basecamp_connections.each do |b| %>
+                        <tr>
+                          <td class="col-lg-2"><a href="<%= project_path(b['project_id']) %>"><%=b['context_project_name']%></a></td>
+                          <td class="col-lg-2"><%=b['basecamp_project_name']%></td>
+                          <td class="col-lg-2"> 
+                          <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="/delete_basecamp2_account/<%=b['int_id']%>" data-method="delete">Remove</a></span></td>                          
+                        </tr>
+                        <% end %>
+                    <% end %>
+                  </tbody>
+              </table>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    
+
+    $('.basecamp2_account_box').on('change',function(evt,params){
+      if(params){
+        $('input[name=basecamp_account_id]').val(params["selected"]);
+      }   
+});
+
+    $('.contextsmith_project_box').on('change',function(evt,params){
+      if(params){
+        $('input[name=project_id]').val(params["selected"]);
+      }   
+});
+
+
+    $('#basecamp2-refresh').click(function(){
+    $.ajax('/salesforce_refresh', {
+        async: true,
+        method: "POST",
+        beforeSend: function () {
+            $('#salesforce-refresh .fa.fa-refresh').addClass('fa-spin');
+        },
+        complete: function() {
+            $('#salesforce-refresh .fa.fa-refresh').removeClass('fa-spin');
+        }
+    });
+});
+</script>
+
+    
+        
+
+

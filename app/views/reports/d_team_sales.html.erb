@@ -1,0 +1,422 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <h2>Team Dashboard</h2>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="">
+                <div class="font-bold col-lg-4 m-t-sm">Department:</div>
+                <select class="category_filter col-lg-8">
+                    <option value="Sales">Account Management</option>
+                    <option value="Sales">Customer Success</option>
+                    <option value="Sales">Sales</option>
+                </select> 
+            </div>
+        </div>
+        <div class="col-lg-4 filter-space">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Title:</div>
+                <select class="category_filter col-lg-8">
+                    <option value="Sales">Account Manager</option>
+                    <option value="Sales">Customer Success Manager</option>
+                    <option value="Sales">Director of Services</option>
+                    <option value="Sales">(No Title)</option>
+                </select> 
+            </div>
+        </div>
+        <div class="col-lg-4 filter-space">
+        </div>
+    </div>
+    
+    <div class="row border-bottom white-bg dashboard-header">
+            <!-- LEFT -->
+            <div class="col-md-5">
+                <h4 class="m-l-md">Metric: 
+                <select class="metric_filter col-lg-8" data-placeholder="Select Type">
+                    <option value="2">Opportunities</option>
+                    <option value="2">Opportunity Revenue</option>
+                    <option value="2">Revenue per Hour Spent (Last 14d)</option>
+                    <option value="2">Time Spent (Last 14d)</option>
+                    <option value="2">On Target</option>
+                    <option value="1" selected="true">Activities (Last 14d)</option>
+                    <option value="2">New Alerts & Tasks (Last 14d)</option>
+                    <option value="2">Closed Alerts & Tasks (Last 14d)</option>
+                    <option value="3">Open Tasks</option>
+                  </select>    
+               
+                </h4>
+                <div id="left-chart" class="left-chart" style="height:800px;"></div>
+                
+            </div>
+
+            <!-- RIGHT -->
+            <div class="col-md-7" style="margin-top:45px;">
+                <div id="intro-account-header">
+                    <div class="row" style="margin-top:100px;">
+                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
+                    </div>
+                </div>
+
+                <div id="account-header" style="display:none;">
+                    <div class="row m-b-sm">
+                        <div class="col-lg-8">
+                            <h1>Neil Anderson</h1>
+                        </div>
+                        <div class="col-lg-4 m-t-md">
+                            <span class="label">Last 14 days</span>
+                        </div>
+                    </div>
+
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="metric">
+                                    <div class="metric-title">
+                                        <h4>On Target</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">85%</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric">
+                                    <div class="metric-title">
+                                        <h4>Expected Revenue</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric text-danger">
+                                    <div class="metric-title">
+                                        <h4>Open Alerts</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">3</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric">
+                                    <div class="metric-title">
+                                        <h4>Opportunities</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">8</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                <!-- end id="account-header" -->
+                
+                <div id="account-charts" style="display:none;">
+                    <div class="ibox-content">
+
+                        <div class="row m-t-md">
+                            <div id="customers-volume-chart" style="height:350px"></div>
+                        </div>
+
+                        <div class="row m-t-md">
+                            <div id="activities-chart" style="height:240px"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="ibox-content">
+                        <div class="row">
+                            <h2>Alerts and Tasks</h2>
+                            <div id="tasks-trend" style="height:280px"></div>
+                        </div>
+                    </div>
+
+                    <div class="ibox-content">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+<script>
+
+    $(function () {
+        $('#left-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: ['Neil Anderson', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Batman', 'Bruce Wallus',
+                              'Wonder Woman', 'Harry Potterson','Luke Walker', 'Danny Adobe', 'Rick Martin', 'Natale Sales'],
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0
+            },
+            legend: {
+                enabled: true,
+                verticalAlign: 'top'
+            },
+            plotOptions: {
+                series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                                $("#account-header").show();
+                                $("#account-charts").show();
+                                $("#intro-account-header").hide();
+                                renderCharts(this.y);
+                            }
+                        }
+                    },
+                    stacking: 'normal'
+                }   
+            },
+            credits: {
+                enabled: false
+            },
+            series: [{
+                type: 'bar',
+                name: 'Emails Sent',
+                data: [13, 20, 18, 17, 16, 8, 14, 8, 9, 8, 7, 4, 1, 1, 1, 1]
+            },
+            {
+                type: 'bar',
+                name: 'Emails Received',
+                data: [17, 10, 7, 9, 8, 6, 3, 2, 2, 2, 0, 1, 2, 0, 0, 0]
+            },
+            {
+                type: 'bar',
+                name: 'Calls',
+                data: [7, 6, 6, 4, 5, 13, 6, 8, 4, 2, 0, 2, 1, 1, 0, 0]
+            },
+            {
+                type: 'bar',
+                name: 'Tasks Closed',
+                data: <%= 14.times.map{ Random.rand(5) }  %>
+            }]
+        });
+    });
+
+
+    /*****
+    Render right charts
+    ******/
+
+    function renderCharts(riskScore) {
+
+        $('#customers-volume-chart').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            credits: false,
+            title: {
+                text: 'Hours Spent (Last 14 days)',
+                align: 'left',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+            },
+            xAxis: {
+                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise', 'Acme Inc.', 'GVC'],
+                labels: {
+                    formatter: function() {
+                        return '<a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e">'+this.value+'</a>';
+                        //return '<a href="'+ categoryLinks[this.value] +'">'+this.value +'</a>';
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
+                    }
+                }
+            },
+            legend: {
+                reversed: true
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Send Emails',
+                data: [2.1, 1.8, 1.5, 1.5, 1.2, 0.4, 0.2]
+            },
+            {
+                name: 'Receive Emails',
+                data: [1, .6, .5, .5, .4, 0, 0]
+            }, 
+            {
+                name: 'Meetings & Calls',
+                data: [2, 0.5, 1, 1, 0, 0, 0]
+            }]
+        });
+
+
+        $('#tasks-trend').highcharts({
+            title: {
+                text: ''
+            },
+            credits: false,
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+                min: 0,
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                shared: true
+            },
+            series: [{
+                name: 'Total Open Alerts',
+                data: [3, 4, 5, 8, 11, 13, 17, 17, 18, 18, 17, 15],
+                type: 'area',
+                color: '#cccccc',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'New Alerts',
+                data: [5, 7, 10, 10, 13, 13, 21, 19, 26, 25, 19, 17],
+                type: 'line',
+                color: '#B23232',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'Closed Alerts',
+                data: [2, 3, 5, 2, 2, 0, 4, 2, 3, 8, 1, 2],
+                type: 'line',
+                color: '#149414',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }]
+        });
+
+
+        $('#activities-chart').highcharts({
+            chart: {
+                events:{
+                  load: function(event) {
+                    var extremes = this.yAxis[0].getExtremes();
+                    this.yAxis[0].setExtremes(0, extremes.dataMax);
+                    }
+                },
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: "Activities (Last 14 days)",
+                align: 'left',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+                
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: { text: '' },
+                labels: { enabled: true },
+                minorGridLineWidth: 0
+            },
+            legend: {
+                enabled: true
+            },
+            tooltip: {
+                positioner: function () {
+                    return {
+                        x: this.chart.chartWidth - this.label.width, // right aligned
+                        y: -15 // align to title
+                    };
+                },
+                borderWidth: 0,
+                backgroundColor: 'none',
+                pointFormat: '{point.stackTotal}',
+                xDateFormat: '%b %e',
+                shadow: false,
+                style: {
+                    fontSize: '16px',
+                    color: '#555555'
+                }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                type: 'column',
+                name: 'Sent Emails',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(10) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Received Emails',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(5) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Meetings',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Tasks Closed',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(2) }  %>
+            }
+            ]
+        });
+
+    };
+
+</script>
+

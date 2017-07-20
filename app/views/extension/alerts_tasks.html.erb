@@ -1,0 +1,11 @@
+<div class="m-t-sm task-form">
+  <%= render 'notifications/form_extension' %>
+</div>
+
+<% @notifications.each do |n| %>
+  <%= render 'notifications/extension', n: n %>
+<% end %>
+
+<p class="text-center"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>/tasks" target="_blank">View more tasks & alerts &rarr;</a></button></p>
+
+<%= javascript_include_tag "notifications_extension" %>
