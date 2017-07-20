@@ -479,7 +479,7 @@ class Activity < ActiveRecord::Base
   end
 
   def is_visible_to(user)
-    is_public || email_addresses.include?(user.email)
+    project.is_visible_to(user) && ( is_public || email_addresses.include?(user.email) )
   end
 
   ### methods to batch change jsonb columns

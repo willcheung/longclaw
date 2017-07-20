@@ -136,6 +136,11 @@ class Project < ActiveRecord::Base
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
+  # implementation of visible scope for individual projects
+  def is_visible_to(user)
+    account.organization == user.organization && is_confirmed && status == 'Active' && ( is_public || project_owner == user || users.include?(user) )
+  end
+
   def self.count_tasks_per_project(array_of_project_ids)
     query = <<-SQL
         SELECT projects.id AS id,

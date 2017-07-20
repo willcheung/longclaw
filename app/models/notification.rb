@@ -225,8 +225,8 @@ class Notification < ActiveRecord::Base
     Notification.find_by_sql(query)
   end
 
-  # Checks whether notification is visible to user based on Activity
+  # Checks whether notification is visible to user based on Activity or Project
   def is_visible_to(user)
-    activity.blank? || activity.is_visible_to(user)
+    activity.present? ? activity.is_visible_to(user) : project.is_visible_to(user)
   end
 end
