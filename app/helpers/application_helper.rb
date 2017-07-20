@@ -265,8 +265,8 @@ module ApplicationHelper
   #               separator (optional) - the separator option in the truncate() function, defaults to empty string
   # Note:  If text doesn't exist (nil), returns no content.  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
   def get_expandable_text_html(text: , id: , length: 100, max_length: nil, separator: '')
-    return "<span></span>" if (!text)  #no content
-    max_length = text.length if (!max_length)
+    return "<span></span>" if (text.nil?)  #no content
+    max_length = text.length if (max_length.nil?)
 
     # Do some newline processing to ensure proper conversion to <br> by simple_format later
     text.gsub!(/\r\n/, "\n")  # convert the carriage-return + newline sequences (e.g., from SFDC activity) into single newlines
