@@ -485,13 +485,13 @@ class User < ActiveRecord::Base
       )  
       UNION ALL
       (
-      -- Attachment directly from notifications table
+      -- Sent Attachments directly from notifications table
       SELECT date(time_series.days) AS calendar_date, '#{Notification::CATEGORY[:Attachment]}' AS category, count(attachments.*) AS num_activities
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id
                   FROM notifications 
                   WHERE category = '#{Notification::CATEGORY[:Attachment]}' 
-                  AND (description::jsonb->'from') || (description::jsonb->'to') || (description::jsonb->'cc') @> ('[{"address": "' || #{User.sanitize(self.email)} || '"}]')::jsonb 
+                  AND description::jsonb->'from'->0->>'address' = #{User.sanitize(self.email)} 
                   AND project_id IN ('#{array_of_project_ids.join("','")}')
                   AND EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS attachments
@@ -678,12 +678,13 @@ class User < ActiveRecord::Base
         GROUP BY users.id, category
       )
       UNION ALL
+      -- Sent Attachments
       (
         SELECT users.id, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(notifications.*) AS num_activities
         FROM users
         LEFT JOIN notifications
         ON category = '#{Notification::CATEGORY[:Attachment]}'
-        AND (description::jsonb->'from') || (description::jsonb->'to') || (description::jsonb->'cc') @> ('[{"address":"' || users.email || '"}]')::jsonb
+        AND description::jsonb->'from'->0->>'address' = users.email
         AND sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
         AND project_id IN ('#{array_of_project_ids.join("','")}')
         WHERE users.id IN ('#{array_of_user_ids.join("','")}')

@@ -488,6 +488,7 @@ class Project < ActiveRecord::Base
   # This is the SQL query that gets the daily activities over the last x days, where x is 1-14
   # Used for time bounded time series
   def daily_activities_last_x_days(time_zone, days_ago=14)
+    domain = account.organization.domain
     query = <<-SQL
       -- This controls the dates return by the query
       WITH time_series as (
@@ -570,7 +571,7 @@ class Project < ActiveRecord::Base
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Notification::CATEGORY[:Attachment]}' as category, count(attachments.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id
-                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days')) AND description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
                 ) as attachments
         ON attachments.project_id = time_series.project_id and date_trunc('day', attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
@@ -783,6 +784,7 @@ class Project < ActiveRecord::Base
       JOIN projects ON projects.id = notifications.project_id
       WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
       AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
+      AND notifications.description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
       GROUP BY projects.id, projects.name, notifications.category
       ORDER BY num_activities DESC
       )
