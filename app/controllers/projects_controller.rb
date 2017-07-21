@@ -273,15 +273,19 @@ class ProjectsController < ApplicationController
     @filter_category = []
     if params[:category].present?
       @filter_category = params[:category].split(',')
-      # special case: if Attachments category selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
+
+      # special cases: if Attachment or Pinned category filters selected, remove from normal WHERE condition and handle differently below
       if @filter_category.include?(Notification::CATEGORY[:Attachment]) || @filter_category.include?(Activity::CATEGORY[:Pinned])
         where_categories = @filter_category - [Notification::CATEGORY[:Attachment], Activity::CATEGORY[:Pinned]]
         category_condition = "activities.category IN ('#{where_categories.join("','")}')"
 
+        # Attachment filter selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
         if @filter_category.include?(Notification::CATEGORY[:Attachment])
-          category_condition += " OR activities.category = '#{Activity::CATEGORY[:Conversation]}' AND att_filter.id IS NOT NULL"
-          activities = activities.joins("LEFT JOIN notifications AS att_filter ON att_filter.activity_id = activities.id AND att_filter.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+          activities = activities.joins("LEFT JOIN notifications AS attachment_notifications ON attachment_notifications.activity_id = activities.id AND attachment_notifications.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+          category_condition += " OR (activities.category = '#{Activity::CATEGORY[:Conversation]}' AND attachment_notifications.id IS NOT NULL)"
         end
+
+        # Pinned filter selected, need to INCLUDE pinned activities regardless of type but NOT EXCLUDE other categories chosen with filter
         if @filter_category.include?(Activity::CATEGORY[:Pinned])
           category_condition += " OR activities.is_pinned IS TRUE"
         end
