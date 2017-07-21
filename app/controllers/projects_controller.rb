@@ -242,6 +242,7 @@ class ProjectsController < ApplicationController
   end
 
   def get_show_data
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
     @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
 
     # metrics
