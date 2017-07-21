@@ -725,7 +725,7 @@ class Project < ActiveRecord::Base
       (
         SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
         FROM projects
-        INNER JOIN
+        LEFT JOIN
         (
          SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
           FROM emails_sent

@@ -87,7 +87,19 @@
             },
             xAxis: {
                 //categories: <%= @data.map(&:name).to_json.html_safe %>,
-                crosshair: true
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        //console.log("accounts_dashboard: " + this.value);
+                        var has_deal_size = this.value[1] != "";
+                        var has_close_date = this.value[2] != "";
+                        return "<b>" + this.value[0] + "</b><br/>" // proj_name
+                            // + (has_deal_size || has_close_date ? " - " : "")
+                            + (has_deal_size ? this.value[1] : "")
+                            + ((has_deal_size && has_close_date) ? ", " : "")
+                            + (has_close_date ? this.value[2] : "");
+                    }
+                }
             },
             yAxis: {
                 min: null,
@@ -103,7 +115,8 @@
                 stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        return Highcharts.numberFormat(Math.abs(this.total), 0, null, "");
+                        //return Highcharts.numberFormat(this.total, 0, null, "");
+                        return large_number_to_human(this.total);
                     }
                 }
             },

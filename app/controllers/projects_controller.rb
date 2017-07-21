@@ -244,7 +244,7 @@ class ProjectsController < ApplicationController
     @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
 
     # metrics
-    @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.alerts.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count

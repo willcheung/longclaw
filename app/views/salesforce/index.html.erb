@@ -63,11 +63,21 @@
                             <div><%= Project::MAPPABLE_FIELDS_META["amount"] %></div>
                         </span>
                         <span class="metric-content" align="center">
-                            <div><%= (@project.amount.nil?) ? "-" : "$"+number_to_human(@project.amount) %></div>
+                            <div><%= @project.amount.blank? ? "-" : "$"+number_to_human(@project.amount) %></div>
                         </span>
                     </div>
                 </div>
                 <div class="col-xs-3">
+                    <div class="metric">
+                        <span class="metric-title" align="center">
+                            <div>Days to Close</div>
+                        </span>
+                        <span class="metric-content" align="center">
+                            <div><%= @project.close_date.blank? ? "-" : (@project.close_date - Date.today).to_i %></div>
+                        </span>
+                    </div>
+                </div>
+                <!-- <div class="col-xs-3">
                     <div class="metric <%= risk_color(@project_risk_score) %>">
                         <span class="metric-title" align="center">
                             <div>Risk Score</div>
@@ -76,7 +86,7 @@
                             <div><%= @project_risk_score %></div>
                         </span>
                     </div>
-                </div>
+                </div> -->
                 <div class="col-xs-3">
                     <div class="metric text-danger">
                         <span class="metric-title" align="center">
