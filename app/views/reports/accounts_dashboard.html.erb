@@ -86,6 +86,7 @@
                 text: ''
             },
             xAxis: {
+                max: undefined,
                 //categories: <%= @data.map(&:name).to_json.html_safe %>,
                 crosshair: true,
                 labels: {
@@ -102,8 +103,8 @@
                 }
             },
             yAxis: {
-                min: null,
-                //max: null,
+                min: undefined,
+                //max: undefined,
                 opposite: true,
                 title: {
                     text: ''
@@ -147,21 +148,7 @@
             },
             credits: {
                 enabled: false
-            },
-            series: [{
-                name: 'Average',
-                type: 'line',
-                lineWidth: 2,
-                color: '#7cb5ec',
-                marker: { enabled: false, radius: 0 },
-                data: <%= Array.new(@data.length, @average).to_json.html_safe %>,
-                zIndex: 2,
-                showInLegend: false  // for "Activities (Last 14d)" metric, hide average
-            }, {
-                name: '',  // to be updated below
-                data: [],
-                zIndex: 1
-            }]
+            }
         });
 
         <%= render partial: "reports/accounts_dashboard.js" %>

@@ -208,7 +208,6 @@ class ReportsController < ApplicationController
       @data = [] and @categories = [] and return if project_engagement.blank?
       @data = project_engagement.map do |pid, activities|
         proj = projects.find { |p| p.id == pid }
-        #puts "\tPid=#{pid}\t Activities: #{activities}"
 
         if proj.present?
           Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: activities, total: activities.inject(0){|sum,a| sum += (a.num_activities.present? ? a.num_activities : 0)} })
@@ -219,23 +218,22 @@ class ReportsController < ApplicationController
 
       @data.compact!
       @categories = @data.first.y.map(&:category)
-    when ACCOUNT_DASHBOARD_METRIC[:risk_score]
-      risk_scores = projects.nil? ? [] : Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
-      total_risk_scores = 0
-      @data = risk_scores.map do |r|
-        proj = projects.find { |p| p.id == r[0] }
-        total_risk_scores += r[1]
-        color = r[1] >= 80 ? 'highRisk' : r[1] >= 60 ? 'mediumRisk' : 'lowRisk'
-        Hashie::Mash.new({ id: proj.id, name: proj.name, y: r[1], color: color })
-      end
-
-      @average = risk_scores.empty? ? 0 : (total_risk_scores.to_f/risk_scores.length).round(1)
+    # when ACCOUNT_DASHBOARD_METRIC[:risk_score]
+    #   risk_scores = projects.nil? ? [] : Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
+    #   total_risk_scores = 0
+    #   @data = risk_scores.map do |r|
+    #     proj = projects.find { |p| p.id == r[0] }
+    #     total_risk_scores += r[1]
+    #     color = r[1] >= 80 ? 'highRisk' : r[1] >= 60 ? 'mediumRisk' : 'lowRisk'
+    #     Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: r[1], color: color })
+    #   end
+    #   @average = risk_scores.empty? ? 0 : (total_risk_scores.to_f/risk_scores.length).round(1)
     when ACCOUNT_DASHBOARD_METRIC[:days_inactive]
       last_sent_dates = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
       @data = last_sent_dates.map do |d|
         proj = projects.find { |p| p.id == d[0] }
         y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
-        Hashie::Mash.new({ id: proj.id, name: proj.name, y: y, color: 'default' })
+        Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: y, color: 'default' })
       end
     # when ACCOUNT_DASHBOARD_METRIC[:negative_sentiment_activities_pct]
     #   project_engagement = Project.find_include_sum_activities(projects.pluck(:id))
@@ -248,12 +246,12 @@ class ReportsController < ApplicationController
     when ACCOUNT_DASHBOARD_METRIC[:open_alerts]
       open_task_counts = Project.count_tasks_per_project(projects.pluck(:id))
       @data = open_task_counts.map do |r|
-        Hashie::Mash.new({ id: r.id, name: r.name, y: r.open_risks, color: 'default'})
+        Hashie::Mash.new({ id: r.id, name: r.name, deal_size: r.amount, close_date: r.close_date, y: r.open_risks, color: 'default'})
       end
     when ACCOUNT_DASHBOARD_METRIC[:overdue_tasks]
       overdue_tasks = projects.select("COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.project_id = projects.id AND notifications.is_complete IS FALSE AND EXTRACT(EPOCH FROM notifications.original_due_date) < #{Time.current.to_i}").group("projects.id").order("task_count DESC")
       @data = overdue_tasks.map do |t|
-        Hashie::Mash.new({ id: t.id, name: t.name, y: t.task_count, color: 'default'})
+        Hashie::Mash.new({ id: t.id, name: t.name, deal_size: t.amount, close_date: t.close_date, y: t.task_count, color: 'default'})
       end
     when ACCOUNT_DASHBOARD_METRIC[:deal_size]
       deal_size = projects.select("projects.id, projects.name, COALESCE(projects.amount,0) AS deal_size").where("projects.amount > 0")
@@ -292,10 +290,10 @@ class ReportsController < ApplicationController
   def ad_account_data
     @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
 
-    @risk_score = @project.new_risk_score(current_user.time_zone)
+    #@risk_score = @project.new_risk_score(current_user.time_zone)
     @open_tasks_count = @project.notifications.open.count
     @last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
-    @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
+    #@risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
 
     # Engagement Volume Chart
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)

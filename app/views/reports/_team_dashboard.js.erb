@@ -7,60 +7,64 @@ while(chart.series.length > 1) {
   chart.series[1].remove();
 }
 
-<% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
-  chart.series[0].hide();
-  <% @categories.each.with_index do |c, i| %>
-  chart.addSeries({
-    name: "<%= c %>",
-    color: "<%= highcharts_series_color(c) %>", //set color according to category
-    showInLegend: <%= @categories_with_data.include? c %>,
-    data: [ 
-    <% @data.each do |d| %>
-    {
-      y: <%= d.y[i].num_activities %>,
-      id: "<%= d.id %>"
-    }, 
-    <% end %> 
-    ]
-  }, false)
-  <% end unless @categories.blank? %>
-<% elsif @metric == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
-  chart.series[0].hide();
-  <% @categories.each do |c| %>
-  chart.addSeries({
-    name: "<%= c %>",
-    color: "<%= highcharts_series_color(c) %>",  //set color according to category
-    showInLegend: true,
-    data: [ 
-    <% @data.each do |d| %>
-    {
-      y: <%= d.y[c] %>,
-      id: "<%= d.id %>"
-    }, 
-    <% end %> 
-    ]
-  }, false)
-  <% end unless @categories.blank? %>
-<% else %>
-  chart.series[0].show();
-  chart.series[0].update({
-    name: '<%= @metric.html_safe %>',
-    color: '<%= highcharts_series_color() %>',
-    data: [ <% @data.each do |d| %>
-    {
-      y: <%= d.y %>,
-      id: "<%= d.id %>"
-    },
-    <% end %> ]
-  }, false);
-<% end %>
+<% if @data.present? %>
+
+  <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
+    chart.series[0].hide();
+    <% @categories.each.with_index do |c, i| %>
+    chart.addSeries({
+      name: "<%= c %>",
+      color: "<%= highcharts_series_color(c) %>", //set color according to category
+      showInLegend: <%= @categories_with_data.include? c %>,
+      data: [ 
+      <% @data.each do |d| %>
+      {
+        y: <%= d.y[i].num_activities %>,
+        id: "<%= d.id %>"
+      }, 
+      <% end %> 
+      ]
+    }, false)
+    <% end unless @categories.blank? %>
+  <% elsif @metric == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
+    chart.series[0].hide();
+    <% @categories.each do |c| %>
+    chart.addSeries({
+      name: "<%= c %>",
+      color: "<%= highcharts_series_color(c) %>",  //set color according to category
+      showInLegend: true,
+      data: [ 
+      <% @data.each do |d| %>
+      {
+        y: <%= d.y[c] %>,
+        id: "<%= d.id %>"
+      }, 
+      <% end %> 
+      ]
+    }, false)
+    <% end unless @categories.blank? %>
+  <% else %>
+    chart.series[0].show();
+    chart.series[0].update({
+      name: '<%= @metric.html_safe %>',
+      color: '<%= highcharts_series_color() %>',
+      data: [ <% @data.each do |d| %>
+      {
+        y: <%= d.y %>,
+        id: "<%= d.id %>"
+      },
+      <% end %> ]
+    }, false);
+  <% end %>
+
+<% end %> // if @data.present? 
 
 chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
 //console.log("datamax=" + chart.yAxis[0].dataMax);
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110)); //set graph height
 
 // handle clicking on user label
-$('.highcharts-xaxis-labels text').click(function() {
+$('.highcharts-xaxis-labels text tspan').click(function() {
     $.get("td_user_data/" + get_category_uuid($(this).text()), function (data) {
         $("#user-data").html(data);
         renderCharts(this.y);

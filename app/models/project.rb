@@ -140,6 +140,8 @@ class Project < ActiveRecord::Base
     query = <<-SQL
         SELECT projects.id AS id,
                projects.name AS name,
+               projects.amount AS amount,
+               projects.close_date AS close_date,
                COUNT(*) FILTER (WHERE is_complete = FALSE ) AS open_risks
         FROM projects
         LEFT JOIN notifications
@@ -237,6 +239,7 @@ class Project < ActiveRecord::Base
     (inactivity_risk + rag_score).round
   end
 
+  # TODO: comment out this code once it's obsolete!
   def new_risk_score_trend(time_zone, day_range=14)
     risk_settings = RiskSetting.where(level: self.account.organization)
     
