@@ -19,7 +19,7 @@ while(chart.series.length > 0) {
     <% @categories_with_data.each do |c| %>
     chart.addSeries({
       name: "<%= c %>",
-      color: "<%= highcharts_series_color(c) %>", //set color according to category
+      color: "<%= highcharts_series_color(c) %>",  //set color according to category
       // showInLegend: false,
       data: [ 
       <% @data.each do |opp| %> 

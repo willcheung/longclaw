@@ -42,27 +42,27 @@
     </div>
 
     <div class="row border-bottom white-bg dashboard-header">
-            <!-- LEFT -->
-            <div class="col-lg-5">
-                <h4 class="m-l-md">Metric:
-                    <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
-                    <% ReportsController::ACCOUNT_DASHBOARD_METRIC.each do |k,label| %>
-                        <option <%= "selected" if params[:sort] == label %>><%= label %></option>
-                    <% end %>
-                    </select>
-                </h4>
-                <div id="left-chart" class="left-chart" style="height:1200px;"></div>
-            </div>
+        <!-- LEFT (metric sort) -->
+        <div class="col-lg-5">
+            <h4 class="m-l-md">Metric:
+                <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
+                <% ReportsController::ACCOUNT_DASHBOARD_METRIC.each do |k,label| %>
+                    <option <%= "selected" if params[:sort] == label %>><%= label %></option>
+                <% end %>
+                </select>
+            </h4>
+            <div id="left-chart" class="left-chart" style="height:1200px"></div>
+        </div>
 
-            <!-- RIGHT -->
-            <div class="col-lg-7" style="margin-top:45px;">
-                <div id="account-data">
-                    <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
-                    </div>
+        <!-- RIGHT (account/opportunity detail) -->
+        <div class="col-lg-7" style="margin-top:45px">
+            <div id="account-data">
+                <div class="row" style="margin-top:50px">
+                    <h3>&larr; Click on a bar/label to see details about the opportunity.</h3>
                 </div>
             </div>
         </div>
+    </div>
 </div>
 
 <%= render "teaser" if current_user.trial? %>

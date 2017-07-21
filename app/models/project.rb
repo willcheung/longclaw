@@ -167,6 +167,20 @@ class Project < ActiveRecord::Base
     result = Project.find_by_sql(query)
   end
 
+  def self.days_to_close_per_project(array_of_project_ids)
+    query = <<-SQL
+        SELECT projects.id AS id,
+               projects.name AS name,
+               projects.close_date AS close_date,
+               projects.close_date - current_date AS days_to_close
+        FROM projects
+        WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
+        GROUP BY projects.id
+        ORDER BY days_to_close DESC
+      SQL
+    result = Project.find_by_sql(query)
+  end
+
   # for risk counts, show every risk regardless of private conversation
   def self.open_risk_count(array_of_project_ids)
     risks_per_project = Project.count_tasks_per_project(array_of_project_ids)
@@ -825,6 +839,12 @@ class Project < ActiveRecord::Base
       end
     end
     return project_chg_activities
+  end
+
+  # For an array of "project" id's, show # of days today is relative to the project close date
+  def self.days_to_close(array_of_project_ids)
+    days_to_close_per_project = Project.days_to_close_per_project(array_of_project_ids)
+    Hash[days_to_close_per_project.map { |p| [p.id, p.days_to_close] }]
   end
 
   # convenience method to make input easier compared to time_shift
