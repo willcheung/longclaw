@@ -59,7 +59,9 @@ class ReportsController < ApplicationController
       end
       #@data = @data.select {|a| a.total > 0}
 
-      @categories = @data.first.y.map(&:category)
+      @categories = @data.inject([]) do |memo, p|
+        memo | p.y.select {|a| a.num_activities > 0}.map(&:category)
+      end  # get (and show in legend) only categories that have data
     when TEAM_DASHBOARD_METRIC[:time_spent_last14d]
       account_ids = current_user.organization.accounts.ids
       user_emails = current_user.organization.users.pluck(:email)
@@ -110,16 +112,11 @@ class ReportsController < ApplicationController
     
     if @categories
       @data.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: user name, case-insensitive in alphabetical order
-      if @metric == TEAM_DASHBOARD_METRIC[:activities_last14d]
-        @categories_with_data = @data.inject([]) do |memo, p|
-          memo | p.y.select {|a| a.num_activities > 0}.map(&:category)
-        end  # get (and show in legend) only categories that have data
-      end
     else  # sort by y instead
       @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }
     end
 
-    # puts "**************** @data (#{@data.present? ? @data.length : 0}): #{@data} \t\t ****** @categories (#{@categories.present? ? @categories.length : 0}):  #{@categories} \t\t ****** @categories_with_data (#{@categories_with_data.present? ? @categories_with_data.length : 0}):  #{@categories_with_data}"
+    # puts "**************** @data (#{@data.present? ? @data.length : 0}): #{@data} \t\t ****** @categories (#{@categories.present? ? @categories.length : 0}):  #{@categories}"
     @data = @data.take(25)  # TODO: real left chart pagination
   end
 
@@ -217,7 +214,14 @@ class ReportsController < ApplicationController
       end
 
       @data.compact!
-      @categories = @data.first.y.map(&:category)
+
+      @categories = @data.inject([]) do |memo, p|
+        if p.total > 0
+          memo | p.y.select {|a| a.num_activities.present? && a.num_activities > 0}.map(&:category)
+        else
+          memo
+        end
+      end  # get (and show in legend) only categories that have data
     # when ACCOUNT_DASHBOARD_METRIC[:risk_score]
     #   risk_scores = projects.nil? ? [] : Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
     #   total_risk_scores = 0
@@ -269,20 +273,11 @@ class ReportsController < ApplicationController
 
     if @categories
       @data.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
-      if @metric == ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
-        @categories_with_data = @data.inject([]) do |memo, p|
-          if p.total > 0
-            memo | p.y.select {|a| a.num_activities.present? && a.num_activities > 0}.map(&:category)
-          else
-            memo
-          end
-        end  # get (and show in legend) only categories that have data
-      end
     else  # sort by y instead
       @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }  
     end
 
-    #puts "**************** @data (#{@data.present? ? @data.length : 0}): #{@data} \t\t ****** @categories (#{@categories.present? ? @categories.length : 0}):  #{@categories} \t\t ****** @categories_with_data (#{@categories_with_data.present? ? @categories_with_data.length : 0}):  #{@categories_with_data}"
+    #puts "**************** @data (#{@data.present? ? @data.length : 0}): #{@data} \t\t ****** @categories (#{@categories.present? ? @categories.length : 0}):  #{@categories}"
     @data = @data.take(25)  # TODO: real left chart pagination
   end
 

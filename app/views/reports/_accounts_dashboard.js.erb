@@ -16,7 +16,7 @@ while(chart.series.length > 0) {
 <% if @data.present? %>
   chart.xAxis[0].setCategories(<%= @data.map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
   <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
-    <% @categories_with_data.each do |c| %>
+    <% @categories.each do |c| %>
     chart.addSeries({
       name: "<%= c %>",
       color: "<%= highcharts_series_color(c) %>",  //set color according to category
@@ -32,7 +32,7 @@ while(chart.series.length > 0) {
       <% end if @data.present? %> 
       ]
     }, false)
-    <% end unless @categories_with_data.blank? %>
+    <% end unless @categories.blank? %>
   <% else %>
     chart.addSeries({
       name: "<%= @metric.html_safe %>",
@@ -54,7 +54,7 @@ while(chart.series.length > 0) {
       showInLegend: <%= (@metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] && @data.present?) ? 'true' : 'false' %>,
     });
   }
-  // showInLegend: < %= @categories_with_data.include? c %>,
+  // showInLegend: < %= @categories.include? c %>,
 
 <% end %> // if @data.present? 
 

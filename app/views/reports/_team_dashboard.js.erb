@@ -15,14 +15,15 @@ while(chart.series.length > 1) {
     chart.addSeries({
       name: "<%= c %>",
       color: "<%= highcharts_series_color(c) %>", //set color according to category
-      showInLegend: <%= @categories_with_data.include? c %>,
+      //showInLegend: false,
       data: [ 
       <% @data.each do |d| %>
-      {
-        y: <%= d.y[i].num_activities %>,
-        id: "<%= d.id %>"
-      }, 
-      <% end %> 
+        <% m = d.y.find{|m| m.category == c} if d.y.present? %>  //find metric for this user
+        {
+          y: <%= m.present? ? m.num_activities : 0 %>,
+          id: "<%= d.id %>"
+        }, 
+      <% end if @data.present? %> 
       ]
     }, false)
     <% end unless @categories.blank? %>
