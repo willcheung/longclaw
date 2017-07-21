@@ -29,14 +29,14 @@ class OnboardingController < ApplicationController
 	def tutorial
 		render layout: false
 		# change user onboarding status
-		if current_user.mark_private == true # Skip this step if you're VP level or above (all 1-1 emails are private)
+		if current_user.mark_private == true # Skip this step if you're VP level or above (all 1-1 e-mails are private)
 			current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
 		else
 			current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:confirm_projects]) if current_user.onboarding_step == Utils::ONBOARDING[:tutorial]
 		end
 	end
 
-  # Show the user the onboarding "Processing emails" in-progress page.
+  # Show the user the onboarding "Processing e-mails" in-progress page.
 	def creating_clusters
 		if current_user.onboarding_step == Utils::ONBOARDING[:confirm_projects] and !current_user.cluster_create_date.nil?
 			redirect_to onboarding_confirm_projects_path
@@ -45,7 +45,7 @@ class OnboardingController < ApplicationController
 		end
 	end
 
-	# Allow user to confirm processed clusters (in the form of streams/projects)
+	# Allow user to confirm processed clusters (in the form of opportunities/projects)
 	def confirm_projects
 		return_vals = User.confirm_projects_for_user(current_user)
 
@@ -72,7 +72,7 @@ class OnboardingController < ApplicationController
 
       respond_to do |format|
         if user and data.kind_of?(Array)   
-            puts("Creating Streams for #{user.email}")
+            puts("Creating Opportunities for #{user.email}")
 
             uniq_external_members, uniq_internal_members = get_all_members(data)
 
@@ -124,7 +124,7 @@ class OnboardingController < ApplicationController
             user.update_attributes(cluster_update_date: Time.now)
         end
 
-        # Send welcome email with confirm_projects link
+        # Send welcome e-mail with confirm_projects link
         num_of_projects = Project.where(created_by: user.id, is_confirmed: false).includes(:users, :contacts, :account).count(:projects)
         puts("Sending onboarding email to #{user.email}")
         url = ENV["BASE_URL"] + "/onboarding/confirm_projects"

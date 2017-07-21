@@ -1,16 +1,19 @@
 // Shared metric update code (left panel) between team_dashboard.html.erb & td_sort_data.js.erb
 var chart = $('#left-chart').highcharts();
 chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
+
+//clear all old series
 while(chart.series.length > 1) {
   chart.series[1].remove();
 }
+
 <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
   chart.series[0].hide();
   <% @categories.each.with_index do |c, i| %>
   chart.addSeries({
     name: "<%= c %>",
-    color: "<%= highcharts_series_color(c) %>",
-    // showInLegend: false,
+    color: "<%= highcharts_series_color(c) %>", //set color according to category
+    showInLegend: <%= @categories_with_data.include? c %>,
     data: [ 
     <% @data.each do |d| %>
     {
@@ -20,14 +23,14 @@ while(chart.series.length > 1) {
     <% end %> 
     ]
   }, false)
-  <% end %>
+  <% end unless @categories.blank? %>
 <% elsif @metric == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
   chart.series[0].hide();
   <% @categories.each do |c| %>
   chart.addSeries({
     name: "<%= c %>",
-    color: "<%= highcharts_series_color(c) %>",
-    //showInLegend: false,
+    color: "<%= highcharts_series_color(c) %>",  //set color according to category
+    showInLegend: true,
     data: [ 
     <% @data.each do |d| %>
     {
@@ -37,7 +40,7 @@ while(chart.series.length > 1) {
     <% end %> 
     ]
   }, false)
-  <% end %>
+  <% end unless @categories.blank? %>
 <% else %>
   chart.series[0].show();
   chart.series[0].update({
@@ -55,3 +58,20 @@ while(chart.series.length > 1) {
 chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
 //console.log("datamax=" + chart.yAxis[0].dataMax);
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110)); //set graph height
+
+// handle clicking on user label
+$('.highcharts-xaxis-labels text').click(function() {
+    $.get("td_user_data/" + get_category_uuid($(this).text()), function (data) {
+        $("#user-data").html(data);
+        renderCharts(this.y);
+    })
+});
+
+function get_category_uuid (catname) {
+  var map = {
+  <% @data.each do |d| %>
+    "<%= d.name.html_safe %>": "<%= d.id %>",
+  <% end %>
+  };
+  return map[catname];
+}

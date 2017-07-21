@@ -30,7 +30,7 @@ $(document).on('ifUnchecked', 'input', function(event){
 */
 // Tooltips
 $('.tool-tip-category').tooltip({
-  title: "<p style=\"line-height:20px;\"><b>Alert:</b> Negative sentiment detected in email body.<br>"+
+  title: "<p style=\"line-height:20px;\"><b>Alert:</b> Negative sentiment detected in e-mail body.<br>"+
          "<b>To-do:</b> Manually generated task.<p>",
   html: true,
   container: 'body'
@@ -60,7 +60,7 @@ $('[data-toggle="overdue"]').hover(function(){
   $('.tooltip-arrow').css('opacity', '0');
 });
 
-// Email Preview Tooltip
+// E-mail Preview Tooltip
 $('.hoverToolTip').tooltip({
   title: hoverGetData,
   html: true,
