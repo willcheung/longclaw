@@ -25,7 +25,7 @@ while(chart.series.length > 0) {
       <% @data.each do |opp| %> 
         <% m = opp.y.find{|m| m.category == c} if opp.y.present? %>  //find metric for this opportunity
         {
-          y: <%= m.present? ? m.num_activities : 0 %>,
+          y: <%= (m.present? && m.num_activities.present?) ? m.num_activities : 0 %>,
           id: "<%= opp.id %>",
           //name: "<%= opp.name %>"
         }, 

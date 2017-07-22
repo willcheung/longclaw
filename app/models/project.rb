@@ -710,8 +710,9 @@ class Project < ActiveRecord::Base
     hours_ago_end = hours_ago_end.hours.ago.to_i
     hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
     query = <<-SQL
-      WITH emails AS 
-      (
+      WITH projects_from_array AS (
+        SELECT id, name FROM projects WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
+      ), emails AS (
         SELECT project_id,
             messages ->> 'messageId'::text AS message_id,
             jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
@@ -741,7 +742,7 @@ class Project < ActiveRecord::Base
       )
       (
         SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
-        FROM projects
+        FROM projects_from_array AS projects
         LEFT JOIN
         (
          SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
@@ -754,21 +755,23 @@ class Project < ActiveRecord::Base
           GROUP BY project_id, category
           HAVING COUNT(DISTINCT message_id) > 0
         ) AS activity_count_by_category
-        ON activity_count_by_category.project_id = projects.id
+        ON projects.id = activity_count_by_category.project_id
       )
       UNION ALL 
       (
       SELECT projects.id, projects.name, t.category, COUNT(*) AS num_activities
-      FROM (
+      FROM projects_from_array AS projects 
+      LEFT JOIN (
         SELECT id,
                category,
                project_id,
                last_sent_date
         FROM activities
         WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+          AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
+          AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
         ) t
-      JOIN projects ON projects.id = t.project_id
-      WHERE t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
+      ON projects.id = t.project_id
       GROUP BY projects.id, projects.name, t.category
       ORDER BY num_activities DESC
       )
