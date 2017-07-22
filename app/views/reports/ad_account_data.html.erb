@@ -13,7 +13,7 @@
                         <h4><%= Project::MAPPABLE_FIELDS_META["stage"] %></h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="margin:20px 0"><%= (@project.stage.nil? || @project.stage.empty?) ? "-" : @project.stage %></h2>
+                        <h2 style="margin:20px 0"><%= @project.stage.blank? ? "-" : @project.stage %></h2>
                     </div>
                 </div>
             </div>

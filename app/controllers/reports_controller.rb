@@ -205,12 +205,8 @@ class ReportsController < ApplicationController
       @data = [] and @categories = [] and return if project_engagement.blank?
       @data = project_engagement.map do |pid, activities|
         proj = projects.find { |p| p.id == pid }
-
-        if proj.present?
-          Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: activities, total: activities.inject(0){|sum,a| sum += (a.num_activities.present? ? a.num_activities : 0)} })
-        else
-          nil
-        end
+        
+        Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: activities, total: activities.inject(0){|sum,a| sum += (a.num_activities.present? ? a.num_activities : 0)} }) if proj.present?  # else nil
       end
 
       @data.compact!
@@ -263,9 +259,9 @@ class ReportsController < ApplicationController
         Hashie::Mash.new({ id: t.id, name: t.name, deal_size: t.amount, close_date: t.close_date, y: t.deal_size, color: 'default'})
       end
     when ACCOUNT_DASHBOARD_METRIC[:days_to_close]
-      days_to_close = projects.select{|p| p.close_date.present?}.map{ |p| { id: p.id, name: p.name, deal_size: p.amount, close_date: p.close_date, days_to_close: (p.close_date - Date.today).to_i } }
-      @data = days_to_close.map do |t|
-        Hashie::Mash.new({ id: t[:id], name: t[:name], deal_size: t[:deal_size], close_date: t[:close_date], y: t[:days_to_close], color: t[:days_to_close] < 0 ? 'negative': 'default'})
+      @data = projects.select{|p| p.close_date.present?}.map do |p| 
+        days_to_close = (p.close_date - Date.today).to_i
+        Hashie::Mash.new({ id: p.id, name: p.name, deal_size: p.amount, close_date: p.close_date, y: days_to_close, color: days_to_close < 0 ? 'negative': 'default'})
       end
     else # Invalid  
       @data = []
