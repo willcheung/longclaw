@@ -35,3 +35,20 @@ $('input[name="daterange"]').daterangepicker({
         ]
     }
 });
+
+/*
+    Converts a number into human readable string.
+    Note: Returns undefined for numbers larger than 999 septillion or smaller than 999 septillionth
+    Number names refs: http://wiki.answers.com/Q/What_number_is_after_vigintillion&src=ansTT
+                       https://en.wikipedia.org/wiki/Names_of_large_numbers
+*/
+function large_number_to_human(number) {
+    if (number == 0) return 0;
+    if (!number || Math.abs(number) > 100000000000000000000000000) return; // 10^24
+    var sign = (number < 0) ? "-" : "";
+    number = Math.abs(number);
+    var s = ['','K', 'M', 'B', 'T', 'Quad', 'Quint', 'Sext', 'Sept']; 
+    var e = Math.floor(Math.log(number) / Math.log(1000));
+    var precision = (e > 0) ? 1 : 0;
+    return sign + ((number / Math.pow(1000, e)).toFixed(precision) + "" + s[e]);
+}

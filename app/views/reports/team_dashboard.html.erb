@@ -28,31 +28,32 @@
     </div>
     
     <div class="row border-bottom white-bg dashboard-header">
-            <!-- LEFT -->
-            <div class="col-md-5">
-                <h4 class="m-l-md">Metric: 
-                <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
-                <% ReportsController::TEAM_DASHBOARD_METRIC.each do |k,label| %>
-                    <option <%= "selected" if params[:sort] == label %>><%= label %></option>
-                <% end %>
-                    <!-- <option>Revenue Managed</option> -->
-                    <!-- <option>Revenue per Hour Spent (Last 14d)</option> -->
-                    <!-- <option>On Target</option> -->
-                </select>
-               
-                </h4>
-                <div id="left-chart" class="left-chart" style="height:1200px;"></div>
-                
-            </div>
+        <!-- LEFT (metric sort) -->
+        <div class="col-md-5">
+            <h4 class="m-l-md">Metric: 
+            <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
+            <% ReportsController::TEAM_DASHBOARD_METRIC.each do |k,label| %>
+                <option <%= "selected" if params[:sort] == label %>><%= label %></option>
+            <% end %>
+                <!-- <option>Revenue Managed</option> -->
+                <!-- <option>Revenue per Hour Spent (Last 14d)</option> -->
+                <!-- <option>On Target</option> -->
+            </select>
+           
+            </h4>
+            <div id="left-chart" class="left-chart" style="height:1200px;"></div>
+            
+        </div>
 
-            <div class="col-md-7" style="margin-top:45px;">
-                <div id="user-data">
-                    <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the rep.</h3>
-                    </div>
+        <!-- RIGHT (user detail) -->
+        <div class="col-md-7" style="margin-top:45px;">
+            <div id="user-data">
+                <div class="row" style="margin-top:50px;">
+                    <h3>&larr; Click on a bar/label to see details about the rep.</h3>
                 </div>
             </div>
         </div>
+    </div>
 </div>
 
 <%= render "teaser" if current_user.trial? %>

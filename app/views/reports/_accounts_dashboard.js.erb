@@ -4,84 +4,82 @@ var barColors = {
   default: '<%= highcharts_series_color() %>', 
   highRisk: '#ED5565',
   mediumRisk: '#FFA500',
-  lowRisk: '#A1C436'
+  lowRisk: '#A1C436',
+  negative: '#ff4d4d' // ruby red
 };
-chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
 
 //clear all old series
-while(chart.series.length > 1) {
-  chart.series[1].remove();
+while(chart.series.length > 0) {
+  chart.series[0].remove();
 }
 
-<% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
-  <% @categories_with_data.each do |c| %>
-  chart.addSeries({
-    name: "<%= c %>",
-    color: "<%= highcharts_series_color(c) %>", //set color according to category
-    // showInLegend: false,
-    data: [ 
-    <% @data.each do |opp| %> 
-      <% m = opp.y.find{|m| m.category == c}  %>  //find metric for this opportunity
+<% if @data.present? %>
+  chart.xAxis[0].setCategories(<%= @data.map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+  <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
+    <% @categories.each do |c| %>
+    chart.addSeries({
+      name: "<%= c %>",
+      color: "<%= highcharts_series_color(c) %>",  //set color according to category
+      // showInLegend: false,
+      data: [ 
+      <% @data.each do |opp| %> 
+        <% m = opp.y.find{|m| m.category == c} if opp.y.present? %>  //find metric for this opportunity
+        {
+          y: <%= (m.present? && m.num_activities.present?) ? m.num_activities : 0 %>,
+          id: "<%= opp.id %>",
+          //name: "<%= opp.name %>"
+        }, 
+      <% end if @data.present? %> 
+      ]
+    }, false)
+    <% end unless @categories.blank? %>
+  <% else %>
+    chart.addSeries({
+      name: "<%= @metric.html_safe %>",
+      data: [ <% @data.each do |opp| %>
       {
-        y: <%= m.present? ? m.num_activities : 0 %>,
+        y: <%= opp.y %>,
+        color: barColors["<%= opp.color %>"],
         id: "<%= opp.id %>",
         //name: "<%= opp.name %>"
-      }, 
-    <% end %> 
-    ]
-  }, false)
-  <% end unless @categories_with_data.blank? %>
-<% else %>
-  chart.addSeries({
-    name: "<%= @metric.html_safe %>",
-    data: [ <% @data.each do |opp| %>
-    {
-      y: <%= opp.y %>,
-      color: barColors["<%= opp.color %>"],
-      id: "<%= opp.id %>",
-      //name: "<%= opp.name %>"
-    },
-    <% end %> 
-    ]
-  }, false);
-<% end %>
+      },
+      <% end if @data.present? %> 
+      ]
+    }, false);
+  <% end %>
 
-// Hide/show legend for all data series (i.e., except "average" series in Risk Score metric)
-for (var i=1; i < chart.series.length; i++) {
-  chart.series[i].update({ 
-    showInLegend: <%= (@metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] && @data.present?) ? 'true' : 'false' %>,
-  });
-}
-// showInLegend: < %= @categories_with_data.include? c %>,
+  // Hide/show legend for all data series
+  for (var i=0; i < chart.series.length; i++) {
+    chart.series[i].update({ 
+      showInLegend: <%= (@metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] && @data.present?) ? 'true' : 'false' %>,
+    });
+  }
+  // showInLegend: < %= @categories.include? c %>,
 
-// Set-up average "Risk Score" line
-<% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:risk_score] %>
-  // chart.yAxis[0].update({min: 0, max: 100}, false);
-  // update average line and unhide
-  chart.series[0].setData(<%= Array.new(@data.length, @average).to_json.html_safe %>)
-  chart.series[0].show();
-<% else %>
-  // chart.yAxis[0].update({min: undefined, max: undefined}, false);
-  chart.series[0].hide();  // hide average line
-<% end %>
+<% end %> // if @data.present? 
 
-chart.xAxis[0].update({min: undefined, max: undefined}, false);
+// chart.xAxis[0].update({min: undefined, max: undefined}, false);
 chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
-chart.setSize(undefined, 50 + Math.min(1150, <%= @data.size %> * 110));
+chart.setSize(undefined, 50 + Math.min(1150, <%= @data.present? ? @data.size : 0 %> * 90));
 
 // handle clicking on opportunity label
 $('.highcharts-xaxis-labels text').click(function() {
-    $.get("ad_account_data/" + get_category_uuid($(this).text()), function (data) {
+    $.get("ad_account_data/" + get_category_uuid($(this).children(0)[0].firstChild.data), function (data) {
         $("#account-data").html(data);
         renderCharts(this.y);
     })
 });
 
 function get_category_uuid (catname) {
-  var map = {
-  <% @data.each do |d| %>
-    "<%= d.name.html_safe %>": "<%= d.id %>",
+    //console.log("Getting proj: " + catname);
+  <% if @data.present? %>
+    var map = {
+    <% @data.each do |d| %>
+      "<%= d.name.html_safe %>": "<%= d.id %>",
+    <% end %>
+    };
+    return map[catname];
+  <% else %>
+    return "";
   <% end %>
-  };
-  return map[catname];
 }

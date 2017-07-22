@@ -140,6 +140,8 @@ class Project < ActiveRecord::Base
     query = <<-SQL
         SELECT projects.id AS id,
                projects.name AS name,
+               projects.amount AS amount,
+               projects.close_date AS close_date,
                COUNT(*) FILTER (WHERE is_complete = FALSE ) AS open_risks
         FROM projects
         LEFT JOIN notifications
@@ -162,6 +164,20 @@ class Project < ActiveRecord::Base
       GROUP BY project_id, note, rag_score, last_sent_date
       ORDER BY last_sent_date ASC;
     SQL
+    result = Project.find_by_sql(query)
+  end
+
+  def self.days_to_close_per_project(array_of_project_ids)
+    query = <<-SQL
+        SELECT projects.id AS id,
+               projects.name AS name,
+               projects.close_date AS close_date,
+               projects.close_date - current_date AS days_to_close
+        FROM projects
+        WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
+        GROUP BY projects.id
+        ORDER BY days_to_close DESC
+      SQL
     result = Project.find_by_sql(query)
   end
 
@@ -237,6 +253,7 @@ class Project < ActiveRecord::Base
     (inactivity_risk + rag_score).round
   end
 
+  # TODO: comment out this code once it's obsolete!
   def new_risk_score_trend(time_zone, day_range=14)
     risk_settings = RiskSetting.where(level: self.account.organization)
     
@@ -693,8 +710,9 @@ class Project < ActiveRecord::Base
     hours_ago_end = hours_ago_end.hours.ago.to_i
     hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
     query = <<-SQL
-      WITH emails AS 
-      (
+      WITH projects_from_array AS (
+        SELECT id, name FROM projects WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
+      ), emails AS (
         SELECT project_id,
             messages ->> 'messageId'::text AS message_id,
             jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
@@ -724,8 +742,8 @@ class Project < ActiveRecord::Base
       )
       (
         SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
-        FROM projects
-        INNER JOIN
+        FROM projects_from_array AS projects
+        LEFT JOIN
         (
          SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
           FROM emails_sent
@@ -737,21 +755,23 @@ class Project < ActiveRecord::Base
           GROUP BY project_id, category
           HAVING COUNT(DISTINCT message_id) > 0
         ) AS activity_count_by_category
-        ON activity_count_by_category.project_id = projects.id
+        ON projects.id = activity_count_by_category.project_id
       )
       UNION ALL 
       (
       SELECT projects.id, projects.name, t.category, COUNT(*) AS num_activities
-      FROM (
+      FROM projects_from_array AS projects 
+      LEFT JOIN (
         SELECT id,
                category,
                project_id,
                last_sent_date
         FROM activities
         WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+          AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
+          AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
         ) t
-      JOIN projects ON projects.id = t.project_id
-      WHERE t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
+      ON projects.id = t.project_id
       GROUP BY projects.id, projects.name, t.category
       ORDER BY num_activities DESC
       )
@@ -822,6 +842,12 @@ class Project < ActiveRecord::Base
       end
     end
     return project_chg_activities
+  end
+
+  # For an array of "project" id's, show # of days today is relative to the project close date
+  def self.days_to_close(array_of_project_ids)
+    days_to_close_per_project = Project.days_to_close_per_project(array_of_project_ids)
+    Hash[days_to_close_per_project.map { |p| [p.id, p.days_to_close] }]
   end
 
   # convenience method to make input easier compared to time_shift
