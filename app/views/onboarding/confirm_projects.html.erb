@@ -12,14 +12,13 @@
     </div>
 </div> -->
 
-<% if !@new_projects.empty? %>
+<% if @new_projects.present? %>
 <div style="margin-bottom:50px">
     <div class="row">
         <div class="alert alert-info col-lg-6 col-lg-offset-3">
             <h3>We found <strong><%= pluralize(@new_projects.size, 'Account') %></strong> not in our system.</h3>
             <h3>Get the most out of ContextSmith by completing our onboarding!</h3>
             <ol class="text-left m-t-md" style="font-size: 20px;font-weight:300;">
-                <li><span style="font-size:15px">Feel free to change their names and settings.</span></li>
                 <li>Each opportunity can be tagged "Public" or "Private". <br><span style="font-size:15px">Note that only invited members can access "Private" Opportunities.</span></li>
                 <li>We recommend deleting accounts that you don't want us to track.<br><span style="font-size:15px">We sometimes pick up noise from your inbox - those can be deleted.</span></li>
             </ol>

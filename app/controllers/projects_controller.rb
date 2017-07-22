@@ -1,12 +1,12 @@
 class ProjectsController < ApplicationController
   before_action :check_params_for_valid_dates, only: [:update]
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
+  before_action :set_visible_project, only: [:show, :edit, :tasks_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
-  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
+  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
-  before_action :get_custom_fields_and_lists, only: [:index, :show, :pinned_tab, :tasks_tab, :arg_tab, :insights_tab]
+  before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
   before_action :project_filter_state, only: [:index]
   
 
@@ -55,8 +55,10 @@ class ProjectsController < ApplicationController
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
     @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
+    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).reverse
     # get categories for category filter
     @categories = @activities_by_category_date.keys
+    @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
   end
 
   def filter_timeline
@@ -65,12 +67,6 @@ class ProjectsController < ApplicationController
 
   def more_timeline
     respond_to :js
-  end
-
-  def pinned_tab
-    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
-
-    render "show"
   end
 
   def tasks_tab
@@ -124,11 +120,6 @@ class ProjectsController < ApplicationController
       ContextsmithService.load_calendar_from_backend(@project, 100, 1.day.ago.to_i)
     end
     redirect_to :back
-  end
-
-  def render_pinned_tab
-    @pinned_activities = @project.activities.pinned.includes(:comments)
-    respond_to :js
   end
 
   # GET /projects/new
@@ -284,11 +275,24 @@ class ProjectsController < ApplicationController
     @filter_category = []
     if params[:category].present?
       @filter_category = params[:category].split(',')
-      # special case: if Attachments category selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
-      if @filter_category.include?(Notification::CATEGORY[:Attachment])
-        where_categories = @filter_category - [Notification::CATEGORY[:Attachment]]
-        category_condition = "activities.category IN ('#{where_categories.join("','")}') OR activities.category = '#{Activity::CATEGORY[:Conversation]}' AND att_filter.id IS NOT NULL"
-        activities = activities.joins("LEFT JOIN notifications AS att_filter ON att_filter.activity_id = activities.id AND att_filter.category = '#{Notification::CATEGORY[:Attachment]}'").where(category_condition).distinct
+
+      # special cases: if Attachment or Pinned category filters selected, remove from normal WHERE condition and handle differently below
+      if @filter_category.include?(Notification::CATEGORY[:Attachment]) || @filter_category.include?(Activity::CATEGORY[:Pinned])
+        where_categories = @filter_category - [Notification::CATEGORY[:Attachment], Activity::CATEGORY[:Pinned]]
+        category_condition = "activities.category IN ('#{where_categories.join("','")}')"
+
+        # Attachment filter selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Notification::CATEGORY[:Attachment])
+          activities = activities.joins("LEFT JOIN notifications AS attachment_notifications ON attachment_notifications.activity_id = activities.id AND attachment_notifications.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+          category_condition += " OR (activities.category = '#{Activity::CATEGORY[:Conversation]}' AND attachment_notifications.id IS NOT NULL)"
+        end
+
+        # Pinned filter selected, need to INCLUDE pinned activities regardless of type but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Activity::CATEGORY[:Pinned])
+          category_condition += " OR activities.is_pinned IS TRUE"
+        end
+
+        activities = activities.where(category_condition)
       else
         activities = activities.where(category: @filter_category)
       end
