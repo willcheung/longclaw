@@ -694,7 +694,7 @@ class User < ActiveRecord::Base
                 )
         GROUP BY 1,2,3,4,5
       ) 
-      SELECT email, outbound, inbound, COALESCE(outbound,0) + COALESCE(inbound,0) AS total
+      SELECT email, COALESCE(outbound,0) AS outbound, COALESCE(inbound,0) AS inbound, COALESCE(outbound,0) + COALESCE(inbound,0) AS total
       FROM(
         SELECT sender as email, cast(t.total_words AS integer) AS outbound, CAST(t2.total_words AS integer) AS inbound
         FROM ( 
@@ -742,8 +742,8 @@ class User < ActiveRecord::Base
         if user
           arr_full_name << get_full_name(user)
           arr_email << m.email
-          arr_inbound << [(m.inbound.to_i / WORDS_PER_HOUR[:Read]).round(2), 0.01].max
-          arr_outbound << [(m.outbound.to_i / WORDS_PER_HOUR[:Write]).round(2), 0.01].max
+          arr_inbound << [(m.inbound.to_i / WORDS_PER_HOUR[:Read]).round(2), 0.01].max if m.inbound != 0
+          arr_outbound << [(m.outbound.to_i / WORDS_PER_HOUR[:Write]).round(2), 0.01].max if m.outbound != 0
         end
     end
     output["email"] = arr_email
@@ -790,6 +790,7 @@ class User < ActiveRecord::Base
           SELECT DISTINCT message_id, project_id, word_count
           FROM user_emails
           WHERE #{User.sanitize(self.email)} IN ("to", "cc")
+            AND #{User.sanitize(self.email)} NOT IN ("from")
         ) inbound_emails
         GROUP BY project_id, message_id
       ) AS wc_table
@@ -801,8 +802,8 @@ class User < ActiveRecord::Base
     project_times = Project.find_by_sql(query)
 
     project_times.each do |p|
-      p.inbound = [(p.inbound / WORDS_PER_HOUR[:Read]).round(2), 0.01].max
-      p.outbound = [(p.outbound / WORDS_PER_HOUR[:Write]).round(2), 0.01].max
+      p.inbound = [(p.inbound / WORDS_PER_HOUR[:Read]).round(2), 0.01].max if p.inbound != 0
+      p.outbound = [(p.outbound / WORDS_PER_HOUR[:Write]).round(2), 0.01].max if p.outbound != 0
     end
   end
 
