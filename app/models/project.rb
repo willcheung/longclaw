@@ -704,11 +704,11 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # Top Active Opportunities/Engagement (within a range of specified hours)
+  # Top Active Opportunities/Engagement (within a range of specified days)
   # TODO: Fix and don't match using current_user's domain.  This method won't work for those with 'gmail.com' domain (or any domain that is ambiguous if internal or external user!!!)
-  def self.count_activities_by_category(array_of_project_ids, domain, hours_ago_start=false, hours_ago_end=0)
-    hours_ago_end = hours_ago_end.hours.ago.to_i
-    hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
+  def self.count_activities_by_category(array_of_project_ids, domain, time_zone, days_ago_start=14, days_ago_end=0)
+    hours_ago_start = days_ago_start.days.ago.utc.to_i
+    hours_ago_end = days_ago_end.days.ago.utc.to_i
     query = <<-SQL
       WITH projects_from_array AS (
         SELECT id, name FROM projects WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
@@ -740,26 +740,23 @@ class Project < ActiveRecord::Base
         EXCEPT
         SELECT project_id, message_id FROM emails_sent
       )
+      SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
+      FROM projects_from_array AS projects
+      JOIN
       (
-        SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
-        FROM projects_from_array AS projects
-        LEFT JOIN
-        (
-         SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
-          FROM emails_sent
-          GROUP BY project_id, category
-          HAVING COUNT(DISTINCT message_id) > 0
-          UNION ALL
-         SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
-          FROM emails_received
-          GROUP BY project_id, category
-          HAVING COUNT(DISTINCT message_id) > 0
-        ) AS activity_count_by_category
-        ON projects.id = activity_count_by_category.project_id
-      )
-      UNION ALL 
-      (
-      SELECT projects.id, projects.name, t.category, COUNT(*) AS num_activities
+       SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
+        FROM emails_sent
+        GROUP BY project_id, category
+        HAVING COUNT(DISTINCT message_id) > 0
+        UNION ALL
+       SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
+        FROM emails_received
+        GROUP BY project_id, category
+        HAVING COUNT(DISTINCT message_id) > 0
+      ) AS activity_count_by_category
+      ON projects.id = activity_count_by_category.project_id
+      UNION ALL
+      SELECT projects.id, projects.name, a.category, COUNT(distinct a.id) AS num_activities
       FROM projects_from_array AS projects 
       LEFT JOIN (
         SELECT id,
@@ -770,11 +767,10 @@ class Project < ActiveRecord::Base
         WHERE project_id IN ('#{array_of_project_ids.join("','")}')
           AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
           AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
-        ) t
-      ON projects.id = t.project_id
-      GROUP BY projects.id, projects.name, t.category
+        ) AS a
+      ON projects.id = a.project_id
+      GROUP BY projects.id, projects.name, a.category
       ORDER BY num_activities DESC
-      )
     SQL
     return Project.find_by_sql(query)
   end

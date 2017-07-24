@@ -693,38 +693,41 @@ class User < ActiveRecord::Base
                   WHERE account_id IN ('#{array_of_account_ids.join("','")}')
                 )
         GROUP BY 1,2,3,4,5
-      ) 
-      SELECT email, COALESCE(outbound,0) AS outbound, COALESCE(inbound,0) AS inbound, COALESCE(outbound,0) + COALESCE(inbound,0) AS total
-      FROM(
-        SELECT sender as email, cast(t.total_words AS integer) AS outbound, CAST(t2.total_words AS integer) AS inbound
-        FROM ( 
-          SELECT sender, sum(word_count) as total_words
-          FROM (
-            SELECT distinct "from" as sender, message_id, word_count
-            FROM email_activities
-          WHERE "from" is not null) as t
-        GROUP BY sender) as t
-      FULL OUTER JOIN
-      (SELECT recipient, sum(total_words) AS total_words
-        FROM (  
-          SELECT recipient, sum(word_count) as total_words
-          FROM (
-              SELECT distinct "to" as recipient, message_id, word_count 
-              FROM email_activities
-              WHERE "to" is not null) as t1
-              GROUP BY recipient
-              UNION ALL
-              SELECT recipient, sum(word_count) as total_words
-              FROM (
-              SELECT distinct "cc" as recipient, message_id, word_count 
-              FROM email_activities
-              WHERE "cc" is not null) as t2
-            GROUP BY recipient) as t
-          GROUP BY recipient
-        ) as t2 ON t.sender = t2.recipient)t3
-        WHERE email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
-        ORDER BY total DESC
-        limit 5;
+      ), outbound AS (
+        SELECT sender, count(distinct message_id) num_messages, SUM(word_count) as total_wc
+        FROM (
+          SELECT distinct "from" AS sender, message_id, word_count 
+          FROM email_activities
+          WHERE "from" IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
+        ) AS o
+        GROUP BY sender
+      ), inbound AS (
+        SELECT recipient, count(distinct message_id) num_messages, SUM(word_count) as total_wc
+        FROM (
+          SELECT distinct "to" AS recipient, message_id, word_count
+          FROM email_activities
+          WHERE "to" IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
+            AND "to" != "from"
+          UNION
+          SELECT distinct "cc", message_id, word_count from email_activities
+          WHERE "cc" IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
+            AND "cc" != "from"
+        ) AS i
+        GROUP BY recipient
+      ), conversation_members AS (
+        SELECT sender AS email FROM outbound
+        UNION
+        SELECT recipient FROM inbound 
+      )
+      SELECT c.email, o.total_wc AS outbound, i.total_wc AS inbound, COALESCE(o.total_wc,0)+COALESCE(i.total_wc,0) AS total
+      FROM conversation_members AS c
+      --WHERE email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
+      LEFT JOIN outbound AS o 
+      ON o.sender = c.email
+      LEFT JOIN inbound AS i
+      ON i.recipient = c.email
+      ORDER BY total DESC
+      limit 5;
     SQL
     find_by_sql(query)
   end
@@ -742,6 +745,10 @@ class User < ActiveRecord::Base
         if user
           arr_full_name << get_full_name(user)
           arr_email << m.email
+          # puts "m.inbound=#{m.inbound}"
+          # puts "arr_inbound=#{[(m.inbound.to_i / WORDS_PER_HOUR[:Read]).round(2), 0.01].max if m.inbound != 0}"
+          # puts "m.outbound=#{m.outbound}"
+          # puts "arr_outbound=#{[(m.outbound.to_i / WORDS_PER_HOUR[:Write]).round(2), 0.01].max if m.inbound != 0}"
           arr_inbound << [(m.inbound.to_i / WORDS_PER_HOUR[:Read]).round(2), 0.01].max if m.inbound != 0
           arr_outbound << [(m.outbound.to_i / WORDS_PER_HOUR[:Write]).round(2), 0.01].max if m.outbound != 0
         end
