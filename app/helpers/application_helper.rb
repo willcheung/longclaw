@@ -194,6 +194,7 @@ module ApplicationHelper
     end
   end
 
+  # creates a human-readable local time expression from an activity
   def get_calendar_interval(event)
     start = event.last_sent_date
     end_t = Time.zone.at(event.email_messages.last.end_epoch)

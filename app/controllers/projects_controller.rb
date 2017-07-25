@@ -42,6 +42,8 @@ class ProjectsController < ApplicationController
       @days_to_close = Project.days_to_close(projects.ids)
       @open_risk_count = Project.open_risk_count(projects.ids)
       #@risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: projects.ids).group("project_id")
+      @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
     end
 
     # new project modal
