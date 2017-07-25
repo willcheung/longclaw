@@ -95,10 +95,12 @@ class User < ActiveRecord::Base
   def upcoming_meetings
     visible_projects = Project.visible_to(organization_id, id)
 
-    meetings_in_cs = Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current..1.week.from_now), project_id: visible_projects.ids)
+    meetings_in_cs = Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current..1.day.from_now), project_id: visible_projects.ids)
       .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{email}\"}]'::jsonb").order(:last_sent_date)
     return meetings_in_cs unless registered?
 
+    # time adjustments for repeating meetings which have last_sent_date as the creation time of the meeting
+    # remove again when Oathkeeper is fixed
     calendar_meetings = ContextsmithService.load_calendar_for_user(self).each do |a|
       a.last_sent_date = Time.current.midnight + a.last_sent_date.hour.hours + a.last_sent_date.min.minutes
       a.last_sent_date += 1.day if a.last_sent_date < Time.current
