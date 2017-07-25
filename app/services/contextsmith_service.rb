@@ -31,7 +31,7 @@ class ContextsmithService
     end
   end
 
-  def self.load_calendar_for_user(user, max: 100, after: Time.current.to_i, before: 1.week.from_now.to_i, save_in_db: false)
+  def self.load_calendar_for_user(user, max: 100, after: Time.current.to_i, before: 1.day.from_now.to_i, save_in_db: false)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
     params =  "?max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
 
