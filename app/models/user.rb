@@ -896,6 +896,40 @@ class User < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
+  def self.sent_attachments_time(array_of_project_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    query = <<-SQL
+      WITH user_attachments AS (
+        SELECT message_id, description::jsonb->'from'->0->>'address' AS sender
+        FROM notifications
+        WHERE category = '#{Notification::CATEGORY[:Attachment]}'
+        AND sent_date AT TIME ZONE 'UTC' BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+        AND project_id IN('#{array_of_project_ids.join("','")}')
+        GROUP BY 1,2
+      )
+      SELECT sender, COUNT(message_id) AS attachment_count
+      FROM user_attachments
+      WHERE sender IN (#{array_of_user_emails.map { |u| sanitize(u) }.join(',')})
+      GROUP BY 1
+    SQL
+    find_by_sql(query)
+  end
+
+  def sent_attachments_by_project(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    array_of_project_ids = Project.visible_to(organization_id, id).ids
+    query = <<-SQL
+      SELECT projects.id, projects.name, COUNT(message_id) AS attachment_count
+      FROM projects
+      JOIN notifications
+      ON projects.id = notifications.project_id
+      AND notifications.category = '#{Notification::CATEGORY[:Attachment]}'
+      AND notifications.sent_date AT TIME ZONE 'UTC' BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+      AND notifications.description::jsonb->'from'->0->'address' = #{User.sanitize(email)}
+      AND projects.id IN ('#{array_of_project_ids.join("','")}')
+      GROUP BY 1,2
+    SQL
+    Project.find_by_sql(query)
+  end
+
   # Returns a map of the ROLEs values only (not keys), for use in best-in-place picklists
   def self.getRolesMap(include_other_roles=false)
     roles_map = {}

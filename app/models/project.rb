@@ -792,6 +792,33 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
+  def interaction_time_by_user(array_of_users)
+    email_word_counts = User.team_usage_report([account.id], array_of_users.pluck(:email))
+    meeting_time_seconds = User.meeting_report([account.id], array_of_users.pluck(:email))
+
+    # result = []
+    result = email_word_counts.map do |u|
+      user = array_of_users.find { |usr| usr.email == u.email }
+      inbound = u.inbound.to_i > 0 ? [(u.inbound.to_i / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max : 0
+      outbound = u.outbound.to_i > 0 ? [(u.outbound.to_i / User::WORDS_PER_HOUR[:Write]).round(2), 0.01].max : 0
+      Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': inbound, 'Sent E-mails': outbound, 'Meetings': 0, 'Attachments': 0 , total: inbound + outbound)
+    end
+
+    meeting_time_seconds.each do |u|
+      meeting = u.total / 3600.0 # convert total meeting time in seconds to hours
+      res = result.find { |usr| usr.email == u.email }
+      if res.nil?
+        user = array_of_users.find { |usr| usr.email == u.email }
+        result << Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': 0, 'Sent E-mails': 0, 'Meetings': meeting, 'Attachments': 0 , total: meeting)
+      else
+        res.Meetings = meeting
+        res.total += meeting
+      end
+    end
+
+    result.sort { |d1, d2| (d1.total != d2.total) ? d2.total <=> d1.total : d1.name.upcase <=> d2.name.upcase }
+  end
+
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.
   def self.create_from_clusters(data, user_id, organization_id)
     project_domains = get_project_top_domain(data)
@@ -859,6 +886,7 @@ class Project < ActiveRecord::Base
 
   # convenience method to make input easier compared to time_shift
   def time_jump(date)
+    puts "** #{self.inspect} contains no activities, skipping time_jump **" && return if activities.blank?
     latest_activity_date = activities.first.last_sent_date
     activities.each { |a| a.time_shift((date - latest_activity_date).round) }
   end

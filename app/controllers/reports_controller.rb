@@ -61,7 +61,7 @@ class ReportsController < ApplicationController
       @categories = @data.first.y.map(&:category)
     when TEAM_DASHBOARD_METRIC[:time_spent_last14d]
       account_ids = current_user.organization.accounts.ids
-      user_emails = current_user.organization.users.pluck(:email)
+      user_emails = users.pluck(:email)
       @data = [] and @categories = [] and return if account_ids.blank? || user_emails.blank?
       email_time = User.team_usage_report(account_ids, user_emails)
       meeting_time = User.meeting_report(account_ids, user_emails)
@@ -280,12 +280,15 @@ class ReportsController < ApplicationController
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
 
-    #TODO: Query for usage_report finds all the read and write times from internal users
-    #Metric for Interaction Time
-    # Read and Sent times
-    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
-    #Meetings in Interaction Time
-    @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
+    # TODO: Query for usage_report finds all the read and write times from internal users
+    # Metric for Interaction Time
+    @interaction_time_report = @project.interaction_time_by_user(current_user.organization.users)
+    # # Read and Sent times
+    # @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
+    # # Meetings in Interaction Time
+    # @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
+    # # Attachments in Interaction Time
+    # @attachment_report = User.sent_attachments_time([@project.id], current_user.organization.users.pluck(:email))
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
