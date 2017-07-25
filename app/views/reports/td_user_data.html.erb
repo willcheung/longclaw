@@ -93,7 +93,7 @@
             },
             credits: false,
             title: {
-                text: 'Time Spent (Last 14 days)',
+                text: 'Time Spent (in hh:mm, last 14 days)',
                 align: 'left',
                 style: {
                     color: '#777777',
@@ -111,8 +111,14 @@
                 title: {
                     text: ''
                 },
+                labels: {
+                    format: '{value} hrs'
+                },
                 stackLabels: {
                     enabled: true,
+                    formatter: function () {
+                        return convert_secs_to_ddhhmm(this.total);
+                    },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
                     }

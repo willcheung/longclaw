@@ -231,14 +231,14 @@
                 margin: 0,
                 style: {
                     color: '#555555',
-                    fontSize: '15px'
+                    fontSize: '16px'
                 }
             },
             subtitle: {
-                text: '(Estimated time for last 14 days)',
+                text: '(Estimated time in hh:mm, last 14 days)',
                 align: 'center',
                 style: {
-                    fontSize: '9px'
+                    fontSize: '10px'
                 }
             },
             credits: { enabled: false },
@@ -254,7 +254,10 @@
                     enabled: false
                 },
                 stackLabels: {
-                    enabled: true
+                    enabled: true,
+                    formatter: function () {
+                        return convert_secs_to_ddhhmm(this.total);
+                    }
                 }
             },
             legend: {

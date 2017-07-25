@@ -52,3 +52,31 @@ function large_number_to_human(number) {
     var precision = (e > 0) ? 1 : 0;
     return sign + ((number / Math.pow(1000, e)).toFixed(precision) + "" + s[e]);
 }
+
+/*
+  Formats seconds into days hh:mm format
+  e.g., convert_secs_to_ddhhmm(59)       => "00:00"
+        convert_secs_to_ddhhmm(60)       => "00:01"
+        convert_secs_to_ddhhmm(61)       => "00:01"
+        convert_secs_to_ddhhmm(3599);    => "00:59"
+        convert_secs_to_ddhhmm(3600);    => "01:00"
+        convert_secs_to_ddhhmm(86399);   => "23:59"
+        convert_secs_to_ddhhmm(86400);   => "1d 00:00"
+        convert_secs_to_ddhhmm(1209599); => "13d 23:59"
+        convert_secs_to_ddhhmm(1209600); => "14d 00:00"
+*/
+function convert_secs_to_ddhhmm(secs) {
+    var prefix = "";
+    var t = new Date(1970, 0, 1); // Epoch
+    t.setSeconds(secs);
+
+    var hhmmss = t.toString().substring(16,24);
+    var d = Math.floor(secs / 86400);
+
+    var hh = hhmmss.substring(0,2);
+    var mm = hhmmss.substring(3,5);
+    //var ss = hhmmss.substring(6,8);
+    if (d > 0) 
+        prefix = d + "d ";
+    return prefix + hh + ":" + mm /*+":"+ss*/;
+}

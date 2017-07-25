@@ -719,7 +719,7 @@ class User < ActiveRecord::Base
         UNION
         SELECT recipient FROM inbound 
       )
-      SELECT c.email, o.total_wc AS outbound, i.total_wc AS inbound, COALESCE(o.total_wc,0)+COALESCE(i.total_wc,0) AS total
+      SELECT c.email, COALESCE(o.total_wc,0) AS outbound, COALESCE(i.total_wc,0) AS inbound, COALESCE(o.total_wc,0)+COALESCE(i.total_wc,0) AS total
       FROM conversation_members AS c
       --WHERE email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
       LEFT JOIN outbound AS o 
@@ -732,25 +732,22 @@ class User < ActiveRecord::Base
     find_by_sql(query)
   end
 
+  # Inbound/outbound values units = Hours
   def self.total_team_usage_report(array_of_account_ids, array_of_user_emails)
     result = team_usage_report(array_of_account_ids, array_of_user_emails)
     output = Hash.new
+    arr_full_name = []
     arr_email = []
     arr_inbound = []
     arr_outbound = []
-    arr_full_name = []
 
     result.each do |m|
       user = User.find_by_email(m.email)
         if user
           arr_full_name << get_full_name(user)
           arr_email << m.email
-          # puts "m.inbound=#{m.inbound}"
-          # puts "arr_inbound=#{[(m.inbound.to_i / WORDS_PER_HOUR[:Read]).round(2), 0.01].max if m.inbound != 0}"
-          # puts "m.outbound=#{m.outbound}"
-          # puts "arr_outbound=#{[(m.outbound.to_i / WORDS_PER_HOUR[:Write]).round(2), 0.01].max if m.inbound != 0}"
-          arr_inbound << [(m.inbound.to_i / WORDS_PER_HOUR[:Read]).round(2), 0.01].max if m.inbound != 0
-          arr_outbound << [(m.outbound.to_i / WORDS_PER_HOUR[:Write]).round(2), 0.01].max if m.outbound != 0
+          arr_inbound << (m.inbound.to_i == 0 ? 0 : [(m.inbound.to_i / WORDS_PER_HOUR[:Read]).round(2), 0.01].max)
+          arr_outbound << (m.outbound.to_i == 0 ? 0 : [(m.outbound.to_i / WORDS_PER_HOUR[:Write]).round(2), 0.01].max)
         end
     end
     output["email"] = arr_email
