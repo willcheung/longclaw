@@ -42,6 +42,9 @@ class ProjectsController < ApplicationController
       @days_to_close = Project.days_to_close(projects.ids)
       @open_risk_count = Project.open_risk_count(projects.ids)
       #@risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @next_meetings = Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current..1.week.from_now), project_id: projects.ids).order(:last_sent_date)
+      # let's hash them by project_id, duplicates are overridden and the last one wins -> the next one
+      @next_meetings = Hash[ @next_meetings.collect { |x| [ x.project_id, x] }]
     end
 
     # new project modal

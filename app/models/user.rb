@@ -101,7 +101,7 @@ class User < ActiveRecord::Base
 
     calendar_meetings = ContextsmithService.load_calendar_for_user(self).each do |a|
       a.last_sent_date = Time.current.midnight + a.last_sent_date.hour.hours + a.last_sent_date.min.minutes
-      a.last_sent_date += 1.week if a.last_sent_date < Time.current
+      a.last_sent_date += 1.day if a.last_sent_date < Time.current
     end.sort_by(&:last_sent_date)
 
     # merge calendar_meetings with meetings_in_cs

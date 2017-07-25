@@ -127,8 +127,8 @@
                                         <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
 
                                         <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
-                                        <% next_meeting = p.meetings.next_week.first.nil? ? "-" : p.meetings.next_week.first.last_sent_date.strftime('%l:%M%p on %B %-d') %>
-                                        <% next_meeting_ts = p.meetings.next_week.first.nil? ? 0 : p.meetings.next_week.first.last_sent_date.to_i %>
+                                        <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].last_sent_date.strftime('%l:%M%p on %B %-d') %>
+                                        <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].last_sent_date.to_i %>
 
                                         <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
                                         <td><% if p.is_public %>
