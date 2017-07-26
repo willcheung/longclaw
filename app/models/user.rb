@@ -668,7 +668,7 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
-  def self.team_usage_report(array_of_account_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.team_usage_report(array_of_account_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
       -- shows the total time usage be adding all the inbound e-mails and outbound e-mails as inbound and outbound

@@ -146,6 +146,13 @@
         });
 
         <%= render partial: "reports/accounts_dashboard.js" %>
+
+        // TODO: Possibly need this code to fix the date misalignment due to timezone datatype in @data (e.g., in the "Activities (Last 14d) graph")
+        // Highcharts.setOptions({
+        //     global: {
+        //         timezoneOffset: 7 * 60
+        //     }
+        // });
     });
 
 </script>
