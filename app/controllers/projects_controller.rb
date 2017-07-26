@@ -15,8 +15,8 @@ class ProjectsController < ApplicationController
   def index
     @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
     @title = "Opportunities"
-    # for filter and bulk owner assignment
-    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
+    # for filter and bulk owner assignment - use only registered users
+    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
