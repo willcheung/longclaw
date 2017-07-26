@@ -510,7 +510,7 @@ class Project < ActiveRecord::Base
       -- E-mail Conversation using emails_activities_last_14d view
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Conversation]}' as category, count(activities.*) as num_activities
       FROM time_series
-      LEFT JOIN (SELECT to_timestamp(sent_date::integer) AS sent_date, project_id
+      LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                  FROM email_activities_last_14d where project_id = '#{self.id}' and EXTRACT(EPOCH FROM (to_timestamp(sent_date::integer))) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
                  ) as activities
         ON activities.project_id = time_series.project_id and date_trunc('day', sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
