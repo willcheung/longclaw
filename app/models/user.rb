@@ -72,6 +72,7 @@ class User < ActiveRecord::Base
   scope :allow_refresh_inbox, -> { where refresh_inbox: true }
   scope :onboarded, -> { where onboarding_step: Utils::ONBOARDING[:onboarded] }
   scope :exchange_auth, -> { where oauth_provider: AUTH_TYPE[:Exchange] }
+  scope :ordered_by_first_name, -> { order('LOWER(first_name) ASC') }
 
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
          :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce, :salesforce_sandbox]
