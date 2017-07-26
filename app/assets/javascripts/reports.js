@@ -36,6 +36,23 @@ $('input[name="daterange"]').daterangepicker({
     }
 });
 
+function reset_labels_on_axis(axis) {
+    axis.update({
+        stackLabels: {
+            enabled: true,
+            formatter: function () {
+                return this.total;
+            }
+        }
+    });
+};
+
+function reset_subtitles_on_chart(chart) {
+    chart.subtitle.update({
+        text: ' ' 
+    });
+};
+
 /*
     Converts a number into human readable string.
     Note: Returns undefined for numbers larger than 999 septillion or smaller than 999 septillionth

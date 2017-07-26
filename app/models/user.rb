@@ -86,7 +86,8 @@ class User < ActiveRecord::Base
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
   OTHER_ROLE = { Trial: 'Trial', Chromeuser: "Chrome user" }  # TODO: remove "Chrome user"
   AUTH_TYPE = { Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }
-  WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
+  WORDS_PER_SEC = { Read: 2.0, Write: 0.42 }   # Reading=120WPM(<200)  Typing=~25WPM(<40)
+  #WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
 
   def valid_streams_subscriptions
     self.subscriptions.joins(:project).where(projects: {id: Project.visible_to(self.organization_id, self.id).pluck(:id)})
@@ -414,7 +415,7 @@ class User < ActiveRecord::Base
                   AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{array_of_account_ids.join("','")}'))
                   AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
                 ) AS meetings
-        ON date_trunc('day', meetings.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', meetings.sent_date AT TIME ZONE '#{self.time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
@@ -726,13 +727,13 @@ class User < ActiveRecord::Base
       ON o.sender = c.email
       LEFT JOIN inbound AS i
       ON i.recipient = c.email
-      ORDER BY total DESC
+      ORDER BY total DESC, outbound DESC
       limit 5;
     SQL
     find_by_sql(query)
   end
 
-  # Inbound/outbound values units = Hours
+  # Inbound/outbound values units = seconds
   def self.total_team_usage_report(array_of_account_ids, array_of_user_emails)
     result = team_usage_report(array_of_account_ids, array_of_user_emails)
     output = Hash.new
@@ -746,8 +747,8 @@ class User < ActiveRecord::Base
         if user
           arr_full_name << get_full_name(user)
           arr_email << m.email
-          arr_inbound << (m.inbound.to_i == 0 ? 0 : [(m.inbound.to_i / WORDS_PER_HOUR[:Read]).round(2), 0.01].max)
-          arr_outbound << (m.outbound.to_i == 0 ? 0 : [(m.outbound.to_i / WORDS_PER_HOUR[:Write]).round(2), 0.01].max)
+          arr_inbound << (m.inbound.to_i / WORDS_PER_SEC[:Read]).round
+          arr_outbound << (m.outbound.to_i / WORDS_PER_SEC[:Write]).round
         end
     end
     output["email"] = arr_email
@@ -806,8 +807,8 @@ class User < ActiveRecord::Base
     project_times = Project.find_by_sql(query)
 
     project_times.each do |p|
-      p.inbound = [(p.inbound / WORDS_PER_HOUR[:Read]).round(2), 0.01].max if p.inbound != 0
-      p.outbound = [(p.outbound / WORDS_PER_HOUR[:Write]).round(2), 0.01].max if p.outbound != 0
+      p.inbound = (p.inbound / WORDS_PER_SEC[:Read]).round
+      p.outbound = (p.outbound / WORDS_PER_SEC[:Write]).round
     end
   end
 
@@ -817,8 +818,8 @@ class User < ActiveRecord::Base
         SELECT  "to" AS attendees, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch, backend_id
           FROM activities,
           LATERAL jsonb_array_elements(email_messages) messages
-          WHERE category = 'Meeting'
-          AND to_timestamp((messages ->> 'end_epoch')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+          WHERE category = '#{Activity::CATEGORY[:Meeting]}'
+          AND (messages ->> 'end_epoch')::integer BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
           AND project_id IN
             (
             SELECT id AS project_id
@@ -839,7 +840,7 @@ class User < ActiveRecord::Base
         WHERE email in (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
         GROUP BY backend_id, t.email, t.start_t, t.end_t ) as t2
         GROUP BY t2.email
-        ORDER BY email DESC;
+        ORDER BY total DESC;
     SQL
   find_by_sql(query)
   end
@@ -849,7 +850,7 @@ class User < ActiveRecord::Base
     output = []
       results.each do |m|
         #convert m.total in sec to hours
-        y = m.total / 3600.0
+        y = m.total
         output << y
       end
     output
@@ -857,7 +858,7 @@ class User < ActiveRecord::Base
 
   def meeting_time_by_project(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
-      SELECT projects.id, projects.name, SUM((messages->>'end_epoch')::integer - last_sent_date_epoch::integer) / 3600::float AS total_meeting_hours
+      SELECT projects.id, projects.name, SUM((messages->>'end_epoch')::integer - last_sent_date_epoch::integer)::float AS total_meeting_hours
       FROM activities
       INNER JOIN projects
       ON projects.id = activities.project_id,

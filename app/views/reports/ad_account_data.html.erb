@@ -223,7 +223,8 @@
 
         $('#usage-report').highcharts({
             chart: {
-                type: 'bar'
+                type: 'bar',
+                marginRight: 35
             },
             title: {
                 text: 'Interaction Time',
@@ -247,11 +248,14 @@
             },
             yAxis: {
                 min: 0,
-                labels: {
-                    format: '{value} hrs'
-                },
+                minTickInterval: 60,
                 title: {
                     enabled: false
+                },
+                labels: {
+                    formatter: function () {
+                        return convert_secs_to_ddhhmm(this.value);
+                    }
                 },
                 stackLabels: {
                     enabled: true,
@@ -265,13 +269,17 @@
             },
             tooltip: {
                 headerFormat: '',
-                pointFormat: '<b>{series.name}:</b> {point.y:.2f} hrs<br/><b>Total:</b> {point.stackTotal:.2f} hrs'
+                // pointFormat: '<b>{series.name}:</b> {point.y:.2f} hrs<br/><b>Total:</b> {point.stackTotal:.2f} hrs'
+                pointFormatter: function() {
+                  return '<span style="color:' + this.color + '">\u25CF</span>  <b>' + this.series.name + '</b>: ' + convert_secs_to_ddhhmm(this.y) + '<br/>'+ '<b>Total:</b>: ' + convert_secs_to_ddhhmm(this.total) + '<br/>';
+                }
             },
+
             plotOptions: {
                 series: {
                     stacking: 'normal',
                     dataLabels: {
-                        format: '{y.1f}',
+                        format: '{y.2f}',
                         style: {
                             fontWeight: 'bold',
                             fontSize: '8px'

@@ -9,6 +9,7 @@ while(chart.series.length > 1) {
 
 <% if @data.present? %>
 
+  // Set the data
   <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
     chart.series[0].hide();
     <% @categories.each.with_index do |c, i| %>
@@ -25,7 +26,7 @@ while(chart.series.length > 1) {
         }, 
       <% end if @data.present? %> 
       ]
-    }, false)
+    }, false);
     <% end unless @categories.blank? %>
   <% elsif @metric == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
     chart.series[0].hide();
@@ -33,16 +34,21 @@ while(chart.series.length > 1) {
     chart.addSeries({
       name: "<%= c %>",
       color: "<%= highcharts_series_color(c) %>",  //set color according to category
+      tooltip: {
+        pointFormatter: function() {
+          return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+        }
+      },
       showInLegend: true,
       data: [ 
       <% @data.each do |d| %>
       {
         y: <%= d.y[c] %>,
         id: "<%= d.id %>"
-      }, 
+      },
       <% end %> 
       ]
-    }, false)
+    }, false);
     <% end unless @categories.blank? %>
   <% else %>
     chart.series[0].show();
@@ -56,6 +62,24 @@ while(chart.series.length > 1) {
       },
       <% end %> ]
     }, false);
+  <% end %>
+
+  // Set/reset the axis labels and subtitles on chart
+  <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
+    chart.yAxis[0].update({
+      stackLabels: {
+        enabled: true,
+        formatter: function () {
+          return convert_secs_to_ddhhmm(this.total);
+        }
+      }
+    });
+    chart.subtitle.update({
+      text: '(in hh:mm)' 
+    });
+  <% else %>
+    reset_labels_on_axis(chart.yAxis[0]);
+    reset_subtitles_on_chart(chart);
   <% end %>
 
 <% end %> // if @data.present? 

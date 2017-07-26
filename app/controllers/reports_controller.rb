@@ -75,12 +75,12 @@ class ReportsController < ApplicationController
         else
           # TODO: figure out why some email_t are not nil but email_t.inbound or email_t.outbound are nil (Issue #692)
           email_t = { 
-            "Read E-mails": email_t.inbound.nil? ? 0 : [(email_t.inbound / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max,
-            "Sent E-mails": email_t.outbound.nil? ? 0 : [(email_t.outbound / User::WORDS_PER_HOUR[:Write]).round(2), 0.001].max
+            "Read E-mails": email_t.inbound.nil? ? 0 : (email_t.inbound / User::WORDS_PER_SEC[:Read]).round,
+            "Sent E-mails": email_t.outbound.nil? ? 0 : (email_t.outbound / User::WORDS_PER_SEC[:Write]).round
           }
         end
         meeting_t = meeting_time.find { |mt| mt.email == user.email }
-        meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total / 3600.0 }
+        meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total }
         time_hash = meeting_t.merge(email_t)
         Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
       end
@@ -202,7 +202,7 @@ class ReportsController < ApplicationController
 
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
-      project_engagement = Project.count_activities_by_category(projects.pluck(:id), current_user.organization.domain, current_user.time_zone, 14).group_by { |p| p.id }
+      project_engagement = Project.count_activities_by_category(projects.pluck(:id), current_user.organization.domain, current_user.time_zone).group_by { |p| p.id }
       @data = [] and @categories = [] and return if project_engagement.blank?
       @data = project_engagement.map do |pid, activities|
         proj = projects.find { |p| p.id == pid }
@@ -287,6 +287,13 @@ class ReportsController < ApplicationController
     # Engagement Volume Chart
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
+
+    @activities_by_category_date.each do |cat, act|
+      puts "#{cat}:"
+      act.each do |d|
+        puts "\t-> #{d.last_sent_date}\t #{d.category}\t #{d.num_activities}\t"
+      end
+    end
 
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
