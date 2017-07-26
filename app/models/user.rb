@@ -36,7 +36,6 @@
 #  mark_private           :boolean          default(FALSE), not null
 #  role                   :string
 #  refresh_inbox          :boolean          default(TRUE), not null
-#  encrypted_password_iv  :string
 #
 # Indexes
 #
@@ -93,6 +92,7 @@ class User < ActiveRecord::Base
     self.subscriptions.joins(:project).where(projects: {id: Project.visible_to(self.organization_id, self.id).pluck(:id)})
   end
 
+  # this calls the backend which in turn queries the data sources (like GMail etc.) for each call
   def upcoming_meetings
     visible_projects = Project.visible_to(organization_id, id)
 
@@ -100,6 +100,8 @@ class User < ActiveRecord::Base
       .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{email}\"}]'::jsonb").order(:last_sent_date)
     return meetings_in_cs unless registered?
 
+    # time adjustments for repeating meetings which have last_sent_date as the creation time of the meeting
+    # remove again when Oathkeeper is fixed
     calendar_meetings = ContextsmithService.load_calendar_for_user(self).each do |a|
       a.last_sent_date = Time.current.midnight + a.last_sent_date.hour.hours + a.last_sent_date.min.minutes
       a.last_sent_date += 1.day if a.last_sent_date < Time.current
