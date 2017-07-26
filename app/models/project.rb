@@ -795,6 +795,7 @@ class Project < ActiveRecord::Base
   def interaction_time_by_user(array_of_users)
     email_word_counts = User.team_usage_report([account.id], array_of_users.pluck(:email))
     meeting_time_seconds = User.meeting_report([account.id], array_of_users.pluck(:email))
+    attachment_counts = User.sent_attachments_count([id], array_of_users.pluck(:email))
 
     # result = []
     result = email_word_counts.map do |u|
@@ -813,6 +814,18 @@ class Project < ActiveRecord::Base
       else
         res.Meetings = meeting
         res.total += meeting
+      end
+    end
+
+    attachment_counts.each do |u|
+      attachment = u.attachment_count * User::ATTACHMENT_TIME_HOURS # convert total number of attachments to approx. time in hours
+      res = result.find { |usr| usr.email == u.email }
+      if res.nil?
+        user = array_of_users.find { |usr| usr.email == u.email }
+        result << Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': 0, 'Sent E-mails': 0, 'Meetings': 0, 'Attachments': attachment , total: attachment)
+      else
+        res.Attachments = attachment
+        res.total += attachment
       end
     end
 

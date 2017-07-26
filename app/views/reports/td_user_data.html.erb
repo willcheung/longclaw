@@ -126,19 +126,15 @@
                     stacking: 'normal'
                 }
             },
-            series: [{
-                name: 'Meetings',
-                color: "<%= highcharts_series_color('Meetings') %>",
-                data: <%= @interaction_time_per_account.map(&:meeting_time).to_json.html_safe %>
-            }, {
-                name: 'Read E-mails',
-                color: "<%= highcharts_series_color('Read E-mails') %>",
-                data: <%= @interaction_time_per_account.map(&:read_time).to_json.html_safe %>
-            }, {
-                name: 'Sent E-mails',
-                color: "<%= highcharts_series_color('Sent E-mails') %>",
-                data: <%= @interaction_time_per_account.map(&:sent_time).to_json.html_safe %>
-            }]
+            series: [
+              <% %i(Meetings Attachments Read\ E-mails Sent\ E-mails).each do |category| %>
+              {
+                name: '<%= category %>',
+                color: "<%= highcharts_series_color(category.to_s) %>",
+                data: <%= @interaction_time_per_account.map(&category).to_json.html_safe %>
+              },
+              <% end %>
+            ]
         });
 
 

@@ -87,6 +87,7 @@ class User < ActiveRecord::Base
   OTHER_ROLE = { Trial: 'Trial', Chromeuser: "Chrome user" }  # TODO: remove "Chrome user"
   AUTH_TYPE = { Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }
   WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
+  ATTACHMENT_TIME_HOURS = 0.15
 
   def valid_streams_subscriptions
     self.subscriptions.joins(:project).where(projects: {id: Project.visible_to(self.organization_id, self.id).pluck(:id)})
@@ -896,7 +897,7 @@ class User < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
-  def self.sent_attachments_time(array_of_project_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.sent_attachments_count(array_of_project_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_attachments AS (
         SELECT message_id, description::jsonb->'from'->0->>'address' AS sender
@@ -906,7 +907,7 @@ class User < ActiveRecord::Base
         AND project_id IN('#{array_of_project_ids.join("','")}')
         GROUP BY 1,2
       )
-      SELECT sender, COUNT(message_id) AS attachment_count
+      SELECT sender AS email, COUNT(message_id) AS attachment_count
       FROM user_attachments
       WHERE sender IN (#{array_of_user_emails.map { |u| sanitize(u) }.join(',')})
       GROUP BY 1
@@ -923,7 +924,7 @@ class User < ActiveRecord::Base
       ON projects.id = notifications.project_id
       AND notifications.category = '#{Notification::CATEGORY[:Attachment]}'
       AND notifications.sent_date AT TIME ZONE 'UTC' BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
-      AND notifications.description::jsonb->'from'->0->'address' = #{User.sanitize(email)}
+      AND notifications.description::jsonb->'from'->0->>'address' = #{User.sanitize(email)}
       AND projects.id IN ('#{array_of_project_ids.join("','")}')
       GROUP BY 1,2
     SQL
