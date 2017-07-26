@@ -288,13 +288,6 @@ class ReportsController < ApplicationController
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
     @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
 
-    @activities_by_category_date.each do |cat, act|
-      puts "#{cat}:"
-      act.each do |d|
-        puts "\t-> #{d.last_sent_date}\t #{d.category}\t #{d.num_activities}\t"
-      end
-    end
-
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
     # Read and Sent times

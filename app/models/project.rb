@@ -499,12 +499,12 @@ class Project < ActiveRecord::Base
 
   # This is the SQL query that gets the daily activities over the last x days, where x is 1-14
   # Used for time bounded time series
-  def daily_activities_last_x_days(time_zone, start_day=14.days.ago.midnight.in_time_zone(time_zone), end_day=Time.current.midnight.in_time_zone(time_zone))
-    puts "************************\t Time.current.end_of_day= #{Time.current.end_of_day.in_time_zone(time_zone)} time_zone:#{time_zone}"
+  def daily_activities_last_x_days(time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    puts "************************\t start_day= #{start_day}  end_day= #{end_day}  time_zone:#{time_zone}"
     query = <<-SQL
       -- This controls the dates returned by the query
       WITH time_series as (
-        SELECT '#{self.id}'::uuid as project_id, generate_series(date(to_timestamp(#{start_day.to_i})) - INTERVAL '1 day', date(to_timestamp(#{end_day.to_i})) - INTERVAL '1 day', INTERVAL '1 day') as days
+        SELECT '#{self.id}'::uuid as project_id, generate_series(date(to_timestamp(#{start_day.to_i})), date(to_timestamp(#{end_day.to_i})), INTERVAL '1 day') as days
        )
       (
       -- E-mail Conversation using emails_activities_last_14d view
@@ -513,7 +513,7 @@ class Project < ActiveRecord::Base
       LEFT JOIN (SELECT to_timestamp(sent_date::integer) AS sent_date, project_id
                  FROM email_activities_last_14d where project_id = '#{self.id}' and EXTRACT(EPOCH FROM (to_timestamp(sent_date::integer))) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
                  ) as activities
-        ON activities.project_id = time_series.project_id and date_trunc('day', sent_date AT TIME ZONE 'UTC') = time_series.days
+        ON activities.project_id = time_series.project_id and date_trunc('day', sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
@@ -522,11 +522,11 @@ class Project < ActiveRecord::Base
       -- Meetings directly from actvities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Meeting]}' as category, count(meetings.*) as num_activities
       FROM time_series
-      LEFT JOIN (SELECT (last_sent_date AT TIME ZONE 'UTC') as sent_date, project_id
+      LEFT JOIN (SELECT last_sent_date as sent_date, project_id
                    FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}'AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
                 ) as meetings
-        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
@@ -538,7 +538,7 @@ class Project < ActiveRecord::Base
       LEFT JOIN (SELECT (last_sent_date AT TIME ZONE 'UTC') as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) > #{start_day.to_i}
                 ) as jiras
-        ON jiras.project_id = time_series.project_id and date_trunc('day', jiras.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON jiras.project_id = time_series.project_id and date_trunc('day', jiras.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
@@ -550,7 +550,7 @@ class Project < ActiveRecord::Base
       LEFT JOIN (SELECT (last_sent_date AT TIME ZONE 'UTC') as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) > #{start_day.to_i}
                 ) as salesforces
-        ON salesforces.project_id = time_series.project_id and date_trunc('day', salesforces.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON salesforces.project_id = time_series.project_id and date_trunc('day', salesforces.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
@@ -562,7 +562,7 @@ class Project < ActiveRecord::Base
       LEFT JOIN (SELECT (last_sent_date AT TIME ZONE 'UTC') as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) > #{start_day.to_i}
                 ) as zendesks
-        ON zendesks.project_id = time_series.project_id and date_trunc('day', zendesks.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON zendesks.project_id = time_series.project_id and date_trunc('day', zendesks.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
@@ -574,7 +574,7 @@ class Project < ActiveRecord::Base
       LEFT JOIN (SELECT (last_sent_date AT TIME ZONE 'UTC') as sent_date, project_id
                   FROM activities where category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) > #{start_day.to_i}
                 ) as basecamp2s
-        ON basecamp2s.project_id = time_series.project_id and date_trunc('day', basecamp2s.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON basecamp2s.project_id = time_series.project_id and date_trunc('day', basecamp2s.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
