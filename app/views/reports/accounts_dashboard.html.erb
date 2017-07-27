@@ -42,27 +42,27 @@
     </div>
 
     <div class="row border-bottom white-bg dashboard-header">
-            <!-- LEFT -->
-            <div class="col-lg-5">
-                <h4 class="m-l-md">Metric:
-                    <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
-                    <% ReportsController::ACCOUNT_DASHBOARD_METRIC.each do |k,label| %>
-                        <option <%= "selected" if params[:sort] == label %>><%= label %></option>
-                    <% end %>
-                    </select>
-                </h4>
-                <div id="left-chart" class="left-chart" style="height:1200px;"></div>
-            </div>
+        <!-- LEFT (metric sort) -->
+        <div class="col-lg-5">
+            <h4 class="m-l-md">Metric:
+                <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
+                <% ReportsController::ACCOUNT_DASHBOARD_METRIC.each do |k,label| %>
+                    <option <%= "selected" if params[:sort] == label %>><%= label %></option>
+                <% end %>
+                </select>
+            </h4>
+            <div id="left-chart" class="left-chart" style="height:1200px"></div>
+        </div>
 
-            <!-- RIGHT -->
-            <div class="col-lg-7" style="margin-top:45px;">
-                <div id="account-data">
-                    <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
-                    </div>
+        <!-- RIGHT (account/opportunity detail) -->
+        <div class="col-lg-7" style="margin-top:45px">
+            <div id="account-data">
+                <div class="row" style="margin-top:50px">
+                    <h3>&larr; Click on a bar/label to see details about the opportunity.</h3>
                 </div>
             </div>
         </div>
+    </div>
 </div>
 
 <%= render "teaser" if current_user.trial? %>
@@ -86,12 +86,19 @@
                 text: ''
             },
             xAxis: {
+                max: undefined,
                 //categories: <%= @data.map(&:name).to_json.html_safe %>,
-                crosshair: true
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        // this.value = [project_name, deal_size, close_date]
+                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                    }
+                }
             },
             yAxis: {
-                min: null,
-                //max: null,
+                min: undefined,
+                //max: undefined,
                 opposite: true,
                 title: {
                     text: ''
@@ -103,7 +110,8 @@
                 stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        return Highcharts.numberFormat(Math.abs(this.total), 0, null, "");
+                        //return Highcharts.numberFormat(this.total, 0, null, "");
+                        return large_number_to_human(this.total);
                     }
                 }
             },
@@ -134,24 +142,17 @@
             },
             credits: {
                 enabled: false
-            },
-            series: [{
-                name: 'Average',
-                type: 'line',
-                lineWidth: 2,
-                color: '#7cb5ec',
-                marker: { enabled: false, radius: 0 },
-                data: <%= Array.new(@data.length, @average).to_json.html_safe %>,
-                zIndex: 2,
-                showInLegend: false  // for "Activities (Last 14d)" metric, hide average
-            }, {
-                name: '',  // to be updated below
-                data: [],
-                zIndex: 1
-            }]
+            }
         });
 
         <%= render partial: "reports/accounts_dashboard.js" %>
+
+        // TODO: Possibly need this code to fix the date misalignment due to timezone datatype in @data (e.g., in the "Activities (Last 14d) graph")
+        // Highcharts.setOptions({
+        //     global: {
+        //         timezoneOffset: 7 * 60
+        //     }
+        // });
     });
 
 </script>

@@ -10,7 +10,6 @@ Longclaw::Application.routes.draw do
   authenticate :user do
     # Rails 4 users must specify the 'as' option to give it a unique name
     root :to => "home#index", :as => "authenticated_root"
-    # get "home/daily_summary"
 
     resources :accounts
     post "/account_bulk" => 'accounts#bulk'
@@ -19,8 +18,6 @@ Longclaw::Application.routes.draw do
     resources :contacts, only: [:create, :update, :destroy]
     resources :projects do
       member do
-        get "render_pinned_tab"
-        get "pinned" => 'projects#pinned_tab'
         get "tasks" => 'projects#tasks_tab'
         get "arg" => 'projects#arg_tab'
         get "filter" => 'projects#filter_timeline'
