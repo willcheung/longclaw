@@ -815,14 +815,15 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.meeting_report(array_of_account_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.meeting_report(array_of_account_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_meeting AS(
         SELECT  "to" AS attendees, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch, backend_id
           FROM activities,
           LATERAL jsonb_array_elements(email_messages) messages
           WHERE category = '#{Activity::CATEGORY[:Meeting]}'
-          AND (messages ->> 'end_epoch')::integer BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
+          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          -- AND (messages ->> 'end_epoch')::integer BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
           AND project_id IN
             (
             SELECT id AS project_id
