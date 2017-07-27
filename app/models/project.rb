@@ -499,7 +499,7 @@ class Project < ActiveRecord::Base
 
   # This is the SQL query that gets the daily activities over a date range, by default the last 14 days through current day.
   # Used for time bounded time series
-  def daily_activities_date_range(time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def daily_activities_in_date_range(time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     # puts "************************\t start_day= #{start_day}  end_day= #{end_day}  time_zone:#{time_zone}"
     query = <<-SQL
       -- This controls the dates returned by the query
@@ -527,7 +527,7 @@ class Project < ActiveRecord::Base
           AND (messages ->> 'sentDate')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       )
       (
-      -- E-mail Conversations using alias above
+      -- E-mail Conversations accessed using Common Table Expression set above using WITH 
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Conversation]}' as category, count(activities.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT DISTINCT sent_date, project_id, message_id
@@ -539,7 +539,7 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
-      -- Meetings directly from actvities table
+      -- Meetings directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Meeting]}' as category, count(meetings.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
@@ -552,7 +552,7 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
-      -- JIRA directly from actvities table
+      -- JIRA directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:JIRA]}' as category, count(jiras.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
@@ -564,7 +564,7 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
-      -- Salesforce directly from actvities table
+      -- Salesforce directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Salesforce]}' as category, count(salesforces.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
@@ -576,7 +576,7 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
-      -- Zendesk directly from actvities table
+      -- Zendesk directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Zendesk]}' as category, count(zendesks.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
@@ -588,7 +588,7 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
-      -- Basecamp2 directly from actvities table
+      -- Basecamp2 directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Basecamp2]}' as category, count(basecamp2s.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
@@ -728,11 +728,7 @@ class Project < ActiveRecord::Base
 
   # Top Active Opportunities/Engagement (within a range of specified days)
   # TODO: Fix and don't match using current_user's domain.  This method won't work for those with 'gmail.com' domain (or any domain that is ambiguous if internal or external user!!!)
-  def self.count_activities_by_category(array_of_project_ids, domain, time_zone, days_ago_start=14, days_ago_end=0)
-    epoch_time_start = days_ago_start.days.ago.utc.to_i
-    epoch_time_end = days_ago_end.days.ago.utc.to_i
-    meeting_epoch_time_start = (days_ago_start-1).days.ago.midnight.utc.to_i
-    meeting_epoch_time_end = Time.current.end_of_day.utc.to_i
+  def self.count_activities_by_category(array_of_project_ids, domain, time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH projects_from_array AS (
         SELECT id, name FROM projects WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
@@ -752,7 +748,7 @@ class Project < ActiveRecord::Base
         LATERAL jsonb_array_elements(email_messages) messages
         WHERE category = 'Conversation'
           AND project_id IN ('#{array_of_project_ids.join("','")}')
-          AND ((messages ->> 'sentDate')::integer BETWEEN #{epoch_time_start} AND #{epoch_time_end})
+          AND (messages ->> 'sentDate')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       ), emails_sent AS (
         SELECT DISTINCT project_id, message_id
           FROM users
@@ -769,7 +765,9 @@ class Project < ActiveRecord::Base
           JOIN projects_from_array ON activities.project_id = projects_from_array.id,
           LATERAL jsonb_array_elements(email_messages) messages
           WHERE category = '#{Activity::CATEGORY[:Meeting]}'
-          AND ((messages ->> 'end_epoch')::integer BETWEEN #{meeting_epoch_time_start} AND #{meeting_epoch_time_end})
+          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          --AND last_sent_date_epoch BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          --AND ((messages ->> 'end_epoch')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       )
       -- Emails
       SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
@@ -808,13 +806,13 @@ class Project < ActiveRecord::Base
         FROM activities
         WHERE project_id IN ('#{array_of_project_ids.join("','")}')
           AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
-          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{epoch_time_start} AND #{epoch_time_end}
+          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
         ) AS a
       ON projects.id = a.project_id
       GROUP BY projects.id, projects.name, a.category
       ORDER BY num_activities DESC
     SQL
-    return Project.find_by_sql(query)
+    Project.find_by_sql(query)
   end
 
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.

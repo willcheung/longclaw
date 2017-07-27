@@ -286,7 +286,7 @@ class ReportsController < ApplicationController
 
     # Engagement Volume Chart
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
-    @activities_by_category_date = @project.daily_activities_date_range(current_user.time_zone).group_by { |a| a.category }
+    @activities_by_category_date = @project.daily_activities_in_date_range(current_user.time_zone).group_by { |a| a.category }
 
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
