@@ -503,7 +503,7 @@ class Project < ActiveRecord::Base
     query = <<-SQL
       -- This controls the dates returned by the query
       WITH time_series as (
-        SELECT '#{self.id}'::uuid as project_id, generate_series(date(to_timestamp(#{start_day.to_i})), date(to_timestamp(#{end_day.to_i})), INTERVAL '1 day') as days LIMIT 15
+        SELECT '#{self.id}'::uuid as project_id, generate_series(date(TIMESTAMP '#{start_day}'), date(TIMESTAMP '#{end_day}'), INTERVAL '1 day') AS days LIMIT #{(end_day - start_day).ceil / 86400}
       ), conversations_last_14d AS (
         SELECT DISTINCT
             project_id,
