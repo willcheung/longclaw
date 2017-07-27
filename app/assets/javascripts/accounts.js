@@ -1,5 +1,5 @@
 var checkedAccountIds = [];
-
+var URL_PREFIX = "/accounts";
 $('[data-toggle="tooltip"]').tooltip();
 
 $(document).ready(function(){
@@ -8,6 +8,7 @@ $(document).ready(function(){
   $('#bulk-owner').chosen({ allow_single_deselect: true});
   
   $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+  $('.owner_filter').chosen({ disable_search: true, allow_single_deselect: true});
 
   //DataTables
   $('#accounts-table').DataTable( {
@@ -61,7 +62,7 @@ $(document).ready(function(){
     bulkOperation(op, params.selected);
   });
 
-  $('.category_filter').on('change',function(evt,params){
+  /*$('.category_filter').on('change',function(evt,params){
     var taskType="";
     if(params){
         window.location.replace("/accounts?account_type="+params["selected"]);    
@@ -73,9 +74,90 @@ $(document).ready(function(){
     else{
       window.location.replace("/accounts");
     }
+  });*/
+
+  $('.category_filter').on('change',function(evt, params){
+    var taskType = "";
+
+    if (params) {
+        taskType = "account_type=" + params["selected"];
+    }
+     if (typeof(params) == 'undefined') {
+      taskType = "account_type=" + "none";
+    }
+
+    newURL(window.location.search, "account_type", taskType);
+  });
+
+  $('.owner_filter').on('change',function(evt, params){
+    var taskType = "";
+
+    if (params) {
+        taskType = "owner=" + params["selected"];
+    }
+    if (typeof(params) == 'undefined') {
+      taskType = "owner=" + 0;
+    }
+
+
+    newURL(window.location.search, "owner", taskType);
   });
 
 });
+
+
+// Takes the query string and removes a parameter matching 'paramStr', retaining all other params
+function removeParam(queryStr, paramStr) {
+    if (queryStr.length == 0) return queryStr;
+
+    var params = queryStr.split("&");
+    var result = "";
+
+    for (i = 0; i < params.length; i++){
+        var param = params[i].split("=");
+        if(param[0].length > 0 && param[0] !== paramStr){ //don't include if we find param
+            result += params[i] + "&";
+        }
+    }
+
+    if (result[result.length-1] === "&")
+        return result.substring(0, result.length-1);
+    else
+        return result;
+
+}
+
+// Sets the browser URL with modified querystring when jQuery detects a change in the filter criteria
+//   e.g., newURL(window.location.search, "type", "type=Other");
+function newURL(fullQueryStr, changedParamStr, newParamValueStr) {
+    var finalURL  = "";
+    var newsearch = "";
+
+    // always remove ampersand (&) in the front(?) or it will cause an error
+    newQueryString = removeParam(fullQueryStr.substring(1), changedParamStr);
+
+    if (newQueryString.length == 0){
+        newsearch = newParamValueStr;
+    }
+    else{
+        if(newParamValueStr.length == 0){ // when user presses X, newParamValueStr is ""
+            newsearch = newQueryString;
+        }
+        else{
+            newsearch = newQueryString + "&" + newParamValueStr;
+        }
+    }
+
+    if (newsearch.length == 0){
+        finalURL = URL_PREFIX;
+    }
+    else{
+        finalURL = URL_PREFIX + "/?" + newsearch;
+    }
+
+    window.location.replace(finalURL);
+}
+
 
 function bulkOperation (operation, value) {
   var temp = {
