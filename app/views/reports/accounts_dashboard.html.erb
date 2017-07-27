@@ -91,7 +91,7 @@
                 crosshair: true,
                 labels: {
                     formatter: function () {
-                        // this.value =[ project_name, deal_size, close_date]
+                        // this.value = [project_name, deal_size, close_date]
                         return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
                     }
                 }
@@ -146,6 +146,13 @@
         });
 
         <%= render partial: "reports/accounts_dashboard.js" %>
+
+        // TODO: Possibly need this code to fix the date misalignment due to timezone datatype in @data (e.g., in the "Activities (Last 14d) graph")
+        // Highcharts.setOptions({
+        //     global: {
+        //         timezoneOffset: 7 * 60
+        //     }
+        // });
     });
 
 </script>

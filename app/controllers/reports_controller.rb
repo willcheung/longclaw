@@ -75,12 +75,12 @@ class ReportsController < ApplicationController
         else
           # TODO: figure out why some email_t are not nil but email_t.inbound or email_t.outbound are nil (Issue #692)
           email_t = { 
-            "Read E-mails": email_t.inbound.nil? ? 0 : [(email_t.inbound / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max,
-            "Sent E-mails": email_t.outbound.nil? ? 0 : [(email_t.outbound / User::WORDS_PER_HOUR[:Write]).round(2), 0.001].max
+            "Read E-mails": email_t.inbound.nil? ? 0 : (email_t.inbound / User::WORDS_PER_SEC[:Read]).round,
+            "Sent E-mails": email_t.outbound.nil? ? 0 : (email_t.outbound / User::WORDS_PER_SEC[:Write]).round
           }
         end
         meeting_t = meeting_time.find { |mt| mt.email == user.email }
-        meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total / 3600.0 }
+        meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total }
         time_hash = meeting_t.merge(email_t)
         Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
       end
@@ -173,6 +173,7 @@ class ReportsController < ApplicationController
       end
     end
     @interaction_time_per_account.sort_by! { |it| it.total }.reverse!
+
     # take the top 10 interaction time per account, currently allotted space only fits about 10 categories on xAxis before labels are cut off
     @interaction_time_per_account = @interaction_time_per_account.take(10)
 
@@ -201,7 +202,7 @@ class ReportsController < ApplicationController
 
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
-      project_engagement = Project.count_activities_by_category(projects.pluck(:id), current_user.organization.domain, 14*24).group_by { |p| p.id }
+      project_engagement = Project.count_activities_by_category(projects.pluck(:id), current_user.organization.domain, current_user.time_zone).group_by { |p| p.id }
       @data = [] and @categories = [] and return if project_engagement.blank?
       @data = project_engagement.map do |pid, activities|
         proj = projects.find { |p| p.id == pid }
@@ -211,13 +212,10 @@ class ReportsController < ApplicationController
 
       @data.compact!
 
-      @categories = @data.inject([]) do |memo, p|
-        if p.total > 0
-          memo | p.y.select {|a| a.num_activities.present? && a.num_activities > 0}.map(&:category)
-        else
-          memo
-        end
-      end  # get (and show in legend) only categories that have data
+      @categories = @data.inject([]) do |memo, d|
+        d.y.each {|a| memo = memo | [a.category]}
+        memo
+      end  
     # when ACCOUNT_DASHBOARD_METRIC[:risk_score]
     #   risk_scores = projects.nil? ? [] : Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
     #   total_risk_scores = 0
@@ -273,7 +271,7 @@ class ReportsController < ApplicationController
       @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }  
     end
 
-    #puts "**************** @data (#{@data.present? ? @data.length : 0}): #{@data} \t\t ****** @categories (#{@categories.present? ? @categories.length : 0}):  #{@categories}"
+    # puts "**************** @data (#{@data.present? ? @data.length : 0}): #{@data} \t\t ****** @categories (#{@categories.present? ? @categories.length : 0}):  #{@categories}"
     @data = @data.take(25)  # TODO: real left chart pagination
   end
 
@@ -288,7 +286,7 @@ class ReportsController < ApplicationController
 
     # Engagement Volume Chart
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
-    @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
+    @activities_by_category_date = @project.daily_activities_in_date_range(current_user.time_zone).group_by { |a| a.category }
 
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time

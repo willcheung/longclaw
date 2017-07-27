@@ -73,10 +73,17 @@
 
         $('#left-chart').highcharts({
             chart: {
-                type: 'bar'
+                type: 'bar',
+                marginTop: 60,
+                marginRight: 35
             },
             title: {
                 text: ''
+            },
+            subtitle: {
+                text: ' ',
+                align: 'center',
+                y: 45
             },
             xAxis: {
                 crosshair: true
@@ -185,6 +192,5 @@
 
         <%= render partial: "reports/team_dashboard.js" %>
     });
-
 </script>
 
