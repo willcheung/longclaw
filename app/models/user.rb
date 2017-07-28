@@ -378,18 +378,18 @@ class User < ActiveRecord::Base
     return return_vals
   end
 
-  def daily_activities_by_category(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def daily_activities_by_category(time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     array_of_account_ids = self.organization.accounts.ids
     array_of_project_ids = Project.where(account_id: array_of_account_ids).ids
     query = <<-SQL
       WITH time_series AS (
-        SELECT generate_series(date(TIMESTAMP '#{start_day}'), date(TIMESTAMP '#{end_day}'), INTERVAL '1 day') AS days  
+        SELECT generate_series(date(TIMESTAMP '#{start_day}'), date(TIMESTAMP '#{end_day}'), INTERVAL '1 day') AS days LIMIT #{(end_day - start_day).ceil / 86400}
       )
       (
-      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
+      SELECT date(time_series.days) AS days, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
       FROM time_series
-      LEFT JOIN (SELECT messages ->> 'messageId'::text AS message_id,
-                        messages ->> 'sentDate'::text AS sent_date,
+      LEFT JOIN (SELECT to_timestamp((messages ->> 'sentDate')::integer) AS sent_date,
+                        messages ->> 'messageId'::text AS message_id,
                        jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
                        CASE
                          WHEN messages -> 'to' IS NULL THEN NULL
@@ -403,89 +403,90 @@ class User < ActiveRecord::Base
                 LATERAL jsonb_array_elements(email_messages) messages
                 WHERE category = '#{Activity::CATEGORY[:Conversation]}'
                 AND project_id IN ('#{array_of_project_ids.join("','")}')
-                AND (messages ->> 'sentDate')::integer > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
+                AND (messages ->> 'sentDate')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
           ) AS emails
-        ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{self.time_zone}') = time_series.days AND #{User.sanitize(self.email)} IN (emails.from, emails.to, emails.cc)
+        ON (date_trunc('day', emails.sent_date AT TIME ZONE '#{time_zone}') = time_series.days)
+        AND #{User.sanitize(self.email)} IN (emails.from, emails.to, emails.cc)
       GROUP BY days, category
       ORDER BY days ASC
       )
       UNION ALL
       (
-      -- Meetings directly from actvities table
-      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Meeting]}' AS category, count(meetings.*) AS num_activities
+      -- Meetings directly from activities table
+      SELECT date(time_series.days) AS days, '#{Activity::CATEGORY[:Meeting]}' AS category, count(meetings.*) AS num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Meeting]}' 
                   AND "from" || "to" || "cc" @> ('[{"address": "' || #{User.sanitize(self.email)} || '"}]')::jsonb 
                   AND project_id IN ('#{array_of_project_ids.join("','")}')
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
+                  AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
                 ) AS meetings
-        ON date_trunc('day', meetings.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', meetings.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
       UNION ALL
       (
-      -- JIRA directly from actvities table
-      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:JIRA]}' AS category, count(jiras.*) AS num_activities
+      -- JIRA directly from activities table
+      SELECT date(time_series.days) AS days, '#{Activity::CATEGORY[:JIRA]}' AS category, count(jiras.*) AS num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:JIRA]}' 
                   AND "from" || "to" || "cc" @> ('[{"address": "' || #{User.sanitize(self.email)} || '"}]')::jsonb 
                   AND project_id IN ('#{array_of_project_ids.join("','")}')
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
+                  AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
                 ) AS jiras
-        ON date_trunc('day', jiras.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', jiras.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
       UNION ALL
       (
-      -- Salesforce directly from actvities table
-      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Salesforce]}' AS category, count(salesforces.*) AS num_activities
+      -- Salesforce directly from activities table
+      SELECT date(time_series.days) AS days, '#{Activity::CATEGORY[:Salesforce]}' AS category, count(salesforces.*) AS num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Salesforce]}' 
                   AND "from" || "to" || "cc" @> ('[{"address": "' || #{User.sanitize(self.email)} || '"}]')::jsonb 
                   AND project_id IN ('#{array_of_project_ids.join("','")}')
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
+                  AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
                 ) AS salesforces
-        ON date_trunc('day', salesforces.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', salesforces.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
       UNION ALL
       (
-      -- Zendesk directly from actvities table
-      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Zendesk]}' AS category, count(zendesks.*) AS num_activities
+      -- Zendesk directly from activities table
+      SELECT date(time_series.days) AS days, '#{Activity::CATEGORY[:Zendesk]}' AS category, count(zendesks.*) AS num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Zendesk]}' 
                   AND "from" || "to" || "cc" @> ('[{"address": "' || #{User.sanitize(self.email)} || '"}]')::jsonb 
                   AND project_id IN ('#{array_of_project_ids.join("','")}')
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
+                  AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
                 ) AS zendesks
-        ON date_trunc('day', zendesks.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', zendesks.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )
       UNION ALL
       (
-      -- Basecamp2 directly from actvities table
-      SELECT date(time_series.days) AS calendar_date, '#{Activity::CATEGORY[:Basecamp2]}' AS category, count(basecamp2s.*) AS num_activities
+      -- Basecamp2 directly from activities table
+      SELECT date(time_series.days) AS days, '#{Activity::CATEGORY[:Basecamp2]}' AS category, count(basecamp2s.*) AS num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date AS sent_date, project_id
                   FROM activities 
                   WHERE category = '#{Activity::CATEGORY[:Basecamp2]}' 
                   AND "from" || "to" || "cc" @> ('[{"address": "' || #{User.sanitize(self.email)} || '"}]')::jsonb 
                   AND project_id IN ('#{array_of_project_ids.join("','")}')
-                  AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{self.time_zone}') > EXTRACT(EPOCH FROM TIMESTAMP '#{start_day}')
+                  AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
                 ) AS basecamp2s
-        ON date_trunc('day', basecamp2s.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{self.time_zone}') = time_series.days
+        ON date_trunc('day', basecamp2s.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY days, category
       ORDER BY days ASC
       )  
@@ -513,7 +514,7 @@ class User < ActiveRecord::Base
   # Team Leaderboard chart
   def self.count_activities_by_user_flex(array_of_account_ids, domain, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
-      -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
+      -- email_activities extracts the activity info from the email_messages jsonb in activities
       WITH email_activities AS
         (
           SELECT messages ->> 'messageId'::text AS message_id,
@@ -570,7 +571,7 @@ class User < ActiveRecord::Base
   end
 
   # Count of number of activities for accounts in array_of_account_ids, and for users in array_of_user_ids, and between a range of days (default=last 14d)
-  def self.count_all_activities_by_user(array_of_account_ids, array_of_user_ids, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.count_all_activities_by_user(array_of_account_ids, array_of_user_ids, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     array_of_project_ids = Project.where(account_id: array_of_account_ids).pluck(:id)
     return [] if array_of_account_ids.blank? || array_of_user_ids.blank? || array_of_project_ids.blank?
     query = <<-SQL
@@ -703,7 +704,7 @@ class User < ActiveRecord::Base
 
   def self.team_usage_report(array_of_account_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
-      -- email_activities extracts the activity info from the email_messages jsonb in activities, based on the email_activities_last_14d view
+      -- email_activities extracts the activity info from the email_messages jsonb in activities
       -- shows the total time usage be adding all the inbound e-mails and outbound e-mails as inbound and outbound
       WITH email_activities AS (
         SELECT  messages ->> 'messageId'::text AS message_id,
@@ -794,7 +795,7 @@ class User < ActiveRecord::Base
   end
 
 
-  def email_time_by_project(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def email_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_emails AS (
         SELECT messages ->> 'messageId'::text AS message_id,
@@ -847,14 +848,14 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.meeting_report(array_of_account_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.meeting_report(array_of_account_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_meeting AS(
         SELECT  "to" AS attendees, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch, backend_id
           FROM activities,
           LATERAL jsonb_array_elements(email_messages) messages
           WHERE category = '#{Activity::CATEGORY[:Meeting]}'
-          AND (messages ->> 'end_epoch')::integer BETWEEN '#{start_day.to_i}' AND '#{end_day.to_i}'
+          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}  -- based on meeting start time, not end time!
           AND project_id IN
             (
             SELECT id AS project_id
@@ -863,7 +864,7 @@ class User < ActiveRecord::Base
             )
         GROUP BY 1,2,3,4
       )
-      SELECT email, SUM(end_t::integer - start_t::integer) AS total
+      SELECT email, SUM(end_t::integer - start_t::integer) AS total -- duration
       FROM (
         SELECT email, start_t, end_t, backend_id
         FROM(   
@@ -891,7 +892,7 @@ class User < ActiveRecord::Base
     output
   end
 
-  def meeting_time_by_project(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def meeting_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       SELECT projects.id, projects.name, SUM((messages->>'end_epoch')::integer - last_sent_date_epoch::integer)::float AS total_meeting_hours
       FROM activities
@@ -899,7 +900,7 @@ class User < ActiveRecord::Base
       ON projects.id = activities.project_id,
       LATERAL jsonb_array_elements(email_messages) messages
       WHERE activities.category = '#{Activity::CATEGORY[:Meeting]}'
-      AND last_sent_date BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
+      AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       AND "from" || "to" || cc @> ('[{"address":"' || #{User.sanitize(self.email)} || '"}]')::jsonb
       AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{self.organization.accounts.ids.join("','")}'))
       GROUP BY 1

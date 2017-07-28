@@ -134,7 +134,7 @@ class ReportsController < ApplicationController
     @accounts_managed = @user.projects_owner_of.count
     @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
 
-    @activities_by_category_date = @user.daily_activities_by_category.group_by { |a| a.category }
+    @activities_by_category_date = @user.daily_activities_by_category(current_user.time_zone).group_by { |a| a.category }
 
     # compute Tasks Trend Data for this user on the fly, this may be done better with a materialized view in the future
     day_range = 14
