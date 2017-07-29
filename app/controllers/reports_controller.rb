@@ -63,13 +63,12 @@ class ReportsController < ApplicationController
         memo | p.y.select {|a| a.num_activities > 0}.map(&:category)
       end  # get (and show in legend) only categories that have data
     when TEAM_DASHBOARD_METRIC[:time_spent_last14d]
-      account_ids = current_user.organization.accounts.ids
-      user_emails = users.pluck(:email)
       project_ids = Project.visible_to(current_user.organization_id, current_user.id).ids
-      @data = [] and @categories = [] and return if account_ids.blank? || project_ids.blank? || user_emails.blank?
+      user_emails = users.pluck(:email)
+      @data = [] and @categories = [] and return if project_ids.blank? || project_ids.blank? || user_emails.blank?
 
-      email_time = User.team_usage_report(account_ids, user_emails)
-      meeting_time = User.meeting_report(account_ids, user_emails)
+      email_time = User.team_usage_report(project_ids, user_emails)
+      meeting_time = User.meeting_report(project_ids, user_emails)
       attachment_count = User.sent_attachments_count(project_ids, user_emails)
       @data = users.map do |user|
         email_t = email_time.find { |et| et.email == user.email }
@@ -78,16 +77,17 @@ class ReportsController < ApplicationController
         else
           # TODO: figure out why some email_t are not nil but email_t.inbound or email_t.outbound are nil (Issue #692)
           email_t = { 
-            "Read E-mails": email_t.inbound.nil? ? 0 : (email_t.inbound / User::WORDS_PER_SEC[:Read]).round,
-            "Sent E-mails": email_t.outbound.nil? ? 0 : (email_t.outbound / User::WORDS_PER_SEC[:Write]).round
+            "Read E-mails": (email_t.inbound / User::WORDS_PER_SEC[:Read]).round,
+            "Sent E-mails": (email_t.outbound / User::WORDS_PER_SEC[:Write]).round
           }
         end
         meeting_t = meeting_time.find { |mt| mt.email == user.email }
         meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total }
         attachment_t = attachment_count.find { |at| at.email == user.email }
-        attachment_t = attachment_t.nil? ? { Attachments: 0 } : { Attachments: attachment_t.attachment_count * User::ATTACHMENT_TIME_HOURS }
+        attachment_t = attachment_t.nil? ? { Attachments: 0 } : { Attachments: attachment_t.attachment_count * User::ATTACHMENT_TIME_SEC }
         time_hash = email_t.merge(meeting_t).merge(attachment_t)
-        # time_hash = [email_t, meeting_t, attachment_t].reduce(&:merge)        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
+        # time_hash = [email_t, meeting_t, attachment_t].reduce(&:merge)
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
       end
       @categories = ["Meetings", "Attachments", "Read E-mails", "Sent E-mails"]
     when TEAM_DASHBOARD_METRIC[:opportunities]
@@ -177,7 +177,7 @@ class ReportsController < ApplicationController
       end
     end
     attachment_time.each do |p|
-      attachment_t = p.attachment_count * User::ATTACHMENT_TIME_HOURS
+      attachment_t = p.attachment_count * User::ATTACHMENT_TIME_SEC
       i_t = @interaction_time_per_account.find { |it| it.id == p.id }
       if i_t.nil?
         @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, Meetings: 0, Attachments: attachment_t, 'Sent E-mails': 0, 'Read E-mails': 0, total: attachment_t)

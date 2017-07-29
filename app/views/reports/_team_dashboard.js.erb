@@ -21,7 +21,7 @@ while(chart.series.length > 1) {
       <% @data.each do |d| %>
         <% m = d.y.find{|m| m.category == c} if d.y.present? %>  //find metric for this user
         {
-          y: <%= (m.present? && m.num_activities.present?)  ? m.num_activities : 0 %>,
+          y: <%= (m.present? && m.num_activities.present?) ? m.num_activities : 0 %>,
           id: "<%= d.id %>"
         }, 
       <% end if @data.present? %> 

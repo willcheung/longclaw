@@ -89,7 +89,7 @@ class User < ActiveRecord::Base
   AUTH_TYPE = { Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }
   WORDS_PER_SEC = { Read: 2.0, Write: 0.42 }   # Reading=120WPM(<200)  Typing=~25WPM(<40)
   #WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
-  ATTACHMENT_TIME_HOURS = 0.15
+  ATTACHMENT_TIME_SEC = 60*9
 
   def valid_streams_subscriptions
     self.subscriptions.joins(:project).where(projects: {id: Project.visible_to(self.organization_id, self.id).pluck(:id)})
@@ -702,7 +702,7 @@ class User < ActiveRecord::Base
     User.find_by_sql(query)
   end
 
-  def self.team_usage_report(array_of_account_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.team_usage_report(array_of_project_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       -- email_activities extracts the activity info from the email_messages jsonb in activities
       -- shows the total time usage be adding all the inbound e-mails and outbound e-mails as inbound and outbound
@@ -723,12 +723,7 @@ class User < ActiveRecord::Base
         LATERAL jsonb_array_elements(email_messages) messages
         WHERE category='Conversation'
           AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
-          AND project_id IN
-                (
-                  SELECT id AS project_id
-                  FROM projects
-                  WHERE account_id IN ('#{array_of_account_ids.join("','")}')
-                )
+          AND project_id IN ('#{array_of_project_ids.join("','")}')
         GROUP BY 1,2,3,4,5
       ), outbound AS (
         SELECT sender, count(distinct message_id) num_messages, SUM(word_count) as total_wc
@@ -768,32 +763,6 @@ class User < ActiveRecord::Base
     SQL
     find_by_sql(query)
   end
-
-  # Inbound/outbound values units = seconds
-  def self.total_team_usage_report(array_of_account_ids, array_of_user_emails)
-    result = team_usage_report(array_of_account_ids, array_of_user_emails)
-    output = Hash.new
-    arr_full_name = []
-    arr_email = []
-    arr_inbound = []
-    arr_outbound = []
-
-    result.each do |m|
-      user = User.find_by_email(m.email)
-        if user
-          arr_full_name << get_full_name(user)
-          arr_email << m.email
-          arr_inbound << (m.inbound.to_i / WORDS_PER_SEC[:Read]).round
-          arr_outbound << (m.outbound.to_i / WORDS_PER_SEC[:Write]).round
-        end
-    end
-    output["email"] = arr_email
-    output["inbound"] = arr_inbound
-    output["outbound"] = arr_outbound
-    output['full_name'] = arr_full_name
-    output
-  end
-
 
   def email_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
@@ -848,7 +817,7 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.meeting_report(array_of_account_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.meeting_report(array_of_project_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_meeting AS(
         SELECT  "to" AS attendees, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch, backend_id
@@ -856,12 +825,7 @@ class User < ActiveRecord::Base
           LATERAL jsonb_array_elements(email_messages) messages
           WHERE category = '#{Activity::CATEGORY[:Meeting]}'
           AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}  -- based on meeting start time, not end time!
-          AND project_id IN
-            (
-            SELECT id AS project_id
-            FROM projects
-            WHERE account_id IN ('#{array_of_account_ids.join("','")}')
-            )
+          AND project_id IN ('#{array_of_project_ids.join("','")}')
         GROUP BY 1,2,3,4
       )
       SELECT email, SUM(end_t::integer - start_t::integer) AS total -- duration
@@ -879,17 +843,6 @@ class User < ActiveRecord::Base
         ORDER BY total DESC;
     SQL
   find_by_sql(query)
-  end
-
-  def self.meeting_team_report(array_of_account_ids, domain)
-    results = meeting_report(array_of_account_ids, domain)
-    output = []
-      results.each do |m|
-        #convert m.total in sec to hours
-        y = m.total
-        output << y
-      end
-    output
   end
 
   def meeting_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)

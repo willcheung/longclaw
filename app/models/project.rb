@@ -834,13 +834,12 @@ class Project < ActiveRecord::Base
         ) AS a
       ON projects.id = a.project_id
       GROUP BY projects.id, projects.name, a.category
-      ORDER BY num_activities DESC
       UNION ALL
       SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
       FROM notifications
       JOIN projects ON projects.id = notifications.project_id
       WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
-      AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end})
+      AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
       AND notifications.description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
       GROUP BY projects.id, projects.name, notifications.category
       ORDER BY num_activities DESC
@@ -848,21 +847,22 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
+  # units for time result = seconds
   def interaction_time_by_user(array_of_users)
-    email_word_counts = User.team_usage_report([account.id], array_of_users.pluck(:email))
-    meeting_time_seconds = User.meeting_report([account.id], array_of_users.pluck(:email))
+    email_word_counts = User.team_usage_report([id], array_of_users.pluck(:email))
+    meeting_time_seconds = User.meeting_report([id], array_of_users.pluck(:email))
     attachment_counts = User.sent_attachments_count([id], array_of_users.pluck(:email))
 
-    # result = []
     result = email_word_counts.map do |u|
       user = array_of_users.find { |usr| usr.email == u.email }
-      inbound = u.inbound.to_i > 0 ? [(u.inbound.to_i / User::WORDS_PER_HOUR[:Read]).round(2), 0.01].max : 0
-      outbound = u.outbound.to_i > 0 ? [(u.outbound.to_i / User::WORDS_PER_HOUR[:Write]).round(2), 0.01].max : 0
+      # convert word count of inbound and outbound emails to approx. time in seconds
+      inbound = (u.inbound.to_i / User::WORDS_PER_SEC[:Read]).round
+      outbound = (u.outbound.to_i / User::WORDS_PER_SEC[:Write]).round
       Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': inbound, 'Sent E-mails': outbound, 'Meetings': 0, 'Attachments': 0 , total: inbound + outbound)
     end
 
     meeting_time_seconds.each do |u|
-      meeting = u.total / 3600.0 # convert total meeting time in seconds to hours
+      meeting = u.total
       res = result.find { |usr| usr.email == u.email }
       if res.nil?
         user = array_of_users.find { |usr| usr.email == u.email }
@@ -874,7 +874,7 @@ class Project < ActiveRecord::Base
     end
 
     attachment_counts.each do |u|
-      attachment = u.attachment_count * User::ATTACHMENT_TIME_HOURS # convert total number of attachments to approx. time in hours
+      attachment = u.attachment_count * User::ATTACHMENT_TIME_SEC # convert total number of attachments to approx. time in seconds
       res = result.find { |usr| usr.email == u.email }
       if res.nil?
         user = array_of_users.find { |usr| usr.email == u.email }
