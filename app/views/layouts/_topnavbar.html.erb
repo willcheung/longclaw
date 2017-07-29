@@ -17,17 +17,21 @@
                 <li class="<%= is_active_controller('home') and is_active_action('index') %>">
                     <a href="<%= root_path %>"><i class="fa fa-home"></i> <span class="nav-label">Home</span></a>
                 </li>
-                <li class="<%= is_active_controller('projects') %>">
-                    <a href="<%= projects_path %>/?owner=<%= current_user.id %>"><i class="fa fa-comments"></i> <span class="nav-label">Streams</span></a>
-                </li>
-                <li class="<%= is_active_controller('notifications') %>">
-                    <a href="<%= notifications_path %>/?type=incomplete&assignee=me"><i class="fa fa-list-ul"></i> <span class="nav-label">Smart Tasks</span></a>
-                </li>
-                <li class="<%= is_active_controller('reports') %>">
-                    <a href="<%= reports_accounts_dashboard_path %>"><i class="fa fa-bar-chart"></i> <span class="nav-label">Dashboard</span></a>
-                </li>
                 <li class="<%= is_active_controller('accounts') %>">
                     <a href="<%= accounts_path %>"><i class="fa fa-users"></i> <span class="nav-label">Accounts</span></a>
+                </li>
+                <li class="<%= is_active_controller('projects') %>">
+                    <a href="<%= projects_path %>"><i class="fa fa-comments"></i> <span class="nav-label">Opportunities</span></a>
+                </li>
+                <li class="<%= is_active_controller('notifications') %>">
+                    <a href="<%= notifications_path %>/?type=incomplete&assignee=me"><i class="fa fa-list-ul"></i> <span class="nav-label">Alerts & Tasks</span></a>
+                </li>
+                <li class="<%= is_active_controller('reports') %> dropdown">
+                    <a role="button" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-bar-chart"></i> <span class="nav-label">Dashboard</span> <span class="caret"></span></a>
+                    <ul role="menu" class="dropdown-menu">
+                        <li><a href="<%= reports_accounts_dashboard_path %>">Opportunities</a></li>
+                        <li><a href="<%= reports_team_dashboard_path %>">Team</a></li>
+                    </ul>
                 </li>
 
             </ul>
@@ -63,4 +67,18 @@
             </ul>
         </div>
     </nav>
+
+    <!-- Chrome header -->
+    <% if request.user_agent.downcase.match(/chrome/) and cookies[:chromeNotificationBar] != "false" %>
+        <div id="chrome-notification-bar" style=""><span>Manage your customers from your inbox. <a href="#" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)">Install our Chrome Extension for Gmail.</a></span></div>
+        <script>
+            function successCallback () {
+                $('#chrome-notification-bar').hide();
+                window.alert('Install successful! Please refresh your Gmail for the extension to take effect.');
+            }
+            function failureCallback () {
+                window.alert('Cannot install extension. Please contact support@contextsmith.com for help.');
+            }
+        </script>
+    <% end %>
 </div>

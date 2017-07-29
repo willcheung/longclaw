@@ -30,9 +30,7 @@ $(document).on('ifUnchecked', 'input', function(event){
 */
 // Tooltips
 $('.tool-tip-category').tooltip({
-  title: "<p style=\"line-height:20px;\"><b>Smart Action:</b> Tasks with due dates that are automatically detected from the email body.<br>"+
-         "<b>Alert:</b> Negative sentiment detected in email body.<br>"+
-         "<b>Opportunity:</b> Streams that have been inactive for 30+ days and is an opportunity to follow up.<br>"+
+  title: "<p style=\"line-height:20px;\"><b>Alert:</b> Negative sentiment detected in e-mail body.<br>"+
          "<b>To-do:</b> Manually generated task.<p>",
   html: true,
   container: 'body'
@@ -62,7 +60,7 @@ $('[data-toggle="overdue"]').hover(function(){
   $('.tooltip-arrow').css('opacity', '0');
 });
 
-// Email Preview Tooltip
+// E-mail Preview Tooltip
 $('.hoverToolTip').tooltip({
   title: hoverGetData,
   html: true,

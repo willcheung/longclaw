@@ -29,6 +29,11 @@
 #  index_activities_on_email_messages                          (email_messages)
 #  index_activities_on_project_id                              (project_id)
 #
+require 'action_view'
+include ActionView::Helpers::DateHelper  #for time_ago_in_words
+### TODO: refactor show_email_body so that it does not depend on simple_format which must be included from ActionView module (separate Controller from Views)
+include ActionView::Helpers::TextHelper  # for simple_format
+include ActionView::Helpers::SanitizeHelper   # for strip_tags
 
 class Activity < ActiveRecord::Base
   include PgSearch
@@ -37,7 +42,8 @@ class Activity < ActiveRecord::Base
   belongs_to :project
   belongs_to :oauth_user
   has_many :comments, dependent: :destroy
-  has_many :notifications, dependent: :destroy
+  has_many :notifications, -> { non_attachments }, dependent: :destroy
+  has_many :attachments, -> { attachments }, class_name: 'Notification'
 
   scope :pinned, -> { where is_pinned: true }
   scope :last_active_on, -> { maximum "last_sent_date" }
@@ -45,11 +51,11 @@ class Activity < ActiveRecord::Base
   scope :notes, -> { where category: CATEGORY[:Note] }
   scope :meetings, -> { where category: CATEGORY[:Meeting] }
   scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
-  scope :from_lastweek, -> { where last_sent_date: (Time.current.yesterday.midnight - 1.weeks)..Time.current.yesterday.end_of_day }
+  scope :from_lastweek, -> { where last_sent_date: 1.week.ago.midnight..Time.current.yesterday.end_of_day }
+  scope :next_week, -> { where last_sent_date: Time.current..1.week.from_now.midnight }
   scope :reverse_chronological, -> { order last_sent_date: :desc }
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
-
 
   acts_as_commentable
 
@@ -59,9 +65,9 @@ class Activity < ActiveRecord::Base
                       :tsearch => {:dictionary => "english"}
                   }
 
-
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2'}
-
+  CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = "CS"
+  CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX = "(imported from ContextSmith) ——"
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity' }
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -74,9 +80,7 @@ class Activity < ActiveRecord::Base
         is_public_flag = true
         c.messages.last.isPrivate ? is_public_flag = false : true  # check if last message is private
 
-
         # if last message is a private message (one to one email), check user settings
-
         if is_public_flag==false
           sender = User.find_by(email: c.messages.last.from[0]['address'])
           if !sender.nil? and !sender.blank?
@@ -109,7 +113,7 @@ class Activity < ActiveRecord::Base
             title: c.subject,
             note: '',
             is_public: is_public_flag,
-            backend_id: c.id,
+            backend_id: c.conversationId,
             last_sent_date: Time.at(c.lastSentDate),
             last_sent_date_epoch: c.lastSentDate,
             from: c.messages.last.from, # take from last message
@@ -134,6 +138,7 @@ class Activity < ActiveRecord::Base
     return activities
   end
 
+  #
   def self.load_calendar(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     events = []
     val = []
@@ -162,7 +167,7 @@ class Activity < ActiveRecord::Base
             title: c.subject,
             note: '',
             is_public: true,
-            backend_id: c.id,
+            backend_id: c.conversationId,
             last_sent_date: Time.at(c.lastSentDate).utc,
             last_sent_date_epoch: c.lastSentDate,
             from: event.from,
@@ -186,9 +191,21 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Parameters:  filter_predicates is a hash that contains several keys -- "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL query.
-  def self.load_salesforce_activities(project, organization_id, sfdc_id, type="Account", filter_predicates = nil, limit=200)
+  # Copies Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS opportunity.
+  # Parameters:   client - SFDC connection
+  #               project - the CS opportunity into which to load the SFDC activity
+  #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
+  #               type - to specify loading from an SFDC "Account" or "Opportunity"
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               limit (optional) - the max number of activity records to process
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if successful, or "ERROR" otherwise
+  #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
+  #             detail - Contains any error or informational/warning messages.
+  def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
     val = []
+    result = nil
+
     if filter_predicates["entity"] == ""
       entity_predicate = ""
     else
@@ -197,23 +214,24 @@ class Activity < ActiveRecord::Base
     if filter_predicates["activityhistory"] == ""
       activityhistory_predicate = ""
     else
-      activityhistory_predicate = "WHERE (" + filter_predicates["activityhistory"] + ")"
+      activityhistory_predicate = "AND (" + filter_predicates["activityhistory"] + ")"
     end
 
-    client = SalesforceService.connect_salesforce(organization_id)
+    # Note: we avoid importing exported CS data residing on SFDC
     if type == "Account"
-      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories #{activityhistory_predicate} limit #{limit}) from Account where Id='#{sfdc_id}' #{entity_predicate}"
+      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{activityhistory_predicate} limit #{limit}) FROM Account WHERE Id='#{sfdc_id}' #{entity_predicate}"  
     elsif type == "Opportunity"
-      query_statement = "select Name, (select Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate from ActivityHistories #{activityhistory_predicate} limit #{limit}) from Opportunity where Id='#{sfdc_id}' #{entity_predicate}"
+      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{activityhistory_predicate} limit #{limit}) FROM Opportunity WHERE Id='#{sfdc_id}' #{entity_predicate}"
     end
     
-    activities = SalesforceService.query_salesforce(client, query_statement)
+    #puts "query_statement: #{ query_statement }"
+    query_result = SalesforceService.query_salesforce(client, query_statement)
 
-    unless activities.nil?  # Salesforce Error
-      unless activities.first.nil?  # in case custom filters results in no record being selected
-        activities.first.each do |a|
+    if query_result[:status] == "SUCCESS"
+      unless query_result[:result].first.nil? # if there is some ActivityHistory
+        query_result[:result].first.each do |a|
           if a.first == "ActivityHistories"
-            if !a.second.nil?
+            if !a.second.nil? # if any ActivityHistory
               a.second.each do |c|
                 owner = { "address": Activity.sanitize(c.Owner.Email)[1, c.Owner.Email.length], "personal": Activity.sanitize(c.Owner.Name)[1, c.Owner.Name.length] }
                 val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
@@ -229,7 +247,7 @@ class Activity < ActiveRecord::Base
         end
 
         insert = 'INSERT INTO "activities" ("posted_by", "project_id", "category", "title", "is_public", "backend_id", "last_sent_date", "last_sent_date_epoch", "from", "to", "cc", "email_messages", "note", "created_at", "updated_at") VALUES'
-        on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages'
+        on_conflict = 'ON CONFLICT (category, backend_id, project_id) DO UPDATE SET title = EXCLUDED.title, note = EXCLUDED.note, email_messages = EXCLUDED.email_messages, last_sent_date = EXCLUDED.last_sent_date, last_sent_date_epoch = EXCLUDED.last_sent_date_epoch, updated_at = EXCLUDED.updated_at'
         values = val.join(', ')
 
         if !val.empty?
@@ -238,14 +256,143 @@ class Activity < ActiveRecord::Base
             Activity.connection.execute([insert,values,on_conflict].join(' '))
           end
         end
-        #puts "************* Result of:", query_statement
-        #print "-> # of rows UPSERTed into Activities = ", val.count, " total *************\n"
+        #puts "***** Result of:", query_statement
+        #puts "-> # of rows UPSERTed into Activities = #{val.count} total *****"
+        if val.count > 0
+          result = { status: "SUCCESS", result: "No. of rows UPSERTed into Activities = #{val.count}", detail: "#{ query_result[:detail] }" }
+        else
+          result = { status: "SUCCESS", result: "Warning: no rows inserted.", detail: "No SFDC activity to import!" }
+        end
       end
-    else
-      #TODO: Handle error
+    else  # SFDC query failure
+      result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
+    end
+
+    result
+  end
+
+  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory).
+  # Parameters:   client - SFDC connection
+  #               type - SFDC entity type: 'Account' or 'Opportunity'
+  #               from_date (optional) - the start date of a date range (e.g., "2018-01-01")
+  #               to_date (optional) - the end date of a date range (e.g., "2018-01-01")
+  # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
+  def self.delete_cs_activities(client, type="Account", from_date=nil, to_date=nil)
+    delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
+    delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
+    delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
+    puts "Deleting all existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce.  SFDC query=\'#{delete_tasks_query_stmt}\'...."
+    query_result = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
+    #tasks = client.query(delete_tasks_query_stmt)
+
+    if query_result[:status] == "SUCCESS"
+      query_result[:result].each { |t| t.destroy }
+      puts "Deletion completed!"
+    else  # SFDC query failure
+      puts "Error occured while attempted to delete SFDC Tasks on Salesforce.  #{ query_result[:result] } Detail: #{ query_result[:detail] } "  # proprogate query to caller
     end
   end
 
+  # Bulk export CS Activities to a SFDC Account or Opportunity (as completed Tasks in ActivityHistory).
+  # Parameters:   client - SFDC connection
+  #               project - the CS opportunity from which to export
+  #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
+  #               type - to specify exporting into an SFDC "Account" or "Opportunity"
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - "SUCCESS" if operation is successful with no errors (activities exported or no activities to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
+  #             detail - a list of errors or informational/warning messages.
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil)
+    result = { status: "SUCCESS", result: [], detail: [] }
+
+    project.activities.each do |a|
+      # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.
+      subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " " + a.category + ": "+ a.title
+      description = a.category + " activity (imported from ContextSmith) ——\n"
+      activity_date = Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d")
+      if a.category == Activity::CATEGORY[:Conversation]
+          subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " E-mail: "+ a.title
+          description = "E-mail activity #{CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX}\n"
+          #activity_date = Time.zone.at(m.sentDate).strftime("%b %d")
+          description += "Description:  \"#{ a.title }:\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }"
+          description += !a.is_public ? "  (private)\n" : "\n"
+          a.email_messages.each do |m|
+            description += "—————————————————————————\n"
+            description += "Sender/Recipients: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
+            description += "Date: " + Time.zone.at(m.sentDate).strftime("%b %d") +"\n"
+            description += "Content: " + strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
+          end
+      elsif a.category == Activity::CATEGORY[:Note]
+          description += "Description:  #{ self.get_full_name(a.user) } wrote:\n"
+          description += a.note.present? ? a.note : self.rag_note(a.rag_score.to_i)
+      elsif a.category == Activity::CATEGORY[:Meeting] 
+          description += "Description:  #{ a.title }"
+          description += !a.is_public ? "  (private)\n" : "\n"
+          description += "Time: #{ self.get_calendar_interval(a) }\n"
+          description += "Meeting Organizer: #{ a.from[0].personal ? a.from[0].personal : a.from[0].address }\n"
+          description += "Attendees: #{ self.get_calendar_member_names(a.to) }\n"
+      elsif a.category == Activity::CATEGORY[:JIRA]
+          description += "Description:  #{ a.note }\n"
+          description += " #{ pluralize(a.email_messages.first.issue.fields.comment.total - 1, 'older comment') } on JIRA" if a.email_messages.first.issue.fields.comment.total > 1
+
+          a.email_messages.first.issue.fields.comment.comments.each { |c| description += "\n#{ c.author.displayName } added a comment: #{ c.body }\n" }
+          # "- #{time_ago_in_words(c.updated.to_time)} ago"
+      elsif a.category == Activity::CATEGORY[:Zendesk]
+          description += "Description:  \"#{ a.title }:\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }  #{ a.email_messages.first.status }"
+          description += !a.is_public ? "  (private)\n" : "\n"
+
+          a.email_messages.first.comments.each do |c|
+            description += "#{ c.author } added a comment - #{ c.created_at }\n"
+            description += "Content: #{ strip_tags(simple_format(c.text)) }\n"
+           end
+      elsif a.category == Activity::CATEGORY[:Basecamp2]
+          description += "Description:  \"#{ a.title }\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }"
+          description += !a.is_public ? "  (private)\n" : "\n"
+          a.email_messages.reverse.each do |c|
+            if c.eventable
+              description += "—————————————————————————\n"
+              if c.action == 'commented on'
+                description += "#{ c.creator.name } added a comment - #{ c.created_at.to_date }\n"
+              else
+                description += "#{ c.creator.name } created discussion - #{ c.created_at.to_date }\n"
+              end
+              description += "Content: #{ strip_tags(simple_format(c[:excerpt])) }\n"
+            end
+          end
+      elsif a.category == Activity::CATEGORY[:Alert]
+          description += "Description:  #{ a.title }\n"
+          description += a.note + "\n"
+      else
+          next # if any other Activity type (e.g., Salesforce), skip to the next Activity!
+      end
+
+      # Second, put the fields into a hash object.
+      sObject_meta = { id: sfdc_id, type: type }
+      sObject_fields = { activity_date: Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d"), subject: subject, priority: 'Normal', description: description }
+      # puts "----> sObject_meta:\n #{sObject_meta}\n"
+      # puts "----> sObject_fields:\n #{sObject_fields}\n"
+
+      # Finally, send information in hashes to be created as (completed) Tasks in SFDC.
+      update_result = SalesforceService.update_salesforce(client: client, update_type: "activity", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+
+      if update_result[:status] == "SUCCESS"  # unless failed Salesforce query
+        puts "-> a SFDC Task was created from a ContextSmith activity. New Task Id='#{ update_result[:result] }'."
+        # Don't set result[:status] back to SUCCESS if the export of a previous activity had an ERROR!
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail]
+      else  # Salesforce update failure
+        # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
+        result[:status] = "ERROR"
+        result[:result] << update_result[:result]
+        result[:detail] << update_result[:detail] + " sObject_fields=#{ sObject_fields }"
+      end
+    end # project.activities.each do
+
+    result
+  end
+
+  #
   def self.load_basecamp2_activities(e, project, user, project_id)
     update = e.first['created_at']
     event = Activity.new(
@@ -266,6 +413,7 @@ class Activity < ActiveRecord::Base
     end
   end
 
+  # Note: copy_email_activities() is executed during the onboarding process (from User.confirm_projects_for_user), so SFDC activity is not pushed back to Salesforce here because the user will not have provided SFDC log-in information yet (and we only log activity going forward).
   def self.copy_email_activities(source_project, target_project)
     return if source_project.activities.empty?
 
@@ -336,8 +484,13 @@ class Activity < ActiveRecord::Base
   end
 
   ### methods to batch change jsonb columns
+  # convenience method to make input easier compared to time_shift
+  def time_jump(date)
+    time_shift((date - self.last_sent_date).round)
+  end
+
   # updates all sent_date related fields for the activity by sec (time in seconds)
-  def timejump(sec)
+  def time_shift(sec)
     self.last_sent_date += sec
     self.last_sent_date_epoch = (self.last_sent_date_epoch.to_i + sec).to_s
     em = self.email_messages
@@ -393,4 +546,141 @@ class Activity < ActiveRecord::Base
     message
   end
 
+   def self.rag_note(score)
+    if score
+      s = "Status set to "
+      if score == 3
+        s + Project::RAGSTATUS[:Green]
+      elsif score == 2
+        s + Project::RAGSTATUS[:Amber]
+      elsif score == 1
+        s + Project::RAGSTATUS[:Red]
+      end
+    end
+  end
+
+  # Copied from "app/helpers/application_helper.rb"
+  def self.get_conversation_member_names(from, to, cc, trailing_text="other", size_limit=4)
+    cc_size = (cc.nil? ? 0 : cc.size)
+    to_size = (to.nil? ? 0 : to.size)
+    from_size = (from.nil? ? 0 : from.size)
+
+    total_size = from_size + to_size + cc_size
+
+    if to_size <= size_limit and cc_size == 0
+      return self.get_first_names(from, to, cc)
+    elsif to_size <= size_limit and cc_size > 0
+      remaining = size_limit - to_size
+      if remaining == 0
+        if trailing_text=="other"
+          return self.get_first_names(from, to, nil) + " and " + pluralize(total_size - size_limit, 'other')
+        else
+          return "All"
+        end
+      else # ramaining > 0
+        if cc_size > remaining
+          if trailing_text=="other"
+            return self.get_first_names(from, to, cc[0..(remaining-1)]) + " and " + pluralize(cc_size - remaining, 'other')
+          else
+            return "All"
+          end
+        else # cc_size <= remaining
+          return self.get_first_names(from, to, cc)
+        end
+      end
+    elsif to_size >= size_limit
+      remaining = 0
+      if trailing_text=="other"
+        return self.get_first_names(from, to[0..size_limit], nil) + " and " + pluralize(total_size - size_limit, 'other')
+      else
+        return "All"
+      end
+    end
+  end
+
+  # Copied from "app/helpers/application_helper.rb"
+  def self.get_first_names(from, to, cc)
+    a = []
+
+    if !from.empty?
+      if from[0]["personal"].nil?
+        a << from[0]["address"]
+      else
+        a << get_first_name(from[0]["personal"])
+      end
+    end
+
+    unless to.nil? or to.empty?
+      to.each do |n|
+        if n["personal"].nil?
+          a << n["address"]
+        else
+          a << get_first_name(n["personal"])
+        end
+      end
+    end
+
+    unless cc.nil? or cc.empty?
+      cc.each do |n|
+        if n["personal"].nil?
+          a << n["address"]
+        else
+          a << get_first_name(n["personal"])
+        end
+      end
+    end
+
+    return a.join(', ')
+  end
+
+  # Copied from "app/helpers/projects_helper.rb"
+  def self.smart_email_body(message, users_available)
+    body = message.content.nil? || message.content.is_a?(String) ? message.content : message.content.body
+    if users_available
+      message.temporalItems.reverse_each do |i|
+        task = i.taskAnnotation
+        body.insert(task.endOffset, "</a>").insert(task.beginOffset, "<a class=\"suggested-action\" data-message=\"#{message.messageId}\" data-due-date=\"#{Time.zone.at(i.resolvedDates.first).strftime('%Y-%m-%d')}\">")
+      end if message.temporalItems
+      simple_format(body, {}, sanitize: false)
+    else
+      simple_format(body)
+    end
+  end
+
+  # Copied from "app/helpers/application_helper.rb"
+  def self.get_calendar_interval(event)
+    start = event.last_sent_date
+    end_t = Time.zone.at(event.email_messages.last.end_epoch)
+    if start.to_date == end_t.to_date
+      return start.strftime("%l:%M%P") + ' - ' + end_t.strftime("%l:%M%P")
+    elsif start == start.midnight && end_t == end_t.midnight # if there is no time, date only
+      return start.strftime("%b %e") + ' - ' + end_t.strftime("%b %e")
+    else
+      return start.strftime("%b %e,%l:%M%P") + ' - ' + end_t.strftime("%b %e,%l:%M%P")
+    end
+  end
+
+  # Copied from "app/helpers/application_helper.rb"
+  def self.get_calendar_member_names(to, trailing_text="other", size_limit=6)
+    attendees_size = (to.nil? ? 0 : to.size)
+
+    if attendees_size <= size_limit
+      return get_first_names([], to, nil)
+    else
+      if trailing_text == "other"
+        return get_first_names([], to[0..size_limit], nil) + " and " + pluralize(attendees_size - size_limit, 'other')
+      else
+        return "All"
+      end
+    end
+  end
+
+  def self.get_CS_export_prefix_SOQL_predicate_string
+    soql_predicate = []
+    CATEGORY.each do |k, v|
+      v = "E-mail" if v == CATEGORY[:Conversation]
+      soql_predicate << "Subject like '#{CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX} #{v}:%'"
+    end
+    soql_predicate.join(" OR ")
+  end
 end

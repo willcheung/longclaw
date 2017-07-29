@@ -1,18 +1,29 @@
 <% remote ||= false %>
-<% url = @domain ? extension_create_account_path : accounts_path %>
+<% url = @domain ? extension_create_account_path : (modal_id == 'edit_account_modal' ? account_path : accounts_path) %>
 <%= simple_form_for @account, remote: remote, html: {role: :form, 'data-model' => 'account'}, url: url do |f| %>
 
   <span class="help-block" style="color:red"></span>      
   <%# Added Bootstrap classes, and help-block container for error messages %> 
   <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
-  <%= f.input :category, wrapper_html: { class: 'col-md-4'}, collection: @account_types, selected: @account.category %>
-  <% if @domain %>
-    <%= f.input :website, wrapper_html: { class: 'col-md-12'}, input_html: { value: 'http://www.'+@domain } %>
-    <%= f.input :domain, as: :hidden, input_html: { value: @domain } %> 
-    <input type="hidden" name="emails" value="<%= params[:emails] %>">
-    <input type="hidden" name="names" value="<%= params[:names] %>">
+  <% if current_user.trial? && @domain %>
+    <!-- category="Customer" for Trial users in Chrome extension -->
+    <%= f.input :category, as: :hidden, input_html: {value: "#{Account::CATEGORY[:Customer]}"} %>
   <% else %>
-    <%= f.input :website, wrapper_html: { class: 'col-md-12'} %>
+    <%= f.input :category, label: Account::MAPPABLE_FIELDS_META["category"], wrapper_html: { class: 'col-md-4'}, collection: @account_types, selected: @account.category %>
+  <% end %>
+  <% if @domain %>
+    <%= f.input :website, label: Account::MAPPABLE_FIELDS_META["website"], wrapper_html: { class: 'col-md-12'}, input_html: { value: 'http://www.'+@domain } %>
+    <%= f.input :domain, as: :hidden, input_html: { value: @domain } %>
+    <% params[:internal].values.each.with_index.each do |person, i| %>
+      <%= hidden_field_tag "internal[#{i}][]", person[0] %>
+      <%= hidden_field_tag "internal[#{i}][]", person[1] %>
+    <% end if params[:internal].present? %>
+    <% params[:external].values.each.with_index.each do |person, i| %>
+      <%= hidden_field_tag "external[#{i}][]", person[0] %>
+      <%= hidden_field_tag "external[#{i}][]", person[1] %>
+    <% end %>
+  <% else %>
+    <%= f.input :website, label: Account::MAPPABLE_FIELDS_META["website"], wrapper_html: { class: 'col-md-12'} %>
   <% end %>
   
   <%# Added Bootstrap classes %>

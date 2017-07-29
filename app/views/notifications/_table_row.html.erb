@@ -7,17 +7,13 @@
     <input type="checkbox" class="i-checks" id=<%= n.id %> <% if n.is_complete %> checked <% end %> >
   </td>
   <td>
-    <% if n.category == Notification::CATEGORY[:Action] %>
-      <span class="label label-primary">
-    <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
-      <span class="label label-success">
-    <% elsif n.category == Notification::CATEGORY[:Todo] %>
-      <span class="label label-info">
-    <% else %>
-      <span class="label label-danger">
-    <% end %>
-      <%= n.category%>
-      </span>
+    <% labels = {Notification::CATEGORY[:Action] => 'label-primary',
+                 Notification::CATEGORY[:Opportunity] => 'label-success',
+                 Notification::CATEGORY[:Todo] => 'label-info'}
+       labels.default('label-danger')
+       not_label= labels[n.category]
+    %>
+    <span class="label <%= not_label %>"><%= n.category%></span>
   </td>
   <td>
     <div class="task-name">
@@ -58,10 +54,12 @@
     <% if n.original_due_date.nil? %>
         <%= best_in_place n, :original_due_date, :as => :date, :place_holder => '(none)', :inner_class => "due_date_datepicker", :activator => "#task-#{n.id}-due-date-activator" %>
     <% else %>
-        <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(none)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime('%Y-%m-%d')}, :activator => "#task-#{n.id}-due-date-activator" %>
+        <%=best_in_place n, :original_due_date, :as => :date, :place_holder => '(none)', :innner_class => "due_date_datepicker", :display_with => Proc.new { Time.zone.at(n.original_due_date).strftime("%a, %b %-d")}, :activator => "#task-#{n.id}-due-date-activator" %>
         <% if !n.is_complete && Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+            <!-- TODO: Use jQuery to dynamically update these warnings -->
             <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="overdue" data-placement="right" data-original-title="Overdue!"></i>
         <% elsif !n.is_complete && Time.zone.at(n.original_due_date).strftime('%Y-%m-%d') == Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+            <!-- TODO: Use jQuery to dynamically update these warnings -->
             <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:#33adff" data-toggle="overdue" data-placement="right" data-original-title="Due Today!"></i>
         <% else %>
         <% end %>

@@ -35,16 +35,16 @@
     <div class="row border-bottom white-bg dashboard-header">
             <!-- LEFT -->
             <div class="col-md-5">
-                <h4 class="m-l-md">Sort by: 
+                <h4 class="m-l-md">Metric: 
                 <select class="metric_filter col-lg-8" data-placeholder="Select Type">
                     <option value="2">Opportunities</option>
                     <option value="2">Opportunity Revenue</option>
-                    <option value="2">Revenue per Hour Spent (Last 7d)</option>
-                    <option value="2">Time Spent (Last 7d)</option>
+                    <option value="2">Revenue per Hour Spent (Last 14d)</option>
+                    <option value="2" selected="true">Time Spent (Last 14d)</option>
                     <option value="2">On Target</option>
-                    <option value="1" selected="true">Activities (Last 7d)</option>
-                    <option value="2">New Alerts & Tasks (Last 7d)</option>
-                    <option value="2">Closed Alerts & Tasks (Last 7d)</option>
+                    <option value="1">Activities (Last 14d)</option>
+                    <option value="2">New Alerts & Tasks (Last 14d)</option>
+                    <option value="2">Closed Alerts & Tasks (Last 14d)</option>
                     <option value="3">Open Tasks</option>
                   </select>    
                
@@ -56,15 +56,15 @@
             <!-- RIGHT -->
             <div class="col-md-7" style="margin-top:45px;">
                 <div id="intro-account-header">
-                    <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
+                    <div class="row" style="margin-top:100px;">
+                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
                     </div>
                 </div>
 
                 <div id="account-header" style="display:none;">
                     <div class="row m-b-sm">
                         <div class="col-lg-8">
-                            <h1>Will Charleston</h1>
+                            <h1>Neil Anderson</h1>
                         </div>
                         <div class="col-lg-4 m-t-md">
                             <span class="label">Last 14 days</span>
@@ -85,12 +85,12 @@
                             </div>
 
                             <div class="col-md-3 text-center">
-                                <div class="metric text-danger">
+                                <div class="metric">
                                     <div class="metric-title">
-                                        <h4>Open Alerts</h4>
+                                        <h4>Expected Revenue</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">3</h2>
+                                        <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
                                     </div>
                                 </div>
                             </div>
@@ -107,15 +107,16 @@
                             </div>
 
                             <div class="col-md-3 text-center">
-                                <div class="metric">
+                                <div class="metric text-danger">
                                     <div class="metric-title">
-                                        <h4>Opportunity Revenue</h4>
+                                        <h4>Open Alerts</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
+                                        <h2 style="font-weight:600;font-size:46px">3</h2>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
 
                     </div>
@@ -124,14 +125,13 @@
                 
                 <div id="account-charts" style="display:none;">
                     <div class="ibox-content">
-                        <h2>Activities Volume</h2>
-                        
+
                         <div class="row m-t-md">
-                            <div id="activities-chart" style="height:240px"></div>
+                            <div id="customers-volume-chart" style="height:350px"></div>
                         </div>
 
                         <div class="row m-t-md">
-                            <div id="customers-volume-chart" style="height:280px"></div>
+                            <div id="activities-chart" style="height:240px"></div>
                         </div>
 
                     </div>
@@ -162,21 +162,45 @@
                 text: ''
             },
             xAxis: {
-                categories: ['Will Charleston', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Batman', 'Bruce Wallus',
-                              'Wonder Woman', 'Harry Potterson','Luke Walker', 'Danny Adobe', 'Rick Martin', 'Natale Sales'],
+                categories: ['Neil Anderson', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Stephanie Smiles', 'Bruce Wallus',
+                              'Whiteney Sales', 'Harry Potterson','Luke Walker', 'Danny Adobe', 'Rick Martin', 'Natale Salesy'],
                 crosshair: true
             },
             yAxis: {
                 min: 0,
-                max: 100,
                 opposite: true,
                 title: {
                     text: ''
                 },
-                gridLineWidth: 0
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                },
+                gridLineWidth: 0,
+                plotLines: [{
+                    color: '#FF0000', // Red
+                    width: 2,
+                    value: 31.5,
+                    zIndex: 5,
+                    label: {
+                        text: 'Average 31.5',
+                        verticalAlign: 'top',
+                        textAlign: 'right',
+                        y: 120
+                    }
+                }]
+            },
+            tooltip: {
+                shared: true,
+                valueSuffix: ' hrs',
+                hideDelay: '100',
+                followPointer: true
             },
             legend: {
-                enabled: false
+                enabled: true,
+                verticalAlign: 'top'
             },
             plotOptions: {
                 series: {
@@ -190,35 +214,35 @@
                                 renderCharts(this.y);
                             }
                         }
-                    }
+                    },
+                    stacking: 'normal'
                 }   
             },
             credits: {
                 enabled: false
             },
             series: [{
-                name: 'Activities',
-                <% @risk_scores = [96, 95, 82, 81, 80, 79, 74, 74, 72, 70, 68, 55, 46, 32, 25, 25] %>
-                data: [ <% @risk_scores.each do |r| %>
-                {
-                    y: <%= r %>,
-                    color: "<%= if r >= 80.0 
-                            '#ed5565'
-                        elsif r >= 60.0
-                            '#FFA500'
-                        else
-                            '#A1C436'
-                        end %>",
-                }, 
-                <% end %> ],
+                type: 'bar',
+                name: 'Send Attachment',
+                color: '#E74C3C',
+                data: [2, 1.5, 0, 0, 1.25, 2, 0, 1, .5, 1, 1.25, .5, 1, 1.5, .25, 0]
+            },{
+                type: 'bar',
+                name: 'Send E-mails',
+                color: '#5DADE2',
+                data: [13, 20, 18, 17, 16, 12, 10, 10, 9, 8, 8, 9, 5, 3, 4, 4]
             },
             {
-                name: 'Average',
-                type: 'line',
-                lineWidth: 2,
-                color: '#7cb5ec',
-                marker: { enabled: false, radius: 0 },
-                data: [55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55]
+                type: 'bar',
+                name: 'Receive E-mails',
+                color: '#3498DB',
+                data: [17.2, 10.4, 7.6, 9.1, 8.1, 7.0, 3.9, 2.3, 3.0, 2.8, 2.6, 3.8, 2.4, 0.1, 2.6, 2.5]
+            },
+            {
+                type: 'bar',
+                name: 'Meetings & Calls',
+                color: '#F5B041',
+                data: [14, 12, 12, 9, 10, 14, 18, 17, 11, 9, 8, 7, 3, 2, 2, 2]
             }]
         });
     });
@@ -236,19 +260,32 @@
             },
             credits: false,
             title: {
-                text: 'Interaction Time by Account Stream',
+                text: 'Hours Spent (Last 14 days)',
+                align: 'left',
                 style: {
                     color: '#777777',
                     fontSize: '16px'
                 }
             },
             xAxis: {
-                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise']
+                categories: ['<strong>Stark Industries</strong> - $750k, Aug 1', '<strong>Hooli</strong> - $120k, Aug 30', '<strong>Pied Piper</strong> - $45k, Sep 1', '<strong>Global Dynamics</strong> - $500k Jun 1', '<strong>Wayne Enterprise</strong> - $20k, Jun 14', '<strong>Acme Inc.</strong> - $500k, Aug 15', '<strong>GVC</strong> - $50k, Jul 20']
+            },
+            tooltip: {
+                shared: true,
+                valueSuffix: ' hrs',
+                hideDelay: '100',
+                followPointer: true
             },
             yAxis: {
                 min: 0,
                 title: {
                     text: ''
+                },
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
                 }
             },
             legend: {
@@ -256,15 +293,37 @@
             },
             plotOptions: {
                 series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.href = "https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e";
+                            }
+                        }
+                    },
                     stacking: 'normal'
                 }
             },
-            series: [{
-                name: 'Emails',
-                data: [0.5, 1, 2.2, 2.8, 3]
-            }, {
-                name: 'Meetings',
-                data: [0, 1, 0, 0.5, 2]
+            series: [
+            {
+                name: 'Send Attachment',
+                data: [.25, .5, 0, .5, .25, 0, .25],
+                color: '#E74C3C'
+            },
+            {
+                name: 'Send E-mails',
+                data: [3.1, 2.8, 1.5, 1.5, 1.2, 0.4, 0.2],
+                color: '#5DADE2'
+            },
+            {
+                name: 'Receive E-mails',
+                data: [2, .6, .5, .5, .4, 0, 0],
+                color: '#3498DB'
+            }, 
+            {
+                name: 'Meetings & Calls',
+                data: [4, 2.5, 3.2, 1, 0, 0, 0],
+                color: '#F5B041'
             }]
         });
 
@@ -329,7 +388,8 @@
                 enabled: false
             },
             title: {
-                text: "By Day",
+                text: "Activities (Last 14 days)",
+                align: 'left',
                 style: {
                     color: '#777777',
                     fontSize: '16px'
@@ -371,28 +431,21 @@
             },
             series: [{
                 type: 'column',
-                name: 'Email',
+                name: 'Sent E-mails',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(10) }  %>
             },
             {
                 type: 'column',
-                name: 'Meeting',
+                name: 'Received E-mails',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(2) }  %>
+                data: <%= 14.times.map{ Random.rand(5) }  %>
             },
             {
                 type: 'column',
-                name: 'Support Ticket',
-                pointInterval: <%= 1.day * 1000 %>,
-                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(2) }  %>
-            },
-            {
-                type: 'column',
-                name: 'Alerts Closed',
+                name: 'Meetings',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(2) }  %>

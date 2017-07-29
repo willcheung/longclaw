@@ -60,7 +60,7 @@
                <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
                   <thead>
                       <tr>
-                          <th>ContextSmith Streams</th>
+                          <th>ContextSmith Opportunities</th>
                           <th>
                               <div style="padding-top:15px; display: inline; margin-right:5px;">BaseCamp2 Account</div>
                               <!-- <div id="basecamp2-activity-refresh" class="btn btn-sm btn-primary btn-outline "> <i class="fa fa-refresh"></i> Sync All Accounts</div>
@@ -73,7 +73,7 @@
                     <% if @basecamp_connections %>
                       <% @basecamp_connections.each do |b| %>
                         <tr>
-                          <td class="col-lg-2"><%=b['context_project_name']%></td>
+                          <td class="col-lg-2"><a href="<%= project_path(b['project_id']) %>"><%=b['context_project_name']%></a></td>
                           <td class="col-lg-2"><%=b['basecamp_project_name']%></td>
                           <td class="col-lg-2"> 
                           <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline center"  style="font-size:12px;" href="/delete_basecamp2_account/<%=b['int_id']%>" data-method="delete">Remove</a></span></td>                          

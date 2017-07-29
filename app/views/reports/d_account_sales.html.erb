@@ -7,7 +7,7 @@
 <div class="wrapper wrapper-content animated fadeInRight">
 
     <div class="row">
-        <div class="col-lg-4 filter-space">
+        <div class="col-lg-3 filter-space">
             <div>
                 <div class="font-bold col-lg-3 m-t-sm">Region:</div>
                 <select class="category_filter col-lg-8">
@@ -21,15 +21,27 @@
                 </select>
             </div>
         </div>
-        <div class="col-lg-4 filter-space">
+        <div class="col-lg-3 filter-space">
             <div class="">
                 <div class="font-bold col-lg-3 m-t-sm">Stage:</div>
                 <select class="category_filter col-lg-8">
                     <option>Implementation</option>
                     <option>Onboarding</option>
                     <option>Closing</option>
-                    <option>Negotiation</option>
+                    <option selected="true">Negotiation</option>
                     <option>Support</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-lg-3 filter-space">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Owner:</div>
+                <select class="category_filter col-lg-8">
+                    <option>Justin</option>
+                    <option>Bob</option>
+                    <option>Henry</option>
+                    <option selected="true">Rachel</option>
+                    <option>Allison</option>
                 </select>
             </div>
         </div>
@@ -38,13 +50,14 @@
     <div class="row border-bottom white-bg dashboard-header">
             <div class="row">
                 <div class="col-lg-5">
-                    <h4 class="m-l-md">Sort by:
+                    <h4 class="m-l-md">Metric:
                     <select class="metric_filter col-lg-8" data-placeholder="Select Type">
                         <option>Days Inactive</option>
-                        <option value="2">Time Spent (Last 7d)</option>
-                        <option value="2">Revenue per Hour Spent (Last 7d)</option>
-                        <option value="1">Engagement (Last 7d)</option>
-                        <option value="3" selected="true">Risk Score</option>
+                        <option value="2">Time Spent (Last 14d)</option>
+                        <option value="2">Deal Size</option>
+                        <option value="2">Deal Size per Hour (Last 14d)</option>
+                        <option value="1" selected="true">Activities (Last 14d)</option>
+                        <option value="3">Risk Score</option>
                         <!--<option>Days to Renewal</option>-->
                         <option>Days to Close</option>
                         <option value="4">Negative Sentiment</option>
@@ -67,7 +80,7 @@
             <div class="col-lg-7" style="margin-top:45px;">
                 <div id="intro-account-header">
                     <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
+                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
                     </div>
                 </div>
 
@@ -120,13 +133,12 @@
                             <div class="col-md-3 text-center">
                                 <div class="metric">
                                     <div class="metric-title">
-                                        <h4>Opportunity</h4>
+                                        <h4>Deal Size</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:32px;">$1.15M</h2>
+                                        <h2 style="font-weight:600;font-size:46px;">$1.15M</h2>
                                     </div>
                                 </div>
-                                <div class="m-t-sm"><h5><strong>32% of $3.56M</strong><br/>account potential</h5></div>
                             </div>
                         </div>
 
@@ -141,10 +153,6 @@
                     <div id="charts-container" class="ibox-content">
                         <div class="row m-t-md">
                             <div id="risk-chart" style="height:220px;padding-right:15px;padding-left:5px;"></div>
-                        </div>
-
-                        <div class="row m-t-md">
-                            <div id="risk-detection-chart" style="height:220px;overflow:visible"></div>
                         </div>
 
                         <div class="row m-t-md">
@@ -183,13 +191,12 @@
                 text: ''
             },
             xAxis: {
-                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Umbrella Corp', 'Nexus Corp', 'Charleston Tech', 'Bay Dynamics', 'Acme Inc', 'DKNY', 'Ariel Clam Tech',
-                              'SF Dynamics', 'Patriots IT','Boston Industries', 'Dynobot', 'Piper Tail', 'Rectangle Corp', 'NexusT Corp', 'Spider Man Tech', 'Accello', 'Inferion Inc', 'Infiniti', 'Octavia Tech', 'Dirty Rock', 'Design Spaces', 'Newton Beach'],
+                categories: ['Stark Industries ($1.15M)', 'Hooli ($200K)', 'Pied Piper ($2.5M)', 'Umbrella Corp ($850K)', 'Nexus Corp ($500K)', 'Charleston Tech ($500K)', 'Bay Dynamics ($500K)', 'Acme Inc ($500K)', 'DKNY ($500K)', 'Ariel Clam Tech ($500K)',
+                              'SF Dynamics ($500K)', 'Patriots IT ($500K)','Boston Industries ($500K)', 'Dynobot ($500K)', 'Piper Tail ($500K)', 'Rectangle Corp ($500K)', 'NexusT Corp ($500K)', 'Spider Man Tech ($500K)', 'Accello ($500K)', 'Inferion Inc( $500K)', 'Infiniti ($500K)', 'Octavia Tech', 'Dirty Rock', 'Design Spaces', 'Newton Beach'],
                 crosshair: true
             },
             yAxis: {
                 min: 0,
-                max: 100,
                 opposite: true,
                 title: {
                     text: ''
@@ -197,10 +204,16 @@
                 gridLineWidth: 0
             },
             legend: {
-                enabled: false
+                enabled: true,
+                verticalAlign: 'top',
+                itemStyle: {
+                    fontWeight: 'light',
+                    fontSize: 12         
+                }
             },
             plotOptions: {
                 series: {
+                    stacking: 'normal',
                     cursor: 'pointer',
                     point: {
                         events: {
@@ -219,28 +232,20 @@
                 enabled: false
             },
             series: [{
-                name: 'Risk Score',
-                <% @risk_scores = [80, 80, 70, 70, 70, 68, 66, 65, 62, 55, 52, 50, 46, 32, 25, 25, 20, 19, 18, 17, 10, 10, 5, 5, 5] %>
-                data: [ <% @risk_scores.each do |r| %>
-                {
-                    y: <%= r %>,
-                    color: "<%= if r >= 80.0
-                            '#ed5565'
-                        elsif r >= 60.0
-                            '#FFA500'
-                        else
-                            '#A1C436'
-                        end %>",
-                },
-                <% end %> ],
-            },
-            {
-                name: 'Average',
-                type: 'line',
-                lineWidth: 2,
-                color: '#7cb5ec',
-                marker: { enabled: false, radius: 0 },
-                data: [55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55]
+                name: 'E-mails Sent',
+                data: [14, 11, 14, 12, 8, 8, 8, 7, 10, 9, 8, 8, 7, 6, 5, 4, 5, 4]
+            }, {
+                name: 'E-mails Received',
+                data: [8, 8, 4, 8, 6, 6, 5, 6, 1, 2, 1, 2, 1, 1, 1, 2, 1, 3]
+            }, {
+                name: 'Meetings',
+                data: [3, 4, 4, 2, 5, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0]
+            }, {
+                name: 'Salesforce Activities',
+                data: [3, 4, 4, 2, 5, 3, 3, 3, 2, 2, 3, 2, 1, 1, 2, 1, 1, 1]
+            }, {
+                name: 'Support Issues',
+                data: [2, 3, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
             }]
         });
     });
@@ -314,57 +319,39 @@
 
         $('#activities-breakdown').highcharts({
             chart: {
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false,
-                type: 'pie'
+                type: 'bar'
             },
-            credits: false,
             title: {
-                text: "Activities by Team",
+                text: 'Account Engagement (Last 14d)',
                 align: 'left',
-                margin: 0,
+                margin: 10,
                 x: 35,
                 style: {
                     color: '#555555',
-                    fontSize: '16px'
+                    fontSize: '14px'
                 }
             },
-            tooltip: {
-                pointFormat: '{point.percentage:.1f}%'
+            credits: { enabled: false },
+            xAxis: {
+                categories: ['Paul (VP Marketing)', 'Josh (Marketing Manager)', 'William (IT)', 'Chloe (VP Sales)', 'Ben (Director Demand Gen)']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: false
             },
             plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: {
-                        enabled: true,
-                        distance: 10,
-                        format: '{point.name}',
-                        style: {
-                            fontSize: 10,
-                            fontWeight: 'normal'
-                        }
-                    }
+                series: {
+                    stacking: 'normal'
                 }
             },
             series: [{
-                name: 'Team',
-                colorByPoint: true,
-                data: [{
-                    name: 'Sales',
-                    y: 56.3,
-                    sliced: true
-                }, {
-                    name: 'Marketing',
-                    y: 24
-                }, {
-                    name: 'Customer Success',
-                    y: 10.3
-                }, {
-                    name: 'Product',
-                    y: 4.7
-                }]
+                name: 'Activities',
+                data: [5, 4, 4, 3, 1]
             }]
         });
 
@@ -373,13 +360,13 @@
                 type: 'bar'
             },
             title: {
-                text: 'Time Spent (Last 7d)',
+                text: 'Team Time Spent (Last 14d)',
                 align: 'left',
-                margin: 0,
+                margin: 10,
                 x: 35,
                 style: {
                     color: '#555555',
-                    fontSize: '15px'
+                    fontSize: '14px'
                 }
             },
             credits: { enabled: false },
@@ -401,8 +388,8 @@
                 }
             },
             series: [{
-                name: 'Engagement',
-                data: [7, 5, 4, 3, 2]
+                name: 'Activities',
+                data: [7, 4, 4, 3, 2]
             }]
         });
 
@@ -410,7 +397,7 @@
 
         $('#risk-chart').highcharts({
             title: {
-                text: "Risk Score Trend",
+                text: "Risk Score (Last 14 days)",
                 align: 'left',
                 margin: 0,
                 x: 35,
@@ -504,7 +491,7 @@
                 ]
 
             });
-
+/*
         $('#risk-detection-chart').highcharts({
             chart: {
                 events:{
@@ -593,7 +580,7 @@
                 marker : {symbol : 'square', radius: 6 }
             }]
         });
-
+*/
         $('#activities-chart').highcharts({
             chart: {
                 events:{
@@ -607,7 +594,7 @@
                 enabled: false
             },
             title: {
-                text: "Engagement",
+                text: "Activities (Last 14 days)",
                     align: 'left',
                     margin: 0,
                     x: 35,
@@ -655,7 +642,7 @@
             },
             series: [{
                 type: 'column',
-                name: 'Email',
+                name: 'E-mail',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: [0,0,6,5,6,7,12,15,10,10,12,8,5,1]
@@ -667,19 +654,19 @@
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: [0,0,0,1,0,0,1,5,8,5,6,6,2,1]
             },
-            // {
-            //     type: 'column',
-            //     name: 'Support Ticket',
-            //     pointInterval: <%= 1.day * 1000 %>,
-            //     pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-            //     data: [0,0,2,1,1,0,1,5,6,6,8,5,2,1]
-            // },
             {
                 type: 'column',
                 name: 'Salesforce Activity',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: <%= 14.times.map{ Random.rand(2) }  %>
+            },
+            {
+                type: 'column',
+                name: 'Support Issues',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: [0,0,0,1,1,0,2,0,0,0,0,0,0,0]
             },
             {
                 type: 'spline',

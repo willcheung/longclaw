@@ -1,0 +1,312 @@
+<div id="user-header">
+    <div class="row m-b-sm">
+        <div class="col-lg-10">
+            <h1><%= get_full_name @user %></h1>
+        </div>
+        <div class="col-lg-2 m-t-md">
+            <span class="label" style="font-size: 11pt">Last 14 days</span>
+        </div>
+    </div>
+
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <div class="metric text-danger">
+                    <div class="metric-title">
+                        <h4>Open Alerts & Tasks</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px"><%= @open_alerts %></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>Opportunities</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px"><%= @accounts_managed %></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>Expected Revenue</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px;"><% if @sum_expected_revenue.nil? %> - <% else %>$<%= number_to_human(@sum_expected_revenue) %><% end %></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>On Target</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px">-</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- end id="user-header" -->
+    
+<div id="user-charts">
+    <div class="ibox-content">
+
+        <div class="row m-t-md">
+            <div id="customers-interaction-chart" style="height:400px"></div>
+        </div>
+
+        <div class="row m-t-md">
+            <div id="activities-chart" style="height:240px"></div>
+        </div>
+
+    </div>
+
+    <div class="ibox-content">
+        <div class="row">
+            <div id="tasks-trend" style="height:280px"></div>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript">
+    
+    /*****
+    Render right charts
+    ******/
+
+    function renderCharts(riskScore) {
+
+        $('#customers-interaction-chart').highcharts({
+            chart: {
+                type: 'bar',
+                marginRight: 25
+            },
+            credits: false,
+            title: {
+                text: 'Time Spent (last 14 days)',
+                align: 'left',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+            },
+            subtitle: {
+                text: '(in hh:mm)',
+                align: 'left'
+            },
+            tooltip: {
+                pointFormatter: function() {
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                }
+            },
+            xAxis: {
+                categories: <%= @interaction_time_per_account.map(&:name).to_json.html_safe %>,
+            },
+            yAxis: {
+                min: 0,
+                minTickInterval: 60,
+                // tickAmount: 5,
+                startOnTick: true,
+                title: {
+                    text: ''
+                },
+                labels: {
+                    formatter: function() {
+                        return convert_secs_to_ddhhmm(this.value);
+                    }
+                },
+                stackLabels: {
+                    enabled: true,
+                    formatter: function () {
+                        return convert_secs_to_ddhhmm(this.total);
+                    },
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
+                    }
+                }
+            },
+            legend: {
+                reversed: true
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'Meetings',
+                color: "<%= highcharts_series_color('Meetings') %>",
+                data: <%= @interaction_time_per_account.map(&:meeting_time).to_json.html_safe %>
+            }, {
+                name: 'Read E-mails',
+                color: "<%= highcharts_series_color('Read E-mails') %>",
+                tooltip: {
+                    pointFormatter: function() {
+                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    }
+                },
+                data: <%= @interaction_time_per_account.map(&:read_time).to_json.html_safe %>
+            }, {
+                name: 'Sent E-mails',
+                color: "<%= highcharts_series_color('Sent E-mails') %>",
+                tooltip: {
+                    pointFormatter: function() {
+                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    }
+                },
+                data: <%= @interaction_time_per_account.map(&:sent_time).to_json.html_safe %>
+            }]
+        });
+
+
+        $('#tasks-trend').highcharts({
+            title: {
+                text: 'Alerts and Tasks',
+                align: 'left',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+            },
+            credits: false,
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+                min: 0,
+                softMax: 1,
+                minorGridLineWidth: 0,
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                shared: true
+            },
+            series: [{
+                name: 'Total Open Tasks',
+                data: <%= @tasks_trend_data.total_open.to_json.html_safe %>,
+                type: 'area',
+                color: '#cccccc',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'New Tasks',
+                data: <%= @tasks_trend_data.new_open.to_json.html_safe %>,
+                type: 'line',
+                color: '#B23232',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }, {
+                name: 'Closed Tasks',
+                data: <%= @tasks_trend_data.new_closed.to_json.html_safe %>,
+                type: 'line',
+                color: '#149414',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            }]
+        });
+
+
+        $('#activities-chart').highcharts({
+            chart: {
+                events:{
+                  load: function(event) {
+                    var extremes = this.yAxis[0].getExtremes();
+                    this.yAxis[0].setExtremes(0, extremes.dataMax);
+                    }
+                },
+            },
+            credits: {
+                enabled: false
+            },
+            title: {
+                text: "Activities (Last 14 days)",
+                align: 'left',
+                style: {
+                    color: '#777777',
+                    fontSize: '16px'
+                }
+                
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: { text: '' },
+                labels: { enabled: true },
+                minTickInterval: 1,
+                minorGridLineWidth: 0,
+                softMax: 1
+            },
+            legend: {
+                enabled: true
+            },
+            tooltip: {
+                positioner: function () {
+                    return {
+                        x: this.chart.chartWidth - this.label.width, // right aligned
+                        y: -15 // align to title
+                    };
+                },
+                borderWidth: 0,
+                backgroundColor: 'none',
+                pointFormat: '{point.stackTotal}',
+                xDateFormat: '%b %e',
+                shadow: false,
+                style: {
+                    fontSize: '16px',
+                    color: '#555555'
+                }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [
+            <% @activities_by_category_date.each do |category, activities_by_date| %>
+            {
+                type: 'column',
+                name: '<%= category %>',
+                color: '<%= highcharts_series_color(category) %>',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= activities_by_date.map {|c| c.num_activities }.to_json.html_safe %>
+            },
+            <% end %>
+            // {
+            //     type: 'column',
+            //     name: 'Alerts Closed',
+            //     pointInterval: <%= 1.day * 1000 %>,
+            //     pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            //     data: <%= 14.times.map{ Random.rand(2) }  %>
+            // },
+            // {
+            //     type: 'column',
+            //     name: 'Tasks Closed',
+            //     pointInterval: <%= 1.day * 1000 %>,
+            //     pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+            //     data: <%= 14.times.map{ Random.rand(2) }  %>
+            // }
+            ]
+        });
+
+    };
+</script>

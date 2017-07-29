@@ -2,8 +2,6 @@
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
-//= require datepicker/datepicker3.css
-
 .merge-wrapper {
   width: 450px;
   vertical-align: middle;
@@ -26,6 +24,12 @@
 .metric-content h3 {
   margin: 0;
   font-size: 28px;
+  font-weight: 300;
+}
+
+.metric-content h4 {
+  margin: 0;
+  font-size: 18px;
   font-weight: 300;
 }
 
@@ -145,7 +149,7 @@
   border-left: 4px solid #A1C436;
 }
 
-//* ----- SimpleForm Styles -------*//
+//* ----- SimpleForm Styles (used for New Note's RAG-Status radio buttons) -------*//
 
 .simple_form {
   label > input{

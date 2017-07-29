@@ -1,0 +1,87 @@
+// Shared metric update code (left panel) between accounts_dashboard.html.erb & ad_sort_data.js.erb
+var chart = $('#left-chart').highcharts();
+var barColors = { 
+  default: '<%= highcharts_series_color() %>', 
+  highRisk: '#ED5565',
+  mediumRisk: '#FFA500',
+  lowRisk: '#A1C436',
+  negative: '#ff4d4d' // ruby red
+};
+
+//clear all existing series
+while(chart.series.length > 0) {
+  chart.series[0].remove();
+}
+
+<% if @data.present? %>
+  chart.xAxis[0].setCategories(<%= @data.map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+  <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
+    <% @categories.each do |c| %>
+    chart.addSeries({
+      name: "<%= c.nil? ? 'NoActivity' : c %>",
+      color: "<%= highcharts_series_color(c) %>",  //set color according to category
+      showInLegend: false,
+      data: [ 
+      <% @data.each do |opp| %> 
+        <% m = opp.y.find{|m| m.category == c} if opp.y.present? %>  //find metric for this opportunity
+        {
+          y: <%= (m.present? && m.num_activities.present? && c.present?) ? m.num_activities : 0 %>,
+          id: "<%= opp.id %>",
+          //name: "<%= opp.name %>"
+        }, 
+      <% end if @data.present? %> 
+      ]
+    }, false)
+    <% end unless @categories.blank? %>
+  <% else %>
+    chart.addSeries({
+      name: "<%= @metric.html_safe %>",
+      data: [ <% @data.each do |opp| %>
+      {
+        y: <%= opp.y %>,
+        color: barColors["<%= opp.color %>"],
+        id: "<%= opp.id %>",
+        //name: "<%= opp.name %>"
+      },
+      <% end if @data.present? %> 
+      ]
+    }, false);
+  <% end %>
+
+  <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
+    // Show legend for specific metric and valid series
+    for (var i=0; i < chart.series.length; i++) {
+      if (chart.series[i].name !== 'NoActivity')
+      chart.series[i].update({ showInLegend: true });
+    }
+  <% end %>
+
+<% end %> // if @data.present? 
+
+// chart.xAxis[0].update({min: undefined, max: undefined}, false);
+chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
+chart.setSize(undefined, 50 + Math.min(1150, <%= @data.present? ? @data.size : 0 %> * 90));
+
+// <% @data.each do |d| %>console.log("<%= d.name.html_safe %>: <%= d %>");<% end %>
+
+// handle clicking on opportunity label
+$('.highcharts-xaxis-labels text').click(function() {
+    $.get("ad_account_data/" + get_category_uuid($(this).children(0)[0].firstChild.data), function (data) {
+        $("#account-data").html(data);
+        renderCharts(this.y);
+    })
+});
+
+function get_category_uuid (catname) {
+    //console.log("Getting proj: " + catname);
+  <% if @data.present? %>
+    var map = {
+    <% @data.each do |d| %>
+      "<%= d.name.html_safe %>": "<%= d.id %>",
+    <% end %>
+    };
+    return map[catname];
+  <% else %>
+    return "";
+  <% end %>
+}

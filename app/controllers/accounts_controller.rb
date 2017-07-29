@@ -1,22 +1,35 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: [:show, :edit, :update, :destroy, :set_salesforce_account] 
   before_action :get_custom_fields_and_lists, only: [:index, :show]
+  before_action :manage_filter_state, only: [:index]
 
   # GET /accounts
   # GET /accounts.json
   def index
+    @CONTACTS_LIST_LIMIT = 8 # Max number of Contacts to show in mouse-over tooltip
     @title = 'Accounts'
-
-    if params[:type]
-      @accounts = Account.eager_load(:projects, :user).where('accounts.category = ? and accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', params[:type], current_user.organization_id, current_user.id).order('accounts.name')
+    if params[:account_type] == "none"
+      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
+    elsif params[:account_type]
+      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ? AND accounts.category = ?", current_user.organization_id, params[:account_type]).order('accounts.name')
     else
-      @accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order('accounts.name')
+      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
     end
-    
-    @account_last_activity = Account.eager_load(:activities).where("organization_id = ? and (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
+
+    unless params[:owner] == '0'
+      if params[:owner]
+        if params[:owner] != 'none'
+          @accounts = @accounts.where(owner_id: params[:owner])
+        else
+          @accounts = @accounts.where(owner_id: nil)
+        end
+      end
+    end
+
+    @account_last_activity = Account.eager_load(:activities).where("organization_id = ? AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)) AND projects.status = 'Active' AND activities.category not in ('Alert','Note')", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
 
-    @owners = User.where(organization_id: current_user.organization_id)
+    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
   end
 
   # GET /accounts/1
@@ -26,11 +39,12 @@ class AccountsController < ApplicationController
     @project_last_email_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.category = 'Conversation'").maximum("activities.last_sent_date")
     @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.last_sent_date > (current_date - interval '7 days')").references(:activities).count(:activities)
     @project_pinned = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
-
     @account_contacts = @account.contacts
+    @clearbit_domain = @account.domain? ? @account.domain : (@account_contacts.present? ? @account_contacts.first.email.split("@").last : "")
     @project = Project.new(account: @account)
+    @contact = Contact.new(account: @account)
 
-    @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}  #need this for New Stream modal
+    @opportunity_types = !@custom_lists.blank? ? @custom_lists["Opportunity Type"] : {}  #need this for New Opportunity modal
   end
 
   # GET /accounts/new
@@ -48,7 +62,7 @@ class AccountsController < ApplicationController
     @account = Account.new(account_params.merge(owner_id: current_user.id, 
                                                 created_by: current_user.id,
                                                 updated_by: current_user.id,
-                                                organization_id: current_user.organization.id,
+                                                organization_id: current_user.organization_id,
                                                 status: 'Active'))
     respond_to do |format|
       if @account.save
@@ -90,45 +104,38 @@ class AccountsController < ApplicationController
   end
 
   # Handle bulk operations
-  def bulk 
-    newArray = params["selected"].map { |key, value| key }
+  def bulk
+    render :json => { success: true }.to_json and return if params['account_ids'].blank?
+    bulk_accounts = Account.visible_to(current_user).where(id: params['account_ids'])
 
-    if(params["operation"]=="delete")
-      bulk_delete(newArray)
-    else
-      bulk_update(params["operation"], newArray, params["value"])
+    case params['operation']
+      when 'delete'
+        bulk_accounts.destroy_all
+      when 'category'
+        bulk_accounts.update_all(category: params['value'])
+      when 'owner'
+        bulk_accounts.update_all(owner_id: params['value'])
+      else
+        puts 'Invalid bulk operation, no operation performed'
     end
 
-    render :json => {:success => true, :msg => ''}.to_json 
+    render :json => {:success => true, :msg => ''}.to_json
   end
-
 
   def set_salesforce_account
     @account.update_attributes(salesforce_id: params[:sid])
     respond_to :js
-
   end
 
   private
-    def bulk_update(field, array_of_ids, new_value)
-      if(!array_of_ids.nil?)
-        if field == "category"
-          Account.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(category: new_value)
-        elsif field == "owner"
-          Account.where("id IN ( '#{array_of_ids.join("','")}' )").update_all(owner_id: new_value)
-        end
-      end
-    end
-
-    def bulk_delete(array_of_id)
-      if(!array_of_id.nil?)
-        Account.where("id IN ( '#{array_of_id.join("','")}' )").destroy_all
-      end
-    end
 
     # Use callbacks to share common setup or constraints between actions.
     def set_account
-      @account = Account.find(params[:id])
+      begin
+        @account = Account.visible_to(current_user).find(params[:id])
+      rescue ActiveRecord::RecordNotFound
+        redirect_to root_url, :flash => { :error => "Account not found or is private." }
+      end
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
@@ -140,4 +147,14 @@ class AccountsController < ApplicationController
       @custom_lists = current_user.organization.get_custom_lists_with_options
       @account_types = !@custom_lists.blank? ? @custom_lists["Account Type"] : {}
     end
+
+    def manage_filter_state
+    if params[:account_type] 
+      cookies[:account_type] = {value: params[:account_type]}
+    else
+      if cookies[:account_type]
+        params[:account_type] = cookies[:account_type]
+      end
+    end
+  end
 end

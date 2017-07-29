@@ -1,5 +1,87 @@
+<strong><span id="pm-length"><%= @project_members.length %></span> People</strong>
+<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People who are currently working on this opportunity."></i>
 <dd class="project-people members">
     <% @project_members.each do |pm| %>
-        <%= render 'project_members/extension_member', pm: pm %>
+        <%= render 'project_members/member', pm: pm %>
     <% end %>
 </dd>
+
+<% if @suggested_members.present? %>
+<strong><span id="suggested-length"><%= @suggested_members.length %></span> Suggested People</strong>
+<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="People we picked up in your e-mails who might be part of this opportunity. Click the ✔ or X to confirm or reject our suggestions."></i>
+<dd class="project-people suggested-members">
+    <% @suggested_members.each do |pm| %>
+        <%= render 'project_members/member', pm: pm %>
+    <% end %>
+</dd>
+<% end %>
+
+<p class="text-center m-t-md"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= account_path(@project.account) %>" target="_blank">View/edit Contacts &rarr;</a></p>
+<p class="text-center">
+    <button 
+    <%= "disabled " if @salesforce_user.nil? || !@linked_to_sfdc  %>
+    id="salesforce-ext-export-cs-contacts" class="btn btn-sm btn-primary btn-outline sfdc-refresh" style="margin-left:6%" btnLabel="Export Contacts to Salesforce">
+    <i class="fa fa-refresh"></i>&nbsp;Export Contacts to Salesforce
+    </button>
+    <% if (@salesforce_user && !@linked_to_sfdc) || (@salesforce_user.nil? && @enable_sfdc_login_and_linking) %>
+        <i class="fa fa-exclamation-triangle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
+        <%= @salesforce_user ? "Link to a Salesforce Account first!" : "Click on Salesforce menu above and log in first!" %>
+        "></i>
+    <% else %>
+        <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
+        <%= @salesforce_user ? (@linked_to_sfdc ? "Send Contacts to linked Salesforce Account." : "-") : (@enable_sfdc_login_and_linking ? "-" : "To export Contacts to the linked Salesforce Account, please contact ContextSmith support or your ContextSmith administrator.") %>
+        "></i>
+    <% end %>
+</p>
+
+<% if @salesforce_user && @linked_to_sfdc %>
+<script>
+    $('#salesforce-ext-export-cs-contacts').click(function(){
+        var self = $(this);
+        var entity_type, entity_type_btn_str;
+        var buttonTxtStr = self.attr("btnLabel");
+
+        if ($(this).attr("id").includes("salesforce-ext-export-cs-contacts")) {  //clicked on 'Export Contacts to Salesforce'
+            entity_type = "contacts";
+        }
+        else {
+            return;
+        }
+
+        // console.log("$(this).attr('id'): " + self.attr("id"));
+        
+        $.ajax('/salesforce/update/' + entity_type, {
+            async: true,
+            method: "POST",
+            beforeSend: function () {
+                self.css("pointer-events", "none");
+                $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
+            },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ " + buttonTxtStr);
+            },
+            error: function(data) {
+                var res = JSON.parse(data.responseText);
+                self.addClass('error-btn-highlight');
+                alert(buttonTxtStr + " error!\n\n" + res.error);
+            },
+            statusCode: {
+                500: function() {
+                    //self.css("margin-left","0px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce update error");
+                },
+                503: function() {
+                    //self.css("margin-left","0px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                },
+            },
+            complete: function() {
+                self.css("pointer-events", "auto");
+                $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
+                location.reload();
+            }
+        });
+    });
+</script>
+<% end %>

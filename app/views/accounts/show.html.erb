@@ -1,5 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-8">
+        <img class="pull-left m-r-sm m-t-sm" style="max-height:75px;max-width:75px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
         <h2>
             <%= @account.name %>&nbsp;&nbsp;&nbsp;&nbsp;
             <% #if (@account.owner_id.nil? || @account.owner_id == current_user.id) %>
@@ -21,7 +22,7 @@
 
     <% if current_user.power_user? %>
     <div class="col-lg-2">
-        <%= link_to '+ New Stream', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+        <%= link_to '+ New Opportunity', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>
     <% end %>
     <div class="col-lg-2">
@@ -35,7 +36,7 @@
             <div class="ibox">
                 <div class="ibox-content">
                     <div class="m-lg m-t-xs">
-                         <h4><strong>Active Streams</strong></h4>
+                         <h4><strong>Active Opportunities</strong></h4>
                             <div class="row">
                                 <div class="col-md-12">
                                 <ul class="todo-list medium-list m-t">
@@ -50,7 +51,7 @@
                                             </li>
                                          <% end %>
                                     <% else %>
-                                        <p class="m-t-md">No active Streams.</p>
+                                        <p class="m-t-md">No active Opportunities.</p>
                                     <% end %>
                                 </ul>
                             </div>
@@ -74,22 +75,38 @@
                                                 <table class="table table-striped table-hover">
                                                     <thead>
                                                         <tr>
-                                                            <th>First Name</th>
-                                                            <th>Last Name</th>
-                                                            <th>Title</th>
+                                                            <th><%= Contact::MAPPABLE_FIELDS_META["first_name"] %></th>
+                                                            <th><%= Contact::MAPPABLE_FIELDS_META["last_name"] %></th>
+                                                            <th><%= Contact::MAPPABLE_FIELDS_META["title"] %></th>
+                                                            <th><%= Contact::MAPPABLE_FIELDS_META["department"] %></th>
+                                                            <th><%= Contact::MAPPABLE_FIELDS_META["buyer_role"] %></th>
                                                             <th></th>
-                                                            <th>Email</th>
+                                                            <th><%= Contact::MAPPABLE_FIELDS_META["email"] %></th>
+                                                            <th><%= Contact::MAPPABLE_FIELDS_META["phone"] %></th>
+                                                            <th><%= Contact::MAPPABLE_FIELDS_META["background_info"] %></th>
                                                             <th></th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <% @account_contacts.each do |contact| %>
+                                                        <% @account_contacts.sort_by {|c| [c.last_name.upcase, c.first_name.upcase]}.each do |contact| %>
                                                         <tr>
-                                                            <td class="contact-info"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-                                                            <td class="contact-info"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-                                                            <td class="contact-info"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
-                                                            <td class="contact-type"><i class="fa fa-envelope"> </i></td>
-                                                            <td class="contact-info"><%= best_in_place contact, :email, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-email-activator" %><i id="contact-<%= contact.id %>-email-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs edit-contact"></td>
+                                                            <td class="editable-field"><%= best_in_place contact, :first_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-first_name-activator" %><i id="contact-<%= contact.id %>-first_name-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+                                                            <td class="editable-field"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+                                                            <td class="editable-field"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+                                                            <td class="editable-field"><%= best_in_place contact, :department, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-dept-activator" %><i id="contact-<%= contact.id %>-dept-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+                                                            <td class="editable-field"><%= best_in_place contact, :buyer_role, :as => :select, :collection => Contact::ROLE, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
+                                                            <td class="contact-type">
+                                                            <% if contact.is_source_from_salesforce? %>
+                                                                <img id="sfdc-icon" style="width:15px" src="/assets/images/salesforce.png" style="width:0px;" title="Source: Salesforce"/>
+                                                            <% else %>
+                                                                <i class="fa fa-envelope"> </i>
+                                                            <% end %>
+                                                            </td>
+                                                            <td class="editable-field"><%= best_in_place contact, :email, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-email-activator" %><i id="contact-<%= contact.id %>-email-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+                                                            <td class="editable-field"><%= best_in_place contact, :phone, :as => 'input', :place_holder => '-', :display_with => :number_to_phone, :activator => "#contact-#{contact.id}-phone-activator" %><i id="contact-<%= contact.id %>-phone-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+                                                            <% @BGINFO_PREV_LEN_MAX = 35 %>
+                                                            <td class="editable-field"><i class="fa fa-sticky-note-o">&nbsp;</i><%= best_in_place contact, :background_info, :as => 'textarea', :place_holder => "&nbsp;", :display_with => lambda { |v| v.present? && v.respond_to?(:to_s) && v.to_s.length > @BGINFO_PREV_LEN_MAX ? v[0...@BGINFO_PREV_LEN_MAX] + "..." : v }, :activator => "#contact-#{contact.id}-background-info-activator" %><i id="contact-<%= contact.id %>-background-info-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+                                                            <!--    <td><%= link_to "<i class=\"fa fa-sticky-note-o\"></i>".html_safe, contact, method: :none, data: {confirm: "About to edit this contact. Are you sure?"} %></td> -->
                                                             <td><%= link_to "<i class=\"fa fa-trash-o\"></i>".html_safe, contact, method: :delete, data: {confirm: "About to delete this contact. Are you sure?"} %></td>
                                                         </tr>
                                                         <% end %>
@@ -109,14 +126,15 @@
     <div class="col-lg-3">
         <div class="wrapper wrapper-content project-manager">
             <div class="m-t-md">
-                <strong>Account Description:</strong>
+                <strong>Account <%= Account::MAPPABLE_FIELDS_META["description"] %>:</strong>
                 <i id="acc-desc-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
             </div>
             <small><%= best_in_place @account, :description, :as => 'textarea', :place_holder => '(no description)', :display_with => :simple_format, :inner_class => 'col-sm-12', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :activator => '#acc-desc-activator' %></small>
 
             <ul class="list-group clear-list m-t-sm">
+                <!-- Standard fields -->
                 <li class="list-group-item m-b-sm first-item">
-                    <strong>Type:</strong>
+                    <strong><%= Account::MAPPABLE_FIELDS_META["category"] %>:</strong>
                     <span class="pull-right"><%= best_in_place @account, :category, :as => :select, :collection => @account_types, :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                 </li>
                 <li class="list-group-item m-b-sm">
@@ -124,20 +142,21 @@
                     <span class="pull-right"><%= get_full_name(@account.user) %></span>
                 </li>
                 <li class="list-group-item m-b-sm">
-                    <strong>Phone:</strong>
+                    <strong><%= Account::MAPPABLE_FIELDS_META["phone"] %>:</strong>
                     <i id="acc-phone-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                     <span class="pull-right m-r-xs"><%= best_in_place @account, :phone, :as => 'input', :place_holder => '(none)', :activator => '#acc-phone-activator' %></span>
                 </li>
                 <li class="list-group-item m-b-sm">
-                    <strong>Website:</strong>
+                    <strong><%= Account::MAPPABLE_FIELDS_META["website"] %>:</strong>
                     <i id="acc-website-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                     <span class="pull-right m-r-xs"><%= best_in_place @account, :website, :as => 'input', :place_holder => '(none)', :activator => '#acc-website-activator' %></span>
                 </li>
                 <li class="list-group-item m-b-sm">
-                    <strong>Address:</strong>
+                    <strong><%= Account::MAPPABLE_FIELDS_META["address"] %>:</strong>
                     <i id="acc-address-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
                     <span class="pull-right m-r-xs"><%= best_in_place @account, :address, :as => 'textarea', :place_holder => '(none)', :display_with => :simple_format, :activator => '#acc-address-activator' %> </span>
                 </li>
+                <!-- End: standard fields -->
                 <!-- Custom fields -->
                 <% @account.custom_fields.each.with_index do |cf, i| %>
                     <li class="list-group-item m-b-sm">
@@ -153,7 +172,7 @@
                         <% end %>
                     </li>
                 <% end %>  
-            <!-- End: custom fields -->
+                <!-- End: custom fields -->
                 <li class="list-group-item small m-t-md first-item">
                     <span class="pull-right"><%= @account.updated_at.to_date.to_formatted_s(:long) %></span>
                     Last Updated:
@@ -168,8 +187,6 @@
 </div>
 
 <script>
-    $('[data-toggle="tooltip"]').tooltip();
-
     // Fix best_in_place bug/side-effect that adds paragraph tags to the .html of custom field dropdown lists, causing the value to be displayed awkwardly
     $('.best_in_place').bind('ajax:success', function(){ 
         this.innerHTML = this.innerHTML.replace('\<p\>', '').replace('\<\/p\>', '');

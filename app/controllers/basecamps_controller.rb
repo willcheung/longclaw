@@ -1,4 +1,3 @@
-
 class BasecampsController < ApplicationController
 	layout "empty", only: [:index]
 
@@ -6,15 +5,8 @@ class BasecampsController < ApplicationController
 	def index
 	end
 
-	def self.load
-		# call this method in order to update any kind of new activity
-	end
-
 	def basecamp2
-
-		respond_to do |format|
-		format.html { redirect_to BasecampService.connect_basecamp2}
-		end
+		redirect_to BasecampService.connect_basecamp2
 	end
 
 	def link_basecamp2_account
@@ -55,17 +47,15 @@ class BasecampsController < ApplicationController
 				end
 			end
 			basecamp_link.destroy
-		else
-			flash[:notice] = "Link Removed!"
-		end
+			rescue
+				flash[:error] = "Error!"
+			else
+				flash[:notice] = "Link Removed!"
+			end
 		end
 		respond_to do |format|
       format.html { redirect_to settings_basecamp_path }
     end
-	end
-
-	def refresh_accounts
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
 	end
 
 	def refresh_stream
@@ -75,9 +65,11 @@ class BasecampsController < ApplicationController
 			if @basecamp2_user
 				begin 
 					events = BasecampService.basecamp2_user_project_events(@basecamp2_user, params[:basecamp_project_id])
+			
 					object_info = events
 					eventable_id_list = events
 					list = []
+					
 
 					object_info.each do |y|
 						creator_info = BasecampService.basecamp2_user_info( y['creator']['id'],@basecamp2_user['oauth_access_token'],@basecamp2_user['oauth_instance_url'] )
@@ -85,18 +77,19 @@ class BasecampsController < ApplicationController
 						user_email['user_email'] = creator_info['email_address']
 						y.merge!(user_email)
 					end
-
+	
 					eventable_id_list.each{ |x| list << x['eventable']['id'] }
 					list.uniq!
 
 					if list
 						list.each do |a|
-							result = object_info.select { |b| b['eventable']['id'] == a }							
+							result = object_info.select { |b| b['eventable']['id'] == a  && b['eventable']['type'] == 'Message' }
+
 							result.sort_by { |hash| hash['updated_at'].to_i }
 							record = Activity.find_by(:backend_id => a)
 
 							if record.nil?
-								Activity.load_basecamp2_activities( result , params[:basecamp_project_id], current_user.id, params[:project_id] )
+									Activity.load_basecamp2_activities( result , params[:basecamp_project_id], current_user.id, params[:project_id] ) unless result.empty?
 							else
 								if record.email_messages.size < result.size
 									record.email_messages = result

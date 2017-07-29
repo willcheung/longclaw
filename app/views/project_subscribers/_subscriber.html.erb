@@ -1,4 +1,5 @@
 <% s = ps.user %>
+<% if s.present? %>
 <div class="row m-b-sm member <%=type%>-<%= ps.id.to_s + ps.user_id %>">
     <div class="col-sm-2">
         <%= get_profile_pic(get_full_name(s), s.email, "message-avatar") %>
@@ -8,6 +9,9 @@
         <span><small><%= s.title %> <%= get_short_name_account_path(s) %></small></span>
     </div>
     <div class="col-sm-3 m-t-xs delete-member">
-        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id, type: type), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the stream?"}, remote: true %>
+        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id, type: type), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the opportunity?"}, remote: true %>
     </div>
 </div>
+<% else %>
+    <% puts "ERROR: Something wrong with ProjectSubscriber(id=#{ps.id.inspect}, project_id=#{ps.project_id.inspect}, user_id=#{ps.user_id.inspect}), rendering skipped!" %>
+<% end %>

@@ -14,10 +14,11 @@
 #  updated_at          :datetime         not null
 #  oauth_refresh_date  :integer
 #  oauth_issued_date   :datetime
+#  user_id             :uuid
 #
 # Indexes
 #
-#  oauth_per_user  (oauth_provider,oauth_user_name,oauth_instance_url) UNIQUE
+#  oauth_per_user  (oauth_provider,oauth_user_name,oauth_instance_url,organization_id,user_id) UNIQUE
 #
 
 require 'net/http'
@@ -28,6 +29,7 @@ class OauthUser < ActiveRecord::Base
 	has_many :integrations, dependent: :destroy
 
 	scope :basecamp_user, -> {where oauth_provider: CATEGORY[:basecamp2] }
+	scope :salesforce_user, -> {where oauth_provider: CATEGORY[:salesforce] }
 	
 	CATEGORY = { basecamp2: 'basecamp2', salesforce: 'salesforce' }
 	
@@ -42,16 +44,15 @@ class OauthUser < ActiveRecord::Base
 			if !client.nil?
 				
 			else
-				user = OauthUser.new(
-				oauth_provider: result['oauth_provider'],
-				oauth_provider_uid: result['oauth_provider_uid'],
-				oauth_access_token: result['oauth_access_token'],
-				oauth_refresh_token: result['oauth_refresh_token'],
-				oauth_instance_url: result['oauth_instance_url'],
-				oauth_user_name: result['oauth_user_name'],
-				organization_id: organization_id,
-				oauth_refresh_date: result['oauth_refresh_date'],
-				oauth_issued_date: Time.now
+				user = OauthUser.new( oauth_provider: result['oauth_provider'],
+															oauth_provider_uid: result['oauth_provider_uid'],
+															oauth_access_token: result['oauth_access_token'],
+															oauth_refresh_token: result['oauth_refresh_token'],
+															oauth_instance_url: result['oauth_instance_url'],
+															oauth_user_name: result['oauth_user_name'],
+															organization_id: organization_id,
+															oauth_refresh_date: result['oauth_refresh_date'],
+															oauth_issued_date: Time.now
 				)
 
 				if user.valid?
@@ -110,13 +111,14 @@ class OauthUser < ActiveRecord::Base
     oauth_access_token
   end
 
+  # Returns the Salesforce Instance (URL) of the organization to be used as a base URL 
+  def self.get_salesforce_instance_url(organization_id)
+    salesforce_user = self.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
+    if salesforce_user.nil?
+    	nil
+    else
+    	salesforce_user.oauth_instance_url 
+    end
+  end
 end
-
-
-
-
-
-
-
-
 

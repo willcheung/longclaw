@@ -27,21 +27,19 @@ class ProjectMembersController < ApplicationController
   def create
     @project_members = []
     emails = params[:email].split(',')
-
     emails.each do |email|
-
-      contact = Contact.find_by_email(email)
-      if contact
-        project_member = ProjectMember.find_by(project_id: params[:project_id], contact_id: contact.id)
-        project_member = ProjectMember.new(project_id: params[:project_id], contact_id: contact.id) if project_member.nil? 
+      user = current_user.organization.users.find_by_email(email)
+      if user
+        project_member = ProjectMember.find_or_initialize_by(project_id: params[:project_id], user: user) if user
       else
-        user = User.find_by_email(email)
-        project_member = ProjectMember.find_by(project_id: params[:project_id], user_id: user.id) 
-        project_member = ProjectMember.new(project_id: params[:project_id], user_id: user.id) if project_member.nil?
+        contact = Contact.visible_to(current_user).find_by_email(email)
+        project_member = ProjectMember.find_or_initialize_by(project_id: params[:project_id], contact: contact) if contact
       end
 
-      next if !project_member.id.nil? && project_member.status == ProjectMember::STATUS[:Confirmed]
+      next if project_member.blank? || (project_member.id.present? && project_member.status == ProjectMember::STATUS[:Confirmed])
       project_member.status = ProjectMember::STATUS[:Confirmed]
+      
+      @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id) if @salesforce_base_URL.nil? && project_member.contact.present? && project_member.contact.is_source_from_salesforce?  # If project_member is an (external) SFDC contact, enable _member#show to create an external link
 
       if project_member.save
         @project_members.push(project_member)
@@ -64,6 +62,7 @@ class ProjectMembersController < ApplicationController
   end
 
   private
+
   def set_project_member
     @project_member = ProjectMember.find(params[:id])
   end

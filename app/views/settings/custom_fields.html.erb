@@ -58,9 +58,9 @@
                                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class='btn btn-default btn-sm element-disabled' style='width:5.5em;background-color:#3C8DC5'>&nbsp;</span>
                                     <% end %>
                                 </td>
-                                <!--<td>
-                                  <%= best_in_place f, :update_permission_level, :as => :select, :collection => User::ROLE, :class => 'btn btn-default btn-sm fa-caret-down' %>
-                                </td>-->
+                                <td style="display: none">
+                                  <%= best_in_place f, :update_permission_role, :as => :select, :collection => User.getRolesMap, :class => 'btn btn-default btn-sm fa-caret-down' %>
+                                </td>
                                 <!--<td>-</td>-->
                                 <td><%= link_to "<i class=\"fa fa-trash-o fa-lg\"></i> Delete".html_safe, f, method: :delete, data: {confirm: "Deleting this field will cause you to lose all existing values! Are you sure you want to delete '#{f.name}'?"}, title: "Delete '#{f.name}'" %></td>
                             </tr>
@@ -81,8 +81,6 @@
     </div>
 </div>
 <script type="text/javascript">
-    $('[data-toggle="tooltip"]').tooltip();
-
     $('#select-entity-type').change( function() {
         window.location.replace("custom_fields?entity_type=" + $(this).val());
     });

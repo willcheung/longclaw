@@ -21,21 +21,32 @@ module ApplicationHelper
     num > 0 ? "<i class=\"fa fa-level-up\"></i>".html_safe : "<i class=\"fa fa-level-down\"></i>".html_safe
   end
 
-  def highcharts_series_color(category)
-    if category == Activity::CATEGORY[:Conversation]
+  def highcharts_series_color(category="default")
+    case category
+    when Activity::CATEGORY[:Conversation]
       "#46C6C6"
-    elsif category == Activity::CATEGORY[:Meeting]
+    when Activity::CATEGORY[:Meeting]
       "#FFA500"
-    elsif category == Activity::CATEGORY[:Note]
+    when Activity::CATEGORY[:Note]
       "#ffde6b"
-    elsif category == Activity::CATEGORY[:JIRA]
+    when Activity::CATEGORY[:JIRA]
       "#205081"
-    elsif category == Activity::CATEGORY[:Salesforce]
+    when Activity::CATEGORY[:Salesforce]
       "#1798c1"
-    elsif category == Activity::CATEGORY[:Zendesk]
+    when Activity::CATEGORY[:Zendesk]
       "#78a300"
-    elsif category == Activity::CATEGORY[:Alert]
+    when Activity::CATEGORY[:Alert], Notification::CATEGORY[:Attachment]
       "#ed5565"
+    when Activity::CATEGORY[:Basecamp2]
+      "#91e8e1"
+    when 'Meetings'
+      '#ffb833'
+    when 'Sent E-mails', 'E-mails Sent'
+      '#46c6c6'
+    when 'Read E-mails', 'E-mails Received'
+      '#33a6a6'
+    else
+      '#7cb5ec'  # light blue
     end
   end
 
@@ -148,7 +159,7 @@ module ApplicationHelper
         else
           return "All"
         end
-      else # ramaining > 0
+      else # remaining > 0
         if cc_size > remaining
           if trailing_text=="other"
             return get_first_names(from, to, cc[0..(remaining-1)]) + " and " + pluralize(cc_size - remaining, 'other')
@@ -183,6 +194,7 @@ module ApplicationHelper
     end
   end
 
+  # creates a human-readable local time expression from an activity
   def get_calendar_interval(event)
     start = event.last_sent_date
     end_t = Time.zone.at(event.email_messages.last.end_epoch)
@@ -240,5 +252,29 @@ module ApplicationHelper
   		flash_messages << text.html_safe if message
   	end
   	flash_messages.join("\n").html_safe
+  end
+
+  # Generates formatted (with HTML tags), expandable and collapsible text.  Uses simple_format() to break newlines, and truncate() to break up content.
+  # Parameters:   text - the text content to truncate (and displayed)
+  #               id - used as the unique identifier in DOM
+  #               length (optional) - length at which to truncate text, defaults to 100
+  #               max_length (optional) - maximum length of the text to display, defaults to the length of text
+  #               separator (optional) - the separator option in the truncate() function, defaults to empty string
+  # Note:  If text doesn't exist (nil), returns no content.  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
+  def get_expandable_text_html(text: , id: , length: 100, max_length: nil, separator: '')
+    return "<span></span>" if text.nil?  # no content
+    max_length = text.length if max_length.nil?
+
+    # Do some newline processing to ensure proper conversion to <br> by simple_format later
+    text.gsub!(/\r\n/, "\n")  # convert the carriage-return + newline sequences (e.g., from SFDC activity) into single newlines
+    text.gsub!(/\n+/, "\n")   # convert double newlines into single ones
+
+    id = id.to_s
+    # Truncated text content
+    html = "<span id=\"" + id + "-short\" style=\"display:block\">" + simple_format(truncate(text, length: length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span')
+    html += "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[more]</a></span>" + 
+            "<span id=\""+ id +"-full\" style=\"display: none\">" + simple_format(truncate(text, length: max_length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span') + 
+            "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[less]</a></span>" if text.length >length
+    return html
   end
 end

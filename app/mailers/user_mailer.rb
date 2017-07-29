@@ -7,31 +7,32 @@ class UserMailer < ApplicationMailer
     @url = url
 
     track user: user # ahoy_email tracker
-    mail(to: @user.email, subject: "Your Account Streams are ready at ContextSmith")
+    mail(to: @user.email, subject: "Your Accounts are created in ContextSmith")
   end
 
   def daily_summary_email(user)
     @user = user
-    sub = user.subscriptions.daily
-
-    unless sub.blank?
-      puts "Checking daily subscription for #{user.email}"
-      @current_user_timezone = user.time_zone
-      @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email)
+    @subs = user.valid_streams_subscriptions.daily
+    @upcoming_meetings = user.upcoming_meetings  # backend call-back
+    @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not("activities.category IN ('#{Activity::CATEGORY[:Note]}', '#{Activity::CATEGORY[:Alert]}') OR activities.last_sent_date BETWEEN CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP + INTERVAL '7 days'").group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
+ 
+    puts "Checking daily subscription for #{user.email}"
+    unless @subs.blank? && @upcoming_meetings.blank?
+      @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email, :account_with_contacts_for_daily_email)
       @updates_today = @updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
         temp = proj.dup
         # temp = Project.new     # another option
         # assign relations before id
-        temp.activities = (proj.conversations_for_daily_email.visible_to(user.email) + proj.other_activities_for_daily_email.visible_to(user.email)).sort  {|a,b| b.last_sent_date <=> a.last_sent_date }
+        temp.activities = (proj.conversations_for_daily_email.visible_to(user.email) + proj.other_activities_for_daily_email.visible_to(user.email)).sort_by {|a| a.last_sent_date }.reverse
         temp.notifications = proj.notifications_for_daily_email
-        temp.account = proj.account
+        temp.contacts = proj.account_with_contacts_for_daily_email.blank? ? [] : proj.account_with_contacts_for_daily_email.contacts
         # CAUTION: if id is assigned before the relations, assigned relation will be overwritten in actual record
         temp.id = proj.id
         temp
       end
-      @updates_today.reject! { |proj| proj.activities.blank? && proj.notifications.blank? }
-      @risk_scores = Project.new_risk_score(@updates_today.map(&:id), user.time_zone) unless @updates_today.blank?
+
+      @updates_today = @updates_today.reject { |proj| proj.activities.blank? && proj.notifications.blank? && proj.contacts.blank? }.sort_by { |proj| proj.activities.size + proj.notifications.size + proj.contacts.size }.reverse
 
       track user: user # ahoy_email tracker
       puts "Emailing daily summary to #{user.email}"
@@ -40,14 +41,14 @@ class UserMailer < ApplicationMailer
   end
 
   def weekly_summary_email(user)
-    open_or_recently_closed = "notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
+    open_or_recently_closed = "notifications.id IS NULL OR notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
     
-    @subs = user.subscriptions.weekly
+    @subs = user.valid_streams_subscriptions.weekly
 
-    if !@subs.nil? and !@subs.empty?
+    unless @subs.blank?
       puts "Checking weekly subscription for #{user.email}"
       @current_user_timezone = user.time_zone
-      @projects = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id")
+      @projects = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id").order(:name)
       # @your_soon_tasks_count = @projects_with_tasks.map(&:notifications).flatten.select { |t| !t.is_complete && !t.original_due_date.nil? && !t.assign_to.nil? && t.original_due_date > Time.current && t.original_due_date < 7.days.from_now && t.assign_to == user.id }.length
 
       track user: user # ahoy_email tracker
@@ -63,12 +64,12 @@ class UserMailer < ApplicationMailer
 
     if @user.organization.users.registered.size > 3
       registered_users = @user.organization.users.registered.map(&:first_name)[0..2].join(', ')
-      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} teammates are already using ContextSmith to track the pulse of your customers."
+      @colleagues = registered_users + " and #{@user.organization.users.registered.size - 3} teammates are already using ContextSmith to stay on top of accounts and sell smarter."
     elsif @user.organization.users.registered.size == 1
-      @colleagues = "Join #{invited_by.split(' ').first} and team to track the pulse of your customers."
+      @colleagues = "Join #{invited_by.split(' ').first} is using ContextSmith to stay on top of accounts and sell smarter."
     else
       registered_users = @user.organization.users.registered.map(&:first_name).join(' and ')
-      @colleagues = registered_users + " are already using ContextSmith to track the pulse of your customers."
+      @colleagues = registered_users + " are already using ContextSmith to stay on top of accounts and sell smarter."
     end
 
     track user: user # ahoy_email tracker
@@ -83,5 +84,11 @@ class UserMailer < ApplicationMailer
 
     track user: @user # ahoy_email tracker
     mail(to: @user.email, subject: "#{get_full_name(assigner)} assigned a task to you: #{@task.name}")
+  end
+
+  def update_cs_team(user)
+    @user = user
+    track user: @user # ahoy_email tracker
+    mail(to:"support@contextsmith.com", subject: "#{get_full_name(@user)} signed up to ContextSmith")
   end
 end
