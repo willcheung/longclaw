@@ -41,14 +41,10 @@ module ApplicationHelper
       "#91e8e1"
     when 'Meetings'
       '#ffb833'
-    when 'Sent E-mails'
-      '#00cccc'
-    when 'E-mails Sent'
-      '#00cccc'
-    when 'Read E-mails'
-      '#995cd6'
-    when 'E-mails Received'
-      '#995cd6'
+    when 'Sent E-mails', 'E-mails Sent'
+      '#46c6c6'
+    when 'Read E-mails', 'E-mails Received'
+      '#33a6a6'
     else
       '#7cb5ec'  # light blue
     end
@@ -198,6 +194,7 @@ module ApplicationHelper
     end
   end
 
+  # creates a human-readable local time expression from an activity
   def get_calendar_interval(event)
     start = event.last_sent_date
     end_t = Time.zone.at(event.email_messages.last.end_epoch)
@@ -258,18 +255,22 @@ module ApplicationHelper
   end
 
   # Generates formatted (with HTML tags), expandable and collapsible text.  Uses simple_format() to break newlines, and truncate() to break up content.
-  # Parameters:   text - the text content to display truncated
+  # Parameters:   text - the text content to truncate (and displayed)
   #               id - used as the unique identifier in DOM
   #               length (optional) - length at which to truncate text, defaults to 100
   #               max_length (optional) - maximum length of the text to display, defaults to the length of text
   #               separator (optional) - the separator option in the truncate() function, defaults to empty string
-  # Note:  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
-  def get_expandable_text_html(text: , id: , length: 100, max_length: text.length, separator: '')
+  # Note:  If text doesn't exist (nil), returns no content.  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
+  def get_expandable_text_html(text: , id: , length: 100, max_length: nil, separator: '')
+    return "<span></span>" if text.nil?  # no content
+    max_length = text.length if max_length.nil?
+
     # Do some newline processing to ensure proper conversion to <br> by simple_format later
     text.gsub!(/\r\n/, "\n")  # convert the carriage-return + newline sequences (e.g., from SFDC activity) into single newlines
-    text.gsub!(/\n+/, "\n")   # convert double newlines into single ones 
+    text.gsub!(/\n+/, "\n")   # convert double newlines into single ones
 
     id = id.to_s
+    # Truncated text content
     html = "<span id=\"" + id + "-short\" style=\"display:block\">" + simple_format(truncate(text, length: length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span')
     html += "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[more]</a></span>" + 
             "<span id=\""+ id +"-full\" style=\"display: none\">" + simple_format(truncate(text, length: max_length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span') + 

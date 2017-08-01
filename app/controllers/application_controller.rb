@@ -65,7 +65,10 @@ class ApplicationController < ActionController::Base
     yield
   end
 
+  # returns the users of an organization who are registered with CS
   def get_current_org_users
-    current_user.organization.users.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+    current_user.organization.users.registered.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
   end
+
+
 end

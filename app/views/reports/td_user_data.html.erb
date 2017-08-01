@@ -89,30 +89,48 @@
 
         $('#customers-interaction-chart').highcharts({
             chart: {
-                type: 'bar'
+                type: 'bar',
+                marginRight: 25
             },
             credits: false,
             title: {
-                text: 'Time Spent (Last 14 days)',
+                text: 'Time Spent (last 14 days)',
                 align: 'left',
                 style: {
                     color: '#777777',
                     fontSize: '16px'
                 }
             },
+            subtitle: {
+                text: '(in hh:mm)',
+                align: 'left'
+            },
             tooltip: {
-                valueSuffix: ' hours'
+                pointFormatter: function() {
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                }
             },
             xAxis: {
                 categories: <%= @interaction_time_per_account.map(&:name).to_json.html_safe %>,
             },
             yAxis: {
                 min: 0,
+                minTickInterval: 60,
+                // tickAmount: 5,
+                startOnTick: true,
                 title: {
                     text: ''
                 },
+                labels: {
+                    formatter: function() {
+                        return convert_secs_to_ddhhmm(this.value);
+                    }
+                },
                 stackLabels: {
                     enabled: true,
+                    formatter: function () {
+                        return convert_secs_to_ddhhmm(this.total);
+                    },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
                     }
@@ -133,10 +151,20 @@
             }, {
                 name: 'Read E-mails',
                 color: "<%= highcharts_series_color('Read E-mails') %>",
+                tooltip: {
+                    pointFormatter: function() {
+                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    }
+                },
                 data: <%= @interaction_time_per_account.map(&:read_time).to_json.html_safe %>
             }, {
                 name: 'Sent E-mails',
                 color: "<%= highcharts_series_color('Sent E-mails') %>",
+                tooltip: {
+                    pointFormatter: function() {
+                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    }
+                },
                 data: <%= @interaction_time_per_account.map(&:sent_time).to_json.html_safe %>
             }]
         });
@@ -223,6 +251,7 @@
             yAxis: {
                 title: { text: '' },
                 labels: { enabled: true },
+                minTickInterval: 1,
                 minorGridLineWidth: 0,
                 softMax: 1
             },

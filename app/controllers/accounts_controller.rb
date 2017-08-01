@@ -15,11 +15,21 @@ class AccountsController < ApplicationController
     else
       @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
     end
-    
+
+    unless params[:owner] == '0'
+      if params[:owner]
+        if params[:owner] != 'none'
+          @accounts = @accounts.where(owner_id: params[:owner])
+        else
+          @accounts = @accounts.where(owner_id: nil)
+        end
+      end
+    end
+
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)) AND projects.status = 'Active' AND activities.category not in ('Alert','Note')", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
 
-    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
+    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
   end
 
   # GET /accounts/1

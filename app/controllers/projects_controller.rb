@@ -15,8 +15,8 @@ class ProjectsController < ApplicationController
   def index
     @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
     @title = "Opportunities"
-    # for filter and bulk owner assignment
-    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
+    # for filter and bulk owner assignment - use only registered users
+    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
@@ -39,8 +39,11 @@ class ProjectsController < ApplicationController
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @sparkline = Project.count_activities_by_day_sparkline(projects.ids, current_user.time_zone)
-      @risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @days_to_close = Project.days_to_close(projects.ids)
       @open_risk_count = Project.open_risk_count(projects.ids)
+      #@risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: projects.ids).group("project_id")
+      @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
     end
 
     # new project modal
@@ -232,10 +235,11 @@ class ProjectsController < ApplicationController
   end
 
   def get_show_data
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
     @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
 
     # metrics
-    @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.alerts.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
