@@ -59,7 +59,7 @@ class ReportsController < ApplicationController
       end
       #@data = @data.select {|a| a.total > 0}
 
-      @categories = @data.inject([]) do |memo, p|
+      @categories = @data.inject([nil]) do |memo, p|
         memo | p.y.select {|a| a.num_activities > 0}.map(&:category)
       end  # get (and show in legend) only categories that have data
     when TEAM_DASHBOARD_METRIC[:time_spent_last14d]
@@ -216,6 +216,7 @@ class ReportsController < ApplicationController
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
       project_engagement = Project.count_activities_by_category(projects.pluck(:id), current_user.organization.domain, current_user.time_zone).group_by { |p| p.id }
+
       @data = [] and @categories = [] and return if project_engagement.blank?
       @data = project_engagement.map do |pid, activities|
         proj = projects.find { |p| p.id == pid }
@@ -228,7 +229,7 @@ class ReportsController < ApplicationController
       @categories = @data.inject([]) do |memo, d|
         d.y.each {|a| memo = memo | [a.category]}
         memo
-      end
+      end  # get (and show in legend) only categories that have data
     # when ACCOUNT_DASHBOARD_METRIC[:risk_score]
     #   risk_scores = projects.nil? ? [] : Project.new_risk_score(projects.ids, current_user.time_zone).sort_by { |pid, score| score }.reverse
     #   total_risk_scores = 0
@@ -304,12 +305,6 @@ class ReportsController < ApplicationController
     # TODO: Query for usage_report finds all the read and write times from internal users
     # Metric for Interaction Time
     @interaction_time_report = @project.interaction_time_by_user(current_user.organization.users)
-    # # Read and Sent times
-    # @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
-    # # Meetings in Interaction Time
-    # @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
-    # # Attachments in Interaction Time
-    # @attachment_report = User.sent_attachments_time([@project.id], current_user.organization.users.pluck(:email))
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
