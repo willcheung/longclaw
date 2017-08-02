@@ -493,7 +493,7 @@ class User < ActiveRecord::Base
       UNION ALL
       (
       -- Sent Attachments directly from notifications table
-      SELECT date(time_series.days) AS calendar_date, '#{Notification::CATEGORY[:Attachment]}' AS category, count(attachments.*) AS num_activities
+      SELECT date(time_series.days) AS days, '#{Notification::CATEGORY[:Attachment]}' AS category, count(attachments.*) AS num_activities
       FROM time_series
       LEFT JOIN (SELECT sent_date, project_id
                   FROM notifications 

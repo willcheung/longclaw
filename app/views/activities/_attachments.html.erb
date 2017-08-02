@@ -3,7 +3,7 @@
   <% attachments.each do |att| %>
     <div class="p-xxs">
       <span class="fa-stack">
-        <i class="fa fa-circle fa-stack-2x" style="color: #33a66d;"></i>
+        <i class="fa fa-circle fa-stack-2x" style="color: <%= highcharts_series_color(Notification::CATEGORY[:Attachment]) %>;"></i>
         <i class="fa fa-paperclip fa-rotate-90 fa-stack-1x fa-inverse"></i>
       </span>
       <%= att.name %>

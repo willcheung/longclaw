@@ -658,33 +658,36 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
-  def activities_moving_average(time_zone, days_ago=14, segment_size=30)
+  def activities_moving_average(time_zone, segment_size=30, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     domain = account.organization.domain
+    num_days = (end_day - start_day).round/86400 # calculate number of days in this date range, find number of seconds and divide by seconds/day
     query = <<-SQL
       WITH time_series as (
-        SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') as days  
+        SELECT generate_series(date (TIMESTAMP '#{start_day}' AT TIME ZONE '#{time_zone}' - INTERVAL '#{segment_size} days'), date(TIMESTAMP '#{end_day}' AT TIME ZONE '#{time_zone}'), INTERVAL '1 day') as days LIMIT #{num_days + segment_size}
       ), activities_by_day AS (
         SELECT date(time_series.days) as date, COUNT(DISTINCT emails.*) + COUNT(DISTINCT other_activities.*) AS num_activities
         FROM time_series
         LEFT JOIN (SELECT messages ->> 'messageId'::text AS message_id,
-                          (messages ->> 'sentDate')::integer AS sent_date
+                          to_timestamp((messages ->> 'sentDate')::integer) AS sent_date
                     FROM activities,
                     LATERAL jsonb_array_elements(email_messages) messages
                     WHERE category = 'Conversation'
                     AND activities.project_id = '#{self.id}'
-                    AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days') AND (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}')
+                    AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (TIMESTAMP'#{start_day}' - INTERVAL '#{segment_size} days') AND (TIMESTAMP'#{end_day}')
                     GROUP BY 1,2
                    ) as emails
-          ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+          ON date (emails.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
         LEFT JOIN (SELECT last_sent_date as sent_date
-                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'))
+                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') and project_id = '#{self.id}' 
+                    AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') BETWEEN '#{(start_day - segment_size.days).to_i}' AND '#{end_day.to_i}'
                   ) as other_activities
-          ON date_trunc('day', other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+          ON date (other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
         LEFT JOIN (SELECT sent_date
-                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'))
+                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' 
+                  AND EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{time_zone}') BETWEEN '#{(start_day - segment_size.days).to_i}' AND '#{end_day.to_i}'
                   AND description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
                 ) as attachments
-          ON date_trunc('day', attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+          ON date (attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
         GROUP BY time_series.days
         ORDER BY time_series.days ASC
       )
@@ -693,9 +696,8 @@ class Project < ActiveRecord::Base
       LEFT JOIN activities_by_day
       ON activities_by_day.date = time_series.days
     SQL
-
     result = Project.find_by_sql(query)
-    result.last(days_ago).map(&:moving_avg).map(&:to_f)
+    result.last(num_days).map(&:moving_avg).map(&:to_f) # take the last num_days results (except the last one, )
   end
 
   def self.count_activities_by_day_sparkline(array_of_project_ids, time_zone, days_ago=7)
