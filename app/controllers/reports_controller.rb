@@ -17,7 +17,6 @@ class ReportsController < ApplicationController
   # for loading metrics data (left panel) on Accounts Opportunities Dashboard
   def ad_sort_data
     @metric = params[:sort]
-    @metric_tick_interval = getTickIntervalForMetric(@metric)
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
     projects = projects.where(category: params[:category]) if params[:category].present?
@@ -153,8 +152,8 @@ class ReportsController < ApplicationController
 
   def team_dashboard
     users = current_user.organization.users
-    @departments = users.registered.pluck(:department).compact.uniq
-    @titles = users.registered.pluck(:title).compact.uniq
+    @departments = users.pluck(:department).compact.uniq
+    @titles = users.pluck(:title).compact.uniq
 
     params[:sort] = TEAM_DASHBOARD_METRIC[:activities_last14d]
     td_sort_data
@@ -163,7 +162,6 @@ class ReportsController < ApplicationController
   # for loading metrics data (left panel) on Team Dashboard
   def td_sort_data
     @metric = params[:sort]
-    @metric_tick_interval = getTickIntervalForMetric(@metric)
     users = current_user.organization.users
     
     # Incrementally apply filters
@@ -324,13 +322,4 @@ class ReportsController < ApplicationController
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
   end
 
-  def getTickIntervalForMetric(metric)
-    if [ACCOUNT_DASHBOARD_METRIC[:activities_last14d], ACCOUNT_DASHBOARD_METRIC[:open_alerts], ACCOUNT_DASHBOARD_METRIC[:overdue_tasks]].include? metric
-      5
-    elsif [TEAM_DASHBOARD_METRIC[:activities_last14d], TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d], TEAM_DASHBOARD_METRIC[:closed_alerts_and_tasks_last14d], TEAM_DASHBOARD_METRIC[:open_alerts_and_tasks]].include? metric
-      5
-    else
-      "null"
-    end
-  end
 end

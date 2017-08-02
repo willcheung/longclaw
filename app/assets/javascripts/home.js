@@ -8,9 +8,9 @@ jQuery(document).ready(function($) {
       responsive: true,
       searching: false,
       columnDefs: [
-        { orderable: false, targets: [0,7] }
+        { orderable: false, targets: [4,7,10,11] }
       ],
-      "order": [[ 1, "asc" ]],
+      "order": [[ 0, "asc" ]],
       "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
       "dom":' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">'
     } );

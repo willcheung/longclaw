@@ -3,37 +3,50 @@ class HomeController < ApplicationController
   before_action :check_user_onboarding, only: :index
 
   def index
+    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
+
     # Load all projects/opportunity visible to user
-    visible_projects = Project.visible_to(current_user.organization_id, current_user.id).preload([:users,:contacts]).select("COUNT(DISTINCT activities.id) AS activity_count").joins("LEFT JOIN activities ON activities.project_id = projects.id").group("projects.id")
-    @projects = visible_projects.owner_of(current_user.id)
-    project_tasks = Notification.where(project_id: @projects.pluck(:id))
-    # Unused metrics
-    #@open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)
-    #@open_risks = project_tasks.open.alerts
-    @overdue_tasks = project_tasks.open.where("original_due_date::date <= ?", Date.today).where("assign_to='#{current_user.id}'")
-    @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'")
+    visible_projects = Project.visible_to(current_user.organization_id, current_user.id)
+    current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
+
+    project_tasks = Notification.where(project_id: current_user_projects.pluck(:id))
+    @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
     # Need this to show project name and user name
-    @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
+    @projects_reverse = current_user_projects.map { |p| [p.id, p.name] }.to_h
     @users_reverse = get_current_org_users
+
     # Load all projects/opportunity to which the user is subscribed
-    @subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly").sort_by { |p| p.name.upcase }
+    subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
 
-    custom_lists = current_user.organization.get_custom_lists_with_options
-    @opportunity_types = !custom_lists.blank? ? custom_lists["Opportunity Type"] : {}
-
+    @projects = current_user_projects
+    subscribed_projects.each do |p|
+      pid = @projects.find {|s| s.id == p.id}
+      @projects << p if pid.nil?
+    end
+    @projects = @projects.sort_by{|p| p.name.upcase}
+   
     # Calculate project metrics
-    unless @projects.empty? && @subscribed_projects.empty?
-      project_ids_a = @projects.map(&:id) | @subscribed_projects.map(&:id)
-      #@project_last_activity_date = Project.owner_of(current_user.id).includes(:activities).maximum("activities.last_sent_date")
-      # @metrics = Project.count_activities_by_day(7, project_ids_a)  # TODO: consider using daily_activities_in_date_range instead of count_activities_by_day
+    unless @projects.empty?
+      project_ids_a = @projects.map(&:id)
+
       @sparkline = Project.count_activities_by_day_sparkline(project_ids_a, current_user.time_zone)
       @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
       @open_risk_count = Project.open_risk_count(project_ids_a)
-      @rag_status = Project.current_rag_score(project_ids_a)
-      # puts "risk_scores: #{@risk_scores}"
+      @days_to_close = Project.days_to_close(project_ids_a)
+      @project_days_inactive = visible_projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
+      @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
+      @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: project_ids_a).group("project_id")
+      @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
+
+      #@rag_status = Project.current_rag_score(project_ids_a)
     end
 
-    p params
+    # Unused metrics
+    #@open_tasks_not_overdue = project_tasks.open.where("(original_due_date::date > ? or original_due_date is NULL) and category != '#{Notification::CATEGORY[:Alert]}'", Date.today)
+    #@open_risks = project_tasks.open.alerts
+    #@overdue_tasks = project_tasks.open.where("original_due_date::date <= ?", Date.today).where("assign_to='#{current_user.id}'")
+
+    #p params
   end
 
   def daily_summary

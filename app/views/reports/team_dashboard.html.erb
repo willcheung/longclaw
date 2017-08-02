@@ -136,58 +136,7 @@
             },
             credits: {
                 enabled: false
-            },
-            series: [{
-                name: 'Main Series',
-                visible: false,
-                showInLegend: false
-            },
-            <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
-                <% @categories.each.with_index do |c, i| %>
-                {
-                    name: "<%= c %>",
-                    color: "<%= highcharts_series_color(c) %>",
-                    // showInLegend: false,
-                    data: [ 
-                    <% @data.each do |d| %>
-                    {
-                      y: <%= d.y[i].num_activities %>,
-                      id: "<%= d.id %>"
-                    }, 
-                    <% end %> 
-                    ]
-                },
-                <% end %>
-            <% elsif @metric == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
-                <% @categories.each do |c| %>
-                {
-                    name: "<%= c %>",
-                    color: "<%= highcharts_series_color(c) %>",
-                    // showInLegend: false,
-                    data: [ 
-                    <% @data.each do |d| %>
-                    {
-                      y: <%= d.y[c] %>,
-                      id: "<%= d.id %>"
-                    }, 
-                    <% end %> 
-                    ]
-                },
-                <% end %>
-            <% else %>
-                {
-                    name: "<%= @metric.html_safe %>",
-                    color: "<%= highcharts_series_color("Default") %>",
-                    data: [ <% @data.each do |d| %>
-                    {
-                      y: <%= d.y %>,
-                      id: "<%= d.id %>"
-                    },
-                    <% end %> 
-                    ]
-                },
-            <% end %>
-            ]
+            }
         });
 
         // Highcharts.setOptions({
