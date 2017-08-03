@@ -144,29 +144,20 @@
                     stacking: 'normal'
                 }
             },
-            series: [{
-                name: 'Meetings',
-                color: "<%= highcharts_series_color('Meetings') %>",
-                data: <%= @interaction_time_per_account.map(&:meeting_time).to_json.html_safe %>
-            }, {
-                name: 'Read E-mails',
-                color: "<%= highcharts_series_color('Read E-mails') %>",
+            series: [
+              <% %i(Meetings Attachments Read\ E-mails Sent\ E-mails).each do |category| %>
+              {
+                name: '<%= category %>',
+                color: "<%= highcharts_series_color(category.to_s) %>",
+                data: <%= @interaction_time_per_account.map(&category).to_json.html_safe %>,
                 tooltip: {
-                    pointFormatter: function() {
-                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
-                    }
-                },
-                data: <%= @interaction_time_per_account.map(&:read_time).to_json.html_safe %>
-            }, {
-                name: 'Sent E-mails',
-                color: "<%= highcharts_series_color('Sent E-mails') %>",
-                tooltip: {
-                    pointFormatter: function() {
-                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
-                    }
-                },
-                data: <%= @interaction_time_per_account.map(&:sent_time).to_json.html_safe %>
-            }]
+                  pointFormatter: function() {
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
+                  }
+                }
+              },
+              <% end %>
+            ]
         });
 
 
