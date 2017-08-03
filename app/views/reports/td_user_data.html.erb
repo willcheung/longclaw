@@ -107,7 +107,7 @@
             },
             tooltip: {
                 pointFormatter: function() {
-                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
                 }
             },
             xAxis: {
@@ -123,13 +123,13 @@
                 },
                 labels: {
                     formatter: function() {
-                        return convert_secs_to_ddhhmm(this.value);
+                        return convert_secs_to_hhmm(this.value);
                     }
                 },
                 stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        return convert_secs_to_ddhhmm(this.total);
+                        return convert_secs_to_hhmm(this.total);
                     },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
@@ -153,7 +153,7 @@
                 color: "<%= highcharts_series_color('Read E-mails') %>",
                 tooltip: {
                     pointFormatter: function() {
-                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
                     }
                 },
                 data: <%= @interaction_time_per_account.map(&:read_time).to_json.html_safe %>
@@ -162,7 +162,7 @@
                 color: "<%= highcharts_series_color('Sent E-mails') %>",
                 tooltip: {
                     pointFormatter: function() {
-                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
                     }
                 },
                 data: <%= @interaction_time_per_account.map(&:sent_time).to_json.html_safe %>

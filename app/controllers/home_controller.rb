@@ -124,4 +124,5 @@ class HomeController < ApplicationController
       redirect_to onboarding_creating_clusters_path
     end
   end
+
 end

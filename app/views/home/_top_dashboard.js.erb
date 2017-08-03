@@ -69,10 +69,12 @@ var chart_right = $('#chart-right').highcharts();
   //   },
   //   <% end %> ]
   // }, false);
+  <% max_value = @data_right.first(5).first.y %>
+  <% min_value = @data_right.first(5).last.y %>
   <% @data_right.first(5).each_with_index do |d, i| %>
   chart_right.addSeries({
     name: 'Opportunity <%= i %>',
-    color: '<%= case i when 0 then "#4f9ce6" when 1 then "#66a8e9" when 2 then "#7cb5ec" when 3 then "#92c2ef" when 4 then "#a9cef2" else "red" end %>', //enable blue gradient
+    color: '<%= highcharts_series_color_gradient_by_pct(d.y, min_value, max_value ) %>', //enable blue gradient
     showInLegend: false,
     data: [ 
     <% 5.times do |n| %>

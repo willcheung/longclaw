@@ -37,7 +37,7 @@ while(chart.series.length > 0) {
       color: "<%= highcharts_series_color(c) %>",  //set color according to category
       tooltip: {
         pointFormatter: function() {
-          return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+          return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
         }
       },
       <%= 'showInLegend: false,' if c.blank? %>
@@ -72,7 +72,7 @@ while(chart.series.length > 0) {
       stackLabels: {
         enabled: true,
         formatter: function () {
-          return convert_secs_to_ddhhmm(this.total);
+          return convert_secs_to_hhmm(this.total);
         }
       }
     });
