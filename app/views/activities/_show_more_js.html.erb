@@ -23,7 +23,7 @@ $(document).ready(function() {
         $(this).popover({
             html: true,
             content: `
-            <%= form_tag notifications_create_from_suggestion_path, remote: true, class: "form-horizontal" %>
+            <%= form_tag create_from_suggestion_notifications_path, remote: true, class: "form-horizontal" %>
                 <div class="row m-b-xs">
                     <div class="col-sm-1"><i class="fa fa-square-o fa-lg text-mute-gray m-t-xs"></i></div>
                     <div class="col-xs-11"><input type="text" class="form-control" name="notification[name]" placeholder="Title" value="'`+ $(this).text() + `"></div>

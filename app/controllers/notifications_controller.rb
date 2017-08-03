@@ -1,9 +1,25 @@
 class NotificationsController < ApplicationController
   ### TODO: refactor show_email_body so that it does not depend on simple_format which must be included from ActionView module (separate Controller from Views)
   include ActionView::Helpers::TextHelper
-  ###
-  before_action :set_notification, only: [:update, :update_is_complete, :show_email_body]
+  include ActionController::Live
+
+  before_action :set_notification, only: [:update, :update_is_complete, :show_email_body, :download_attachment]
   before_action :set_visible_project_user, only: [:index, :show, :create]
+
+  def download_attachment
+    render plain: 'You don\'t have access to this file' and return unless @notification.is_visible_to(current_user)
+
+    description = JSON.parse(@notification.description)
+    urn = description[:urn]
+    user_email = urn.split(':').fourth
+    att_user = current_user.organization.users.find_by_email(user_email)
+    render plain: 'You don\'t have access to this file' and return unless att_user
+
+    # base_url = ENV["csback_base_url"] + "/newsfeed/download"
+
+    render plain: 'OK'
+  end
+
   def index
 
     # only show valid notifications (both project and activities must be visible to user)
