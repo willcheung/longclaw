@@ -697,7 +697,7 @@ class Project < ActiveRecord::Base
       ON activities_by_day.date = time_series.days
     SQL
     result = Project.find_by_sql(query)
-    result.last(num_days).map(&:moving_avg).map(&:to_f) # take the last num_days results (except the last one, )
+    result.last(num_days).map(&:moving_avg).map(&:to_f) # take the last num_days results
   end
 
   def self.count_activities_by_day_sparkline(array_of_project_ids, time_zone, days_ago=7)
