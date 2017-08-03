@@ -397,7 +397,7 @@
         function get_category_uuid (catname) {
             // console.log("Finding proj: " + catname);
             var map = {
-                <% @visible_projects.each do |d| %>
+                <% @current_user_projects.each do |d| %>
                   "<%= d.name.html_safe %>": "<%= d.id %>",
                 <% end %>
             };
