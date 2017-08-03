@@ -271,7 +271,7 @@
                 headerFormat: '',
                 // pointFormat: '<b>{series.name}:</b> {point.y:.2f} hrs<br/><b>Total:</b> {point.stackTotal:.2f} hrs'
                 pointFormatter: function() {
-                  return '<span style="color:' + this.color + '">\u25CF</span>  <b>' + this.series.name + '</b>: ' + convert_secs_to_hhmm(this.y) + '<br/>'+ '<b>Total:</b>: ' + convert_secs_to_hhmm(this.total) + '<br/>';
+                  return '<span style="color:' + this.color + '">\u25CF</span>  <b>' + this.series.name + '</b>: ' + convert_secs_to_hhmm(this.y) + '<br/>'+ '<b>Total</b>: ' + convert_secs_to_hhmm(this.total) + '<br/>';
                 }
             },
 

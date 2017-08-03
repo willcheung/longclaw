@@ -152,7 +152,7 @@
                 data: <%= @interaction_time_per_account.map(&category).to_json.html_safe %>,
                 tooltip: {
                   pointFormatter: function() {
-                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
                   }
                 }
               },

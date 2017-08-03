@@ -123,10 +123,7 @@ class ReportsController < ApplicationController
 
     #TODO: Query for usage_report finds all the read and write times from internal users
     #Metric for Interaction Time
-    # Read and Sent times
-    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
-    #Meetings in Interaction Time
-    @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
+    @interaction_time_report = @project.interaction_time_by_user(current_user.organization.users)
 
     # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
     # Most Active Contributors & Activities By Team
