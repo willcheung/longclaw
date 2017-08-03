@@ -1,7 +1,7 @@
 class ReportsController < ApplicationController
   before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
 
-  ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :days_inactive => "Days Inactive", :open_alerts => "Total Open Alerts", :overdue_tasks => "Total Overdue Tasks", :deal_size => "Deal Size", :days_to_close => "Days to Close"} # Removed: :risk_score => "Risk Score"
+  ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :days_inactive => "Days Inactive", :open_alerts_and_tasks => "Open Alerts & Tasks", :overdue_tasks => "Total Overdue Tasks", :deal_size => "Deal Size", :days_to_close => "Days to Close"} # Removed: :risk_score => "Risk Score"
   TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :new_alerts_and_tasks_last14d => "New Alerts & Tasks (Last 14d)", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks"}
 
   # "accounts_dashboard" is actually referring to opportunities, AKA projects
@@ -74,7 +74,7 @@ class ReportsController < ApplicationController
     #     Hashie::Mash.new({ id: e.id, name: e.name, deal_size: e.amount, close_date: e.close_date, y: (risk.risk_count.to_f/e.num_activities*100).round(2), color: 'default'})
     #   end
     #   @data.sort_by! { |d| d.y }.reverse!
-    when ACCOUNT_DASHBOARD_METRIC[:open_alerts]
+    when ACCOUNT_DASHBOARD_METRIC[:open_alerts_and_tasks]
       open_task_counts = Project.count_tasks_per_project(projects.pluck(:id))
       @data = open_task_counts.map do |r|
         Hashie::Mash.new({ id: r.id, name: r.name, deal_size: r.amount, close_date: r.close_date, y: r.open_risks, color: 'default'})
@@ -260,7 +260,7 @@ class ReportsController < ApplicationController
     @user = User.where(organization_id: current_user.organization_id).find(params[:id])
     @error = "Oops, something went wrong. Try again." and return if @user.blank?
 
-    @open_alerts = @user.notifications.open.count  #tasks and alerts
+    @open_alerts_and_tasks = @user.notifications.open.count  #tasks and alerts
     @accounts_managed = @user.projects_owner_of.count
     @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
 

@@ -4,34 +4,28 @@
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Most Active Opportunities</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top 5"></i>
+                    <h2>Most Active (7d)</h2>
                 </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins">-</h1>
-                </div>
+                <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with most activity during the last 7 days."></i> -->
+                <div id="chart-left" class="opp-chart"></div>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Least Active Opportunities</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Bottom 5"></i>
+                    <h2>Least Active (7d)</h2>
                 </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins">-</h1>
-                </div>
+                <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with least activity during the last 7 days."></i> -->
+                <div id="chart-center" class="opp-chart"></div>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>Top Opportunities with Alerts & Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Top Opportunities with Alerts & Tasks"></i>
+                    <h2>Most Open Alerts & Tasks</h2>
                 </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins">-</h1>
-                </div>
+                <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with the most open Alerts & Tasks"></i> -->
+                <div id="chart-right" class="opp-chart"></div>
             </div>
         </div>
     </div>
@@ -75,7 +69,14 @@
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
             <div class="ibox-title">
-                <h2>My Subscriptions & Opportunities</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><h2>My Opportunities<h2></h2>
+                            <td>&nbsp;<i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or to which you are subscribed."></i></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="ibox-content">
                 <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
@@ -87,7 +88,7 @@
                             <th>Owner</th>
                             <th></th>
                             <th>Days to Close</th>
-                            <th>Open Alerts</th>
+                            <th>Open Alerts & Tasks</th>
                             <th>Last 7d Activity</th>
                             <th>Days Inactive</th>
                             <th>Next Meeting</th>
@@ -99,16 +100,12 @@
                         <% @projects.each do |p| %>
                             <tr>
                                 <td>
-                                    <div><a href="<%= project_path(p) %>"><%= p.name %></a><%= " *" if p.owner_id == current_user.id %></div>
+                                    <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                     <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                 </td>
                                 <td style="width: 120px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
                                 <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
-                                <td>
-                                    <div style="<%= 'font-weight: bold' if p.owner_id == current_user.id %>"">
-                                        <%= get_full_name(p.project_owner) %>
-                                    </div>
-                                </td>
+                                <td><div><%= get_full_name(p.project_owner) %></div></td>
                                 <td style="width: 40px"><span
                                 <% all_members = p.users + p.contacts %>
                                 <% members = all_members.first(@MEMBERS_LIST_LIMIT) %>
@@ -152,18 +149,6 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td>* = You are the owner</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -175,3 +160,247 @@
 </div>
 
 <%= javascript_include_tag "notifications_table" %>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        $('#chart-left').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            // subtitle: {
+            //     text: ' ',
+            //     align: 'center',
+            //     y: 40
+            // },
+            xAxis: {
+                max: undefined,
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        // this.value = [project_name, deal_size, close_date]
+                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                // max: 100,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
+            },
+            tooltip: {
+                headerFormat:  '',
+                pointFormatter: function() {
+                    // this.category = [project_name, deal_size, close_date]
+                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+                }
+            },
+            legend: {
+              enabled: false,
+              // verticalAlign: 'top',
+              // itemStyle: {
+              //     fontWeight: 'light',
+              //     fontSize: 12         
+              // }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal',
+                    cursor: 'pointer',
+                    pointWidth: 33,
+                    //maxPointWidth: 75,
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.assign("/projects/"+ this.options.id);
+                                //window.open("/projects/"+ this.options.id);
+                            }
+                        }
+                    }
+                },
+                allowPointSelect: false
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        $('#chart-center').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            // subtitle: {
+            //     text: ' ',
+            //     align: 'center',
+            //     y: 40
+            // },
+            xAxis: {
+                max: undefined,
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        // this.value = [project_name, deal_size, close_date]
+                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                // max: 100,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
+            },
+            tooltip: {
+                headerFormat:  '',
+                pointFormatter: function() {
+                    // this.category = [project_name, deal_size, close_date]
+                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+                }
+            },
+            legend: {
+              enabled: false,
+              // verticalAlign: 'top',
+              // itemStyle: {
+              //     fontWeight: 'light',
+              //     fontSize: 12         
+              // }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal',
+                    cursor: 'pointer',
+                    pointWidth: 33,
+                    //maxPointWidth: 75,
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.assign("/projects/"+ this.options.id);
+                            }
+                        }
+                    }
+                },
+                allowPointSelect: false
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        $('#chart-right').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            // subtitle: {
+            //     text: ' ',
+            //     align: 'center',
+            //     y: 40
+            // },
+            xAxis: {
+                max: undefined,
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        // this.value = [project_name, deal_size, close_date]
+                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                // max: 100,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
+            },
+            tooltip: {
+                headerFormat:  '',
+                pointFormatter: function() {
+                    // this.category = [project_name, deal_size, close_date]
+                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+                }
+            },
+            legend: {
+              enabled: false,
+              // verticalAlign: 'top',
+              // itemStyle: {
+              //     fontWeight: 'light',
+              //     fontSize: 12         
+              // }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal',
+                    cursor: 'pointer',
+                    pointWidth: 33,
+                    //maxPointWidth: 75,
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.assign("/projects/"+ this.options.id);
+                            }
+                        }
+                    }
+                },
+                allowPointSelect: false
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        <%= render partial: "home/top_dashboard.js" %>
+
+        // handle clicking on opportunity label
+        $('.highcharts-xaxis-labels text').click(function() {
+            var clicked_pid = get_category_uuid($(this).children(0)[0].firstChild.data);
+            if (clicked_pid)
+              window.location.assign("/projects/"+ clicked_pid);
+        });
+
+        function get_category_uuid (catname) {
+            // console.log("Finding proj: " + catname);
+            var map = {
+                <% @visible_projects.each do |d| %>
+                  "<%= d.name.html_safe %>": "<%= d.id %>",
+                <% end %>
+            };
+            return map[catname];
+        }
+    });
+</script>

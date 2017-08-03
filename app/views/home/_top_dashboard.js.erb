@@ -1,0 +1,91 @@
+
+var chart_left = $('#chart-left').highcharts();
+var chart_center = $('#chart-center').highcharts();
+var chart_right = $('#chart-right').highcharts();
+
+<% unless @data_left.blank? %>
+  // Add the data via series
+  // chart_left.legend.update({enabled: false});
+  chart_left.xAxis[0].setCategories(<%= @data_left.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+
+  <% @categories.each do |c| %>
+  chart_left.addSeries({
+    name: "<%= c.nil? ? 'NoActivity' : c %>",
+    color: "<%= highcharts_series_color(c) %>",  //set color according to category
+    //showInLegend: <%= c.nil? ? 'false' : 'true' %>,
+    data: [ 
+    <% @data_left.first(5).each do |opp| %> 
+      <% m = opp.y.find{|m| m.category == c} if opp.y.present? %>//find metric for this opportunity
+      {
+        //name: "<%= opp.name %>"
+        y: <%= (m.present? && m.num_activities.present? && c.present?) ? m.num_activities : 0 %>,
+        id: "<%= opp.id %>",
+      }, 
+    <% end %>
+    ]
+  }, false)
+  <% end unless @categories.blank? %>
+<% end %>
+
+<% unless @data_center.blank? %>
+  // Add the data via series
+  // chart_left.legend.update({enabled: false});
+  chart_center.xAxis[0].setCategories(<%= @data_center.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+
+  <% @categories.each do |c| %>
+  chart_center.addSeries({
+    name: "<%= c.nil? ? 'NoActivity' : c %>",
+    color: "<%= highcharts_series_color(c) %>",  //set color according to category
+    //showInLegend: <%= c.nil? ? 'false' : 'true' %>,
+    data: [ 
+    <% @data_center.first(5).each do |opp| %> 
+      <% m = opp.y.find{|m| m.category == c} if opp.y.present? %>//find metric for this opportunity
+      {
+        //name: "<%= opp.name %>"
+        y: <%= (m.present? && m.num_activities.present? && c.present?) ? m.num_activities : 0 %>,
+        id: "<%= opp.id %>",
+      }, 
+    <% end %>
+    ]
+  }, false)
+  <% end unless @categories.blank? %>
+<% end %>
+
+<% unless @data_right.blank? %>
+  // Add the data via series
+  // chart_left.legend.update({enabled: false});
+  chart_right.xAxis[0].setCategories(<%= @data_right.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+
+  // chart.legend.update({enabled: false});
+
+  // chart_right.addSeries({
+  //   name: 'Open Alerts & Tasks',
+  //   color: '<%= highcharts_series_color() %>',
+  //   // showInLegend: false,
+  //   data: [ <% @data_right.first(5).each do |d| %>
+  //   {
+  //     y: <%= d.y %>,
+  //     id: "<%= d.id %>"
+  //   },
+  //   <% end %> ]
+  // }, false);
+  <% @data_right.first(5).each_with_index do |d, i| %>
+  chart_right.addSeries({
+    name: 'Opportunity <%= i %>',
+    color: '<%= case i when 0 then "#4f9ce6" when 1 then "#66a8e9" when 2 then "#7cb5ec" when 3 then "#92c2ef" when 4 then "#a9cef2" else "red" end %>', //enable blue gradient
+    showInLegend: false,
+    data: [ 
+    <% 5.times do |n| %>
+      {
+        y: <%= i == n ? d.y : 0 %>,
+        id: "<%= d.id %>"
+      },
+    <% end %>
+    ]
+  }, false);
+  <% end %>
+<% end %>
+
+chart_left.redraw();
+chart_center.redraw();
+chart_right.redraw();
