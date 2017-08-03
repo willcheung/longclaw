@@ -25,7 +25,7 @@ class HomeController < ApplicationController
 
     @data_center = @data_left.reverse
 
-    open_task_counts = Project.count_tasks_per_project(@visible_projects.pluck(:id))
+    open_task_counts = Project.count_tasks_per_project(current_user_projects.pluck(:id))
     @data_right = open_task_counts.map do |r|
       Hashie::Mash.new({ id: r.id, name: r.name, deal_size: r.amount, close_date: r.close_date, y: r.open_risks, color: 'default'})
     end
