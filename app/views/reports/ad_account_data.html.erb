@@ -244,7 +244,7 @@
             },
             credits: { enabled: false },
             xAxis: {
-                categories: <%= @in_outbound_report['full_name'].to_json.html_safe %>
+                categories: <%= @interaction_time_report.map(&:name).to_json.html_safe %>
             },
             yAxis: {
                 min: 0,
@@ -271,7 +271,7 @@
                 headerFormat: '',
                 // pointFormat: '<b>{series.name}:</b> {point.y:.2f} hrs<br/><b>Total:</b> {point.stackTotal:.2f} hrs'
                 pointFormatter: function() {
-                  return '<span style="color:' + this.color + '">\u25CF</span>  <b>' + this.series.name + '</b>: ' + convert_secs_to_ddhhmm(this.y) + '<br/>'+ '<b>Total:</b>: ' + convert_secs_to_ddhhmm(this.total) + '<br/>';
+                  return '<span style="color:' + this.color + '">\u25CF</span>  <b>' + this.series.name + '</b>: ' + convert_secs_to_ddhhmm(this.y) + '<br/>'+ '<b>Total</b>: ' + convert_secs_to_ddhhmm(this.total) + '<br/>';
                 }
             },
 
@@ -287,19 +287,15 @@
                     }
                 }
             },
-            series: [ {
-                name: 'Meetings',
-                color: "<%= highcharts_series_color('Meetings') %>",
-                data: <%= @meeting_report.to_json.html_safe %> 
-            }, {
-                name: 'Sent',
-                color: "<%= highcharts_series_color('Sent E-mails') %>",
-                data: <%= @in_outbound_report['outbound'].to_json.html_safe %>
-            }, {
-                name: 'Read',
-                color: "<%= highcharts_series_color('Read E-mails') %>",
-                data: <%= @in_outbound_report['inbound'].to_json.html_safe %>
-            }]
+            series: [
+              <% %i(Meetings Attachments Sent\ E-mails Read\ E-mails).each do |category| %>
+              {
+                name: '<%= category %>',
+                color: "<%= highcharts_series_color(category.to_s) %>",
+                data: <%= @interaction_time_report.map(&category).to_json.html_safe %>
+              },
+              <% end %>
+            ]
         });
 
 

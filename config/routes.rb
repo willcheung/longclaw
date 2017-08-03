@@ -31,9 +31,21 @@ Longclaw::Application.routes.draw do
     end
     post "/project_bulk" => 'projects#bulk'
     delete "project_subscribers/destroy_other"
+
     resources :project_members
     resources :users
-    resources :notifications, only: [:index, :update, :create]
+
+    resources :notifications, only: [:index, :update, :create] do
+      member do
+        get "update_is_complete" => 'notifications#update_is_complete'
+        get "download" => 'notifications#download_attachment'
+      end
+      collection do
+        post "create_from_suggestion"
+      end
+    end
+    get "notifications/show_email_body/:id" => 'notifications#show_email_body'
+
     resources :salesforce, only: [:index]
     get "salesforce/disconnect/:id" => 'salesforce#disconnect', as: "salesforce_disconnect"
     post "/link_salesforce_account" => 'salesforce#link_salesforce_account'
@@ -60,9 +72,9 @@ Longclaw::Application.routes.draw do
       get "custom_fields"
       get "custom_lists"
       get "custom_list/:id" => 'settings#custom_list_show'
-      get "salesforce_accounts" 
-      get "salesforce_opportunities" 
-      get "salesforce_activities" 
+      get "salesforce_accounts"
+      get "salesforce_opportunities"
+      get "salesforce_activities"
       get "basecamp"
       get "basecamp2_projects"
       get "basecamp2_activity"
@@ -72,12 +84,9 @@ Longclaw::Application.routes.draw do
       post "invite_user/:user_id" => 'settings#invite_user'
     end
 
-    get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
-    get "notifications/show_email_body/:id" => 'notifications#show_email_body'
-    post "notifications/create_from_suggestion"
 
     get "/delete_single_activity/:id" => 'activities#destroy'
-    
+
     resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy], shallow: true
     end
