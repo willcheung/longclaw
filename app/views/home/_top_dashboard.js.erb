@@ -77,7 +77,7 @@ var chart_right = $('#chart-right').highcharts();
     color: '<%= highcharts_series_color_gradient_by_pct(d.y, min_value, max_value ) %>', //enable blue gradient
     showInLegend: false,
     data: [ 
-    <% 5.times do |n| %>
+    <% (@data_right.first(5).size).times do |n| %>
       {
         y: <%= i == n ? d.y : 0 %>,
         id: "<%= d.id %>"
