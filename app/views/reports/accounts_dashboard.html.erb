@@ -115,6 +115,13 @@
                     }
                 }
             },
+            tooltip: {
+                headerFormat:  '',
+                pointFormatter: function() {
+                    // this.category = [project_name, deal_size, close_date]
+                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+                }
+            },
             legend: {
                 enabled: true,
                 verticalAlign: 'top',
@@ -145,14 +152,14 @@
             }
         });
 
-        <%= render partial: "reports/accounts_dashboard.js" %>
-
-        // TODO: Possibly need this code to fix the date misalignment due to timezone datatype in @data (e.g., in the "Activities (Last 14d) graph")
         // Highcharts.setOptions({
         //     global: {
-        //         timezoneOffset: 7 * 60
+        //         timezoneOffset: <%= @time_zone_offset_min %>
         //     }
         // });
+
+        <%= render partial: "reports/accounts_dashboard.js" %>
+
     });
 
 </script>

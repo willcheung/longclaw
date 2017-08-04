@@ -78,19 +78,14 @@ class NotificationsController < ApplicationController
 
     final_filter = filter_statement.join(" AND ")
 
-    @projects = Project.visible_to(current_user.organization_id, current_user.id).order(:name)
+    @projects = @projects.order(:name)
 
-    if @projects.empty?
-      #no project, no notifications
-      return
-    end
-
+    return if @projects.empty? # no project, no notifications
+      
     @select_project = 0
     # always check if projectid is in visible projects in case someone do evil
     if !params[:projectid].nil? and !@projects.nil? and @projects.map(&:id).include? params[:projectid]
-      newProject = Array.new(1)
-      newProject[0] = params[:projectid]
-      total_notifications = Notification.find_project_and_user(newProject, final_filter)
+      total_notifications = Notification.find_project_and_user([params[:projectid]], final_filter)
       @select_project = params[:projectid]
     else
       total_notifications = Notification.find_project_and_user(@projects.map(&:id), final_filter)
@@ -229,11 +224,7 @@ class NotificationsController < ApplicationController
   end
 
   def set_visible_project_user
-    @projects = Project.joins(:account)
-                      .where('accounts.organization_id = ?
-                              AND (projects.is_public=true
-                                    OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(projects.name)")
-
+    @projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 

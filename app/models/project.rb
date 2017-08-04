@@ -795,56 +795,60 @@ class Project < ActiveRecord::Base
           --AND last_sent_date_epoch BETWEEN #{start_day.to_i} AND #{end_day.to_i}
           --AND ((messages ->> 'end_epoch')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       )
-      -- Emails
-      SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
-      FROM projects_from_array AS projects
-      JOIN
-      (
-       SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
-        FROM emails_sent
-        GROUP BY project_id, category
-        HAVING COUNT(DISTINCT message_id) > 0
-        UNION ALL
-       SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
-        FROM emails_received
-        GROUP BY project_id, category
-        HAVING COUNT(DISTINCT message_id) > 0
-      ) AS activity_count_by_category
-      ON projects.id = activity_count_by_category.project_id
-      UNION ALL
-      -- Meetings
-      SELECT t.project_id, t.name, '#{Activity::CATEGORY[:Meeting]}', COUNT(DISTINCT t.id) AS num_activities
+      SELECT *
       FROM (
-        SELECT DISTINCT m.id, project_id, proj.name, start_epoch AS start_t, jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t
-        FROM meetings AS m
-        JOIN projects_from_array AS proj ON m.project_id = proj.id
-        ) AS t
-      GROUP BY t.project_id, t.name
-      UNION ALL
-      -- Other activity
-      SELECT projects.id, projects.name, a.category, COUNT(distinct a.id) AS num_activities
-      FROM projects_from_array AS projects 
-      LEFT JOIN (
-        SELECT id,
-               category,
-               project_id,
-               last_sent_date
-        FROM activities
-        WHERE project_id IN ('#{array_of_project_ids.join("','")}')
-          AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
-          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
-        ) AS a
-      ON projects.id = a.project_id
-      GROUP BY projects.id, projects.name, a.category
-      UNION ALL
-      SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
-      FROM notifications
-      JOIN projects ON projects.id = notifications.project_id
-      WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
-      AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
-      AND notifications.description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
-      GROUP BY projects.id, projects.name, notifications.category
-      ORDER BY num_activities DESC
+        -- Emails
+        SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
+        FROM projects_from_array AS projects
+        JOIN
+        (
+         SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_sent
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT message_id) > 0
+          UNION ALL
+         SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_received
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT message_id) > 0
+        ) AS activity_count_by_category
+        ON projects.id = activity_count_by_category.project_id
+        UNION ALL
+        -- Meetings
+        SELECT t.project_id, t.name, '#{Activity::CATEGORY[:Meeting]}', COUNT(DISTINCT t.id) AS num_activities
+        FROM (
+          SELECT DISTINCT m.id, project_id, proj.name, start_epoch AS start_t, jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t
+          FROM meetings AS m
+          JOIN projects_from_array AS proj ON m.project_id = proj.id
+          ) AS t
+        GROUP BY t.project_id, t.name
+        UNION ALL
+        -- Other activity
+        SELECT projects.id, projects.name, a.category, COUNT(distinct a.id) AS num_activities
+        FROM projects_from_array AS projects 
+        LEFT JOIN (
+          SELECT id,
+                 category,
+                 project_id,
+                 last_sent_date
+          FROM activities
+          WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+            AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
+            AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          ) AS a
+        ON projects.id = a.project_id
+        GROUP BY projects.id, projects.name, a.category
+        UNION ALL
+        -- Attachments
+        SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
+        FROM notifications
+        JOIN projects ON projects.id = notifications.project_id
+        WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
+        AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
+        AND notifications.description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
+        GROUP BY projects.id, projects.name, notifications.category
+      ) as q
+      ORDER BY q.num_activities DESC, UPPER(q.name)
     SQL
     Project.find_by_sql(query)
   end
