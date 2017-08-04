@@ -273,6 +273,7 @@ class ProjectsController < ApplicationController
 
   def load_timeline
     activities = @project.activities.visible_to(current_user.email).includes(:notifications, :attachments, :comments)
+    @pinned_ids = activities.pinned.ids.reverse # get ids of Key Activities to show number on stars
     # filter by categories
     @filter_category = []
     if params[:category].present?
@@ -329,11 +330,9 @@ class ProjectsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_visible_project
-    begin
-      @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
-    rescue ActiveRecord::RecordNotFound
-      redirect_to root_url, :flash => { :error => "Project not found or is private." }
-    end
+    @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
 
   def set_editable_project
@@ -342,6 +341,8 @@ class ProjectsController < ApplicationController
                               AND (projects.is_public=true
                                     OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
                       .find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
 
   def get_account_names

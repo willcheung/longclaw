@@ -1,9 +1,25 @@
 class NotificationsController < ApplicationController
   ### TODO: refactor show_email_body so that it does not depend on simple_format which must be included from ActionView module (separate Controller from Views)
   include ActionView::Helpers::TextHelper
-  ###
-  before_action :set_notification, only: [:update, :update_is_complete, :show_email_body]
+  include ActionController::Live
+
+  before_action :set_notification, only: [:update, :update_is_complete, :show_email_body, :download_attachment]
   before_action :set_visible_project_user, only: [:index, :show, :create]
+
+  def download_attachment
+    render plain: 'You don\'t have access to this file' and return unless @notification.is_visible_to(current_user)
+
+    description = JSON.parse(@notification.description)
+    urn = description[:urn]
+    user_email = urn.split(':').fourth
+    att_user = current_user.organization.users.find_by_email(user_email)
+    render plain: 'You don\'t have access to this file' and return unless att_user
+
+    # base_url = ENV["csback_base_url"] + "/newsfeed/download"
+
+    render plain: 'OK'
+  end
+
   def index
 
     # only show valid notifications (both project and activities must be visible to user)
@@ -62,19 +78,14 @@ class NotificationsController < ApplicationController
 
     final_filter = filter_statement.join(" AND ")
 
-    @projects = Project.visible_to(current_user.organization_id, current_user.id).order(:name)
+    @projects = @projects.order(:name)
 
-    if @projects.empty?
-      #no project, no notifications
-      return
-    end
-
+    return if @projects.empty? # no project, no notifications
+      
     @select_project = 0
     # always check if projectid is in visible projects in case someone do evil
     if !params[:projectid].nil? and !@projects.nil? and @projects.map(&:id).include? params[:projectid]
-      newProject = Array.new(1)
-      newProject[0] = params[:projectid]
-      total_notifications = Notification.find_project_and_user(newProject, final_filter)
+      total_notifications = Notification.find_project_and_user([params[:projectid]], final_filter)
       @select_project = params[:projectid]
     else
       total_notifications = Notification.find_project_and_user(@projects.map(&:id), final_filter)
@@ -213,11 +224,7 @@ class NotificationsController < ApplicationController
   end
 
   def set_visible_project_user
-    @projects = Project.joins(:account)
-                      .where('accounts.organization_id = ?
-                              AND (projects.is_public=true
-                                    OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(projects.name)")
-
+    @projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 

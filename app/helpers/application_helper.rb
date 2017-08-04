@@ -23,30 +23,55 @@ module ApplicationHelper
 
   def highcharts_series_color(category="default")
     case category
-    when Activity::CATEGORY[:Conversation]
-      "#46C6C6"
-    when Activity::CATEGORY[:Meeting]
-      "#FFA500"
-    when Activity::CATEGORY[:Note]
-      "#ffde6b"
-    when Activity::CATEGORY[:JIRA]
-      "#205081"
-    when Activity::CATEGORY[:Salesforce]
-      "#1798c1"
-    when Activity::CATEGORY[:Zendesk]
-      "#78a300"
-    when Activity::CATEGORY[:Alert], Notification::CATEGORY[:Attachment]
-      "#ed5565"
-    when Activity::CATEGORY[:Basecamp2]
-      "#91e8e1"
-    when 'Meetings'
-      '#ffb833'
-    when 'Sent E-mails', 'E-mails Sent'
-      '#46c6c6'
+    when Activity::CATEGORY[:Conversation], 'Sent E-mails', 'E-mails Sent'
+      '#46C6C6'
     when 'Read E-mails', 'E-mails Received'
       '#33a6a6'
+    when Activity::CATEGORY[:Meeting], 'Meetings'
+      '#ffb833'
+    when Notification::CATEGORY[:Attachment], 'Attachments'
+      '#33a66d'
+    when Activity::CATEGORY[:Note]
+      '#ffde6b'
+    when Activity::CATEGORY[:JIRA]
+      '#205081'
+    when Activity::CATEGORY[:Salesforce]
+      '#1798c1'
+    when Activity::CATEGORY[:Zendesk]
+      '#78a300'
+    when Activity::CATEGORY[:Alert]
+      '#ed5565'
+    when Activity::CATEGORY[:Basecamp2]
+      '#91e8e1'
     else
       '#7cb5ec'  # light blue
+    end
+  end
+
+  def highcharts_series_color_gradient_by_pct(val, minval, maxval)
+    if val < minval
+      '#398fe2'
+    # lighter tints (first), darker tints (last)
+    elsif (val - minval) / (maxval - minval).to_f < 0.1
+      '#aed2f0'
+    elsif (val - minval) / (maxval - minval).to_f < 0.2
+      '#a6cdef' 
+    elsif (val - minval) / (maxval - minval).to_f < 0.3
+      '#9dc8ee'
+    elsif (val - minval) / (maxval - minval).to_f < 0.4
+      '#93c2ed'
+    elsif (val - minval) / (maxval - minval).to_f < 0.5
+      '#88bcec'
+    elsif (val - minval) / (maxval - minval).to_f < 0.6
+      '#7bb5ea'
+    elsif (val - minval) / (maxval - minval).to_f < 0.7
+      '#6dade8'
+    elsif (val - minval) / (maxval - minval).to_f < 0.8
+      '#5da4e6'
+    elsif (val - minval) / (maxval - minval).to_f < 0.9
+      '#4c9ae4'
+    else
+      '#398fe2' # >= 0.9 (incl. val > maxval)
     end
   end
 

@@ -14,7 +14,9 @@ while(chart.series.length > 0) {
 }
 
 <% if @data.present? %>
+  // proj category: [name, deal_size, close_date]
   chart.xAxis[0].setCategories(<%= @data.map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+
   <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
     <% @categories.each do |c| %>
     chart.addSeries({
@@ -59,7 +61,6 @@ while(chart.series.length > 0) {
 <% end %> // if @data.present? 
 
 // chart.xAxis[0].update({min: undefined, max: undefined}, false);
-chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.present? ? @data.size : 0 %> * 90));
 
 // <% @data.each do |d| %>console.log("<%= d.name.html_safe %>: <%= d %>");<% end %>
@@ -73,7 +74,7 @@ $('.highcharts-xaxis-labels text').click(function() {
 });
 
 function get_category_uuid (catname) {
-    //console.log("Getting proj: " + catname);
+    //console.log("Finding proj: " + catname);
   <% if @data.present? %>
     var map = {
     <% @data.each do |d| %>
@@ -85,3 +86,4 @@ function get_category_uuid (catname) {
     return "";
   <% end %>
 }
+

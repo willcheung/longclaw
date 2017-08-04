@@ -38,7 +38,7 @@
                         <h4>Open Alerts & Tasks</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><%= @open_alerts %></h2>
+                        <h2 style="font-weight:600;font-size:46px"><%= @open_alerts_and_tasks %></h2>
                     </div>
                 </div>
             </div>
@@ -95,7 +95,7 @@
             },
             credits: false,
             title: {
-                text: 'Time Spent (last 14 days)',
+                text: 'Time Spent (Last 14 days)',
                 align: 'left',
                 style: {
                     color: '#777777',
@@ -108,7 +108,7 @@
             },
             tooltip: {
                 pointFormatter: function() {
-                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
                 }
             },
             xAxis: {
@@ -124,13 +124,13 @@
                 },
                 labels: {
                     formatter: function() {
-                        return convert_secs_to_ddhhmm(this.value);
+                        return convert_secs_to_hhmm(this.value);
                     }
                 },
                 stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        return convert_secs_to_ddhhmm(this.total);
+                        return convert_secs_to_hhmm(this.total);
                     },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
@@ -145,29 +145,20 @@
                     stacking: 'normal'
                 }
             },
-            series: [{
-                name: 'Meetings',
-                color: "<%= highcharts_series_color('Meetings') %>",
-                data: <%= @interaction_time_per_account.map(&:meeting_time).to_json.html_safe %>
-            }, {
-                name: 'Read E-mails',
-                color: "<%= highcharts_series_color('Read E-mails') %>",
+            series: [
+              <% %i(Meetings Attachments Read\ E-mails Sent\ E-mails).each do |category| %>
+              {
+                name: '<%= category %>',
+                color: "<%= highcharts_series_color(category.to_s) %>",
+                data: <%= @interaction_time_per_account.map(&category).to_json.html_safe %>,
                 tooltip: {
-                    pointFormatter: function() {
-                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
-                    }
-                },
-                data: <%= @interaction_time_per_account.map(&:read_time).to_json.html_safe %>
-            }, {
-                name: 'Sent E-mails',
-                color: "<%= highcharts_series_color('Sent E-mails') %>",
-                tooltip: {
-                    pointFormatter: function() {
-                        return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
-                    }
-                },
-                data: <%= @interaction_time_per_account.map(&:sent_time).to_json.html_safe %>
-            }]
+                  pointFormatter: function() {
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
+                  }
+                }
+              },
+              <% end %>
+            ]
         });
 
 

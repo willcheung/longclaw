@@ -136,6 +136,11 @@ class Project < ActiveRecord::Base
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
+  # implementation of visible scope for individual projects
+  def is_visible_to(user)
+    account.organization == user.organization && is_confirmed && status == 'Active' && ( is_public || project_owner == user || users.include?(user) )
+  end
+
   def self.count_tasks_per_project(array_of_project_ids)
     query = <<-SQL
         SELECT projects.id AS id,
@@ -500,6 +505,7 @@ class Project < ActiveRecord::Base
   # This is the SQL query that gets the daily activities over a date range, by default the last 14 days through current day.
   # Used for time bounded time series
   def daily_activities_in_date_range(time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    domain = account.organization.domain
     query = <<-SQL
       -- This controls the dates returned by the query
       WITH time_series as (
@@ -597,6 +603,19 @@ class Project < ActiveRecord::Base
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
+      UNION ALL
+      (
+      -- Sent Attachments directly from notifications table
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Notification::CATEGORY[:Attachment]}' as category, count(attachments.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT sent_date, project_id
+                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+                  AND description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
+                ) as attachments
+        ON attachments.project_id = time_series.project_id and date_trunc('day', attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
     SQL
 
     Activity.find_by_sql(query)
@@ -639,27 +658,36 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
-  def activities_moving_average(time_zone, days_ago=14, segment_size=30)
+  def activities_moving_average(time_zone, segment_size=30, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    domain = account.organization.domain
+    num_days = (end_day - start_day).round/86400 # calculate number of days in this date range, find number of seconds and divide by seconds/day
     query = <<-SQL
       WITH time_series as (
-        SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') as days  
+        SELECT generate_series(date (TIMESTAMP '#{start_day}' AT TIME ZONE '#{time_zone}' - INTERVAL '#{segment_size} days'), date(TIMESTAMP '#{end_day}' AT TIME ZONE '#{time_zone}'), INTERVAL '1 day') as days LIMIT #{num_days + segment_size}
       ), activities_by_day AS (
         SELECT date(time_series.days) as date, COUNT(DISTINCT emails.*) + COUNT(DISTINCT other_activities.*) AS num_activities
         FROM time_series
         LEFT JOIN (SELECT messages ->> 'messageId'::text AS message_id,
-                          (messages ->> 'sentDate')::integer AS sent_date
+                          to_timestamp((messages ->> 'sentDate')::integer) AS sent_date
                     FROM activities,
                     LATERAL jsonb_array_elements(email_messages) messages
                     WHERE category = 'Conversation'
                     AND activities.project_id = '#{self.id}'
-                    AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days') AND (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}')
+                    AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (TIMESTAMP'#{start_day}' - INTERVAL '#{segment_size} days') AND (TIMESTAMP'#{end_day}')
                     GROUP BY 1,2
                    ) as emails
-          ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+          ON date (emails.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
         LEFT JOIN (SELECT last_sent_date as sent_date
-                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'))
+                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') and project_id = '#{self.id}' 
+                    AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') BETWEEN '#{(start_day - segment_size.days).to_i}' AND '#{end_day.to_i}'
                   ) as other_activities
-          ON date_trunc('day', other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+          ON date (other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+        LEFT JOIN (SELECT sent_date
+                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' 
+                  AND EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{time_zone}') BETWEEN '#{(start_day - segment_size.days).to_i}' AND '#{end_day.to_i}'
+                  AND description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
+                ) as attachments
+          ON date (attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
         GROUP BY time_series.days
         ORDER BY time_series.days ASC
       )
@@ -668,9 +696,8 @@ class Project < ActiveRecord::Base
       LEFT JOIN activities_by_day
       ON activities_by_day.date = time_series.days
     SQL
-
     result = Project.find_by_sql(query)
-    result.last(days_ago).map(&:moving_avg).map(&:to_f)
+    result.last(num_days).map(&:moving_avg).map(&:to_f) # take the last num_days results
   end
 
   def self.count_activities_by_day_sparkline(array_of_project_ids, time_zone, days_ago=7)
@@ -768,50 +795,103 @@ class Project < ActiveRecord::Base
           --AND last_sent_date_epoch BETWEEN #{start_day.to_i} AND #{end_day.to_i}
           --AND ((messages ->> 'end_epoch')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       )
-      -- Emails
-      SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
-      FROM projects_from_array AS projects
-      JOIN
-      (
-       SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
-        FROM emails_sent
-        GROUP BY project_id, category
-        HAVING COUNT(DISTINCT message_id) > 0
-        UNION ALL
-       SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
-        FROM emails_received
-        GROUP BY project_id, category
-        HAVING COUNT(DISTINCT message_id) > 0
-      ) AS activity_count_by_category
-      ON projects.id = activity_count_by_category.project_id
-      UNION ALL
-      -- Meetings
-      SELECT t.project_id, t.name, '#{Activity::CATEGORY[:Meeting]}', COUNT(DISTINCT t.id) AS num_activities
+      SELECT *
       FROM (
-        SELECT DISTINCT m.id, project_id, proj.name, start_epoch AS start_t, jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t
-        FROM meetings AS m
-        JOIN projects_from_array AS proj ON m.project_id = proj.id
-        ) AS t
-      GROUP BY t.project_id, t.name
-      UNION ALL
-      -- Other activity
-      SELECT projects.id, projects.name, a.category, COUNT(distinct a.id) AS num_activities
-      FROM projects_from_array AS projects 
-      LEFT JOIN (
-        SELECT id,
-               category,
-               project_id,
-               last_sent_date
-        FROM activities
-        WHERE project_id IN ('#{array_of_project_ids.join("','")}')
-          AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
-          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
-        ) AS a
-      ON projects.id = a.project_id
-      GROUP BY projects.id, projects.name, a.category
-      ORDER BY num_activities DESC
+        -- Emails
+        SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
+        FROM projects_from_array AS projects
+        JOIN
+        (
+         SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_sent
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT message_id) > 0
+          UNION ALL
+         SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_received
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT message_id) > 0
+        ) AS activity_count_by_category
+        ON projects.id = activity_count_by_category.project_id
+        UNION ALL
+        -- Meetings
+        SELECT t.project_id, t.name, '#{Activity::CATEGORY[:Meeting]}', COUNT(DISTINCT t.id) AS num_activities
+        FROM (
+          SELECT DISTINCT m.id, project_id, proj.name, start_epoch AS start_t, jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t
+          FROM meetings AS m
+          JOIN projects_from_array AS proj ON m.project_id = proj.id
+          ) AS t
+        GROUP BY t.project_id, t.name
+        UNION ALL
+        -- Other activity
+        SELECT projects.id, projects.name, a.category, COUNT(distinct a.id) AS num_activities
+        FROM projects_from_array AS projects 
+        LEFT JOIN (
+          SELECT id,
+                 category,
+                 project_id,
+                 last_sent_date
+          FROM activities
+          WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+            AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
+            AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          ) AS a
+        ON projects.id = a.project_id
+        GROUP BY projects.id, projects.name, a.category
+        UNION ALL
+        -- Attachments
+        SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
+        FROM notifications
+        JOIN projects ON projects.id = notifications.project_id
+        WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
+        AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
+        AND notifications.description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
+        GROUP BY projects.id, projects.name, notifications.category
+      ) as q
+      ORDER BY q.num_activities DESC, UPPER(q.name)
     SQL
     Project.find_by_sql(query)
+  end
+
+  # units for time result = seconds
+  def interaction_time_by_user(array_of_users)
+    email_word_counts = User.team_usage_report([id], array_of_users.pluck(:email))
+    meeting_time_seconds = User.meeting_report([id], array_of_users.pluck(:email))
+    attachment_counts = User.sent_attachments_count([id], array_of_users.pluck(:email))
+
+    result = email_word_counts.map do |u|
+      user = array_of_users.find { |usr| usr.email == u.email }
+      # convert word count of inbound and outbound emails to approx. time in seconds
+      inbound = (u.inbound.to_i / User::WORDS_PER_SEC[:Read]).round
+      outbound = (u.outbound.to_i / User::WORDS_PER_SEC[:Write]).round
+      Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': inbound, 'Sent E-mails': outbound, 'Meetings': 0, 'Attachments': 0 , total: inbound + outbound)
+    end
+
+    meeting_time_seconds.each do |u|
+      meeting = u.total
+      res = result.find { |usr| usr.email == u.email }
+      if res.nil?
+        user = array_of_users.find { |usr| usr.email == u.email }
+        result << Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': 0, 'Sent E-mails': 0, 'Meetings': meeting, 'Attachments': 0 , total: meeting)
+      else
+        res.Meetings = meeting
+        res.total += meeting
+      end
+    end
+
+    attachment_counts.each do |u|
+      attachment = u.attachment_count * User::ATTACHMENT_TIME_SEC # convert total number of attachments to approx. time in seconds
+      res = result.find { |usr| usr.email == u.email }
+      if res.nil?
+        user = array_of_users.find { |usr| usr.email == u.email }
+        result << Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': 0, 'Sent E-mails': 0, 'Meetings': 0, 'Attachments': attachment , total: attachment)
+      else
+        res.Attachments = attachment
+        res.total += attachment
+      end
+    end
+
+    result.sort { |d1, d2| (d1.total != d2.total) ? d2.total <=> d1.total : d1.name.upcase <=> d2.name.upcase }
   end
 
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.
@@ -887,6 +967,7 @@ class Project < ActiveRecord::Base
 
   # convenience method to make input easier compared to time_shift
   def time_jump(date)
+    puts "** #{self.inspect} contains no activities, skipping time_jump **" && return if activities.blank?
     latest_activity_date = activities.first.last_sent_date
     activities.each { |a| a.time_shift((date - latest_activity_date).round) }
   end
