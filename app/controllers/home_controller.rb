@@ -10,8 +10,8 @@ class HomeController < ApplicationController
     @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
     subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
 
+    # Load data for the 3 dashboards at the top of page
     unless @current_user_projects.blank?
-      # Load data for the 3 dashboards at the top of page
       project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, current_user.time_zone, 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
       if project_engagement_7d.blank?
         @data_left = [] and @categories = []
@@ -52,8 +52,8 @@ class HomeController < ApplicationController
       # end
     end
 
+    # Load notifications for "My Alerts & Tasks"  
     unless @current_user_projects.blank?
-      # Load notifications for "My Alerts & Tasks"  
       project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
       @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
       # Need these to show project name and user name instead of pid and uid
@@ -61,9 +61,8 @@ class HomeController < ApplicationController
       @users_reverse = get_current_org_users
     end
 
-    # Get all projects/opportunities that user owns or to which user is subscribed
-    @projects = (@current_user_projects + subscribed_projects).uniq(&:id).sort_by{|p| p.name.upcase}
     # Load project data for "My Opportunities"
+    @projects = (@current_user_projects + subscribed_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
     unless @projects.empty?
       project_ids_a = @projects.map(&:id)
 
