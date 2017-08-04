@@ -11,56 +11,58 @@ class HomeController < ApplicationController
     subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
 
     # Load data for the 3 dashboards at the top of page
-    project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, current_user.time_zone, 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
-    if project_engagement_7d.blank?
-      @data_left = [] and @categories = []
-    else
-      @data_left = project_engagement_7d.map do |pid, activities|
-        proj = @current_user_projects.find { |p| p.id == pid }
-        Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: activities, total: activities.inject(0){|sum,a| sum += (a.num_activities.present? ? a.num_activities : 0)} }) if proj.present?  # else nil
+    unless @current_user_projects.blank?
+      project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, current_user.time_zone, 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
+      if project_engagement_7d.blank?
+        @data_left = [] and @categories = []
+      else
+        @data_left = project_engagement_7d.map do |pid, activities|
+          proj = @current_user_projects.find { |p| p.id == pid }
+          Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: activities, total: activities.inject(0){|sum,a| sum += (a.num_activities.present? ? a.num_activities : 0)} }) if proj.present?  # else nil
+        end
       end
+      @data_left.compact!
+      @data_left.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+
+      @data_center = @data_left.sort{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d1.total <=> d2.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+
+      open_task_counts = Project.count_tasks_per_project(@current_user_projects.pluck(:id))
+      @data_right = open_task_counts.map do |r|
+        Hashie::Mash.new({ id: r.id, name: r.name, deal_size: r.amount, close_date: r.close_date, y: r.open_risks, color: 'default'})
+      end
+      @data_right.sort!{ |d1, d2| (d1.y == d2.y) ? d1.name.upcase <=> d2.name.upcase : d2.y <=> d1.y } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+
+      @categories = @data_left.inject([]) do |memo, d|
+        d.y.each {|a| memo = memo | [a.category]}
+        memo
+      end  # get only categories that have data
+
+      # puts "\t******************* @categories: #{@categories}"
+      # puts "\t<<<<<<<<<<<<<<<<<<< @data_left:"
+      # @data_left.each do |d|
+      #   puts "d.name=#{d.name} d.total=#{d.total}"
+      # end
+      # puts "\t******************* @data_center:"
+      # @data_center.each do |d|
+      #   puts "d.name=#{d.name} d.total=#{d.total}"
+      # end
+      # puts "\t>>>>>>>>>>>>>>>>>>> @data_right:"
+      # @data_right.each do |d|
+      #   puts "d.name=#{d.name} d.y=#{d.y}"
+      # end
     end
-    @data_left.compact!
-    @data_left.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
-
-    @data_center = @data_left.reverse
-
-    open_task_counts = Project.count_tasks_per_project(@current_user_projects.pluck(:id))
-    @data_right = open_task_counts.map do |r|
-      Hashie::Mash.new({ id: r.id, name: r.name, deal_size: r.amount, close_date: r.close_date, y: r.open_risks, color: 'default'})
-    end
-    @data_right.sort!{ |d1, d2| (d1.y == d2.y) ? d1.name.upcase <=> d2.name.upcase : d2.y <=> d1.y } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
-
-    @categories = @data_left.inject([]) do |memo, d|
-      d.y.each {|a| memo = memo | [a.category]}
-      memo
-    end  # get only categories that have data
-
-    # puts "\t******************* @categories: #{@categories}"
-    # puts "\t<<<<<<<<<<<<<<<<<<< @data_left:"
-    # @data_left.each do |d|
-    #   puts "d.name=#{d.name} d.total=#{d.total}"
-    # end
-    # puts "\t******************* @data_center:"
-    # @data_center.each do |d|
-    #   puts "d.name=#{d.name} d.total=#{d.total}"
-    # end
-    # puts "\t>>>>>>>>>>>>>>>>>>> @data_right:"
-    # @data_right.each do |d|
-    #   puts "d.name=#{d.name} d.y=#{d.y}"
-    # end
 
     # Load notifications for "My Alerts & Tasks"  
-    project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
-    @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
-    # Need these to show project name and user name instead of pid and uid
-    @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
-    @users_reverse = get_current_org_users
-
-    # Get all projects/opportunities that user owns or to which user is subscribed
-    @projects = (@current_user_projects + subscribed_projects).uniq(&:id).sort_by{|p| p.name.upcase}
+    unless @current_user_projects.blank?
+      project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
+      @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
+      # Need these to show project name and user name instead of pid and uid
+      @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
+      @users_reverse = get_current_org_users
+    end
 
     # Load project data for "My Opportunities"
+    @projects = (@current_user_projects + subscribed_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
     unless @projects.empty?
       project_ids_a = @projects.map(&:id)
 
