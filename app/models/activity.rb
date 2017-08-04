@@ -52,6 +52,7 @@ class Activity < ActiveRecord::Base
   scope :meetings, -> { where category: CATEGORY[:Meeting] }
   scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
   scope :from_lastweek, -> { where last_sent_date: 1.week.ago.midnight..Time.current.yesterday.end_of_day }
+  scope :next_week, -> { where last_sent_date: Time.current..1.week.from_now.midnight }
   scope :reverse_chronological, -> { order last_sent_date: :desc }
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
@@ -66,7 +67,7 @@ class Activity < ActiveRecord::Base
 
   CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = "CS"
   CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX = "(imported from ContextSmith) ——"
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2' }
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity' }
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -479,7 +480,7 @@ class Activity < ActiveRecord::Base
   end
 
   def is_visible_to(user)
-    is_public || email_addresses.include?(user.email)
+    project.is_visible_to(user) && ( is_public || email_addresses.include?(user.email) )
   end
 
   ### methods to batch change jsonb columns

@@ -7,17 +7,13 @@
     <input type="checkbox" class="i-checks" id=<%= n.id %> <% if n.is_complete %> checked <% end %> >
   </td>
   <td>
-    <% if n.category == Notification::CATEGORY[:Action] %>
-      <span class="label label-primary">
-    <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
-      <span class="label label-success">
-    <% elsif n.category == Notification::CATEGORY[:Todo] %>
-      <span class="label label-info">
-    <% else %>
-      <span class="label label-danger">
-    <% end %>
-      <%= n.category%>
-      </span>
+    <% labels = { Notification::CATEGORY[:Action] => 'label-primary',
+                  Notification::CATEGORY[:Opportunity] => 'label-success',
+                  Notification::CATEGORY[:Todo] => 'label-info',
+                  Notification::CATEGORY[:Alert] => 'label-danger' }
+       not_label = labels[n.category]
+    %>
+    <span class="label <%= not_label %>"><%= n.category%></span>
   </td>
   <td>
     <div class="task-name">

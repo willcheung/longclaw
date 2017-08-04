@@ -44,7 +44,6 @@ class SalesforceController < ApplicationController
       #puts ">>>>>>>>>>>> @project = #{@project.id}, #{@project.name}" 
 
       # Top status
-      @project_risk_score = @project.new_risk_score(current_user.time_zone)
       @project_open_tasks_count = @project.notifications.open.count
 
       # Tab specific (directly copied from "projects_controller.rb")
@@ -521,7 +520,7 @@ class SalesforceController < ApplicationController
   ### TODO: get_show_data and load_timeline are copies from ProjectsController, should be combined for better maintenance/to keep in sync with projects#show
   def get_show_data
     # metrics
-    @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.alerts.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count

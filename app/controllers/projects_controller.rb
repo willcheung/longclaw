@@ -1,12 +1,12 @@
 class ProjectsController < ApplicationController
   before_action :check_params_for_valid_dates, only: [:update]
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
+  before_action :set_visible_project, only: [:show, :edit, :tasks_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
-  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
+  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
-  before_action :get_custom_fields_and_lists, only: [:index, :show, :pinned_tab, :tasks_tab, :arg_tab, :insights_tab]
+  before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
   before_action :project_filter_state, only: [:index]
   
 
@@ -15,8 +15,8 @@ class ProjectsController < ApplicationController
   def index
     @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
     @title = "Opportunities"
-    # for filter and bulk owner assignment
-    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
+    # for filter and bulk owner assignment - use only registered users
+    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
@@ -39,8 +39,11 @@ class ProjectsController < ApplicationController
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @sparkline = Project.count_activities_by_day_sparkline(projects.ids, current_user.time_zone)
-      @risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @days_to_close = Project.days_to_close(projects.ids)
       @open_risk_count = Project.open_risk_count(projects.ids)
+      #@risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: projects.ids).group("project_id")
+      @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
     end
 
     # new project modal
@@ -54,8 +57,10 @@ class ProjectsController < ApplicationController
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
     @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
+    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).reverse
     # get categories for category filter
     @categories = @activities_by_category_date.keys
+    @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
   end
 
   def filter_timeline
@@ -64,12 +69,6 @@ class ProjectsController < ApplicationController
 
   def more_timeline
     respond_to :js
-  end
-
-  def pinned_tab
-    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
-
-    render "show"
   end
 
   def tasks_tab
@@ -123,11 +122,6 @@ class ProjectsController < ApplicationController
       ContextsmithService.load_calendar_from_backend(@project, 100, 1.day.ago.to_i)
     end
     redirect_to :back
-  end
-
-  def render_pinned_tab
-    @pinned_activities = @project.activities.pinned.includes(:comments)
-    respond_to :js
   end
 
   # GET /projects/new
@@ -241,10 +235,11 @@ class ProjectsController < ApplicationController
   end
 
   def get_show_data
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
     @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
 
     # metrics
-    @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
     @project_open_risks_count = @project.notifications.open.alerts.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
@@ -278,15 +273,29 @@ class ProjectsController < ApplicationController
 
   def load_timeline
     activities = @project.activities.visible_to(current_user.email).includes(:notifications, :attachments, :comments)
+    @pinned_ids = activities.pinned.ids.reverse # get ids of Key Activities to show number on stars
     # filter by categories
     @filter_category = []
     if params[:category].present?
       @filter_category = params[:category].split(',')
-      # special case: if Attachments category selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
-      if @filter_category.include?(Notification::CATEGORY[:Attachment])
-        where_categories = @filter_category - [Notification::CATEGORY[:Attachment]]
-        category_condition = "activities.category IN ('#{where_categories.join("','")}') OR activities.category = '#{Activity::CATEGORY[:Conversation]}' AND att_filter.id IS NOT NULL"
-        activities = activities.joins("LEFT JOIN notifications AS att_filter ON att_filter.activity_id = activities.id AND att_filter.category = '#{Notification::CATEGORY[:Attachment]}'").where(category_condition).distinct
+
+      # special cases: if Attachment or Pinned category filters selected, remove from normal WHERE condition and handle differently below
+      if @filter_category.include?(Notification::CATEGORY[:Attachment]) || @filter_category.include?(Activity::CATEGORY[:Pinned])
+        where_categories = @filter_category - [Notification::CATEGORY[:Attachment], Activity::CATEGORY[:Pinned]]
+        category_condition = "activities.category IN ('#{where_categories.join("','")}')"
+
+        # Attachment filter selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Notification::CATEGORY[:Attachment])
+          activities = activities.joins("LEFT JOIN notifications AS attachment_notifications ON attachment_notifications.activity_id = activities.id AND attachment_notifications.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+          category_condition += " OR (activities.category = '#{Activity::CATEGORY[:Conversation]}' AND attachment_notifications.id IS NOT NULL)"
+        end
+
+        # Pinned filter selected, need to INCLUDE pinned activities regardless of type but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Activity::CATEGORY[:Pinned])
+          category_condition += " OR activities.is_pinned IS TRUE"
+        end
+
+        activities = activities.where(category_condition)
       else
         activities = activities.where(category: @filter_category)
       end
@@ -321,11 +330,9 @@ class ProjectsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_visible_project
-    begin
-      @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
-    rescue ActiveRecord::RecordNotFound
-      redirect_to root_url, :flash => { :error => "Project not found or is private." }
-    end
+    @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
 
   def set_editable_project
@@ -334,6 +341,8 @@ class ProjectsController < ApplicationController
                               AND (projects.is_public=true
                                     OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
                       .find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
 
   def get_account_names

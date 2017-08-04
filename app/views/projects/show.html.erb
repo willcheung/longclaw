@@ -40,7 +40,7 @@
                         <h5><%= Project::MAPPABLE_FIELDS_META["stage"] %></h5>
                     </div>
                     <div class="metric-content" align="center">
-                        <h4><%= (@project.stage.nil? or @project.stage.empty?) ? "-" : @project.stage %></h4>
+                        <h4><%= @project.stage.blank? ? "-" : @project.stage %></h4>
                     </div>
                 </div>
             </div>
@@ -50,11 +50,21 @@
                         <h5><%= Project::MAPPABLE_FIELDS_META["amount"] %></h5>
                     </div>
                     <div class="metric-content" align="center">
-                        <h3><%= (@project.amount.nil?) ? "-" : "$"+number_to_human(@project.amount) %></h3>
+                        <h3><%= @project.amount.blank? ? "-" : "$"+number_to_human(@project.amount) %></h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
+                <div class="metric">
+                    <div class="metric-title" align="center">
+                        <h5>Days to Close</h5>
+                    </div>
+                    <div class="metric-content" align="center">
+                        <h3><%= @project.close_date.blank? ? "-" : (@project.close_date - Date.today).to_i %></h3>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="col-md-3">
                 <div class="metric <%= risk_color(@project_risk_score) %>">
                     <div class="metric-title" align="center">
                         <h5>Risk Score</h5>
@@ -63,11 +73,11 @@
                         <h3><%= @project_risk_score %></h3>
                     </div>
                 </div>
-            </div>
+            </div> -->
             <div class="col-md-3">
                 <div class="metric text-danger">
                     <div class="metric-title" align="center">
-                        <h5>Open Alerts</h5>
+                        <h5>Open Alerts & Tasks</h5>
                     </div>
                     <div class="metric-content" align="center">
                         <h3><%= @project_open_tasks_count %></h3>
@@ -84,7 +94,6 @@
                 <div class="panel-heading">
                     <ul class="nav nav-tabs">
                         <li class="nav-tab"><a id="newsfeed-link" href="<%= project_path(@project) %>" class="white-bg"><i class="fa fa-comments"></i> Activities</a></li>
-                        <li class="nav-tab"><a id="pinned-link" href="<%= project_path(@project) %>/pinned" class="white-bg"><i class="fa fa-thumb-tack"></i> Key Activities (<%= @project_pinned_count %>)</a></li>
                         <li class="nav-tab"><a id="tasks-link" href="<%= project_path(@project) %>/tasks" class="white-bg"><i class="fa fa-list-ul"></i> Alerts & Tasks (<%= @project_open_tasks_count %>)</a></li>
                         <li class="nav-tab"><a id="arg-link" href="<%= project_path(@project) %>/arg" class="white-bg"><i class="fa fa-users"></i> Relationship Graph</a></li>
                     </ul>
@@ -92,7 +101,6 @@
             </div>
 
             <%= render 'activities_tab' if params[:action] == "show" %>
-            <%= render 'pinned_tab', pinned_activities: @pinned_activities if params[:action] == "pinned_tab" %>
             <%= render 'notifications/project' if params[:action] == "tasks_tab" %>
             <%= render 'arg_tab', project_id: @project.id if params[:action] == "arg_tab" %>
 
@@ -172,6 +180,16 @@
                         <strong><%= Project::MAPPABLE_FIELDS_META["close_date"] %>:</strong>
                         <span class="pull-right">
                             <%=best_in_place @project, :close_date, :as => :date, :place_holder => '-', :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-close-date-activator" %>
+                            <% unless @project.close_date.nil? %>
+                                <!-- TODO: Use jQuery to dynamically update these warnings -->
+                                <% if @project_close_date < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d') %>
+                                    <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:red" data-toggle="tooltip" data-placement="bottom" data-original-title="Date has passed!"></i>
+                                <% elsif @project_close_date == Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
+                                    <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:#33adff" data-toggle="tooltip" data-placement="bottom" data-original-title="Today"></i>
+                                <% elsif @project_close_date <= Time.zone.at(Time.now.utc + 10.days).strftime('%Y-%m-%d')  %>
+                                    <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:orange" data-toggle="tooltip" data-placement="bottom" data-original-title="Due within the next 10 days"></i>
+                                <% end %>
+                            <% end %>
                             <i id="project-close-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                         </span>
                     </li>                    
@@ -186,7 +204,7 @@
                                 <% elsif @project_renewal_date == Time.zone.at(Time.now.utc).strftime('%Y-%m-%d')  %>
                                     <i class="fa fa-exclamation-circle" aria-hidden="true" style="color:#33adff" data-toggle="tooltip" data-placement="bottom" data-original-title="Today"></i>
                                 <% elsif @project_renewal_date <= Time.zone.at(Time.now.utc + 10.days).strftime('%Y-%m-%d')  %>
-                                    <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:orange" data-toggle="tooltip" data-placement="bottom" data-original-title="Due in 10 days"></i>
+                                    <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:orange" data-toggle="tooltip" data-placement="bottom" data-original-title="Due within the next 10 days"></i>
                                 <% end %>
                             <% end %>
                             <i id="project-renewal-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
