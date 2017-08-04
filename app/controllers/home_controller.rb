@@ -24,7 +24,7 @@ class HomeController < ApplicationController
       @data_left.compact!
       @data_left.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
 
-      @data_center = @data_left.reverse
+      @data_center = @data_left.sort{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d1.total <=> d2.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
 
       open_task_counts = Project.count_tasks_per_project(@current_user_projects.pluck(:id))
       @data_right = open_task_counts.map do |r|
