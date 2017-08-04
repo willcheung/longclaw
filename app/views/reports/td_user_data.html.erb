@@ -4,12 +4,34 @@
             <h1><%= get_full_name @user %></h1>
         </div>
         <div class="col-lg-2 m-t-md">
-            <span class="label" style="font-size: 11pt">Last 14 days</span>
+            
         </div>
     </div>
 
     <div class="ibox-content">
         <div class="row">
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>Expected Revenue</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px;"><% if @sum_expected_revenue.nil? %> - <% else %>$<%= number_to_human(@sum_expected_revenue) %><% end %></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>On Target</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px">-</h2>
+                    </div>
+                </div>
+            </div>
+            
             <div class="col-md-3 text-center">
                 <div class="metric text-danger">
                     <div class="metric-title">
@@ -32,27 +54,6 @@
                 </div>
             </div>
 
-            <div class="col-md-3 text-center">
-                <div class="metric">
-                    <div class="metric-title">
-                        <h4>Expected Revenue</h4>
-                    </div>
-                    <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px;"><% if @sum_expected_revenue.nil? %> - <% else %>$<%= number_to_human(@sum_expected_revenue) %><% end %></h2>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3 text-center">
-                <div class="metric">
-                    <div class="metric-title">
-                        <h4>On Target</h4>
-                    </div>
-                    <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px">-</h2>
-                    </div>
-                </div>
-            </div>
         </div>
 
     </div>
