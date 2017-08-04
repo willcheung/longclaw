@@ -273,6 +273,7 @@ class ProjectsController < ApplicationController
 
   def load_timeline
     activities = @project.activities.visible_to(current_user.email).includes(:notifications, :attachments, :comments)
+    @pinned_ids = activities.pinned.ids.reverse # get ids of Key Activities to show number on stars
     # filter by categories
     @filter_category = []
     if params[:category].present?

@@ -85,7 +85,8 @@ $(function () {
       useUTC : false
     },
     lang: {
-        resetZoom: "Clear date filter"
+      resetZoom: "Reset",
+      resetZoomTitle: "Clear date filter"
     }
   });
 
@@ -119,6 +120,15 @@ $(function () {
         }
       },
       zoomType: 'x',
+      resetZoomButton: {
+        theme: {
+          fill: 'transparent'
+        },
+        position: {
+          y: 1
+        },
+        relativeTo: 'chart'
+      },
       backgroundColor: '#f3f3f4'
     },
     credits: {
