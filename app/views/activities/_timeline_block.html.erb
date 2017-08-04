@@ -1,5 +1,4 @@
 <div class="vertical-timeline-block <%= a.id.to_s + a.category %> <%= 'future-activity' if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %>">
-
     <% if a.category == Activity::CATEGORY[:Conversation] %>
         <div class="vertical-timeline-icon secondary-bg" id="<%= a.backend_id.to_s %>">
             <i class="fa fa-envelope"></i>
@@ -50,8 +49,14 @@
             <h3><%= a.title %>
                 <small class="m-l-md" data-toggle="tooltip" data-placement="top" data-original-title="<%= get_conversation_member_names(a.from, a.to, a.cc, '', 99) %>"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
                 <% if not_in_current_user_inbox(a) %><span id="not-in-inbox"><i class="fa fa-eye pull-right" style="font-size:14px;" data-toggle="tooltip" data-placement="top" data-original-title="This conversation is not in your inbox"></i></span><% end %>
-                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
-                <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
+                <span <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
+                <% if a.is_pinned %>
+                  <% index = @pinned_ids.index(a.id) + 1 %>
+                  <span class="fa-stack pull-right" style="margin-top: -8px;">
+                    <i class="fa fa-star fa-stack-1x" title="Key Activity"></i>
+                    <small class="fa-stack-1x text-white text-stack"><%= index %></small>
+                  </span>
+                <% end %>
             </h3>
 
             <div class="chat-discussion">
@@ -86,7 +91,7 @@
                 <div class="action-links">
                     <strong><a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= last_msg_recipients(a) %>&su=<%= last_msg_subject(a) %>&body=<%= last_msg_body(a) %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"><i class="fa fa-reply-all" aria-hidden="true"></i> Reply Email</a></strong>
                     &sdot;
-                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                     &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
@@ -105,20 +110,22 @@
 
         <% elsif a.category == Activity::CATEGORY[:Note] %>
             <div class="chat-discussion timeline-note rag-bar<%=a['rag_score']%>">
-                <div class="row">
-                    <div class="col-xs-11">
-                        <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
-                        <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => rag_note(a['rag_score']), :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
-                    </div>
-                    <% if a.user == current_user %>
-                        <div class="col-xs-1 delete-note">
-                            <i id="note-<%= a.id %>-activator" class="fa fa-pencil bip_activator text-mute-gray m-r-xs"></i>
-                            <%= link_to "<i class=\"fa fa-trash-o text-mute-gray\"></i>".html_safe, a, method: :delete, title: "Remove", data: {confirm: "Are you sure you want to delete this note?"}, remote: true %>
-                        </div>
-                    <% end %>
-                </div>
+              <p class="note-author"><strong><%= get_full_name(a.user) %></strong> wrote:</p>
+                <% if a.is_pinned %>
+                  <% index = @pinned_ids.index(a.id) + 1 %>
+                <span class="fa-stack pull-right" style="margin-top: -8px;">
+                  <i class="fa fa-star fa-stack-1x" title="Key Activity"></i>
+                  <small class="fa-stack-1x text-white text-stack"><%= index %></small>
+                </span>
+                <% end %>
+              <% if a.user == current_user %>
+                  <%= link_to "<i class=\"fa fa-trash-o text-mute-gray m-r-xs pull-right delete-note\"></i>".html_safe, a, method: :delete, title: "Remove", data: {confirm: "Are you sure you want to delete this note?"}, remote: true %>
+                  <i id="note-<%= a.id %>-activator" class="fa fa-pencil bip_activator text-mute-gray m-r-xs pull-right delete-note"></i>
+              <% end %>
+
+              <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => rag_note(a['rag_score']), :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
                 <div class="action-links">
-                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                    <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                      &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 </div>
             </div>
@@ -126,8 +133,14 @@
         <% elsif a.category == Activity::CATEGORY[:Meeting] %>
             <h3><%= a.title %>
                 <small class="m-l-md"><%= get_calendar_interval(a) %></small>
-                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
-                <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
+                <span <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
+                <% if a.is_pinned %>
+                  <% index = @pinned_ids.index(a.id) + 1 %>
+                  <span class="fa-stack pull-right" style="margin-top: -8px;">
+                    <i class="fa fa-star fa-stack-1x" title="Key Activity"></i>
+                    <small class="fa-stack-1x text-white text-stack"><%= index %></small>
+                  </span>
+                <% end %>
             </h3>
 
             <div class="chat-discussion">
@@ -136,7 +149,7 @@
                     <div class="col-lg-9"><strong>Attendees:</strong> <%= get_calendar_member_names(a.to) %></div>
                 </div>
                 <div class="action-links">
-                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
@@ -150,8 +163,14 @@
             <h3><%= a.title %>
                 <small class="m-l-md"><%= a.from[0].personal ? a.from[0].personal : a.from[0].address %></small>
                 <span class="label pull-right"><%= a.email_messages.first["ActivityType"] %></span>
-                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
-                <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
+                <span <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
+                <% if a.is_pinned %>
+                  <% index = @pinned_ids.index(a.id) + 1 %>
+                  <span class="fa-stack pull-right" style="margin-top: -8px;">
+                    <i class="fa fa-star fa-stack-1x" title="Key Activity"></i>
+                    <small class="fa-stack-1x text-white text-stack"><%= index %></small>
+                  </span>
+                <% end %>
             </h3>
 
             <div class="chat-discussion">
@@ -162,7 +181,7 @@
                 </div>
 
                 <div class="action-links">
-                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
@@ -176,8 +195,14 @@
             <h3><%= a.title %>
               <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
               <span class="label pull-right"></span>                
-              <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
-              <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
+              <span <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
+                <% if a.is_pinned %>
+                  <% index = @pinned_ids.index(a.id) + 1 %>
+                <span class="fa-stack pull-right" style="margin-top: -8px;">
+                  <i class="fa fa-star fa-stack-1x" title="Key Activity"></i>
+                  <small class="fa-stack-1x text-white text-stack"><%= index %></small>
+                </span>
+                <% end %>
             </h3>
             <div class="chat-discussion">
                 <% if a.email_messages.length > 1 %>
@@ -212,7 +237,7 @@
                   </div>
                   <% end %>
                   <div class="action-links">
-                        <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                        <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                       
                         &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                         &sdot; <a href="<%=a.email_messages.first.html_url%>" target="_blank">View in BaseCamp 2 <i class="fa fa-external-link"></i></a>
@@ -224,8 +249,14 @@
                 <%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
                 <span class="label pull-right"><%= a.email_messages.first.issue.fields.status.name %></span>
-                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
-                <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
+                <span <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
+                <% if a.is_pinned %>
+                  <% index = @pinned_ids.index(a.id) + 1 %>
+                  <span class="fa-stack pull-right" style="margin-top: -8px;">
+                    <i class="fa fa-star fa-stack-1x" title="Key Activity"></i>
+                    <small class="fa-stack-1x text-white text-stack"><%= index %></small>
+                  </span>
+                <% end %>
             </h3>
 
             <div class="chat-discussion">
@@ -248,7 +279,7 @@
                     </div>
                 <% end %>
                 <div class="action-links">
-                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
@@ -264,8 +295,14 @@
                 <%= a.title %>
                 <small class="m-l-md"><%= get_conversation_member_names(a.from, a.to, a.cc) %></small>
                 <span class="label pull-right"><%= a.email_messages.first.status %></span>
-                <span id="private" <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
-                <span id="pinned" <% if !a.is_pinned %>style="display:none;"<% end %>><i class="fa fa-thumb-tack pull-right" title="Pinned"></i></span>
+                <span <% if a.is_public %>style="display:none;"<% end %>><i class="fa fa-lock pull-right" title="Private"></i></span>
+                <% if a.is_pinned %>
+                  <% index = @pinned_ids.index(a.id) + 1 %>
+                  <span class="fa-stack pull-right" style="margin-top: -8px;">
+                    <i class="fa fa-star fa-stack-1x" title="Key Activity"></i>
+                    <small class="fa-stack-1x text-white text-stack"><%= index %></small>
+                  </span>
+                <% end %>
             </h3>
 
             <div class="chat-discussion">
@@ -287,7 +324,7 @@
                     </div>
                 <% end %>
                 <div class="action-links">
-                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                   &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
@@ -301,13 +338,20 @@
         <% elsif a.category == Activity::CATEGORY[:Alert] %>
             <h3>
                 Alert: <%= a.title %>
-           </h3>
+                <% if a.is_pinned %>
+                  <% index = @pinned_ids.index(a.id) + 1 %>
+                  <span class="fa-stack pull-right" style="margin-top: -8px;">
+                    <i class="fa fa-star fa-stack-1x" title="Key Activity"></i>
+                    <small class="fa-stack-1x text-white text-stack"><%= index %></small>
+                  </span>
+                <% end %>
+            </h3>
 
             <div class="chat-discussion">
                 <div> <%= a.note %></div>
 
                 <div class="action-links">
-                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Pin as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-thumb-tack\"></i> Pinned</a></strong>")}, :class => 'pin' %>
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 </div>
             </div>
