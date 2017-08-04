@@ -58,13 +58,8 @@ class HomeController < ApplicationController
     @users_reverse = get_current_org_users
 
     # Get all projects/opportunities that user owns or to which user is subscribed
-    @projects = @current_user_projects
-    subscribed_projects.each do |p|
-      pid = @projects.find {|s| s.id == p.id}
-      @projects << p if pid.nil?
-    end
-    @projects = @projects.sort_by{|p| p.name.upcase}
-   
+    @projects = (@current_user_projects + subscribed_projects).uniq(&:id).sort_by{|p| p.name.upcase}
+
     # Load project data for "My Opportunities"
     unless @projects.empty?
       project_ids_a = @projects.map(&:id)

@@ -78,7 +78,7 @@ class NotificationsController < ApplicationController
 
     final_filter = filter_statement.join(" AND ")
 
-    @projects = Project.visible_to(current_user.organization_id, current_user.id).order(:name)
+    @projects = @projects.order(:name)
 
     return if @projects.empty? # no project, no notifications
       

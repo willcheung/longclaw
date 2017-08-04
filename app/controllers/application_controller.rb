@@ -53,6 +53,7 @@ class ApplicationController < ActionController::Base
     if current_user.time_zone == 'UTC' and !cookies[:timezone].nil?
       current_user.update_attributes(time_zone: cookies[:timezone])
     end
+    # TODO: Temporarily un-used until figure out why this is buggy (display is off by 1 day)
     #@time_zone_offset_min = -ActiveSupport::TimeZone.new(current_user.time_zone).utc_offset / 60
 
     Time.use_zone(current_user.time_zone, &block)
