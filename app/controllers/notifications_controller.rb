@@ -5,6 +5,7 @@ class NotificationsController < ApplicationController
 
   before_action :set_notification, only: [:update, :update_is_complete, :show_email_body, :download_attachment]
   before_action :set_visible_project_user, only: [:index, :show, :create]
+  before_action :get_current_org_users, only: [:index, :show, :create, :create_from_suggestion]
 
   def download_attachment
     render plain: 'You don\'t have access to this file' and return unless @notification.is_visible_to(current_user)
@@ -122,8 +123,6 @@ class NotificationsController < ApplicationController
       has_time: true
     ))
 
-    @users_reverse = get_current_org_users
-
     # send notification e-mail for the assign_to user
     send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id
 
@@ -198,7 +197,6 @@ class NotificationsController < ApplicationController
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 
     @users = current_user.organization.users.map { |u| [u.first_name+' '+ u.last_name+' '+u.email, u.id] }.to_h
-    @users_reverse = get_current_org_users
   end
 
   def get_email_and_member
