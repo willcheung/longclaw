@@ -764,7 +764,7 @@ class User < ActiveRecord::Base
     find_by_sql(query)
   end
 
-  def email_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def email_time_by_project(array_of_project_ids=Project.visible_to(self.organization_id, self.id).pluck(:id), start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)  # array_of_user_emails
     query = <<-SQL
       WITH user_emails AS (
         SELECT messages ->> 'messageId'::text AS message_id,
@@ -782,7 +782,7 @@ class User < ActiveRecord::Base
         FROM activities,
         LATERAL jsonb_array_elements(email_messages) messages
         WHERE category = '#{Activity::CATEGORY[:Conversation]}'
-        AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{self.organization.accounts.ids.join("','")}'))
+        AND project_id IN ('#{array_of_project_ids.join("','")}')
         AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
       )
       SELECT projects.id, projects.name, SUM(outbound_wc)::float AS outbound, SUM(inbound_wc)::float AS inbound, COALESCE(SUM(outbound_wc),0) + COALESCE(SUM(inbound_wc),0) AS total
@@ -845,7 +845,7 @@ class User < ActiveRecord::Base
   find_by_sql(query)
   end
 
-  def meeting_time_by_project(start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def meeting_time_by_project(array_of_project_ids=Project.visible_to(self.organization_id, self.id).pluck(:id), start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc) # array_of_user_emails
     query = <<-SQL
       SELECT projects.id, projects.name, SUM((messages->>'end_epoch')::integer - last_sent_date_epoch::integer)::float AS total_meeting_hours
       FROM activities
@@ -855,7 +855,7 @@ class User < ActiveRecord::Base
       WHERE activities.category = '#{Activity::CATEGORY[:Meeting]}'
       AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       AND "from" || "to" || cc @> ('[{"address":"' || #{User.sanitize(self.email)} || '"}]')::jsonb
-      AND project_id IN (SELECT id AS project_id FROM projects WHERE account_id IN ('#{self.organization.accounts.ids.join("','")}'))
+      AND project_id IN ('#{array_of_project_ids.join("','")}')
       GROUP BY 1
     SQL
     Project.find_by_sql(query)
@@ -879,8 +879,7 @@ class User < ActiveRecord::Base
     find_by_sql(query)
   end
 
-  def sent_attachments_by_project(start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
-    array_of_project_ids = Project.visible_to(organization_id, id).ids
+  def sent_attachments_by_project(array_of_project_ids=Project.visible_to(self.organization_id, self.id).pluck(:id), start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc) # array_of_user_emails
     query = <<-SQL
       SELECT projects.id, projects.name, COUNT(message_id) AS attachment_count
       FROM projects

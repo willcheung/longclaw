@@ -394,6 +394,8 @@
               window.location.assign("/projects/"+ clicked_pid);
         });
 
+        $('.highcharts-xaxis-labels text').css("cursor", "pointer");
+
         function get_category_uuid (catname) {
             // console.log("Finding proj: " + catname);
             var map = {
