@@ -752,9 +752,15 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # Top Active Opportunities/Engagement (within a range of specified days)
-  # TODO: Fix and don't match using current_user's domain.  This method won't work for those with 'gmail.com' domain (or any domain that is ambiguous if internal or external user!!!)
-  def self.count_activities_by_category(array_of_project_ids, domain, time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  # Top Active Opportunities/Engagement of e-mails, meetings, and all activity within a period
+  # Parameters:   array_of_project_ids - ids of opportunities
+  #               domain - domain of the organization (not used)
+  #               array_of_user_emails (required) - e-mails of users to be used to determine if an e-mail is outbound/sent or inbound/received (e.g., if from perspective of a single user, this contains only this user's e-mail address; if want to use all users for the current user's organization, specify them).)  
+  #               start_day - the starting time (timestamp) of the reporting period (default is midnight 14 days ago in current user's timezone)
+  #               end_day - the starting time (timestamp) of the reporting period (default is midnight current day in current user's timezone)
+  # Note: this query will not report anything without a non-empty array in array_of_user_emails!
+  def self.count_activities_by_category(array_of_project_ids, domain, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    return [] if array_of_user_emails.blank?
     query = <<-SQL
       WITH projects_from_array AS (
         SELECT id, name FROM projects WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
@@ -780,24 +786,29 @@ class Project < ActiveRecord::Base
           FROM users
           INNER JOIN emails
           ON (users.email IN (emails.from))
-          WHERE users.email like '%#{domain}'
+          WHERE users.email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
       ), emails_received AS (
-        SELECT project_id, message_id FROM emails
+        SELECT DISTINCT project_id, message_id
+          FROM users
+          INNER JOIN emails
+          ON (users.email IN (emails.to, emails.cc))
+          WHERE users.email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
         EXCEPT
-        SELECT project_id, message_id FROM emails_sent
+        SELECT * FROM emails_sent
       ), meetings AS (
-        SELECT DISTINCT activities.id, project_id, "to" AS attendees, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch
+        SELECT DISTINCT activities.id, project_id, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch -- "to" AS attendees
           FROM activities
           JOIN projects_from_array ON activities.project_id = projects_from_array.id,
           LATERAL jsonb_array_elements(email_messages) messages
-          WHERE category = '#{Activity::CATEGORY[:Meeting]}'
+          WHERE activities.category = '#{Activity::CATEGORY[:Meeting]}'
           AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
-          --AND last_sent_date_epoch BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          AND project_id IN ('#{array_of_project_ids.join("','")}')
+          AND (#{ array_of_user_emails.map{|e| "\"from\" || \"to\" || cc @> ('[{\"address\":\"" + User.sanitize(e)[1..-2] + "\"}]')::jsonb"}.join(" OR ") })
           --AND ((messages ->> 'end_epoch')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       )
       SELECT *
       FROM (
-        -- Emails
+        -- E-mails
         SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
         FROM projects_from_array AS projects
         JOIN
@@ -845,7 +856,7 @@ class Project < ActiveRecord::Base
         JOIN projects ON projects.id = notifications.project_id
         WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
         AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
-        AND notifications.description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
+        AND notifications.description::jsonb->'from'->0->>'address' IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
         GROUP BY projects.id, projects.name, notifications.category
       ) as q
       ORDER BY q.num_activities DESC, UPPER(q.name)

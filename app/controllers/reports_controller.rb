@@ -22,6 +22,8 @@ class ReportsController < ApplicationController
     projects = projects.where(category: params[:category]) if params[:category].present?
     projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account].present?
 
+    users_emails = current_user.organization.users.map{|u| u.email}
+
     # Incrementally apply any filters
     if params[:owner].present?
       if params["owner"] == "none"
@@ -35,7 +37,7 @@ class ReportsController < ApplicationController
 
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
-      project_engagement = Project.count_activities_by_category(projects.pluck(:id), current_user.organization.domain, current_user.time_zone).group_by { |p| p.id }
+      project_engagement = Project.count_activities_by_category(projects.pluck(:id), current_user.organization.domain, users_emails).group_by { |p| p.id }
       @data = [] and @categories = [] and return if project_engagement.blank?
 
       @data = project_engagement.map do |pid, activities|

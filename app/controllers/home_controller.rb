@@ -12,7 +12,7 @@ class HomeController < ApplicationController
 
     # Load data for the 3 dashboards at the top of page
     unless @current_user_projects.blank?
-      project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, current_user.time_zone, 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
+      project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, [current_user.email], 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
       if project_engagement_7d.blank?
         @data_left = [] and @categories = []
       else
