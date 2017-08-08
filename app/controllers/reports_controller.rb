@@ -22,7 +22,7 @@ class ReportsController < ApplicationController
     projects = projects.where(category: params[:category]) if params[:category].present?
     projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account].present?
 
-    users_emails = current_user.organization.users.map{|u| u.email}
+    users_emails = current_user.organization.users.pluck(:email)
 
     # Incrementally apply any filters
     if params[:owner].present?
