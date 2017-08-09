@@ -22,12 +22,17 @@ class ProjectsController < ApplicationController
     if params[:owner] != "0"
       if params[:owner] == "none"
         projects = projects.where(owner_id: nil)
+      elsif params[:owner].nil?
+        projects = Project.visible_to(current_user.organization_id, current_user.id)
       else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
           projects = projects.where(owner_id: params[:owner])
       end
     end
-    if params[:type] != "none"
+    if params[:type] != "none" && !params[:type].nil?
       projects = projects.where(category: params[:type])
+    end
+    if params[:type].nil? && params[:owner].nil?
+      projects = Project.visible_to(current_user.organization_id, current_user.id)
     end
     
     # all projects and their accounts, sorted by account name alphabetically
@@ -423,5 +428,4 @@ class ProjectsController < ApplicationController
       end
     end
   end
-
 end
