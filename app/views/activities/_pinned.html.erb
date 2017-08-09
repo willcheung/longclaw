@@ -1,4 +1,3 @@
-
 <tr id="pin-<%=a.id%>" <% if a.category == Activity::CATEGORY[:Meeting] && Time.zone.at(a.last_sent_date) > Time.current %> class="future-activity" <% end %> >
     <td>
         <% if a.category == Activity::CATEGORY[:Conversation] %>
