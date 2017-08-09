@@ -403,7 +403,29 @@
                   "<%= d.name.html_safe %>": "<%= d.id %>",
                 <% end %>
             };
-            return map[catname];
+
+            // In case of axis label truncation and wrapping (including Highcharts adding ellipses), implement "close-enough" match
+            catname = catname.trim().replace("…","");
+            var match = map[catname];
+            if (!match){
+                // Attempt to match the max number of chars, so keep truncating the string until matched
+                var keys = Object.keys(map);
+                for (var e = 0; e < 200; e++) {
+                    var keyname;
+                    var found_nonempty_key = false;
+                    for (k in Object.keys(map)) {
+                        keyname = keys[k];
+                        if (keyname.substring(0, keyname.length - e) == catname)
+                            return map[keyname];
+                        found_nonempty_key = found_nonempty_key || (keyname.length - e > 0);
+                    }
+                    if (!found_nonempty_key) // if all keys are truncated to 0 length, quit!
+break;
+            }
+                return ""; // if cannot find category, return undefined
+            } else {
+                return match;
+            }
         }
     });
 </script>
