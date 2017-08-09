@@ -4,10 +4,7 @@
   <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
     <th class="center" style="width:2%;padding:0 10px;white-space:nowrap;vertical-align:middle">
       <center>
-        <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">
-          Daily Summary<br>
-          <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= Time.current.yesterday.strftime('%A, %B %d') %></span>
-        </h1>
+        <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">Daily Summary</h1>
       <center>
     </th>
     <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
@@ -53,9 +50,11 @@
 
 <!-- Summary -->
 <% if @updates_today.empty? %>
-  <h2 style="font-size:22px;font-weight:200;color:#333333;text-align:center;margin-top:20px;">No updates today</h2>
+  <h2 style="font-size:22px;font-weight:200;color:#333333;text-align:center;margin-top:20px;">No updates for yesterday.</h2>
 <% else %>
-  <h2 style="font-size:22px;font-weight:200;color:#333333;text-align:center;margin-top:20px;">Yesterday's updates:</h2>
+  <h2 style="font-size:22px;font-weight:200;color:#333333;text-align:center;margin-top:20px;">Yesterday's updates:<br/>
+    <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= Time.current.yesterday.strftime('%A, %B %d') %></span>
+  </h2>
 <% end %>
 
 <!-- Project/stream detail -->
@@ -101,9 +100,9 @@
           <td style="color:#aaaaaa;font-size:12px;">
           <%= case c.source
               when "Email", "Chrome"
-                "Found in emails"
+                "Found in e-mails"
               # when "Chrome"
-              #   "Found by CS Chrome Extension in emails"
+              #   "Found by CS Chrome Extension in e-mails"
               when "Salesforce"
                 "Synced from Salesforce"
               when nil
@@ -130,7 +129,7 @@
           </td>
           <td class="expander"></td>
           <td style="padding:6px;text-align:right;">
-            <a href="<%= project_url(p.id) %>" style="display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">Go to Stream »</a>
+            <a href="<%= project_url(p.id) %>" style="display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;-webkit-text-size-adjust:none;mso-hide:all;">Go to Opportunity »</a>
           </td>
         </tr>
       </tbody>
@@ -157,7 +156,7 @@
                   </tr>
                   <tr>
                     <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top">
-                      <span style="font-size:12px;color:#777"><span style="font-weight:bold"> <%= a.from[0].personal.nil? ? a.from[0].address : a.from[0].personal %></span> to <%= get_conversation_member_names([], a.to, a.cc, "All") %>:</span>
+                      <span style="font-size:12px;color:#777"><span style="font-weight:bold"> <%= a.last_msg['from'][0]['personal'].nil? ? a.last_msg['from'][0]['address'] : a.last_msg['from'][0]['personal'] %></span> to <%= get_conversation_member_names([], a.last_msg['to'], a.last_msg['cc'], "All") %>:</span>
                       <p><%= if a.last_msg['content'].nil? || a.last_msg['content'].is_a?(String)
                             truncate(a.last_msg['content'], length: 160, separator: ' ')
                           else
@@ -437,5 +436,5 @@
 
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
 <tr><td><p style="color:#333;font-weight: normal; text-align: left; line-height: 20px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="center">
-Click <a target="_blank" href="<%= projects_url %>"><span style="text-decoration:underline">here to Subscribe or Unsubscribe</span></a> to weekly and daily stream alerts.
+Click <a target="_blank" href="<%= projects_url %>"><span style="text-decoration:underline">here to Subscribe or Unsubscribe</span></a> to weekly and daily summaries.
 </p></td></tr></table>

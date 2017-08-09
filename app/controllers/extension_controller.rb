@@ -77,7 +77,7 @@ class ExtensionController < ApplicationController
       if @account.save
         if create_project
           @project.subscribers.create(user: current_user)
-          format.html { redirect_to extension_account_path(internal: params[:internal], external: params[:external]), notice: 'Account Stream was successfully created.' }
+          format.html { redirect_to extension_account_path(internal: params[:internal], external: params[:external]), notice: 'Opportunity was successfully created.' }
           format.js
         else
           format.html { render action: 'no_account' }
@@ -125,14 +125,14 @@ class ExtensionController < ApplicationController
 
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
-    order_emails_by_domain_freq = ex_emails.map { |email| "email = '#{email}' DESC" }.join(',')
+    order_emails_by_domain_freq = ex_emails.map { |email| "email = #{Contact.sanitize(email)} DESC" }.join(',')
     # find all contacts within current_user org that match the external emails, in the order of ex_emails
     contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
     if contacts.present?
-      # get all streams that these contacts are members of
+      # get all opportunities that these contacts are members of
       projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
       if projects.present?
-        # set most frequent project as stream
+        # set most frequent project as opportunity
         @project = projects.group_by(&:id).values.max_by(&:size).first
         @account = @project.account
       end
@@ -174,7 +174,7 @@ class ExtensionController < ApplicationController
             puts "Error creating account!"
             redirect_to no_account_path and return
           else
-            # Create a stream for the account now so that we can add members to it in the next few instructions
+            # Create an Opportunity for the Account now so that we can add members to it in the next few instructions
             create_project  # uses @account
             @project.subscribers.create(user: current_user)
 
@@ -197,13 +197,17 @@ class ExtensionController < ApplicationController
 
     if @project.blank?
       create_project
-      @project.subscribers.create(user: current_user) # why was this missing before??
+      @project.subscribers.create(user: current_user)
     elsif params[:action] == "account" 
       # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
       # since project already exists, any new external members found should be added as suggested members, let user confirm
       create_people
     end
     
+    @MEMBERS_LIST_LIMIT = 8
+    @all_members = @project.users + @project.contacts
+    @members = @all_members.first(@MEMBERS_LIST_LIMIT) # same value as 
+
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
@@ -312,7 +316,7 @@ class ExtensionController < ApplicationController
     # p "*** creating project for account #{@account.name} ***"
     @project = @account.projects.new(
       name: @account.name,
-      description: "Default stream for #{@account.name}",
+      description: "Default opportunity for #{@account.name}",
       created_by: current_user.id,
       updated_by: current_user.id,
       owner_id: current_user.id,
@@ -363,8 +367,9 @@ class ExtensionController < ApplicationController
   # Parameters:  internal_members_a - An array of hashes {full_name: full_name, email: email} to indicate potential new users
   def create_and_return_internal_users(internal_members_a)
     new_users = []
+    #puts "internal_members_a: #{internal_members_a}"
     internal_members_a.each do |u|
-      next if User.find_by_email(u[:email]).present? 
+      next if User.find_by_email(u[:email]).present?
 
       name = u[:full_name].split(" ")
       first_name = name[0].nil? ? '' : name[0]

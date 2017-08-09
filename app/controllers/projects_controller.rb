@@ -1,20 +1,22 @@
 class ProjectsController < ApplicationController
-  before_action :set_visible_project, only: [:show, :edit, :render_pinned_tab, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
+  before_action :check_params_for_valid_dates, only: [:update]
+  before_action :set_visible_project, only: [:show, :edit, :tasks_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
-  before_action :get_show_data, only: [:show, :pinned_tab, :tasks_tab, :insights_tab, :arg_tab]
+  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
-  before_action :get_custom_fields_and_lists, only: [:index, :show, :pinned_tab, :tasks_tab, :arg_tab, :insights_tab]
+  before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
   before_action :project_filter_state, only: [:index]
   
 
   # GET /projects
   # GET /projects.json
   def index
-    @title = "Streams"
-    # for filter and bulk owner assignment
-    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
+    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
+    @title = "Opportunities"
+    # for filter and bulk owner assignment - use only registered users
+    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
@@ -41,9 +43,12 @@ class ProjectsController < ApplicationController
     unless projects.empty?
       @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
-      @sparkline = Project.count_activities_by_day_sparkline(projects.map(&:id), current_user.time_zone)
-      @risk_scores = Project.new_risk_score(projects.pluck(:id), current_user.time_zone)
-      @open_risk_count = Project.open_risk_count(projects.map(&:id))
+      @sparkline = Project.count_activities_by_day_sparkline(projects.ids, current_user.time_zone)
+      @days_to_close = Project.days_to_close(projects.ids)
+      @open_risk_count = Project.open_risk_count(projects.ids)
+      #@risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: projects.ids).group("project_id")
+      @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
     end
 
     # new project modal
@@ -57,6 +62,10 @@ class ProjectsController < ApplicationController
     @final_filter_user = @project.all_involved_people(current_user.email)
     # get data for time series filter
     @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
+    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).reverse
+    # get categories for category filter
+    @categories = @activities_by_category_date.keys
+    @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
   end
 
   def filter_timeline
@@ -67,68 +76,9 @@ class ProjectsController < ApplicationController
     respond_to :js
   end
 
-  def pinned_tab
-    @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
-
-    render "show"
-  end
-
   def tasks_tab
     # show every risk regardless of private conversation
     @notifications = @project.notifications
-
-    render "show"
-  end
-
-  def insights_tab
-    @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
-
-    # Engagement Volume Chart
-    @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
-    @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
-    # activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
-
-    # TODO: Generate data for Risk Volume Chart in SQL query
-    # Risk Volume Chart
-    # risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
-    # risks_by_date = Array.new(14, 0)
-    # risk_notifications.each do |r|
-    #   # risks_by_date based on number of days since 14 days ago
-    #   day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
-    #   risks_by_date[day_index] += 1
-    # end
-
-    # @risk_activity_engagement = []
-    # risks_by_date.zip(activity_engagement).each do | a, b|
-    #   if b == 0
-    #     @risk_activity_engagement.push(0)
-    #   else
-    #     @risk_activity_engagement.push(a/b.to_f * 100)
-    #   end
-    # end
-
-    #Shows the total email usage report
-    @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
-    @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
-    
-    # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
-    # Most Active Contributors & Activities By Team
-    user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)
-    @team_leaderboard = []
-    @activities_by_dept = Hash.new(0)
-    activities_by_dept_total = 0
-    user_num_activities.each do |u|
-      user = User.find_by_email(u.email)
-      u.email = get_full_name(user) if user
-      @team_leaderboard << u
-      dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
-      @activities_by_dept[dept] += u.inbound_count + u.outbound_count
-      activities_by_dept_total += u.inbound_count + u.outbound_count
-    end
-    # Convert Activities By Team to %
-    @activities_by_dept.each { |dept, count| @activities_by_dept[dept] = (count.to_f/activities_by_dept_total*100).round(1)  }
-    # Only show top 5 for Most Active Contributors
-    @team_leaderboard = @team_leaderboard[0...5]
 
     render "show"
   end
@@ -166,7 +116,7 @@ class ProjectsController < ApplicationController
   end
 
   def refresh
-    # big refresh when no activities (normally a new stream), small refresh otherwise
+    # big refresh when no activities (normally a new Opportunity), small refresh otherwise
     if @project.activities.count == 0
       puts "<><> Big asynchronous refresh incoming... <><>"
       ContextsmithService.load_emails_from_backend(@project, 2000)
@@ -177,11 +127,6 @@ class ProjectsController < ApplicationController
       ContextsmithService.load_calendar_from_backend(@project, 100, 1.day.ago.to_i)
     end
     redirect_to :back
-  end
-
-  def render_pinned_tab
-    @pinned_activities = @project.activities.pinned.includes(:comments)
-    respond_to :js
   end
 
   # GET /projects/new
@@ -208,7 +153,7 @@ class ProjectsController < ApplicationController
     @project.subscribers.new(user: current_user)
 
       respond_to do |format|
-        if params[:commit] == 'Create Stream' 
+        if params[:commit] == 'Create with account contacts' 
           members = @project.account.contacts
             members.each do |input|
               new_member = @project.project_members.new(contact: input)
@@ -217,7 +162,7 @@ class ProjectsController < ApplicationController
             # Big First Refresh, potentially won't need big refresh in the refresh method above
             ContextsmithService.load_emails_from_backend(@project, 2000)
             ContextsmithService.load_calendar_from_backend(@project, 1000)
-            format.html { redirect_to @project, notice: 'Project was successfully created.' }
+            format.html { redirect_to @project, notice: 'Opportunity was successfully created.' }
             format.js
             #format.json { render action: 'show', status: :created, location: @project }
           else
@@ -225,13 +170,13 @@ class ProjectsController < ApplicationController
             format.js { render json: @project.errors, status: :unprocessable_entity }
             #format.json { render json: @project.errors, status: :unprocessable_entity }
           end
-        else params[:commit] == 'Custom Stream'
+        else  # params[:commit] == 'Blank Opportunity'
           if @project.save
-            format.html { redirect_to @project, notice: 'Project was successfully created.' }
+            format.html { redirect_to @project, notice: 'Opportunity was successfully created.' }
             format.js
             #format.json { render action: 'show', status: :created, location: @project 
           else
-            puts "Fail project saved"
+            puts "Failure to save opportunity"
             format.html { render action: 'new' }
             format.js { render json: @project.errors, status: :unprocessable_entity }
             #format.json { render json: @project.errors, status: :unprocessable_entity }
@@ -269,12 +214,20 @@ class ProjectsController < ApplicationController
 
   # Handle bulk operations
   def bulk
-    newArray = params["selected"].map { |key, value| key }
+    render :json => { success: true }.to_json and return if params['project_ids'].blank?
+    bulk_projects = Project.visible_to(current_user.organization_id, current_user.id).where(id: params['project_ids'])
 
-    if(params["operation"]=="delete")
-      bulk_delete(newArray)
+    case params['operation']
+    when 'delete'
+      bulk_projects.destroy_all
+    when 'category'
+      bulk_projects.update_all(category: params['value'])
+    when 'owner'
+      bulk_projects.update_all(owner_id: params['value'])
+    when 'status'
+      bulk_projects.update_all(status: params['value'])
     else
-      bulk_update(params["operation"], newArray, params["value"])
+      puts 'Invalid bulk operation, no operation performed'
     end
 
     render :json => {:success => true, :msg => ''}.to_json
@@ -287,9 +240,12 @@ class ProjectsController < ApplicationController
   end
 
   def get_show_data
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
+
     # metrics
-    @project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_open_risks_count = @project.notifications.open.risks.count
+    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
+    @project_open_risks_count = @project.notifications.open.alerts.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
 
@@ -321,12 +277,33 @@ class ProjectsController < ApplicationController
   end
 
   def load_timeline
-    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments)
+    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :attachments, :comments)
+    @pinned_ids = activities.pinned.ids.reverse # get ids of Key Activities to show number on stars
     # filter by categories
     @filter_category = []
     if params[:category].present?
       @filter_category = params[:category].split(',')
-      activities = activities.where(category: @filter_category)
+
+      # special cases: if Attachment or Pinned category filters selected, remove from normal WHERE condition and handle differently below
+      if @filter_category.include?(Notification::CATEGORY[:Attachment]) || @filter_category.include?(Activity::CATEGORY[:Pinned])
+        where_categories = @filter_category - [Notification::CATEGORY[:Attachment], Activity::CATEGORY[:Pinned]]
+        category_condition = "activities.category IN ('#{where_categories.join("','")}')"
+
+        # Attachment filter selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Notification::CATEGORY[:Attachment])
+          activities = activities.joins("LEFT JOIN notifications AS attachment_notifications ON attachment_notifications.activity_id = activities.id AND attachment_notifications.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+          category_condition += " OR (activities.category = '#{Activity::CATEGORY[:Conversation]}' AND attachment_notifications.id IS NOT NULL)"
+        end
+
+        # Pinned filter selected, need to INCLUDE pinned activities regardless of type but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Activity::CATEGORY[:Pinned])
+          category_condition += " OR activities.is_pinned IS TRUE"
+        end
+
+        activities = activities.where(category_condition)
+      else
+        activities = activities.where(category: @filter_category)
+      end
     end
     # filter by people
     @filter_email = []
@@ -356,31 +333,11 @@ class ProjectsController < ApplicationController
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
 
-  def bulk_update(field, array_of_ids, new_value)
-    if(!array_of_ids.nil?)
-      if field == "category"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(category: new_value)
-      elsif field == "owner"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(owner_id: new_value)
-      elsif field == "status"
-        Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).update_all(status: new_value)
-      end
-    end
-  end
-
-  def bulk_delete(array_of_ids)
-    if(!array_of_ids.nil?)
-      Project.visible_to(current_user.organization_id, current_user.id).where(id: array_of_ids).destroy_all
-    end
-  end
-
   # Use callbacks to share common setup or constraints between actions.
   def set_visible_project
-    begin
-      @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
-    rescue ActiveRecord::RecordNotFound
-      redirect_to root_url, :flash => { :error => "Project not found or is private." }
-    end
+    @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
 
   def set_editable_project
@@ -389,6 +346,8 @@ class ProjectsController < ApplicationController
                               AND (projects.is_public=true
                                     OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
                       .find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
 
   def get_account_names
@@ -397,7 +356,7 @@ class ProjectsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def project_params
-    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date)
+    params.require(:project).permit(:name, :description, :is_public, :account_id, :owner_id, :category, :renewal_date, :contract_start_date, :contract_end_date, :contract_arr, :renewal_count, :has_case_study, :is_referenceable, :amount, :stage, :close_date, :expected_revenue)
   end
 
   # A list of the param names that can be used for filtering the Project list
@@ -407,9 +366,9 @@ class ProjectsController < ApplicationController
 
   def get_custom_fields_and_lists
     custom_lists = current_user.organization.get_custom_lists_with_options
-    @stream_types = !custom_lists.blank? ? custom_lists["Stream Type"] : {}
+    @opportunity_types = !custom_lists.blank? ? custom_lists["Opportunity Type"] : {}
     @custom_lists = current_user.organization.get_custom_lists_with_options
-    @stream_types = !@custom_lists.blank? ? @custom_lists["Stream Type"] : {}
+    @opportunity_types = !@custom_lists.blank? ? @custom_lists["Opportunity Type"] : {}
   end
 
   def project_filter_state
@@ -428,4 +387,28 @@ class ProjectsController < ApplicationController
       end
     end
   end
+<<<<<<< HEAD
+=======
+
+  # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
+  def check_params_for_valid_dates
+    params["project"][:close_date] = parse_valid_date(params["project"][:close_date]) if params["project"][:close_date].present?
+    params["project"][:renewal_date] = parse_valid_date(params["project"][:renewal_date]) if params["project"][:renewal_date].present?
+  end
+
+  # Attempt to parse a Date from datestr using recognized formats %Y-%m-%d or %m/%d/%Y, then return the parsed Date. Otherwise, return nil.
+  def parse_valid_date(datestr)
+    return nil if datestr.nil?
+
+    parsed_date = nil
+    begin
+      parsed_date = Date.strptime(datestr, '%Y-%m-%d')
+    rescue ArgumentError => e
+      parsed_date = Date.strptime(datestr, '%m/%d/%Y')
+    rescue => e
+      # Do nothing
+    end
+    parsed_date
+  end
+>>>>>>> upstream/develop
 end

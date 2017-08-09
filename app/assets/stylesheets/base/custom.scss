@@ -160,7 +160,7 @@ h2.catchup-project:before {
   font-weight: 500;
 }
 
-button.oauth {
+a.btn.oauth, button.btn.oauth {
   -webkit-font-smoothing: auto;
   font-weight: 500;
   width: 100%;
@@ -297,19 +297,18 @@ span.best_in_place.btn {
 .social-comment .delete-comment,
 .task-name .edit-task,
 .task-desc .edit-task,
-.contact-info .edit-contact {
+.editable-field .editable-field-activator {
   color: transparent;
 }
-.project-people .member:hover .delete-member,
-.timeline-note:hover .delete-note,
-.social-comment:hover .delete-comment {
-  display: block;
-}
+
 .task-name { font-weight: 500;font-size:14px; }
 .task-desc { font-weight: 300; }
 .task-name:hover .edit-task,
 .task-desc:hover .edit-task,
-.contact-info:hover .edit-contact {
+.editable-field:hover .editable-field-activator,
+.project-people .member:hover .delete-member,
+.timeline-note:hover .delete-note,
+.social-comment:hover .delete-comment {
   color: #999;
 }
 #projects-table th, #accounts-table th {
@@ -473,7 +472,7 @@ span.best_in_place.btn {
 }
 
 .timeline-note p {
-  margin: 14px 0;
+  margin: 5px 0 10px;
 }
 
 .jira-bg {
@@ -687,4 +686,10 @@ a.suggested-action:hover, a.suggested-action:focus {
 
 .top-navigation .nav.nav-tabs > li.active {
   border-bottom: none;
+}
+
+.hr-divider {
+  padding: 0.5em 0;
+  margin-bottom: 1.5em;
+  border-bottom: 1px dotted grey;
 }

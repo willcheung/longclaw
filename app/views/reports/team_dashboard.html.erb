@@ -28,34 +28,32 @@
     </div>
     
     <div class="row border-bottom white-bg dashboard-header">
-            <!-- LEFT -->
-            <div class="col-md-5">
-                <h4 class="m-l-md">Sort by: 
-                <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Type">
-                    <option selected>Activities (Last 14d)</option>
-                    <option>Time Spent (Last 14d)</option>
-                    <option>Opportunities</option>
-                    <option>New Alerts & Tasks (Last 14d)</option>
-                    <option>Closed Alerts & Tasks (Last 14d)</option>
-                    <option>Open Alerts & Tasks</option>
-                    <!-- <option>Revenue Managed</option> -->
-                    <!-- <option>Revenue per Hour Spent (Last 14d)</option> -->
-                    <!-- <option>On Target</option> -->
-                  </select>    
-               
-                </h4>
-                <div id="left-chart" class="left-chart" style="height:1200px;"></div>
-                
-            </div>
+        <!-- LEFT (metric sort) -->
+        <div class="col-md-5">
+            <h4 class="m-l-md">Metric: 
+            <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
+            <% ReportsController::TEAM_DASHBOARD_METRIC.each do |k,label| %>
+                <option <%= "selected" if params[:sort] == label %>><%= label %></option>
+            <% end %>
+                <!-- <option>Revenue Managed</option> -->
+                <!-- <option>Revenue per Hour Spent (Last 14d)</option> -->
+                <!-- <option>On Target</option> -->
+            </select>
+           
+            </h4>
+            <div id="left-chart" class="left-chart" style="height:1200px;"></div>
+            
+        </div>
 
-            <div class="col-md-7" style="margin-top:45px;">
-                <div id="user-data">
-                    <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
-                    </div>
+        <!-- RIGHT (user detail) -->
+        <div class="col-md-7" style="margin-top:45px;">
+            <div id="user-data">
+                <div class="row" style="margin-top:50px;">
+                    <h3>&larr; Click on a bar/label to see details about the rep.</h3>
                 </div>
             </div>
         </div>
+    </div>
 </div>
 
 <%= render "teaser" if current_user.trial? %>
@@ -65,8 +63,8 @@
     $(function () {
 
         $('#sort-type, #team-filter, #title-filter').change( function () {
-            // Clear stream data ("right") chart
-            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the account stream.</h3></div>");
+            // Clear Opportunity data ("right") chart
+            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the rep.</h3></div>");
 
             // Build URL for AJAX call for filtered data
             var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param({ team: $('#team-filter').val(), title: $('#title-filter').val() });
@@ -75,13 +73,19 @@
 
         $('#left-chart').highcharts({
             chart: {
-                type: 'bar'
+                type: 'bar',
+                marginTop: 55,
+                marginRight: 35
             },
             title: {
                 text: ''
             },
+            subtitle: {
+                text: ' ',
+                align: 'center',
+                y: 40
+            },
             xAxis: {
-                categories: <%= @data.map(&:name).to_json.html_safe %>,
                 crosshair: true
             },
             yAxis: {
@@ -91,16 +95,27 @@
                 title: {
                     text: ''
                 },
-                gridLineWidth: 0
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
             },
             legend: {
-                enabled: false
+                enabled: true,
+                verticalAlign: 'top',
+                itemStyle: {
+                    fontWeight: 'light',
+                    fontSize: 12         
+                }
             },
             plotOptions: {
                 series: {
                     stacking: 'normal',
                     cursor: 'pointer',
-                    // pointWidth: 20,
+                    maxPointWidth: 75,
                     point: {
                         events: {
                             click: function () {
@@ -111,33 +126,26 @@
                             }
                         }
                     }
-                }   
+                },
+                column: {
+                    events: {
+
+                    }
+                },
+                allowPointSelect: false
             },
             credits: {
                 enabled: false
-            },
-            series: [{
-                name: 'Series 1',
-                visible: false
-            },
-            <% @categories.each.with_index do |c, i| %>
-            {
-                name: "<%= c %>",
-                color: "<%= highcharts_series_color(c) %>",
-                data: [ 
-                <% @data.each do |d| %>
-                {
-                  y: <%= d.y[i].num_activities %>,
-                  id: "<%= d.id %>"
-                }, 
-                <% end %> 
-                ]
-            },
-            <% end %>
-            ]
+            }
         });
+
+        // Highcharts.setOptions({
+        //     global: {
+        //         timezoneOffset: <%= @time_zone_offset_min %>
+        //     }
+        // });
+
+        <%= render partial: "reports/team_dashboard.js" %>
     });
-
-
 </script>
 

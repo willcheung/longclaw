@@ -14,7 +14,7 @@
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  is_confirmed        :boolean
-#  category            :string           default("Opportunity")
+#  category            :string           default("New Business")
 #  deleted_at          :datetime
 #  renewal_date        :date
 #  contract_start_date :date
@@ -43,12 +43,14 @@ class Project < ActiveRecord::Base
   belongs_to  :account
   belongs_to  :project_owner, class_name: "User", foreign_key: "owner_id"
   has_many  :subscribers, class_name: "ProjectSubscriber", dependent: :destroy
-  has_many  :notifications, dependent: :destroy
+
+  has_many  :notifications, -> { non_attachments }, dependent: :destroy
+  has_many  :notifications_all, class_name: 'Notification', dependent: :destroy
+  has_many  :attachments, -> { attachments }, class_name: 'Notification'
   has_many  :notifications_for_daily_email, -> {
-    where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
+    non_attachments.where("(is_complete IS FALSE AND created_at BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?) OR (category = ? AND label = 'DaysInactive' AND is_complete IS FALSE)",
       Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Time.current.yesterday.midnight.utc, Time.current.yesterday.end_of_day.utc, Notification::CATEGORY[:Alert])
-    .order(:is_complete, :original_due_date)
-  }, class_name: "Notification"
+    .order(:is_complete, :original_due_date) }, class_name: "Notification"
   #has_many  :notifications_for_weekly_email, -> {
   #  where("is_complete IS FALSE OR (is_complete IS TRUE AND complete_date BETWEEN TIMESTAMP ? AND TIMESTAMP ?)", Time.current.yesterday.midnight.utc - 1.weeks, Time.current.yesterday.end_of_day.utc)
   #  .order(:is_complete, :original_due_date)
@@ -124,18 +126,27 @@ class Project < ActiveRecord::Base
   scope :is_active, -> { where status: 'Active' }
   scope :is_confirmed, -> { where is_confirmed: true }
 
-  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already a stream with the same name." }
+  validates :name, presence: true, uniqueness: { scope: [:account, :project_owner, :is_confirmed], message: "There's already an opportunity with the same name." }
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
-  CATEGORY = { Adoption: 'Adoption', Expansion: 'Expansion', Implementation: 'Implementation', Onboarding: 'Onboarding', Opportunity: 'Opportunity', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
+  MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue" }  # "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count", 
+
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
 
   attr_accessor :num_activities_prev, :pct_from_prev
+
+  # implementation of visible scope for individual projects
+  def is_visible_to(user)
+    account.organization == user.organization && is_confirmed && status == 'Active' && ( is_public || project_owner == user || users.include?(user) )
+  end
 
   def self.count_tasks_per_project(array_of_project_ids)
     query = <<-SQL
         SELECT projects.id AS id,
                projects.name AS name,
+               projects.amount AS amount,
+               projects.close_date AS close_date,
                COUNT(*) FILTER (WHERE is_complete = FALSE ) AS open_risks
         FROM projects
         LEFT JOIN notifications
@@ -161,6 +172,20 @@ class Project < ActiveRecord::Base
     result = Project.find_by_sql(query)
   end
 
+  def self.days_to_close_per_project(array_of_project_ids)
+    query = <<-SQL
+        SELECT projects.id AS id,
+               projects.name AS name,
+               projects.close_date AS close_date,
+               projects.close_date - current_date AS days_to_close
+        FROM projects
+        WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
+        GROUP BY projects.id
+        ORDER BY days_to_close DESC
+      SQL
+    result = Project.find_by_sql(query)
+  end
+
   # for risk counts, show every risk regardless of private conversation
   def self.open_risk_count(array_of_project_ids)
     risks_per_project = Project.count_tasks_per_project(array_of_project_ids)
@@ -171,6 +196,9 @@ class Project < ActiveRecord::Base
     projects = Project.where(id: array_of_project_ids).group('projects.id')
 
     return [] if projects.empty?   # quit early if there are no projects
+
+    # Initialize all scores with 0
+    project_base = projects.sum(0)
 
     risk_settings = RiskSetting.where(level: projects.first.account.organization)
 
@@ -197,7 +225,7 @@ class Project < ActiveRecord::Base
     project_rag_status.each { |pid, rag_score| project_rag_status[pid] = calculate_score_by_setting(rag_score, rag_status_setting) }
 
     # Overall Score
-    overall = [project_inactivity_risk, project_rag_status].each_with_object({}) { |oh, nh| nh.merge!(oh) { |pid, h1, h2| h1 + h2 } }
+    overall = [project_base, project_inactivity_risk, project_rag_status].each_with_object({}) { |current_hash, result_hash| result_hash.merge!(current_hash) { |pid, h1, h2| h1 + h2 } }
     overall.each { |pid, score| overall[pid] = score.round }
   end
 
@@ -230,6 +258,7 @@ class Project < ActiveRecord::Base
     (inactivity_risk + rag_score).round
   end
 
+  # TODO: comment out this code once it's obsolete!
   def new_risk_score_trend(time_zone, day_range=14)
     risk_settings = RiskSetting.where(level: self.account.organization)
     
@@ -297,7 +326,7 @@ class Project < ActiveRecord::Base
                  END AS cc
           FROM activities,
           LATERAL jsonb_array_elements(email_messages) messages
-          WHERE category IN ('Conversation', 'Meeting')
+          WHERE category IN ('#{Activity::CATEGORY[:Conversation]}','#{Activity::CATEGORY[:Meeting]}')
           AND project_id = '#{self.id}'
           GROUP BY 1,2,3,4
         )
@@ -349,9 +378,11 @@ class Project < ActiveRecord::Base
 
   # Used for exploding all activities of a given project without time bound, specifically for time series filter.
   # Subquery is based on email_activities_last_14d view.
+  # NOTE: to_timestamp converts epoch to timestamp with UTC timezone, but Activity.last_sent_date usually saved as timestamp without timezone
+  # Therefore we need to convert Activity.last_sent_date to timestamp with UTC timezone, then convert to timestamp with user timezone
   def daily_activities(time_zone)
     query = <<-SQL
-      -- Email conversations
+      -- E-mail conversations
       (
       SELECT date(to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}') as last_sent_date,
              '#{Activity::CATEGORY[:Conversation]}' as category,
@@ -381,161 +412,207 @@ class Project < ActiveRecord::Base
       UNION ALL
       (
       -- Meetings
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Meeting]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Notes
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Note]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Note]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- JIRA
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:JIRA]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Salesforce
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Salesforce]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Zendesk
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Zendesk]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Alert
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Alert]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Alert]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
       UNION ALL
       (
       -- Basecamp2
-      SELECT date(last_sent_date AT TIME ZONE '#{time_zone}') as last_sent_date,
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Activity::CATEGORY[:Basecamp2]}' as category,
             count(*) as activity_count
       FROM activities
       WHERE category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}'
-      GROUP BY date(last_sent_date AT TIME ZONE '#{time_zone}'), category
-      ORDER BY date(last_sent_date AT TIME ZONE '#{time_zone}')
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
+      )
+      UNION ALL
+      (
+      -- Attachment
+      SELECT date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Notification::CATEGORY[:Attachment]}' as category,
+            count(*) as activity_count
+      FROM notifications
+      WHERE category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}'
+      GROUP BY date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
       )
     SQL
 
     Activity.find_by_sql(query)
   end
 
-  # This is the SQL query that gets the daily activities over the last x days, where x is 1-14
+  # This is the SQL query that gets the daily activities over a date range, by default the last 14 days through current day.
   # Used for time bounded time series
-  def daily_activities_last_x_days(time_zone, days_ago=14)
+  def daily_activities_in_date_range(time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    domain = account.organization.domain
     query = <<-SQL
-      -- This controls the dates return by the query
+      -- This controls the dates returned by the query
       WITH time_series as (
-        SELECT '#{self.id}'::uuid as project_id, generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') as days
-       )
+        SELECT '#{self.id}'::uuid as project_id, generate_series(date(TIMESTAMP '#{start_day}'), date(TIMESTAMP '#{end_day}'), INTERVAL '1 day') AS days LIMIT #{(end_day - start_day).ceil / 86400}
+      ), conversations_last_14d AS (
+        SELECT DISTINCT
+            project_id,
+            to_timestamp((messages ->> 'sentDate')::integer) AS sent_date,
+            messages ->> 'messageId'::text AS message_id,
+            jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+            CASE
+              WHEN messages -> 'to' IS NULL THEN NULL
+              ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+            END AS to,
+            CASE
+              WHEN messages -> 'cc' IS NULL THEN NULL
+              ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+            END AS cc,
+            (messages::json ->'content') ->> 'body'  AS body
+        FROM activities,
+        LATERAL jsonb_array_elements(email_messages) messages
+        WHERE category = '#{Activity::CATEGORY[:Conversation]}'
+          AND project_id = '#{self.id}'
+          AND (messages ->> 'sentDate')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+      )
       (
-      -- Email Conversation using emails_activities_last_14d view
+      -- E-mail Conversations accessed using Common Table Expression set above using WITH 
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Conversation]}' as category, count(activities.*) as num_activities
       FROM time_series
-      LEFT JOIN (SELECT sent_date, project_id
-                 FROM email_activities_last_14d where project_id = '#{self.id}' and EXTRACT(EPOCH FROM (to_timestamp(sent_date::integer) AT TIME ZONE '#{time_zone}')) > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+      LEFT JOIN (SELECT DISTINCT sent_date, project_id, message_id
+                 FROM conversations_last_14d
                  ) as activities
-        ON activities.project_id = time_series.project_id and date_trunc('day', to_timestamp(activities.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+        ON activities.project_id = time_series.project_id and date_trunc('day', sent_date AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- Meetings directly from actvities table
+      -- Meetings directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Meeting]}' as category, count(meetings.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
-                  FROM activities where category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                   FROM activities 
+                  WHERE category = '#{Activity::CATEGORY[:Meeting]}' and project_id = '#{self.id}'AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
                 ) as meetings
-        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON meetings.project_id = time_series.project_id and date_trunc('day', meetings.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- JIRA directly from actvities table
+      -- JIRA directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:JIRA]}' as category, count(jiras.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
-                  FROM activities where category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                  FROM activities where category = '#{Activity::CATEGORY[:JIRA]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
                 ) as jiras
-        ON jiras.project_id = time_series.project_id and date_trunc('day', jiras.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON jiras.project_id = time_series.project_id and date_trunc('day', jiras.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- Salesforce directly from actvities table
+      -- Salesforce directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Salesforce]}' as category, count(salesforces.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
-                  FROM activities where category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                  FROM activities where category = '#{Activity::CATEGORY[:Salesforce]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
                 ) as salesforces
-        ON salesforces.project_id = time_series.project_id and date_trunc('day', salesforces.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON salesforces.project_id = time_series.project_id and date_trunc('day', salesforces.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- Zendesk directly from actvities table
+      -- Zendesk directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Zendesk]}' as category, count(zendesks.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
-                  FROM activities where category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                  FROM activities where category = '#{Activity::CATEGORY[:Zendesk]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
                 ) as zendesks
-        ON zendesks.project_id = time_series.project_id and date_trunc('day', zendesks.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON zendesks.project_id = time_series.project_id and date_trunc('day', zendesks.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
       UNION ALL
       (
-      -- Basecamp2 directly from actvities table
+      -- Basecamp2 directly from activities table
       SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Activity::CATEGORY[:Basecamp2]}' as category, count(basecamp2s.*) as num_activities
       FROM time_series
       LEFT JOIN (SELECT last_sent_date as sent_date, project_id
-                  FROM activities where category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago} days'))
+                  FROM activities where category = '#{Activity::CATEGORY[:Basecamp2]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
                 ) as basecamp2s
-        ON basecamp2s.project_id = time_series.project_id and date_trunc('day', basecamp2s.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
+        ON basecamp2s.project_id = time_series.project_id and date_trunc('day', basecamp2s.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+      GROUP BY time_series.project_id, days, category
+      ORDER BY time_series.project_id, days ASC
+      )
+      UNION ALL
+      (
+      -- Sent Attachments directly from notifications table
+      SELECT time_series.project_id as project_id, date(time_series.days) as last_sent_date, '#{Notification::CATEGORY[:Attachment]}' as category, count(attachments.*) as num_activities
+      FROM time_series
+      LEFT JOIN (SELECT sent_date, project_id
+                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' and EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+                  AND description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
+                ) as attachments
+        ON attachments.project_id = time_series.project_id and date_trunc('day', attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
       GROUP BY time_series.project_id, days, category
       ORDER BY time_series.project_id, days ASC
       )
@@ -581,27 +658,36 @@ class Project < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
-  def activities_moving_average(time_zone, days_ago=14, segment_size=30)
+  def activities_moving_average(time_zone, segment_size=30, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    domain = account.organization.domain
+    num_days = (end_day - start_day).round/86400 # calculate number of days in this date range, find number of seconds and divide by seconds/day
     query = <<-SQL
       WITH time_series as (
-        SELECT generate_series(date (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'), date(CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '1 day'), INTERVAL '1 day') as days  
+        SELECT generate_series(date (TIMESTAMP '#{start_day}' AT TIME ZONE '#{time_zone}' - INTERVAL '#{segment_size} days'), date(TIMESTAMP '#{end_day}' AT TIME ZONE '#{time_zone}'), INTERVAL '1 day') as days LIMIT #{num_days + segment_size}
       ), activities_by_day AS (
         SELECT date(time_series.days) as date, COUNT(DISTINCT emails.*) + COUNT(DISTINCT other_activities.*) AS num_activities
         FROM time_series
         LEFT JOIN (SELECT messages ->> 'messageId'::text AS message_id,
-                          (messages ->> 'sentDate')::integer AS sent_date
+                          to_timestamp((messages ->> 'sentDate')::integer) AS sent_date
                     FROM activities,
                     LATERAL jsonb_array_elements(email_messages) messages
                     WHERE category = 'Conversation'
                     AND activities.project_id = '#{self.id}'
-                    AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days') AND (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}')
+                    AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN (TIMESTAMP'#{start_day}' - INTERVAL '#{segment_size} days') AND (TIMESTAMP'#{end_day}')
                     GROUP BY 1,2
                    ) as emails
-          ON date_trunc('day', to_timestamp(emails.sent_date::integer) AT TIME ZONE '#{time_zone}') = time_series.days
+          ON date (emails.sent_date AT TIME ZONE '#{time_zone}') = time_series.days
         LEFT JOIN (SELECT last_sent_date as sent_date
-                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')and project_id = '#{self.id}' and EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') > EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP AT TIME ZONE '#{time_zone}' - INTERVAL '#{days_ago + segment_size} days'))
+                    FROM activities where category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') and project_id = '#{self.id}' 
+                    AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE '#{time_zone}') BETWEEN '#{(start_day - segment_size.days).to_i}' AND '#{end_day.to_i}'
                   ) as other_activities
-          ON date_trunc('day', other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+          ON date (other_activities.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
+        LEFT JOIN (SELECT sent_date
+                  FROM notifications where category = '#{Notification::CATEGORY[:Attachment]}' and project_id = '#{self.id}' 
+                  AND EXTRACT(EPOCH FROM sent_date AT TIME ZONE '#{time_zone}') BETWEEN '#{(start_day - segment_size.days).to_i}' AND '#{end_day.to_i}'
+                  AND description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
+                ) as attachments
+          ON date (attachments.sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') = time_series.days
         GROUP BY time_series.days
         ORDER BY time_series.days ASC
       )
@@ -610,9 +696,8 @@ class Project < ActiveRecord::Base
       LEFT JOIN activities_by_day
       ON activities_by_day.date = time_series.days
     SQL
-
     result = Project.find_by_sql(query)
-    result.last(days_ago).map(&:moving_avg).map(&:to_f)
+    result.last(num_days).map(&:moving_avg).map(&:to_f) # take the last num_days results
   end
 
   def self.count_activities_by_day_sparkline(array_of_project_ids, time_zone, days_ago=7)
@@ -643,9 +728,9 @@ class Project < ActiveRecord::Base
   end
 
   # Top Active Streams/Engagement Last 7d
-  def self.find_include_sum_activities(array_of_project_ids, hours_ago_start=false, hours_ago_end=0)
-    hours_ago_end = hours_ago_end.hours.ago.to_i
-    hours_ago_start = hours_ago_start ? hours_ago_start.hours.ago.to_i : 0
+  def self.find_include_sum_activities(array_of_project_ids, epoch_time_start=false, epoch_time_end=0)
+    epoch_time_end = epoch_time_end.hours.ago.to_i
+    epoch_time_start = epoch_time_start ? epoch_time_start.hours.ago.to_i : 0
 
     query = <<-SQL
       SELECT projects.*, COUNT(*) AS num_activities
@@ -659,12 +744,165 @@ class Project < ActiveRecord::Base
         WHERE project_id IN ('#{array_of_project_ids.join("','")}')
         ) t
       JOIN projects ON projects.id = t.project_id
-      WHERE (t.category = '#{Activity::CATEGORY[:Conversation]}' AND (sent_date::integer BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
-      OR (t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{hours_ago_start} AND #{hours_ago_end}))
+      WHERE (t.category = '#{Activity::CATEGORY[:Conversation]}' AND (sent_date::integer BETWEEN #{epoch_time_start} AND #{epoch_time_end}))
+      OR (t.category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}') AND (EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{epoch_time_start} AND #{epoch_time_end}))
       GROUP BY projects.id
       ORDER BY num_activities DESC
     SQL
     return Project.find_by_sql(query)
+  end
+
+  # Top Active Opportunities/Engagement of e-mails, meetings, and all activity within a period
+  # Parameters:   array_of_project_ids - ids of opportunities
+  #               domain - domain of the organization (not used)
+  #               array_of_user_emails (required) - e-mails of users to be used to determine if an e-mail is outbound/sent or inbound/received (e.g., if from perspective of a single user, this contains only this user's e-mail address; if want to use all users for the current user's organization, specify them).)  
+  #               start_day - the starting time (timestamp) of the reporting period (default is midnight 14 days ago in current user's timezone)
+  #               end_day - the starting time (timestamp) of the reporting period (default is midnight current day in current user's timezone)
+  # Note: this query will not report anything without a non-empty array in array_of_user_emails!
+  def self.count_activities_by_category(array_of_project_ids, domain, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    return [] if array_of_user_emails.blank?
+    query = <<-SQL
+      WITH projects_from_array AS (
+        SELECT id, name FROM projects WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
+      ), emails AS (
+        SELECT project_id,
+            messages ->> 'messageId'::text AS message_id,
+            jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
+            CASE
+              WHEN messages -> 'to' IS NULL THEN NULL
+              ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+            END AS to,
+            CASE
+              WHEN messages -> 'cc' IS NULL THEN NULL
+              ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+            END AS cc
+        FROM activities,
+        LATERAL jsonb_array_elements(email_messages) messages
+        WHERE category = 'Conversation'
+          AND project_id IN ('#{array_of_project_ids.join("','")}')
+          AND (messages ->> 'sentDate')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+      ), emails_sent AS (
+        SELECT DISTINCT project_id, message_id
+          FROM users
+          INNER JOIN emails
+          ON (users.email IN (emails.from))
+          WHERE users.email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
+      ), emails_received AS (
+        SELECT DISTINCT project_id, message_id
+          FROM users
+          INNER JOIN emails
+          ON (users.email IN (emails.to, emails.cc))
+          WHERE users.email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
+        EXCEPT
+        SELECT * FROM emails_sent
+      ), meetings AS (
+        SELECT DISTINCT activities.id, project_id, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch -- "to" AS attendees
+          FROM activities
+          JOIN projects_from_array ON activities.project_id = projects_from_array.id,
+          LATERAL jsonb_array_elements(email_messages) messages
+          WHERE activities.category = '#{Activity::CATEGORY[:Meeting]}'
+          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          AND project_id IN ('#{array_of_project_ids.join("','")}')
+          AND (#{ array_of_user_emails.map{|e| "\"from\" || \"to\" || cc @> ('[{\"address\":\"" + User.sanitize(e)[1..-2] + "\"}]')::jsonb"}.join(" OR ") })
+          --AND ((messages ->> 'end_epoch')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+      )
+      SELECT *
+      FROM (
+        -- E-mails
+        SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
+        FROM projects_from_array AS projects
+        JOIN
+        (
+         SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_sent
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT message_id) > 0
+          UNION ALL
+         SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_received
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT message_id) > 0
+        ) AS activity_count_by_category
+        ON projects.id = activity_count_by_category.project_id
+        UNION ALL
+        -- Meetings
+        SELECT t.project_id, t.name, '#{Activity::CATEGORY[:Meeting]}', COUNT(DISTINCT t.id) AS num_activities
+        FROM (
+          SELECT DISTINCT m.id, project_id, proj.name, start_epoch AS start_t, jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t
+          FROM meetings AS m
+          JOIN projects_from_array AS proj ON m.project_id = proj.id
+          ) AS t
+        GROUP BY t.project_id, t.name
+        UNION ALL
+        -- Other activity
+        SELECT projects.id, projects.name, a.category, COUNT(distinct a.id) AS num_activities
+        FROM projects_from_array AS projects 
+        LEFT JOIN (
+          SELECT id,
+                 category,
+                 project_id,
+                 last_sent_date
+          FROM activities
+          WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+            AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
+            AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          ) AS a
+        ON projects.id = a.project_id
+        GROUP BY projects.id, projects.name, a.category
+        UNION ALL
+        -- Attachments
+        SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
+        FROM notifications
+        JOIN projects ON projects.id = notifications.project_id
+        WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
+        AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
+        AND notifications.description::jsonb->'from'->0->>'address' IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
+        GROUP BY projects.id, projects.name, notifications.category
+      ) as q
+      ORDER BY q.num_activities DESC, UPPER(q.name)
+    SQL
+    Project.find_by_sql(query)
+  end
+
+  # units for time result = seconds
+  def interaction_time_by_user(array_of_users)
+    email_word_counts = User.team_usage_report([id], array_of_users.pluck(:email))
+    meeting_time_seconds = User.meeting_report([id], array_of_users.pluck(:email))
+    attachment_counts = User.sent_attachments_count([id], array_of_users.pluck(:email))
+
+    result = email_word_counts.map do |u|
+      user = array_of_users.find { |usr| usr.email == u.email }
+      # convert word count of inbound and outbound emails to approx. time in seconds
+      inbound = (u.inbound.to_i / User::WORDS_PER_SEC[:Read]).round
+      outbound = (u.outbound.to_i / User::WORDS_PER_SEC[:Write]).round
+      Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': inbound, 'Sent E-mails': outbound, 'Meetings': 0, 'Attachments': 0 , total: inbound + outbound)
+    end
+
+    meeting_time_seconds.each do |u|
+      meeting = u.total
+      res = result.find { |usr| usr.email == u.email }
+      if res.nil?
+        user = array_of_users.find { |usr| usr.email == u.email }
+        result << Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': 0, 'Sent E-mails': 0, 'Meetings': meeting, 'Attachments': 0 , total: meeting)
+      else
+        res.Meetings = meeting
+        res.total += meeting
+      end
+    end
+
+    attachment_counts.each do |u|
+      attachment = u.attachment_count * User::ATTACHMENT_TIME_SEC # convert total number of attachments to approx. time in seconds
+      res = result.find { |usr| usr.email == u.email }
+      if res.nil?
+        user = array_of_users.find { |usr| usr.email == u.email }
+        result << Hashie::Mash.new(id: user.id, email: user.email, name: get_full_name(user), 'Read E-mails': 0, 'Sent E-mails': 0, 'Meetings': 0, 'Attachments': attachment , total: attachment)
+      else
+        res.Attachments = attachment
+        res.total += attachment
+      end
+    end
+
+    result.sort { |d1, d2| (d1.total != d2.total) ? d2.total <=> d1.total : d1.name.upcase <=> d2.name.upcase }
   end
 
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.
@@ -673,14 +911,14 @@ class Project < ActiveRecord::Base
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
 
     project_domains.each do |p|
-      external_members, internal_members = get_project_members(data, p)
-      project = Project.new(name: (accounts.find {|a| a.domain == p}).name,
+      p_account = accounts.find { |a| a.domain == p }
+      project = Project.new(name: p_account.name,
                            status: "Active",
-                           category: "Opportunity",
+                           category: "New Business",
                            created_by: user_id,
                            updated_by: user_id,
                            owner_id: user_id,
-                           account_id: (accounts.find {|a| a.domain == p}).id,
+                           account_id: p_account.id,
                            is_public: true,
                            is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
                           )
@@ -688,6 +926,7 @@ class Project < ActiveRecord::Base
       if project.save
         # Project members
         # assuming contacts and users have already been inserted, we just need to link them
+        external_members, internal_members = get_project_members(data, p)
         contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
         users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
 
@@ -731,9 +970,22 @@ class Project < ActiveRecord::Base
     return project_chg_activities
   end
 
-  ### method to batch update activities in a project by time (in seconds)
-  def timejump(sec)
-    self.activities.each { |a| a.timejump(sec) }
+  # For an array of "project" id's, show # of days today is relative to the project close date
+  def self.days_to_close(array_of_project_ids)
+    days_to_close_per_project = Project.days_to_close_per_project(array_of_project_ids)
+    Hash[days_to_close_per_project.map { |p| [p.id, p.days_to_close] }]
+  end
+
+  # convenience method to make input easier compared to time_shift
+  def time_jump(date)
+    puts "** #{self.inspect} contains no activities, skipping time_jump **" && return if activities.blank?
+    latest_activity_date = activities.first.last_sent_date
+    activities.each { |a| a.time_shift((date - latest_activity_date).round) }
+  end
+
+  ### method to batch update sent_date-related attributes of all activities in a project by a scalar value (in seconds)
+  def time_shift(sec)
+    activities.each { |a| a.time_shift(sec) }
   end
 
   ### method to batch update activities in a project by person
@@ -751,46 +1003,117 @@ class Project < ActiveRecord::Base
   # days_ago_end: end of created_at date range in number of days ago from today, non-inclusive! (default:"yesterday")
   def get_alerts_in_range(time_zone, days_ago_start=nil, days_ago_end=0)
     if (days_ago_start.nil?)
-      self.notifications.risks.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+      self.notifications.alerts.where("created_at < ? ", (days_ago_end).days.ago.in_time_zone(time_zone).to_date)
     else
-      self.notifications.risks.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
+      self.notifications.alerts.where(created_at: (days_ago_start).days.ago.in_time_zone(time_zone).to_date..(days_ago_end).days.ago.in_time_zone(time_zone).to_date)
     end
   end
 
-  # Updates all mapped custom fields of a single SFDC opportunity -> CS stream
+  # Updates all (standard) CS Opportunity fields from all mapped SFDC Opportunity fields.
   # Parameters:   client - connection to Salesforce
-  #               project_id - CS project/stream id          
-  #               sfdc_opportunity_id - SFDC opportunity sObjectId
-  #               stream_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS project/stream.
+  #               opportunities - collection of CS Projects/Opportunities to process
+  #               sfdc_fields_mapping - A list of [Mapped SFDC Opportunity field name, CS Opportunity field name] pairs
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
-  def self.load_salesforce_fields(client, project_id, sfdc_opportunity_id, stream_custom_fields)
+  def self.update_fields_from_sfdc(client: , opportunities: , sfdc_fields_mapping: )
     result = nil
 
-    unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || stream_custom_fields.blank?)
-      stream_custom_field_names = stream_custom_fields.collect { |cf| cf.salesforce_field }
+    unless (client.nil? || opportunities.nil? || sfdc_fields_mapping.blank?)
+      sfdc_fields_mapping = sfdc_fields_mapping.to_h
+      sfdc_ids_mapping = opportunities.collect { |s| s.salesforce_opportunity.nil? ? nil : [s.salesforce_opportunity.salesforce_opportunity_id, s.id] }.compact  # a list of [linked SFDC sObject Id, CS Opportunity id] pairs
+      sfdc_ids_mapping = sfdc_ids_mapping.to_h
 
-      query_statement = "SELECT " + stream_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
+      # puts "sfdc_fields_mapping: #{ sfdc_fields_mapping }"
+      # puts "SFDC Opportunity field names: #{ sfdc_fields_mapping.keys }"
+      # puts "sfdc_ids_mapping: #{ sfdc_ids_mapping }"
+      # puts "SFDC Opportunity ids: #{ sfdc_ids_mapping.keys }"
+      unless sfdc_ids_mapping.empty? 
+        query_statement = "SELECT Id, " + sfdc_fields_mapping.keys.join(", ") + " FROM Opportunity WHERE Id IN ('" + sfdc_ids_mapping.keys.join("', '") + "')"
+        query_result = SalesforceService.query_salesforce(client, query_statement)
+        # puts "*** query: \"#{query_statement}\" ***"
+        # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
+
+        if query_result[:status] == "SUCCESS"
+          changed_values_hash_list = []
+          query_result[:result].each do |r|
+            # CS_UUID = sfdc_ids_mapping[r.Id] , SFDC_Id = r.Id
+            sfdc_fields_mapping.each do |k,v|
+              # k (SFDC field name) , v (CS field name), r[k] (SFDC field value)
+              if r[k].is_a?(Restforce::Mash) # the value is a Salesforce sObject, so try to resolve each attribute of the sObject into a String of the fields delimited by commas
+                sfdc_val = []
+                r[k].each { |k,v| sfdc_val.push(v.to_s) if v.present? }
+                sfdc_val = sfdc_val.join(", ")
+              else
+                sfdc_val = r[k]
+              end
+              changed_values_hash_list.push({ sfdc_ids_mapping[r.Id] => { v => sfdc_val } })
+            end
+          end
+          # puts "changed_values_hash_list: #{ changed_values_hash_list }"
+
+          changed_values_hash_list.each { |h| Project.update(h.keys, h.values) }
+          result = { status: "SUCCESS" }
+        else
+          result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " query_statement=" + query_statement }
+        end
+      else  # No mapped CS Opportunities -> SFDC Opportunities
+          result = { status: "SUCCESS" }  
+      end
+    else
+      if client.nil?
+        puts "** ContextSmith error: Parameter 'client' passed to Project.update_fields_from_sfdc is invalid!"
+        result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
+      else
+        # Ignores if other parameters were not passed properly to update_fields_from_sfdc
+        result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
+      end
+    end
+
+    result
+  end
+
+  # Updates all custom CS Opportunity fields mapped to SFDC Opportunity fields for a single CS Opportunity/SFDC Opportunity pair.
+  # Parameters:   client - connection to Salesforce
+  #               project_id - CS project/opportunity id          
+  #               sfdc_opportunity_id - SFDC opportunity sObjectId
+  #               opportunity_custom_fields - ActiveRecord::Relation that represents the custom fields (CustomFieldsMetadatum) of the CS project/opportunity.
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
+  #             result - if status == "ERROR", contains the title of the error
+  #             detail - if status == "ERROR", contains the details of the error
+  def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
+    result = nil
+
+    unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || opportunity_custom_fields.blank?)
+      opportunity_custom_field_names = opportunity_custom_fields.collect { |cf| cf.salesforce_field }
+
+      query_statement = "SELECT " + opportunity_custom_field_names.join(", ") + " FROM Opportunity WHERE Id = '#{sfdc_opportunity_id}' LIMIT 1"
       query_result = SalesforceService.query_salesforce(client, query_statement)
 
       if query_result[:status] == "SUCCESS"
         sObj = query_result[:result].first
-        stream_custom_fields.each do |cf|
+        opportunity_custom_fields.each do |cf|
           #csfield = CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id)
-          #print "----> CS_fieldname=\"", cf.name, "\" SF_fieldname=\"", cf.salesforce_field, "\"\n"
-          #print "   .. CS_fieldvalue=\"", csfield.value, "\" SF_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
-          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: sObj[cf.salesforce_field])
+          #print "----> CS_fieldname=\"", cf.name, "\" SFDC_fieldname=\"", cf.salesforce_field, "\"\n"
+          #print "   .. CS_fieldvalue=\"", csfield.value, "\" SFDC_fieldvalue=\"", sObj[cf.salesforce_field], "\"\n"
+          new_value = sObj[cf.salesforce_field]
+          if new_value.is_a?(Restforce::Mash) # the value is a Salesforce sObject, so try to resolve each attribute of the sObject into a String of the fields delimited by commas
+            sfdc_val = []
+            new_value.each { |k,v| sfdc_val.push(v.to_s) if v.present? }
+            new_value = sfdc_val.join(", ")
+          end
+          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value)
         end
         result = { status: "SUCCESS" }
       else
-        result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " stream_custom_field_names=" + stream_custom_field_names.to_s }
+        result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " opportunity_custom_field_names=" + opportunity_custom_field_names.to_s }
       end
     else
       if client.nil?
         puts "** ContextSmith error: Parameter 'client' passed to Project.load_salesforce_fields is invalid!"
-        result = { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." }
+        result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
       else
         # Ignores if other parameters were not passed properly to load_salesforce_fields
         result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
@@ -819,7 +1142,7 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Create all custom fields for a new Stream
+  # Create all custom fields for a new Opportunity
   def create_custom_fields
     CustomFieldsMetadatum.where(organization:self.account.organization, entity_type: "Project").each { |cfm| CustomField.create(organization:self.account.organization, custom_fields_metadatum:cfm, customizable:self) }
   end

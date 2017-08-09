@@ -13,7 +13,7 @@
 
                 <% if m.is_internal_user? %>
                     <% if m.onboarding_step == nil %>
-                    <%= link_to '(Invite)', "/settings/invite_user/#{m.id}", 'style' => 'font-size:10px', 'method' => 'post', 'remote' => true, 'id' => "#{m.id}", 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an email invitation." %>
+                    <%= link_to '(Invite)', "/settings/invite_user/#{m.id}", 'style' => 'font-size:10px', 'method' => 'post', 'remote' => true, 'id' => "#{m.id}", 'data-toggle' => "tooltip", 'data-placement' => "top", 'data-original-title' => "We will send an e-mail invitation." %>
                     <% end %>
                 <% else %>
                     <% if m.is_source_from_salesforce? %>
@@ -40,7 +40,7 @@
     </div>
     <% if pm.status == ProjectMember::STATUS[:Confirmed] %>
     <div class="col-xs-3 m-t-xs delete-member">
-        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this person from the stream?"}, remote: true %>
+        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this person from the opportunity?"}, remote: true %>
     </div>
     <% else %>
     <div class="col-xs-3 m-t-xs">

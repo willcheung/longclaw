@@ -4,7 +4,7 @@ $('#project-index-follow-<%= params[:type] %>-<%= @project.id %>').replaceWith('
 $('#project-show-follow-<%= params[:type] %>-<%= @project.id %>').replaceWith('<%= link_to "<i class=\"fa fa-check\"></i> Following #{params[:type]}".html_safe, project_project_subscriber_path(project_id: @project.id, user_id: current_user.id) + "?type=#{params[:type]}", remote: true, method: :delete, id: "project-show-unfollow-#{params[:type]}-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm", title: "Following #{params[:type]}" %>');
 $("#project-show-unfollow-daily-<%= @project.id %>").addClass("m-l-md");
 
-// Stream projects#show page: update follower/sub count and list
+// Opportunity projects#show page: update follower/sub count and list
 $('.project-people.<%= params[:type] %>-subs').append('<%=    escape_javascript(render "project_subscribers/subscriber", ps: @project_subscriber, type: "#{params[:type]}")
 	%>')
 $("#ps-<%= params[:type] %>-subs").text(Number($('#ps-<%= params[:type] %>-subs').text()) + 1);

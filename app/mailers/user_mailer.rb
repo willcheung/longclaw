@@ -7,13 +7,13 @@ class UserMailer < ApplicationMailer
     @url = url
 
     track user: user # ahoy_email tracker
-    mail(to: @user.email, subject: "Your Account Streams are ready at ContextSmith")
+    mail(to: @user.email, subject: "Your Accounts are created in ContextSmith")
   end
 
   def daily_summary_email(user)
     @user = user
     @subs = user.valid_streams_subscriptions.daily
-    @upcoming_meetings = user.upcoming_meetings
+    @upcoming_meetings = user.upcoming_meetings  # backend call-back
     @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not("activities.category IN ('#{Activity::CATEGORY[:Note]}', '#{Activity::CATEGORY[:Alert]}') OR activities.last_sent_date BETWEEN CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP + INTERVAL '7 days'").group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
  
     puts "Checking daily subscription for #{user.email}"

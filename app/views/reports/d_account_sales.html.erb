@@ -50,7 +50,7 @@
     <div class="row border-bottom white-bg dashboard-header">
             <div class="row">
                 <div class="col-lg-5">
-                    <h4 class="m-l-md">Sort by:
+                    <h4 class="m-l-md">Metric:
                     <select class="metric_filter col-lg-8" data-placeholder="Select Type">
                         <option>Days Inactive</option>
                         <option value="2">Time Spent (Last 14d)</option>
@@ -80,7 +80,7 @@
             <div class="col-lg-7" style="margin-top:45px;">
                 <div id="intro-account-header">
                     <div class="row" style="margin-top:50px;">
-                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
+                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
                     </div>
                 </div>
 
@@ -232,10 +232,10 @@
                 enabled: false
             },
             series: [{
-                name: 'Emails Sent',
+                name: 'E-mails Sent',
                 data: [14, 11, 14, 12, 8, 8, 8, 7, 10, 9, 8, 8, 7, 6, 5, 4, 5, 4]
             }, {
-                name: 'Emails Received',
+                name: 'E-mails Received',
                 data: [8, 8, 4, 8, 6, 6, 5, 6, 1, 2, 1, 2, 1, 1, 1, 2, 1, 3]
             }, {
                 name: 'Meetings',
@@ -642,7 +642,7 @@
             },
             series: [{
                 type: 'column',
-                name: 'Email',
+                name: 'E-mail',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
                 data: [0,0,6,5,6,7,12,15,10,10,12,8,5,1]

@@ -21,30 +21,57 @@ module ApplicationHelper
     num > 0 ? "<i class=\"fa fa-level-up\"></i>".html_safe : "<i class=\"fa fa-level-down\"></i>".html_safe
   end
 
-  def highcharts_series_color(category)
+  def highcharts_series_color(category="default")
     case category
-    when Activity::CATEGORY[:Conversation]
-      "#46C6C6"
-    when Activity::CATEGORY[:Meeting]
-      "#FFA500"
-    when Activity::CATEGORY[:Note]
-      "#ffde6b"
-    when Activity::CATEGORY[:JIRA]
-      "#205081"
-    when Activity::CATEGORY[:Salesforce]
-      "#1798c1"
-    when Activity::CATEGORY[:Zendesk]
-      "#78a300"
-    when Activity::CATEGORY[:Alert]
-      "#ed5565"
-    when Activity::CATEGORY[:Basecamp2]
-      "#91e8e1"
-    when 'Meetings'
+    when Activity::CATEGORY[:Conversation], 'Sent E-mails', 'E-mails Sent'
+      '#46C6C6'
+    when 'Read E-mails', 'E-mails Received'
+      '#33a6a6'
+    when Activity::CATEGORY[:Meeting], 'Meetings'
       '#ffb833'
-    when 'Sent Emails'
-      '#00cccc'
-    when 'Read Emails'
-      '#995cd6'
+    when Notification::CATEGORY[:Attachment], 'Attachments'
+      '#33a66d'
+    when Activity::CATEGORY[:Note]
+      '#ffde6b'
+    when Activity::CATEGORY[:JIRA]
+      '#205081'
+    when Activity::CATEGORY[:Salesforce]
+      '#1798c1'
+    when Activity::CATEGORY[:Zendesk]
+      '#78a300'
+    when Activity::CATEGORY[:Alert]
+      '#ed5565'
+    when Activity::CATEGORY[:Basecamp2]
+      '#91e8e1'
+    else
+      '#7cb5ec'  # light blue
+    end
+  end
+
+  def highcharts_series_color_gradient_by_pct(val, minval, maxval)
+    if val < minval
+      '#398fe2'
+    # lighter tints (first), darker tints (last)
+    elsif (val - minval) / (maxval - minval).to_f < 0.1
+      '#aed2f0'
+    elsif (val - minval) / (maxval - minval).to_f < 0.2
+      '#a6cdef' 
+    elsif (val - minval) / (maxval - minval).to_f < 0.3
+      '#9dc8ee'
+    elsif (val - minval) / (maxval - minval).to_f < 0.4
+      '#93c2ed'
+    elsif (val - minval) / (maxval - minval).to_f < 0.5
+      '#88bcec'
+    elsif (val - minval) / (maxval - minval).to_f < 0.6
+      '#7bb5ea'
+    elsif (val - minval) / (maxval - minval).to_f < 0.7
+      '#6dade8'
+    elsif (val - minval) / (maxval - minval).to_f < 0.8
+      '#5da4e6'
+    elsif (val - minval) / (maxval - minval).to_f < 0.9
+      '#4c9ae4'
+    else
+      '#398fe2' # >= 0.9 (incl. val > maxval)
     end
   end
 
@@ -192,6 +219,7 @@ module ApplicationHelper
     end
   end
 
+  # creates a human-readable local time expression from an activity
   def get_calendar_interval(event)
     start = event.last_sent_date
     end_t = Time.zone.at(event.email_messages.last.end_epoch)
@@ -252,18 +280,22 @@ module ApplicationHelper
   end
 
   # Generates formatted (with HTML tags), expandable and collapsible text.  Uses simple_format() to break newlines, and truncate() to break up content.
-  # Parameters:   text - the text content to display truncated
+  # Parameters:   text - the text content to truncate (and displayed)
   #               id - used as the unique identifier in DOM
   #               length (optional) - length at which to truncate text, defaults to 100
   #               max_length (optional) - maximum length of the text to display, defaults to the length of text
   #               separator (optional) - the separator option in the truncate() function, defaults to empty string
-  # Note:  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
-  def get_expandable_text_html(text: , id: , length: 100, max_length: text.length, separator: '')
+  # Note:  If text doesn't exist (nil), returns no content.  May need to use .html_safe in .erb embedded Ruby partials, and toggle_visibility_for_pair()/ toggle_visibility() .js scripts.
+  def get_expandable_text_html(text: , id: , length: 100, max_length: nil, separator: '')
+    return "<span></span>" if text.nil?  # no content
+    max_length = text.length if max_length.nil?
+
     # Do some newline processing to ensure proper conversion to <br> by simple_format later
     text.gsub!(/\r\n/, "\n")  # convert the carriage-return + newline sequences (e.g., from SFDC activity) into single newlines
-    text.gsub!(/\n+/, "\n")   # convert double newlines into single ones 
+    text.gsub!(/\n+/, "\n")   # convert double newlines into single ones
 
     id = id.to_s
+    # Truncated text content
     html = "<span id=\"" + id + "-short\" style=\"display:block\">" + simple_format(truncate(text, length: length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span')
     html += "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[more]</a></span>" + 
             "<span id=\""+ id +"-full\" style=\"display: none\">" + simple_format(truncate(text, length: max_length, separator: separator), {style: "overflow-wrap: break-word"}, wrapper_tag: 'span') + 
