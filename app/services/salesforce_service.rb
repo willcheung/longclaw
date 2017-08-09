@@ -48,7 +48,7 @@ class SalesforceService
     end
 
     #return nil  # simulates a Salesforce connection error
-    return client
+    client
   end
 
   # Parameters: client - connection to Salesforce
@@ -74,7 +74,7 @@ class SalesforceService
       result = { status: "ERROR", result: "SalesforceService error", detail: "Invalid Salesforce connection was passed to SalesforceService.query_salesforce." }
     end
 
-    return result
+    result
   end
 
   # This is used to export/create a single CS activity or a contact to the linked/mapped SFDC account/opportunity. 
@@ -153,7 +153,7 @@ class SalesforceService
   # Finds a Contact in SFDC Account that matches an e-mail address.  If found, performs an update on the SFDC Contact.  If multiple Contacts are found, picks only one (first one alphabetically by LastName, then FirstName). If not found, a new SFDC Contact is created/inserted.  Returns nil if there is an error, or the Contact's SFDC/sObject id if successful.
   # Parameters:   client - connection to Salesforce
   #              sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
-  #               email  - string, the email to search for to determine the contact to upsert
+  #               email  - string, the e-mail to search for to determine the contact to upsert
   #               params - a hash that contains the Contact information (e.g., FirstName, Email, etc.)
   # Returns:    A hash that represents the execution status/result of the upsert. Consists of:
   #               status - "SUCCESS" if successful, or "ERROR" otherwise
@@ -164,7 +164,7 @@ class SalesforceService
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , email: , params: )
     result = nil
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{ return_escaped_SFDC_field(email) }' ORDER BY LastName, FirstName"  # Unused: Description    
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND Email='#{ return_escaped_SFDC_field_val(email) }' ORDER BY LastName, FirstName"  # Unused: Description    
     #puts "query_statement: #{ query_statement }"
     query_result = self.query_salesforce(client, query_statement)
 
@@ -213,7 +213,7 @@ class SalesforceService
     result
   end
 
-  # Updates a Salesforce Contact with info in params. If the SFDC sfdc_contact_id cannot be found, try to find it using Contact's email in the SFDC Account
+  # Updates a Salesforce Contact with info in params. If the SFDC sfdc_contact_id cannot be found, try to find it using Contact's e-mail in the SFDC Account
   # Parameters (all required):  client - connection to Salesforce
   #                             sfdc_contact_id - the external sObject id that identifies the Salesforce Contact to update
   #                             sfdc_account_id - the SFDC/sObject id of the Salesforce Account where the Contact resides
@@ -256,7 +256,7 @@ class SalesforceService
   end
 
   # Call this from ProjectsController#refresh !!
-  # Parameters: project - the CS stream that we will attempt to refresh from SFDC
+  # Parameters: project - the CS Opportunity that we will attempt to refresh from SFDC
   #             query?
   def self.load_activity_from_salesforce(project, query=nil, save_in_db=true, after=nil, is_time=true, request=true, is_test=false)
     client = self.connect_salesforce(current_user.organization_id)
@@ -265,7 +265,7 @@ class SalesforceService
   end
 
   # Changes value 'val' to a valid value to be used in a SFDC field. e.g., escapes single quotes
-  def self.return_escaped_SFDC_field(val)
+  def self.return_escaped_SFDC_field_val(val)
     if val.present?
       val.gsub("'", "\\\\'") 
     else

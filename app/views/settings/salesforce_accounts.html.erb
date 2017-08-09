@@ -31,7 +31,7 @@
                       <li class="active"><a href="<%= settings_salesforce_accounts_path %>">Step 1: Map Accounts</a></li>
                       <li><a href="<%= settings_salesforce_opportunities_path %>">Step 2: Map Opportunities</a></li>
                       <li><a href="<%= settings_salesforce_activities_path %>">Step 3: Map Activities</a></li>
-                      <li><a href="<%= settings_salesforce_fields_path %>">Step 4: Map Fields</a></li>
+                      <li><a href="<%= settings_salesforce_fields_path(:standard) %>">Step 4: Map Fields</a></li>
                     </ul>
                   </div>
               </nav>
@@ -60,7 +60,9 @@
                   <%end%>
                 </div>
 
-                <span class="pull-right"><a class="btn btn-danger btn-sm btn-outline pull-right" style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect (<%= @salesforce_user.oauth_user_name %>)</a></span>
+                <span class="pull-right">
+                  <%= link_to "Disconnect (#{@salesforce_user.oauth_user_name})", salesforce_disconnect_path(@salesforce_user.id), data: {confirm: "Disconnecting from Salesforce will cause all mapped Salesforce information to be lost!  Are you sure you wish to proceed?"}, class: "btn btn-danger btn-sm btn-outline pull-right", style: "font-size:12px" %>
+                </span>
               </div>
 
               <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
@@ -84,7 +86,7 @@
                                   <%= "disabled" if !@linked_to_sfdc %>
                                   id="salesforce-accounts-cont-import" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Import Contacts"> <i class="fa fa-refresh"></i> Import Contacts
                                   </button>
-                                  <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve Contacts from Salesforce Accounts."></i>
+                                  <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve Contacts with an e-mail from Salesforce Accounts."></i>
                               </nobr></div>
                               <div><nobr>
                                   <button 

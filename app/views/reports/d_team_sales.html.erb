@@ -35,14 +35,13 @@
     <div class="row border-bottom white-bg dashboard-header">
             <!-- LEFT -->
             <div class="col-md-5">
-                <h4 class="m-l-md">Sort by: 
+                <h4 class="m-l-md">Metric: 
                 <select class="metric_filter col-lg-8" data-placeholder="Select Type">
                     <option value="2">Opportunities</option>
-                    <option value="2">Opportunity Revenue</option>
-                    <option value="2">Revenue per Hour Spent (Last 14d)</option>
-                    <option value="2">Time Spent (Last 14d)</option>
+                    <option value="2">Booking</option>
+                    <option value="2" selected="true">Time Spent (Last 14d)</option>
                     <option value="2">On Target</option>
-                    <option value="1" selected="true">Activities (Last 14d)</option>
+                    <option value="1">Activities (Last 14d)</option>
                     <option value="2">New Alerts & Tasks (Last 14d)</option>
                     <option value="2">Closed Alerts & Tasks (Last 14d)</option>
                     <option value="3">Open Tasks</option>
@@ -57,7 +56,7 @@
             <div class="col-md-7" style="margin-top:45px;">
                 <div id="intro-account-header">
                     <div class="row" style="margin-top:100px;">
-                        <h3>&larr; Click on a bar to see details about the account stream.</h3>
+                        <h3>&larr; Click on a bar to see details about the opportunity.</h3>
                     </div>
                 </div>
 
@@ -67,7 +66,7 @@
                             <h1>Neil Anderson</h1>
                         </div>
                         <div class="col-lg-4 m-t-md">
-                            <span class="label">Last 14 days</span>
+                            
                         </div>
                     </div>
 
@@ -87,21 +86,10 @@
                             <div class="col-md-3 text-center">
                                 <div class="metric">
                                     <div class="metric-title">
-                                        <h4>Expected Revenue</h4>
+                                        <h4>Booking</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:32px;">$2.15M</h2>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3 text-center">
-                                <div class="metric text-danger">
-                                    <div class="metric-title">
-                                        <h4>Open Alerts</h4>
-                                    </div>
-                                    <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">3</h2>
+                                        <h2 style="font-weight:600;font-size:42px;">$2.15M</h2>
                                     </div>
                                 </div>
                             </div>
@@ -113,6 +101,17 @@
                                     </div>
                                     <div class="metric-content">
                                         <h2 style="font-weight:600;font-size:46px">8</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric text-danger">
+                                    <div class="metric-title">
+                                        <h4>Open Alerts</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">3</h2>
                                     </div>
                                 </div>
                             </div>
@@ -162,8 +161,8 @@
                 text: ''
             },
             xAxis: {
-                categories: ['Neil Anderson', 'Kelvin Luis', 'Steven Yellen', 'Richard Wally', 'Varian Lopez', 'Charlie Schema', 'Michael Bay', 'Ben Shorty', 'Batman', 'Bruce Wallus',
-                              'Wonder Woman', 'Harry Potterson','Luke Walker', 'Danny Adobe', 'Rick Martin', 'Natale Sales'],
+                categories: ['<strong>Neil Anderson</strong><br>85% ($2.15M)', '<strong>Kelvin Luis</strong><br>63% ($1.5M)', '<strong>Steven Yellen</strong><br>62% ($1.2M)', '<strong>Richard Wally</strong><br>60% ($952K)', '<strong>Varian Lopez</strong><br>40% ($125K)', '<strong>Charlie Schema</strong><br>34% ($120K)', '<strong>Michael Bay</strong><br>90% ($2.42M)', '<strong>Ben Shorty<strong><br>53% ($450K)', '<strong>Stephanie Smiles</strong><br>61% ($650K)', '<strong>Bruce Wallus</strong><br>25% ($104K)',
+                            '<strong>Rick Martin</strong><br>24% ($390K)', '<strong>Natale Salesy</strong><br>33% ($330K)'],
                 crosshair: true
             },
             yAxis: {
@@ -172,7 +171,30 @@
                 title: {
                     text: ''
                 },
-                gridLineWidth: 0
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                },
+                gridLineWidth: 0,
+                plotLines: [{
+                    color: '#FF0000', // Red
+                    width: 2,
+                    value: 31.5,
+                    zIndex: 5,
+                    label: {
+                        text: 'Average 31.5',
+                        verticalAlign: 'top',
+                        textAlign: 'right',
+                        y: 120
+                    }
+                }]
+            },
+            tooltip: {
+                valueSuffix: ' hrs',
+                hideDelay: '100',
+                followPointer: true
             },
             legend: {
                 enabled: true,
@@ -199,23 +221,26 @@
             },
             series: [{
                 type: 'bar',
-                name: 'Emails Sent',
-                data: [13, 20, 18, 17, 16, 8, 14, 8, 9, 8, 7, 4, 1, 1, 1, 1]
+                name: 'Send Attachment',
+                color: '#E74C3C',
+                data: [2, 1.5, 0, 0, 1.25, 2, 0, 1, .5, 1, 1.25, .5]
+            },{
+                type: 'bar',
+                name: 'Send E-mails',
+                color: '#5DADE2',
+                data: [13, 20, 18, 17, 16, 12, 10, 10, 9, 8, 8, 9]
             },
             {
                 type: 'bar',
-                name: 'Emails Received',
-                data: [17, 10, 7, 9, 8, 6, 3, 2, 2, 2, 0, 1, 2, 0, 0, 0]
+                name: 'Receive E-mails',
+                color: '#3498DB',
+                data: [17.2, 10.4, 7.6, 9.1, 8.1, 7.0, 3.9, 2.3, 3.0, 2.8, 2.6, 3.8]
             },
             {
                 type: 'bar',
-                name: 'Calls',
-                data: [7, 6, 6, 4, 5, 13, 6, 8, 4, 2, 0, 2, 1, 1, 0, 0]
-            },
-            {
-                type: 'bar',
-                name: 'Tasks Closed',
-                data: <%= 14.times.map{ Random.rand(5) }  %>
+                name: 'Meetings & Calls',
+                color: '#F5B041',
+                data: [14, 12, 12, 9, 10, 14, 18, 17, 11, 9, 8, 7]
             }]
         });
     });
@@ -241,13 +266,12 @@
                 }
             },
             xAxis: {
-                categories: ['Stark Industries', 'Hooli', 'Pied Piper', 'Global Dynamics', 'Wayne Enterprise', 'Acme Inc.', 'GVC'],
-                labels: {
-                    formatter: function() {
-                        return '<a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e">'+this.value+'</a>';
-                        //return '<a href="'+ categoryLinks[this.value] +'">'+this.value +'</a>';
-                    }
-                }
+                categories: ['<strong>Stark Industries</strong> - $750k, Aug 1', '<strong>Hooli</strong> - $120k, Aug 30', '<strong>Pied Piper</strong> - $45k, Sep 1', '<strong>Global Dynamics</strong> - $500k Jun 1', '<strong>Wayne Enterprise</strong> - $20k, Jun 14', '<strong>Acme Inc.</strong> - $500k, Aug 15', '<strong>GVC</strong> - $50k, Jul 20']
+            },
+            tooltip: {
+                valueSuffix: ' hrs',
+                hideDelay: '100',
+                followPointer: true
             },
             yAxis: {
                 min: 0,
@@ -257,7 +281,7 @@
                 stackLabels: {
                     enabled: true,
                     style: {
-                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
                     }
                 }
             },
@@ -266,20 +290,37 @@
             },
             plotOptions: {
                 series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.href = "https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e";
+                            }
+                        }
+                    },
                     stacking: 'normal'
                 }
             },
-            series: [{
-                name: 'Send Emails',
-                data: [2.1, 1.8, 1.5, 1.5, 1.2, 0.4, 0.2]
+            series: [
+            {
+                name: 'Send Attachment',
+                data: [.25, .5, 0, .5, .25, 0, .25],
+                color: '#E74C3C'
             },
             {
-                name: 'Receive Emails',
-                data: [1, .6, .5, .5, .4, 0, 0]
+                name: 'Send E-mails',
+                data: [3.1, 2.8, 1.5, 1.5, 1.2, 0.4, 0.2],
+                color: '#5DADE2'
+            },
+            {
+                name: 'Receive E-mails',
+                data: [2, .6, .5, .5, .4, 0, 0],
+                color: '#3498DB'
             }, 
             {
                 name: 'Meetings & Calls',
-                data: [2, 0.5, 1, 1, 0, 0, 0]
+                data: [4, 2.5, 3.2, 1, 0, 0, 0],
+                color: '#F5B041'
             }]
         });
 
@@ -364,21 +405,7 @@
                 enabled: true
             },
             tooltip: {
-                positioner: function () {
-                    return {
-                        x: this.chart.chartWidth - this.label.width, // right aligned
-                        y: -15 // align to title
-                    };
-                },
-                borderWidth: 0,
-                backgroundColor: 'none',
-                pointFormat: '{point.stackTotal}',
-                xDateFormat: '%b %e',
-                shadow: false,
-                style: {
-                    fontSize: '16px',
-                    color: '#555555'
-                }
+
             },
             plotOptions: {
                 series: {
@@ -387,31 +414,42 @@
             },
             series: [{
                 type: 'column',
-                name: 'Sent Emails',
+                name: 'Send Attachment',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(10) }  %>
+                data: <%= 14.times.map{ Random.rand(2) }  %>,
+                color: '#E74C3C'
+            },{
+                type: 'column',
+                name: 'Sent E-mails',
+                pointInterval: <%= 1.day * 1000 %>,
+                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+                data: <%= 14.times.map{ Random.rand(10) }  %>,
+                color: '#5DADE2'
             },
             {
                 type: 'column',
-                name: 'Received Emails',
+                name: 'Received E-mails',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(5) }  %>
+                data: <%= 14.times.map{ Random.rand(5) }  %>,
+                color: '#3498DB'
             },
             {
                 type: 'column',
-                name: 'Meetings',
+                name: 'Meetings & Calls',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(2) }  %>
+                data: <%= 14.times.map{ Random.rand(2) }  %>,
+                color: '#F5B041'
             },
             {
                 type: 'column',
                 name: 'Tasks Closed',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= 14.times.map{ Random.rand(2) }  %>
+                data: <%= 14.times.map{ Random.rand(2) }  %>,
+                color: '#222222'
             }
             ]
         });

@@ -4,34 +4,28 @@
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>My Account Streams</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total Number of Account Streams that you own."></i>
+                    <h2>Most Active (7d)</h2>
+                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with most activity during the last 7 days."></i> -->
                 </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @projects.empty? ? "0" : @projects.size %></h1>
-                </div>
+                <div id="chart-left" class="ibox-content opp-chart"></div>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>My Alerts & Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total Number of tasks that have been assigned to you."></i>
+                    <h2>Least Active (7d)</h2>
+                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with least activity during the last 7 days."></i> -->
                 </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins"><%= @open_total_tasks.size %></h1>
-                </div>
+                <div id="chart-center" class="ibox-content opp-chart"></div>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>My Overdue Tasks</h5>
-                    <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Total Number of overdue tasks that have been assigned to you."></i>
+                    <h2>Most Open Alerts & Tasks</h2>
+                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with the most open Alerts & Tasks"></i> -->
                 </div>
-                <div class="ibox-content">
-                    <h1 class="no-margins" style="color:<%= alert_color(@overdue_tasks.size) %>"><%= @overdue_tasks.size %></h1>
-                </div>
+                <div id="chart-right" class="ibox-content opp-chart"></div>
             </div>
         </div>
     </div>
@@ -40,13 +34,13 @@
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
             <div class="ibox-title">
-                <h1>My Alerts & Tasks</h1>
+                <h2>My Alerts & Tasks</h2>
             </div>
             <div class="ibox-content">
                 <!-- <h2>Open and Alerts</h2> -->
                     <div class="col-lg-12 m-b-md">
-                        <% if @open_total_tasks.empty? %>
-                            <p>Great, we did not find any risks or alerts from your account streams.</p>
+                        <% if @open_total_tasks.blank? %>
+                            <p>Great, no open tasks on your Opportunities.</p>
                         <% else %>
                             <%= render "notifications/table", :notifications => @open_total_tasks %>
                         <% end %>
@@ -75,20 +69,30 @@
     <div class="row ibox float-e-margins">
         <div class="col-lg-12">
             <div class="ibox-title">
-                <h2>My Account Streams</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><h2>My Opportunities<h2></h2>
+                            <td>&nbsp;<i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or to which you are subscribed."></i></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="ibox-content">
                 <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th>Stream</th>
-                            <th>Type</th>
+                            <th>Name</th>
+                            <th><%= Project::MAPPABLE_FIELDS_META["stage"] %></th>
+                            <th><%= Project::MAPPABLE_FIELDS_META["amount"] %></th>
+                            <th>Owner</th>
                             <th></th>
-                            <th></th>
-                            <th>Risk Score</th>
-                            <th>Open Alerts</th>
-                            <th>Status</th>
+                            <th>Days to Close</th>
+                            <th>Open Alerts & Tasks</th>
                             <th>Last 7d Activity</th>
+                            <th>Days Inactive</th>
+                            <th>Next Meeting</th>
+                            <th></th>
                             <th></th>
                         </tr>
                     </thead>
@@ -99,103 +103,307 @@
                                     <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                     <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                 </td>
-                                <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
-                                <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
-                                <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
-                                <td style="text-align:right;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
-                                <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                <td><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id]%></div></td>
+                                <td style="width: 120px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
+                                <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
+                                <td><div><%= get_full_name(p.project_owner) %></div></td>
+                                <td style="width: 40px"><span
+                                <% all_members = p.users + p.contacts %>
+                                <% members = all_members.first(@MEMBERS_LIST_LIMIT) %>
+                                <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe unless all_members.size == 0 %>
+                                ><i class="fa fa-users" style="color:#888"></i> <%= all_members.size %></span></td>
+                                <!-- <td style="text-align: center;" class="< %= risk_color(@risk_scores[p.id]) %>">< %= @risk_scores[p.id] %></td> -->
+                                <td style="text-align:center;" class=""><%= @days_to_close[p.id].nil? ? "-" : @days_to_close[p.id].to_s %></td>
+                                <td style="text-align:center;" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
                                 <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
-                                <td><% if !p.is_public %>
-                                        <span class="label label-warning pull-right">Private</span>
-                                    <% else %>
-                                        <span class="label label-default pull-right">Public</span>
-                                    <% end %>
-                                </td>
-                            </tr>
-                        <% end %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 
-    <div class="row ibox float-e-margins">
-        <div class="col-lg-12">
-            <div class="ibox-title">
-                <h2>My Stream Subscriptions</h2>
-            </div>
-            <div class="ibox-content">
-                <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
-                    <thead>
-                        <tr>
-                            <th>Stream</th>
-                            <th>Type</th>
-                            <th></th>
-                            <th></th>
-                            <th>Risk Score</th>
-                            <th>Open Alerts</th>
-                            <th>Status</th>
-                            <th>Last 7d Activity</th>
-                            <th></th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% @subscribed_projects.each do |p| %>
-                            <tr>
-                                <td>
-                                    <div><a href="<%= project_path(p) %>"><%= p.name %></a><% if p.owner_id == current_user.id %> *<% end %></div>
-                                    <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
-                                </td>
-                                <td style="width: 120px"><%= best_in_place p, :category, :as => :select, :collection => @stream_types, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
-                                <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= ((p.users+p.contacts).collect {|u| get_full_name(u)}).join('<br>') %>"><i class="fa fa-users" style="color:#888"></i> <%= (p.users.size + p.contacts.size) %></span></td>
-                                <td style="width: 40px"><span data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<%= (p.activity_count) %> conversations"><i class="fa fa-comments" style="color:#888"></i> <%= (p.activity_count) %></span></td>
-                                <td style="text-align:right;" class="<%= risk_color(@risk_scores[p.id]) %>"><%= @risk_scores[p.id] %></td>
-                                <td style="text-align:center" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                <td><div class="index-circle rag-circle<%=@rag_status[p.id]%>"></div><div style="display:none;"><%=@rag_status[p.id]%></div></td>
-                                <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
-                                <td>
-                                    <% if p.is_public %>
+                                <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
+
+                                <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%l:%M%p on %B %-d') %>
+                                <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].to_i %>
+                                <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
+                                
+                                <td><% if p.is_public %>
                                         <span class="label label-default pull-right">Public</span>
                                     <% else %>
                                         <span class="label label-warning pull-right">Private</span>
                                     <% end %>
                                 </td>
-                                <td>
+                                <td style="width: 120px"> 
+                                    <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to daily updates and alerts." data-delay='{"show":"300"}'>
                                     <% if p.daily %>
                                         <%= link_to "<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{p.id}", class: "block m-b-xs", title: "Following daily" %>
                                     <% else %>
                                         <%= link_to "<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{p.id}", class: "block m-b-xs", title: "Follow daily" %>
                                     <% end %>
                                     </span>
+                                    <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to weekly updates and alerts." data-delay='{"show":"300"}'>
                                     <% if p.weekly %>
                                         <%= link_to "<i class=\"fa fa-check\"></i> Weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-index-unfollow-weekly-#{p.id}", class: "block m-b-xs", title: "Following weekly" %>
                                     <% else %>
                                         <%= link_to "<i class=\"fa fa-bell-o\"></i> Weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{p.id}", class: "block m-b-xs", title: "Follow weekly" %>
                                     <% end %>
+                                    </span>
                                 </td>
                             </tr>
                         <% end %>
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td>* = You own this stream</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
         </div>
     </div>
+
+   
 </div>
 
 <%= javascript_include_tag "notifications_table" %>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        $('#chart-left').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            // subtitle: {
+            //     text: ' ',
+            //     align: 'center',
+            //     y: 40
+            // },
+            xAxis: {
+                max: undefined,
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        // this.value = [project_name, deal_size, close_date]
+                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                // max: 100,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
+            },
+            tooltip: {
+                headerFormat:  '',
+                pointFormatter: function() {
+                    // this.category = [project_name, deal_size, close_date]
+                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+                }
+            },
+            legend: {
+              enabled: false,
+              // verticalAlign: 'top',
+              // itemStyle: {
+              //     fontWeight: 'light',
+              //     fontSize: 12         
+              // }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal',
+                    cursor: 'pointer',
+                    pointWidth: 33,
+                    //maxPointWidth: 75,
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.assign("/projects/"+ this.options.id);
+                                //window.open("/projects/"+ this.options.id);
+                            }
+                        }
+                    }
+                },
+                allowPointSelect: false
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        $('#chart-center').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            // subtitle: {
+            //     text: ' ',
+            //     align: 'center',
+            //     y: 40
+            // },
+            xAxis: {
+                max: undefined,
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        // this.value = [project_name, deal_size, close_date]
+                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                // max: 100,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
+            },
+            tooltip: {
+                headerFormat:  '',
+                pointFormatter: function() {
+                    // this.category = [project_name, deal_size, close_date]
+                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+                }
+            },
+            legend: {
+              enabled: false,
+              // verticalAlign: 'top',
+              // itemStyle: {
+              //     fontWeight: 'light',
+              //     fontSize: 12         
+              // }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal',
+                    cursor: 'pointer',
+                    pointWidth: 33,
+                    //maxPointWidth: 75,
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.assign("/projects/"+ this.options.id);
+                            }
+                        }
+                    }
+                },
+                allowPointSelect: false
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        $('#chart-right').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: ''
+            },
+            // subtitle: {
+            //     text: ' ',
+            //     align: 'center',
+            //     y: 40
+            // },
+            xAxis: {
+                max: undefined,
+                crosshair: true,
+                labels: {
+                    formatter: function () {
+                        // this.value = [project_name, deal_size, close_date]
+                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                // max: 100,
+                opposite: true,
+                title: {
+                    text: ''
+                },
+                gridLineWidth: 0,
+                labels: {
+                    enabled: false
+                },
+                stackLabels: {
+                    enabled: true
+                }
+            },
+            tooltip: {
+                headerFormat:  '',
+                pointFormatter: function() {
+                    // this.category = [project_name, deal_size, close_date]
+                    //return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+                    return this.category[0];
+                }
+            },
+            legend: {
+              enabled: false,
+              // verticalAlign: 'top',
+              // itemStyle: {
+              //     fontWeight: 'light',
+              //     fontSize: 12         
+              // }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal',
+                    cursor: 'pointer',
+                    pointWidth: 33,
+                    //maxPointWidth: 75,
+                    point: {
+                        events: {
+                            click: function () {
+                                window.location.assign("/projects/"+ this.options.id);
+                            }
+                        }
+                    }
+                },
+                allowPointSelect: false
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        <%= render partial: "home/top_dashboard.js" %>
+
+        // handle clicking on opportunity label
+        $('.highcharts-xaxis-labels text').click(function() {
+            var clicked_pid = get_category_uuid($(this).children(0)[0].firstChild.data);
+            if (clicked_pid)
+              window.location.assign("/projects/"+ clicked_pid);
+        });
+
+        $('.highcharts-xaxis-labels text').css("cursor", "pointer");
+
+        function get_category_uuid (catname) {
+            // console.log("Finding proj: " + catname);
+            var map = {
+                <% @current_user_projects.each do |d| %>
+                  "<%= d.name.html_safe %>": "<%= d.id %>",
+                <% end %>
+            };
+            return map[catname];
+        }
+    });
+</script>

@@ -7,7 +7,7 @@
 #  entity_type              :string           not null
 #  name                     :string           not null
 #  data_type                :string           not null
-#  update_permission_level  :string           not null
+#  update_permission_role   :string           not null
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  default_value            :string
@@ -30,12 +30,13 @@ class CustomFieldsMetadatum < ActiveRecord::Base
 	# To do: use 'default' value column
 
 	validates :name, presence: true, length: { maximum: 30 }
+	validates :update_permission_role, presence: true   # Currently unused
 
-	ENTITY_TYPE = { Account: 'Account', Project: 'Stream' }
+	ENTITY_TYPE = { Account: 'Account', Project: 'Opportunity' }
 	DATA_TYPE = { Text: 'Text', Number: 'Number', List: 'List' } # To do: add Lookup("User"), Date/Time, Checkbox
 
-	# Checks the string 'type' to see if it is a valid ENTITY_TYPE.  If 'type' is valid, returns the ENTITY_TYPE (key); otherwise, returns nil. Use match_external_value=true to validate 'type' with the mapped value (the external value displayed to the user) instead of the key.
-	# e.g., Calling validate_and_return_entity_type("Project") or validate_and_return_entity_type("Stream",true) will both return CustomFieldsMetadatum::ENTITY_TYPE[:Project]
+	# Checks the string 'type' to see if it is a valid ENTITY_TYPE.  If 'type' is valid, returns the ENTITY_TYPE (key value); otherwise, returns nil. Use match_external_value=true to validate 'type' with the mapped value (the external value displayed to the user) instead of the key.
+	# e.g., Both validate_and_return_entity_type("Project") and validate_and_return_entity_type("Opportunity",true) => CustomFieldsMetadatum::ENTITY_TYPE[:Project]
 	def self.validate_and_return_entity_type(type, match_external_value=false)
 		return nil if type == nil
 		ENTITY_TYPE.each do |t|

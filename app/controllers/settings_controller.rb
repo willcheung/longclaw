@@ -103,17 +103,18 @@ class SettingsController < ApplicationController
 		@linked_to_sfdc = @salesforce_link_accounts.present?
 	end
 
-	# Map CS Streams with Salesforce Opportunities: "One CS Stream can link to many Salesforce Opportunities"
+	# Map CS Opportunity with Salesforce Opportunities: "One CS Opportunity can link to many Salesforce Opportunities"
 	def salesforce_opportunities
 		if current_user.role == User::ROLE[:Admin]
-			@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active projects because "admin" role can see everything
+			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active opportunities because "admin" role can see everything
 			@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
 		end
 	end
 
 	def salesforce_activities
 		if current_user.role == User::ROLE[:Admin]
-			@streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active projects because "admin" role can see everything
+			@CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = Activity::CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX
+			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active opportunities because "admin" role can see everything
 
 			# Load previous queries if it was saved
 			custom_config = current_user.organization.custom_configurations.where("organization_id = '#{current_user.organization_id}' AND config_type LIKE '/settings/salesforce_activities#%'")
@@ -136,26 +137,39 @@ class SettingsController < ApplicationController
 		end
 	end
 
+	# Map SFDC entity fields to standard or custom CS entity fields
 	def salesforce_fields
 		if current_user.role == User::ROLE[:Admin]
-			# We don't save SFDC custom fields (i.e., in PG), so we must query Salesforce for these every time.
-			cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
-			@cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
-			@cs_stream_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+      @user_roles = User::ROLE.map { |r| [r[1],r[1]] }
 
-			if (params[:sf_custom_fields_only] == "true")
-				@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id, true)
+      if params[:type] == "standard"
+        cs_entity_fields = current_user.organization.entity_fields_metadatum.order(:name)
+        @cs_account_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
+        @cs_stream_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
+        @cs_contact_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Contact])
+      elsif params[:type] == "custom"
+        cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
+        @cs_account_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum::ENTITY_TYPE[:Account])
+        @cs_opportunity_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+      end
+
+      # We don't save SFDC custom fields (i.e., in our backend), so we query SFDC every time! :(
+			if (params[:sfdc_custom_fields_only] == "true")
+        @sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id, custom_fields_only: true)
 			else
-				@sf_fields = SalesforceController.get_salesforce_fields(current_user.organization_id)
+        @sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id)
 			end
 
-			if @sf_fields.nil?  # SFDC connection error
+			if @sfdc_fields.empty?  # SFDC connection error
 				@salesforce_connection_error = true
 			else
+				EntityFieldsMetadatum.create_default_for(current_user.organization) if current_user.organization.entity_fields_metadatum.first.blank?  # SFDC connection exists, so check if mapping exists; if not, create a default mapping to SFDC fields
+
 				# add ("nil") options to remove mapping 
-				@sf_fields[:sf_account_fields] << ["","(none)"] 
-				@sf_fields[:sf_opportunity_fields] << ["","(none)"] 
-				#puts "************** @sf_fields ************** #{@sf_fields} ******************************"
+				@sfdc_fields[:sfdc_account_fields] << ["","(Unmapped)"] 
+				@sfdc_fields[:sfdc_opportunity_fields] << ["","(Unmapped)"] 
+				@sfdc_fields[:sfdc_contact_fields] << ["","(Unmapped)"] 
+				#puts "******** @sfdc_fields *** #{@sfdc_fields} *******"
 			end
 		end
 	end
@@ -163,7 +177,7 @@ class SettingsController < ApplicationController
 	def basecamp
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 		# Filter only the users Accounts
-		@streams = Project.visible_to_admin(current_user.organization_id).is_active
+		@opportunities = Project.visible_to_admin(current_user.organization_id).is_active
 		# @accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
 		callback_pin = params[:code]
 		# Check if Oauth_user has been created

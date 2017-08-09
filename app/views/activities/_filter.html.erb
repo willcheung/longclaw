@@ -12,7 +12,7 @@
         </div>
         <div class="m-l-md"> 
           <select class="comment_category" data-placeholder="  Filter by activity type" multiple="true">
-            <% Activity::CATEGORY.each do |k,v| %>
+            <% @categories.each do |v| %>
               <option value="<%= v %>" <% if @filter_category.include?(v) %> selected <% end %> ><%= v %></option>
             <% end %> 
           </select>
@@ -30,8 +30,8 @@
                 <% if u.first_name.include?('@')%>
                     <%= u.first_name %>
                 <% else %>
-                    <%= get_full_name(u)+' @'+  get_short_name(get_domain(u.email)) %>
-                <% end %>         
+                    <%= get_full_name(u) + ' @' + get_short_name(get_domain(u.email)) %>
+                <% end %>
               </option>
             <% end %>
           </select>
@@ -85,7 +85,8 @@ $(function () {
       useUTC : false
     },
     lang: {
-        resetZoom: "Clear date filter"
+      resetZoom: "Reset",
+      resetZoomTitle: "Clear date filter"
     }
   });
 
@@ -119,6 +120,15 @@ $(function () {
         }
       },
       zoomType: 'x',
+      resetZoomButton: {
+        theme: {
+          fill: 'transparent'
+        },
+        position: {
+          y: 1
+        },
+        relativeTo: 'chart'
+      },
       backgroundColor: '#f3f3f4'
     },
     credits: {
@@ -165,6 +175,25 @@ $(function () {
         data: [ <% activities_by_date.each_with_index do |a, i| %>
           <%='['+(a.last_sent_date.to_i * 1000).to_s + ','+ a.activity_count.to_s+']' %> <%= ',' unless i + 1 == activities_by_date.length %>
           <% end %> 
+        ]
+      },
+      <% end %>
+      <% if @pinned_activities.present? %>
+      {
+        type: 'flags',
+        name: 'Key Activities',
+        color: '#333333',
+        fillColor: 'rgba(255,255,255,0.8)',
+        shape: 'squarepin',
+        data: [
+          <% @pinned_activities.each.with_index(1) do |p, i| %>
+          {
+            x: <%= p.last_sent_date.to_i * 1000 %>,
+            title: '<%= i %>',
+            text: '<%= p.category %><br><%= p.title %>'
+          },
+          <% end %>
+//        id: p.id, so that this can be a link and let people jump to this pinned activity?
         ]
       },
       <% end %>

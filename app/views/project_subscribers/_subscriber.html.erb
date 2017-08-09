@@ -9,7 +9,7 @@
         <span><small><%= s.title %> <%= get_short_name_account_path(s) %></small></span>
     </div>
     <div class="col-sm-3 m-t-xs delete-member">
-        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id, type: type), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the stream?"}, remote: true %>
+        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, project_subscribers_destroy_other_path(id: ps.id, type: type), method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this subscriber from the opportunity?"}, remote: true %>
     </div>
 </div>
 <% else %>

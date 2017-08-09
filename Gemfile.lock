@@ -68,6 +68,8 @@ GEM
       activerecord (>= 3.2, <= 4.3)
       rake (~> 10.4)
     arel (6.0.3)
+    attr_encrypted (3.0.3)
+      encryptor (~> 3.0.0)
     autoprefixer-rails (6.2.3)
       execjs
       json
@@ -100,6 +102,7 @@ GEM
       responders
       thread_safe (~> 0.1)
       warden (~> 1.2.3)
+    encryptor (3.0.0)
     errbase (0.0.3)
     erubis (2.7.0)
     eventmachine (1.2.1)
@@ -269,6 +272,7 @@ DEPENDENCIES
   ahoy_email
   ahoy_matey
   annotate (~> 2.6.8)
+  attr_encrypted (~> 3.0.0)
   best_in_place (~> 3.1.0)
   bootstrap-sass (~> 3.3.6)
   coffee-rails (~> 4.0.1)

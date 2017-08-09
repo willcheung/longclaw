@@ -1,5 +1,5 @@
 class CustomListsMetadataController < ApplicationController
-	before_action :find_custom_lists_metadata, only: [:update, :destroy]
+	before_action :set_custom_lists_metadata, only: [:update, :destroy]
 
 	def create
 		current_user.organization.custom_lists_metadatum.create(name:"New list")
@@ -31,7 +31,7 @@ class CustomListsMetadataController < ApplicationController
 
 	private
 
-	def find_custom_lists_metadata
+	def set_custom_lists_metadata
 		@custom_lists_metadata = current_user.organization.custom_lists_metadatum.find(params[:id])
 	end
 

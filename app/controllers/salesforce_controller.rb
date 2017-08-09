@@ -1,8 +1,8 @@
 class SalesforceController < ApplicationController
   layout "empty", only: [:index]
 
-  # For accessing Streams#show page+tabs from a Salesforce Visualforce iframe page
-  # e.g., the route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_stream_id> ("&actiontype=" is optional)
+  # For accessing Project#show page+tabs from a Salesforce Visualforce iframe page
+  # The route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_opportunity_id> ("&actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
   def index
     @category_param = []
     @filter_email = []
@@ -16,10 +16,10 @@ class SalesforceController < ApplicationController
       @id_param_present = true
       # Set this salesforce id to contextsmith account id and then try to find a SF account mapping
       @salesforce_id = params[:id]  
-      sf_account = SalesforceAccount.eager_load(:account).find_by(salesforce_account_id: @salesforce_id, contextsmith_organization_id: current_user.organization_id)
-      return if sf_account.nil?  # invalid SFDC id or id cannot be found
+      sfdc_account = SalesforceAccount.eager_load(:account).find_by(salesforce_account_id: @salesforce_id, contextsmith_organization_id: current_user.organization_id)
+      return if sfdc_account.nil?  # invalid SFDC id or id cannot be found
 
-      cs_account = sf_account.account
+      cs_account = sfdc_account.account
       return if cs_account.nil?  # no CS accounts mapped to this Salesforce account
     end
 
@@ -28,23 +28,22 @@ class SalesforceController < ApplicationController
     @actiontype = (params[:actiontype].present? && (["index", "show", "filter_timeline", "more_timeline", "pinned_tab", "tasks_tab", "insights_tab", "arg_tab"].include? params[:actiontype])) ? params[:actiontype] : 'show'
 
     # check if CS account_id is valid and in the scope
-    @streams_mapped = Project.visible_to(current_user.organization_id, current_user.id).where(account_id: cs_account.id)
-    #@streams_mapped.each { |p| puts "**************** project=#{ p.name }"}
+    @opportunities_mapped = Project.visible_to(current_user.organization_id, current_user.id).where(account_id: cs_account.id)
+    #@opportunities_mapped.each { |p| puts "**************** project=#{ p.name }"}
     #puts ">>>>>>>>>>>>>>>>>>>>>>>>>>> cs_account.id=#{cs_account.id}"
 
     activities = []
-    if @streams_mapped.present?
+    if @opportunities_mapped.present?
       if params[:pid].present?
-        @project = @streams_mapped.detect {|p| p.id == params[:pid]} || nil
+        @project = @opportunities_mapped.detect {|p| p.id == params[:pid]} || nil
       else
-        @project = @streams_mapped[0]
+        @project = @opportunities_mapped[0]
       end
 
       return if @project.blank?
       #puts ">>>>>>>>>>>> @project = #{@project.id}, #{@project.name}" 
 
       # Top status
-      @project_risk_score = @project.new_risk_score(current_user.time_zone)
       @project_open_tasks_count = @project.notifications.open.count
 
       # Tab specific (directly copied from "projects_controller.rb")
@@ -62,55 +61,6 @@ class SalesforceController < ApplicationController
       elsif @actiontype == "tasks_tab"
         # show every risk regardless of private conversation
         @notifications = @project.notifications
-      elsif @actiontype == "insights_tab"
-        @risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
-
-        # Engagement Volume Chart
-        @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
-        @activities_by_category_date = @project.daily_activities_last_x_days(current_user.time_zone).group_by { |a| a.category }
-        activity_engagement = @activities_by_category_date["Conversation"].map {|c| c.num_activities }.to_a
-
-        # TODO: Generate data for Risk Volume Chart in SQL query
-        # Risk Volume Chart
-        risk_notifications = @project.notifications.risks.where(created_at: 14.days.ago.midnight..Time.current.midnight)
-        risks_by_date = Array.new(14, 0)
-        risk_notifications.each do |r|
-          # risks_by_date based on number of days since 14 days ago
-          day_index = r.created_at.to_date.mjd - 14.days.ago.midnight.to_date.mjd
-          risks_by_date[day_index] += 1
-        end
-
-        @risk_activity_engagement = []
-        risks_by_date.zip(activity_engagement).each do | a, b|
-          if b == 0
-            @risk_activity_engagement.push(0)
-          else
-            @risk_activity_engagement.push(a/b.to_f * 100)
-          end
-        end
-
-        #Shows the total email usage report
-        @in_outbound_report = User.total_team_usage_report([@project.account.id], current_user.organization.users.pluck(:email))
-        @meeting_report = User.meeting_team_report([@project.account.id], current_user.organization.users.pluck(:email))
-        
-        # TODO: Modify query and method params for count_activities_by_user_flex to take project_ids instead of account_ids
-        # Most Active Contributors & Activities By Team
-        user_num_activities = User.count_activities_by_user_flex([@project.account.id], current_user.organization.domain)
-        @team_leaderboard = []
-        @activities_by_dept = Hash.new(0)
-        activities_by_dept_total = 0
-        user_num_activities.each do |u|
-          user = User.find_by_email(u.email)
-          u.email = get_full_name(user) if user
-          @team_leaderboard << u
-          dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
-          @activities_by_dept[dept] += u.inbound_count + u.outbound_count
-          activities_by_dept_total += u.inbound_count + u.outbound_count
-        end
-        # Convert Activities By Team to %
-        @activities_by_dept.each { |dept, count| @activities_by_dept[dept] = (count.to_f/activities_by_dept_total*100).round(1)  }
-        # Only show top 5 for Most Active Contributors
-        @team_leaderboard = @team_leaderboard[0...5]
       elsif @actiontype == "arg_tab" # Account Relationship Graph
         @data = @project.activities.where(category: %w(Conversation Meeting))
       end
@@ -133,7 +83,7 @@ class SalesforceController < ApplicationController
       salesforce_account.account = Account.find_by_id(params[:account_id])
       salesforce_account.save
 
-      # For Power Users and trial/Chrome Users: Automatically import SFDC contacts, then add all SFDC contacts as pending members ('Suggested People') in all streams in the linked CS account 
+      # For Power Users and trial/Chrome Users: Automatically import SFDC contacts, then add all SFDC contacts as pending members ('Suggested People') in all opportunities in the linked CS account 
       if current_user.power_or_trial_only?
         puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked Account '#{salesforce_account.account.name}' to SFDC Account '#{salesforce_account.salesforce_account_name}'!"
         SalesforceController.import_sfdc_contacts_and_add_as_members(client: SalesforceService.connect_salesforce(current_user.organization_id), account: salesforce_account.account, sfdc_account: salesforce_account) 
@@ -145,9 +95,9 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Links a CS stream to a Salesforce opportunity.
+  # Links a CS Opportunity to a Salesforce Opportunity.
   def link_salesforce_opportunity
-    # One CS Stream can link to many Salesforce Opportunities
+    # One CS Opportunity can link to many Salesforce Opportunities
     salesforce_opp = SalesforceOpportunity.find_by(id: params[:salesforce_id])
     if !salesforce_opp.nil?
       salesforce_opp.project = Project.find_by_id(params[:project_id])
@@ -198,7 +148,7 @@ class SalesforceController < ApplicationController
       end
     # end when params[:entity_type] = "contacts"
     when "activities"
-      # Load SFDC Activities into CS Streams, depending on the explicit (primary) mapping of a SFDC opportunity to a CS stream, or the implicit (secondary) stream mapping of a SFDC account mapped to a CS account.
+      # Load SFDC Activities into CS Opportunities, depending on the explicit (primary) mapping of a SFDC opportunity to a CS Opportunity, or the implicit (secondary) opportunity mapping of a SFDC account mapped to a CS account.
       # Note: Ignores exported CS data residing on SFDC
       method_name = "import_salesforce#activities()"
       filter_predicate_str = {}
@@ -206,32 +156,32 @@ class SalesforceController < ApplicationController
       filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
 
       #puts "******************** #{ method_name } ... filter_predicate_str= #{ filter_predicate_str }", 
-      @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active projects because "admin" role can see everything
+      @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
       @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
       unless @client.nil?  # unless connection error
-        @streams.each do |s|
-          if s.salesforce_opportunity.nil? # Stream not linked to SFDC Opportunity
-            if !s.account.salesforce_accounts.empty? # Stream linked to SFDC Account
+        @opportunities.each do |s|
+          if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
+            if !s.account.salesforce_accounts.empty? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 load_result = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
                 #puts "$$$(import_salesforce)$$$ load_result: #{load_result}"
 
                 if load_result[:status] == "ERROR"
                   failure_method_location = "Activity.load_salesforce_activities()"
-                  error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                  error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
                   render_internal_server_error(method_name, failure_method_location, error_detail)
                   return
                 end
               end
             end
-          else # Stream linked to Opportunity
-            # If Stream is linked in Opportunity, then save on Opportunity level
+          else # CS Opportunity linked to SFDC Opportunity
+            # Save at the Opportunity level
             load_result = Activity.load_salesforce_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
 
             if load_result[:status] == "ERROR"
               failure_method_location = "Activity.load_salesforce_activities()"
-              error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+              error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
               render_internal_server_error(method_name, failure_method_location, error_detail)
               return
             end
@@ -253,37 +203,37 @@ class SalesforceController < ApplicationController
   def export_salesforce
     case params[:entity_type]
     when "activities"
-      # All CS Activities are exported into the remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS stream to a SFDC opportunity, or the implicit/explicit (secondary) stream mapping of a CS stream (through the CS account) mapped to a SFDC account.
+      # All CS Activities are exported into the remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS opportunity to a SFDC opportunity, or the implicit/explicit (secondary) opportunity mapping of a CS opportunity (through the CS account) mapped to a SFDC account.
       # Note: Ignores imported SFDC activity residing locally
       method_name = "export_salesforce#activities()"
-      @streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
+      @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
 
       @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
       Activity.delete_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
 
       unless @client.nil?  # unless connection error
-        @streams.each do |s|
-          if s.salesforce_opportunity.nil? # Stream not linked to SFDC Opportunity
-            if !s.account.salesforce_accounts.empty? # Stream linked to SFDC Account
+        @opportunities.each do |s|
+          if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
+            if !s.account.salesforce_accounts.empty? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 export_result = Activity.export_cs_activities(@client, s, sfa.salesforce_account_id, "Account")
 
                 if export_result[:status] == "ERROR"
                   method_location = "Activity.export_cs_activities()"
-                  error_detail = "Error while attempting to export CS activity from CS Stream \"#{s.name}\" (stream_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{ export_result[:detail] }"
+                  error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{ export_result[:detail] }"
                   render_internal_server_error(method_name, method_location, error_detail)
                   return
                 end
               end
             end
-          else # Stream linked to Opportunity
-            # If Stream is linked in Opportunity, then save on Opportunity level
+          else # CS Opportunity linked to SFDC Opportunity
+            # Save at the Opportunity level
             export_result = Activity.export_cs_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
             if export_result[:status] == "ERROR"
               method_location = "Activity.export_cs_activities()"
-              error_detail = "Error while attempting to export CS activity from CS Stream \"#{s.name}\" (stream_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{ export_result[:detail] }"
+              error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{ export_result[:detail] }"
               render_internal_server_error(method_name, method_location, error_detail)
               return
             end
@@ -332,32 +282,49 @@ class SalesforceController < ApplicationController
     render :text => ' '
   end
 
-  # Native CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS stream, or a field of a SFDC account to a field of a CS account. 
-  # Parameters: entity_type: = "accounts" or "projects".
-  # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS stream, an update will be carried out for each mapping.
+  # Native CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. 
+  # Parameters:   params[:entity_type] - "accounts" or "projects" or "contacts".
+  #               params[:field_type] - "standard" or "custom"
+  # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS Opportunity, an update will be carried out for each mapping.
   def refresh_fields
     method_name = "refresh_fields()"
     if params[:entity_type] == "accounts"
-      account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
+      if params[:field_type] == "standard"
+        account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
+        #puts "account_standard_fields: #{account_standard_fields}"
+      else
+        account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
+      end
 
-      unless account_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
+      unless (params[:field_type] == "standard" && account_standard_fields.empty?) || (params[:field_type] == "custom" && account_custom_fields.empty?) # Nothing to do if no mappings are found
         @client = SalesforceService.connect_salesforce(current_user.organization_id)
         #@client=nil # simulates a Salesforce connection error
 
         unless @client.nil?  # unless connection error
           accounts = Account.where("accounts.organization_id = ? and status = 'Active'", current_user.organization_id)
-          accounts.each do |a|
-            unless a.salesforce_accounts.first.nil? 
-              #print "***** SFDC account:\"", a.salesforce_accounts.first.salesforce_account_name, "\" --> CS account:\"", a.name, "\" *****\n"
-              load_result = Account.load_salesforce_fields(@client, a.id, a.salesforce_accounts.first.salesforce_account_id, account_custom_fields)
 
-              if load_result[:status] == "ERROR"
-                method_location = "Account.load_salesforce_fields()"
-                error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                render_internal_server_error(method_name, method_location, error_detail)
-                return
-              end
+          if params[:field_type] == "standard"
+            update_result = Account.update_fields_from_sfdc(client: @client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
+            if update_result[:status] == "ERROR"
+              method_location = "Account.update_fields_from_sfdc()"
+              error_detail = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+              render_internal_server_error(method_name, method_location, error_detail)
+              return
             end
+          else # params[:field_type] == "custom"
+            accounts.each do |a|
+              unless a.salesforce_accounts.first.nil? 
+                #print "***** SFDC account:\"", a.salesforce_accounts.first.salesforce_account_name, "\" --> CS account:\"", a.name, "\" *****\n"
+                load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
+
+                if load_result[:status] == "ERROR"
+                  method_location = "Account.load_salesforce_fields()"
+                  error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                  render_internal_server_error(method_name, method_location, error_detail)
+                  return
+                end
+              end
+            end # End: accounts.each do |s|
           end
         else
           render_service_unavailable_error(method_name)
@@ -365,34 +332,52 @@ class SalesforceController < ApplicationController
         end
       end
     elsif params[:entity_type] == "projects"
-      stream_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+      if params[:field_type] == "standard"
+        opportunity_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
+        puts "opportunity_standard_fields: #{opportunity_standard_fields}"
+      else
+        opportunity_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+      end
 
-      unless stream_custom_fields.empty? # Nothing to do if no custom fields or mappings are found
+      unless (params[:field_type] == "standard" && opportunity_standard_fields.empty?) || (params[:field_type] == "custom" && opportunity_custom_fields.empty?) # Nothing to do if no mappings are found
         @client = SalesforceService.connect_salesforce(current_user.organization_id)
         #@client=nil # simulates a Salesforce connection error
 
         unless @client.nil?  # unless connection error
-          streams = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity)
-          streams.each do |s|
-            unless s.salesforce_opportunity.nil?
-              #print "***** SFDC stream:\"", s.salesforce_opportunity.name, "\" --> CS opportunity:\"", s.name, "\" *****\n"
-              load_result = Project.load_salesforce_fields(@client, s.id, s.salesforce_opportunity.salesforce_opportunity_id, stream_custom_fields)
+          opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity)
 
-              if load_result[:status] == "ERROR"
-                method_location = "Project.load_salesforce_fields()"
-                error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Stream \"#{s.name}\" (stream_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                render_internal_server_error(method_name, method_location, error_detail)
-                return
-              end
+          if params[:field_type] == "standard"
+            update_result = Project.update_fields_from_sfdc(client: @client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
+            if update_result[:status] == "ERROR"
+              method_location = "Project.update_fields_from_sfdc()"
+              error_detail = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+              render_internal_server_error(method_name, method_location, error_detail)
+              return
             end
+          else # params[:field_type] == "custom"
+            opportunities.each do |s|
+              unless s.salesforce_opportunity.nil?
+                #print "***** SFDC opportunity:\"", s.salesforce_opportunity.name, "\" --> CS opportunity:\"", s.name, "\" *****\n"
+                load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
+
+                if load_result[:status] == "ERROR"
+                  method_location = "Project.load_salesforce_fields()"
+                  error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                  render_internal_server_error(method_name, method_location, error_detail)
+                  return
+                end
+              end
+            end # End: opportunities.each do |s|
           end
         else
           render_service_unavailable_error(method_name)
           return
         end
       end
+    elsif params[:entity_type] == "contacts" && params[:field_type] == "standard"
+      puts "Standard #{params[:entity_type]} fields all the wayyyyy!!!"
     else
-      print "Invalid parameter passed to refresh_fields().  entity_type=", params[:entity_type], "!\n"
+      puts "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
     end
 
     render :text => ' '
@@ -432,7 +417,17 @@ class SalesforceController < ApplicationController
     # delete salesforce oauth_user
     SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).destroy_all   # will unlink all accounts for the Organization if somebody from the Organization d/c's from their SFDC account!
     salesforce_user = OauthUser.find_by(id: params[:id])
-    salesforce_user.destroy if salesforce_user.present?
+    if salesforce_user.present?
+      salesforce_user.destroy
+      # Unmap SFDC fields to standard fields
+      current_user.organization.entity_fields_metadatum.each do |fm|
+        fm.update(salesforce_field: nil)
+      end
+      # Unmap SFDC fields to custom fields
+      current_user.organization.custom_fields_metadatum.each do |fm|
+        fm.update(salesforce_field: nil)
+      end
+    end
 
     respond_to do |format|
       format.html { redirect_to(request.referer || settings_path) }
@@ -440,50 +435,66 @@ class SalesforceController < ApplicationController
   end
 
   # Gets Salesforce (custom) fields in the form of the following hash:
-  #   :sf_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
-  #   :sf_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
-  #   :sf_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sf_account_fields
-  #   :sf_opportunity_fields_metadata -- similar to :sf_account_fields_metadata for sf_opportunity_fields
-  def self.get_salesforce_fields(organization_id, custom_fields_only=false)
+  #   :sfdc_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
+  #   :sfdc_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
+  #   :sfdc_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sfdc_account_fields
+  #   :sfdc_opportunity_fields_metadata -- similar to :sfdc_account_fields_metadata for sfdc_opportunity_fields
+  #   :sfdc_contact_fields -- a list of SFDC contact field names mapped to the field labels (visible to the user) in a similar to :sfdc_account_fields
+  #   :sfdc_contact_fields_metadata -- similar to :sfdc_account_fields_metadata for sfdc_contact_fields
+  # Returns {} if there is no SFDC connection detected for this Organization, or if there was a SFDC connection error.
+  def self.get_salesforce_fields(organization_id: , custom_fields_only: false)
     client = SalesforceService.connect_salesforce(organization_id)
 
-    return nil if client.nil?
+    return {} if client.nil?
 
-    sf_account_fields = {}
-    sf_account_fields_metadata = {}
-    sf_opportunity_fields = {}
-    sf_opportunity_fields_metadata = {}
+    sfdc_account_fields = {}
+    sfdc_account_fields_metadata = {}
+    sfdc_opportunity_fields = {}
+    sfdc_opportunity_fields_metadata = {}
+    sfdc_contact_fields = {}
+    sfdc_contact_fields_metadata = {}
 
-    account_describe = client.describe('Account')
-    account_describe.fields.each do |f|
-      sf_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+    entity_describe = client.describe('Account')
+    entity_describe.fields.each do |f|
+      sfdc_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
       metadata["updateable"] = f.updateable
       metadata["nillable"] = f.nillable
-      sf_account_fields_metadata[f.name] = metadata
+      sfdc_account_fields_metadata[f.name] = metadata
     end
-    account_describe = client.describe('Opportunity')
-    account_describe.fields.each do |f|
-      sf_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+    entity_describe = client.describe('Opportunity')
+    entity_describe.fields.each do |f|
+      sfdc_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
       metadata["updateable"] = f.updateable
       metadata["nillable"] = f.nillable
-      sf_opportunity_fields_metadata[f.name] = metadata
+      sfdc_opportunity_fields_metadata[f.name] = metadata
+    end
+    entity_describe = client.describe('Contact')
+    entity_describe.fields.each do |f|
+      sfdc_contact_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      metadata = {}
+      metadata["type"] = f.type
+      metadata["custom"] = f.custom
+      metadata["updateable"] = f.updateable
+      metadata["nillable"] = f.nillable
+      sfdc_contact_fields_metadata[f.name] = metadata
     end
 
-    sf_account_fields = sf_account_fields.sort_by { |k,v| v.upcase }
-    sf_opportunity_fields = sf_opportunity_fields.sort_by { |k,v| v.upcase }
+    sfdc_account_fields = sfdc_account_fields.sort_by { |k,v| v.upcase }
+    sfdc_opportunity_fields = sfdc_opportunity_fields.sort_by { |k,v| v.upcase }
+    sfdc_contact_fields = sfdc_contact_fields.sort_by { |k,v| v.upcase }
 
-    return {sf_account_fields: sf_account_fields, sf_account_fields_metadata: sf_account_fields_metadata, sf_opportunity_fields: sf_opportunity_fields, sf_opportunity_fields_metadata: sf_opportunity_fields_metadata}
+    return { sfdc_account_fields: sfdc_account_fields, sfdc_account_fields_metadata: sfdc_account_fields_metadata, sfdc_opportunity_fields: sfdc_opportunity_fields, sfdc_opportunity_fields_metadata: sfdc_opportunity_fields_metadata, sfdc_contact_fields: sfdc_contact_fields, sfdc_contact_fields_metadata: sfdc_contact_fields_metadata }
   end
 
-  # Import SFDC contacts from sfdc_account, then add all SFDC contacts as pending members ('Suggested People') in all streams in the linked CS account 
+  # Import SFDC contacts from sfdc_account, then add all SFDC contacts as pending members ('Suggested People') in all opportunities in the linked CS account 
   def self.import_sfdc_contacts_and_add_as_members(client: , account: , sfdc_account: )
-    puts "Automatically importing SFDC contacts from SFDC Account '#{ sfdc_account.salesforce_account_name }' into Account '#{ account.name }' and adding SFDC contacts as pending members of its streams..."
+    puts "Automatically importing SFDC contacts from SFDC Account '#{ sfdc_account.salesforce_account_name }' into Account '#{ account.name }' and adding SFDC contacts as pending members of its opportunities..."
 
     unless client.nil?  # if valid connection 
       load_result = Contact.load_salesforce_contacts(client, sfdc_account.contextsmith_account_id, sfdc_account.salesforce_account_id)
@@ -494,22 +505,23 @@ class SalesforceController < ApplicationController
       end
     end
 
-    # Add all SFDC contacts found in CS account to pending members of all streams in this CS account if not already a member of the stream, even SFDC contacts to whom the current user does not have visibility!
+    # Add all SFDC contacts found in CS account to pending members of all opportunities in this CS account if not already a member of the opportunity, even SFDC contacts to whom the current user does not have visibility!
     sfdc_contacts = account.contacts.select { |c| c.is_source_from_salesforce? }
     account.projects.each do |p|
       project_contact_ids = p.contacts_all.pluck(:contact_id)
 
-      sfdc_contacts.each { |sfc| ProjectMember.create(project: p, contact: sfc, status: ProjectMember::STATUS[:Pending]) unless project_contact_ids.include?(sfc.id)  # if contact is not a project member in this stream, add as a suggested member
+      sfdc_contacts.each { |sfc| ProjectMember.create(project: p, contact: sfc, status: ProjectMember::STATUS[:Pending]) unless project_contact_ids.include?(sfc.id)  # if contact is not a project member in this opportunity, add as a suggested member
       }
     end
   end
 
   private
 
+  ### TODO: get_show_data and load_timeline are copies from ProjectsController, should be combined for better maintenance/to keep in sync with projects#show
   def get_show_data
     # metrics
-    @project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_open_risks_count = @project.notifications.open.risks.count
+    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
+    @project_open_risks_count = @project.notifications.open.alerts.count
     @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
     @project_open_tasks_count = @project.notifications.open.count
     project_rag_score = @project.activities.latest_rag_score.first
@@ -534,7 +546,7 @@ class SalesforceController < ApplicationController
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
     @clearbit_domain = @project.account.domain? ? @project.account.domain : (@project.account.contacts.present? ? @project.account.contacts.first.email.split("@").last : "")
 
-    # for merging projects, for future use
+    # for merging projects/opportunities, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
   end
 

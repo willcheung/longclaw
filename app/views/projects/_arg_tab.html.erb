@@ -278,7 +278,7 @@
 
         // Create hash for all node info
         var nodesByEmail = {};
-        // Add node info for each stream member
+        // Add node info for each opportunity member
         lookup.forEach(function(person) {
             nodesByEmail[person.email] = {
                 email: person.email,
@@ -291,13 +291,13 @@
                 outbound: 0
             };
         });
-        // Add node info for each source and target from email data
+        // Add node info for each source and target from e-mail data
         links.forEach(function(link) {
             link.source = nodeByEmail(link.source, +link.count, 0);
             link.target = nodeByEmail(link.target, 0, +link.count);
         });
         function nodeByEmail(email, outbound, inbound) {
-            // Dynamically create nodes with dummy info when email address in email data not added as project member
+            // Dynamically create nodes with dummy info when e-mail address in e-mail data not added as project member
             if (!nodesByEmail[email]) {
                 nodesByEmail[email] = {
                     email: email,
@@ -603,16 +603,16 @@
                                 <tr>
                                     <% if !pm.contact.nil? %>
                                         <% contact = pm.contact %>
-                                        <td class="contact-info"><%= contact.first_name + ' ' + contact.last_name %></td>
-                                        <td class="contact-info"><%= contact.title %></td>
-                                        <td class="contact-info"><%= contact.buyer_role %></td>
+                                        <td class="editable-field"><%= contact.first_name + ' ' + contact.last_name %></td>
+                                        <td class="editable-field"><%= contact.title %></td>
+                                        <td class="editable-field"><%= contact.buyer_role %></td>
                                         <!-- hardcoded data!!! -->
-                                        <td class="contact-info">Will Cheung</td>
-                                        <td class="contact-info"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
-                                        <td class="contact-info"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td class="editable-field">Will Cheung</td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
                                         <td style="text-align: center;"><%= rand(0..5) %></td>
-                                        <td class="contact-info"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
-                                        <td class="contact-info"><% if pm.contact.first_name == "Nigel" or pm.contact.first_name == "Tony" %><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %><% end %></td>
+                                        <td class="editable-field"><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %></td>
+                                        <td class="editable-field"><% if pm.contact.first_name == "Nigel" or pm.contact.first_name == "Tony" %><%= Time.at(Time.local(2013, 1, 1) + rand * (Time.now.to_f - Time.local(2013, 1, 1).to_f)).to_date.strftime("%b %e") %><% end %></td>
                                     <% end %>
                                 </tr>
                             <% end %>

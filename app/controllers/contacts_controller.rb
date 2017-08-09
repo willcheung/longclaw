@@ -43,7 +43,7 @@ class ContactsController < ApplicationController
   # PATCH/PUT /contacts/1.json
   def update
     respond_to do |format|
-      #if Contact.where(id: @contact.id).update_all(contact_params)  #allows updating Contact if email is null
+      #if Contact.where(id: @contact.id).update_all(contact_params)  #allows updating Contact if e-mail is null
       if @contact.update(contact_params)
         format.html { redirect_to @contact, notice: 'Contact was successfully updated.' }
         format.json { respond_with_bip(@contact) }
@@ -76,6 +76,6 @@ class ContactsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def contact_params
-      params.require(:contact).permit(:account_id, :first_name, :last_name, :email, :phone, :title, :buyer_role)
+      params.require(:contact).permit(:account_id, :first_name, :last_name, :email, :phone, :title, :buyer_role, :department, :background_info)
     end
 end

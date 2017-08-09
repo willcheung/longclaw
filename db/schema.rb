@@ -11,12 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170603004643) do
+ActiveRecord::Schema.define(version: 20170712061917) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "uuid-ossp"
   enable_extension "hstore"
+  enable_extension "uuid-ossp"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                                  default: "",         null: false
@@ -158,7 +158,7 @@ ActiveRecord::Schema.define(version: 20170603004643) do
     t.string   "entity_type",              null: false
     t.string   "name",                     null: false
     t.string   "data_type",                null: false
-    t.string   "update_permission_level",  null: false
+    t.string   "update_permission_role",   null: false
     t.datetime "created_at",               null: false
     t.datetime "updated_at",               null: false
     t.string   "default_value"
@@ -188,6 +188,20 @@ ActiveRecord::Schema.define(version: 20170603004643) do
   end
 
   add_index "custom_lists_metadata", ["organization_id", "name"], name: "index_custom_lists_metadata_on_organization_id_and_name", using: :btree
+
+  create_table "entity_fields_metadata", force: :cascade do |t|
+    t.uuid     "organization_id",        null: false
+    t.string   "entity_type",            null: false
+    t.string   "name",                   null: false
+    t.string   "default_value"
+    t.string   "salesforce_field"
+    t.string   "read_permission_role",   null: false
+    t.string   "update_permission_role", null: false
+    t.datetime "created_at",             null: false
+    t.datetime "updated_at",             null: false
+  end
+
+  add_index "entity_fields_metadata", ["organization_id", "entity_type"], name: "entity_fields_metadata_idx", using: :btree
 
   create_table "integrations", force: :cascade do |t|
     t.uuid     "contextsmith_account_id"
@@ -276,7 +290,7 @@ ActiveRecord::Schema.define(version: 20170603004643) do
   add_index "project_subscribers", ["user_id"], name: "index_project_subscribers_on_email", using: :btree
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",                                         default: "",            null: false
+    t.string   "name",                                         default: "",             null: false
     t.uuid     "account_id"
     t.boolean  "is_public",                                    default: true
     t.string   "status",                                       default: "Active"
@@ -284,18 +298,18 @@ ActiveRecord::Schema.define(version: 20170603004643) do
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
-    t.datetime "created_at",                                                           null: false
-    t.datetime "updated_at",                                                           null: false
+    t.datetime "created_at",                                                            null: false
+    t.datetime "updated_at",                                                            null: false
     t.boolean  "is_confirmed"
-    t.string   "category",                                     default: "Opportunity"
+    t.string   "category",                                     default: "New Business"
     t.datetime "deleted_at"
     t.date     "renewal_date"
     t.date     "contract_start_date"
     t.date     "contract_end_date"
     t.decimal  "contract_arr",        precision: 14, scale: 2
     t.integer  "renewal_count"
-    t.boolean  "has_case_study",                               default: false,         null: false
-    t.boolean  "is_referenceable",                             default: false,         null: false
+    t.boolean  "has_case_study",                               default: false,          null: false
+    t.boolean  "is_referenceable",                             default: false,          null: false
     t.decimal  "amount",              precision: 14, scale: 2
     t.string   "stage"
     t.date     "close_date"
@@ -387,6 +401,7 @@ ActiveRecord::Schema.define(version: 20170603004643) do
     t.boolean  "mark_private",           default: false, null: false
     t.string   "role"
     t.boolean  "refresh_inbox",          default: true,  null: false
+    t.string   "encrypted_password_iv"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree

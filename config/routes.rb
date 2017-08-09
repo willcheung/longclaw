@@ -4,13 +4,12 @@ Longclaw::Application.routes.draw do
     get "extension/account" => "extension#new"
   end
 
-  devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
+  devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
   # You can have the root of your site routed with "root"
 
   authenticate :user do
     # Rails 4 users must specify the 'as' option to give it a unique name
     root :to => "home#index", :as => "authenticated_root"
-    get "home/daily_summary"
 
     resources :accounts
     post "/account_bulk" => 'accounts#bulk'
@@ -19,10 +18,7 @@ Longclaw::Application.routes.draw do
     resources :contacts, only: [:create, :update, :destroy]
     resources :projects do
       member do
-        get "render_pinned_tab"
-        get "pinned" => 'projects#pinned_tab'
         get "tasks" => 'projects#tasks_tab'
-        get "insights" => 'projects#insights_tab'
         get "arg" => 'projects#arg_tab'
         get "filter" => 'projects#filter_timeline'
         get "more" => 'projects#more_timeline'
@@ -35,9 +31,21 @@ Longclaw::Application.routes.draw do
     end
     post "/project_bulk" => 'projects#bulk'
     delete "project_subscribers/destroy_other"
+
     resources :project_members
     resources :users
-    resources :notifications, only: [:index, :update, :create]
+
+    resources :notifications, only: [:index, :update, :create] do
+      member do
+        get "update_is_complete" => 'notifications#update_is_complete'
+        get "download" => 'notifications#download_attachment'
+      end
+      collection do
+        post "create_from_suggestion"
+      end
+    end
+    get "notifications/show_email_body/:id" => 'notifications#show_email_body'
+
     resources :salesforce, only: [:index]
     get "salesforce/disconnect/:id" => 'salesforce#disconnect', as: "salesforce_disconnect"
     post "/link_salesforce_account" => 'salesforce#link_salesforce_account'
@@ -64,24 +72,21 @@ Longclaw::Application.routes.draw do
       get "custom_fields"
       get "custom_lists"
       get "custom_list/:id" => 'settings#custom_list_show'
-      get "salesforce_accounts" 
-      get "salesforce_opportunities" 
-      get "salesforce_activities" 
+      get "salesforce_accounts"
+      get "salesforce_opportunities"
+      get "salesforce_activities"
       get "basecamp"
       get "basecamp2_projects"
       get "basecamp2_activity"
-      get "salesforce_fields" 
+      get "salesforce_fields/:type" => "settings#salesforce_fields", as: "salesforce_fields"
       get "super_user"
       get "user_analytics"
       post "invite_user/:user_id" => 'settings#invite_user'
     end
 
-    get "notifications/:id/update_is_complete" => 'notifications#update_is_complete'
-    get "notifications/show_email_body/:id" => 'notifications#show_email_body'
-    post "notifications/create_from_suggestion"
 
     get "/delete_single_activity/:id" => 'activities#destroy'
-    
+
     resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy], shallow: true
     end
@@ -89,7 +94,7 @@ Longclaw::Application.routes.draw do
     resources :organizations
 
     scope "search", controller: :search, as: 'search' do
-      get "results"
+      # get "results"
       get "autocomplete_project_name"
       get "autocomplete_project_subs"
       get "autocomplete_project_member"
@@ -120,13 +125,14 @@ Longclaw::Application.routes.draw do
       get 'account'
       get 'alerts_tasks'
       get 'contacts'
-      get 'metrics'
+      # get 'metrics'
       get 'no_account/:domain', to: 'extension#no_account', as: :no_account
       get 'private_domain'
       get 'project_error'
       post 'create_account'
     end
 
+    resources :entity_fields_metadatum, controller: 'entity_fields_metadata', only: [:create, :update, :destroy] #for /settings/salesforce_fields/standard
     resources :custom_fields, only: [:update]
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
     resources :custom_lists, only: [:create, :update, :destroy]

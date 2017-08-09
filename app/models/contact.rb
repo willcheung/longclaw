@@ -55,6 +55,7 @@ class Contact < ActiveRecord::Base
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
   ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', Coach: 'Coach', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
+  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department", "buyer_role" => "Buyer Role" }  #, "mobile" => "Mobile Phone"
 
   def is_source_from_salesforce?
     return self.source == "Salesforce"
@@ -64,7 +65,7 @@ class Contact < ActiveRecord::Base
     return false
   end
 
-  # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Stream as suggested members.  
+  # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Opportunity as suggested members.  
   def self.load(data, project, save_in_db=true)
     contacts = []
     current_org = project.account.organization
@@ -89,7 +90,7 @@ class Contact < ActiveRecord::Base
 
       ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
       # find account this new member should belong to
-      account = org.accounts.find_by_domain(primary_domain)
+      account = org.accounts.find_by_domain(primary_domain) || org.accounts.find_by_name(primary_domain)
       # create a new account for this domain if one doesn't exist yet
       unless account
         account = Account.create(
