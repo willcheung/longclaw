@@ -120,7 +120,7 @@ function get_category_uuid (catname) {
     if (!match){
       // Attempt to match the max number of chars, so keep truncating the string until matched
       var keys = Object.keys(map);
-      for (var e = 0; e < 200; e++) {
+      for (var e = 0; ; e++) {
         var keyname;
         var found_nonempty_key = false;
         for (k in Object.keys(map)) {
