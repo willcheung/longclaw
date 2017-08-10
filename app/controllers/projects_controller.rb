@@ -3,7 +3,7 @@ class ProjectsController < ApplicationController
   before_action :set_visible_project, only: [:show, :edit, :tasks_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_current_org_users, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
   before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
@@ -229,10 +229,6 @@ class ProjectsController < ApplicationController
   end
 
   private
-
-  def get_users_reverse
-    @users_reverse = get_current_org_users
-  end
 
   def get_show_data
     @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')

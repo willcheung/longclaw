@@ -209,22 +209,6 @@ class Notification < ActiveRecord::Base
     notification.save
   end
 
-  def self.find_project_and_user(array_of_project_ids, wherestatement="")
-
-    query = ""
-    if !wherestatement.empty?
-      query = "SELECT notifications.*, users.first_name, users.last_name FROM notifications
-      LEFT JOIN users ON users.id = notifications.assign_to
-      WHERE notifications.project_id IN ('#{array_of_project_ids.join("','")}') AND #{wherestatement} ORDER BY created_at DESC"
-    else
-      query = "SELECT notifications.*, users.first_name, users.last_name FROM notifications
-      LEFT JOIN users ON users.id = notifications.assign_to
-      WHERE notifications.project_id IN ('#{array_of_project_ids.join("','")}') AND is_complete = FALSE ORDER BY created_at DESC"
-    end
-
-    Notification.find_by_sql(query)
-  end
-
   # Checks whether notification is visible to user based on Activity or Project
   def is_visible_to(user)
     activity.present? ? activity.is_visible_to(user) : project.is_visible_to(user)

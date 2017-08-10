@@ -1,5 +1,6 @@
 class SalesforceController < ApplicationController
-  layout "empty", only: [:index]
+  layout "empty", only: :index
+  before_action :get_current_org_users, only: :index
 
   # For accessing Project#show page+tabs from a Salesforce Visualforce iframe page
   # The route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_opportunity_id> ("&actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
@@ -47,7 +48,6 @@ class SalesforceController < ApplicationController
       @project_open_tasks_count = @project.notifications.open.count
 
       # Tab specific (directly copied from "projects_controller.rb")
-      @users_reverse = get_current_org_users   # get_users_reverse
       get_show_data
       load_timeline if ["show", "filter_timeline", "more_timeline"].include? @actiontype
 
