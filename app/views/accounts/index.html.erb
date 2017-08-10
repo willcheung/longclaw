@@ -98,7 +98,7 @@
                                     <td><%= get_full_name(a.user) %></td>
                                     <td style="width: 40px"><span
                                     <% contacts = a.contacts.first(@CONTACTS_LIST_LIMIT) %>
-                                    <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>Contacts:</strong><br/> #{ (contacts.collect{|c| c.get_full_name}).sort_by{|c| c.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (a.contacts.size - @CONTACTS_LIST_LIMIT).to_s + " more...</span>") if a.contacts.size > @CONTACTS_LIST_LIMIT } \"".html_safe unless a.contacts.size == 0 %>
+                                    <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>Contacts:</strong><br/> #{ (contacts.collect{|c| get_full_name(c)}).sort_by{|c| c.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (a.contacts.size - @CONTACTS_LIST_LIMIT).to_s + " more...</span>") if a.contacts.size > @CONTACTS_LIST_LIMIT } \"".html_safe unless a.contacts.size == 0 %>
                                         ><i class="fa fa-users" style="color:#888"></i> <%= (a.contacts.size) %></span></td>
                                     <td style="text-align:center"><%= a.projects.visible_to(current_user.organization_id, current_user.id).count(:id).size %></td>
                                     <td style="text-align:center"><%= @account_last_activity[a.id].nil? ? "" : ((Time.current - @account_last_activity[a.id])/86400).to_i %></td>

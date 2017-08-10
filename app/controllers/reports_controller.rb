@@ -135,7 +135,7 @@ class ReportsController < ApplicationController
     activities_by_dept_total = 0
     user_num_activities.each do |u|
       user = User.find_by_email(u.email)
-      u.email = user.get_full_name if user
+      u.email = get_full_name(user) if user
       @team_leaderboard << u
       dept = user.nil? || user.department.nil? ? '(unknown)' : user.department
       @activities_by_dept[dept] += u.inbound_count + u.outbound_count
@@ -189,7 +189,7 @@ class ReportsController < ApplicationController
 
       @data = user_activities.map do |uid, activities|
         user = users.find { |usr| usr.id == uid }
-        Hashie::Mash.new({ id: user.id, name: user.get_full_name, y: activities, total: activities.sum(&:num_activities) })
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
       end
       #@data = @data.select {|a| a.total > 0}
 
@@ -221,29 +221,29 @@ class ReportsController < ApplicationController
         attachment_t = attachment_t.nil? ? { Attachments: 0 } : { Attachments: attachment_t.attachment_count * User::ATTACHMENT_TIME_SEC }
         time_hash = email_t.merge(meeting_t).merge(attachment_t)
         # time_hash = [email_t, meeting_t, attachment_t].reduce(&:merge)
-        Hashie::Mash.new({ id: user.id, name: user.get_full_name, y: time_hash, total: time_hash.values.sum })
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
       end
       @categories = ["Meetings", "Attachments", "Read E-mails", "Sent E-mails"]
     when TEAM_DASHBOARD_METRIC[:opportunities]
       accounts_managed = users.includes(:projects_owner_of).group('users.id').order('count_projects_all DESC').count('projects.*')
       @data = accounts_managed.map do |uid, num_accounts|
         user = users.find { |usr| usr.id == uid }
-        Hashie::Mash.new({ id: user.id, name: user.get_full_name, y: num_accounts })
+        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: num_accounts })
       end
     when TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d]
       new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = new_tasks.map do |u|
-        Hashie::Mash.new({ id: u.id, name: u.get_full_name, y: u.task_count })
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
       end
     when TEAM_DASHBOARD_METRIC[:closed_alerts_and_tasks_last14d]
       closed_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS TRUE AND EXTRACT(EPOCH FROM notifications.complete_date) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
       @data = closed_tasks.map do |u|
-        Hashie::Mash.new({ id: u.id, name: u.get_full_name, y: u.task_count })
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
       end
     when TEAM_DASHBOARD_METRIC[:open_alerts_and_tasks]
       open_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.is_complete IS FALSE").group('users.id').order("task_count DESC")
       @data = open_tasks.map do |u|
-        Hashie::Mash.new({ id: u.id, name: u.get_full_name, y: u.task_count })
+        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
       end
     else # Invalid
       @data = []

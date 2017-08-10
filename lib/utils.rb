@@ -17,7 +17,7 @@ module Utils
     if user.first_name.blank? && user.last_name.blank?
       user.email
     else
-      [user.first_name, user.last_name].join(" ").strip
+      [ActionView::Base.full_sanitizer.sanitize(user.first_name), ActionView::Base.full_sanitizer.sanitize(user.last_name)].join(" ").strip
     end
 	end
 
