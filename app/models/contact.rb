@@ -66,7 +66,9 @@ class Contact < ActiveRecord::Base
   end
 
   def get_full_name
-    return ActionView::Base.full_sanitizer.sanitize(self.first_name) + " " + ActionView::Base.full_sanitizer.sanitize(self.last_name)
+    full_name = (ActionView::Base.full_sanitizer.sanitize(self.first_name) + " " + ActionView::Base.full_sanitizer.sanitize(self.last_name)).strip
+    full_name = self.email if full_name == ""
+    return full_name
   end
 
   # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Opportunity as suggested members.  

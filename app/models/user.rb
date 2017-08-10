@@ -984,4 +984,9 @@ class User < ActiveRecord::Base
     oauth_access_token
   end
 
+  def get_full_name
+    full_name = (ActionView::Base.full_sanitizer.sanitize(self.first_name) + " " + ActionView::Base.full_sanitizer.sanitize(self.last_name)).strip
+    full_name = self.email if full_name == ""
+    return full_name
+  end
 end
