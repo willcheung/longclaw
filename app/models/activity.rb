@@ -42,7 +42,8 @@ class Activity < ActiveRecord::Base
   belongs_to :project
   belongs_to :oauth_user
   has_many :comments, dependent: :destroy
-  has_many :notifications, -> { non_attachments }, dependent: :destroy
+  has_many :notifications_all, class_name: 'Notification', dependent: :destroy
+  has_many :notifications, -> { non_attachments }
   has_many :attachments, -> { attachments }, class_name: 'Notification'
 
   scope :pinned, -> { where is_pinned: true }
@@ -499,6 +500,8 @@ class Activity < ActiveRecord::Base
       e.end_epoch += sec if self.category == CATEGORY[:Meeting]
     end
     self.email_messages = em
+
+    self.
     self.save
   end
 

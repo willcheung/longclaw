@@ -31,7 +31,7 @@ $(document).ready(function($) {
 
 
   //DataTables
-  $('#projects-table').DataTable( {
+  $('#projects-table').DataTable({
     responsive: true,
     columnDefs: [
       { searchable: false, targets: [0,5,6,7,8,9,10,11]},
@@ -44,7 +44,7 @@ $(document).ready(function($) {
       search: "_INPUT_",
       searchPlaceholder: "Start typing to filter list..."
     }
-  } );
+  });
 
   $('input[type=search]').attr('size', '50');
 
