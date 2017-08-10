@@ -4,10 +4,12 @@ var chart_center = $('#chart-center').highcharts();
 var chart_right = $('#chart-right').highcharts();
 
 <% unless @data_left.blank? %>
-  // Add the data via series
   // chart_left.legend.update({enabled: false});
-  chart_left.xAxis[0].setCategories(<%= @data_left.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
 
+  // proj category: [name, deal_size, close_date, project_id]
+  chart_left.xAxis[0].setCategories(<%= @data_left.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e')), d.id] }.to_json.html_safe %>, false);
+
+  // Add the data via series
   <% @categories.each do |c| %>
   chart_left.addSeries({
     name: "<%= c.nil? ? 'NoActivity' : c %>",
@@ -30,7 +32,7 @@ var chart_right = $('#chart-right').highcharts();
 <% unless @data_center.blank? %>
   // Add the data via series
   // chart_left.legend.update({enabled: false});
-  chart_center.xAxis[0].setCategories(<%= @data_center.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+  chart_center.xAxis[0].setCategories(<%= @data_center.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e')), d.id] }.to_json.html_safe %>, false);
 
   <% @categories.each do |c| %>
   chart_center.addSeries({
@@ -54,7 +56,7 @@ var chart_right = $('#chart-right').highcharts();
 <% unless @data_right.blank? %>
   // Add the data via series
   // chart_left.legend.update({enabled: false});
-  chart_right.xAxis[0].setCategories(<%= @data_right.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+  chart_right.xAxis[0].setCategories(<%= @data_right.first(5).map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e')), d.id] }.to_json.html_safe %>, false);
 
   // chart.legend.update({enabled: false});
 
@@ -91,3 +93,8 @@ var chart_right = $('#chart-right').highcharts();
 chart_left.redraw();
 chart_center.redraw();
 chart_right.redraw();
+
+// Ensure opportunity name is bold, any additional info isn't
+$('.highcharts-xaxis-labels text tspan').css("font-weight", "bold");
+$('.highcharts-xaxis-labels text tspan:last-of-type').css("font-weight", "normal");
+$('.highcharts-xaxis-labels text tspan:first-child').css("font-weight", "bold");

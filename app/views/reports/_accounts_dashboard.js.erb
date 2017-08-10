@@ -14,8 +14,8 @@ while(chart.series.length > 0) {
 }
 
 <% if @data.present? %>
-  // proj category: [name, deal_size, close_date]
-  chart.xAxis[0].setCategories(<%= @data.map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+  // proj category: [name, deal_size, close_date, project_id]
+  chart.xAxis[0].setCategories(<%= @data.map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e')), d.id] }.to_json.html_safe %>, false);
 
   <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
     <% @categories.each do |c| %>
@@ -109,4 +109,3 @@ function get_category_uuid (catname) {
     }
   <% end %>
 }
-
