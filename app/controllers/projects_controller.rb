@@ -21,20 +21,15 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters
-    if params[:owner] != "0"
+    if params[:owner].present? && params[:owner] != "0"
       if params[:owner] == "none"
         projects = projects.where(owner_id: nil)
-      elsif params[:owner].nil?
-        projects = Project.visible_to(current_user.organization_id, current_user.id)
       else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
           projects = projects.where(owner_id: params[:owner])
       end
     end
-    if params[:type] != "none" && !params[:type].nil?
+    if params[:type].present? && params[:type] != "none"
       projects = projects.where(category: params[:type])
-    end
-    if params[:type].nil? && params[:owner].nil?
-      projects = Project.visible_to(current_user.organization_id, current_user.id)
     end
     
     # all projects and their accounts, sorted by account name alphabetically
@@ -373,22 +368,20 @@ class ProjectsController < ApplicationController
 
   def project_filter_state
     if params[:owner] 
-      cookies[:owner] = {value: params[:owner]}
+      cookies[:project_owner] = {value: params[:owner]}
     else
-      if cookies[:owner]
-        params[:owner] = cookies[:owner]
+      if cookies[:project_owner]
+        params[:owner] = cookies[:project_owner]
       end
     end
     if params[:type] 
-      cookies[:type] = {value: params[:type]}
+      cookies[:project_type] = {value: params[:type]}
     else
-      if cookies[:type]
-        params[:type] = cookies[:type]
+      if cookies[:project_type]
+        params[:type] = cookies[:project_type]
       end
     end
   end
-<<<<<<< HEAD
-=======
 
   # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
   def check_params_for_valid_dates
@@ -410,5 +403,5 @@ class ProjectsController < ApplicationController
     end
     parsed_date
   end
->>>>>>> upstream/develop
+
 end

@@ -8,6 +8,8 @@ class AccountsController < ApplicationController
   def index
     @CONTACTS_LIST_LIMIT = 8 # Max number of Contacts to show in mouse-over tooltip
     @title = 'Accounts'
+    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
+
     if params[:account_type] == "none"
       @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
     elsif params[:account_type]
@@ -16,20 +18,20 @@ class AccountsController < ApplicationController
       @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
     end
 
-    unless params[:owner] == '0'
-      if params[:owner]
-        if params[:owner] != 'none'
+    # Incrementally apply filters
+    if params[:owner].present? && params[:owner] != "0"
+      if params[:owner] == "none"
+        @accounts = @accounts.where(owner_id: nil)
+      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
           @accounts = @accounts.where(owner_id: params[:owner])
-        else
-          @accounts = @accounts.where(owner_id: nil)
-        end
       end
+    end
+    if params[:account_type].present? && params[:account_type] != "none"
+      @accounts = @accounts.where(category: params[:account_type])
     end
 
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)) AND projects.status = 'Active' AND activities.category not in ('Alert','Note')", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
-
-    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
   end
 
   # GET /accounts/1
@@ -149,12 +151,20 @@ class AccountsController < ApplicationController
     end
 
     def manage_filter_state
-    if params[:account_type] 
-      cookies[:account_type] = {value: params[:account_type]}
-    else
-      if cookies[:account_type]
-        params[:account_type] = cookies[:account_type]
+      if params[:owner] 
+        cookies[:account_owner] = {value: params[:owner]}
+      else
+        if cookies[:account_owner]
+          params[:owner] = cookies[:account_owner]
+        end
+      end
+      if params[:account_type] 
+        cookies[:account_type] = {value: params[:account_type]}
+      else
+        if cookies[:account_type]
+          params[:account_type] = cookies[:account_type]
+        end
       end
     end
-  end
+
 end
