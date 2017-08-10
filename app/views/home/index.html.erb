@@ -183,7 +183,7 @@
                     style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
                     formatter: function () {
                         // this.value = [project_name, deal_size, close_date, project_id]
-                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/><a href="/projects/' + this.value[3] + '">' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2] + "</a>";
+                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
                     }
                 }
             },
@@ -258,7 +258,7 @@
                     style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
                     formatter: function () {
                         // this.value = [project_name, deal_size, close_date, project_id]
-                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/><a href="/projects/' + this.value[3] + '">' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2] + "</a>";
+                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
                     }
                 }
             },
