@@ -983,5 +983,4 @@ class User < ActiveRecord::Base
     refresh_token! if token_expired?
     oauth_access_token
   end
-
 end

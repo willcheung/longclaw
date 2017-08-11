@@ -14,8 +14,8 @@ while(chart.series.length > 0) {
 }
 
 <% if @data.present? %>
-  // proj category: [name, deal_size, close_date]
-  chart.xAxis[0].setCategories(<%= @data.map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e'))] }.to_json.html_safe %>, false);
+  // proj category: [name, deal_size, close_date, project_id]
+  chart.xAxis[0].setCategories(<%= @data.map{ |d| [d.name, (d.deal_size.nil? ? "" : "$"+number_to_human(d.deal_size)), (d.close_date.nil? ? "" : d.close_date.strftime('%b%e')), d.id] }.to_json.html_safe %>, false);
 
   <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
     <% @categories.each do |c| %>
@@ -76,15 +76,36 @@ $('.highcharts-xaxis-labels text').css("cursor", "pointer");
 
 function get_category_uuid (catname) {
     //console.log("Finding proj: " + catname);
-  <% if @data.present? %>
+  <% if @data.blank? %>
+    return "";
+  <% else %>
     var map = {
     <% @data.each do |d| %>
       "<%= d.name.html_safe %>": "<%= d.id %>",
     <% end %>
     };
-    return map[catname];
-  <% else %>
-    return "";
+
+    catname = catname.trim();
+    // In case of axis label truncation and wrapping, implement "close-enough" match
+    var match = map[catname];
+    if (!match){
+      // Attempt to match the max number of chars, so keep truncating the string until matched
+      var keys = Object.keys(map);
+      for (var e = 0; ; e++) {
+        var keyname;
+        var found_nonempty_key = false;
+        for (k in Object.keys(map)) {
+          keyname = keys[k];
+          if (keyname.substring(0, keyname.length - e) == catname)
+              return map[keyname];
+          found_nonempty_key = found_nonempty_key || (keyname.length - e > 0);
+        }
+        if (!found_nonempty_key) // if all keys are truncated to 0 length, quit!
+          break;
+      }
+      return ""; // cannot find category
+    } else {
+      return match;
+    }
   <% end %>
 }
-

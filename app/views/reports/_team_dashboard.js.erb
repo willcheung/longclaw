@@ -105,10 +105,36 @@ $('.highcharts-xaxis-labels text tspan').click(function() {
 $('.highcharts-xaxis-labels text').css("cursor", "pointer");
 
 function get_category_uuid (catname) {
-  var map = {
-  <% @data.each do |d| %>
-    "<%= d.name.html_safe %>": "<%= d.id %>",
+  <% if @data.blank? %>
+    return "";
+  <% else %>
+    var map = {
+    <% @data.each do |d| %>
+      "<%= d.name.html_safe %>": "<%= d.id %>",
+    <% end %>
+    };
+
+    catname = catname.trim();
+    // In case of axis label truncation and wrapping, implement "close-enough" match
+    var match = map[catname];
+    if (!match){
+      // Attempt to match the max number of chars, so keep truncating the string until matched
+      var keys = Object.keys(map);
+      for (var e = 0; ; e++) {
+        var keyname;
+        var found_nonempty_key = false;
+        for (k in Object.keys(map)) {
+          keyname = keys[k];
+          if (keyname.substring(0, keyname.length - e) == catname)
+              return map[keyname];
+          found_nonempty_key = found_nonempty_key || (keyname.length - e > 0);
+        }
+        if (!found_nonempty_key) // if all keys are truncated to 0 length, quit!
+          break;
+      }
+      return ""; // cannot find category
+    } else {
+      return match;
+    }
   <% end %>
-  };
-  return map[catname];
 }
