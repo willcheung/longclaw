@@ -393,7 +393,7 @@ class Project < ActiveRecord::Base
              MAX(sent_emails.sent_date) AS last_reply_date
       FROM contacts
       JOIN project_members
-      ON contacts.id = project_members.contact_id
+      ON contacts.id = project_members.contact_id AND project_members.status != #{ProjectMember::STATUS[:Rejected]}
       JOIN projects
       ON projects.id = project_members.project_id
       LEFT JOIN future_meetings
