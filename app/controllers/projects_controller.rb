@@ -79,14 +79,15 @@ class ProjectsController < ApplicationController
   end
 
   def arg_tab # Account Relationship Graph
-    @data = @project.activities.where(category: %w(Conversation Meeting))
+    @data = @project.activities.where(category: %w(Conversation Meeting)).ids
+    @contacts = @project.contact_relationship_metrics
 
     render "show"
   end
 
   def network_map
     respond_to do |format|
-      format.json { render json: @project.network_map}
+      format.json { render json: @project.network_map }
     end
   end
 
@@ -231,23 +232,22 @@ class ProjectsController < ApplicationController
   private
 
   def get_show_data
-    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
-    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
 
     # metrics
-    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_open_risks_count = @project.notifications.open.alerts.count
-    @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
     @project_open_tasks_count = @project.notifications.open.count
 
     # Removing RAG status - old metric
     # project_rag_score = @project.activities.latest_rag_score.first
-
     # if project_rag_score
     #   @project_rag_status = project_rag_score['rag_score']
     # end
 
     # old metrics
+    # @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    # @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    # @project_open_risks_count = @project.notifications.open.alerts.count
     # @project_last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
     # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
     # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
