@@ -385,6 +385,7 @@ class Project < ActiveRecord::Base
              contacts.last_name,
              contacts.title,
              contacts.buyer_role,
+             project_members.status,
              received_emails.from_address AS last_sent_by_address,
              received_emails.from_personal AS last_sent_by_personal,
              received_emails.max_sent_date AS last_sent_date,
@@ -420,7 +421,7 @@ class Project < ActiveRecord::Base
       ) AS received_emails
       ON contacts.email = received_emails.recipient
       WHERE projects.id = '#{self.id}'
-      GROUP BY 1,2,3,4,5,6,7,8
+      GROUP BY 1,2,3,4,5,6,7,8,9
       ORDER BY last_sent_date DESC
     SQL
 

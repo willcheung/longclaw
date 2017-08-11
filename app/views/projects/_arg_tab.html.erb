@@ -20,7 +20,12 @@
           <tbody>
           <% @contacts.each do |contact| %>
             <tr>
-              <td><%= get_full_name(contact) %></td>
+              <td>
+                <%= get_full_name(contact) %>
+                <% if contact.status == ProjectMember::STATUS[:Pending] %>
+                <i class="fa fa-asterisk" data-toggle="tooltip" data-placement="top" data-original-title="Suggested Person" style="font-size:8px;"></i>
+                <% end %>
+              </td>
               <td><%= contact.title %></td>
               <td><%= contact.buyer_role %></td>
               <td><%= contact.last_sent_by_personal.present? ? contact.last_sent_by_personal : contact.last_sent_by_address %></td>

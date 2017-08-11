@@ -94,11 +94,13 @@ class ProjectsController < ApplicationController
   def lookup
     pinned = @project.conversations.pinned
     meetings = @project.meetings
-    members = (@project.users + @project.contacts).map do |m|
+    suggested_members = @project.project_members_all.pending.map { |pm| pm.user_id || pm.contact_id }
+    members = (@project.users_all + @project.contacts_all).map do |m|
       pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
+      suggested = suggested_members.include?(m.id) ? ' *' : ''
       {
-        name: get_full_name(m),
+        name: get_full_name(m) + suggested,
         domain: get_domain(m.email),
         email: m.email,
         title: m.title,
