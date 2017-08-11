@@ -11,15 +11,15 @@ module Utils
 		end
 	end
 
-	def get_full_name(user)
+  def get_full_name(user)
     return "" if user.nil?
 
     if user.first_name.blank? && user.last_name.blank?
       user.email
     else
-      [user.first_name, user.last_name].join(" ").strip
+      [ActionView::Base.full_sanitizer.sanitize(user.first_name), ActionView::Base.full_sanitizer.sanitize(user.last_name)].join(" ").strip
     end
-	end
+  end
 
 	def get_first_name(name)
 		return "" if name.nil? || name.include?("@") || name.empty?

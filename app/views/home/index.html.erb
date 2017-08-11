@@ -180,9 +180,10 @@
                 max: undefined,
                 crosshair: true,
                 labels: {
+                    style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
                     formatter: function () {
-                        // this.value = [project_name, deal_size, close_date]
-                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                        // this.value = [project_name, deal_size, close_date, project_id]
+                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
                     }
                 }
             },
@@ -254,9 +255,10 @@
                 max: undefined,
                 crosshair: true,
                 labels: {
+                    style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
                     formatter: function () {
-                        // this.value = [project_name, deal_size, close_date]
-                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                        // this.value = [project_name, deal_size, close_date, project_id]
+                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
                     }
                 }
             },
@@ -327,9 +329,10 @@
                 max: undefined,
                 crosshair: true,
                 labels: {
+                    style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
                     formatter: function () {
-                        // this.value = [project_name, deal_size, close_date]
-                        return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                        // this.value = [project_name, deal_size, close_date, project_id]
+                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
                     }
                 }
             },
@@ -387,21 +390,10 @@
 
         <%= render partial: "home/top_dashboard.js" %>
 
-        // handle clicking on opportunity label
+        // handle clicking on all parts of the opportunity label
         $('.highcharts-xaxis-labels text').click(function() {
-            var clicked_pid = get_category_uuid($(this).children(0)[0].firstChild.data);
-            if (clicked_pid)
-              window.location.assign("/projects/"+ clicked_pid);
+            $(this).children(0)[0].onclick(); // use the first tspan's onclick() method
         });
 
-        function get_category_uuid (catname) {
-            // console.log("Finding proj: " + catname);
-            var map = {
-                <% @current_user_projects.each do |d| %>
-                  "<%= d.name.html_safe %>": "<%= d.id %>",
-                <% end %>
-            };
-            return map[catname];
-        }
     });
 </script>

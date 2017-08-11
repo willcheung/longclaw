@@ -5,6 +5,7 @@ class NotificationsController < ApplicationController
 
   before_action :set_notification, only: [:update, :update_is_complete, :show_email_body, :download_attachment]
   before_action :set_visible_project_user, only: [:index, :show, :create]
+  before_action :get_current_org_users, only: [:index, :show, :create, :create_from_suggestion]
 
   def download_attachment
     render plain: 'You don\'t have access to this file' and return unless @notification.is_visible_to(current_user)
@@ -21,79 +22,48 @@ class NotificationsController < ApplicationController
   end
 
   def index
+    return if @projects.empty? # no project, no notifications
 
     # only show valid notifications (both project and activities must be visible to user)
     # for now will only show incomplete tasks
-    @notifications = []
+    @notifications = Notification.non_attachments
 
-    @complete = "incomplete"
-
-    filter_statement = Array.new
-    if !params[:type].nil?
-      if params["type"]=="complete"
-        filter_statement.push(" is_complete=true ")
-        @complete = "complete"
-      elsif params["type"]=="incomplete"
-        filter_statement.push(" is_complete=false ")
-        @complete = "incomplete"
-      elsif params["type"]=="all"
-        # must put something in the where clause, so put TRUE
-        filter_statement.push(" TRUE ")
-        @complete = "all"
+    if params[:type].present?
+      @complete = params[:type]
+      if params[:type] == "incomplete"
+        @notifications = @notifications.open
+      elsif params[:type] == "complete"
+        @notifications = @notifications.where(is_complete: true)
       end
     end
 
-    @assignee = ""
-    if !params[:assignee].nil?
-      if params["assignee"]=="me"
-        filter_statement.push(" assign_to='#{current_user.id}' ");
-        @assignee = "me"
-      elsif params["assignee"]=="none"
-        filter_statement.push(" assign_to is NULL ")
-        @assignee = "none"
+    if params[:assignee].present?
+      @assignee = params[:assignee]
+      if params[:assignee] == "me"
+        @notifications = @notifications.where(assign_to_user: current_user)
+      elsif params[:assignee] == "none"
+        @notifications = @notifications.where(assign_to: nil)
       end
     end
 
-    @duedate = ""
-    if !params[:duedate].nil?
-      if params["duedate"]=="oneweek"
-        local_current_time = Time.zone.at(Time.now.utc)
-        start_utc_time = Time.new(local_current_time.year, local_current_time.month, local_current_time.day).utc.strftime("%Y-%m-%d %H:%M:%S")
-        local_end_time = local_current_time + 7.day
-        end_utc_time = Time.new(local_end_time.year, local_end_time.month, local_end_time.day,23,59,59).utc.strftime("%Y-%m-%d %H:%M:%S")
-
-        # filter_statement.push(" original_due_date BETWEEN CURRENT_TIMESTAMP + INTERVAL '1 week' and CURRENT_TIMESTAMP ")
-        filter_statement.push(" (original_due_date BETWEEN '"+start_utc_time.to_s+"' AND '"+end_utc_time.to_s + "') ")
-        @duedate = "oneweek"
+    if params[:duedate].present?
+      @duedate = params[:duedate]
+      if params["duedate"] == "oneweek"
+        @notifications = @notifications.where(original_due_date: Time.current.midnight.utc...7.days.from_now.end_of_day.utc)
       elsif params["duedate"]=="none"
-        filter_statement.push(" original_due_date is NULL ")
-        @duedate = "none"
+        @notifications = @notifications.where(original_due_date: nil)
       elsif params["duedate"]=="overdue"
-        local_current_time = Time.zone.at(Time.now.utc)
-        end_utc_time = Time.new(local_current_time.year, local_current_time.month, local_current_time.day,0,0,0).utc.strftime("%Y-%m-%d %H:%M:%S")
-        filter_statement.push(" (original_due_date < '"+ end_utc_time.to_s + "') ")
-        @duedate = "overdue"
+        @notifications = @notifications.where(original_due_date: Time.at(0).utc...Time.current.utc)
       end
     end
 
-    final_filter = filter_statement.join(" AND ")
-
-    @projects = @projects.order(:name)
-
-    return if @projects.empty? # no project, no notifications
-      
-    @select_project = 0
     # always check if projectid is in visible projects in case someone do evil
-    if !params[:projectid].nil? and !@projects.nil? and @projects.map(&:id).include? params[:projectid]
-      total_notifications = Notification.find_project_and_user([params[:projectid]], final_filter)
+    if params[:projectid].present? && @projects.ids.include?(params[:projectid])
       @select_project = params[:projectid]
+      @notifications = @notifications.where(project_id: params[:projectid])
     else
-      total_notifications = Notification.find_project_and_user(@projects.map(&:id), final_filter)
+      @notifications = @notifications.where(project_id: @projects.ids)
     end
-
-    #show every risk, smart action, opportunity regardless of private conversation
-    @notifications = total_notifications
-
   end
 
   # TODO: move view logic (like simple_format part) into its own partial or template
@@ -152,8 +122,6 @@ class NotificationsController < ApplicationController
       category: Notification::CATEGORY[:Todo],
       has_time: true
     ))
-
-    @users_reverse = get_current_org_users
 
     # send notification e-mail for the assign_to user
     send_email = @notification.assign_to.present? && @notification.assign_to != current_user.id
@@ -229,7 +197,6 @@ class NotificationsController < ApplicationController
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 
     @users = current_user.organization.users.map { |u| [u.first_name+' '+ u.last_name+' '+u.email, u.id] }.to_h
-    @users_reverse = get_current_org_users
   end
 
   def get_email_and_member

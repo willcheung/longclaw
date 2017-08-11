@@ -1,6 +1,7 @@
 class HomeController < ApplicationController
   layout 'empty', only: 'access_denied'
   before_action :check_user_onboarding, only: :index
+  before_action :get_current_org_users, only: :index
 
   def index
     @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
@@ -12,7 +13,7 @@ class HomeController < ApplicationController
 
     # Load data for the 3 dashboards at the top of page
     unless @current_user_projects.blank?
-      project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, current_user.time_zone, 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
+      project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, [current_user.email], 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
       if project_engagement_7d.blank?
         @data_left = [] and @categories = []
       else
@@ -58,7 +59,6 @@ class HomeController < ApplicationController
       @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
       # Need these to show project name and user name instead of pid and uid
       @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
-      @users_reverse = get_current_org_users
     end
 
     # Load project data for "My Opportunities"

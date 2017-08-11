@@ -3,7 +3,7 @@ class ProjectsController < ApplicationController
   before_action :set_visible_project, only: [:show, :edit, :tasks_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_current_org_users, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
   before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
@@ -21,14 +21,14 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters
-    if params[:owner] != "0"
+    if params[:owner].present? && params[:owner] != "0"
       if params[:owner] == "none"
         projects = projects.where(owner_id: nil)
       else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
           projects = projects.where(owner_id: params[:owner])
       end
     end
-    if params[:type] != "none"
+    if params[:type].present? && params[:type] != "none"
       projects = projects.where(category: params[:type])
     end
     
@@ -79,14 +79,15 @@ class ProjectsController < ApplicationController
   end
 
   def arg_tab # Account Relationship Graph
-    @data = @project.activities.where(category: %w(Conversation Meeting))
+    @data = @project.activities.where(category: %w(Conversation Meeting)).ids
+    @contacts = @project.contact_relationship_metrics
 
     render "show"
   end
 
   def network_map
     respond_to do |format|
-      format.json { render json: @project.network_map}
+      format.json { render json: @project.network_map }
     end
   end
 
@@ -230,28 +231,23 @@ class ProjectsController < ApplicationController
 
   private
 
-  def get_users_reverse
-    @users_reverse = get_current_org_users
-  end
-
   def get_show_data
-    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
-    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
 
     # metrics
-    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_open_risks_count = @project.notifications.open.alerts.count
-    @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
     @project_open_tasks_count = @project.notifications.open.count
 
     # Removing RAG status - old metric
     # project_rag_score = @project.activities.latest_rag_score.first
-
     # if project_rag_score
     #   @project_rag_status = project_rag_score['rag_score']
     # end
 
     # old metrics
+    # @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    # @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    # @project_open_risks_count = @project.notifications.open.alerts.count
     # @project_last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
     # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
     # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
@@ -368,21 +364,20 @@ class ProjectsController < ApplicationController
 
   def project_filter_state
     if params[:owner] 
-      cookies[:owner] = {value: params[:owner]}
+      cookies[:project_owner] = {value: params[:owner]}
     else
-      if cookies[:owner]
-        params[:owner] = cookies[:owner]
+      if cookies[:project_owner]
+        params[:owner] = cookies[:project_owner]
       end
     end
     if params[:type] 
-      cookies[:type] = {value: params[:type]}
+      cookies[:project_type] = {value: params[:type]}
     else
-      if cookies[:type]
-        params[:type] = cookies[:type]
+      if cookies[:project_type]
+        params[:type] = cookies[:project_type]
       end
     end
   end
-
   # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
   def check_params_for_valid_dates
     params["project"][:close_date] = parse_valid_date(params["project"][:close_date]) if params["project"][:close_date].present?
@@ -403,4 +398,5 @@ class ProjectsController < ApplicationController
     end
     parsed_date
   end
+
 end
