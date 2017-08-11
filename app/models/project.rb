@@ -356,11 +356,11 @@ class Project < ActiveRecord::Base
   #   next meeting
     query = <<-SQL
       WITH future_meetings AS (
-        SELECT last_sent_date, "to"
+        SELECT last_sent_date, "from", "to"
         FROM activities
         WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Meeting]}' AND last_sent_date > TIMESTAMP '#{Time.current.utc}'
       ), past_meetings AS (
-        SELECT last_sent_date, "to"
+        SELECT last_sent_date, "from", "to"
         FROM activities
         WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Meeting]}' AND last_sent_date < TIMESTAMP '#{Time.current.utc}'
       ), user_emails AS (
@@ -397,9 +397,9 @@ class Project < ActiveRecord::Base
       JOIN projects
       ON projects.id = project_members.project_id
       LEFT JOIN future_meetings
-      ON future_meetings.to @> ('[{"address":"' || contacts.email || '"}]')::jsonb
+      ON (future_meetings.from || future_meetings.to) @> ('[{"address":"' || contacts.email || '"}]')::jsonb
       LEFT JOIN past_meetings
-      ON past_meetings.to @> ('[{"address":"' || contacts.email || '"}]')::jsonb
+      ON (past_meetings.from || past_meetings.to) @> ('[{"address":"' || contacts.email || '"}]')::jsonb
       LEFT JOIN user_emails AS sent_emails
       ON contacts.email = sent_emails.from_address
       LEFT JOIN (
