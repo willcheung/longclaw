@@ -20,7 +20,12 @@
           <tbody>
           <% @contacts.each do |contact| %>
             <tr>
-              <td><%= get_full_name(contact) %></td>
+              <td>
+                <%= link_to get_full_name(contact), project_path(@project, emails: contact.email) %>
+                <% if contact.status == ProjectMember::STATUS[:Pending] %>
+                <i class="fa fa-asterisk" data-toggle="tooltip" data-placement="top" data-original-title="Suggested Person" style="font-size:8px;"></i>
+                <% end %>
+              </td>
               <td><%= contact.title %></td>
               <td><%= contact.buyer_role %></td>
               <td><%= contact.last_sent_by_personal.present? ? contact.last_sent_by_personal : contact.last_sent_by_address %></td>
@@ -110,7 +115,7 @@ $(function () {
         font-size: 30px;
     }
     .legendContainer > text:nth-child(2) {
-        font-size: 20px;
+        font-size: 14px;
     }
     .legendContainer {
         padding: 0;
@@ -162,7 +167,7 @@ $(function () {
     var legendSizePadding = 10;
     var legendDomainPadding = 5;
 
-    var height = 0;
+    var height = 500;
     var width = 0;
 
     // Configure force layout
@@ -314,7 +319,13 @@ $(function () {
             .attr("x", xMargin)
             .attr("y", yMargin)
             .style("fill", "black")
-            .text("Account Relationship Graph")
+            .text("Account Relationship Graph");
+
+        var asteriskLabel = legendContainer.append("text")
+            .attr("x", xMargin)
+            .attr("y", height - 10)
+            .style("fill", "black")
+            .text("* = Suggested Person");
 
         // // Create a legend for big/small nodes
         // legendContainer.append("g")
@@ -538,7 +549,7 @@ $(function () {
 
         // Change opacity to highlight nodes when applying filter
         function searchNode(searchVal, gObject) {
-            console.log('hi');
+//            console.log('hi');
             nodeHighlighted = false;
             var searchNode = d3.selectAll(".node");
             var notSelectedNodes = searchNode.filter(function (d, i){
@@ -616,7 +627,8 @@ $(function () {
 
         function resize() {
             var graphContainer = d3.select('#force-graph').node();
-            width = graphContainer.clientWidth, height = 500;//graphContainer.clientHeight;
+            width = graphContainer.clientWidth
+            // height = graphContainer.clientHeight;
             d3.select("svg").attr("width", width).attr("height", height);
             force.size([width, height]).resume();
 
