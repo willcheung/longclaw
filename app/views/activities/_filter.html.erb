@@ -56,26 +56,34 @@ $(function () {
     $('#time-filter-highcharts').highcharts().reflow(); // reflow chart to fit to parent container
   });
 
+  function filter_timeline_data(params) {
+    console.log(params)
+    // Show spinner while loading
+    $('#vertical-timeline').html('<div class="text-center"><i class="fa fa-spinner fa-3x fa-pulse"></i></div>');
+    // Build URL for and make AJAX call for filtered data
+    var url = "<%= project_path(@project) %>";
+    var paramString = $.isEmptyObject(params) ? "" : "?" + $.param(params);
+    history.replaceState(params, '', url + paramString);
+    $.getScript(url + "/filter" + paramString);
+  }
+
   // Category Filter & Person Filter
   $('.comment_category, .user_filter')
     .chosen({ width: '100%'})
-    .change( function (event, params) {
-      $('#vertical-timeline').html('<div class="text-center"><i class="fa fa-spinner fa-3x fa-pulse"></i></div>');
-      // Build URL for AJAX call for filtered data
-      var url = "<%= project_path(@project) %>/filter?";
-      var params = [];
+    .change( function () {
+      var params = {};
       var timeAxis = $('#time-filter-highcharts').highcharts().xAxis[0];
       if (timeAxis.min > timeAxis.dataMin || timeAxis.max < timeAxis.dataMax) {
-        params.push("time=" +  timeAxis.min/1000 + "," + timeAxis.max/1000);
+        params.time = timeAxis.min/1000 + "," + timeAxis.max/1000;
       } 
       if ($('.comment_category').val()) { 
-        params.push("category=" + $('.comment_category').val()); 
+        params.category = $('.comment_category').val().toString();
       }
       if ($('.user_filter').val()) { 
-        params.push("emails=" + $('.user_filter').val()); 
+        params.emails = $('.user_filter').val().toString();
       }
-      url += params.join('&');
-      $.getScript(url)
+
+      filter_timeline_data(params);
     });
 
   // Time Filter
@@ -98,25 +106,22 @@ $(function () {
           this.yAxis[0].setExtremes(0, extremes.dataMax);
         },
         selection: function(event) {
-          $('#vertical-timeline').html('<div class="text-center"><i class="fa fa-spinner fa-3x fa-pulse"></i></div>');
-          // Build URL for AJAX call for filtered data
-          var url = "<%= project_path(@project) %>/filter?";
-          var params = [];
+          var params = {};
           var timeAxis = this.xAxis[0];
           if (!event.resetSelection) {
             // trigger zoom and redraw to get new min/max of chart (otherwise not available until after selection event ends)
             timeAxis.zoom(event.xAxis[0].min, event.xAxis[0].max);
             this.redraw();
-            params.push("time=" + timeAxis.min/1000 + "," + timeAxis.max/1000);
+            params.time = timeAxis.min/1000 + "," + timeAxis.max/1000;
           }
-          if ($('.comment_category').val()) { 
-            params.push("category=" + $('.comment_category').val()); 
+          if ($('.comment_category').val()) {
+            params.category = $('.comment_category').val().toString();
           }
-          if ($('.user_filter').val()) { 
-            params.push("emails=" + $('.user_filter').val()); 
+          if ($('.user_filter').val()) {
+            params.emails = $('.user_filter').val().toString();
           }
-          url += params.join('&');
-          $.getScript(url)
+
+          filter_timeline_data(params);
         }
       },
       zoomType: 'x',
