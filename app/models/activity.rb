@@ -268,7 +268,7 @@ class Activity < ActiveRecord::Base
         end
       else
         puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned!  Detail: query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"  # Temporary diagnostic console message to determine a SFDC (permission?) issue 
-        result = { status: "ERROR", result: "SFDC query returned successfully, but no valid result was returned from Salesforce! My may not have the proper permissions to access the proper Salesforce tables.  Verify with your Salesforce administrator to see if you have access to Account, Opportunity, and Task tables and relations.", detail: "No valid result was returned from Salesforce!" }
+        result = { status: "ERROR", result: "SFDC query returned successfully, but an invalid result was returned from Salesforce! You may not have the proper Salesforce access permissions.  Verify with your Salesforce administrator that you have access to Account and Opportunity tables, and ActivityHistory/Task relation.", detail: "Invalid result was returned from Salesforce!" }
       end
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
