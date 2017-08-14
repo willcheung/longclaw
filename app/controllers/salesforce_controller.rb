@@ -157,12 +157,21 @@ class SalesforceController < ApplicationController
 
       #puts "******************** #{ method_name } ... filter_predicate_str= #{ filter_predicate_str }", 
       @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
+      no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+
+      # Nothing to do if no opportunities or linked SFDC entities
+      if @opportunities.blank? || no_linked_sfdc
+        @client = nil
+        render :text => ' ' 
+        return 
+      end
+
       @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
       unless @client.nil?  # unless connection error
         @opportunities.each do |s|
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
-            if !s.account.salesforce_accounts.empty? # CS Opportunity linked to SFDC Account
+            if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 load_result = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
                 #puts "$$$(import_salesforce)$$$ load_result: #{load_result}"
@@ -207,6 +216,14 @@ class SalesforceController < ApplicationController
       # Note: Ignores imported SFDC activity residing locally
       method_name = "export_salesforce#activities()"
       @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
+      no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+
+      # Nothing to do if no opportunities or linked SFDC entities
+      if @opportunities.blank? || no_linked_sfdc
+        @client = nil
+        render :text => ' ' 
+        return 
+      end
 
       @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
@@ -215,7 +232,7 @@ class SalesforceController < ApplicationController
       unless @client.nil?  # unless connection error
         @opportunities.each do |s|
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
-            if !s.account.salesforce_accounts.empty? # CS Opportunity linked to SFDC Account
+            if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 export_result = Activity.export_cs_activities(@client, s, sfa.salesforce_account_id, "Account")
 
