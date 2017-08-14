@@ -228,7 +228,10 @@
                 borderWidth: 0,
                 dataLabels: {
                     enabled: true,
-                    format: '${y}M'
+                    format: '${y}M',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    },
                 }
             },
              series: {
@@ -293,7 +296,10 @@
                 borderWidth: 0,
                 dataLabels: {
                     enabled: true,
-                    format: '${y}M'
+                    format: '${y}M',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
                 }
             },
              series: {
@@ -348,7 +354,7 @@
                     value: 31.5,
                     zIndex: 5,
                     label: {
-                        text: 'Average 31.5',
+                        text: 'Average 31:30 hrs',
                         verticalAlign: 'top',
                         textAlign: 'right',
                         y: 120
