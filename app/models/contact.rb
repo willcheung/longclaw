@@ -122,10 +122,10 @@ class Contact < ActiveRecord::Base
     end
   end
 
-  # Takes Contacts (with an e-mail address) in a SFDC account and copies them to a CS account, overwriting all existing Contact fields to each "matched" (same e-mail in the account) Contact.  i.e., if there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one.
+  # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields (only overwriting if there's a value in the SFDC Contact) for each "matched" Contact (same e-mail).  i.e., if there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one.
   # Parameters:  client - connection to Salesforce
-  #              account_id - the CS account to which this copies Contacts
-  #              sfdc_account_id - id of SFDC account from which this copies Contacts 
+  #              account_id - the CS account to which to import Contacts
+  #              sfdc_account_id - id of SFDC account from which to import Contacts 
   #              limit (optional) - the max number of Contacts to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
@@ -173,9 +173,9 @@ class Contact < ActiveRecord::Base
       end
 
       insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "mobile", "source", "external_source_id", "created_at", "updated_at") VALUES'  # Unused: "background_info" 
-      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, title = EXCLUDED.title, department = EXCLUDED.department, phone = EXCLUDED.phone, mobile = EXCLUDED.mobile, external_source_id = EXCLUDED.external_source_id, updated_at = EXCLUDED.updated_at'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
+      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = CASE WHEN LENGTH(EXCLUDED.first_name::text) > 0 THEN EXCLUDED.first_name ELSE contacts.first_name END, last_name = CASE WHEN LENGTH(EXCLUDED.last_name::text) > 0 THEN EXCLUDED.last_name ELSE contacts.last_name END, title = CASE WHEN LENGTH(EXCLUDED.title::text) > 0 THEN EXCLUDED.title ELSE contacts.title END, department = CASE WHEN LENGTH(EXCLUDED.department::text) > 0 THEN EXCLUDED.department ELSE contacts.department END, phone = CASE WHEN LENGTH(EXCLUDED.phone::text) > 0 THEN EXCLUDED.phone ELSE contacts.phone END, mobile = CASE WHEN LENGTH(EXCLUDED.mobile::text) > 0 THEN EXCLUDED.mobile ELSE contacts.mobile END, external_source_id = CASE WHEN LENGTH(EXCLUDED.external_source_id::text) > 0 THEN EXCLUDED.external_source_id ELSE contacts.external_source_id END, updated_at = CASE WHEN LENGTH(EXCLUDED.updated_at::text) > 0 THEN EXCLUDED.updated_at ELSE contacts.updated_at END'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
       values = val.join(', ')
-      #puts "And inserting values....  \"#{values}\""
+      # puts "And inserting values....  \"#{values}\""
 
       if !val.empty?
         Contact.transaction do

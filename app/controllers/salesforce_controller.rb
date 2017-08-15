@@ -292,7 +292,7 @@ class SalesforceController < ApplicationController
           #puts "\n\n==> Export result messages: #{export_result_messages}\n\n"
           if error_occurred
             failure_method_location = "Contact.export_cs_contacts()"
-            render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| (m[:status] == "ERROR" ? "*" : "-") + " #{m[:status]}  '#{m[:account][:name]}'(#{m[:account][:id]}) -> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]}) detail: #{m[:detail]}" }.join("\n\n"))
+            render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| (m[:status] == "ERROR" ? "*" : "-") + " #{m[:status]}:  '#{m[:account][:name]}'(#{m[:account][:id]}) -> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]}) detail: #{m[:detail]}" }.join("\n\n"))
             # render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| {account_name: m[:account][:name], account_id: m[:account][:id], sfdc_account_name: m[:sfdc_account][:name], sfdc_account_id: m[:sfdc_account][:id], status: m[:status], detail: m[:detail] }})
             return
           end
