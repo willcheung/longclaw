@@ -57,7 +57,6 @@ $(function () {
   });
 
   function filter_timeline_data(params) {
-    console.log(params)
     // Show spinner while loading
     $('#vertical-timeline').html('<div class="text-center"><i class="fa fa-spinner fa-3x fa-pulse"></i></div>');
     // Build URL for and make AJAX call for filtered data
@@ -104,6 +103,10 @@ $(function () {
         load: function(event) {
           var extremes = this.yAxis[0].getExtremes();
           this.yAxis[0].setExtremes(0, extremes.dataMax);
+          <% if @filter_time.present? %>
+          this.xAxis[0].zoom(<%= @filter_time[0] %> * 1000, <%= @filter_time[1] %> * 1000);
+          this.redraw();
+          <% end %>
         },
         selection: function(event) {
           var params = {};
