@@ -274,17 +274,26 @@ class SalesforceController < ApplicationController
         client = SalesforceService.connect_salesforce(current_user.organization_id)
         #client = nil #simulate connection error
         unless client.nil?  # unless SFDC connection error
+          export_result_messages = []
+          error_occurred = false
           account_mapping.each do |m|
             a = m[0]
             sfa = m[1]
             export_result = Contact.export_cs_contacts(client, a.id, sfa.salesforce_account_id)
 
             if export_result[:status] == "ERROR"
-              failure_method_location = "Contact.export_cs_contacts()"
-              error_detail = "Error while attempting to export CS contacts from CS Account \"#{a.name}\" (account_id='#{a.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{export_result[:detail]}"
-              render_internal_server_error(method_name, failure_method_location, error_detail)
-              return
+              error_detail = export_result[:detail]
+              export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: error_detail }
+              error_occurred = true
+            else # SUCCESS
+              # export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: [] } 
             end
+          end
+          puts "\n\n==> Export result messages: #{export_result_messages}\n\n"
+          if error_occurred
+            failure_method_location = "Contact.export_cs_contacts()"
+            render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| "\t*'#{m[:account][:name]}'(#{m[:account][:id]}) -> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]}) = #{m[:status]}! detail: #{m[:detail]}" if m[:status] == "ERROR" }.join("\n\n"))
+            return
           end
         else
           render_service_unavailable_error(method_name)
