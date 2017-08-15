@@ -9,6 +9,7 @@
           <tr>
             <th>Name</th>
             <th>Last Reply</th>
+            <th>Last Touch</th>
             <th>Last Sent</th>
             <th>Last Meeting</th>
             <th>Next Meeting</th>
@@ -34,6 +35,18 @@
                   <i class="fa fa-times"></i>
                 <% end %>
               </td>
+              <td>
+                <% if contact.last_sent_date.present? || contact.last_reply_date.present? %>
+                  <!-- Show nothing if no email communication with this contact -->
+                  <% if contact.last_sent_date.blank? || contact.last_reply_date > contact.last_sent_date %>
+                    <!-- Last touch was external to internal -->
+                    <a><i class="fa fa-sign-in"></i></a>
+                  <% else %>
+                    <!-- Last touch was internal to external -->
+                    <a><i class="fa fa-sign-out fa-flip-horizontal"></i></a>
+                  <% end %>
+                <% end %>
+              </td>
               <td title="<%= Time.zone.at(contact.last_sent_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_sent_date.present? %>" data-order="<%= contact.last_sent_date.to_i %>" >
                 <% if contact.last_sent_date.present? %>
                     <%= Time.zone.at(contact.last_sent_date).strftime('%b %e') %> by <%= contact.last_sent_by_personal.present? ? contact.last_sent_by_personal : contact.last_sent_by_address %>
@@ -54,6 +67,7 @@ $(function () {
   //DataTables
   $('#contacts-table').DataTable({
     responsive: true,
+//    scrollX: true,
     "order": [[ 2, "desc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
     "dom":' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
