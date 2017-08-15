@@ -286,13 +286,14 @@ class SalesforceController < ApplicationController
               export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: error_detail }
               error_occurred = true
             else # SUCCESS
-              # export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: [] } 
+              export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: [] } 
             end
           end
-          puts "\n\n==> Export result messages: #{export_result_messages}\n\n"
+          #puts "\n\n==> Export result messages: #{export_result_messages}\n\n"
           if error_occurred
             failure_method_location = "Contact.export_cs_contacts()"
-            render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| "\t*'#{m[:account][:name]}'(#{m[:account][:id]}) -> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]}) = #{m[:status]}! detail: #{m[:detail]}" if m[:status] == "ERROR" }.join("\n\n"))
+            render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| (m[:status] == "ERROR" ? "*" : "-") + " #{m[:status]}  '#{m[:account][:name]}'(#{m[:account][:id]}) -> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]}) detail: #{m[:detail]}" }.join("\n\n"))
+            # render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| {account_name: m[:account][:name], account_id: m[:account][:id], sfdc_account_name: m[:sfdc_account][:name], sfdc_account_id: m[:sfdc_account][:id], status: m[:status], detail: m[:detail] }})
             return
           end
         else
@@ -618,7 +619,7 @@ class SalesforceController < ApplicationController
   end
 
   def render_internal_server_error(method_name, method_location, error_detail)
-    puts "****SFDC****: Salesforce query error in SalesforceController.#{method_name} (#{method_location}): #{error_detail}"
+    puts "****SFDC****: Salesforce query error in SalesforceController.#{method_name} (#{method_location})\nDetail:\n-------\n#{error_detail}"
     render json: { error: error_detail }, status: :internal_server_error # 500
   end
 end

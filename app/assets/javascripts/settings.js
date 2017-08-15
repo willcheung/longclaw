@@ -124,7 +124,7 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                console.log(buttonTxtStr + " error\n\n Details: " + res.error);
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
                 alert("There was a " + buttonTxtStr + " error, but it has been logged and we will get right on it shortly to resolve it!");
             },
             statusCode: {
@@ -173,7 +173,7 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                console.log(buttonTxtStr + " error\n\n Details: " + res.error);
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
                 alert("There was a " + buttonTxtStr + " error, but it has been logged and we will get right on it shortly to resolve it!");
             },
             statusCode: {
@@ -338,7 +338,7 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                console.log(buttonTxtStr + " error\n\n Details: " + res.error);
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
                 alert("There was a " + buttonTxtStr + " error, but it has been logged and we will get right on it shortly to resolve it!");
             },
             statusCode: {
@@ -397,7 +397,7 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                console.log("Refresh ContextSmith " + entity_type_btn_str + " error\n\n Details: " + res.error);
+                console.log("Refresh ContextSmith " + entity_type_btn_str + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
                 alert("There was a Refresh " + entity_type_btn_str + " error, but it has been logged and we will get right on it shortly to resolve it!");
             },
             statusCode: {
