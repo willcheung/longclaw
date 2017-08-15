@@ -220,7 +220,7 @@ class Contact < ActiveRecord::Base
       #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
 
       sObject_meta = { id: sfdc_account_id, type: "Account" }
-      sObject_fields = { FirstName: c.first_name, LastName: c.last_name.empty? ? "(none)" : c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
+      sObject_fields = { FirstName: c.first_name, LastName: c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
       # Unused: LeadSource: c.source, Description: c.background_info
       #puts "----> sObject_meta:\t #{sObject_meta}\n"
       #puts "----> sObject_fields:\t #{sObject_fields}\n"
