@@ -145,7 +145,7 @@ Longclaw::Application.routes.draw do
     root to: redirect('/auth/basecamp')
     get '/auth/:provider/callback' => 'setting#basecamp'
     get "/user/omniauth/auth/:provider", to:  "omniauth_callbacks#user_omniauth_auth_helper", as: "user_omniauth_auth_helper"
-    # get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
+    get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
   end
 
   get '/users/auth/basecamp2' => 'basecamps#basecamp2'
