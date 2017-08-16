@@ -110,6 +110,7 @@ class SalesforceController < ApplicationController
   end
 
   # Import/load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts.
+  #TODO: Issue #829 Need to allow SFDC import of activities and contacts to continue even after encountering an error.
   def import_salesforce
     case params[:entity_type]
     when "accounts"
@@ -231,6 +232,7 @@ class SalesforceController < ApplicationController
 
       unless @client.nil?  # unless connection error
         @opportunities.each do |s|
+          #TODO: Issue #829 Need to allow SFDC export of activities to continue even after encountering an error.
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
             if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
