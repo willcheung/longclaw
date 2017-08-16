@@ -163,7 +163,7 @@ class SalesforceController < ApplicationController
       # Nothing to do if no opportunities or linked SFDC entities
       if @opportunities.blank? || no_linked_sfdc
         @client = nil
-        render :text => ' ' 
+        render plain: '' 
         return 
       end
 
@@ -206,7 +206,7 @@ class SalesforceController < ApplicationController
       # Error: unsupported Salesforce entity type; do nothing
     end
 
-    render :text => ' '
+    render plain: ''
   end
 
   # Export CS Activity or Contacts into the mapped SFDC Account (or Opportunity)
@@ -222,7 +222,7 @@ class SalesforceController < ApplicationController
       # Nothing to do if no opportunities or linked SFDC entities
       if @opportunities.blank? || no_linked_sfdc
         @client = nil
-        render :text => ' ' 
+        render plain: '' 
         return 
       end
 
@@ -308,7 +308,7 @@ class SalesforceController < ApplicationController
       # Error: unsupported Salesforce entity type; do nothing
     end
 
-    render :text => ' '
+    render plain: ''
   end
 
   # Native CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. 
@@ -409,7 +409,7 @@ class SalesforceController < ApplicationController
       puts "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
     end
 
-    render :text => ' '
+    render plain: ''
   end
 
   def remove_account_link
