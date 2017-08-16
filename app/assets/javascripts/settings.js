@@ -125,7 +125,7 @@ $(document).ready(function() {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
                 console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
-                alert("There was a " + buttonTxtStr + " error, but it has been logged and we will get right on it shortly to resolve it!");
+                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {
@@ -174,7 +174,7 @@ $(document).ready(function() {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
                 console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
-                alert("There was a " + buttonTxtStr + " error, but it has been logged and we will get right on it shortly to resolve it!");
+                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {
@@ -339,7 +339,7 @@ $(document).ready(function() {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
                 console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
-                alert("There was a " + buttonTxtStr + " error, but it has been logged and we will get right on it shortly to resolve it!");
+                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {
@@ -398,7 +398,7 @@ $(document).ready(function() {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
                 console.log("Refresh ContextSmith " + entity_type_btn_str + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
-                alert("There was a Refresh " + entity_type_btn_str + " error, but it has been logged and we will get right on it shortly to resolve it!");
+                alert("There was a Refresh " + entity_type_btn_str + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {

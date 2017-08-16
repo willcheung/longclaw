@@ -233,7 +233,7 @@ class SalesforceService
     result
   end
 
-  # Updates a Salesforce Contact with Id = sfdc_contact_id with Contact info in params. If the SFDC sfdc_contact_id cannot be found, try to find it using Contact's e-mail in the SFDC Account
+  # Updates a Salesforce Contact with Id = sfdc_contact_id with Contact info in params. If the SFDC sfdc_contact_id cannot be found, try to find it using Contact's e-mail in the SFDC Account. SFDC Contact field will only be updated if there is a value in the corresponding CS field.
   # Parameters (all required):  client - connection to Salesforce
   #                             sfdc_contact_id - (required) the external sObject id that identifies the Salesforce Contact to update
   #                             sfdc_account_id - the SFDC/sObject id of the Salesforce Account where the Contact resides
