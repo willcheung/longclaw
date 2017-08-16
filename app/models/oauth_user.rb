@@ -115,7 +115,12 @@ class OauthUser < ActiveRecord::Base
   def self.get_salesforce_instance_url(organization_id)
     salesforce_user = self.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
     if salesforce_user.nil?
-    	nil
+    	salesforce_user = self.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
+      if salesforce_user.present?
+        salesforce_user.oauth_instance_url
+      else
+        nil  # should never happen if we check if the user is logged in before calling this method
+      end
     else
     	salesforce_user.oauth_instance_url 
     end
