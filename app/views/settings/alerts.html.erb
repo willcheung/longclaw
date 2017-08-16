@@ -23,8 +23,8 @@
                 <label>Level:</label>
                 <select id="select-metric-level" class="form-control" name="level_type" form="risk-setting-form">
                     <option>Organization</option>
-                    <option>Account (Coming Soon)</option>
-                    <option>Stream (Coming Soon)</option>
+                    <option>Account Executive (Coming Soon)</option>
+                    <option>Product / Vertical (Coming Soon)</option>
                 </select>
                 <div class="form-group" style="display: none;">
                   <select class="form-control">
@@ -67,7 +67,7 @@
                         <td><input type="checkbox" name="settings[DaysInactive][notify_task]" <%= "checked" if @risk_settings[:DaysInactive].notify_task %>></td>
                     </tr>
                     <tr>
-                        <td>RAG Status</td>
+                        <td>Red/Amber/Green Status</td>
                         <td><%= Project::RAGSTATUS[:Green] %></td>
                         <td><%= Project::RAGSTATUS[:Amber] %></td>
                         <td><%= Project::RAGSTATUS[:Red] %></td>
@@ -75,29 +75,133 @@
                         <td><input type="checkbox" name="settings[RAGStatus][notify_task]" <%= "checked" if @risk_settings[:RAGStatus].notify_task %>></td>
                     </tr>
                     <tr>
-                        <td class="text-muted"><i class="fa fa-plug"></i> Days To Close</td>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Next Meeting Setup</td>
                         <td class="text-muted">-</td>
-                        <td><input disabled="true" type="text" name="settings[DaysClose][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysClose].medium_threshold.round %>"></td>
-                        <td><input disabled="true" type="text" name="settings[DaysClose][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysClose].high_threshold.round %>"></td>
-                        <td><input disabled="true" type="text" name="settings[DaysClose][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:DaysClose].weight*100 %>%"></td>
-                        <td><input disabled="true" type="checkbox" name="settings[DaysClose][notify_task]" <%= "checked" if @risk_settings[:DaysClose].notify_task %>></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
                     </tr>
                     <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Number of Meetings with VP/Director</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Number of Total Meetings</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Number of Attachments / Deliverables</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Number of Key Activities</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Deal Size Movement</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Stage Movement</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Forecast Movement</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Close Date Movement</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Key Stakeholder Added</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Days in Stage</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Opportunity Age</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Email Response Rate (Send vs Receive)</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="fa fa-plug"></i> Email Read Rate (Send vs Read)</td>
+                        <td class="text-muted">-</td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="N/A"></td>
+                        <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="0.0%"></td>
+                        <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
+                    </tr>
+<!--                     <tr>
                         <td class="text-muted"><i class="fa fa-plug"></i> Days Until Renewal</td>
                         <td class="text-muted">-</td>
                         <td><input disabled="true" type="text" name="settings[DaysRenewal][medium_threshold]" class="form-control" value="<%= @risk_settings[:DaysRenewal].medium_threshold.round %>"></td>
                         <td><input disabled="true" type="text" name="settings[DaysRenewal][high_threshold]" class="form-control" value="<%= @risk_settings[:DaysRenewal].high_threshold.round %>"></td>
                         <td><input disabled="true" type="text" name="settings[DaysRenewal][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:DaysRenewal].weight*100 %>%"></td>
                         <td><input disabled="true" type="checkbox" name="settings[DaysRenewal][notify_task]" <%= "checked" if @risk_settings[:DaysRenewal].notify_task %>></td>
-                    </tr>
-                    <tr>
+                    </tr> -->
+<!--                     <tr>
                         <td class="text-muted"><i class="fa fa-plug"></i> Support Ticket Volume</td>
                         <td class="text-muted"> -</td>
                         <td><input disabled="true" type="text" name="settings[SupportVolume][medium_threshold]" class="form-control" value="<%= @risk_settings[:SupportVolume].medium_threshold.round %>"></td>
                         <td><input disabled="true" type="text" name="settings[SupportVolume][high_threshold]" class="form-control" value="<%= @risk_settings[:SupportVolume].high_threshold.round %>"></td>
                         <td><input disabled="true" type="text" name="settings[SupportVolume][weight]" class="form-control metric-weight-field" value="<%= @risk_settings[:SupportVolume].weight*100 %>%"></td>
                         <td><input disabled="true" type="checkbox" name="settings[SupportVolume][notify_task]" <%= "checked" if @risk_settings[:SupportVolume].notify_task %>></td>
-                    </tr>
+                    </tr> -->
                     <tr>
                         <td></td>
                         <td></td>

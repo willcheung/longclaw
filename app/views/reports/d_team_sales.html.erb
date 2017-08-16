@@ -193,6 +193,147 @@
         </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="starkModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <div class="row m-b-sm">
+                        <div class="col-lg-10">
+                            <h1 ><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e">Stark Industries</a></h1>
+                            <h4 ><span style="color: #aaa;font-weight: bold; font-size:0.8em">OWNER:</span> <a href="https://app.contextsmith.com/reports/d_team_sales">Neil Anderson</a> &nbsp;&nbsp;&nbsp; <span style="color: #aaa;font-weight: bold; font-size:0.8em">FORECAST:</span> Commit &nbsp;&nbsp;&nbsp; <span style="color: #aaa;font-weight: bold; font-size:0.8em">STAGE:</span> Negotation</h4>
+                        </div>
+                        
+                    </div>
+      </div>
+      <div class="modal-body">
+        <div id="opportunity-header" style="display:none;">
+
+                    <div class="">
+                        <div class="row">
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric">
+                                    <div class="metric-title">
+                                        <h4>Deal Size</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px;">$750K</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric">
+                                    <div class="metric-title">
+                                        <!-- <h4>Days to Renewal</h4> -->
+                                        <h4>Days to Close</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">25</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric text-warning">
+                                    <div class="metric-title">
+                                        <h4>Risk</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:40px">Medium</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric text-danger">
+                                    <div class="metric-title">
+                                        <h4>Open Alerts</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">4</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+                    </div>
+                </div>
+                <!-- end id="account-header" -->
+
+                <div id="opportunity-charts" style="display:none;">
+                    <div id="charts-container" class="ibox-content">
+                        <div class="row m-t-md">
+                            <h3><i class="fa fa-bell-o"></i> Alerts & Tasks</h3>
+                            <ul class="todo-list m-t">
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">Inactive for 35 days</span>
+                                    <small class="label label-danger"> Alert</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">Send legal documents to Mike</span>
+                                    <small class="label label-info"> To-do</small><small class="label label-primary"><i class="fa fa-clock-o"></i> Due Aug 12</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">Get back to Stark about Iron Man suit</span>
+                                    <small class="label label-info"> To-do</small><small class="label label-primary"><i class="fa fa-clock-o"></i> Due tomorrow</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">No meetings setup over next 2 weeks</span>
+                                    <small class="label label-danger"> Alert</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">Negative sentiment: "Difficult to budget"</span>
+                                    <small class="label label-danger"> Alert</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-check-square"></i> </a>
+                                    <span class="m-l-xs todo-completed">Close Date moved from Aug 1 to Sept 1</span>
+                                    <small class="label label-danger"> Alert</small>
+                                </li>
+                            </ul>
+                            <!-- <div id="risk-chart" style="height:220px;padding-right:15px;padding-left:5px;"></div> -->
+                        </div>
+
+                        <div class="row m-t-md">
+                            <h3 class="m-t-md"><i class="fa fa-calendar"></i>  Next Meeting</h3>
+                            <p style="color:#ed5565">No meetings setup</p>
+                        </div>
+
+                        <div class="row text-center m-t-md">
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/tasks" class="btn btn-outline btn-primary btn-xs">See Alerts and Next Steps &rarr;</a></h3>
+                        </div>
+                    </div>
+
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-12" id="activities-breakdown" style="height:350px"></div>
+                            <!-- <div class="col-lg-6" id="top-contributors" style="height:200px;"></div> -->
+                        </div>
+
+                        <div class="row m-t-lg text-center">
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/arg" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
+                        </div>
+                    </div>
+                </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="window.location.href = 'https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e';">See Stark Industries</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
 
     $('#forecast-chart').highcharts({
@@ -421,6 +562,57 @@
         });
     });
 
+    function renderDrillDownCharts() {
+        $('#activities-breakdown').highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: 'Top Buyer Engagement (Last 14 days)',
+                margin: 10,
+                style: {
+                    color: '#555555',
+                    fontSize: '16px'
+                }
+            },
+            credits: { enabled: false },
+            xAxis: {
+                categories: ['<strong>Tony Stark</strong> <br>CEO, Economic Buyer', '<strong>Nigel Thorsson</strong> <br>Head of IT, Technical Buyer', '<strong>Natasha Romanoff</strong> <br>Director of Sales, Champion', '<strong>Tom Ardenwood</strong> <br>Security Engineer, Infuencer', '<strong>Franklin Jaddell</strong><br>Account Executive, User']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                }
+            },
+            legend: {
+                enabled: true
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'E-mails Sent',
+                data: [1, 4, 6, 1, 0],
+                color: '#5DADE2'
+            },{
+                name: 'E-mails Received',
+                data: [0, 2, 4, 1, 0],
+                color: '#3498DB'
+            },{
+                name: 'Attachments',
+                data: [0, 1, 0, 1, 0],
+                color: '#666666'
+            },{
+                name: 'Meetings & Calls',
+                data: [0, 1, 1, 1, 0],
+                color: '#F5B041'
+            }]
+        });
+    };
+
 
     /*****
     Render right charts
@@ -443,7 +635,7 @@
                 text: 'Ranked by Close Date'
             },
             xAxis: {
-                categories: ['<strong>Stark Industries</strong> - $750k <br>Oct 1, Negotiation', '<strong>Hooli Gooli</strong> - $120k<br>Oct 15, Negotation', '<strong>Pied Piper</strong> - $45k<br>Oct 30, Buyer Bought-in', '<strong>Global Dynamics</strong> - $500k<br>Oct 30, Negotiation', '<strong>Wayne Enterprise</strong> - $20k<br>Nov 14, Legal', '<strong>Acme Inc.</strong> - $500k<br>Nov 15, Negotiation', '<strong>GVC</strong> - $50k<br>Dec 1, Negotiation']
+                categories: ['<strong>Stark Industries</strong> - $750k <br>Oct 1, Negotiation', '<strong>Hooli Gooli</strong> - $120k<br>Oct 15, Negotation', '<strong>Pied Piper</strong> - $45k<br>Oct 30, Buyer Bought-in', '<strong>Umbrella Corp</strong> - $500k<br>Oct 30, Negotiation', '<strong>Wayne Enterprise</strong> - $20k<br>Nov 14, Legal', '<strong>Global Dynamics</strong> - $500k<br>Nov 15, Negotiation', '<strong>GVC</strong> - $50k<br>Dec 1, Negotiation']
             },
             tooltip: {
                 valueSuffix: ' hrs',
@@ -474,7 +666,11 @@
                     point: {
                         events: {
                             click: function () {
-                                window.location.href = "https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e";
+                                $("#opportunity-header").show();
+                                $("#opportunity-charts").show();
+                                $('#starkModal').modal('show');
+                                renderDrillDownCharts();
+                                //window.location.href = "https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e";
                             }
                         }
                     },
@@ -566,7 +762,6 @@
             },
             title: {
                 text: "Activities (Last 14 days)",
-                align: 'left',
                 style: {
                     color: '#777777',
                     fontSize: '16px'
@@ -637,4 +832,3 @@
     };
 
 </script>
-
