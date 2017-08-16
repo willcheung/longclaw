@@ -1,6 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>Accounts Dashboard</h2>
+        <h2>Opportunities Dashboard</h2>
     </div>
 </div>
 
@@ -9,40 +9,85 @@
     <div class="row">
         <div class="col-lg-3 filter-space">
             <div>
-                <div class="font-bold col-lg-3 m-t-sm">Region:</div>
+                <div class="font-bold col-lg-3 m-t-sm">Team:</div>
                 <select class="category_filter col-lg-8">
-                    <% Account::CATEGORY.each{|k,v|    %>
-                    <option>Northeast</option>
-                    <option>West</option>
-                    <option>South</option>
+                    <option>NA - West</option>
+                    <option>NA - East</option>
+                    <option>NA - South</option>
+                    <option>EMEA</option>
                     <option>APAC</option>
-                    <option>Europe</option>
-                     <% } %>
                 </select>
             </div>
         </div>
-        <div class="col-lg-3 filter-space">
-            <div class="">
-                <div class="font-bold col-lg-3 m-t-sm">Stage:</div>
-                <select class="category_filter col-lg-8">
-                    <option>Implementation</option>
-                    <option>Onboarding</option>
-                    <option>Closing</option>
-                    <option selected="true">Negotiation</option>
-                    <option>Support</option>
-                </select>
-            </div>
-        </div>
-        <div class="col-lg-3 filter-space">
+
+        <div class="col-lg-4 filter-space">
             <div class="">
                 <div class="font-bold col-lg-3 m-t-sm">Owner:</div>
                 <select class="category_filter col-lg-8">
-                    <option>Justin</option>
-                    <option>Bob</option>
-                    <option>Henry</option>
-                    <option selected="true">Rachel</option>
-                    <option>Allison</option>
+                    <!-- sorted by % target -->
+                    <option selected="true">(All)</option>
+                    <option>Michael Bachman - 90% ($2.42M)</option>
+                    <option>Neil Anderson - 85% ($2.15M)</option>
+                    <option>Kevin Lius - 63% ($1.5M)</option>
+                    <option>Steven Yellen - 62% ($1.2M)</option>
+                    <option>Ben Shorty - 36% ($450K)</option>
                 </select>
+            </div>
+        </div>
+
+        <div class="col-lg-3 filter-space">
+            <div class="">
+                <div class="font-bold col-lg-3 m-t-sm">Time:</div>
+                <select class="category_filter col-lg-8">
+                    <optgroup label="Quarter">
+                        <option selected="true">This Quarter</option>
+                        <option value="Sales">Last Quarter</option>
+                    </optgroup>
+                    <optgroup label="Month">
+                        <option value="Sales">This Month</option>
+                        <option value="Sales">Last Month</option>
+                    </optgroup>
+                    <optgroup label="Last x Days">
+                        <option value="Sales">Last 14 days</option>
+                        <option>Last 30 days</option>
+                    </optgroup>
+                </select>
+                <!-- <input type="text" name="daterange" class="form-control daterange"> -->
+            </div>
+        </div>
+    </div>
+
+    <div class="row border-bottom ">
+        <div class="col-lg-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Bookings</h5>
+                </div>
+                <div class="ibox-content">
+                    <h1><strong>$6.43M</strong></h1>
+                    
+                    <h4><strong>73%</strong> of $9.1M target</h4>
+                    <div class="progress progress-mini">
+                        <div style="width: 73%;" class="progress-bar"></div>
+                    </div>
+
+                    <h4 style="margin-top:20px"><strong>21 days</strong> left in the quarter</h4>
+                    <div class="progress progress-mini">
+                        <div style="width: 80%;" class="progress-bar progress-bar-success"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="ibox float-e-margins">
+                <div id="forecast-chart" class="ibox-content forecast-chart" style="height:210px;padding-bottom:0"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ibox float-e-margins">
+                <div id="stage-chart" class="ibox-content stage-chart" style="height:210px;padding-bottom:0"></div>
             </div>
         </div>
     </div>
@@ -53,15 +98,10 @@
                     <h4 class="m-l-md">Metric:
                     <select class="metric_filter col-lg-8" data-placeholder="Select Type">
                         <option>Days Inactive</option>
-                        <option value="2">Time Spent (Last 14d)</option>
+                        <option value="2" selected="true">Time Spent</option>
                         <option value="2">Deal Size</option>
-                        <option value="2">Deal Size per Hour (Last 14d)</option>
-                        <option value="1" selected="true">Activities (Last 14d)</option>
-                        <option value="3">Risk Score</option>
-                        <!--<option>Days to Renewal</option>-->
+                        <option value="1">Activities</option>
                         <option>Days to Close</option>
-                        <option value="4">Negative Sentiment</option>
-                        <option>Account Potential</option>
                         <option value="5">Total Open Alerts</option>
                         <option value="6">Total Overdue Tasks</option>
                     </select>
@@ -86,34 +126,25 @@
 
                 <div id="account-header" style="display:none;">
                     <div class="row m-b-sm">
-                        <div class="col-lg-8">
-                            <h2 >Stark Industries</h2>
+                        <div class="col-lg-10">
+                            <h1 ><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e">Stark Industries</a></h1>
+                            <h4 ><span style="color: #aaa;font-weight: bold; font-size:0.8em">OWNER:</span> <a href="https://app.contextsmith.com/reports/d_team_sales">Neil Anderson</a> &nbsp;&nbsp;&nbsp; <span style="color: #aaa;font-weight: bold; font-size:0.8em">FORECAST:</span> Commit &nbsp;&nbsp;&nbsp; <span style="color: #aaa;font-weight: bold; font-size:0.8em">STAGE:</span> Negotation</h4>
                         </div>
-                        <div class="col-lg-4">
-                            <small>Date range: </small><input type="text" name="daterange" class="form-control daterange">
+                        <div class="col-lg-2">
+                            
                         </div>
                     </div>
 
                     <div class="ibox-content">
                         <div class="row">
-                            <div class="col-md-3 text-center">
-                                <div class="metric text-danger">
-                                    <div class="metric-title">
-                                        <h4>High Risk</h4>
-                                    </div>
-                                    <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">80</h2>
-                                    </div>
-                                </div>
-                            </div>
 
                             <div class="col-md-3 text-center">
-                                <div class="metric text-danger">
+                                <div class="metric">
                                     <div class="metric-title">
-                                        <h4>Open Alerts</h4>
+                                        <h4>Deal Size</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">3</h2>
+                                        <h2 style="font-weight:600;font-size:46px;">$750K</h2>
                                     </div>
                                 </div>
                             </div>
@@ -125,26 +156,36 @@
                                         <h4>Days to Close</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px">45</h2>
+                                        <h2 style="font-weight:600;font-size:46px">25</h2>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-md-3 text-center">
-                                <div class="metric">
+                                <div class="metric text-warning">
                                     <div class="metric-title">
-                                        <h4>Deal Size</h4>
+                                        <h4>Risk</h4>
                                     </div>
                                     <div class="metric-content">
-                                        <h2 style="font-weight:600;font-size:46px;">$1.15M</h2>
+                                        <h2 style="font-weight:600;font-size:40px">Medium</h2>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="metric text-danger">
+                                    <div class="metric-title">
+                                        <h4>Open Alerts</h4>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h2 style="font-weight:600;font-size:46px">4</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+
                         </div>
 
-                        <div class="row text-center m-t-md">
-                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/tasks" class="btn btn-outline btn-primary btn-xs">See Alerts and Next Steps &rarr;</a></h3>
-                        </div>
                     </div>
                 </div>
                 <!-- end id="account-header" -->
@@ -152,23 +193,56 @@
                 <div id="account-charts" style="display:none;">
                     <div id="charts-container" class="ibox-content">
                         <div class="row m-t-md">
-                            <div id="risk-chart" style="height:220px;padding-right:15px;padding-left:5px;"></div>
+                            <h3><i class="fa fa-bell-o"></i> Alerts & Tasks</h3>
+                            <ul class="todo-list m-t">
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">Inactive for 35 days</span>
+                                    <small class="label label-danger"> Alert</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">Send legal documents to Mike</span>
+                                    <small class="label label-info"> To-do</small><small class="label label-primary"><i class="fa fa-clock-o"></i> Due Aug 12</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">Get back to Stark about Iron Man suit</span>
+                                    <small class="label label-info"> To-do</small><small class="label label-primary"><i class="fa fa-clock-o"></i> Due tomorrow</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">No meetings setup over next 2 weeks</span>
+                                    <small class="label label-danger"> Alert</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
+                                    <span class="m-l-xs">Negative sentiment: "Difficult to budget"</span>
+                                    <small class="label label-danger"> Alert</small>
+                                </li>
+                                <li>
+                                    <a href="#" class="check-link"><i class="fa fa-check-square"></i> </a>
+                                    <span class="m-l-xs todo-completed">Close Date moved from Aug 1 to Sept 1</span>
+                                    <small class="label label-danger"> Alert</small>
+                                </li>
+                            </ul>
+                            <!-- <div id="risk-chart" style="height:220px;padding-right:15px;padding-left:5px;"></div> -->
                         </div>
 
                         <div class="row m-t-md">
-
-                            <div id="activities-chart" style="height:220px"></div>
+                            <h3 class="m-t-md"><i class="fa fa-calendar"></i>  Next Meeting</h3>
+                            <p style="color:#ed5565">No meetings setup</p>
                         </div>
 
-                        <div class="row m-t-lg text-center">
-                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e" class="btn btn-outline btn-primary btn-xs">See activities &rarr;</a></h3>
+                        <div class="row text-center m-t-md">
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/tasks" class="btn btn-outline btn-primary btn-xs">See Alerts and Next Steps &rarr;</a></h3>
                         </div>
                     </div>
 
                     <div class="ibox-content">
                         <div class="row">
-                            <div class="col-lg-6" id="activities-breakdown" style="height:200px"></div>
-                            <div class="col-lg-6" id="top-contributors" style="height:200px;"></div>
+                            <div class="col-lg-12" id="activities-breakdown" style="height:350px"></div>
+                            <!-- <div class="col-lg-6" id="top-contributors" style="height:200px;"></div> -->
                         </div>
 
                         <div class="row m-t-lg text-center">
@@ -182,6 +256,132 @@
 
 <script>
 
+    $('#forecast-chart').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: ''
+        },
+        credits: {
+            enabled: false
+        },
+        xAxis: {
+            categories: [
+                'Best Case',
+                'Commit',
+                'Booking'
+            ],
+            crosshair: true
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: ''
+            },
+            labels: {
+               enabled: false
+           },
+        },
+        tooltip: {
+            enabled: false
+        },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            column: {
+                pointPadding: 0.2,
+                borderWidth: 0,
+                dataLabels: {
+                    enabled: true,
+                    format: '${y}M',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                }
+            },
+             series: {
+                pointPadding: 0.1,
+                groupPadding: 0,
+                borderWidth: 0
+            }
+        },
+        series: [{
+            name: 'Total Value',
+            data: [15.1, 9.8, {y: 6.43, color: '#3cc5b9'}]
+
+        }]
+    });
+
+    $('#stage-chart').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: ''
+        },
+        credits: {
+            enabled: false
+        },
+        xAxis: {
+            categories: [
+                'Qualification',
+                'Demo',
+                'Buyer Bought-in',
+                'Negotiation',
+                'Legal',
+                'Closed Won',
+                'Closed Lost'
+            ],
+            crosshair: true,
+            labels: {
+                style: {
+                    fontSize: '9px'
+                },
+                rotation: 0
+            }
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: ''
+            },
+            labels: {
+               enabled: false
+           },
+        },
+        tooltip: {
+            enabled: false
+        },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            column: {
+                pointPadding: 0.2,
+                borderWidth: 0,
+                dataLabels: {
+                    enabled: true,
+                    format: '${y}M',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                }
+            },
+             series: {
+                pointPadding: 0.1,
+                groupPadding: 0.1,
+                borderWidth: 0
+            }
+        },
+        series: [{
+            name: 'Total Value',
+            data: [0.5, 1.1, 12.2, 7.3, 3.8, {y: 6.4, color: '#3cc5b9'}, {y: 1.13, color: '#ed5565'}]
+
+        }]
+    });
+
     $(function () {
         $('#left-chart').highcharts({
             chart: {
@@ -190,9 +390,13 @@
             title: {
                 text: ''
             },
+            subtitle: {
+                text: 'Ranked by Close Date',
+                y: 0
+            },
             xAxis: {
-                categories: ['Stark Industries ($1.15M)', 'Hooli ($200K)', 'Pied Piper ($2.5M)', 'Umbrella Corp ($850K)', 'Nexus Corp ($500K)', 'Charleston Tech ($500K)', 'Bay Dynamics ($500K)', 'Acme Inc ($500K)', 'DKNY ($500K)', 'Ariel Clam Tech ($500K)',
-                              'SF Dynamics ($500K)', 'Patriots IT ($500K)','Boston Industries ($500K)', 'Dynobot ($500K)', 'Piper Tail ($500K)', 'Rectangle Corp ($500K)', 'NexusT Corp ($500K)', 'Spider Man Tech ($500K)', 'Accello ($500K)', 'Inferion Inc( $500K)', 'Infiniti ($500K)', 'Octavia Tech', 'Dirty Rock', 'Design Spaces', 'Newton Beach'],
+                categories: ['<strong>Stark Industries</strong> - $750k <br>Oct 1, Negotiation', '<strong>Hooli Gooli</strong> - $120k<br>Oct 15, Negotation', '<strong>Pied Piper</strong> - $45k<br>Oct 30, Buyer Bought-in', '<strong>Umbrella Corp</strong> - $500k<br>Oct 30, Negotiation', '<strong>Wayne Enterprise</strong> - $20k<br>Nov 14, Legal', '<strong>Global Dynamics</strong> - $500k<br>Nov 15, Negotiation', '<strong>GVC</strong> - $50k<br>Dec 1, Negotiation', '<strong>Acme, Inc.</strong> - $500k<br>Dec 16, Buyer Bought-in', '<strong>Nexus Corp</strong> - $450k<br>Dec 30, Demo',
+                              '<strong>SF Dynamics</strong> - $38k<br>Dec 30, Demo', '<strong>Patriots IT</strong> - $800k<br>Dec 30, Buyer Bought-in','<strong>Boston Industries</strong> - $70k<br>Dec 30, Buyer Bought-in', '<strong>Dynobot</strong> - $250k<br>Dec 30, Negotiation'],
                 crosshair: true
             },
             yAxis: {
@@ -201,7 +405,16 @@
                 title: {
                     text: ''
                 },
-                gridLineWidth: 0
+                gridLineWidth: 0,
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    },
+                    formatter: function () {
+                      return convert_secs_to_hhmm(this.total*3600) + " hrs";
+                    }
+                }
             },
             legend: {
                 enabled: true,
@@ -222,7 +435,6 @@
                                 $("#account-charts").show();
                                 $("#intro-account-header").hide();
                                 renderCharts(this.y);
-                                //alert('Category: ' + this.category + ', value: ' + this.y);
                             }
                         }
                     }
@@ -233,19 +445,20 @@
             },
             series: [{
                 name: 'E-mails Sent',
-                data: [14, 11, 14, 12, 8, 8, 8, 7, 10, 9, 8, 8, 7, 6, 5, 4, 5, 4]
+                data: [8.25, 11.2, 14, 12, 8, 5, 8, 7, 10, 9, 8, 8, 3],
+                color: '#5DADE2'
             }, {
                 name: 'E-mails Received',
-                data: [8, 8, 4, 8, 6, 6, 5, 6, 1, 2, 1, 2, 1, 1, 1, 2, 1, 3]
+                data: [4, 7.1, 8, 8, 6, 6, 5, 6, 3, 5, 1, 2.2, 1],
+                color: '#3498DB'
+            },  {
+                name: 'Attachments',
+                data: [.1, .4, .5, .2, .5, 0, 0, 1, .25, .9, 1, 0, 0],
+                color: '#666666'
             }, {
-                name: 'Meetings',
-                data: [3, 4, 4, 2, 5, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0]
-            }, {
-                name: 'Salesforce Activities',
-                data: [3, 4, 4, 2, 5, 3, 3, 3, 2, 2, 3, 2, 1, 1, 2, 1, 1, 1]
-            }, {
-                name: 'Support Issues',
-                data: [2, 3, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+                name: 'Meetings & Calls',
+                data: [2, 4.6, 4, 2, 5, 1.5, 2.4, 1, 2, 3, 1, 1, 0],
+                color: '#F5B041'
             }]
         });
     });
@@ -258,42 +471,42 @@
      * In order to synchronize tooltips and crosshairs, override the
      * built-in events with handlers defined on the parent element.
      */
-    $('#charts-container').bind('mousemove touchmove touchstart', function (e) {
-        var chart,
-            point,
-            i,
-            event;
+    // $('#charts-container').bind('mousemove touchmove touchstart', function (e) {
+    //     var chart,
+    //         point,
+    //         i,
+    //         event;
 
-        console.log(Highcharts.charts);
+    //     console.log(Highcharts.charts);
 
-        for (i = 3; i < Highcharts.charts.length; i = i + 1) { // i=3 to exclude first chart #left-chart
-            chart = Highcharts.charts[i];
-            event = chart.pointer.normalize(e.originalEvent); // Find coordinates within the chart
-            point = chart.series[0].searchPoint(event, true); // Get the hovered point
+    //     for (i = 3; i < Highcharts.charts.length; i = i + 1) { // i=3 to exclude first chart #left-chart
+    //         chart = Highcharts.charts[i];
+    //         event = chart.pointer.normalize(e.originalEvent); // Find coordinates within the chart
+    //         point = chart.series[0].searchPoint(event, true); // Get the hovered point
 
-            if (point) {
-                point.highlight(e);
-            }
-        }
-    });
+    //         if (point) {
+    //             point.highlight(e);
+    //         }
+    //     }
+    // });
 
 
     /**
      * Synchronize zooming through the setExtremes event handler.
      */
-    function syncExtremes(e) {
-        var thisChart = this.chart;
+    // function syncExtremes(e) {
+    //     var thisChart = this.chart;
 
-        if (e.trigger !== 'syncExtremes') { // Prevent feedback loop
-            Highcharts.each(Highcharts.charts, function (chart) {
-                if (chart !== thisChart) {
-                    if (chart.xAxis[0].setExtremes) { // It is null while updating
-                        chart.xAxis[0].setExtremes(e.min, e.max, undefined, false, { trigger: 'syncExtremes' });
-                    }
-                }
-            });
-        }
-    }
+    //     if (e.trigger !== 'syncExtremes') { // Prevent feedback loop
+    //         Highcharts.each(Highcharts.charts, function (chart) {
+    //             if (chart !== thisChart) {
+    //                 if (chart.xAxis[0].setExtremes) { // It is null while updating
+    //                     chart.xAxis[0].setExtremes(e.min, e.max, undefined, false, { trigger: 'syncExtremes' });
+    //                 }
+    //             }
+    //         });
+    //     }
+    // }
 
     /*****
     Render right charts
@@ -322,175 +535,148 @@
                 type: 'bar'
             },
             title: {
-                text: 'Account Engagement (Last 14d)',
-                align: 'left',
+                text: 'Top Buyer Engagement (Last 14 days)',
                 margin: 10,
-                x: 35,
-                style: {
-                    color: '#555555',
-                    fontSize: '14px'
-                }
-            },
-            credits: { enabled: false },
-            xAxis: {
-                categories: ['Paul (VP Marketing)', 'Josh (Marketing Manager)', 'William (IT)', 'Chloe (VP Sales)', 'Ben (Director Demand Gen)']
-            },
-            yAxis: {
-                min: 0,
-                title: {
-                    text: ''
-                }
-            },
-            legend: {
-                enabled: false
-            },
-            plotOptions: {
-                series: {
-                    stacking: 'normal'
-                }
-            },
-            series: [{
-                name: 'Activities',
-                data: [5, 4, 4, 3, 1]
-            }]
-        });
-
-        $('#top-contributors').highcharts({
-            chart: {
-                type: 'bar'
-            },
-            title: {
-                text: 'Team Time Spent (Last 14d)',
-                align: 'left',
-                margin: 10,
-                x: 35,
-                style: {
-                    color: '#555555',
-                    fontSize: '14px'
-                }
-            },
-            credits: { enabled: false },
-            xAxis: {
-                categories: ['Justin', 'Kelvin', 'Will', 'Richard', 'Ben']
-            },
-            yAxis: {
-                min: 0,
-                title: {
-                    text: ''
-                }
-            },
-            legend: {
-                enabled: false
-            },
-            plotOptions: {
-                series: {
-                    stacking: 'normal'
-                }
-            },
-            series: [{
-                name: 'Activities',
-                data: [7, 4, 4, 3, 2]
-            }]
-        });
-
-
-
-        $('#risk-chart').highcharts({
-            title: {
-                text: "Risk Score (Last 14 days)",
-                align: 'left',
-                margin: 0,
-                x: 35,
                 style: {
                     color: '#555555',
                     fontSize: '16px'
                 }
             },
+            credits: { enabled: false },
             xAxis: {
-                type: 'datetime',
-                crosshair: true,
-                events: {
-                    setExtremes: syncExtremes
-                }
+                categories: ['<strong>Tony Stark</strong> <br>CEO, Economic Buyer', '<strong>Nigel Thorsson</strong> <br>Head of IT, Technical Buyer', '<strong>Natasha Romanoff</strong> <br>Director of Sales, Champion', '<strong>Tom Ardenwood</strong> <br>Security Engineer, Infuencer', '<strong>Franklin Jaddell</strong><br>Account Executive, User']
             },
             yAxis: {
+                min: 0,
                 title: {
                     text: ''
-                },
-                labels: { enabled: true },
-                gridLineWidth: 0,
-                minorGridLineWidth: 0,
-                plotLines: [{
-                    value: 0,
-                    width: 1,
-                    color: '#808080'
-                }],
-                min: 0,
-                max: 100,
-                plotBands: [ { // Low Risk
-                    from: 0,
-                    to: 60,
-                    color: 'rgba(170, 252, 174, 0.1)',
-                    label: {
-                        text: 'Low Risk',
-                        style: {
-                            color: '#606060'
-                        }
-                    }
-                    }, { // Medium Risk
-                        from: 60,
-                        to: 80,
-                        color: 'rgba(246, 188, 42, 0.1)',
-                        label: {
-                            text: 'Medium Risk',
-                            style: {
-                                color: '#606060'
-                            }
-                        }
-                    }, { // High Risk
-                        from: 80,
-                        to: 100,
-                        color: 'rgba(246, 42, 46, 0.1)',
-                        label: {
-                            text: 'High Risk',
-                            style: {
-                                color: '#606060'
-                            }
-                        }
-                    }]
-                },
-                tooltip: {
-                    positioner: function () {
-                        return {
-                            x: this.chart.chartWidth - this.label.width, // right aligned
-                            y: -15 // align to title
-                        };
-                    },
-                    borderWidth: 0,
-                    backgroundColor: 'none',
-                    pointFormat: '{point.y}',
-                    xDateFormat: '%b %e',
-                    shadow: false,
-                    style: {
-                        fontSize: '16px',
-                        color: '#555555'
-                    }
-                },
-                credits: {
-                    enabled: false
-                },
-                legend: {
-                    enabled: false
-                },
-                series: [
-                    {
-                    pointInterval: <%= 1.day * 1000 %>,
-                    pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                    data: [30,30,60,60,65,75,90,90,90,80,80,80,80,75]
-                    }
-                ]
+                }
+            },
+            legend: {
+                enabled: true
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+            series: [{
+                name: 'E-mails Sent',
+                data: [1, 4, 6, 1, 0],
+                color: '#5DADE2'
+            },{
+                name: 'E-mails Received',
+                data: [0, 2, 4, 1, 0],
+                color: '#3498DB'
+            },{
+                name: 'Attachments',
+                data: [0, 1, 0, 1, 0],
+                color: '#666666'
+            },{
+                name: 'Meetings & Calls',
+                data: [0, 1, 1, 1, 0],
+                color: '#F5B041'
+            }]
+        });
 
-            });
+
+
+        // $('#risk-chart').highcharts({
+        //     title: {
+        //         text: "Risk Score (Last 14 days)",
+        //         align: 'left',
+        //         margin: 0,
+        //         x: 35,
+        //         style: {
+        //             color: '#555555',
+        //             fontSize: '16px'
+        //         }
+        //     },
+        //     xAxis: {
+        //         type: 'datetime',
+        //         crosshair: true,
+        //         events: {
+        //             setExtremes: syncExtremes
+        //         }
+        //     },
+        //     yAxis: {
+        //         title: {
+        //             text: ''
+        //         },
+        //         labels: { enabled: true },
+        //         gridLineWidth: 0,
+        //         minorGridLineWidth: 0,
+        //         plotLines: [{
+        //             value: 0,
+        //             width: 1,
+        //             color: '#808080'
+        //         }],
+        //         min: 0,
+        //         max: 100,
+        //         plotBands: [ { // Low Risk
+        //             from: 0,
+        //             to: 60,
+        //             color: 'rgba(170, 252, 174, 0.1)',
+        //             label: {
+        //                 text: 'Low Risk',
+        //                 style: {
+        //                     color: '#606060'
+        //                 }
+        //             }
+        //             }, { // Medium Risk
+        //                 from: 60,
+        //                 to: 80,
+        //                 color: 'rgba(246, 188, 42, 0.1)',
+        //                 label: {
+        //                     text: 'Medium Risk',
+        //                     style: {
+        //                         color: '#606060'
+        //                     }
+        //                 }
+        //             }, { // High Risk
+        //                 from: 80,
+        //                 to: 100,
+        //                 color: 'rgba(246, 42, 46, 0.1)',
+        //                 label: {
+        //                     text: 'High Risk',
+        //                     style: {
+        //                         color: '#606060'
+        //                     }
+        //                 }
+        //             }]
+        //         },
+        //         tooltip: {
+        //             positioner: function () {
+        //                 return {
+        //                     x: this.chart.chartWidth - this.label.width, // right aligned
+        //                     y: -15 // align to title
+        //                 };
+        //             },
+        //             borderWidth: 0,
+        //             backgroundColor: 'none',
+        //             pointFormat: '{point.y}',
+        //             xDateFormat: '%b %e',
+        //             shadow: false,
+        //             style: {
+        //                 fontSize: '16px',
+        //                 color: '#555555'
+        //             }
+        //         },
+        //         credits: {
+        //             enabled: false
+        //         },
+        //         legend: {
+        //             enabled: false
+        //         },
+        //         series: [
+        //             {
+        //             pointInterval: <%= 1.day * 1000 %>,
+        //             pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
+        //             data: [30,30,60,60,65,75,90,90,90,80,80,80,80,75]
+        //             }
+        //         ]
+
+        //     });
 /*
         $('#risk-detection-chart').highcharts({
             chart: {
