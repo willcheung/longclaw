@@ -122,7 +122,7 @@ class Contact < ActiveRecord::Base
     end
   end
 
-  # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields (only overwriting if there's a value in the SFDC Contact) for each "matched" Contact (same e-mail).  i.e., if there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one.
+  # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields for each "matched" Contact (same e-mail).  If there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one. Note: Contact merge will only copy the value from the SFDC Contact field if there's no existing value in the matched CS Contact.
   # Parameters:  client - connection to Salesforce
   #              account_id - the CS account to which to import Contacts
   #              sfdc_account_id - id of SFDC account from which to import Contacts 
@@ -173,7 +173,7 @@ class Contact < ActiveRecord::Base
       end
 
       insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "mobile", "source", "external_source_id", "created_at", "updated_at") VALUES'  # Unused: "background_info" 
-      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = CASE WHEN LENGTH(EXCLUDED.first_name::text) > 0 THEN EXCLUDED.first_name ELSE contacts.first_name END, last_name = CASE WHEN LENGTH(EXCLUDED.last_name::text) > 0 THEN EXCLUDED.last_name ELSE contacts.last_name END, title = CASE WHEN LENGTH(EXCLUDED.title::text) > 0 THEN EXCLUDED.title ELSE contacts.title END, department = CASE WHEN LENGTH(EXCLUDED.department::text) > 0 THEN EXCLUDED.department ELSE contacts.department END, phone = CASE WHEN LENGTH(EXCLUDED.phone::text) > 0 THEN EXCLUDED.phone ELSE contacts.phone END, mobile = CASE WHEN LENGTH(EXCLUDED.mobile::text) > 0 THEN EXCLUDED.mobile ELSE contacts.mobile END, external_source_id = CASE WHEN LENGTH(EXCLUDED.external_source_id::text) > 0 THEN EXCLUDED.external_source_id ELSE contacts.external_source_id END, updated_at = CASE WHEN LENGTH(EXCLUDED.updated_at::text) > 0 THEN EXCLUDED.updated_at ELSE contacts.updated_at END'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
+      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = CASE WHEN LENGTH(contacts.first_name::text) > 0 THEN contacts.first_name ELSE EXCLUDED.first_name END, last_name = CASE WHEN LENGTH(contacts.last_name::text) > 0 THEN contacts.last_name ELSE EXCLUDED.last_name END, title = CASE WHEN LENGTH(contacts.title::text) > 0 THEN contacts.title ELSE EXCLUDED.title END, department = CASE WHEN LENGTH(contacts.department::text) > 0 THEN contacts.department ELSE EXCLUDED.department END, phone = CASE WHEN LENGTH(contacts.phone::text) > 0 THEN contacts.phone ELSE EXCLUDED.phone END, mobile = CASE WHEN LENGTH(contacts.mobile::text) > 0 THEN contacts.mobile ELSE EXCLUDED.mobile END, external_source_id = CASE WHEN LENGTH(contacts.external_source_id::text) > 0 THEN contacts.external_source_id ELSE EXCLUDED.external_source_id END, updated_at = CASE WHEN LENGTH(contacts.updated_at::text) > 0 THEN contacts.updated_at ELSE EXCLUDED.updated_at END'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
       values = val.join(', ')
       # puts "And inserting values....  \"#{values}\""
 
@@ -204,7 +204,7 @@ class Contact < ActiveRecord::Base
     result
   end
 
-  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.
+  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.  Note: If a value exists in the CS Contact field, then this value will overwrite the corresponding field in the matched target SFDC Contact.
   # Parameters: client - connection to Salesforce
   #             account_id - the CS account from which this exports contacts
   #             sfdc_account_id - id of SFDC account to which this exports contacts 
