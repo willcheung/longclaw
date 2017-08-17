@@ -39,10 +39,10 @@
                   <!-- Show nothing if no email communication with this contact -->
                   <% if contact.last_sent_date.blank? || contact.last_reply_date > contact.last_sent_date %>
                     <!-- Last touch was external to internal -->
-                    <a data-id="<%= contact.last_reply_id %>" data-message-id="<%= contact.last_reply_message_id %>" class="email-data-tooltip"><i class="fa fa-sign-in"></i></a>
+                    <a data-href="<%= project_path(@project) %>#<%= contact.last_reply_message_id %>" data-id="<%= contact.last_reply_id %>" data-message-id="<%= contact.last_reply_message_id %>" class="email-data-tooltip"><i class="fa fa-sign-in"></i></a>
                   <% else %>
                     <!-- Last touch was internal to external -->
-                    <a data-id="<%= contact.last_sent_id %>" data-message-id="<%= contact.last_sent_message_id %>" class="email-data-tooltip"><i class="fa fa-sign-out fa-flip-horizontal"></i></a>
+                    <a data-href="<%= project_path(@project) %>#<%= contact.last_sent_message_id %>" data-id="<%= contact.last_sent_id %>" data-message-id="<%= contact.last_sent_message_id %>" class="email-data-tooltip"><i class="fa fa-sign-out fa-flip-horizontal"></i></a>
                   <% end %>
                 <% end %>
               </td>
@@ -90,6 +90,7 @@ $(function () {
     // only make request for email body if data not already stored here
     if (!(messageId in cachedData)) {
       var id = element.data('id');
+      console.log(messageId);
       // save response in cachedData
       $.ajax({
         dataType: "json",
