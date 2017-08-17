@@ -37,12 +37,12 @@
               <td>
                 <% if contact.last_sent_date.present? || contact.last_reply_date.present? %>
                   <!-- Show nothing if no email communication with this contact -->
-                  <% if contact.last_sent_date.blank? || contact.last_reply_date > contact.last_sent_date %>
+                  <% if (contact.last_sent_date.blank? && contact.last_reply_date.present?) || (contact.last_sent_date.present? && contact.last_reply_date.present? && contact.last_reply_date > contact.last_sent_date) %>
                     <!-- Last touch was external to internal -->
-                    <a data-href="<%= project_path(@project) %>#<%= contact.last_reply_message_id %>" data-id="<%= contact.last_reply_id %>" data-message-id="<%= contact.last_reply_message_id %>" class="email-data-tooltip"><i class="fa fa-sign-in"></i></a>
+                    <a data-href="<%= project_path(@project) %>#<%= contact.last_reply_message_id %>" data-id="<%= contact.last_reply_id %>" data-message-id="<%= contact.last_reply_message_id %>" class="email-data-tooltip text-info"><i class="fa fa-sign-in"></i></a>
                   <% else %>
                     <!-- Last touch was internal to external -->
-                    <a data-href="<%= project_path(@project) %>#<%= contact.last_sent_message_id %>" data-id="<%= contact.last_sent_id %>" data-message-id="<%= contact.last_sent_message_id %>" class="email-data-tooltip"><i class="fa fa-sign-out fa-flip-horizontal"></i></a>
+                    <a data-href="<%= project_path(@project) %>#<%= contact.last_sent_message_id %>" data-id="<%= contact.last_sent_id %>" data-message-id="<%= contact.last_sent_message_id %>" class="email-data-tooltip text-success"><i class="fa fa-sign-out fa-flip-horizontal"></i></a>
                   <% end %>
                 <% end %>
               </td>
@@ -66,8 +66,10 @@ $(function () {
   //DataTables
   $('#contacts-table').DataTable({
     responsive: true,
-//    scrollX: true,
-    "order": [[2, "desc"]],
+    "columnDefs": [
+      { "orderable": false, "targets": 2 }
+    ],
+    "order": [[3, "desc"]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
     "dom": ' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
     "language": {
