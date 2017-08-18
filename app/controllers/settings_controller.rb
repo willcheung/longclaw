@@ -137,7 +137,7 @@ class SettingsController < ApplicationController
 		end
 	end
 
-	# Map SFDC entity fields to standard or custom CS entity fields
+	# Map SFDC entity fields to standard (params[:type] == "standard") Account, Opportunity, or Contact fields or custom (params[:type] == "custom") Account or Opportunity ContextSmith fields
 	def salesforce_fields
 		if current_user.role == User::ROLE[:Admin]
       @user_roles = User::ROLE.map { |r| [r[1],r[1]] }
@@ -146,6 +146,7 @@ class SettingsController < ApplicationController
         cs_entity_fields = current_user.organization.entity_fields_metadatum.order(:name)
         @cs_account_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
         @cs_stream_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
+        # TODO: Add code to use Contacts mapping set here when importing Contacts
         @cs_contact_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Contact])
       elsif params[:type] == "custom"
         cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)

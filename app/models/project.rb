@@ -27,6 +27,8 @@
 #  stage               :string
 #  close_date          :date
 #  expected_revenue    :decimal(14, 2)
+#  probability         :integer
+#  forecast            :string
 #
 # Indexes
 #
@@ -130,7 +132,7 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue" }  # "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count", 
+  MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count", 
 
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
 
@@ -1126,7 +1128,7 @@ class Project < ActiveRecord::Base
           end
           # puts "changed_values_hash_list: #{ changed_values_hash_list }"
 
-          changed_values_hash_list.each { |h| Project.update(h.keys, h.values) }
+          changed_values_hash_list.each { |h| Project.update(h.keys, h.values) } # Make updates to project fields from the list of changed values
           result = { status: "SUCCESS" }
         else
           result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " query_statement=" + query_statement }
@@ -1177,7 +1179,7 @@ class Project < ActiveRecord::Base
             new_value.each { |k,v| sfdc_val.push(v.to_s) if v.present? }
             new_value = sfdc_val.join(", ")
           end
-          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value)
+          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value) # Make update to project custom field with value obtained in SFDC query
         end
         result = { status: "SUCCESS" }
       else

@@ -109,7 +109,7 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Import/load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts.
+  # Import/load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts, or Load SFDC Activities into CS Opportunities
   #TODO: Issue #829 Need to allow SFDC import of activities and contacts to continue even after encountering an error.
   def import_salesforce
     case params[:entity_type]
@@ -442,9 +442,10 @@ class SalesforceController < ApplicationController
   end
 
   def disconnect
-    # delete salesforce data
+    # unlink and delete all accounts for the Organization if somebody from the Organization d/c's (possible bug)
+    current_user.organization.salesforce_accounts.destroy_all
+
     # delete salesforce oauth_user
-    SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).destroy_all   # will unlink all accounts for the Organization if somebody from the Organization d/c's from their SFDC account!
     salesforce_user = OauthUser.find_by(id: params[:id])
     if salesforce_user.present?
       salesforce_user.destroy
