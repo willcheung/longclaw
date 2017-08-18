@@ -3,7 +3,7 @@ class ProjectsController < ApplicationController
   before_action :set_visible_project, only: [:show, :edit, :tasks_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
-  before_action :get_users_reverse, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_current_org_users, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
   before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
@@ -79,25 +79,28 @@ class ProjectsController < ApplicationController
   end
 
   def arg_tab # Account Relationship Graph
-    @data = @project.activities.where(category: %w(Conversation Meeting))
+    @data = @project.activities.where(category: %w(Conversation Meeting)).ids
+    @contacts = @project.contact_relationship_metrics
 
     render "show"
   end
 
   def network_map
     respond_to do |format|
-      format.json { render json: @project.network_map}
+      format.json { render json: @project.network_map }
     end
   end
 
   def lookup
     pinned = @project.conversations.pinned
     meetings = @project.meetings
-    members = (@project.users + @project.contacts).map do |m|
+    suggested_members = @project.project_members_all.pending.map { |pm| pm.user_id || pm.contact_id }
+    members = (@project.users_all + @project.contacts_all).map do |m|
       pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
+      suggested = suggested_members.include?(m.id) ? ' *' : ''
       {
-        name: get_full_name(m),
+        name: get_full_name(m) + suggested,
         domain: get_domain(m.email),
         email: m.email,
         title: m.title,
@@ -230,28 +233,23 @@ class ProjectsController < ApplicationController
 
   private
 
-  def get_users_reverse
-    @users_reverse = get_current_org_users
-  end
-
   def get_show_data
-    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
-    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
 
     # metrics
-    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_open_risks_count = @project.notifications.open.alerts.count
-    @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
     @project_open_tasks_count = @project.notifications.open.count
 
     # Removing RAG status - old metric
     # project_rag_score = @project.activities.latest_rag_score.first
-
     # if project_rag_score
     #   @project_rag_status = project_rag_score['rag_score']
     # end
 
     # old metrics
+    # @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    # @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    # @project_open_risks_count = @project.notifications.open.alerts.count
     # @project_last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
     # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
     # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"

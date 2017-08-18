@@ -4,7 +4,8 @@ class ExtensionController < ApplicationController
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
   before_action :set_sfdc_status_and_accounts, only: [:account, :alerts_tasks, :contacts, :metrics]
-  before_action :get_account_types, only: [:no_account]
+  before_action :get_account_types, only: :no_account
+  before_action :get_current_org_users, only: :alerts_tasks
 
   def test
     render layout: "empty"
@@ -53,7 +54,6 @@ class ExtensionController < ApplicationController
 
   def alerts_tasks
     @notifications = @project.notifications.order(:is_complete).take(15)
-    @users_reverse = get_current_org_users
   end
 
   def contacts
@@ -100,7 +100,7 @@ class ExtensionController < ApplicationController
     if current_user.admin?
       # try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
-      #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
+      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
     elsif current_user.power_or_trial_only?  # individual power user or trial/Chrome user
       @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
       #@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?

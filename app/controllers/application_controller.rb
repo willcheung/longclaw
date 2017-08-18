@@ -70,7 +70,7 @@ class ApplicationController < ActionController::Base
 
   # returns the users of an organization who are registered with CS
   def get_current_org_users
-    current_user.organization.users.registered.order(:first_name).map { |u| [u.id,u.first_name+' '+ u.last_name] }.to_h
+    @users_reverse = current_user.organization.users.registered.order(:first_name).map { |u| [u.id, get_full_name(u)] }.to_h
   end
 
 

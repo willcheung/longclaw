@@ -42,7 +42,8 @@ class Activity < ActiveRecord::Base
   belongs_to :project
   belongs_to :oauth_user
   has_many :comments, dependent: :destroy
-  has_many :notifications, -> { non_attachments }, dependent: :destroy
+  has_many :notifications_all, class_name: 'Notification', dependent: :destroy
+  has_many :notifications, -> { non_attachments }
   has_many :attachments, -> { attachments }, class_name: 'Notification'
 
   scope :pinned, -> { where is_pinned: true }
@@ -191,7 +192,7 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Copies Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS opportunity.
+  # Copies/imports Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS opportunity.
   # Parameters:   client - SFDC connection
   #               project - the CS opportunity into which to load the SFDC activity
   #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
@@ -227,8 +228,10 @@ class Activity < ActiveRecord::Base
     #puts "query_statement: #{ query_statement }"
     query_result = SalesforceService.query_salesforce(client, query_statement)
 
+    # puts "\t\t ***** query_result= #{query_result} nil?=#{query_result.nil?}"
     if query_result[:status] == "SUCCESS"
-      unless query_result[:result].first.nil? # if there is some ActivityHistory
+      # puts "\t\t ***** query_result[:result].first= #{query_result[:result].first} nil?=#{query_result[:result].first.nil?}"
+      unless query_result[:result].first.nil?
         query_result[:result].first.each do |a|
           if a.first == "ActivityHistories"
             if !a.second.nil? # if any ActivityHistory
@@ -263,6 +266,9 @@ class Activity < ActiveRecord::Base
         else
           result = { status: "SUCCESS", result: "Warning: no rows inserted.", detail: "No SFDC activity to import!" }
         end
+      else
+        puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned!  Detail: query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"  # Temporary diagnostic console message to determine a SFDC (permission?) issue 
+        result = { status: "ERROR", result: "SFDC query returned successfully, but an invalid result was returned from Salesforce! You may not have the proper Salesforce access permissions.  Verify with your Salesforce administrator that you have access to Account and Opportunity tables, and ActivityHistory/Task relation.", detail: "Invalid result was returned from Salesforce!" }
       end
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
@@ -499,6 +505,7 @@ class Activity < ActiveRecord::Base
       e.end_epoch += sec if self.category == CATEGORY[:Meeting]
     end
     self.email_messages = em
+    # TODO: move child notifications as well (Alerts/Suggested To-do/Attachments)
     self.save
   end
 

@@ -345,6 +345,103 @@ class Project < ActiveRecord::Base
     result = Activity.find_by_sql(query)
   end
 
+  def contact_relationship_metrics
+  #   name
+  #   title
+  #   buyer role
+  #   last sent by
+  #   last sent
+  #   last reply
+  #   last meeting
+  #   next meeting
+    query = <<-SQL
+      WITH future_meetings AS (
+        SELECT last_sent_date, "from", "to"
+        FROM activities
+        WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Meeting]}' AND last_sent_date > TIMESTAMP '#{Time.current.utc}'
+      ), past_meetings AS (
+        SELECT last_sent_date, "from", "to"
+        FROM activities
+        WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Meeting]}' AND last_sent_date <= TIMESTAMP '#{Time.current.utc}'
+      ), user_emails AS (
+        SELECT activities.id,
+               messages ->> 'messageId' AS message_id,
+               to_timestamp((messages ->> 'sentDate')::integer) AS sent_date,
+               jsonb_array_elements(messages -> 'from') ->> 'address' AS from_address,
+               jsonb_array_elements(messages -> 'from') ->> 'personal' AS from_personal,
+               CASE
+                 WHEN messages -> 'to' IS NULL THEN NULL
+                 ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+               END AS to,
+               CASE
+                 WHEN messages -> 'cc' IS NULL THEN NULL
+                 ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+               END AS cc
+        FROM activities,
+        LATERAL jsonb_array_elements(email_messages) messages
+        WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Conversation]}'
+      )
+      SELECT contacts.email,
+             contacts.first_name,
+             contacts.last_name,
+             contacts.title,
+             contacts.buyer_role,
+             project_members.status,
+             received_emails.from_address AS last_sent_by_address,
+             received_emails.from_personal AS last_sent_by_personal,
+             received_emails.max_sent_date AS last_sent_date,
+             received_emails.id AS last_sent_id,
+             received_emails.message_id AS last_sent_message_id,
+             sent_emails.max_reply_date AS last_reply_date,
+             sent_emails.id AS last_reply_id,
+             sent_emails.message_id AS last_reply_message_id,
+             MAX(past_meetings.last_sent_date) AS last_meeting_date,
+             MIN(future_meetings.last_sent_date) AS next_meeting_date
+      FROM contacts
+      JOIN project_members
+      ON contacts.id = project_members.contact_id AND project_members.status != #{ProjectMember::STATUS[:Rejected]}
+      JOIN projects
+      ON projects.id = project_members.project_id
+      LEFT JOIN future_meetings
+      ON (future_meetings.from || future_meetings.to) @> ('[{"address":"' || contacts.email || '"}]')::jsonb
+      LEFT JOIN past_meetings
+      ON (past_meetings.from || past_meetings.to) @> ('[{"address":"' || contacts.email || '"}]')::jsonb
+      LEFT JOIN (
+        SELECT id, message_id, sent.*
+        FROM user_emails
+        JOIN (
+          SELECT from_address, MAX(sent_date) AS max_reply_date
+          FROM user_emails
+          GROUP BY 1
+        ) AS sent
+        ON user_emails.sent_date = sent.max_reply_date AND sent.from_address = user_emails.from_address
+      ) AS sent_emails
+      ON contacts.email = sent_emails.from_address
+      LEFT JOIN (
+        SELECT id, message_id, from_address, from_personal, received.*
+        FROM user_emails
+        JOIN (
+          SELECT recipient, MAX(sent_date) AS max_sent_date
+          FROM (
+            SELECT "to" AS recipient, sent_date
+            FROM user_emails
+            UNION ALL
+            SELECT cc AS recipient, sent_date
+            FROM user_emails
+           ) t
+          GROUP BY 1
+        ) AS received
+        ON user_emails.sent_date = received.max_sent_date AND received.recipient IN (user_emails.to, user_emails.cc)
+      ) AS received_emails
+      ON contacts.email = received_emails.recipient
+      WHERE projects.id = '#{self.id}'
+      GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+      ORDER BY last_sent_date DESC
+    SQL
+
+    Contact.find_by_sql(query)
+  end
+
   # generate options for Person Filter on Timeline, from activities visible to user with user_email
   def all_involved_people(user_email)
     activities = self.activities.visible_to(user_email).select(:from, :to, :cc, :posted_by).includes(:user)
@@ -514,17 +611,7 @@ class Project < ActiveRecord::Base
         SELECT DISTINCT
             project_id,
             to_timestamp((messages ->> 'sentDate')::integer) AS sent_date,
-            messages ->> 'messageId'::text AS message_id,
-            jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
-            CASE
-              WHEN messages -> 'to' IS NULL THEN NULL
-              ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
-            END AS to,
-            CASE
-              WHEN messages -> 'cc' IS NULL THEN NULL
-              ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
-            END AS cc,
-            (messages::json ->'content') ->> 'body'  AS body
+            messages ->> 'messageId'::text AS message_id
         FROM activities,
         LATERAL jsonb_array_elements(email_messages) messages
         WHERE category = '#{Activity::CATEGORY[:Conversation]}'
