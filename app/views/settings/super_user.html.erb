@@ -77,7 +77,7 @@
                             <td><%= get_full_name(u) %></td>
                             <td><%= u.email %></td>
                             <td><%= u.onboarding_step %></td>
-                            <td></td>
+                            <td><%= u.created_at.to_date %></td>
                             <td><%= u.current_sign_in_at.to_date unless u.current_sign_in_at.nil? %></td>
                             <td><%= u.sign_in_count %></td>
                             <td><%= u.accounts.count.to_s %> / <%= u.projects_owner_of.count.to_s %></td>
