@@ -881,7 +881,7 @@ class User < ActiveRecord::Base
 
   def sent_attachments_by_project(array_of_project_ids=Project.visible_to(self.organization_id, self.id).pluck(:id), start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc) # array_of_user_emails
     query = <<-SQL
-      SELECT projects.id, projects.name, COUNT(message_id) AS attachment_count
+      SELECT projects.id, projects.name, COUNT(DISTINCT message_id) AS attachment_count
       FROM projects
       JOIN notifications
       ON projects.id = notifications.project_id
