@@ -27,7 +27,7 @@
 #  stage               :string
 #  close_date          :date
 #  expected_revenue    :decimal(14, 2)
-#  probability         :integer
+#  probability         :decimal(5, 2)
 #  forecast            :string
 #
 # Indexes

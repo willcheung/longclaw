@@ -290,31 +290,31 @@ ActiveRecord::Schema.define(version: 20170817221644) do
   add_index "project_subscribers", ["user_id"], name: "index_project_subscribers_on_email", using: :btree
 
   create_table "projects", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "name",                                                   default: "",             null: false
+    t.string   "name",                                         default: "",             null: false
     t.uuid     "account_id"
-    t.boolean  "is_public",                                              default: true
-    t.string   "status",                                                 default: "Active"
+    t.boolean  "is_public",                                    default: true
+    t.string   "status",                                       default: "Active"
     t.text     "description"
     t.uuid     "created_by"
     t.uuid     "updated_by"
     t.uuid     "owner_id"
-    t.datetime "created_at",                                                                      null: false
-    t.datetime "updated_at",                                                                      null: false
+    t.datetime "created_at",                                                            null: false
+    t.datetime "updated_at",                                                            null: false
     t.boolean  "is_confirmed"
-    t.string   "category",                                               default: "New Business"
+    t.string   "category",                                     default: "New Business"
     t.datetime "deleted_at"
     t.date     "renewal_date"
     t.date     "contract_start_date"
     t.date     "contract_end_date"
-    t.decimal  "contract_arr",                  precision: 14, scale: 2
+    t.decimal  "contract_arr",        precision: 14, scale: 2
     t.integer  "renewal_count"
-    t.boolean  "has_case_study",                                         default: false,          null: false
-    t.boolean  "is_referenceable",                                       default: false,          null: false
-    t.decimal  "amount",                        precision: 14, scale: 2
+    t.boolean  "has_case_study",                               default: false,          null: false
+    t.boolean  "is_referenceable",                             default: false,          null: false
+    t.decimal  "amount",              precision: 14, scale: 2
     t.string   "stage"
     t.date     "close_date"
-    t.decimal  "expected_revenue",              precision: 14, scale: 2
-    t.integer  "probability",         limit: 2
+    t.decimal  "expected_revenue",    precision: 14, scale: 2
+    t.decimal  "probability",         precision: 5,  scale: 2
     t.string   "forecast"
   end
 

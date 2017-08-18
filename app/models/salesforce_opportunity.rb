@@ -29,7 +29,7 @@ class SalesforceOpportunity < ActiveRecord::Base
 	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id", primary_key: "salesforce_account_id"
   belongs_to  :project, foreign_key: "contextsmith_project_id"
 
-  # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with a linked account, that are open, or closed within 2 years.
+  # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with a linked account, that are open, or closed within the past year.
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of opportunities added/updated; if an error occurred, contains the title of the error.
@@ -47,7 +47,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     total_opportunities = 0
 
     sfdc_accounts.each do |a|
-      query_statement = "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 2.year).utc.strftime('%Y-%m-%d')})) ORDER BY Id"
+      query_statement = "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) ORDER BY Id"
 
       query_result = SalesforceService.query_salesforce(client, query_statement)
       # puts "query_statement: #{ query_statement }" 

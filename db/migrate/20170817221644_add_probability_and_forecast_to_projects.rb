@@ -1,6 +1,6 @@
 class AddProbabilityAndForecastToProjects < ActiveRecord::Migration
   def change
-    add_column :projects, :probability, :smallint
+    add_column :projects, :probability, :decimal, precision: 5, scale: 2 # :smallint
     add_column :projects, :forecast, :string
     add_column :salesforce_opportunities, :forecast_category_name, :string
     add_column :salesforce_opportunities, :owner_id, :string
