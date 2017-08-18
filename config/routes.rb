@@ -39,6 +39,7 @@ Longclaw::Application.routes.draw do
       member do
         get "update_is_complete" => 'notifications#update_is_complete'
         get "download" => 'notifications#download_attachment'
+        get "message" => 'notifications#show_message'
       end
       collection do
         post "create_from_suggestion"

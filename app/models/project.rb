@@ -362,7 +362,7 @@ class Project < ActiveRecord::Base
       ), past_meetings AS (
         SELECT last_sent_date, "from", "to"
         FROM activities
-        WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Meeting]}' AND last_sent_date < TIMESTAMP '#{Time.current.utc}'
+        WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Meeting]}' AND last_sent_date <= TIMESTAMP '#{Time.current.utc}'
       ), user_emails AS (
         SELECT activities.id,
                messages ->> 'messageId' AS message_id,
