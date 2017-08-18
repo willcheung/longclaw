@@ -143,7 +143,7 @@ $(function () {
         stroke-width: 1.5px;
     }
 
-    div.tooltip {
+    div.arg-tooltip {
         position: absolute;
         text-align: center;
         line-height: 1;
@@ -369,14 +369,14 @@ $(function () {
 
         // Pinned tooltip
         var pinnedTooltip = d3.select("#force-graph").append("div")
-            .attr("class", "tooltip pinned")
+            .attr("class", "arg-tooltip pinned")
             .style("right", "40px")
             .style("top", "70px")
             .style("opacity", 0);
 
         // Tooptip in top right corner
         var tooltip = d3.select("#force-graph").append("div")
-            .attr("class", "tooltip")
+            .attr("class", "arg-tooltip")
             .style("right", "40px")
             .style("top", "70px")
             .style("opacity", "0");
