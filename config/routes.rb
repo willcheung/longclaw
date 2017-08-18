@@ -39,12 +39,12 @@ Longclaw::Application.routes.draw do
       member do
         get "update_is_complete" => 'notifications#update_is_complete'
         get "download" => 'notifications#download_attachment'
+        get "message" => 'notifications#show_message'
       end
       collection do
         post "create_from_suggestion"
       end
     end
-    get "notifications/show_email_body/:id" => 'notifications#show_email_body'
 
     resources :salesforce, only: [:index]
     get "salesforce/disconnect/:id" => 'salesforce#disconnect', as: "salesforce_disconnect"
@@ -89,6 +89,9 @@ Longclaw::Application.routes.draw do
 
     resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy], shallow: true
+      member do
+        get 'message' => 'activities#show_message'
+      end
     end
     
     resources :organizations

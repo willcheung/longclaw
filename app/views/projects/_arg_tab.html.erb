@@ -1,6 +1,5 @@
 <% if @data.present? %>
 <div id="force-graph" class="m-l white-bg header-box"></div>
-
 <div class="panel blank-panel">
     <div class="panel-body">
       <div class="ibox-content">
@@ -8,28 +7,26 @@
           <thead>
           <tr>
             <th>Name</th>
-            <th>Title</th>
-            <th>Buyer role</th>
-            <th>Last Sent By</th>
-            <th>Last Sent</th>
             <th>Last Reply</th>
+            <th>Last Touch</th>
+            <th>Last Sent</th>
             <th>Last Meeting</th>
             <th>Next Meeting</th>
+            <th>Buyer role</th>
           </tr>
           </thead>
           <tbody>
           <% @contacts.each do |contact| %>
             <tr>
               <td>
-                <%= link_to get_full_name(contact), project_path(@project, emails: contact.email) %>
-                <% if contact.status == ProjectMember::STATUS[:Pending] %>
-                <i class="fa fa-asterisk" data-toggle="tooltip" data-placement="top" data-original-title="Suggested Person" style="font-size:8px;"></i>
-                <% end %>
+                <div>
+                  <%= link_to get_full_name(contact), project_path(@project, emails: contact.email) %>
+                  <% if contact.status == ProjectMember::STATUS[:Pending] %>
+                  <i class="fa fa-asterisk" data-toggle="tooltip" data-placement="top" data-original-title="Suggested Person" style="font-size:8px;"></i>
+                  <% end %>
+                </div>
+                <div class="m-t-xs"><small><%= contact.title %></small></div>
               </td>
-              <td><%= contact.title %></td>
-              <td><%= contact.buyer_role %></td>
-              <td><%= contact.last_sent_by_personal.present? ? contact.last_sent_by_personal : contact.last_sent_by_address %></td>
-              <td title="<%= Time.zone.at(contact.last_sent_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_sent_date.present? %>" data-order="<%= contact.last_sent_date.to_i %>" <% if contact.last_sent_date.present? && contact.last_reply_date.present? && contact.last_sent_date < contact.last_reply_date %>style="color:red;"<% end %> ><%= Time.zone.at(contact.last_sent_date).strftime('%b %e') if contact.last_sent_date.present? %></td>
               <td title="<%= Time.zone.at(contact.last_reply_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_reply_date.present? %>" data-order="<%= contact.last_reply_date.to_i %>">
                 <% if contact.last_reply_date.present? %>
                   <%= Time.zone.at(contact.last_reply_date).strftime('%b %e') %>
@@ -37,8 +34,26 @@
                   <i class="fa fa-times"></i>
                 <% end %>
               </td>
+              <td>
+                <% if contact.last_sent_date.present? || contact.last_reply_date.present? %>
+                  <!-- Show nothing if no email communication with this contact -->
+                  <% if (contact.last_sent_date.blank? && contact.last_reply_date.present?) || (contact.last_sent_date.present? && contact.last_reply_date.present? && contact.last_reply_date > contact.last_sent_date) %>
+                    <!-- Last touch was external to internal -->
+                    <a data-href="<%= project_path(@project) %>#<%= contact.last_reply_message_id %>" data-id="<%= contact.last_reply_id %>" data-message-id="<%= contact.last_reply_message_id %>" class="email-data-tooltip text-info"><i class="fa fa-sign-in"></i></a>
+                  <% else %>
+                    <!-- Last touch was internal to external -->
+                    <a data-href="<%= project_path(@project) %>#<%= contact.last_sent_message_id %>" data-id="<%= contact.last_sent_id %>" data-message-id="<%= contact.last_sent_message_id %>" class="email-data-tooltip text-success"><i class="fa fa-sign-out fa-flip-horizontal"></i></a>
+                  <% end %>
+                <% end %>
+              </td>
+              <td title="<%= Time.zone.at(contact.last_sent_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_sent_date.present? %>" data-order="<%= contact.last_sent_date.to_i %>" >
+                <% if contact.last_sent_date.present? %>
+                    <%= Time.zone.at(contact.last_sent_date).strftime('%b %e') %> by <%= contact.last_sent_by_personal.present? ? contact.last_sent_by_personal : contact.last_sent_by_address %>
+                <% end %>
+              </td>
               <td title="<%= Time.zone.at(contact.last_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_meeting_date.present? %>" data-order="<%= contact.last_meeting_date.to_i %>"><%= Time.zone.at(contact.last_meeting_date).strftime('%b %e') if contact.last_meeting_date.present? %></td>
               <td title="<%= Time.zone.at(contact.next_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.next_meeting_date.present? %>" data-order="<%= contact.next_meeting_date.to_i %>"><%= Time.zone.at(contact.next_meeting_date).strftime('%b %e') if contact.next_meeting_date.present? %></td>
+              <td><%= contact.buyer_role %></td>
             </tr>
           <% end %>
           </tbody>
@@ -51,15 +66,71 @@ $(function () {
   //DataTables
   $('#contacts-table').DataTable({
     responsive: true,
-    "order": [[ 5, "desc" ]],
+    "columnDefs": [
+      { "orderable": false, "targets": 2 }
+    ],
+    "order": [[3, "desc"]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
-    "dom":' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
+    "dom": ' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
     "language": {
       search: "_INPUT_",
       searchPlaceholder: "Start typing to filter list..."
     }
   });
 });
+
+  $('.email-data-tooltip').tooltip({
+    title: getEmailData,
+    html: true,
+    container: 'body'
+  });
+
+  var cachedData = {};
+  function getEmailData() {
+    var element = $(this);
+    var messageId = element.data('message-id');
+    // only make request for email body if data not already stored here
+    if (!(messageId in cachedData)) {
+      var id = element.data('id');
+      console.log(messageId);
+      // save response in cachedData
+      $.ajax({
+        dataType: "json",
+        url: '/activities/' + id + '/message',
+        data: { message_id: messageId },
+        async: false
+      }).done(function (data) {
+        cachedData[messageId] = data;
+      }).fail(function () {
+        cachedData[messageId] = { body: "error"}
+      });
+    }
+    var data = cachedData[messageId];
+    if (('from', 'to', 'sentDate') in data) {
+      return '<b>' + data.from + '</b> to ' + data.to + '<br><span style="padding-top: 5px;color: grey;">' + data.sentDate + '</span><hr style="margin: 10px 0;>' + data.body;
+    }
+    else {
+      return data.body;
+    }
+  }
+
+  $('.email-data-tooltip').hover(function(){
+    $('.tooltip-inner').css('background-color', 'white');
+    $('.tooltip-inner').css('color', 'black');
+    $('.tooltip-inner').css('opacity', '1');
+    $('.tooltip-inner').css('padding', '15px 15px');
+    $('.tooltip-inner').css('max-width', '512px');
+    $('.tooltip-inner').css('text-align', 'left');
+
+    $('.tooltip').css('background-color', 'white');
+    $('.tooltip').css('opacity', '1');
+    $('.tooltip').css('border-style','solid');
+    $('.tooltip').css('border-width', '1px');
+    $('.tooltip').css('border-color', '#eeeeee');
+    $('.tooltip').css('boxShadow', '0px 0px 20px #aaaaaa');
+    $('.tooltip-inner-content').css('margin-bottom', '7px');
+    $('.tooltip-arrow').css('opacity', '0');
+  });
 </script>
 <style>
     .link {
