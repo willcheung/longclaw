@@ -110,6 +110,7 @@ class SalesforceController < ApplicationController
   end
 
   # Import/load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts.
+  #TODO: Issue #829 Need to allow SFDC import of activities and contacts to continue even after encountering an error.
   def import_salesforce
     case params[:entity_type]
     when "accounts"
@@ -157,12 +158,21 @@ class SalesforceController < ApplicationController
 
       #puts "******************** #{ method_name } ... filter_predicate_str= #{ filter_predicate_str }", 
       @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
+      no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+
+      # Nothing to do if no opportunities or linked SFDC entities
+      if @opportunities.blank? || no_linked_sfdc
+        @client = nil
+        render plain: '' 
+        return 
+      end
+
       @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
       unless @client.nil?  # unless connection error
         @opportunities.each do |s|
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
-            if !s.account.salesforce_accounts.empty? # CS Opportunity linked to SFDC Account
+            if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 load_result = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
                 #puts "$$$(import_salesforce)$$$ load_result: #{load_result}"
@@ -196,7 +206,7 @@ class SalesforceController < ApplicationController
       # Error: unsupported Salesforce entity type; do nothing
     end
 
-    render :text => ' '
+    render plain: ''
   end
 
   # Export CS Activity or Contacts into the mapped SFDC Account (or Opportunity)
@@ -207,6 +217,14 @@ class SalesforceController < ApplicationController
       # Note: Ignores imported SFDC activity residing locally
       method_name = "export_salesforce#activities()"
       @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
+      no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+
+      # Nothing to do if no opportunities or linked SFDC entities
+      if @opportunities.blank? || no_linked_sfdc
+        @client = nil
+        render plain: '' 
+        return 
+      end
 
       @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
@@ -214,8 +232,9 @@ class SalesforceController < ApplicationController
 
       unless @client.nil?  # unless connection error
         @opportunities.each do |s|
+          #TODO: Issue #829 Need to allow SFDC export of activities to continue even after encountering an error.
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
-            if !s.account.salesforce_accounts.empty? # CS Opportunity linked to SFDC Account
+            if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 export_result = Activity.export_cs_activities(@client, s, sfa.salesforce_account_id, "Account")
 
@@ -257,17 +276,27 @@ class SalesforceController < ApplicationController
         client = SalesforceService.connect_salesforce(current_user.organization_id)
         #client = nil #simulate connection error
         unless client.nil?  # unless SFDC connection error
+          export_result_messages = []
+          error_occurred = false
           account_mapping.each do |m|
             a = m[0]
             sfa = m[1]
             export_result = Contact.export_cs_contacts(client, a.id, sfa.salesforce_account_id)
 
             if export_result[:status] == "ERROR"
-              failure_method_location = "Contact.export_cs_contacts()"
-              error_detail = "Error while attempting to export CS contacts from CS Account \"#{a.name}\" (account_id='#{a.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{export_result[:detail]}"
-              render_internal_server_error(method_name, failure_method_location, error_detail)
-              return
+              error_detail = export_result[:detail]
+              export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: error_detail }
+              error_occurred = true
+            else # SUCCESS
+              export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: [] } 
             end
+          end
+          #puts "\n\n==> Export result messages: #{export_result_messages}\n\n"
+          if error_occurred
+            failure_method_location = "Contact.export_cs_contacts()"
+            render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| (m[:status] == "ERROR" ? "*" : "-") + " #{m[:status]}:  '#{m[:account][:name]}'(#{m[:account][:id]}) -> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]}) detail: #{m[:detail]}" }.join("\n\n"))
+            # render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| {account_name: m[:account][:name], account_id: m[:account][:id], sfdc_account_name: m[:sfdc_account][:name], sfdc_account_id: m[:sfdc_account][:id], status: m[:status], detail: m[:detail] }})
+            return
           end
         else
           render_service_unavailable_error(method_name)
@@ -279,7 +308,7 @@ class SalesforceController < ApplicationController
       # Error: unsupported Salesforce entity type; do nothing
     end
 
-    render :text => ' '
+    render plain: ''
   end
 
   # Native CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. 
@@ -380,7 +409,7 @@ class SalesforceController < ApplicationController
       puts "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
     end
 
-    render :text => ' '
+    render plain: ''
   end
 
   def remove_account_link
@@ -592,7 +621,7 @@ class SalesforceController < ApplicationController
   end
 
   def render_internal_server_error(method_name, method_location, error_detail)
-    puts "****SFDC****: Salesforce query error in SalesforceController.#{method_name} (#{method_location}): #{error_detail}"
+    puts "****SFDC****: Salesforce query error in SalesforceController.#{method_name} (#{method_location})\nDetail:\n-------\n#{error_detail}"
     render json: { error: error_detail }, status: :internal_server_error # 500
   end
 end

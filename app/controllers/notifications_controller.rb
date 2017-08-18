@@ -1,9 +1,7 @@
 class NotificationsController < ApplicationController
-  ### TODO: refactor show_email_body so that it does not depend on simple_format which must be included from ActionView module (separate Controller from Views)
-  include ActionView::Helpers::TextHelper
   include ActionController::Live
 
-  before_action :set_notification, only: [:update, :update_is_complete, :show_email_body, :download_attachment]
+  before_action :set_notification, only: [:update, :update_is_complete, :download_attachment]
   before_action :set_visible_project_user, only: [:index, :show, :create]
   before_action :get_current_org_users, only: [:index, :show, :create, :create_from_suggestion]
 
@@ -66,23 +64,22 @@ class NotificationsController < ApplicationController
     end
   end
 
-  # TODO: move view logic (like simple_format part) into its own partial or template
-  def show_email_body
+  def show_message
     result = get_email_and_member
     body = ""
     if !result.nil?
+      helper = view_context
       sent_time = Time.zone.at(result[3]).strftime('%b %e').to_s
-      body = '<b>'+result[0] + '</b>'+result[1]+'<br><font color="gray">'+sent_time+'</font><hr>' + simple_format(result[2], class: 'tooltip-inner-content')
+      body = '<b>'+result[0] + '</b>'+result[1]+'<br><font color="gray">'+sent_time+'</font><hr>' + helper.simple_format(result[2], class: 'tooltip-inner-content')
     else
       body = 'Email not found!'
     end
-    render :text => body
+    render plain: body
   end
 
   def new
     @notification = Notification.new
   end
-
 
   def create
     o_due_date = nil
@@ -196,7 +193,7 @@ class NotificationsController < ApplicationController
 
     @projects_reverse = @projects.map { |p| [p.id, p.name] }.to_h
 
-    @users = current_user.organization.users.map { |u| [u.first_name+' '+ u.last_name+' '+u.email, u.id] }.to_h
+    #@users = current_user.organization.users.map { |u| [u.first_name+' '+u.last_name+' '+u.email, u.id] }.to_h
   end
 
   def get_email_and_member
@@ -221,7 +218,7 @@ class NotificationsController < ApplicationController
         LIMIT 1
       SQL
     elsif @notification.category==Notification::CATEGORY[:Opportunity]
-       query = <<-SQL
+      query = <<-SQL
         SELECT messages->>'content' as content,
                messages->'from' as from,
                messages -> 'to' as to,
@@ -324,14 +321,5 @@ class NotificationsController < ApplicationController
     final_result[3] = sentdate.to_i
 
     return final_result
-  end
-
-  def show
-    result = get_email_and_member
-    @body = ""
-    if !result.nil?
-      sent_time = Time.zone.at(result[3]).strftime('%b %e').to_s
-      @body = '<b>'+result[0] + '</b>'+result[1]+'<br>'+sent_time+'<hr>' + result[2]
-    end
   end
 end

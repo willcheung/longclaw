@@ -124,7 +124,8 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                alert(buttonTxtStr + " error!\n\n" + res.error);
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {
@@ -172,7 +173,8 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                alert(buttonTxtStr + " error!\n\n" + res.error);
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {
@@ -336,7 +338,8 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                alert(buttonTxtStr+" error!\n\n" + res.error);
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {
@@ -394,7 +397,8 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n\n" + res.error);
+                console.log("Refresh ContextSmith " + entity_type_btn_str + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                alert("There was a Refresh " + entity_type_btn_str + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {

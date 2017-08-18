@@ -81,7 +81,7 @@ function hoverGetData() {
 
   var localData = "error";
 
- $.ajax('/notifications/show_email_body/'+id, {
+ $.ajax('/notifications/' + id + '/message', {
       async: false,
       success: function(data){
           localData = data;

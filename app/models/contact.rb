@@ -122,10 +122,10 @@ class Contact < ActiveRecord::Base
     end
   end
 
-  # Takes Contacts (with an e-mail address) in a SFDC account and copies them to a CS account, overwriting all existing Contact fields to each "matched" (same e-mail in the account) Contact.  i.e., if there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one.
+  # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields for each "matched" Contact (same e-mail).  If there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one. Note: Contact merge will only copy the value from the SFDC Contact field if there's no existing value in the matched CS Contact.
   # Parameters:  client - connection to Salesforce
-  #              account_id - the CS account to which this copies Contacts
-  #              sfdc_account_id - id of SFDC account from which this copies Contacts 
+  #              account_id - the CS account to which to import Contacts
+  #              sfdc_account_id - id of SFDC account from which to import Contacts 
   #              limit (optional) - the max number of Contacts to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
@@ -173,9 +173,9 @@ class Contact < ActiveRecord::Base
       end
 
       insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "mobile", "source", "external_source_id", "created_at", "updated_at") VALUES'  # Unused: "background_info" 
-      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, title = EXCLUDED.title, department = EXCLUDED.department, phone = EXCLUDED.phone, mobile = EXCLUDED.mobile, external_source_id = EXCLUDED.external_source_id, updated_at = EXCLUDED.updated_at'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
+      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = CASE WHEN LENGTH(contacts.first_name::text) > 0 THEN contacts.first_name ELSE EXCLUDED.first_name END, last_name = CASE WHEN LENGTH(contacts.last_name::text) > 0 THEN contacts.last_name ELSE EXCLUDED.last_name END, title = CASE WHEN LENGTH(contacts.title::text) > 0 THEN contacts.title ELSE EXCLUDED.title END, department = CASE WHEN LENGTH(contacts.department::text) > 0 THEN contacts.department ELSE EXCLUDED.department END, phone = CASE WHEN LENGTH(contacts.phone::text) > 0 THEN contacts.phone ELSE EXCLUDED.phone END, mobile = CASE WHEN LENGTH(contacts.mobile::text) > 0 THEN contacts.mobile ELSE EXCLUDED.mobile END, external_source_id = CASE WHEN LENGTH(contacts.external_source_id::text) > 0 THEN contacts.external_source_id ELSE EXCLUDED.external_source_id END, updated_at = CASE WHEN LENGTH(contacts.updated_at::text) > 0 THEN contacts.updated_at ELSE EXCLUDED.updated_at END'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
       values = val.join(', ')
-      #puts "And inserting values....  \"#{values}\""
+      # puts "And inserting values....  \"#{values}\""
 
       if !val.empty?
         Contact.transaction do
@@ -204,7 +204,7 @@ class Contact < ActiveRecord::Base
     result
   end
 
-  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.
+  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.  Note: If a value exists in the CS Contact field, then this value will overwrite the corresponding field in the matched target SFDC Contact.
   # Parameters: client - connection to Salesforce
   #             account_id - the CS account from which this exports contacts
   #             sfdc_account_id - id of SFDC account to which this exports contacts 
@@ -220,7 +220,7 @@ class Contact < ActiveRecord::Base
       #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
 
       sObject_meta = { id: sfdc_account_id, type: "Account" }
-      sObject_fields = { FirstName: c.first_name, LastName: c.last_name.empty? ? "(none)" : c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
+      sObject_fields = { FirstName: c.first_name, LastName: c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
       # Unused: LeadSource: c.source, Description: c.background_info
       #puts "----> sObject_meta:\t #{sObject_meta}\n"
       #puts "----> sObject_fields:\t #{sObject_fields}\n"

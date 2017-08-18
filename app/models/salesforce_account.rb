@@ -17,7 +17,7 @@
 #
 
 class SalesforceAccount < ActiveRecord::Base
-	belongs_to  :organization, foreign_key: "contextsmith_organization_id"
+	belongs_to :organization, foreign_key: "contextsmith_organization_id"
 	belongs_to :account, foreign_key: "contextsmith_account_id"
   has_many :salesforce_opportunities, -> { order("close_date desc") }, primary_key: "salesforce_account_id", dependent: :destroy
 
