@@ -204,9 +204,19 @@ class SettingsController < ApplicationController
 		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
 		if @super_admin.include?(current_user.email)
 			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+			@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
+			@toggle_org = Organization.is_active
 		else
 			redirect_to root_path
 		end
+	end
+
+	def organization_jump
+		person = User.find_by(id: params[:user]['user'])
+			if person.present?
+				person.update_columns(organization_id: params[:user]['organization_id'])
+			end
+		redirect_to :back
 	end
 
 	def user_analytics
