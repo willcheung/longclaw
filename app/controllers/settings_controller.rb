@@ -1,6 +1,7 @@
 class SettingsController < ApplicationController
 	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
 	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce_accounts', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
+	before_filter :get_super_admin
 
 	def index
 		@user_count = current_user.organization.users.count
@@ -131,9 +132,6 @@ class SettingsController < ApplicationController
 			else
 				@activityhistory_predicate = @activityhistory_predicate.first
 			end
-
-			# to decide if show "update SFDC ActivityHistory" export button
-			@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
 		end
 	end
 
@@ -202,7 +200,6 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
 		if @super_admin.include?(current_user.email)
 			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
 			@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
@@ -213,14 +210,14 @@ class SettingsController < ApplicationController
 	end
 
 	def organization_jump
-		person = User.find_by(id: params[:user]['user'])
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
-		person.update_columns(organization_id: params[:user]['organization_id']) if person.present? && @super_admin.include?(person.email)
+		if @super_admin.include?(current_user.email)
+			person = User.find_by(id: params[:user]['user'])
+			person.update_columns(organization_id: params[:user]['organization_id']) if person.present?
+		end
 		redirect_to :back
 	end
 
 	def user_analytics
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
 		if @super_admin.include?(current_user.email)
 			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
 			@institution = Organization.all
@@ -268,4 +265,8 @@ class SettingsController < ApplicationController
 		end
 	end
 
+	# To be used to decide if show "update SFDC ActivityHistory" export button, or enable other super admin functions
+	def get_super_admin
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)	
+	end
 end
