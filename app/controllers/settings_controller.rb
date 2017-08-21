@@ -1,7 +1,8 @@
 class SettingsController < ApplicationController
+	before_filter :get_super_admin
 	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
 	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce_accounts', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
-	before_filter :get_super_admin
+	around_action :check_if_super_admin, only: ['super_user', 'user_analytics']
 
 	def index
 		@user_count = current_user.organization.users.count
@@ -200,13 +201,9 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		if @super_admin.include?(current_user.email)
-			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
-			@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
-			@toggle_org = Organization.is_active
-		else
-			redirect_to root_path
-		end
+		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+		@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
+		@toggle_org = Organization.is_active
 	end
 
 	def organization_jump
@@ -218,16 +215,12 @@ class SettingsController < ApplicationController
 	end
 
 	def user_analytics
-		if @super_admin.include?(current_user.email)
-			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
-			@institution = Organization.all
-			@latest_user_activity = Ahoy::Event.latest_activities
-			activity_org = Ahoy::Event.all_ahoy_events
-			@event_date = activity_org.map(&:date)
-			@event_count = activity_org.map{ |n| n['events']}
-		else
-			redirect_to root_path
-		end
+		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+		@institution = Organization.all
+		@latest_user_activity = Ahoy::Event.latest_activities
+		activity_org = Ahoy::Event.all_ahoy_events
+		@event_date = activity_org.map(&:date)
+		@event_count = activity_org.map{ |n| n['events']}
 	end
 
 	def invite_user
@@ -268,5 +261,13 @@ class SettingsController < ApplicationController
 	# To be used to decide if show "update SFDC ActivityHistory" export button, or enable other super admin functions
 	def get_super_admin
 		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)	
+	end
+
+	def check_if_super_admin
+		if @super_admin.include?(current_user.email)
+			yield
+		else
+			redirect_to root_path
+		end
 	end
 end
