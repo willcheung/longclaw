@@ -1,5 +1,5 @@
 class OrganizationsController < ApplicationController
-  before_action :check_if_admin
+  before_action :check_if_super_admin
   before_action :set_organization, only: [:show, :edit, :update, :destroy]
 
   layout 'empty', only: 'new'
@@ -69,8 +69,8 @@ class OrganizationsController < ApplicationController
   end
 
   private
-    def check_if_admin
-      @super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
+    def check_if_super_admin
+      @super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
       redirect_to root_path and return unless @super_admin.include?(current_user.email)
     end
 

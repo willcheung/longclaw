@@ -76,6 +76,8 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "close_date").update(salesforce_field: "CloseDate") if sfdc_opportunity_fields.include? "CloseDate"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "description").update(salesforce_field: "Description") if sfdc_opportunity_fields.include? "Description"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "expected_revenue").update(salesforce_field: "ExpectedRevenue") if sfdc_opportunity_fields.include? "ExpectedRevenue"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "forecast").update(salesforce_field: "ForecastCategoryName") if sfdc_opportunity_fields.include? "ForecastCategoryName"  # ForecastCategory ?
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "probability").update(salesforce_field: "Probability") if sfdc_opportunity_fields.include? "probability"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "stage").update(salesforce_field: "StageName") if sfdc_opportunity_fields.include? "StageName"
 
       # Map the CS Contact field to the SFDC Contact field. The following lines may need to change if Contact::MAPPABLE_FIELDS_META changes
