@@ -213,9 +213,8 @@ class SettingsController < ApplicationController
 
 	def organization_jump
 		person = User.find_by(id: params[:user]['user'])
-			if person.present? && %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com).include?(person.email)
-				person.update_columns(organization_id: params[:user]['organization_id'])
-			end
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
+		person.update_columns(organization_id: params[:user]['organization_id']) if person.present? && @super_admin.include?(person.email)
 		redirect_to :back
 	end
 
