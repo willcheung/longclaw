@@ -113,16 +113,11 @@ class OauthUser < ActiveRecord::Base
 
   # Returns the Salesforce Instance (URL) of the organization to be used as a base URL 
   def self.get_salesforce_instance_url(organization_id)
-    salesforce_user = self.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
-    if salesforce_user.nil?
-    	salesforce_user = self.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
-      if salesforce_user.present?
-        salesforce_user.oauth_instance_url
-      else
-        nil  # should never happen if we check if the user is logged in before calling this method
-      end
+    salesforce_user = self.find_by(oauth_provider: 'salesforce', organization_id: organization_id) || self.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
+    if salesforce_user.present?
+      salesforce_user.oauth_instance_url
     else
-    	salesforce_user.oauth_instance_url 
+      nil  # should never happen if we check if the user is logged in before calling this method
     end
   end
 end
