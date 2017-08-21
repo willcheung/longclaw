@@ -1,6 +1,8 @@
 class SettingsController < ApplicationController
+	before_filter :get_super_admin
 	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
 	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce_accounts', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
+	around_action :check_if_super_admin, only: ['super_user', 'user_analytics']
 
 	def index
 		@user_count = current_user.organization.users.count
@@ -131,13 +133,10 @@ class SettingsController < ApplicationController
 			else
 				@activityhistory_predicate = @activityhistory_predicate.first
 			end
-
-			# to decide if show "update SFDC ActivityHistory" export button
-			@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
 		end
 	end
 
-	# Map SFDC entity fields to standard or custom CS entity fields
+	# Map SFDC entity fields to standard (params[:type] == "standard") Account, Opportunity, or Contact fields or custom (params[:type] == "custom") Account or Opportunity ContextSmith fields
 	def salesforce_fields
 		if current_user.role == User::ROLE[:Admin]
       @user_roles = User::ROLE.map { |r| [r[1],r[1]] }
@@ -146,6 +145,7 @@ class SettingsController < ApplicationController
         cs_entity_fields = current_user.organization.entity_fields_metadatum.order(:name)
         @cs_account_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
         @cs_stream_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
+        # TODO: Add code to use Contacts mapping set here when importing Contacts
         @cs_contact_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Contact])
       elsif params[:type] == "custom"
         cs_custom_fields = current_user.organization.custom_fields_metadatum.order(:name)
@@ -201,35 +201,26 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
-		if @super_admin.include?(current_user.email)
-			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
-			@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
-			@toggle_org = Organization.is_active
-		else
-			redirect_to root_path
-		end
+		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+		@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
+		@toggle_org = Organization.is_active
 	end
 
 	def organization_jump
-		person = User.find_by(id: params[:user]['user'])
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
-		person.update_columns(organization_id: params[:user]['organization_id']) if person.present? && @super_admin.include?(person.email)
+		if @super_admin.include?(current_user.email)
+			person = User.find_by(id: params[:user]['user'])
+			person.update_columns(organization_id: params[:user]['organization_id']) if person.present?
+		end
 		redirect_to :back
 	end
 
 	def user_analytics
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
-		if @super_admin.include?(current_user.email)
-			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
-			@institution = Organization.all
-			@latest_user_activity = Ahoy::Event.latest_activities
-			activity_org = Ahoy::Event.all_ahoy_events
-			@event_date = activity_org.map(&:date)
-			@event_count = activity_org.map{ |n| n['events']}
-		else
-			redirect_to root_path
-		end
+		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+		@institution = Organization.all
+		@latest_user_activity = Ahoy::Event.latest_activities
+		activity_org = Ahoy::Event.all_ahoy_events
+		@event_date = activity_org.map(&:date)
+		@event_count = activity_org.map{ |n| n['events']}
 	end
 
 	def invite_user
@@ -267,4 +258,16 @@ class SettingsController < ApplicationController
 		end
 	end
 
+	# To be used to decide if show "update SFDC ActivityHistory" export button, or enable other super admin functions
+	def get_super_admin
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)	
+	end
+
+	def check_if_super_admin
+		if @super_admin.include?(current_user.email)
+			yield
+		else
+			redirect_to root_path
+		end
+	end
 end

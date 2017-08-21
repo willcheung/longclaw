@@ -90,6 +90,7 @@
                                     <th>Name</th>
                                     <th><%= Project::MAPPABLE_FIELDS_META["stage"] %></th>
                                     <th><%= Project::MAPPABLE_FIELDS_META["amount"] %></th>
+                                    <th><%= Project::MAPPABLE_FIELDS_META["forecast"] %></th>
                                     <th>Owner</th>
                                     <th></th>
                                     <th>Days to Close</th>
@@ -111,8 +112,9 @@
                                             <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                             <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                         </td>
-                                        <td style="width: 120px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
-                                        <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
+                                        <td style="width: 80px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
+                                        <td style="width: 60px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
+                                        <td style="width: 80px"><%= (p.forecast.nil?) ? "-" : p.forecast %></td>
                                         <td>
                                             <div><%= get_full_name(p.project_owner) %></div>
                                         </td>

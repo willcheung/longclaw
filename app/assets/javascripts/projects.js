@@ -34,8 +34,8 @@ $(document).ready(function($) {
   $('#projects-table').DataTable({
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,5,6,7,8,9,10,11]},
-     { orderable: false, targets: [0,5,8,11,12] }
+      { searchable: false, targets: [0,6,7,8,9,10,11,12] },
+      { orderable: false, targets: [0,6,9,12,13] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
