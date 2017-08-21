@@ -133,7 +133,7 @@ class SettingsController < ApplicationController
 			end
 
 			# to decide if show "update SFDC ActivityHistory" export button
-			@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
+			@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
 		end
 	end
 
@@ -201,7 +201,7 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
 		if @super_admin.include?(current_user.email)
 			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
 			@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
@@ -213,14 +213,14 @@ class SettingsController < ApplicationController
 
 	def organization_jump
 		person = User.find_by(id: params[:user]['user'])
-			if person.present?
+			if person.present? && %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com).include?(person.email)
 				person.update_columns(organization_id: params[:user]['organization_id'])
 			end
 		redirect_to :back
 	end
 
 	def user_analytics
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com)
+		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)
 		if @super_admin.include?(current_user.email)
 			@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
 			@institution = Organization.all
