@@ -27,6 +27,8 @@
 include ActionView::Helpers::SanitizeHelper   # for sanitize (escape single quotes)
 
 class Contact < ActiveRecord::Base
+  before_save :downcase_email
+
 	belongs_to :account
 
   ### project_members/projects relations have 2 versions
@@ -132,7 +134,7 @@ class Contact < ActiveRecord::Base
 
       # Keep the first contact (alphabetically, by Last then First Name) from contacts with identical e-mails; ignore contacts with no e-mail field
       query_result[:result].each do |c|
-        email = Contact.sanitize(c[:Email]) 
+        email = Contact.sanitize(c[:Email]).downcase
         if c[:Email].present? && emails_processed[email].nil?
           firstname = self.capitalize_first_only(c[:FirstName])
           lastname = self.capitalize_first_only(c[:LastName])
@@ -236,5 +238,9 @@ class Contact < ActiveRecord::Base
   # Capitalizes first character and leaves the remaining alone (unlike .capitalize which changes remaining ones to lowercase)
   def self.capitalize_first_only (str)
     str.slice(0,1).capitalize + str.slice(1..-1) if !str.nil?
+  end
+
+  def downcase_email
+    self.email.downcase!
   end
 end
