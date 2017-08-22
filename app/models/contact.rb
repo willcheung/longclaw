@@ -85,41 +85,29 @@ class Contact < ActiveRecord::Base
   def self.find_or_create_from_email_info(address, personal, project, status=ProjectMember::STATUS[:Pending], source=nil)
     org = project.account.organization
     domain = get_domain(address)
-    if valid_domain?(domain)
-      primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
+    puts "** Skipped creating Contact for #{address}, invalid domain='#{domain}'. **" && return unless valid_domain?(domain)
 
-      ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
-      # find account this new member should belong to
-      account = org.accounts.find_by_domain(primary_domain) || org.accounts.find_by_name(primary_domain)
-      # create a new account for this domain if one doesn't exist yet
-      unless account
-        account = Account.create(
-          domain: primary_domain,
-          name: primary_domain,
-          category: Account::CATEGORY[:Customer], # TODO: 'Customer' may not be in Org's custom list of Account Types (Categories)!!
-          address: "",
-          website: "http://www.#{primary_domain}",
-          owner_id: project.owner_id,
-          organization: org,
-          created_by: project.owner_id)
-        subdomain_msg = primary_domain != domain ? " (subdomain: #{domain})" : ""
-        puts "** Created a new account for domain='#{primary_domain}'#{subdomain_msg}, organization='#{org}'. **"
-      end
-
-      # find or create contact for this member
-      contact = account.contacts.create_with(
-        first_name: get_first_name(personal),
-        last_name: get_last_name(personal),
-        source: source
-        ).find_or_create_by(email: address)
-
-      # add member to project as suggested member
-      ProjectMember.create(project: project, contact: contact, status: status)
-
-      contact
-    else
-      puts "** Skipped processing the invalid domain='#{domain}'. **"
+    # find account this new member should belong to
+    primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
+    account = org.accounts.find_by_domain(primary_domain) || org.accounts.find_by_name(primary_domain)
+    if account.blank?
+      # try to find a contact with matching email domain
+      contact = org.contacts.where("email LIKE '%@#{domain}'").first || org.contacts.where("email LIKE '%@#{primary_domain}'").first
+      account = contact.account if contact.present?
     end
+    puts "** Skipped creating Contact for #{address}, no Account found! **" && return if account.blank?
+
+    # find or create contact for this member
+    contact = account.contacts.create_with(
+      first_name: get_first_name(personal),
+      last_name: get_last_name(personal),
+      source: source
+    ).find_or_create_by(email: address)
+
+    # add member to project as suggested member
+    ProjectMember.create(project: project, contact: contact, status: status)
+
+    contact
   end
 
   # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields for each "matched" Contact (same e-mail).  If there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one. Note: Contact merge will only copy the value from the SFDC Contact field if there's no existing value in the matched CS Contact.
