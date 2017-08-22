@@ -505,7 +505,10 @@ class Activity < ActiveRecord::Base
       e.end_epoch += sec if self.category == CATEGORY[:Meeting]
     end
     self.email_messages = em
-    # TODO: move child notifications as well (Alerts/Suggested To-do/Attachments)
+    self.attachments.each do |a|
+      a.sent_date += sec
+      a.save
+    end
     self.save
   end
 
