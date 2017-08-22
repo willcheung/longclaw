@@ -117,37 +117,6 @@ class SalesforceController < ApplicationController
       SalesforceAccount.load_accounts(current_user.organization_id)
     when "opportunities"
       SalesforceOpportunity.load_opportunities(current_user.organization_id)
-    when "contacts"
-      # Load SFDC Contacts into CS Accounts, depending on the explicit (primary) mapping of a SFDC Account (first one) to a CS account.
-      account_mapping = []
-      method_name = "import_salesforce#contacts()"
-      accounts = Account.visible_to(current_user)
-      accounts.each do |a|
-        account_mapping << [a, a.salesforce_accounts.first] if a.salesforce_accounts.present?
-      end
-
-      unless account_mapping.empty?  # no visible or mapped accounts
-        client = SalesforceService.connect_salesforce(current_user.organization_id)
-        #client = nil #simulate connection error
-        unless client.nil?  # unless SFDC connection error
-          account_mapping.each do |m|
-            a = m[0]
-            sfa = m[1]
-            load_result = Contact.load_salesforce_contacts(client, a.id, sfa.salesforce_account_id)
-
-            if load_result[:status] == "ERROR"
-              failure_method_location = "Contact.load_salesforce_contacts()"
-              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-              render_internal_server_error(method_name, failure_method_location, error_detail)
-              return
-            end
-          end
-        else
-          render_service_unavailable_error(method_name)
-          return
-        end
-      end
-    # end when params[:entity_type] = "contacts"
     when "activities"
       # Load SFDC Activities into CS Opportunities, depending on the explicit (primary) mapping of a SFDC opportunity to a CS Opportunity, or the implicit (secondary) opportunity mapping of a SFDC account mapped to a CS account.
       # Note: Ignores exported CS data residing on SFDC
@@ -203,7 +172,10 @@ class SalesforceController < ApplicationController
       end
     # end when params[:entity_type] = "activities"
     else
-      # Error: unsupported Salesforce entity type; do nothing
+      error_detail = "Invalid entity_type parameter passed to import_salesforce(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
     end
 
     render plain: ''
@@ -263,9 +235,23 @@ class SalesforceController < ApplicationController
         return
       end
     #end when params[:entity_type] = "activities"
+    else
+      error_detail = "Invalid entity_type parameter passed to export_salesforce(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
+    end
+
+    render plain: ''
+  end
+
+  # An import and merge of a SFDC entity to ContextSmith, followed by an export back to SFDC using SFDC <-> CS fields mapping.
+  # For Contacts, merges and synchronizes Contacts depending on the explicit mapping of a SFDC Account to a CS Account. ("Sync" is used loosely, because some Contacts is missing information like e-mail address)
+  def sync_salesforce
+    method_name = "sync_salesforce()"
+    case params[:entity_type]
     when "contacts"
-      # Export local Contacts out to SFDC Accounts, depending on the explicit (primary) mapping of a CS account to SFDC Account (first one).
-      method_name = "export_salesforce#contacts()"
+      method_name = "sync_salesforce#contacts()"
       account_mapping = []
       accounts = Account.visible_to(current_user)
       accounts.each do |a|
@@ -275,27 +261,40 @@ class SalesforceController < ApplicationController
       unless account_mapping.empty?  # no visible or mapped accounts
         client = SalesforceService.connect_salesforce(current_user.organization_id)
         #client = nil #simulate connection error
+
         unless client.nil?  # unless SFDC connection error
-          export_result_messages = []
+          sync_result_messages = []
           error_occurred = false
           account_mapping.each do |m|
             a = m[0]
             sfa = m[1]
+            # Import Contacts from SFDC to ContextSmith 
+            import_result = Contact.load_salesforce_contacts(client, a.id, sfa.salesforce_account_id)
+            failure_method_location = "Contact.load_salesforce_contacts()"
+
+            if import_result[:status] == "ERROR"
+              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
+              sync_result_messages << { status: import_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: import_result[:result] + " " + import_result[:detail] }
+              error_occurred = true
+            else # import_result[:status] == SUCCESS
+              sync_result_messages << { status: import_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: import_result[:result] + " " + import_result[:detail] } 
+            end
+
+            # Export ContextSmith Contacts out to SFDC
             export_result = Contact.export_cs_contacts(client, a.id, sfa.salesforce_account_id)
+            failure_method_location = "Contact.export_cs_contacts()"
 
             if export_result[:status] == "ERROR"
-              error_detail = export_result[:detail]
-              export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: error_detail }
+              sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: export_result[:detail] }
               error_occurred = true
-            else # SUCCESS
-              export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: [] } 
+            else # export_result[:status] == SUCCESS
+              sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id } } 
             end
-          end
-          #puts "\n\n==> Export result messages: #{export_result_messages}\n\n"
+          end #end: account_mapping.each
+
+          #puts "\n\n==> Sync result messages: #{sync_result_messages}\n\n"
           if error_occurred
-            failure_method_location = "Contact.export_cs_contacts()"
-            render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| (m[:status] == "ERROR" ? "*" : "-") + " #{m[:status]}:  '#{m[:account][:name]}'(#{m[:account][:id]}) -> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]}) detail: #{m[:detail]}" }.join("\n\n"))
-            # render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| {account_name: m[:account][:name], account_id: m[:account][:id], sfdc_account_name: m[:sfdc_account][:name], sfdc_account_id: m[:sfdc_account][:id], status: m[:status], detail: m[:detail] }})
+            render_internal_server_error(method_name, "(see listing)", sync_result_messages.map{ |m| (m[:status] == "ERROR" ? "X FAILURE:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:account][:name]}'(#{m[:account][:id]}) <-> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]})  detail: #{m[:detail]}" }.join("\n\n"))
             return
           end
         else
@@ -303,16 +302,18 @@ class SalesforceController < ApplicationController
           return
         end
       end
-    # end when params[:entity_type] = "contacts"
+    # end: when params[:entity_type] = "contacts"
     else
-      # Error: unsupported Salesforce entity type; do nothing
+      error_detail = "Invalid entity_type parameter passed to sync_salesforce(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
     end
-
     render plain: ''
   end
 
   # Native CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. 
-  # Parameters:   params[:entity_type] - "accounts" or "projects" or "contacts".
+  # Parameters:   params[:entity_type] - "accounts" or "projects".
   #               params[:field_type] - "standard" or "custom"
   # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS Opportunity, an update will be carried out for each mapping.
   def refresh_fields
@@ -403,10 +404,11 @@ class SalesforceController < ApplicationController
           return
         end
       end
-    elsif params[:entity_type] == "contacts" && params[:field_type] == "standard"
-      puts "Standard #{params[:entity_type]} fields all the wayyyyy!!!"
     else
-      puts "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
+      error_detail = "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
     end
 
     render plain: ''

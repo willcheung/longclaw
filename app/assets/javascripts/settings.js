@@ -101,9 +101,6 @@ $(document).ready(function() {
         else if ($(this).attr("id").includes("salesforce-accounts-opp-refresh")) {  //clicked on 'Refresh Opportunities'
             entity_type = "opportunities";
         }
-        else if ($(this).attr("id").includes("salesforce-accounts-cont-import")) {  //clicked on 'Import Contacts'
-            entity_type = "contacts";
-        }
         else {
             return;
         }
@@ -145,55 +142,7 @@ $(document).ready(function() {
         });
     });
 
-    $('#salesforce-accounts-export-contacts').click(function(){
-        var self = $(this);
-        var entity_type, entity_type_btn_str;
-        var buttonTxtStr = self.attr("btnLabel");
-
-        if ($(this).attr("id").includes("salesforce-accounts-export-contacts")) {  //clicked on 'Export Contacts to Salesforce'
-            entity_type = "contacts";
-        }
-        else {
-            return;
-        }
-
-        // console.log("$(this).attr('id'): " + self.attr("id"));
-        
-        $.ajax('/salesforce/update/' + entity_type, {
-            async: true,
-            method: "POST",
-            beforeSend: function () {
-                self.css("pointer-events", "none");
-                $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
-            },
-            success: function() {
-                self.addClass('success-btn-highlight');
-                self.html("✓ " + buttonTxtStr);
-            },
-            error: function(data) {
-                var res = JSON.parse(data.responseText);
-                self.addClass('error-btn-highlight');
-                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
-                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
-            },
-            statusCode: {
-                500: function() {
-                    //self.css("margin-left","0px");
-                    self.html("<i class='fa fa-exclamation'></i> Salesforce update error");
-                },
-                503: function() {
-                    //self.css("margin-left","0px");
-                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
-                },
-            },
-            complete: function() {
-                self.css("pointer-events", "auto");
-                $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
-                location.reload();
-            }
-        });
-    });
-
+    
     ////////////////////////////////////////
     // ../settings/salesforce_opportunities
     ////////////////////////////////////////
@@ -360,7 +309,7 @@ $(document).ready(function() {
     ////////////////////////////////////////
     // ../settings/salesforce_fields
     ////////////////////////////////////////
-    $('#salesforce-standard-fields-refresh-accounts-btn,#salesforce-standard-fields-refresh-projects-btn,#salesforce-standard-fields-refresh-contacts-btn,#salesforce-custom-fields-refresh-accounts-btn,#salesforce-custom-fields-refresh-projects-btn').click(function() {
+    $('#salesforce-standard-fields-refresh-accounts-btn,#salesforce-standard-fields-refresh-projects-btn,#salesforce-custom-fields-refresh-accounts-btn,#salesforce-custom-fields-refresh-projects-btn').click(function() {
         var self = $(this);
         var entity_type, entity_type_btn_str;
 
@@ -399,6 +348,63 @@ $(document).ready(function() {
                 self.addClass('error-btn-highlight');
                 console.log("Refresh ContextSmith " + entity_type_btn_str + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
                 alert("There was a Refresh " + entity_type_btn_str + " error, but it has been logged and our team will get right on it shortly to resolve it!");
+            },
+            statusCode: {
+                500: function() {
+                    self.css("margin-left","60px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                },
+                503: function() {
+                    self.css("margin-left","30px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                },
+            },
+            complete: function() {
+                self.css("pointer-events", "auto");
+                self.removeClass('btn-primary btn-outline');
+            }
+        });
+    });
+
+    $('#salesforce-standard-fields-sync-contacts-btn').click(function() {
+        var self = $(this);
+        var entity_type, entity_type_btn_str;
+
+        var field_type = self.attr("id").includes("standard") ? "standard" : "custom";
+
+        if (self.attr("id").includes("accounts")) {
+            entity_type = "accounts";
+            entity_type_btn_str = "Accounts";
+        } 
+        else if (self.attr("id").includes("projects")) {
+            entity_type = "projects";
+            entity_type_btn_str = "Opportunities";
+        } 
+        else {
+            entity_type = "contacts";
+            entity_type_btn_str = "Contacts";
+        }
+
+        $.ajax('/salesforce/sync/', {
+            async: true,
+            method: "POST",
+            data: { "field_type": field_type, "entity_type": entity_type },
+            beforeSend: function () {
+                self.css("pointer-events", "none");
+                self.css("margin-left","0px");
+                self.removeClass('success-btn-highlight error-btn-highlight');
+                self.addClass('btn-primary btn-outline');
+                self.html("<i class='fa fa-refresh fa-spin'></i> Sync " + entity_type_btn_str);
+            },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ Sync " + entity_type_btn_str);
+            },
+            error: function(data) {
+                var res = JSON.parse(data.responseText);
+                self.addClass('error-btn-highlight');
+                console.log("Sync " + entity_type_btn_str + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                alert("There was a Sync " + entity_type_btn_str + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {
