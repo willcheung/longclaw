@@ -151,6 +151,7 @@ class Project < ActiveRecord::Base
         FROM projects
         LEFT JOIN notifications
         ON projects.id = notifications.project_id
+        AND notifications.category != '#{Notification::CATEGORY[:Attachment]}'
         WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
         GROUP BY projects.id
         ORDER BY open_risks DESC
