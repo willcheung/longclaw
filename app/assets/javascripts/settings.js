@@ -252,21 +252,21 @@ $(document).ready(function() {
         });
     });
 
-    $('#salesforce-activity-refresh, #salesforce-activity-cs-export-activities').click(function(){
+    $('#salesforce-activities-sync').click(function(){
         var self = $(this);
         var error500_msg;
         var requestURL;
         var request_data = {};
         var buttonTxtStr = self.attr("btnLabel");
 
-        if (self.attr("id").includes("salesforce-activity-refresh")) {
-            error500_msg = "Salesforce query error";
-            requestURL = "/salesforce/import/activities";
-            request_data = { entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() };
+        if (self.attr("id").includes("salesforce-activities-sync")) {
+            error500_msg = "Sync activities error";
+            requestURL = "/salesforce/sync";
+            request_data = { "entity_type": "activities", entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() };
         }
         else {
-            error500_msg = "Salesforce update error";
-            requestURL = "/salesforce/update/activities";
+            error500_msg = "Sync activities error";
+            requestURL = "/salesforce/sync";
         }
 
         $.ajax(requestURL, {
@@ -369,6 +369,7 @@ $(document).ready(function() {
     $('#salesforce-standard-fields-sync-contacts-btn').click(function() {
         var self = $(this);
         var entity_type, entity_type_btn_str;
+        var buttonTxtStr = self.attr("btnLabel");
 
         var field_type = self.attr("id").includes("standard") ? "standard" : "custom";
 
@@ -385,7 +386,7 @@ $(document).ready(function() {
             entity_type_btn_str = "Contacts";
         }
 
-        $.ajax('/salesforce/sync/', {
+        $.ajax('/salesforce/sync', {
             async: true,
             method: "POST",
             data: { "field_type": field_type, "entity_type": entity_type },
@@ -394,11 +395,11 @@ $(document).ready(function() {
                 self.css("margin-left","0px");
                 self.removeClass('success-btn-highlight error-btn-highlight');
                 self.addClass('btn-primary btn-outline');
-                self.html("<i class='fa fa-refresh fa-spin'></i> Sync " + entity_type_btn_str);
+                self.html("<i class='fa fa-refresh fa-spin'></i> " + buttonTxtStr);
             },
             success: function() {
                 self.addClass('success-btn-highlight');
-                self.html("✓ Sync " + entity_type_btn_str);
+                self.html("✓ " + buttonTxtStr);
             },
             error: function(data) {
                 var res = JSON.parse(data.responseText);

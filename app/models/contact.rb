@@ -124,6 +124,7 @@ class Contact < ActiveRecord::Base
   def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
     result = nil
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"  # Unused: Description, LeadSource
 
@@ -205,6 +206,7 @@ class Contact < ActiveRecord::Base
   #             detail - a list of all errors, or an empty list if no errors occurred. 
   def self.export_cs_contacts(client, account_id, sfdc_account_id)
     result = { status: "SUCCESS", result: [], detail: [] }
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     Account.find(account_id).contacts.each do |c|
       #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
