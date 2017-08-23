@@ -189,4 +189,20 @@ namespace :scheduler do
             end
         end
     end
+
+    desc 'Keep all activities in demo Project up to date'
+    # Optional Parameters: project_id (via variable name injection into environment)
+    # Usage: rake scheduler:time_jump_demo [proj=project_uuid] (default proj=id of Stark Industries in production)
+    task time_jump_demo: :environment do
+        proj = ENV['proj'].nil? ? '502b8160-0536-48da-9021-1561b957434e' : ENV['proj']
+        puts "\n\n=====Task (time_jump_demo) started at #{Time.now}====="
+
+        begin
+            p = Project.find(proj)
+            p.time_jump 3.hours.ago
+            puts "time_jumped all activities in #{p.name}(id=#{proj}) to a recent date for demos"
+        rescue ActiveRecord::RecordNotFound
+            puts "*** CAUTION: demo Project with id=#{proj} to time_jump could not be found, exiting... ***"
+        end
+    end
 end
