@@ -27,6 +27,10 @@ gem 'omniauth-salesforce'
 gem 'restforce', '~> 2.5.0'  #saleforce REST gem
 gem 'd3-rails', '~> 3.5'          # Use D3 for cool data visualizations
 gem 'slack-notifier'
+gem 'device_detector'
+gem 'geocoder'
+gem 'rack-cors', :require => 'rack/cors'
+gem 'graphql'
 
 # Gems used only for assets and not required
 # in production environments by default.

@@ -11,7 +11,7 @@ module Longclaw
   class Application < Rails::Application
     config.autoload_paths += %W(#{config.root}/lib) # add modules from /lib
 
-    # Load config file into environment 
+    # Load config file into environment
     config.before_configuration do
         api_keys_config_file = File.join(Rails.root,'config','api_keys.yml')
         raise "#{api_keys_config_file} is missing!" unless File.exists? api_keys_config_file
@@ -32,6 +32,13 @@ module Longclaw
         domain:  'contextsmith.com',
         enable_starttls_auto: true
         }
+    end
+
+    config.middleware.insert_before 0, 'Rack::Cors' do
+      allow do
+        origins 'https://mail.google.com'
+        resource '*', credentials: true, headers: :any, methods: [:get, :post, :options]
+      end
     end
 
     # Settings in config/environments/* take precedence over those specified here.

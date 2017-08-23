@@ -132,6 +132,14 @@ Longclaw::Application.routes.draw do
       post 'create_account'
     end
 
+    scope "tracking", controller: :tracking, as: 'tracking' do
+      post 'create'
+      get '/' => 'tracking#index'
+      post 'toggle'
+      get 'new_events'
+      post 'seen'
+    end
+
     resources :entity_fields_metadatum, controller: 'entity_fields_metadata', only: [:create, :update, :destroy] #for /settings/salesforce_fields/standard
     resources :custom_fields, only: [:update]
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
@@ -161,4 +169,8 @@ Longclaw::Application.routes.draw do
     post "zendesk"
   end
 
+  #scope 'tracking', controller: :tracking, as: 'tracking' do
+  #  get 'view/:tracking_id' => 'tracking#view'
+  #end
+  get "track/:user_id/:tracking_id/:gif" => 'tracking#view'
 end
