@@ -314,6 +314,8 @@ ActiveRecord::Schema.define(version: 20170818163635) do
     t.string   "stage"
     t.date     "close_date"
     t.decimal  "expected_revenue",    precision: 14, scale: 2
+    t.decimal  "probability",         precision: 5,  scale: 2
+    t.string   "forecast"
   end
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
@@ -373,6 +375,8 @@ ActiveRecord::Schema.define(version: 20170818163635) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
+    t.string   "forecast_category_name"
+    t.string   "owner_id"
   end
 
   add_index "salesforce_opportunities", ["salesforce_opportunity_id"], name: "index_salesforce_opportunities_on_salesforce_opportunity_id", unique: true, using: :btree

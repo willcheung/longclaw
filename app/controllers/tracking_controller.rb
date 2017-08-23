@@ -50,7 +50,12 @@ class TrackingController < ApplicationController
       user_agent = request.headers['user-agent']
       host_name = Resolv.getname(request.remote_ip)
       # if request comes from a google proxy, we can't locate the user
-      location = host_name.start_with?('google-proxy') ? 'Gmail' : location_lookup(request.remote_ip)
+      location = if host_name.start_with?('google-proxy') then
+                   user_agent = ''
+                   'Gmail'
+                 else
+                   location_lookup(request.remote_ip)
+                 end
       TrackingEvent.create(
           tracking_id: tr.tracking_id,
           user_agent: user_agent,

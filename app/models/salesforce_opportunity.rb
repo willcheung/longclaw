@@ -7,7 +7,6 @@
 #  salesforce_account_id     :string           default(""), not null
 #  name                      :string           default(""), not null
 #  description               :text
-#  amount                    :decimal(14, 2)
 #  is_closed                 :boolean
 #  is_won                    :boolean
 #  stage_name                :string
@@ -17,6 +16,9 @@
 #  contextsmith_project_id   :uuid
 #  probability               :decimal(5, 2)
 #  expected_revenue          :decimal(14, 2)
+#  amount                    :decimal(14, 2)
+#  forecast_category_name    :string
+#  owner_id                  :string
 #
 # Indexes
 #
@@ -27,7 +29,7 @@ class SalesforceOpportunity < ActiveRecord::Base
 	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id", primary_key: "salesforce_account_id"
   belongs_to  :project, foreign_key: "contextsmith_project_id"
 
-  # This class method finds SFDC opportunities and creates a local model
+  # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with a linked account, that are open, or closed within the past year.
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of opportunities added/updated; if an error occurred, contains the title of the error.
@@ -45,7 +47,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     total_opportunities = 0
 
     sfdc_accounts.each do |a|
-      query_statement = "select Id, AccountId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' and StageName != 'Closed Lost' ORDER BY Id"
+      query_statement = "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) ORDER BY Id"
 
       query_result = SalesforceService.query_salesforce(client, query_statement)
       # puts "query_statement: #{ query_statement }" 
@@ -59,6 +61,7 @@ class SalesforceOpportunity < ActiveRecord::Base
 
     	query_result[:result].each do |opp|
     		val << "('#{opp.Id}', 
+    						'#{opp.OwnerId}', 
     						'#{opp.AccountId}', 
     						#{SalesforceOpportunity.sanitize(opp.Name)}, 
     						#{SalesforceOpportunity.sanitize(opp.Description)}, 
@@ -67,11 +70,13 @@ class SalesforceOpportunity < ActiveRecord::Base
     						#{opp.IsWon}, 
     						#{SalesforceOpportunity.sanitize(opp.StageName)},
     						'#{opp.CloseDate}',
+    						#{SalesforceOpportunity.sanitize(opp.Probability)},
+    						#{SalesforceOpportunity.sanitize(opp.ForecastCategoryName)},
     						'#{Time.now}', '#{Time.now}')"
     	end
 
-    	insert = 'INSERT INTO "salesforce_opportunities" ("salesforce_opportunity_id", "salesforce_account_id", "name", "description", "amount", "is_closed", "is_won", "stage_name", "close_date", "created_at", "updated_at") VALUES'
-    	on_conflict = 'ON CONFLICT (salesforce_opportunity_id) DO UPDATE SET salesforce_account_id = EXCLUDED.salesforce_account_id, name = EXCLUDED.name, description = EXCLUDED.description, amount = EXCLUDED.amount, is_closed = EXCLUDED.is_closed, is_won = EXCLUDED.is_won, stage_name = EXCLUDED.stage_name, close_date = EXCLUDED.close_date, updated_at = EXCLUDED.updated_at'
+    	insert = 'INSERT INTO "salesforce_opportunities" ("salesforce_opportunity_id", "owner_id", "salesforce_account_id", "name", "description", "amount", "is_closed", "is_won", "stage_name", "close_date", "probability", "forecast_category_name", "created_at", "updated_at") VALUES'
+    	on_conflict = 'ON CONFLICT (salesforce_opportunity_id) DO UPDATE SET owner_id = EXCLUDED.owner_id, salesforce_account_id = EXCLUDED.salesforce_account_id, name = EXCLUDED.name, description = EXCLUDED.description, amount = EXCLUDED.amount, is_closed = EXCLUDED.is_closed, is_won = EXCLUDED.is_won, stage_name = EXCLUDED.stage_name, close_date = EXCLUDED.close_date, probability = EXCLUDED.probability, forecast_category_name = EXCLUDED.forecast_category_name, updated_at = EXCLUDED.updated_at'
       values = val.join(', ')
 
       if !val.empty?

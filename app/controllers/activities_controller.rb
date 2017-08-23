@@ -47,15 +47,30 @@ class ActivitiesController < ApplicationController
     end
   end
 
+  def show_message
+    activity = Activity.find(params[:id])
+    # display 'Email not found!' message if activity or message are not found
+    render json: { body: 'Email not found!' }.to_json and return unless activity.present? && activity.email_messages.map(&:messageId).include?(params[:message_id])
+    # display 'Private message' message if activity is not visible to current user
+    render json: { body: 'This is a private message.' }.to_json and return unless activity.is_visible_to(current_user)
+
+    # simple hack to access view helpers without an include statement
+    helpers = view_context
+
+    message = activity.email_messages.find { |m| m.messageId == params[:message_id] }
+    from = message.from[0].personal.nil? ? message.from[0].address : message.from[0].personal
+    to = helpers.get_conversation_member_names([], message.to, message.cc, "All")
+    render json: { sentDate: Time.zone.at(message.sentDate).strftime('%b %e'), subject: message.subject, body: helpers.simple_format(message.content.body, class: 'tooltip-inner-content'), from: from, to: to }.to_json
+  end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_activity
-      @activity = Activity.find(params[:id])
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_activity
+    @activity = Activity.find(params[:id])
+  end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def activity_params
-      params.require(:activity).permit(:is_pinned, :pinned_by, :pinned_at, :is_public, :title, :note, :last_sent_date, :last_sent_date_epoch, :rag_score)
-    end
+  # Never trust parameters from the scary internet, only allow the white list through.
+  def activity_params
+    params.require(:activity).permit(:is_pinned, :pinned_by, :pinned_at, :is_public, :title, :note, :last_sent_date, :last_sent_date_epoch, :rag_score)
+  end
 end

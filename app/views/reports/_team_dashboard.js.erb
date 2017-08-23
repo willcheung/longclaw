@@ -1,6 +1,5 @@
 // Shared metric update code (left panel) between team_dashboard.html.erb & td_sort_data.js.erb
 var chart = $('#left-chart').highcharts();
-chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
 
 //clear all old series
 while(chart.series.length > 0) {
@@ -8,10 +7,12 @@ while(chart.series.length > 0) {
 }
 
 <% if @data.present? %>
+  chart.xAxis[0].setCategories(<%= @data.map(&:name).to_json.html_safe %>, false);
 
   // Add the data via series
   <% if @metric == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
     // chart.legend.update({enabled: true});
+
     <% @categories.each.with_index do |c, i| %>
     chart.addSeries({
       name: "<%= c %>",
@@ -36,7 +37,7 @@ while(chart.series.length > 0) {
       color: "<%= highcharts_series_color(c) %>",  //set color according to category
       tooltip: {
         pointFormatter: function() {
-          return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+          return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
         }
       },
       <%= 'showInLegend: false,' if c.blank? %>
@@ -71,7 +72,7 @@ while(chart.series.length > 0) {
       stackLabels: {
         enabled: true,
         formatter: function () {
-          return convert_secs_to_ddhhmm(this.total);
+          return convert_secs_to_hhmm(this.total);
         }
       }
     });
@@ -89,7 +90,6 @@ while(chart.series.length > 0) {
   reset_subtitles_on_chart(chart);
 <% end %>
 
-chart.yAxis[0].update( { tickInterval: <%= @metric_tick_interval %> });
 //console.log("datamax=" + chart.yAxis[0].dataMax);
 chart.setSize(undefined, 70 + Math.min(1150, <%= @data.size %> * 110)); //set graph height
 
@@ -102,12 +102,39 @@ $('.highcharts-xaxis-labels text tspan').click(function() {
         renderCharts(this.y);
     })
 });
+$('.highcharts-xaxis-labels text').css("cursor", "pointer");
 
 function get_category_uuid (catname) {
-  var map = {
-  <% @data.each do |d| %>
-    "<%= d.name.html_safe %>": "<%= d.id %>",
+  <% if @data.blank? %>
+    return "";
+  <% else %>
+    var map = {
+    <% @data.each do |d| %>
+      "<%= d.name.html_safe %>": "<%= d.id %>",
+    <% end %>
+    };
+
+    catname = catname.trim();
+    // In case of axis label truncation and wrapping, implement "close-enough" match
+    var match = map[catname];
+    if (!match){
+      // Attempt to match the max number of chars, so keep truncating the string until matched
+      var keys = Object.keys(map);
+      for (var e = 0; ; e++) {
+        var keyname;
+        var found_nonempty_key = false;
+        for (k in Object.keys(map)) {
+          keyname = keys[k];
+          if (keyname.substring(0, keyname.length - e) == catname)
+              return map[keyname];
+          found_nonempty_key = found_nonempty_key || (keyname.length - e > 0);
+        }
+        if (!found_nonempty_key) // if all keys are truncated to 0 length, quit!
+          break;
+      }
+      return ""; // cannot find category
+    } else {
+      return match;
+    }
   <% end %>
-  };
-  return map[catname];
 }

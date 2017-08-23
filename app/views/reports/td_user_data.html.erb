@@ -4,34 +4,12 @@
             <h1><%= get_full_name @user %></h1>
         </div>
         <div class="col-lg-2 m-t-md">
-            <span class="label" style="font-size: 11pt">Last 14 days</span>
+            
         </div>
     </div>
 
     <div class="ibox-content">
         <div class="row">
-            <div class="col-md-3 text-center">
-                <div class="metric text-danger">
-                    <div class="metric-title">
-                        <h4>Open Alerts & Tasks</h4>
-                    </div>
-                    <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><%= @open_alerts %></h2>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3 text-center">
-                <div class="metric">
-                    <div class="metric-title">
-                        <h4>Opportunities</h4>
-                    </div>
-                    <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><%= @accounts_managed %></h2>
-                    </div>
-                </div>
-            </div>
-
             <div class="col-md-3 text-center">
                 <div class="metric">
                     <div class="metric-title">
@@ -53,6 +31,29 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="col-md-3 text-center">
+                <div class="metric text-danger">
+                    <div class="metric-title">
+                        <h4>Open Alerts & Tasks</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px"><%= @open_alerts_and_tasks %></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+                <div class="metric">
+                    <div class="metric-title">
+                        <h4>Opportunities</h4>
+                    </div>
+                    <div class="metric-content">
+                        <h2 style="font-weight:600;font-size:46px"><%= @accounts_managed %></h2>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -94,7 +95,7 @@
             },
             credits: false,
             title: {
-                text: 'Time Spent (last 14 days)',
+                text: 'Time Spent (Last 14 days)',
                 align: 'left',
                 style: {
                     color: '#777777',
@@ -107,7 +108,7 @@
             },
             tooltip: {
                 pointFormatter: function() {
-                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
                 }
             },
             xAxis: {
@@ -123,13 +124,13 @@
                 },
                 labels: {
                     formatter: function() {
-                        return convert_secs_to_ddhhmm(this.value);
+                        return convert_secs_to_hhmm(this.value);
                     }
                 },
                 stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        return convert_secs_to_ddhhmm(this.total);
+                        return convert_secs_to_hhmm(this.total);
                     },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
@@ -152,7 +153,7 @@
                 data: <%= @interaction_time_per_account.map(&category).to_json.html_safe %>,
                 tooltip: {
                   pointFormatter: function() {
-                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_ddhhmm(this.y) + '</b>';
+                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
                   }
                 }
               },

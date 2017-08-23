@@ -27,6 +27,8 @@
 #  stage               :string
 #  close_date          :date
 #  expected_revenue    :decimal(14, 2)
+#  probability         :decimal(5, 2)
+#  forecast            :string
 #
 # Indexes
 #
@@ -130,7 +132,7 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue" }  # "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count", 
+  MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count", 
 
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
 
@@ -151,6 +153,7 @@ class Project < ActiveRecord::Base
         FROM projects
         LEFT JOIN notifications
         ON projects.id = notifications.project_id
+        AND notifications.category != '#{Notification::CATEGORY[:Attachment]}'
         WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
         GROUP BY projects.id
         ORDER BY open_risks DESC
@@ -345,6 +348,103 @@ class Project < ActiveRecord::Base
     result = Activity.find_by_sql(query)
   end
 
+  def contact_relationship_metrics
+  #   name
+  #   title
+  #   buyer role
+  #   last sent by
+  #   last sent
+  #   last reply
+  #   last meeting
+  #   next meeting
+    query = <<-SQL
+      WITH future_meetings AS (
+        SELECT last_sent_date, "from", "to"
+        FROM activities
+        WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Meeting]}' AND last_sent_date > TIMESTAMP '#{Time.current.utc}'
+      ), past_meetings AS (
+        SELECT last_sent_date, "from", "to"
+        FROM activities
+        WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Meeting]}' AND last_sent_date <= TIMESTAMP '#{Time.current.utc}'
+      ), user_emails AS (
+        SELECT activities.id,
+               messages ->> 'messageId' AS message_id,
+               to_timestamp((messages ->> 'sentDate')::integer) AS sent_date,
+               jsonb_array_elements(messages -> 'from') ->> 'address' AS from_address,
+               jsonb_array_elements(messages -> 'from') ->> 'personal' AS from_personal,
+               CASE
+                 WHEN messages -> 'to' IS NULL THEN NULL
+                 ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
+               END AS to,
+               CASE
+                 WHEN messages -> 'cc' IS NULL THEN NULL
+                 ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
+               END AS cc
+        FROM activities,
+        LATERAL jsonb_array_elements(email_messages) messages
+        WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Conversation]}'
+      )
+      SELECT contacts.email,
+             contacts.first_name,
+             contacts.last_name,
+             contacts.title,
+             contacts.buyer_role,
+             project_members.status,
+             received_emails.from_address AS last_sent_by_address,
+             received_emails.from_personal AS last_sent_by_personal,
+             received_emails.max_sent_date AS last_sent_date,
+             received_emails.id AS last_sent_id,
+             received_emails.message_id AS last_sent_message_id,
+             sent_emails.max_reply_date AS last_reply_date,
+             sent_emails.id AS last_reply_id,
+             sent_emails.message_id AS last_reply_message_id,
+             MAX(past_meetings.last_sent_date) AS last_meeting_date,
+             MIN(future_meetings.last_sent_date) AS next_meeting_date
+      FROM contacts
+      JOIN project_members
+      ON contacts.id = project_members.contact_id AND project_members.status != #{ProjectMember::STATUS[:Rejected]}
+      JOIN projects
+      ON projects.id = project_members.project_id
+      LEFT JOIN future_meetings
+      ON (future_meetings.from || future_meetings.to) @> ('[{"address":"' || contacts.email || '"}]')::jsonb
+      LEFT JOIN past_meetings
+      ON (past_meetings.from || past_meetings.to) @> ('[{"address":"' || contacts.email || '"}]')::jsonb
+      LEFT JOIN (
+        SELECT id, message_id, sent.*
+        FROM user_emails
+        JOIN (
+          SELECT from_address, MAX(sent_date) AS max_reply_date
+          FROM user_emails
+          GROUP BY 1
+        ) AS sent
+        ON user_emails.sent_date = sent.max_reply_date AND sent.from_address = user_emails.from_address
+      ) AS sent_emails
+      ON contacts.email = sent_emails.from_address
+      LEFT JOIN (
+        SELECT id, message_id, from_address, from_personal, received.*
+        FROM user_emails
+        JOIN (
+          SELECT recipient, MAX(sent_date) AS max_sent_date
+          FROM (
+            SELECT "to" AS recipient, sent_date
+            FROM user_emails
+            UNION ALL
+            SELECT cc AS recipient, sent_date
+            FROM user_emails
+           ) t
+          GROUP BY 1
+        ) AS received
+        ON user_emails.sent_date = received.max_sent_date AND received.recipient IN (user_emails.to, user_emails.cc)
+      ) AS received_emails
+      ON contacts.email = received_emails.recipient
+      WHERE projects.id = '#{self.id}'
+      GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+      ORDER BY last_sent_date DESC
+    SQL
+
+    Contact.find_by_sql(query)
+  end
+
   # generate options for Person Filter on Timeline, from activities visible to user with user_email
   def all_involved_people(user_email)
     activities = self.activities.visible_to(user_email).select(:from, :to, :cc, :posted_by).includes(:user)
@@ -514,17 +614,7 @@ class Project < ActiveRecord::Base
         SELECT DISTINCT
             project_id,
             to_timestamp((messages ->> 'sentDate')::integer) AS sent_date,
-            messages ->> 'messageId'::text AS message_id,
-            jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
-            CASE
-              WHEN messages -> 'to' IS NULL THEN NULL
-              ELSE jsonb_array_elements(messages -> 'to') ->> 'address'
-            END AS to,
-            CASE
-              WHEN messages -> 'cc' IS NULL THEN NULL
-              ELSE jsonb_array_elements(messages -> 'cc') ->> 'address'
-            END AS cc,
-            (messages::json ->'content') ->> 'body'  AS body
+            messages ->> 'messageId'::text AS message_id
         FROM activities,
         LATERAL jsonb_array_elements(email_messages) messages
         WHERE category = '#{Activity::CATEGORY[:Conversation]}'
@@ -752,9 +842,15 @@ class Project < ActiveRecord::Base
     return Project.find_by_sql(query)
   end
 
-  # Top Active Opportunities/Engagement (within a range of specified days)
-  # TODO: Fix and don't match using current_user's domain.  This method won't work for those with 'gmail.com' domain (or any domain that is ambiguous if internal or external user!!!)
-  def self.count_activities_by_category(array_of_project_ids, domain, time_zone, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  # Top Active Opportunities/Engagement of e-mails, meetings, and all activity within a period
+  # Parameters:   array_of_project_ids - ids of opportunities
+  #               domain - domain of the organization (not used)
+  #               array_of_user_emails (required) - e-mails of users to be used to determine if an e-mail is outbound/sent or inbound/received (e.g., if from perspective of a single user, this contains only this user's e-mail address; if want to use all users for the current user's organization, specify them).)  
+  #               start_day - the starting time (timestamp) of the reporting period (default is midnight 14 days ago in current user's timezone)
+  #               end_day - the starting time (timestamp) of the reporting period (default is midnight current day in current user's timezone)
+  # Note: this query will not report anything without a non-empty array in array_of_user_emails!
+  def self.count_activities_by_category(array_of_project_ids, domain, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    return [] if array_of_user_emails.blank?
     query = <<-SQL
       WITH projects_from_array AS (
         SELECT id, name FROM projects WHERE projects.id IN ('#{array_of_project_ids.join("','")}')
@@ -780,71 +876,80 @@ class Project < ActiveRecord::Base
           FROM users
           INNER JOIN emails
           ON (users.email IN (emails.from))
-          WHERE users.email like '%#{domain}'
+          WHERE users.email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
       ), emails_received AS (
-        SELECT project_id, message_id FROM emails
+        SELECT DISTINCT project_id, message_id
+          FROM users
+          INNER JOIN emails
+          ON (users.email IN (emails.to, emails.cc))
+          WHERE users.email IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
         EXCEPT
-        SELECT project_id, message_id FROM emails_sent
+        SELECT * FROM emails_sent
       ), meetings AS (
-        SELECT DISTINCT activities.id, project_id, "to" AS attendees, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch
+        SELECT DISTINCT activities.id, project_id, email_messages AS end_epoch, last_sent_date_epoch AS start_epoch -- "to" AS attendees
           FROM activities
           JOIN projects_from_array ON activities.project_id = projects_from_array.id,
           LATERAL jsonb_array_elements(email_messages) messages
-          WHERE category = '#{Activity::CATEGORY[:Meeting]}'
+          WHERE activities.category = '#{Activity::CATEGORY[:Meeting]}'
           AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
-          --AND last_sent_date_epoch BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          AND project_id IN ('#{array_of_project_ids.join("','")}')
+          AND (#{ array_of_user_emails.map{|e| "\"from\" || \"to\" || cc @> ('[{\"address\":\"" + User.sanitize(e)[1..-2] + "\"}]')::jsonb"}.join(" OR ") })
           --AND ((messages ->> 'end_epoch')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
       )
-      -- Emails
-      SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
-      FROM projects_from_array AS projects
-      JOIN
-      (
-       SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
-        FROM emails_sent
-        GROUP BY project_id, category
-        HAVING COUNT(DISTINCT message_id) > 0
-        UNION ALL
-       SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
-        FROM emails_received
-        GROUP BY project_id, category
-        HAVING COUNT(DISTINCT message_id) > 0
-      ) AS activity_count_by_category
-      ON projects.id = activity_count_by_category.project_id
-      UNION ALL
-      -- Meetings
-      SELECT t.project_id, t.name, '#{Activity::CATEGORY[:Meeting]}', COUNT(DISTINCT t.id) AS num_activities
+      SELECT *
       FROM (
-        SELECT DISTINCT m.id, project_id, proj.name, start_epoch AS start_t, jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t
-        FROM meetings AS m
-        JOIN projects_from_array AS proj ON m.project_id = proj.id
-        ) AS t
-      GROUP BY t.project_id, t.name
-      UNION ALL
-      -- Other activity
-      SELECT projects.id, projects.name, a.category, COUNT(distinct a.id) AS num_activities
-      FROM projects_from_array AS projects 
-      LEFT JOIN (
-        SELECT id,
-               category,
-               project_id,
-               last_sent_date
-        FROM activities
-        WHERE project_id IN ('#{array_of_project_ids.join("','")}')
-          AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
-          AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
-        ) AS a
-      ON projects.id = a.project_id
-      GROUP BY projects.id, projects.name, a.category
-      UNION ALL
-      SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
-      FROM notifications
-      JOIN projects ON projects.id = notifications.project_id
-      WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
-      AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
-      AND notifications.description::jsonb->'from'->0->>'address' LIKE '%#{domain}'
-      GROUP BY projects.id, projects.name, notifications.category
-      ORDER BY num_activities DESC
+        -- E-mails
+        SELECT projects.id, projects.name, activity_count_by_category.category, activity_count_by_category.num_activities
+        FROM projects_from_array AS projects
+        JOIN
+        (
+         SELECT project_id, 'E-mails Sent' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_sent
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT message_id) > 0
+          UNION ALL
+         SELECT project_id, 'E-mails Received' AS category, COUNT(DISTINCT message_id) AS num_activities
+          FROM emails_received
+          GROUP BY project_id, category
+          HAVING COUNT(DISTINCT message_id) > 0
+        ) AS activity_count_by_category
+        ON projects.id = activity_count_by_category.project_id
+        UNION ALL
+        -- Meetings
+        SELECT t.project_id, t.name, '#{Activity::CATEGORY[:Meeting]}', COUNT(DISTINCT t.id) AS num_activities
+        FROM (
+          SELECT DISTINCT m.id, project_id, proj.name, start_epoch AS start_t, jsonb_array_elements(end_epoch) ->> 'end_epoch' AS end_t
+          FROM meetings AS m
+          JOIN projects_from_array AS proj ON m.project_id = proj.id
+          ) AS t
+        GROUP BY t.project_id, t.name
+        UNION ALL
+        -- Other activity
+        SELECT projects.id, projects.name, a.category, COUNT(distinct a.id) AS num_activities
+        FROM projects_from_array AS projects 
+        LEFT JOIN (
+          SELECT id,
+                 category,
+                 project_id,
+                 last_sent_date
+          FROM activities
+          WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+            AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
+            AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
+          ) AS a
+        ON projects.id = a.project_id
+        GROUP BY projects.id, projects.name, a.category
+        UNION ALL
+        -- Attachments
+        SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
+        FROM notifications
+        JOIN projects ON projects.id = notifications.project_id
+        WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
+        AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
+        AND notifications.description::jsonb->'from'->0->>'address' IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
+        GROUP BY projects.id, projects.name, notifications.category
+      ) as q
+      ORDER BY q.num_activities DESC, UPPER(q.name)
     SQL
     Project.find_by_sql(query)
   end
@@ -1038,7 +1143,7 @@ class Project < ActiveRecord::Base
           end
           # puts "changed_values_hash_list: #{ changed_values_hash_list }"
 
-          changed_values_hash_list.each { |h| Project.update(h.keys, h.values) }
+          changed_values_hash_list.each { |h| Project.update(h.keys, h.values) } # Make updates to project fields from the list of changed values
           result = { status: "SUCCESS" }
         else
           result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " query_statement=" + query_statement }
@@ -1089,7 +1194,7 @@ class Project < ActiveRecord::Base
             new_value.each { |k,v| sfdc_val.push(v.to_s) if v.present? }
             new_value = sfdc_val.join(", ")
           end
-          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value)
+          CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value) # Make update to project custom field with value obtained in SFDC query
         end
         result = { status: "SUCCESS" }
       else

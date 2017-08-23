@@ -39,12 +39,12 @@ Longclaw::Application.routes.draw do
       member do
         get "update_is_complete" => 'notifications#update_is_complete'
         get "download" => 'notifications#download_attachment'
+        get "message" => 'notifications#show_message'
       end
       collection do
         post "create_from_suggestion"
       end
     end
-    get "notifications/show_email_body/:id" => 'notifications#show_email_body'
 
     resources :salesforce, only: [:index]
     get "salesforce/disconnect/:id" => 'salesforce#disconnect', as: "salesforce_disconnect"
@@ -80,6 +80,7 @@ Longclaw::Application.routes.draw do
       get "basecamp2_activity"
       get "salesforce_fields/:type" => "settings#salesforce_fields", as: "salesforce_fields"
       get "super_user"
+      post "update_user_org" => "settings#organization_jump"
       get "user_analytics"
       post "invite_user/:user_id" => 'settings#invite_user'
     end
@@ -89,6 +90,9 @@ Longclaw::Application.routes.draw do
 
     resources :activities, only: [:create, :update, :destroy] do
       resources :comments, only: [:create, :update, :destroy], shallow: true
+      member do
+        get 'message' => 'activities#show_message'
+      end
     end
     
     resources :organizations
@@ -153,7 +157,7 @@ Longclaw::Application.routes.draw do
     root to: redirect('/auth/basecamp')
     get '/auth/:provider/callback' => 'setting#basecamp'
     get "/user/omniauth/auth/:provider", to:  "omniauth_callbacks#user_omniauth_auth_helper", as: "user_omniauth_auth_helper"
-    # get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
+    get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
   end
 
   get '/users/auth/basecamp2' => 'basecamps#basecamp2'

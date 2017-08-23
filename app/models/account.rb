@@ -154,7 +154,7 @@ class Account < ActiveRecord::Base
                     end
                     #puts "changed_values_hash_list: #{ changed_values_hash_list }"
 
-                    changed_values_hash_list.each { |h| Account.update(h.keys, h.values) }
+                    changed_values_hash_list.each { |h| Account.update(h.keys, h.values) } # Make updates to account fields from the list of changed values
                     result = { status: "SUCCESS" }
                 else
                     result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " query_statement=" + query_statement }
@@ -205,7 +205,7 @@ class Account < ActiveRecord::Base
                         new_value.each { |k,v| sfdc_val.push(v.to_s) if v.present? }
                         new_value = sfdc_val.join(", ")
                     end
-                    CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id).update(value: new_value)
+                    CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: account_id).update(value: new_value) # Make update to account custom field with value obtained in SFDC query
                 end
                 result = { status: "SUCCESS" }
             else

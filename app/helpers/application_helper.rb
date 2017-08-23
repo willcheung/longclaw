@@ -48,6 +48,33 @@ module ApplicationHelper
     end
   end
 
+  def highcharts_series_color_gradient_by_pct(val, minval, maxval)
+    if val < minval
+      '#398fe2'
+    # lighter tints (first), darker tints (last)
+    elsif (val - minval) / (maxval - minval).to_f < 0.1
+      '#aed2f0'
+    elsif (val - minval) / (maxval - minval).to_f < 0.2
+      '#a6cdef' 
+    elsif (val - minval) / (maxval - minval).to_f < 0.3
+      '#9dc8ee'
+    elsif (val - minval) / (maxval - minval).to_f < 0.4
+      '#93c2ed'
+    elsif (val - minval) / (maxval - minval).to_f < 0.5
+      '#88bcec'
+    elsif (val - minval) / (maxval - minval).to_f < 0.6
+      '#7bb5ea'
+    elsif (val - minval) / (maxval - minval).to_f < 0.7
+      '#6dade8'
+    elsif (val - minval) / (maxval - minval).to_f < 0.8
+      '#5da4e6'
+    elsif (val - minval) / (maxval - minval).to_f < 0.9
+      '#4c9ae4'
+    else
+      '#398fe2' # >= 0.9 (incl. val > maxval)
+    end
+  end
+
   def risk_color(score, in_email=false)
     return unless score
 

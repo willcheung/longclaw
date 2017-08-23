@@ -71,29 +71,18 @@ function large_number_to_human(number) {
 }
 
 /*
-  Formats seconds into days hh:mm format
-  e.g., convert_secs_to_ddhhmm(59)       => "00:00"
-        convert_secs_to_ddhhmm(60)       => "00:01"
-        convert_secs_to_ddhhmm(61)       => "00:01"
-        convert_secs_to_ddhhmm(3599);    => "00:59"
-        convert_secs_to_ddhhmm(3600);    => "01:00"
-        convert_secs_to_ddhhmm(86399);   => "23:59"
-        convert_secs_to_ddhhmm(86400);   => "1d 00:00"
-        convert_secs_to_ddhhmm(1209599); => "13d 23:59"
-        convert_secs_to_ddhhmm(1209600); => "14d 00:00"
+  Formats seconds into h:mm format
+  e.g., convert_secs_to_hhmm(59)      => "0:00"
+        convert_secs_to_hhmm(60)      => "0:01"
+        convert_secs_to_hhmm(61)      => "0:01"
+        convert_secs_to_hhmm(3599);   => "0:59"
+        convert_secs_to_hhmm(3600);   => "1:00"
+        convert_secs_to_hhmm(86399);  => "23:59"
+        convert_secs_to_hhmm(86400);  => "24:00"
+        convert_secs_to_hhmm(172800); => "48:00"
 */
-function convert_secs_to_ddhhmm(secs) {
-    var prefix = "";
-    var t = new Date(1970, 0, 1); // Epoch
-    t.setSeconds(secs);
-
-    var hhmmss = t.toString().substring(16,24);
-    var d = Math.floor(secs / 86400);
-
-    var hh = hhmmss.substring(0,2);
-    var mm = hhmmss.substring(3,5);
-    //var ss = hhmmss.substring(6,8);
-    if (d > 0) 
-        prefix = d + "d ";
-    return prefix + hh + ":" + mm /*+":"+ss*/;
+function convert_secs_to_hhmm(secs) {
+    var hours = Math.floor(secs / 3600);
+    var mins = Math.floor((secs - hours*3600) / 60);
+    return hours + ":" + ("00" + mins).slice(-2);
 }

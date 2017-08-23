@@ -27,6 +27,8 @@
 include ActionView::Helpers::SanitizeHelper   # for sanitize (escape single quotes)
 
 class Contact < ActiveRecord::Base
+  before_save :downcase_email
+
 	belongs_to :account
 
   ### project_members/projects relations have 2 versions
@@ -54,7 +56,7 @@ class Contact < ActiveRecord::Base
 
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
-  ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', Coach: 'Coach', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
+  ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', DecisionMaker: 'Decision Maker', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
   MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department", "buyer_role" => "Buyer Role" }  #, "mobile" => "Mobile Phone"
 
   def is_source_from_salesforce?
@@ -85,47 +87,35 @@ class Contact < ActiveRecord::Base
   def self.find_or_create_from_email_info(address, personal, project, status=ProjectMember::STATUS[:Pending], source=nil)
     org = project.account.organization
     domain = get_domain(address)
-    if valid_domain?(domain)
-      primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
+    puts "** Skipped creating Contact for #{address}, invalid domain='#{domain}'. **" && return unless valid_domain?(domain)
 
-      ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
-      # find account this new member should belong to
-      account = org.accounts.find_by_domain(primary_domain) || org.accounts.find_by_name(primary_domain)
-      # create a new account for this domain if one doesn't exist yet
-      unless account
-        account = Account.create(
-          domain: primary_domain,
-          name: primary_domain,
-          category: Account::CATEGORY[:Customer], # TODO: 'Customer' may not be in Org's custom list of Account Types (Categories)!!
-          address: "",
-          website: "http://www.#{primary_domain}",
-          owner_id: project.owner_id,
-          organization: org,
-          created_by: project.owner_id)
-        subdomain_msg = primary_domain != domain ? " (subdomain: #{domain})" : ""
-        puts "** Created a new account for domain='#{primary_domain}'#{subdomain_msg}, organization='#{org}'. **"
-      end
-
-      # find or create contact for this member
-      contact = account.contacts.create_with(
-        first_name: get_first_name(personal),
-        last_name: get_last_name(personal),
-        source: source
-        ).find_or_create_by(email: address)
-
-      # add member to project as suggested member
-      ProjectMember.create(project: project, contact: contact, status: status)
-
-      contact
-    else
-      puts "** Skipped processing the invalid domain='#{domain}'. **"
+    # find account this new member should belong to
+    primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
+    account = org.accounts.find_by_domain(primary_domain) || org.accounts.find_by_name(primary_domain)
+    if account.blank?
+      # try to find a contact with matching email domain
+      contact = org.contacts.where("email LIKE '%@#{domain}'").first || org.contacts.where("email LIKE '%@#{primary_domain}'").first
+      account = contact.account if contact.present?
     end
+    puts "** Skipped creating Contact for #{address}, no Account found! **" && return if account.blank?
+
+    # find or create contact for this member
+    contact = account.contacts.create_with(
+      first_name: get_first_name(personal),
+      last_name: get_last_name(personal),
+      source: source
+    ).find_or_create_by(email: address)
+
+    # add member to project as suggested member
+    ProjectMember.create(project: project, contact: contact, status: status)
+
+    contact
   end
 
-  # Takes Contacts (with an e-mail address) in a SFDC account and copies them to a CS account, overwriting all existing Contact fields to each "matched" (same e-mail in the account) Contact.  i.e., if there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one.
+  # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields for each "matched" Contact (same e-mail).  If there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one. Note: Contact merge will only copy the value from the SFDC Contact field if there's no existing value in the matched CS Contact.
   # Parameters:  client - connection to Salesforce
-  #              account_id - the CS account to which this copies Contacts
-  #              sfdc_account_id - id of SFDC account from which this copies Contacts 
+  #              account_id - the CS account to which to import Contacts
+  #              sfdc_account_id - id of SFDC account from which to import Contacts 
   #              limit (optional) - the max number of Contacts to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
@@ -144,7 +134,7 @@ class Contact < ActiveRecord::Base
 
       # Keep the first contact (alphabetically, by Last then First Name) from contacts with identical e-mails; ignore contacts with no e-mail field
       query_result[:result].each do |c|
-        email = Contact.sanitize(c[:Email]) 
+        email = Contact.sanitize(c[:Email]).downcase
         if c[:Email].present? && emails_processed[email].nil?
           firstname = self.capitalize_first_only(c[:FirstName])
           lastname = self.capitalize_first_only(c[:LastName])
@@ -173,9 +163,9 @@ class Contact < ActiveRecord::Base
       end
 
       insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "mobile", "source", "external_source_id", "created_at", "updated_at") VALUES'  # Unused: "background_info" 
-      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, title = EXCLUDED.title, department = EXCLUDED.department, phone = EXCLUDED.phone, mobile = EXCLUDED.mobile, external_source_id = EXCLUDED.external_source_id, updated_at = EXCLUDED.updated_at'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
+      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = CASE WHEN LENGTH(contacts.first_name::text) > 0 THEN contacts.first_name ELSE EXCLUDED.first_name END, last_name = CASE WHEN LENGTH(contacts.last_name::text) > 0 THEN contacts.last_name ELSE EXCLUDED.last_name END, title = CASE WHEN LENGTH(contacts.title::text) > 0 THEN contacts.title ELSE EXCLUDED.title END, department = CASE WHEN LENGTH(contacts.department::text) > 0 THEN contacts.department ELSE EXCLUDED.department END, phone = CASE WHEN LENGTH(contacts.phone::text) > 0 THEN contacts.phone ELSE EXCLUDED.phone END, mobile = CASE WHEN LENGTH(contacts.mobile::text) > 0 THEN contacts.mobile ELSE EXCLUDED.mobile END, external_source_id = CASE WHEN LENGTH(contacts.external_source_id::text) > 0 THEN contacts.external_source_id ELSE EXCLUDED.external_source_id END, updated_at = CASE WHEN LENGTH(contacts.updated_at::text) > 0 THEN contacts.updated_at ELSE EXCLUDED.updated_at END'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
       values = val.join(', ')
-      #puts "And inserting values....  \"#{values}\""
+      # puts "And inserting values....  \"#{values}\""
 
       if !val.empty?
         Contact.transaction do
@@ -204,7 +194,7 @@ class Contact < ActiveRecord::Base
     result
   end
 
-  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.
+  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.  Note: If a value exists in the CS Contact field, then this value will overwrite the corresponding field in the matched target SFDC Contact.
   # Parameters: client - connection to Salesforce
   #             account_id - the CS account from which this exports contacts
   #             sfdc_account_id - id of SFDC account to which this exports contacts 
@@ -220,7 +210,7 @@ class Contact < ActiveRecord::Base
       #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
 
       sObject_meta = { id: sfdc_account_id, type: "Account" }
-      sObject_fields = { FirstName: c.first_name, LastName: c.last_name.empty? ? "(none)" : c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
+      sObject_fields = { FirstName: c.first_name, LastName: c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
       # Unused: LeadSource: c.source, Description: c.background_info
       #puts "----> sObject_meta:\t #{sObject_meta}\n"
       #puts "----> sObject_fields:\t #{sObject_fields}\n"
@@ -248,5 +238,9 @@ class Contact < ActiveRecord::Base
   # Capitalizes first character and leaves the remaining alone (unlike .capitalize which changes remaining ones to lowercase)
   def self.capitalize_first_only (str)
     str.slice(0,1).capitalize + str.slice(1..-1) if !str.nil?
+  end
+
+  def downcase_email
+    self.email.downcase!
   end
 end

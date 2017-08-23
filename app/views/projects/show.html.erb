@@ -77,7 +77,7 @@
             <div class="col-md-3">
                 <div class="metric text-danger">
                     <div class="metric-title" align="center">
-                        <h5>Open Alerts</h5>
+                        <h5>Open Alerts & Tasks</h5>
                     </div>
                     <div class="metric-content" align="center">
                         <h3><%= @project_open_tasks_count %></h3>
@@ -172,8 +172,22 @@
                    <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["expected_revenue"] %>:</strong>
                         <span class="pull-right">
-                            <%=best_in_place @project, :expected_revenue, :as => :input,:place_holder => '-', :activator => "#project-expected-revenue-activator" %>
+                            <%=best_in_place @project, :expected_revenue, :as => :input, :place_holder => '-', :activator => "#project-expected-revenue-activator" %>
                                 <i id="project-expected-revenue-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                        </span>
+                    </li>
+                    <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["probability"] %>:</strong>
+                        <span class="pull-right">
+                            <%=best_in_place @project, :probability, :as => :input, :place_holder => '-', :activator => "#project-probability-activator" %>
+                                <i id="project-probability-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                        </span>
+                    </li>
+                    <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["forecast"] %>:</strong>
+                        <span class="pull-right">
+                            <%=best_in_place @project, :forecast, :as => :input, :place_holder => '-', :activator => "#project-forecast-activator" %>
+                                <i id="project-forecast-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
                         </span>
                     </li>
                     <li class="list-group-item m-b-sm">
