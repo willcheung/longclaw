@@ -30,7 +30,7 @@ class AccountsController < ApplicationController
       @accounts = @accounts.where(category: params[:account_type])
     end
 
-    @account_last_activity = Account.eager_load(:activities).where("organization_id = ? AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)) AND projects.status = 'Active' AND activities.category not in ('Alert','Note')", current_user.organization_id, current_user.id).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
+    @account_last_activity = Account.eager_load(:activities).where("organization_id = ? AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)) AND projects.status = 'Active' AND activities.category not in ('Alert','Note') AND activities.last_sent_date <= ?", current_user.organization_id, current_user.id, Time.current).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
     @account = Account.new
   end
 
