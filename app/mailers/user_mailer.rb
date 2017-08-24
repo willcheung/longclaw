@@ -14,7 +14,7 @@ class UserMailer < ApplicationMailer
     @user = user
     @subs = user.valid_streams_subscriptions.daily
     @upcoming_meetings = user.upcoming_meetings  # backend call-back
-    @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not("activities.category IN ('#{Activity::CATEGORY[:Note]}', '#{Activity::CATEGORY[:Alert]}') OR activities.last_sent_date BETWEEN CURRENT_TIMESTAMP AND CURRENT_TIMESTAMP + INTERVAL '7 days'").group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
+    @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
  
     puts "Checking daily subscription for #{user.email}"
     unless @subs.blank? && @upcoming_meetings.blank?
