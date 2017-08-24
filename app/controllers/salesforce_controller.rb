@@ -117,46 +117,29 @@ class SalesforceController < ApplicationController
       SalesforceAccount.load_accounts(current_user.organization_id)
     when "opportunities"
       SalesforceOpportunity.load_opportunities(current_user.organization_id)
-    when "contacts"
-      # Load SFDC Contacts into CS Accounts, depending on the explicit (primary) mapping of a SFDC Account (first one) to a CS account.
-      account_mapping = []
-      method_name = "import_salesforce#contacts()"
-      accounts = Account.visible_to(current_user)
-      accounts.each do |a|
-        account_mapping << [a, a.salesforce_accounts.first] if a.salesforce_accounts.present?
-      end
+    else
+      error_detail = "Invalid entity_type parameter passed to import_salesforce(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
+    end
 
-      unless account_mapping.empty?  # no visible or mapped accounts
-        client = SalesforceService.connect_salesforce(current_user.organization_id)
-        #client = nil #simulate connection error
-        unless client.nil?  # unless SFDC connection error
-          account_mapping.each do |m|
-            a = m[0]
-            sfa = m[1]
-            load_result = Contact.load_salesforce_contacts(client, a.id, sfa.salesforce_account_id)
+    render plain: ''
+  end
 
-            if load_result[:status] == "ERROR"
-              failure_method_location = "Contact.load_salesforce_contacts()"
-              error_detail = "Error while attempting to load contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-              render_internal_server_error(method_name, failure_method_location, error_detail)
-              return
-            end
-          end
-        else
-          render_service_unavailable_error(method_name)
-          return
-        end
-      end
-    # end when params[:entity_type] = "contacts"
+  # Synchronize entities in CS and SFDC consisting of an import of a SFDC entity to ContextSmith, followed by an export back to SFDC, using SFDC <-> CS fields mapping.
+  # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account. First, imports SFDC Activities (not exported from CS) into CS Opportunities.  Finally, non-SFDC Activities in CS are exported into the remote SFDC Account (or Opportunity).  Ignores exported CS data residing on SFDC and imported SFDC activity residing on CS.
+  # For Contacts -- merges Contacts depending on the explicit mapping of a SFDC Account to a CS Account. ("Sync" is used loosely, because some Contacts is missing information like e-mail address)
+  def sync_salesforce
+    method_name = "sync_salesforce()"
+    case params[:entity_type]
     when "activities"
-      # Load SFDC Activities into CS Opportunities, depending on the explicit (primary) mapping of a SFDC opportunity to a CS Opportunity, or the implicit (secondary) opportunity mapping of a SFDC account mapped to a CS account.
-      # Note: Ignores exported CS data residing on SFDC
-      method_name = "import_salesforce#activities()"
+      method_name = "sync_salesforce#activities()"
       filter_predicate_str = {}
       filter_predicate_str["entity"] = params[:entity_pred].strip
       filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
+      # puts "******* #{ method_name } ... filter_predicate_str= #{ filter_predicate_str }"
 
-      #puts "******************** #{ method_name } ... filter_predicate_str= #{ filter_predicate_str }", 
       @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
       no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
 
@@ -170,102 +153,88 @@ class SalesforceController < ApplicationController
       @client = SalesforceService.connect_salesforce(current_user.organization_id)
 
       unless @client.nil?  # unless connection error
+        sync_result_messages = []
+        error_occurred = false
+        Activity.delete_cs_activities(@client) # clear all existing CS Activities in SFDC (accounts)
+
         @opportunities.each do |s|
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
             if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
+                # Import activities from SFDC Account level to ContextSmith Opportunity
                 load_result = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
-                #puts "$$$(import_salesforce)$$$ load_result: #{load_result}"
 
                 if load_result[:status] == "ERROR"
                   failure_method_location = "Activity.load_salesforce_activities()"
-                  error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                  render_internal_server_error(method_name, failure_method_location, error_detail)
-                  return
+                  puts "****SFDC**** Error at #{failure_method_location} while attempting to import activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                  sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: load_result[:result] + " " + load_result[:detail] }
+                  error_occurred = true
+                else # load_result[:status] == SUCCESS
+                  sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: load_result[:result] + " " + load_result[:detail] } 
                 end
-              end
+
+                # Export activities from ContextSmith Opportunity to SFDC Account level
+                export_result = Activity.export_cs_activities(@client, s, sfa.salesforce_account_id, "Account")
+
+                if export_result[:status] == "ERROR"
+                  failure_method_location = "Activity.export_cs_activities()"
+                  puts "****SFDC**** Error at #{failure_method_location} while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{ export_result[:detail] }"
+                  sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: export_result[:result].to_s + " " + export_result[:detail].to_s }
+                  error_occurred = true
+                else # export_result[:status] == SUCCESS
+                  sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: export_result[:result].to_s + " " + export_result[:detail].to_s } 
+                end
+              end # end: s.account.salesforce_accounts.each do |sfa|
             end
           else # CS Opportunity linked to SFDC Opportunity
-            # Save at the Opportunity level
+            # Import activities from SFDC to ContextSmith, both at Opportunity level
             load_result = Activity.load_salesforce_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
 
             if load_result[:status] == "ERROR"
               failure_method_location = "Activity.load_salesforce_activities()"
-              error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-              render_internal_server_error(method_name, failure_method_location, error_detail)
-              return
+              puts "****SFDC**** Error at #{failure_method_location} while attempting to import activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+              sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, failure_method_location: failure_method_location, detail: load_result[:result] + " " + load_result[:detail] }
+              error_occurred = true
+            else # load_result[:status] == SUCCESS
+              sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, detail: load_result[:result] + " " + load_result[:detail] } 
             end
-          end
-        end
-      else
-        render_service_unavailable_error(method_name)
-        return
-      end
-    # end when params[:entity_type] = "activities"
-    else
-      # Error: unsupported Salesforce entity type; do nothing
-    end
-
-    render plain: ''
-  end
-
-  # Export CS Activity or Contacts into the mapped SFDC Account (or Opportunity)
-  def export_salesforce
-    case params[:entity_type]
-    when "activities"
-      # All CS Activities are exported into the remote SFDC Account (or Opportunity), depending on the (primary) mapping of a CS opportunity to a SFDC opportunity, or the implicit/explicit (secondary) opportunity mapping of a CS opportunity (through the CS account) mapped to a SFDC account.
-      # Note: Ignores imported SFDC activity residing locally
-      method_name = "export_salesforce#activities()"
-      @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
-      no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
-
-      # Nothing to do if no opportunities or linked SFDC entities
-      if @opportunities.blank? || no_linked_sfdc
-        @client = nil
-        render plain: '' 
-        return 
-      end
-
-      @client = SalesforceService.connect_salesforce(current_user.organization_id)
-
-      Activity.delete_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
-
-      unless @client.nil?  # unless connection error
-        @opportunities.each do |s|
-          #TODO: Issue #829 Need to allow SFDC export of activities to continue even after encountering an error.
-          if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
-            if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
-              s.account.salesforce_accounts.each do |sfa|
-                export_result = Activity.export_cs_activities(@client, s, sfa.salesforce_account_id, "Account")
-
-                if export_result[:status] == "ERROR"
-                  method_location = "Activity.export_cs_activities()"
-                  error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{ export_result[:detail] }"
-                  render_internal_server_error(method_name, method_location, error_detail)
-                  return
-                end
-              end
-            end
-          else # CS Opportunity linked to SFDC Opportunity
-            # Save at the Opportunity level
+            # Export activities from ContextSmith to SFDC, both at Opportunity level
             export_result = Activity.export_cs_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
             if export_result[:status] == "ERROR"
               method_location = "Activity.export_cs_activities()"
-              error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{ export_result[:detail] }"
-              render_internal_server_error(method_name, method_location, error_detail)
-              return
+              error_detail = "****SFDC**** Error at #{failure_method_location} while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{ export_result[:detail] }"
+              sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, failure_method_location: failure_method_location, detail: export_result[:result].to_s + " " + export_result[:detail].to_s }
+              error_occurred = true
+            else # export_result[:status] == SUCCESS
+              sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, detail: export_result[:result].to_s + " " + export_result[:detail].to_s } 
             end
           end
+        end # end: @opportunities.each do |s|
+
+        puts "\n\n==> Sync result messages: #{sync_result_messages}\n\n"
+        if error_occurred
+          render_internal_server_error(method_name, "(see listing)", sync_result_messages.map do |m| 
+            if m[:sfdc_account].present?
+              sfdc_entity_detail = "'#{m[:sfdc_account][:name]}'(account sObject Id=#{m[:sfdc_account][:id]})"
+            else
+              sfdc_entity_detail = "'#{m[:sfdc_opportunity][:name]}'(opportunity sObject Id=#{m[:sfdc_opportunity][:id]})"
+            end
+
+            (m[:status] == "ERROR" ? "x Failure:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:opportunity][:name]}'(opportunity id=#{m[:opportunity][:id]}) <-> (SFDC)#{sfdc_entity_detail}  detail: #{m[:detail]}"
+          # end: sync_result_messages.map do |m|
+          end.join("\n\n")  
+          )
+          return
         end
       else
         render_service_unavailable_error(method_name)
         return
       end
-    #end when params[:entity_type] = "activities"
+
+    # end when params[:entity_type] = "activities"
     when "contacts"
-      # Export local Contacts out to SFDC Accounts, depending on the explicit (primary) mapping of a CS account to SFDC Account (first one).
-      method_name = "export_salesforce#contacts()"
+      method_name = "sync_salesforce#contacts()"
       account_mapping = []
       accounts = Account.visible_to(current_user)
       accounts.each do |a|
@@ -275,27 +244,42 @@ class SalesforceController < ApplicationController
       unless account_mapping.empty?  # no visible or mapped accounts
         client = SalesforceService.connect_salesforce(current_user.organization_id)
         #client = nil #simulate connection error
+
         unless client.nil?  # unless SFDC connection error
-          export_result_messages = []
+          sync_result_messages = []
           error_occurred = false
           account_mapping.each do |m|
             a = m[0]
             sfa = m[1]
+
+            # Import Contacts from SFDC to ContextSmith 
+            import_result = Contact.load_salesforce_contacts(client, a.id, sfa.salesforce_account_id)
+            failure_method_location = "Contact.load_salesforce_contacts()"
+
+            if import_result[:status] == "ERROR"
+              puts "****SFDC**** Error at #{failure_method_location} while attempting to import contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
+              sync_result_messages << { status: import_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: import_result[:result] + " " + import_result[:detail] }
+              error_occurred = true
+            else # import_result[:status] == SUCCESS
+              sync_result_messages << { status: import_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: import_result[:result] + " " + import_result[:detail] } 
+            end
+
+            # Export ContextSmith Contacts out to SFDC
             export_result = Contact.export_cs_contacts(client, a.id, sfa.salesforce_account_id)
+            failure_method_location = "Contact.export_cs_contacts()"
 
             if export_result[:status] == "ERROR"
-              error_detail = export_result[:detail]
-              export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: error_detail }
+              puts "****SFDC**** Error at #{failure_method_location} while attempting to export contacts from CS Account \"#{a.name}\" (account_id='#{a.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
+              sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: export_result[:detail] }
               error_occurred = true
-            else # SUCCESS
-              export_result_messages << { account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, status: export_result[:status], detail: [] } 
+            else # export_result[:status] == SUCCESS
+              sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id } } 
             end
-          end
-          #puts "\n\n==> Export result messages: #{export_result_messages}\n\n"
+          end #end: account_mapping.each
+
+          #puts "\n\n==> Sync result messages: #{sync_result_messages}\n\n"
           if error_occurred
-            failure_method_location = "Contact.export_cs_contacts()"
-            render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| (m[:status] == "ERROR" ? "*" : "-") + " #{m[:status]}:  '#{m[:account][:name]}'(#{m[:account][:id]}) -> (SFDC)'#{m[:sfdc_account][:name]}'(#{m[:sfdc_account][:id]}) detail: #{m[:detail]}" }.join("\n\n"))
-            # render_internal_server_error(method_name, failure_method_location, export_result_messages.map{ |m| {account_name: m[:account][:name], account_id: m[:account][:id], sfdc_account_name: m[:sfdc_account][:name], sfdc_account_id: m[:sfdc_account][:id], status: m[:status], detail: m[:detail] }})
+            render_internal_server_error(method_name, "(see listing)", sync_result_messages.map{ |m| (m[:status] == "ERROR" ? "x Failure:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:account][:name]}'(account id=#{m[:account][:id]}) <-> (SFDC)'#{m[:sfdc_account][:name]}'(account sObject Id=#{m[:sfdc_account][:id]})  detail: #{m[:detail]}" }.join("\n\n"))
             return
           end
         else
@@ -303,16 +287,18 @@ class SalesforceController < ApplicationController
           return
         end
       end
-    # end when params[:entity_type] = "contacts"
+    # end: when params[:entity_type] = "contacts"
     else
-      # Error: unsupported Salesforce entity type; do nothing
+      error_detail = "Invalid entity_type parameter passed to sync_salesforce(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
     end
-
     render plain: ''
   end
 
   # Native CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. 
-  # Parameters:   params[:entity_type] - "accounts" or "projects" or "contacts".
+  # Parameters:   params[:entity_type] - "accounts" or "projects".
   #               params[:field_type] - "standard" or "custom"
   # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS Opportunity, an update will be carried out for each mapping.
   def refresh_fields
@@ -335,9 +321,9 @@ class SalesforceController < ApplicationController
           if params[:field_type] == "standard"
             update_result = Account.update_fields_from_sfdc(client: @client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
             if update_result[:status] == "ERROR"
-              method_location = "Account.update_fields_from_sfdc()"
+              failure_method_location = "Account.update_fields_from_sfdc()"
               error_detail = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
-              render_internal_server_error(method_name, method_location, error_detail)
+              render_internal_server_error(method_name, failure_method_location, error_detail)
               return
             end
           else # params[:field_type] == "custom"
@@ -347,9 +333,9 @@ class SalesforceController < ApplicationController
                 load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
 
                 if load_result[:status] == "ERROR"
-                  method_location = "Account.load_salesforce_fields()"
+                  failure_method_location = "Account.load_salesforce_fields()"
                   error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                  render_internal_server_error(method_name, method_location, error_detail)
+                  render_internal_server_error(method_name, failure_method_location, error_detail)
                   return
                 end
               end
@@ -378,9 +364,9 @@ class SalesforceController < ApplicationController
           if params[:field_type] == "standard"
             update_result = Project.update_fields_from_sfdc(client: @client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
             if update_result[:status] == "ERROR"
-              method_location = "Project.update_fields_from_sfdc()"
+              failure_method_location = "Project.update_fields_from_sfdc()"
               error_detail = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
-              render_internal_server_error(method_name, method_location, error_detail)
+              render_internal_server_error(method_name, failure_method_location, error_detail)
               return
             end
           else # params[:field_type] == "custom"
@@ -390,9 +376,9 @@ class SalesforceController < ApplicationController
                 load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
 
                 if load_result[:status] == "ERROR"
-                  method_location = "Project.load_salesforce_fields()"
+                  failure_method_location = "Project.load_salesforce_fields()"
                   error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                  render_internal_server_error(method_name, method_location, error_detail)
+                  render_internal_server_error(method_name, failure_method_location, error_detail)
                   return
                 end
               end
@@ -403,10 +389,11 @@ class SalesforceController < ApplicationController
           return
         end
       end
-    elsif params[:entity_type] == "contacts" && params[:field_type] == "standard"
-      puts "Standard #{params[:entity_type]} fields all the wayyyyy!!!"
     else
-      puts "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
+      error_detail = "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
     end
 
     render plain: ''

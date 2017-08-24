@@ -88,6 +88,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "email").update(salesforce_field: "Email") if sfdc_contact_fields.include? "Email"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "first_name").update(salesforce_field: "FirstName") if sfdc_contact_fields.include? "FirstName"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "last_name").update(salesforce_field: "LastName") if sfdc_contact_fields.include? "LastName"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "mobile").update(salesforce_field: "MobilePhone") if sfdc_contact_fields.include? "MobilePhone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "phone").update(salesforce_field: "Phone") if sfdc_contact_fields.include? "Phone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "title").update(salesforce_field: "Title") if sfdc_contact_fields.include? "Title"
     end

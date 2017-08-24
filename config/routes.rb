@@ -51,7 +51,7 @@ Longclaw::Application.routes.draw do
     post "/link_salesforce_account" => 'salesforce#link_salesforce_account'
     post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
     post "/salesforce/import/:entity_type" => 'salesforce#import_salesforce'
-    post "/salesforce/update/:entity_type" => 'salesforce#export_salesforce'
+    post "/salesforce/sync" => 'salesforce#sync_salesforce'
     post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
