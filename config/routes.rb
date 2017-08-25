@@ -176,5 +176,5 @@ Longclaw::Application.routes.draw do
   #scope 'tracking', controller: :tracking, as: 'tracking' do
   #  get 'view/:tracking_id' => 'tracking#view'
   #end
-  get "track/:user_id/:tracking_id/:gif" => 'tracking#view'
+  get "track/:user_email/:tracking_id/:gif" => 'tracking#view'
 end

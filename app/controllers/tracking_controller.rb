@@ -18,7 +18,7 @@ class TrackingController < ApplicationController
         'camera' => 'fa-camera'
     }
     @trackings = TrackingRequest.includes(:tracking_events).where(user_id: current_user.id).order('tracking_events.date DESC')
-    @opened, @unopened = @trackings.partition{ |t| t.tracking_events.size > 0 }
+    @opened, @unopened = @trackings.partition {|t| t.tracking_events.size > 0}
     @tracking_setting = get_tracking_setting
     #@trackings = TrackingRequest.includes(:tracking_events).where(:belong)
 
@@ -75,37 +75,36 @@ class TrackingController < ApplicationController
     if tr
       tr.toggle_status
       tr.save
-      result = { status: tr.status}
+      result = {status: tr.status}
     else
-      result = { error: "No tracking request found"}
+      result = {error: "No tracking request found"}
     end
     render json: result
   end
 
   def new_events
     ts = get_tracking_setting
-    event_count = { count: TrackingEvent.where(date: ts.last_seen..Time.now).count}
+    event_count = {count: TrackingEvent.where(date: ts.last_seen..Time.now).count}
     render json: event_count
   end
+
+  def seen
+    ts = TrackingSetting.where(user: current_user).first_or_create
+
+    ts.last_seen = DateTime.now
+    ts.save
+    result = {status: 'ok'}
+    render json: result
+  end
+
+  private
 
   def get_tracking_setting
     ts = TrackingSetting.where(user: current_user).first_or_create do |ts|
       ts.last_seen = DateTime.now
-      ts.user_id = current_user.id
     end
     ts.save
     ts
-  end
-
-  def seen
-    ts = TrackingSetting.where(user: current_user).first_or_create do |ts|
-      ts.user_id = current_user.id
-    end
-
-    ts.last_seen = DateTime.now
-    ts.save
-    result = { status: 'ok'}
-    render json: result
   end
 
   def location_lookup(ip)
@@ -113,7 +112,7 @@ class TrackingController < ApplicationController
   end
 
   def to_email_address(emails)
-    emails.map { |a| Mail::Address.new(a).address}
+    emails.map {|a| Mail::Address.new(a).address}
   end
 
   def not_viewed_by_self(tracking_request)
