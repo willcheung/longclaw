@@ -60,6 +60,8 @@ class User < ActiveRecord::Base
   has_many    :oauth_users
   has_many    :custom_configurations, dependent: :destroy
   has_many    :events
+  has_many    :tracking_requests, dependent: :destroy
+  has_one     :tracking_setting, dependent: :destroy
 
 
   ### project_members/projects relations have 2 versions
