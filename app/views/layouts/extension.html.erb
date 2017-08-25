@@ -47,21 +47,20 @@
                             <% if @salesforce_user.present? %>
                                 <!-- SFDC user logged in -->
                                 <li style="line-height: 1em"><strong><%= @salesforce_user.oauth_user_name %></strong></li>
+                                <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">(<i class='fa fa-sign-out'></i> Sign out)</a></li> 
                                 <li class="divider"></li>
-                                
+
                                 <li><button 
                                 <%= "disabled " if !@enable_sfdc_refresh %>
                                 id="salesforce-ext-acc-refresh" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Refresh Accounts" style="font-size: 10px"><i class="fa fa-refresh"></i> Refresh Accounts</button> <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
-                                <%= @enable_sfdc_refresh ? "Retrieve latest Accounts from Salesforce." : "To retrieve the latest Accounts from Salesforce, please contact ContextSmith support or your ContextSmith administrator." %>
+                                <%= @enable_sfdc_refresh ? "Retrieve latest Accounts and fields from Salesforce." : "To retrieve the latest Accounts from Salesforce, please contact ContextSmith support or your ContextSmith administrator." %>
                                 "></i></li>
                                 
                                 <li><button 
                                 <%= "disabled " if !@enable_sfdc_refresh || !@linked_to_sfdc  %>
-                                id="salesforce-ext-cont-import" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Import Contacts" style="font-size: 10px"><i class="fa fa-refresh"></i> Import Contacts</button> <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
-                                <%= @enable_sfdc_refresh ? "Retrieve Contacts with an e-mail from linked Salesforce Account." : "To retrieve Contacts from the linked Salesforce Account, please contact ContextSmith support or your ContextSmith administrator." %>
+                                id="salesforce-ext-cont-import" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Sync Contacts" style="font-size: 10px"><i class="fa fa-refresh"></i> Sync Contacts</button> <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="
+                                <%= @enable_sfdc_refresh ? "Synchronize Contacts with an e-mail from the linked Salesforce Account." : "To synchronize Contacts from Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
                                 "></i></li>
-
-                                <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">Log out of Salesforce</a></li> 
                             <% else %>
                                 <!-- SFDC user not logged in -->
                                 <li>
@@ -235,28 +234,29 @@
 
 <% if @enable_sfdc_refresh %>
         $('.sfdc-refresh').click(function(){
-            var entity_type, entity_type_btn_str;
+            var entity_type;
+            var buttonTxtStr = self.attr("btnLabel");
             var self = $(this);
             if ($(this).attr("id").includes("salesforce-ext-acc-refresh")) {  //clicked on 'Refresh Accounts'
-                entity_type = "accounts";
+                entity_type = "account";
+                requestURL = "/salesforce/import/account";
             }
             // else if ($(this).attr("id").includes("salesforce-opp-refresh")) {
-            //     entity_type = "opportunities";
+            //     entity_type = "project";
+            //     requestURL = "/salesforce/import/project";
             // }
             else if ($(this).attr("id").includes("salesforce-ext-cont-import")) {  //clicked on 'Import Contacts'
-                entity_type = "contacts";
+                entity_type = "contact";
+                requestURL = "/salesforce/sync";
             }
             else {
                 return;
             }
 
-            entity_type_btn_str = entity_type.charAt(0).toUpperCase() + entity_type.slice(1);
-            // console.log("$(this).attr('id'): " + self.attr("id"));
-            // console.log("entity_type_btn_str: " + entity_type_btn_str);
-
-            $.ajax('/salesforce/import/' + entity_type, {
+            $.ajax(requestURL, {
                 async: true,
                 method: "POST",
+                data: { "entity_type": entity_type },
                 beforeSend: function () {
                     self.css("pointer-events", "none");
                     $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
@@ -264,7 +264,7 @@
                 error: function(data) {
                     var res = JSON.parse(data.responseText);
                     self.addClass('error-btn-highlight');
-                    alert("Refresh ContextSmith " + entity_type_btn_str + " error!\n\n" + res.error);
+                    alert("Encountered " + buttonTxtStr + " error!\n\n" + res.error);
                 },
                 statusCode: {
                     500: function() {

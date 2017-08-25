@@ -187,7 +187,7 @@ class Contact < ActiveRecord::Base
       end
       # puts "**** Result of SFDC query \"#{query_statement}\":"
       # puts "-> # of rows UPSERTed into Contacts = #{val.count} total ****"
-      result = { status: "SUCCESS", result: "No. of rows UPSERTed into Contacts = #{val.count}", detail: "#{ query_result[:detail] }" }
+      result = { status: "SUCCESS", result: "Rows imported from SFDC into CS Contacts = #{val.count}", detail: "#{ query_result[:detail] }" }
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
     end
