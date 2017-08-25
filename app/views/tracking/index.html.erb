@@ -1,0 +1,96 @@
+<div>
+
+<!-- to enable desktop notifications <div class="row hidden tr-enable">
+    <div><button class="btn btn-primary" onclick="enableTracking()">Enable Tracking</button></div>
+  </div>
+-->
+
+  <ul class="nav nav-tabs navbar-fixed-top" style="background-color: white;" role="tablist">
+    <li class="active" role="presentation"><a href="#section1" aria-controls="home" role="tab" data-toggle="tab">Opened</a></li>
+    <li role="presentation"><a href="#section2" aria-controls="profile" role="tab" data-toggle="tab">Unopened</a></li>
+  </ul>
+
+  <div class="container-fluid tab-content" style="padding-top: 70px;">
+
+    <div id="section1" class="tab-pane active">
+      <!-- <h3>Opened</h3 >-->
+      <ul class="list-group">
+        <% if @opened.size == 0 %>
+            <li class="list-group-item"><span class="text-muted">None</span></li>
+        <% else %>
+            <% @opened.each do |tr| %>
+                <% latest = tr.tracking_events[0]
+                   device = latest.device
+                   device_class = @device_to_icon[device.device_type]
+                   new_event = latest.date > @tracking_setting.last_seen ? 'list-group-item-info' : ''
+                %>
+                <li class="list-group-item <%= new_event %>">
+                  <div class="pull-right"><%= button_to (tr.status == 'active' ? 'Pause Tracking' : 'Resume Tracking'), {action: 'toggle', tracking_id: tr.tracking_id}, {class: 'btn btn-default btn-sm', form_class: 'tr-top-tracking', remote: true} %></div>
+                  <div><b><%= tr.recipients_to_list %></b> opened your message
+                    <b><span class="tr-time"><%= latest.date %></span></b></div>
+                  <div><b><%= tr.subject %></b> that was sent by you <span class="tr-time"><%= tr.sent_at %></span>
+                  </div>
+                  <div>
+                    <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<%= latest.place_name %></span>
+                    <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %></span>
+                  </div>
+                  <div class="text-muted"><a src="#" class="tr-show-more">Opened <%= tr.tracking_events.length %>
+                    time<%= 's' if tr.tracking_events.length > 1 %>.
+                    <i class="fa fa-angle-double-down tr-show-more-icon"></i>
+                    <i class="fa fa-angle-double-up tr-show-more-icon hidden"></i>
+
+                  </a>
+                  </div>
+                  <div class="tr-all-events hidden">
+                    <% tr.tracking_events.each do |te| %>
+                        <% device = te.device
+                           device_class = @device_to_icon[device.device_type]
+                           new_event = latest.date > @tracking_setting.last_seen ? 'text-info' : ''
+                        %>
+                        <div>
+                          <b><span class="tr-time <%= new_event %>"><%= te.date %></span></b>
+                          <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<%= te.place_name %></span>
+                          <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %></span>
+                        </div>
+                    <% end %>
+                  </div>
+                </li>
+            <% end %>
+        <% end %>
+      </ul>
+    </div>
+    <div id="section2" class="container-fluid tab-pane">
+      <!-- <h3>Unopened</h3> -->
+      <ul class="list-group">
+        <% if @unopened.size == 0 %>
+            <li class="list-group-item"><span class="text-muted">None</span></li>
+        <% else %>
+        <% @unopened.each do |tr| %>
+            <li class="list-group-item">
+              <div><b><%= tr.recipients_to_list %></b> hasn't opened the message</div>
+              <div><b><%= tr.subject %></b> that was sent by you <span class="tr-time"><%= tr.sent_at %></span></div>
+            </li>
+            <% end %>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+  <script>
+    if (Notification.permission === 'default') {
+        $('.tr-enable').toggleClass('hidden');
+    }
+      $('.tr-time').each(function () {
+          this.textContent = moment(this.textContent).fromNow() + ' (' + moment(this.textContent).format('lll') + ')';
+      });
+      $('.tr-top-tracking').on('ajax:success', function (event, data) {
+          console.log(data);
+          let active = data.status && data.status != 'inactive';
+          $(this).find('.btn').val(active ? 'Stop Tracking' : 'Continue Tracking');
+      });
+      $('.tr-show-more').click(function () {
+          $(this).find('.tr-show-more-icon').toggleClass('hidden');
+          $(this).parent().siblings('.tr-all-events').toggleClass('hidden');
+
+      })
+  </script>
+</div>

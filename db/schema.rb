@@ -355,6 +355,7 @@ ActiveRecord::Schema.define(version: 20170822223958) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -364,12 +365,41 @@ ActiveRecord::Schema.define(version: 20170822223958) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
-    t.decimal  "amount",                    precision: 14, scale: 2
     t.string   "forecast_category_name"
     t.string   "owner_id"
   end
 
   add_index "salesforce_opportunities", ["salesforce_opportunity_id"], name: "index_salesforce_opportunities_on_salesforce_opportunity_id", unique: true, using: :btree
+
+  create_table "tracking_events", force: :cascade do |t|
+    t.string   "tracking_id", limit: 255
+    t.datetime "date"
+    t.string   "user_agent"
+    t.string   "place_name"
+    t.string   "event_type"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+  end
+
+  create_table "tracking_requests", force: :cascade do |t|
+    t.uuid     "user_id"
+    t.string   "message_id",  limit: 255
+    t.text     "recipients",              default: [],              array: true
+    t.string   "status"
+    t.datetime "sent_at"
+    t.datetime "created_at",                           null: false
+    t.datetime "updated_at",                           null: false
+    t.string   "tracking_id", limit: 255
+    t.string   "subject"
+    t.string   "email_id"
+  end
+
+  create_table "tracking_settings", force: :cascade do |t|
+    t.uuid     "user_id"
+    t.datetime "last_seen"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "first_name",             default: "",    null: false
