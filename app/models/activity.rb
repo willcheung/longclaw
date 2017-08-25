@@ -192,7 +192,7 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Copies/imports Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS opportunity.
+  # Copies/imports Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS opportunity.  Does not import previously-exported CS data residing on SFDC.
   # Parameters:   client - SFDC connection
   #               project - the CS opportunity into which to load the SFDC activity
   #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
@@ -206,6 +206,8 @@ class Activity < ActiveRecord::Base
   def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
     val = []
     result = nil
+
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     if filter_predicates["entity"] == ""
       entity_predicate = ""
@@ -299,7 +301,7 @@ class Activity < ActiveRecord::Base
     end
   end
 
-  # Bulk export CS Activities to a SFDC Account or Opportunity (as completed Tasks in ActivityHistory).
+  # Bulk export CS Activities to a SFDC Account or Opportunity (as completed Tasks in ActivityHistory). Ignores imported SFDC activity residing locally in CS.
   # Parameters:   client - SFDC connection
   #               project - the CS opportunity from which to export
   #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
@@ -311,6 +313,7 @@ class Activity < ActiveRecord::Base
   #             detail - a list of errors or informational/warning messages.
   def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil)
     result = { status: "SUCCESS", result: [], detail: [] }
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     project.activities.each do |a|
       # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.

@@ -144,7 +144,7 @@ class SettingsController < ApplicationController
       if params[:type] == "standard"
         cs_entity_fields = current_user.organization.entity_fields_metadatum.order(:name)
         @cs_account_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
-        @cs_stream_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
+        @cs_opp_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
         # TODO: Add code to use Contacts mapping set here when importing Contacts
         @cs_contact_fields = cs_entity_fields.where(entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Contact])
       elsif params[:type] == "custom"

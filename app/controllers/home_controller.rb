@@ -70,7 +70,7 @@ class HomeController < ApplicationController
       @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
       @open_risk_count = Project.open_risk_count(project_ids_a)
       @days_to_close = Project.days_to_close(project_ids_a)
-      @project_days_inactive = visible_projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date") # get last_sent_date
+      @project_days_inactive = visible_projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: project_ids_a).group("project_id")
       @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
