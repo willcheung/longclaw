@@ -6,7 +6,7 @@
                 <a href="<%= root_path %>">Home</a>
             </li>
             <li>
-                <a href="<%= settings_path%>">Settings</a>
+                <a href="<%= settings_path %>">Settings</a>
             </li>
             <li class="active">
                 <strong>Salesforce Integration</strong>
@@ -20,7 +20,7 @@
         <div class="ibox-content">
             <% if current_user.role != User::ROLE[:Admin] %>
               Must be a Salesforce admin to access Organization Salesforce Integration.  <a href="<%= settings_path %>">Return to Settings</a>
-            <% elsif @salesforce_user.nil?%> <a class="btn btn-primary btn-sm" style="font-size:12px" href="<%=user_omniauth_authorize_url(:salesforce)%>">Log in to Salesforce</a>
+            <% elsif @salesforce_user.nil? %> <a class="btn btn-primary btn-sm" style="font-size:12px" href="<%= user_omniauth_authorize_url(:salesforce) %>">Log in to Salesforce</a>
             <a class="btn btn-primary btn-sm" style="font-size:12px" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
             Must be a Salesforce admin. Please contact <a href="mailto:support@contextsmith.com?subject=Salesforce%20Integration%20Setup" target="_blank">support@contextsmith.com</a> for setup instructions.
             <% else %>
@@ -29,22 +29,22 @@
                   <!-- Collect the nav links, forms, and other content for toggling -->
                   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
-                      <li><a href="<%= settings_salesforce_accounts_path %>">Step 1: Map Accounts</a></li>
-                      <li><a href="<%= settings_salesforce_opportunities_path %>">Step 2: Map Opportunities</a></li>
-                      <li class="active"><a href="<%= settings_salesforce_activities_path %>">Step 3: Map Activities</a></li>
-                      <li><a href="<%= settings_salesforce_fields_path(:standard) %>">Step 4: Map Fields</a></li>
+                      <li><a href="<%= settings_salesforce_fields_path(:standard) %>">Step 1: Map Fields / Refresh</a></li>
+                      <li><a href="<%= settings_salesforce_accounts_path %>">Step 2: Map Accounts</a></li>
+                      <li><a href="<%= settings_salesforce_opportunities_path %>">Step 3: Map Opportunities</a></li>
+                      <li class="active"><a href="<%= settings_salesforce_activities_path %>">Step 4: Sync Activities</a></li>
                     </ul>
                   </div>
               </nav>
 
               <div>
-                <span style="font-size:15px;font-weight:bold;padding-right:1em">Salesforce Activities Filter</span>
+                <span style="font-size:15px;font-weight:bold;padding-right:1em">Salesforce Activities Inclusion Query</span>
                 <span>
                   <table class="table table-striped table-bordered table-hover responsive no-wrap">
                     <thead>
                       <tr>
                         <th>Salesforce Entity</th>
-                        <th style="width:85%">Predicate (SOQL)&nbsp;<i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Directly injected into the Salesforce query when retrieving Activities."></i></th>
+                        <th style="width:85%">Condition Predicate&nbsp;<i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="SOQL directly injected into the Salesforce query when retrieving Activities."></i></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -95,8 +95,8 @@
                               <span style="vertical-align: bottom; margin-right:5px">Salesforce Entity</span>
                               <span style="display: inline-block;">
                                 <div>
-                                  <button id="salesforce-activities-sync" class="btn btn-sm btn-primary btn-outline" btnLabel="Sync Activities" style="width:12em;"><i class="fa fa-refresh"></i> Sync Activities</button>
-                                  <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve Activities from Salesforce."></i>
+                                  <button id="salesforce-activities-sync" class="btn btn-sm btn-primary btn-outline" btnLabel="Sync Activities with Salesforce" style="width:18em;"><i class="fa fa-refresh"></i> Sync Activities with Salesforce</button>
+                                  <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Import and export Activities in ContextSmith and Salesforce."></i>
                                 </div>
                               </span>
                             </th>

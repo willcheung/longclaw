@@ -177,7 +177,7 @@ class SalesforceService
 
     # If cannot match by E-mail, try matching by First/Last name if either are specified
     if query_result[:result].size == 0 && (contact[:FirstName].strip.present? || contact[:LastName].strip.present?)
-      puts "--> Cannot match by E-mail, trying to match by First/Last name instead!"
+      puts "*> Cannot match Contact by E-mail, trying to match by First/Last name instead!"
       contact_name_predicate = []
       contact_name_predicate << "FirstName = '#{contact[:FirstName].strip}'" if contact[:FirstName].strip.present?
       contact_name_predicate << "LastName = '#{contact[:LastName].strip}'" if contact[:LastName].strip.present?
@@ -204,7 +204,7 @@ class SalesforceService
       end
     else
       begin
-        puts "* Contact #{ contact[:Email] } in SFDC Account #{ sfdc_account_id } not found. Creating a new Contact..."
+        puts "-> Contact #{ contact[:Email] } in SFDC Account #{ sfdc_account_id } not found. Creating a new Contact..."
         upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : '(unknown)', Email: contact[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
         # upsert_result is the Contact's SFDC sObject Id
         result = { status: "SUCCESS", result: upsert_result, detail: "" }
