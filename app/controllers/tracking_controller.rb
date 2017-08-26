@@ -84,7 +84,7 @@ class TrackingController < ApplicationController
 
   def new_events
     ts = get_tracking_setting
-    event_count = {count: TrackingEvent.where(date: ts.last_seen..Time.now).count}
+    event_count = {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
     render json: event_count
   end
 
