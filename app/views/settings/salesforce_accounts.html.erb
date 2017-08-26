@@ -82,18 +82,7 @@
                           <th>
                               <div style="padding-top:15px; display: inline; margin-right:5px;">Salesforce Contacts <small>(first 10)</small></div>
                               <div><nobr>
-                                  <button 
-                                  <%= "disabled" if !@linked_to_sfdc %>
-                                  id="salesforce-accounts-cont-import" class="btn btn-sm btn-primary btn-outline sfdc-refresh" btnLabel="Import Contacts"> <i class="fa fa-refresh"></i> Import Contacts
-                                  </button>
-                                  <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Retrieve Contacts with an e-mail from Salesforce Accounts."></i>
-                              </nobr></div>
-                              <div><nobr>
-                                  <button 
-                                  <%= "disabled" if !@linked_to_sfdc %>
-                                  id="salesforce-accounts-export-contacts" class="btn btn-sm btn-primary btn-outline" btnLabel="Export Contacts to Salesforce"> <i class="fa fa-refresh"></i> Export Contacts to Salesforce
-                                  </button>
-                                  <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-original-title="Send Contacts to Salesforce."></i>
+                                  <i class="fa fa-question-circle text-primary"data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Sync Salesforce contacts in <b>Step #4: Map Fields</b> above."></i>
                               </nobr></div>
                           </th>
                           <th></th>
