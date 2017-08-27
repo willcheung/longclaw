@@ -51,8 +51,8 @@ Longclaw::Application.routes.draw do
     post "/link_salesforce_account" => 'salesforce#link_salesforce_account'
     post "/link_salesforce_opportunity" => 'salesforce#link_salesforce_opportunity'
     post "/salesforce/import/:entity_type" => 'salesforce#import_salesforce'
-    post "/salesforce/update/:entity_type" => 'salesforce#export_salesforce'
-    post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
+    post "/salesforce/sync" => 'salesforce#sync_salesforce'
+    # post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
 
@@ -136,6 +136,14 @@ Longclaw::Application.routes.draw do
       post 'create_account'
     end
 
+    scope "tracking", controller: :tracking, as: 'tracking' do
+      post 'create'
+      get '/' => 'tracking#index'
+      post 'toggle'
+      get 'new_events'
+      post 'seen'
+    end
+
     resources :entity_fields_metadatum, controller: 'entity_fields_metadata', only: [:create, :update, :destroy] #for /settings/salesforce_fields/standard
     resources :custom_fields, only: [:update]
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields
@@ -165,4 +173,8 @@ Longclaw::Application.routes.draw do
     post "zendesk"
   end
 
+  #scope 'tracking', controller: :tracking, as: 'tracking' do
+  #  get 'view/:tracking_id' => 'tracking#view'
+  #end
+  get "track/:user_email/:tracking_id/:gif" => 'tracking#view'
 end

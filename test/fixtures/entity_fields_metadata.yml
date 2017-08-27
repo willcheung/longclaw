@@ -4,8 +4,20 @@
 # model remove the '{}' from the fixture names and add the columns immediately
 # below each fixture, per the syntax in the comments below
 #
-one: {}
+one:
+  id: 1
+  organization_id: 00000000-0000-0000-0000-000000000001
+  entity_type: 'string'
+  name: 'foo'
+  read_permission_role: 'user'
+  update_permission_role: 'user'
 # column: value
 #
-two: {}
+two:
+  id: 2
+  organization_id: 00000000-0000-0000-0000-000000000002
+  entity_type: 'string'
+  name: 'bar'
+  read_permission_role: 'user'
+  update_permission_role: 'user'
 #  column: value

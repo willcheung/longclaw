@@ -52,11 +52,14 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       end if meta.present?
     end
 
-    # Create a default mapping of "standard" SFDC fields to CS fields, 
+    set_default_sfdc_fields_mapping_for(organization: organization)
+  end
 
-    # Create lists of valid SFDC entity fields for reference, in case an expected "standard" SFDC field does not exist
-    # We don't save SFDC custom fields (i.e., in our backend), so we query SFDC every time! :(
+  # Set the default mapping of "standard" SFDC fields to CS fields for all entities: Accounts, Projects, and Contacts
+  def self.set_default_sfdc_fields_mapping_for(organization:)
+    # Create lists of valid SFDC entity fields for reference, in case an expected "standard" SFDC field does not exist; We don't save SFDC custom fields (i.e., in our backend), so we query SFDC every time! :(
     sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: organization.id)
+
     if sfdc_fields.present?
       sfdc_account_fields = sfdc_fields[:sfdc_account_fields].map{|f| f[0]}
       sfdc_opportunity_fields = sfdc_fields[:sfdc_opportunity_fields].map{|f| f[0]}
@@ -77,7 +80,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "description").update(salesforce_field: "Description") if sfdc_opportunity_fields.include? "Description"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "expected_revenue").update(salesforce_field: "ExpectedRevenue") if sfdc_opportunity_fields.include? "ExpectedRevenue"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "forecast").update(salesforce_field: "ForecastCategoryName") if sfdc_opportunity_fields.include? "ForecastCategoryName"  # ForecastCategory ?
-      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "probability").update(salesforce_field: "Probability") if sfdc_opportunity_fields.include? "probability"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "probability").update(salesforce_field: "Probability") if sfdc_opportunity_fields.include? "Probability"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "stage").update(salesforce_field: "StageName") if sfdc_opportunity_fields.include? "StageName"
 
       # Map the CS Contact field to the SFDC Contact field. The following lines may need to change if Contact::MAPPABLE_FIELDS_META changes
@@ -88,11 +91,11 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "email").update(salesforce_field: "Email") if sfdc_contact_fields.include? "Email"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "first_name").update(salesforce_field: "FirstName") if sfdc_contact_fields.include? "FirstName"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "last_name").update(salesforce_field: "LastName") if sfdc_contact_fields.include? "LastName"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "mobile").update(salesforce_field: "MobilePhone") if sfdc_contact_fields.include? "MobilePhone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "phone").update(salesforce_field: "Phone") if sfdc_contact_fields.include? "Phone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "title").update(salesforce_field: "Title") if sfdc_contact_fields.include? "Title"
     end
   end
-
   # Returns a list of [mapped SFDC entity field name, CS entity field name] pairs, for a particular entity type (i.e., Account, Opportunity, or Contact).
   # Parameters:   organization_id - the Id of the organization
   #               entity_type - EntityFieldsMetadatum::ENTITY_TYPE 

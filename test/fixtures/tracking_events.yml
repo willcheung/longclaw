@@ -1,0 +1,15 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+#one: {}
+#  tracking_request_id:
+#  date: 2017-08-07 13:53:21
+#  user_agent: MyString
+#  place_name: MyString
+#  event_type: MyString
+
+#two: {}
+#  tracking_request_id:
+#  date: 2017-08-07 13:53:21
+#  user_agent: MyString
+#  place_name: MyString
+#  event_type: MyString

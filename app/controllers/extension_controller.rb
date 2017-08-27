@@ -118,7 +118,7 @@ class ExtensionController < ApplicationController
     redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
 
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
-    ex_emails = external.map { |person| person[1] }.reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
+    ex_emails = external.map(&:second).reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
 
     # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#private_domain page
     redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if ex_emails.blank? 

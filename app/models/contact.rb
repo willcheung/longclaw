@@ -27,6 +27,8 @@
 include ActionView::Helpers::SanitizeHelper   # for sanitize (escape single quotes)
 
 class Contact < ActiveRecord::Base
+  before_save :downcase_email
+
 	belongs_to :account
 
   ### project_members/projects relations have 2 versions
@@ -55,7 +57,7 @@ class Contact < ActiveRecord::Base
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
   ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', DecisionMaker: 'Decision Maker', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department", "buyer_role" => "Buyer Role" }  #, "mobile" => "Mobile Phone"
+  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "mobile" => "Mobile Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department", "buyer_role" => "Buyer Role" }
 
   def is_source_from_salesforce?
     return self.source == "Salesforce"
@@ -85,41 +87,29 @@ class Contact < ActiveRecord::Base
   def self.find_or_create_from_email_info(address, personal, project, status=ProjectMember::STATUS[:Pending], source=nil)
     org = project.account.organization
     domain = get_domain(address)
-    if valid_domain?(domain)
-      primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
+    puts "** Skipped creating Contact for #{address}, invalid domain='#{domain}'. **" && return unless valid_domain?(domain)
 
-      ### account and contact setup here can probably be replaced with Model.create_with().find_or_create_by()
-      # find account this new member should belong to
-      account = org.accounts.find_by_domain(primary_domain) || org.accounts.find_by_name(primary_domain)
-      # create a new account for this domain if one doesn't exist yet
-      unless account
-        account = Account.create(
-          domain: primary_domain,
-          name: primary_domain,
-          category: Account::CATEGORY[:Customer], # TODO: 'Customer' may not be in Org's custom list of Account Types (Categories)!!
-          address: "",
-          website: "http://www.#{primary_domain}",
-          owner_id: project.owner_id,
-          organization: org,
-          created_by: project.owner_id)
-        subdomain_msg = primary_domain != domain ? " (subdomain: #{domain})" : ""
-        puts "** Created a new account for domain='#{primary_domain}'#{subdomain_msg}, organization='#{org}'. **"
-      end
-
-      # find or create contact for this member
-      contact = account.contacts.create_with(
-        first_name: get_first_name(personal),
-        last_name: get_last_name(personal),
-        source: source
-        ).find_or_create_by(email: address)
-
-      # add member to project as suggested member
-      ProjectMember.create(project: project, contact: contact, status: status)
-
-      contact
-    else
-      puts "** Skipped processing the invalid domain='#{domain}'. **"
+    # find account this new member should belong to
+    primary_domain = get_domain_from_subdomain(domain) # roll up subdomains into domains
+    account = org.accounts.find_by_domain(primary_domain) || org.accounts.find_by_name(primary_domain)
+    if account.blank?
+      # try to find a contact with matching email domain
+      contact = org.contacts.where("email LIKE '%@#{domain}'").first || org.contacts.where("email LIKE '%@#{primary_domain}'").first
+      account = contact.account if contact.present?
     end
+    puts "** Skipped creating Contact for #{address}, no Account found! **" && return if account.blank?
+
+    # find or create contact for this member
+    contact = account.contacts.create_with(
+      first_name: get_first_name(personal),
+      last_name: get_last_name(personal),
+      source: source
+    ).find_or_create_by(email: address)
+
+    # add member to project as suggested member
+    ProjectMember.create(project: project, contact: contact, status: status)
+
+    contact
   end
 
   # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields for each "matched" Contact (same e-mail).  If there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one. Note: Contact merge will only copy the value from the SFDC Contact field if there's no existing value in the matched CS Contact.
@@ -134,6 +124,7 @@ class Contact < ActiveRecord::Base
   def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
     result = nil
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"  # Unused: Description, LeadSource
 
@@ -144,7 +135,7 @@ class Contact < ActiveRecord::Base
 
       # Keep the first contact (alphabetically, by Last then First Name) from contacts with identical e-mails; ignore contacts with no e-mail field
       query_result[:result].each do |c|
-        email = Contact.sanitize(c[:Email]) 
+        email = Contact.sanitize(c[:Email]).downcase
         if c[:Email].present? && emails_processed[email].nil?
           firstname = self.capitalize_first_only(c[:FirstName])
           lastname = self.capitalize_first_only(c[:LastName])
@@ -189,14 +180,14 @@ class Contact < ActiveRecord::Base
             else
               error = "Invalid statement error: \"#{e}\"" 
             end
-            puts "ActiveRecord error=#{error}"
-            return error
+            puts "ActiveRecord error in Contact.load_salesforce_contacts()=#{error}"
+            return { status: "ERROR", result: "ActiveRecord error in Contact.load_salesforce_contacts()!", detail: "#{ error } Query: #{ query_statement }" }
           end
         end
       end
       # puts "**** Result of SFDC query \"#{query_statement}\":"
       # puts "-> # of rows UPSERTed into Contacts = #{val.count} total ****"
-      result = { status: "SUCCESS", result: "No. of rows UPSERTed into Contacts = #{val.count}", detail: "#{ query_result[:detail] }" }
+      result = { status: "SUCCESS", result: "Rows imported from SFDC into CS Contacts = #{val.count}", detail: "#{ query_result[:detail] }" }
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
     end
@@ -215,6 +206,7 @@ class Contact < ActiveRecord::Base
   #             detail - a list of all errors, or an empty list if no errors occurred. 
   def self.export_cs_contacts(client, account_id, sfdc_account_id)
     result = { status: "SUCCESS", result: [], detail: [] }
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     Account.find(account_id).contacts.each do |c|
       #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
@@ -248,5 +240,9 @@ class Contact < ActiveRecord::Base
   # Capitalizes first character and leaves the remaining alone (unlike .capitalize which changes remaining ones to lowercase)
   def self.capitalize_first_only (str)
     str.slice(0,1).capitalize + str.slice(1..-1) if !str.nil?
+  end
+
+  def downcase_email
+    self.email.downcase!
   end
 end

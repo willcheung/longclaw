@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!-- Start of ContextSmith Chrome extension code -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" crossorigin="use-credentials" href="/manifest.json">
+
+  <title>ContextSmith | Enterprise Account Intelligence Platform</title>
+
+    <!-- Include style per-controller - vendor plugins -->
+    <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" %>
+    <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" %>
+
+    <!-- Main css styles -->
+    <!-- <%= stylesheet_link_tag 'application', media: 'all' %> -->
+
+  <script src="https://www.gstatic.com/firebasejs/4.2.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/4.2.0/firebase-messaging.js"></script>
+
+  <!-- Main javascript files -->
+  <%= javascript_include_tag 'application' %>
+  <%= javascript_include_tag 'tracking.js' %>
+  <%= javascript_include_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js" %>
+  <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" %>
+  <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js" %>
+
+
+  <script>
+
+</script>
+
+    <%= csrf_meta_tags %>
+</head>
+<body class="white-bg">
+<div id="wrapper" class="<%= params[:controller] %>.<%= params[:action] %>">
+
+  <div class="white-bg">
+    <!-- Main view  -->
+    <%= yield %>
+  </div>
+</div>
+</body>

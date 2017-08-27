@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one: {}
+#  id:
+#  user_id:
+#  message_id: MyString
+#  recipients: MyText
+#  state:
+#  sent_at: 2017-08-06 21:49:25
+
+two: {}
+#  id:
+#  user_id:
+#  message_id: MyString
+#  recipients: MyText
+#  state:
+#  sent_at: 2017-08-06 21:49:25

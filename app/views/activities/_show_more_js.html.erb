@@ -2,10 +2,8 @@
 // Show More
 $(document).ready(function() {
     $(".show-more-<%= a.id.to_s %>").click(function() {
-        $(".hidden-chat-message-<%= a.id.to_s %>").each(function() {
-            $(this).show();
-        });
-        $(".show-more-<%= a.id.to_s %>").hide();
+        $(".hidden-chat-message-<%= a.id.to_s %>").toggle();
+        $(".show-more-<%= a.id.to_s %>").toggle();
     });
 
     $(".comment-link-<%= a.id %>").click(function() {
