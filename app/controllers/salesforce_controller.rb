@@ -703,13 +703,35 @@ class SalesforceController < ApplicationController
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
   end
 
+  # Copied directly from ProjectsController#load_timeline
   def load_timeline
-    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments)
+    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :attachments, :comments)
+    @pinned_ids = activities.pinned.ids.reverse # get ids of Key Activities to show number on stars
     # filter by categories
     @filter_category = []
     if params[:category].present?
       @filter_category = params[:category].split(',')
-      activities = activities.where(category: @filter_category)
+
+      # special cases: if Attachment or Pinned category filters selected, remove from normal WHERE condition and handle differently below
+      if @filter_category.include?(Notification::CATEGORY[:Attachment]) || @filter_category.include?(Activity::CATEGORY[:Pinned])
+        where_categories = @filter_category - [Notification::CATEGORY[:Attachment], Activity::CATEGORY[:Pinned]]
+        category_condition = "activities.category IN ('#{where_categories.join("','")}')"
+
+        # Attachment filter selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Notification::CATEGORY[:Attachment])
+          activities = activities.joins("LEFT JOIN notifications AS attachment_notifications ON attachment_notifications.activity_id = activities.id AND attachment_notifications.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+          category_condition += " OR (activities.category = '#{Activity::CATEGORY[:Conversation]}' AND attachment_notifications.id IS NOT NULL)"
+        end
+
+        # Pinned filter selected, need to INCLUDE pinned activities regardless of type but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Activity::CATEGORY[:Pinned])
+          category_condition += " OR activities.is_pinned IS TRUE"
+        end
+
+        activities = activities.where(category_condition)
+      else
+        activities = activities.where(category: @filter_category)
+      end
     end
     # filter by people
     @filter_email = []
