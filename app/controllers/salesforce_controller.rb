@@ -3,7 +3,7 @@ class SalesforceController < ApplicationController
   before_action :get_current_org_users, only: :index
 
   # For accessing Project#show page+tabs from a Salesforce Visualforce iframe page
-  # The route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_opportunity_id> ("&actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
+  # The route is in the form GET http(s)://<host_url>/salesforce/?id=<salesforce_account_id>&pid=<contextsmith_project_id> ("&actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
   def index
     @category_param = []
     @filter_email = []
@@ -26,7 +26,7 @@ class SalesforceController < ApplicationController
 
     @is_mapped_to_CS_account = true
 
-    @actiontype = (params[:actiontype].present? && (["index", "show", "filter_timeline", "more_timeline", "pinned_tab", "tasks_tab", "insights_tab", "arg_tab"].include? params[:actiontype])) ? params[:actiontype] : 'show'
+    @actiontype = (params[:actiontype].present? && (["index", "show", "filter_timeline", "more_timeline", "tasks_tab", "insights_tab", "arg_tab"].include? params[:actiontype])) ? params[:actiontype] : 'show'
 
     # check if CS account_id is valid and in the scope
     @opportunities_mapped = Project.visible_to(current_user.organization_id, current_user.id).where(account_id: cs_account.id)
@@ -56,8 +56,10 @@ class SalesforceController < ApplicationController
         @final_filter_user = @project.all_involved_people(current_user.email)
         # get data for time series filter
         @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
-      elsif @actiontype == "pinned_tab"
-        @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
+        @pinned_activities = @project.activities.pinned.visible_to(current_user.email).reverse
+        # get categories for category filter
+        @categories = @activities_by_category_date.keys
+        @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
       elsif @actiontype == "tasks_tab"
         # show every risk regardless of private conversation
         @notifications = @project.notifications
