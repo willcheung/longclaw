@@ -57,7 +57,7 @@ class Contact < ActiveRecord::Base
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
   ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', DecisionMaker: 'Decision Maker', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department", "buyer_role" => "Buyer Role" }  #, "mobile" => "Mobile Phone"
+  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "mobile" => "Mobile Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department", "buyer_role" => "Buyer Role" }
 
   def is_source_from_salesforce?
     return self.source == "Salesforce"
@@ -124,6 +124,7 @@ class Contact < ActiveRecord::Base
   def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
     val = []
     result = nil
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"  # Unused: Description, LeadSource
 
@@ -179,8 +180,8 @@ class Contact < ActiveRecord::Base
             else
               error = "Invalid statement error: \"#{e}\"" 
             end
-            puts "ActiveRecord error=#{error}"
-            return error
+            puts "ActiveRecord error in Contact.load_salesforce_contacts()=#{error}"
+            return { status: "ERROR", result: "ActiveRecord error in Contact.load_salesforce_contacts()!", detail: "#{ error } Query: #{ query_statement }" }
           end
         end
       end
@@ -205,6 +206,7 @@ class Contact < ActiveRecord::Base
   #             detail - a list of all errors, or an empty list if no errors occurred. 
   def self.export_cs_contacts(client, account_id, sfdc_account_id)
     result = { status: "SUCCESS", result: [], detail: [] }
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     Account.find(account_id).contacts.each do |c|
       #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."

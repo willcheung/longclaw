@@ -1,7 +1,15 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  name: MyString
+  id: 00000000-0000-0000-0000-000000000001
+  name: AccountOne
+  owner_id: 00000000-0000-0000-0000-000000000001
+  organization_id: 00000000-0000-0000-0000-000000000001
+  domain: 'account-one.com'
 
 two:
-  name: MyString
+  id: 00000000-0000-0000-0000-000000000002
+  name: AccountTwo
+  owner_id: 00000000-0000-0000-0000-000000000002
+  organization_id: 00000000-0000-0000-0000-000000000002
+  domain: 'account-two.com'

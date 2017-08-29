@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class EntityFieldsMetadataControllerTest < ActionController::TestCase
+class TrackingRequestTest < ActiveSupport::TestCase
   # test "the truth" do
   #   assert true
   # end

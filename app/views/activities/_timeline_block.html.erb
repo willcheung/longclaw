@@ -62,12 +62,13 @@
             <div class="chat-discussion">
                 <% if a.email_messages.size > 1 %>
                     <div class="more-messages">
-                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
+                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; Show <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
+                        <a class="show-more-<%= a.id.to_s %>" style="display: none;"><i class="fa fa-minus-square"></i> &nbsp; Hide <%= pluralize((a.email_messages.size - 1), 'older message') %></a>
                     </div>
                 <% end %>
 
                 <% a.email_messages.each do |m| %>
-                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% if a.email_messages.last != m %> style="display:none;" <% end %>>
+                    <div <% if a.email_messages.last != m %> class="hidden-chat-message-<%= a.id.to_s %>" style="display:none;" <% end %>>
                         <div class="chat-message <%= is_internal_domain?(m.from[0].address) ? "left" : "right" %>">
                             <%= get_profile_pic(m.from[0].personal, m.from[0].address, "message-avatar") %>
                             <div class="message">
@@ -207,11 +208,12 @@
             <div class="chat-discussion">
                 <% if a.email_messages.length > 1 %>
                   <div class="more-messages">
-                    <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize(a.email_messages.length - 1, 'older comment') %> on BaseCamp2</a>
+                    <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; Show <%= pluralize(a.email_messages.length - 1, 'older comment') %> on BaseCamp2</a>
+                    <a class="show-more-<%= a.id.to_s %>" style="display: none;"><i class="fa fa-minus-square"></i> &nbsp; Hide <%= pluralize(a.email_messages.length - 1, 'older comment') %> on BaseCamp2</a>
                   </div>
                 <% end %>
                 <% a.email_messages.reverse.each_with_index do |c, i| %>
-                  <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% unless a.email_messages.size - 1 == i %> style="display:none;" <% end %> >
+                  <div <% unless a.email_messages.size - 1 == i %> class="hidden-chat-message-<%= a.id.to_s %>" style="display:none;" <% end %> >
                       <% if c.eventable %>
                       <div class="chat-message <%= is_internal_domain?(c.user_email) ? "left" : "right" %>">
                           <%= get_profile_pic(c.creator.name, c.creator.name, "message-avatar") %>
@@ -263,12 +265,13 @@
                 <div><strong>Description:</strong> <%= a.note %></div>
                 <% if a.email_messages.first.issue.fields.comment.total > 1 %>
                     <div class="more-messages">
-                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize(a.email_messages.first.issue.fields.comment.total - 1, 'older comment') %> on JIRA</a>
+                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; Show <%= pluralize(a.email_messages.first.issue.fields.comment.total - 1, 'older comment') %> on JIRA</a>
+                        <a class="show-more-<%= a.id.to_s %>" style="display: none;"><i class="fa fa-minus-square"></i> &nbsp; Hide <%= pluralize(a.email_messages.first.issue.fields.comment.total - 1, 'older comment') %> on JIRA</a>
                     </div>
                 <% end %>
 
                 <% a.email_messages.first.issue.fields.comment.comments.each_with_index do |c, i| %>
-                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% unless a.email_messages.first.issue.fields.comment.total - 1 == i %> style="display:none;" <% end %> >
+                    <div <% unless a.email_messages.first.issue.fields.comment.total - 1 == i %> class="hidden-chat-message-<%= a.id.to_s %>" style="display:none;" <% end %> >
                         <div class="chat-message left">
                             <%= get_profile_pic(c.author.displayName, c.author.emailAddress, "message-avatar") %>
                             <div class="message">
@@ -308,12 +311,13 @@
             <div class="chat-discussion">
                 <% if a.email_messages.first.comments.length > 1 %>
                     <div class="more-messages">
-                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; <%= pluralize(a.email_messages.first.comments.length - 1, 'older comment') %> on Zendesk</a>
+                        <a class="show-more-<%= a.id.to_s %>"><i class="fa fa-plus-square"></i> &nbsp; Show <%= pluralize(a.email_messages.first.comments.length - 1, 'older comment') %> on Zendesk</a>
+                        <a class="show-more-<%= a.id.to_s %>" style="display: none;"><i class="fa fa-minus-square"></i> &nbsp; Hide <%= pluralize(a.email_messages.first.comments.length - 1, 'older comment') %> on Zendesk</a>
                     </div>
                 <% end %>
 
                 <% a.email_messages.first.comments.each_with_index do |c, i| %>
-                    <div class="hidden-message-filter hidden-chat-message-<%= a.id.to_s %>" <% unless a.email_messages.first.comments.length - 1 == i %> style="display:none;" <% end %> >
+                    <div <% unless a.email_messages.first.comments.length - 1 == i %> class="hidden-chat-message-<%= a.id.to_s %>" style="display:none;" <% end %> >
                         <div class="chat-message left">
                             <%= get_profile_pic(c.author, c.author, "message-avatar") %>
                             <div class="message">
