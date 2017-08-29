@@ -63,13 +63,13 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-lg-3">
             <div class="ibox float-e-margins">
                 <div id="forecast-chart" class="ibox-content forecast-chart" style="height:210px;padding-bottom:0"></div>
             </div>
         </div>
 
-        <div class="col-lg-5">
+        <div class="col-lg-6">
             <div class="ibox float-e-margins">
                 <div id="stage-chart" class="ibox-content stage-chart" style="height:210px;padding-bottom:0"></div>
             </div>
@@ -341,7 +341,13 @@
             type: 'column'
         },
         title: {
-            text: ''
+            text: 'At-Risk Forecast',
+            style: {
+                color: '#676a6c',
+                fontSize: '14px',
+                fontFamily: 'Roboto'
+            },
+            align: 'left'
         },
         credits: {
             enabled: false
@@ -419,7 +425,13 @@
             type: 'column'
         },
         title: {
-            text: ''
+            text: 'At-Risk Deals',
+            style: {
+                color: '#676a6c',
+                fontSize: '14px',
+                fontFamily: 'Roboto'
+            },
+            align: 'left'
         },
         credits: {
             enabled: false
@@ -533,7 +545,7 @@
                 },
                 gridLineWidth: 0,
                 plotLines: [{
-                    color: '#FF0000', // Red
+                    color: '#aeaeae', // Red
                     width: 2,
                     value: 31.5,
                     zIndex: 5,

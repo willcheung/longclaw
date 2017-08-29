@@ -3,7 +3,7 @@ class SalesforceController < ApplicationController
   before_action :get_current_org_users, only: :index
 
   # For accessing Project#show page+tabs from a Salesforce Visualforce iframe page
-  # The route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_opportunity_id> ("&actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
+  # The route is in the form GET http(s)://<host_url>/salesforce/?id=<salesforce_account_id>&pid=<contextsmith_project_id> ("&pid" and &actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
   def index
     @category_param = []
     @filter_email = []
@@ -26,7 +26,7 @@ class SalesforceController < ApplicationController
 
     @is_mapped_to_CS_account = true
 
-    @actiontype = (params[:actiontype].present? && (["index", "show", "filter_timeline", "more_timeline", "pinned_tab", "tasks_tab", "insights_tab", "arg_tab"].include? params[:actiontype])) ? params[:actiontype] : 'show'
+    @actiontype = (params[:actiontype].present? && (["index", "show", "filter_timeline", "more_timeline", "tasks_tab", "insights_tab", "arg_tab"].include? params[:actiontype])) ? params[:actiontype] : 'show'
 
     # check if CS account_id is valid and in the scope
     @opportunities_mapped = Project.visible_to(current_user.organization_id, current_user.id).where(account_id: cs_account.id)
@@ -56,8 +56,10 @@ class SalesforceController < ApplicationController
         @final_filter_user = @project.all_involved_people(current_user.email)
         # get data for time series filter
         @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
-      elsif @actiontype == "pinned_tab"
-        @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
+        @pinned_activities = @project.activities.pinned.visible_to(current_user.email).reverse
+        # get categories for category filter
+        @categories = @activities_by_category_date.keys
+        @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
       elsif @actiontype == "tasks_tab"
         # show every risk regardless of private conversation
         @notifications = @project.notifications
@@ -80,9 +82,18 @@ class SalesforceController < ApplicationController
     # One CS Account can be linked to many Salesforce Accounts
     salesforce_account = SalesforceAccount.find_by(id: params[:salesforce_id], contextsmith_organization_id: current_user.organization_id)
     if !salesforce_account.nil?
-      salesforce_account.account = Account.find_by_id(params[:account_id])
+      account = Account.find_by_id(params[:account_id])
+      salesforce_account.account = account
       salesforce_account.save
 
+      # After linking, copy values in standard fields from SFDC -> CS
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      update_result = Account.update_fields_from_sfdc(client: client, accounts: [account], sfdc_fields_mapping: EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account]))
+      puts "****SFDC**** Error while attempting to automatically update standard fields after linking a CS and Salesforce Account.  Salesforce Account \"#{salesforce_account.salesforce_account_name}\" (sfdc_id='#{salesforce_account.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{account.id}').  #{ update_result[:result] } Details: #{ update_result[:detail] }" if update_result[:status] == "ERROR"
+      # Then copy values in custom fields from SFDC -> CS
+      load_result = Account.load_salesforce_fields(client: client, account_id: account.id, sfdc_account_id: salesforce_account.salesforce_account_id, account_custom_fields: CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true)))
+      puts "****SFDC**** Error while attempting to automatically update custom fields after linking a CS and Salesforce Account.  Salesforce Account \"#{salesforce_account.salesforce_account_name}\" (sfdc_id='#{salesforce_account.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{account.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }" if load_result[:status] == "ERROR"
+      
       # For Power Users and trial/Chrome Users: Automatically import SFDC contacts, then add all SFDC contacts as pending members ('Suggested People') in all opportunities in the linked CS account 
       if current_user.power_or_trial_only?
         puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked Account '#{salesforce_account.account.name}' to SFDC Account '#{salesforce_account.salesforce_account_name}'!"
@@ -100,8 +111,17 @@ class SalesforceController < ApplicationController
     # One CS Opportunity can link to many Salesforce Opportunities
     salesforce_opp = SalesforceOpportunity.find_by(id: params[:salesforce_id])
     if !salesforce_opp.nil?
-      salesforce_opp.project = Project.find_by_id(params[:project_id])
+      project = Project.find_by_id(params[:project_id])
+      salesforce_opp.project = project
       salesforce_opp.save
+
+      # After linking, copy values in standard fields from SFDC -> CS
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      update_result = Project.update_fields_from_sfdc(client: client, opportunities: [project], sfdc_fields_mapping: EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project]))
+      puts "****SFDC**** Error while attempting to automatically update standard fields after linking a CS and Salesforce Opportunity.  Salesforce Opportunity \"#{salesforce_opp.name}\" (sfdc_id='#{salesforce_opp.salesforce_opportunity_id}') to CS Opportunity \"#{project.name}\" (project_id='#{project.id}').  #{ update_result[:result] } Details: #{ update_result[:detail] }" if update_result[:status] == "ERROR"
+      # Then copy values in custom fields from SFDC -> CS
+      load_result = Project.load_salesforce_fields(client: client, project_id: project.id, sfdc_opportunity_id: salesforce_opp.salesforce_opportunity_id, opportunity_custom_fields: CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true)))
+      puts "****SFDC**** Error while attempting to automatically update custom fields after linking a CS and Salesforce Opportunity.  Salesforce Opportunity \"#{salesforce_opp.name}\" (sfdc_id='#{salesforce_opp.salesforce_opportunity_id}') to CS Opportunity \"#{project.name}\" (project_id='#{project.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }" if load_result[:status] == "ERROR"
     end
 
     respond_to do |format|
@@ -109,14 +129,73 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Import/load a list of SFDC Accounts/Opportunities into local CS models, or load SFDC Contacts into all corresponding mapped CS Accounts, or Load SFDC Activities into CS Opportunities
-  #TODO: Issue #829 Need to allow SFDC import of activities and contacts to continue even after encountering an error.
+  # Import/load a list of SFDC Accounts or SFDC Opportunities (that are of mapped SFDC Accounts)  into local CS models, or import SFDC Activities into CS Opportunities.
+  # For Accounts/Opportunities -- This will also refreshes/updates the standard and custom field values of mapped accounts or opportunities.
+  # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account.
   def import_salesforce
     case params[:entity_type]
-    when "accounts"
+    when "account"
       SalesforceAccount.load_accounts(current_user.organization_id)
-    when "opportunities"
+      refresh_fields(params[:entity_type])
+      return
+    when "project"
       SalesforceOpportunity.load_opportunities(current_user.organization_id)
+      refresh_fields(params[:entity_type])
+      return
+    when "activity"
+      # Ignores exported CS data residing on SFDC.
+      # TODO: Issue #829 Need to allow SFDC import of activities to continue even after encountering an error.  Use new sync_salesforce code as guide.
+      method_name = "import_salesforce#activity()"
+      filter_predicate_str = {}
+      filter_predicate_str["entity"] = params[:entity_pred].strip
+      filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
+
+      #puts "******************** #{ method_name } ... filter_predicate_str= #{ filter_predicate_str }", 
+      @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
+      no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+
+      # Nothing to do if no opportunities or linked SFDC entities
+      if @opportunities.blank? || no_linked_sfdc
+        @client = nil
+        render plain: '' 
+        return 
+      end
+
+      @client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+      unless @client.nil?  # unless connection error
+        @opportunities.each do |s|
+          if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
+            if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
+              s.account.salesforce_accounts.each do |sfa|
+                load_result = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
+                #puts "$$$(import_salesforce)$$$ load_result: #{load_result}"
+
+                if load_result[:status] == "ERROR"
+                  failure_method_location = "Activity.load_salesforce_activities()"
+                  error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                  render_internal_server_error(method_name, failure_method_location, error_detail)
+                  return
+                end
+              end
+            end
+          else # CS Opportunity linked to SFDC Opportunity
+            # Save at the Opportunity level
+            load_result = Activity.load_salesforce_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
+
+            if load_result[:status] == "ERROR"
+              failure_method_location = "Activity.load_salesforce_activities()"
+              error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+              render_internal_server_error(method_name, failure_method_location, error_detail)
+              return
+            end
+          end
+        end
+      else
+        render_service_unavailable_error(method_name)
+        return
+      end
+    # end when params[:entity_type] = "activity"
     else
       error_detail = "Invalid entity_type parameter passed to import_salesforce(). entity_type=#{params[:entity_type]}"
       puts error_detail
@@ -127,14 +206,78 @@ class SalesforceController < ApplicationController
     render plain: ''
   end
 
+  # Export CS Activity or Contacts into the mapped SFDC Account (or Opportunity)
+  # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account.  
+  def export_salesforce
+    case params[:entity_type]
+    when "activity"
+      # Activities in CS (excluding imported SFDC activity) are exported into the remote SFDC Account (or Opportunity).
+      method_name = "export_salesforce#activity()"
+      @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
+      no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+
+      # Nothing to do if no opportunities or linked SFDC entities
+      if @opportunities.blank? || no_linked_sfdc
+        @client = nil
+        render plain: '' 
+        return 
+      end
+
+      @client = SalesforceService.connect_salesforce(current_user.organization_id)
+
+      Activity.delete_cs_activities(@client) #clear all existing CS Activities in SFDC (accounts)
+
+      unless @client.nil?  # unless connection error
+        @opportunities.each do |s|
+          # TODO: Issue #829 Need to allow SFDC export of activities to continue even after encountering an error.  Use new sync_salesforce code as guide.
+          if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
+            if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
+              s.account.salesforce_accounts.each do |sfa|
+                export_result = Activity.export_cs_activities(@client, s, sfa.salesforce_account_id, "Account")
+
+                if export_result[:status] == "ERROR"
+                  method_location = "Activity.export_cs_activities()"
+                  error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{ export_result[:detail] }"
+                  render_internal_server_error(method_name, method_location, error_detail)
+                  return
+                end
+              end
+            end
+          else # CS Opportunity linked to SFDC Opportunity
+            # Save at the Opportunity level
+            export_result = Activity.export_cs_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
+
+            if export_result[:status] == "ERROR"
+              method_location = "Activity.export_cs_activities()"
+              error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{ export_result[:detail] }"
+              render_internal_server_error(method_name, method_location, error_detail)
+              return
+            end
+          end
+        end
+      else
+        render_service_unavailable_error(method_name)
+        return
+      end
+    # end: when params[:entity_type] = "activity"
+    else
+      error_detail = "Invalid entity_type parameter passed to export_salesforce(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
+    end
+
+    render plain: ''
+  end
+
   # Synchronize entities in CS and SFDC consisting of an import of a SFDC entity to ContextSmith, followed by an export back to SFDC, using SFDC <-> CS fields mapping.
-  # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account. First, imports SFDC Activities (not exported from CS) into CS Opportunities.  Finally, non-SFDC Activities in CS are exported into the remote SFDC Account (or Opportunity).  Ignores exported CS data residing on SFDC and imported SFDC activity residing on CS.
+  # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account. Imports SFDC Activities (not exported from CS) into CS Opportunities.
   # For Contacts -- merges Contacts depending on the explicit mapping of a SFDC Account to a CS Account. ("Sync" is used loosely, because some Contacts is missing information like e-mail address)
   def sync_salesforce
     method_name = "sync_salesforce()"
     case params[:entity_type]
-    when "activities"
-      method_name = "sync_salesforce#activities()"
+    when "activity"
+      method_name = "sync_salesforce#activity()"
       filter_predicate_str = {}
       filter_predicate_str["entity"] = params[:entity_pred].strip
       filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
@@ -232,7 +375,7 @@ class SalesforceController < ApplicationController
         return
       end
 
-    # end when params[:entity_type] = "activities"
+    # end when params[:entity_type] = "activity"
     when "contacts"
       method_name = "sync_salesforce#contacts()"
       account_mapping = []
@@ -297,100 +440,93 @@ class SalesforceController < ApplicationController
     render plain: ''
   end
 
-  # Native CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. 
-  # Parameters:   params[:entity_type] - "accounts" or "projects".
-  #               params[:field_type] - "standard" or "custom"
+  # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. This is for all active accounts for user's organization.
+  # Parameters:  entity_type - "account" or "opportunity".
   # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS Opportunity, an update will be carried out for each mapping.
-  def refresh_fields
+  def refresh_fields(entity_type)
     method_name = "refresh_fields()"
-    if params[:entity_type] == "accounts"
-      if params[:field_type] == "standard"
-        account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
-        #puts "account_standard_fields: #{account_standard_fields}"
-      else
-        account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
-      end
+    if entity_type == "account"
+      accounts = current_user.organization.accounts.where(status: "Active")
+      account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
+      account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
+      # puts "any accounts mapped=#{accounts.find{|a| a.salesforce_accounts.present?}.present?}"
+      # puts "\n\naccount_standard_fields: #{account_standard_fields}\naccount_custom_fields: #{account_custom_fields}\n"
 
-      unless (params[:field_type] == "standard" && account_standard_fields.empty?) || (params[:field_type] == "custom" && account_custom_fields.empty?) # Nothing to do if no mappings are found
+      unless accounts.blank? || current_user.organization.salesforce_accounts.where.not(contextsmith_account_id: nil).first.blank? || (account_standard_fields.blank? && account_custom_fields.blank?) # nothing to do if no active CS accounts, no SFDC accounts mapped, or no account field mappings are found
         @client = SalesforceService.connect_salesforce(current_user.organization_id)
         #@client=nil # simulates a Salesforce connection error
 
-        unless @client.nil?  # unless connection error
-          accounts = Account.where("accounts.organization_id = ? and status = 'Active'", current_user.organization_id)
-
-          if params[:field_type] == "standard"
-            update_result = Account.update_fields_from_sfdc(client: @client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
-            if update_result[:status] == "ERROR"
-              failure_method_location = "Account.update_fields_from_sfdc()"
-              error_detail = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
-              render_internal_server_error(method_name, failure_method_location, error_detail)
-              return
-            end
-          else # params[:field_type] == "custom"
-            accounts.each do |a|
-              unless a.salesforce_accounts.first.nil? 
-                #print "***** SFDC account:\"", a.salesforce_accounts.first.salesforce_account_name, "\" --> CS account:\"", a.name, "\" *****\n"
-                load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
-
-                if load_result[:status] == "ERROR"
-                  failure_method_location = "Account.load_salesforce_fields()"
-                  error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                  render_internal_server_error(method_name, failure_method_location, error_detail)
-                  return
-                end
-              end
-            end # End: accounts.each do |s|
+        unless @client.nil?  # unless SFDC connection error
+          # standard fields
+          update_result = Account.update_fields_from_sfdc(client: @client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
+          if update_result[:status] == "ERROR"
+            failure_method_location = "Account.update_fields_from_sfdc()"
+            error_detail = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+            render_internal_server_error(method_name, failure_method_location, error_detail)
+            return
           end
+
+          # custom fields
+          accounts.each do |a|
+            unless a.salesforce_accounts.first.nil? 
+              # puts "***** SFDC account:\"#{a.salesforce_accounts.first.salesforce_account_name}\" --> CS account:\"#{a.name}\" *****\n"
+              load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
+
+              if load_result[:status] == "ERROR"
+                failure_method_location = "Account.load_salesforce_fields()"
+                error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                render_internal_server_error(method_name, failure_method_location, error_detail)
+                return
+              end
+            end
+          end # End: accounts.each do |s|
         else
           render_service_unavailable_error(method_name)
           return
         end
       end
-    elsif params[:entity_type] == "projects"
-      if params[:field_type] == "standard"
-        opportunity_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
-        puts "opportunity_standard_fields: #{opportunity_standard_fields}"
-      else
-        opportunity_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
-      end
+    elsif entity_type == "project"
+      opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
+      opportunity_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
+      opportunity_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+      # puts "any opps mapped=#{opportunities.find{|p| p.salesforce_opportunity.present?}.blank?}"
+      # puts "\n\nopportunity_standard_fields: #{opportunity_standard_fields}\nopportunity_custom_fields: #{opportunity_custom_fields}\n"
 
-      unless (params[:field_type] == "standard" && opportunity_standard_fields.empty?) || (params[:field_type] == "custom" && opportunity_custom_fields.empty?) # Nothing to do if no mappings are found
+      unless opportunities.first.blank? || (opportunity_standard_fields.blank? && opportunity_custom_fields.blank?) # nothing to do if no active+confirmed opportunities or no opportunity field mappings are found
         @client = SalesforceService.connect_salesforce(current_user.organization_id)
         #@client=nil # simulates a Salesforce connection error
 
-        unless @client.nil?  # unless connection error
-          opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity)
-
-          if params[:field_type] == "standard"
-            update_result = Project.update_fields_from_sfdc(client: @client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
-            if update_result[:status] == "ERROR"
-              failure_method_location = "Project.update_fields_from_sfdc()"
-              error_detail = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
-              render_internal_server_error(method_name, failure_method_location, error_detail)
-              return
-            end
-          else # params[:field_type] == "custom"
-            opportunities.each do |s|
-              unless s.salesforce_opportunity.nil?
-                #print "***** SFDC opportunity:\"", s.salesforce_opportunity.name, "\" --> CS opportunity:\"", s.name, "\" *****\n"
-                load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
-
-                if load_result[:status] == "ERROR"
-                  failure_method_location = "Project.load_salesforce_fields()"
-                  error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                  render_internal_server_error(method_name, failure_method_location, error_detail)
-                  return
-                end
-              end
-            end # End: opportunities.each do |s|
+        unless @client.nil?  # unless SFDC connection error
+          # standard fields
+          update_result = Project.update_fields_from_sfdc(client: @client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
+          if update_result[:status] == "ERROR"
+            failure_method_location = "Project.update_fields_from_sfdc()"
+            error_detail = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+            render_internal_server_error(method_name, failure_method_location, error_detail)
+            return
           end
+
+          # custom fields
+          opportunities.each do |s|
+            unless s.salesforce_opportunity.nil?
+              # puts "***** SFDC opportunity:\"#{s.salesforce_opportunity.name}\" --> CS opportunity:\"#{s.name}\" *****\n"
+              load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
+
+              if load_result[:status] == "ERROR"
+                failure_method_location = "Project.load_salesforce_fields()"
+                error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+                render_internal_server_error(method_name, failure_method_location, error_detail)
+                return
+              end
+            end
+          end # End: opportunities.each do |s|
         else
           render_service_unavailable_error(method_name)
           return
         end
       end
     else
-      error_detail = "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{params[:entity_type]}"
+      error_detail = "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{entity_type}"
       puts error_detail
       render_internal_server_error(method_name, method_name, error_detail)
       return
@@ -567,13 +703,35 @@ class SalesforceController < ApplicationController
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
   end
 
+  # Copied directly from ProjectsController#load_timeline
   def load_timeline
-    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments)
+    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :attachments, :comments)
+    @pinned_ids = activities.pinned.ids.reverse # get ids of Key Activities to show number on stars
     # filter by categories
     @filter_category = []
     if params[:category].present?
       @filter_category = params[:category].split(',')
-      activities = activities.where(category: @filter_category)
+
+      # special cases: if Attachment or Pinned category filters selected, remove from normal WHERE condition and handle differently below
+      if @filter_category.include?(Notification::CATEGORY[:Attachment]) || @filter_category.include?(Activity::CATEGORY[:Pinned])
+        where_categories = @filter_category - [Notification::CATEGORY[:Attachment], Activity::CATEGORY[:Pinned]]
+        category_condition = "activities.category IN ('#{where_categories.join("','")}')"
+
+        # Attachment filter selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Notification::CATEGORY[:Attachment])
+          activities = activities.joins("LEFT JOIN notifications AS attachment_notifications ON attachment_notifications.activity_id = activities.id AND attachment_notifications.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+          category_condition += " OR (activities.category = '#{Activity::CATEGORY[:Conversation]}' AND attachment_notifications.id IS NOT NULL)"
+        end
+
+        # Pinned filter selected, need to INCLUDE pinned activities regardless of type but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Activity::CATEGORY[:Pinned])
+          category_condition += " OR activities.is_pinned IS TRUE"
+        end
+
+        activities = activities.where(category_condition)
+      else
+        activities = activities.where(category: @filter_category)
+      end
     end
     # filter by people
     @filter_email = []

@@ -96,10 +96,10 @@ $(document).ready(function() {
         var buttonTxtStr = self.attr("btnLabel");
 
         if ($(this).attr("id").includes("salesforce-accounts-acc-refresh")) {  //clicked on 'Refresh Accounts'
-            entity_type = "accounts";
+            entity_type = "account";
         }
         else if ($(this).attr("id").includes("salesforce-accounts-opp-refresh")) {  //clicked on 'Refresh Opportunities'
-            entity_type = "opportunities";
+            entity_type = "project";
         }
         else {
             return;
@@ -107,9 +107,10 @@ $(document).ready(function() {
 
         // console.log("$(this).attr('id'): " + self.attr("id"));
         
-        $.ajax('/salesforce/import/' + entity_type, {
+        $.ajax('/salesforce/import/'+entity_type, {
             async: true,
             method: "POST",
+            // data: { "entity_type": entity_type },
             beforeSend: function () {
                 self.css("pointer-events", "none");
                 $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
@@ -223,11 +224,14 @@ $(document).ready(function() {
         var self = $(this);
         var type;
 
-        if (self.attr("id").includes("salesforce-activity-save-entity-predicate-btn")) {
+        if (self.attr("id").includes("entity")) {
             type = "entity";
         }
-        else {
+        else if (self.attr("id").includes("activityhistory")) {
             type = "activityhistory";
+        }
+        else {
+            return;
         }
 
         var custom_config_id = document.getElementById("salesforce-activity-" + type + "-predicate-customconfig-id").value.trim();
@@ -262,7 +266,7 @@ $(document).ready(function() {
         if (self.attr("id").includes("salesforce-activities-sync")) {
             error500_msg = "Sync activities error";
             requestURL = "/salesforce/sync";
-            request_data = { "entity_type": "activities", entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() };
+            request_data = { "entity_type": "activity", entity_pred: document.getElementById("salesforce-activity-entity-predicate-textarea").value.trim(), activityhistory_pred: document.getElementById("salesforce-activity-activityhistory-predicate-textarea").value.trim() };
         }
         else {
             error500_msg = "Sync activities error";
@@ -309,87 +313,25 @@ $(document).ready(function() {
     ////////////////////////////////////////
     // ../settings/salesforce_fields
     ////////////////////////////////////////
-    $('#salesforce-standard-fields-refresh-accounts-btn,#salesforce-standard-fields-refresh-projects-btn,#salesforce-custom-fields-refresh-accounts-btn,#salesforce-custom-fields-refresh-projects-btn').click(function() {
+    $('#salesforce-fields-refresh-account-btn,#salesforce-fields-refresh-opportunity-btn').click(function() {
         var self = $(this);
-        var entity_type, entity_type_btn_str;
-
-        var field_type = self.attr("id").includes("standard") ? "standard" : "custom";
-
-        if (self.attr("id").includes("accounts")) {
-            entity_type = "accounts";
-            entity_type_btn_str = "Accounts";
-        } 
-        else if (self.attr("id").includes("projects")) {
-            entity_type = "projects";
-            entity_type_btn_str = "Opportunities";
-        } 
-        else {
-            entity_type = "contacts";
-            entity_type_btn_str = "Contacts";
-        }
-
-        $.ajax('/salesforce_fields_refresh', {
-            async: true,
-            method: "POST",
-            data: { "field_type": field_type, "entity_type": entity_type },
-            beforeSend: function () {
-                self.css("pointer-events", "none");
-                self.css("margin-left","0px");
-                self.removeClass('success-btn-highlight error-btn-highlight');
-                self.addClass('btn-primary btn-outline');
-                self.html("<i class='fa fa-refresh fa-spin'></i> Refresh ContextSmith " + entity_type_btn_str);
-            },
-            success: function() {
-                self.addClass('success-btn-highlight');
-                self.html("✓ Refresh ContextSmith " + entity_type_btn_str);
-            },
-            error: function(data) {
-                var res = JSON.parse(data.responseText);
-                self.addClass('error-btn-highlight');
-                console.log("Refresh ContextSmith " + entity_type_btn_str + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
-                alert("There was a Refresh " + entity_type_btn_str + " error, but it has been logged and our team will get right on it shortly to resolve it!");
-            },
-            statusCode: {
-                500: function() {
-                    self.css("margin-left","60px");
-                    self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
-                },
-                503: function() {
-                    self.css("margin-left","30px");
-                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
-                },
-            },
-            complete: function() {
-                self.css("pointer-events", "auto");
-                self.removeClass('btn-primary btn-outline');
-            }
-        });
-    });
-
-    $('#salesforce-standard-fields-sync-contacts-btn').click(function() {
-        var self = $(this);
-        var entity_type, entity_type_btn_str;
+        var entity_type;
         var buttonTxtStr = self.attr("btnLabel");
 
-        var field_type = self.attr("id").includes("standard") ? "standard" : "custom";
-
-        if (self.attr("id").includes("accounts")) {
-            entity_type = "accounts";
-            entity_type_btn_str = "Accounts";
+        if (self.attr("id").includes("account")) {
+            entity_type = "account";
         } 
-        else if (self.attr("id").includes("projects")) {
-            entity_type = "projects";
-            entity_type_btn_str = "Opportunities";
+        else if (self.attr("id").includes("opportunity")) {
+            entity_type = "project";
         } 
         else {
-            entity_type = "contacts";
-            entity_type_btn_str = "Contacts";
+            return;
         }
 
-        $.ajax('/salesforce/sync', {
+        $.ajax('/salesforce/import/'+entity_type, {
             async: true,
             method: "POST",
-            data: { "field_type": field_type, "entity_type": entity_type },
+            // data: { "entity_type": entity_type },
             beforeSend: function () {
                 self.css("pointer-events", "none");
                 self.css("margin-left","0px");
@@ -404,16 +346,69 @@ $(document).ready(function() {
             error: function(data) {
                 var res = JSON.parse(data.responseText);
                 self.addClass('error-btn-highlight');
-                console.log("Sync " + entity_type_btn_str + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
-                alert("There was a Sync " + entity_type_btn_str + " error, but it has been logged and our team will get right on it shortly to resolve it!");
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
             },
             statusCode: {
                 500: function() {
-                    self.css("margin-left","60px");
+                    self.css("margin-left","-20px");
                     self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
                 },
                 503: function() {
-                    self.css("margin-left","30px");
+                    self.css("margin-left","-50px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                },
+            },
+            complete: function() {
+                self.css("pointer-events", "auto");
+                self.removeClass('btn-primary btn-outline');
+            }
+        });
+    });
+
+    $('#salesforce-standard-fields-sync-contacts-btn').click(function() {
+        var self = $(this);
+        var entity_type;
+        var buttonTxtStr = self.attr("btnLabel");
+
+        // if (self.attr("id").includes("accounts")) {
+        //     entity_type = "accounts";
+        // } 
+        // else if (self.attr("id").includes("projects")) {
+        //     entity_type = "projects";
+        // } 
+        // else {
+            entity_type = "contacts";
+        // }
+
+        $.ajax('/salesforce/sync', {
+            async: true,
+            method: "POST",
+            data: { "entity_type": entity_type },
+            beforeSend: function () {
+                self.css("pointer-events", "none");
+                self.css("margin-left","0px");
+                self.removeClass('success-btn-highlight error-btn-highlight');
+                self.addClass('btn-primary btn-outline');
+                self.html("<i class='fa fa-refresh fa-spin'></i> " + buttonTxtStr);
+            },
+            success: function() {
+                self.addClass('success-btn-highlight');
+                self.html("✓ " + buttonTxtStr);
+            },
+            error: function(data) {
+                var res = JSON.parse(data.responseText);
+                self.addClass('error-btn-highlight');
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                alert("There was a " + buttonTxtStr + " error, but it has been logged and our team will get right on it shortly to resolve it!");
+            },
+            statusCode: {
+                500: function() {
+                    self.css("margin-left","-45px");
+                    self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                },
+                503: function() {
+                    self.css("margin-left","-75px");
                     self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
                 },
             },
@@ -430,22 +425,22 @@ $(document).ready(function() {
 
         if ($(this).attr("class").includes("salesforce-account-field-name")) {
             selectorStr = "#salesforce-"+field_type+"-fields-refresh-accounts-btn";
-            entity_type_btn_str = "Accounts";
+            entity_type_btn_str = "Refresh Accounts";
         } 
         else if ($(this).attr("class").includes("salesforce-opportunity-field-name")) {
             selectorStr = "#salesforce-"+field_type+"-fields-refresh-projects-btn";
-            entity_type_btn_str = "Opportunities";
+            entity_type_btn_str = "Refresh Opportunities";
         } 
-        //else {
-        //  selectorStr = "#salesforce-custom-fields-refresh-contacts-btn";
-        //  entity_type_btn_str = "Contacts";
-        //}
+        else {
+            selectorStr = "#salesforce-standard-fields-sync-contacts-btn";
+            entity_type_btn_str = "Sync Contacts";
+        }
 
         // Reset button style to initial state
         $(selectorStr).css("margin-left","0px")
         $(selectorStr).removeClass('success-btn-highlight error-btn-highlight');
         $(selectorStr).addClass('btn-primary btn-outline');
-        $(selectorStr).html("<i class='fa fa-refresh'></i> Refresh ContextSmith "+entity_type_btn_str);
+        $(selectorStr).html("<i class='fa fa-refresh'></i> "+entity_type_btn_str);
         
         var exclamation_triangle_warning = field_type == "standard" ? document.getElementById("exclamation-triangle-warning-fid"+$(this).attr("f_id")) : document.getElementById("exclamation-triangle-warning-cfid"+$(this).attr("cf_id"));
         if (exclamation_triangle_warning != undefined)
