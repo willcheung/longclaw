@@ -19,20 +19,24 @@
             <li class="list-group-item"><span class="text-muted">None</span></li>
         <% else %>
             <% @opened.each do |tr| %>
-                <% latest = tr.tracking_events[0]
-                   device = latest.device
+                <% te = tr.tracking_events[0]
+                   device = te.device
                    device_class = @device_to_icon[device.device_type]
-                   new_event = latest.date > @tracking_setting.last_seen ? 'list-group-item-info' : ''
+                   new_event = te.date > @tracking_setting.last_seen ? 'list-group-item-info' : ''
                 %>
                 <li class="list-group-item <%= new_event %>">
                   <div class="pull-right"><%= button_to (tr.status == 'active' ? 'Pause Tracking' : 'Resume Tracking'), {action: 'toggle', tracking_id: tr.tracking_id}, {class: 'btn btn-default btn-sm', form_class: 'tr-top-tracking', remote: true} %></div>
-                  <div><b><%= tr.recipients_to_list.capitalize %></b> opened your message
-                    <b><span class="tr-time"><%= latest.date %></span></b></div>
+                  <div><b><%= tr.someone.capitalize %></b> opened your message
+                    <b><span class="tr-time"><%= te.date %></span></b></div>
                   <div><b><%= tr.subject %></b> that was sent by you <span class="tr-time"><%= tr.sent_at %></span>
                   </div>
                   <div>
-                    <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<%= latest.place_name %></span>
-                    <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %></span>
+                    <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<%= te.place_name %></span>
+                    <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %>
+                      <% if te.domain %>
+                          on a <b><%= te.domain %></b> network
+                      <% end %>
+                    </span>
                   </div>
                   <div class="text-muted"><a src="#" class="tr-show-more">Opened <%= tr.tracking_events.length %>
                     time<%= 's' if tr.tracking_events.length > 1 %>.
@@ -45,12 +49,17 @@
                     <% tr.tracking_events.each do |te| %>
                         <% device = te.device
                            device_class = @device_to_icon[device.device_type]
-                           new_event = latest.date > @tracking_setting.last_seen ? 'text-info' : ''
+                           new_event = te.date > @tracking_setting.last_seen ? 'text-info' : ''
+
                         %>
                         <div>
                           <b><span class="tr-time <%= new_event %>"><%= te.date %></span></b>
                           <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<%= te.place_name %></span>
-                          <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %></span>
+                          <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %>
+                            <% if te.domain %>
+                                on a <b><%= te.domain %></b> network
+                            <% end %>
+                          </span>
                         </div>
                     <% end %>
                   </div>
