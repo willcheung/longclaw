@@ -20,7 +20,6 @@ class TrackingController < ApplicationController
     @trackings = TrackingRequest.includes(:tracking_events).where(user_id: current_user.id).order('tracking_events.date DESC')
     @opened, @unopened = @trackings.partition {|t| t.tracking_events.size > 0}
     @tracking_setting = get_tracking_setting
-    #@trackings = TrackingRequest.includes(:tracking_events).where(:belong)
 
   end
 

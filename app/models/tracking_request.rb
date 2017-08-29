@@ -21,7 +21,12 @@ class TrackingRequest < ActiveRecord::Base
            -> { order(date: :desc) }
 
   def recipients_to_list
-    self.recipients.join(", ")
+    if self.recipients.count > 1
+      'one of the recipients (' + self.recipients.join(', ') + ')'
+    else
+      self.recipients.join('') # also good for case where recipients is null or empty
+    end
+
   end
 
   def toggle_status

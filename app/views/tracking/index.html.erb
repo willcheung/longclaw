@@ -26,7 +26,7 @@
                 %>
                 <li class="list-group-item <%= new_event %>">
                   <div class="pull-right"><%= button_to (tr.status == 'active' ? 'Pause Tracking' : 'Resume Tracking'), {action: 'toggle', tracking_id: tr.tracking_id}, {class: 'btn btn-default btn-sm', form_class: 'tr-top-tracking', remote: true} %></div>
-                  <div><b><%= tr.recipients_to_list %></b> opened your message
+                  <div><b><%= tr.recipients_to_list.capitalize %></b> opened your message
                     <b><span class="tr-time"><%= latest.date %></span></b></div>
                   <div><b><%= tr.subject %></b> that was sent by you <span class="tr-time"><%= tr.sent_at %></span>
                   </div>
