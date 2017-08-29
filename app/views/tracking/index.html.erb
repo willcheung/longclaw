@@ -85,7 +85,7 @@
       $('.tr-top-tracking').on('ajax:success', function (event, data) {
           console.log(data);
           let active = data.status && data.status != 'inactive';
-          $(this).find('.btn').val(active ? 'Stop Tracking' : 'Continue Tracking');
+          $(this).find('.btn').val(active ? 'Pause Tracking' : 'Resume Tracking');
       });
       $('.tr-show-more').click(function () {
           $(this).find('.tr-show-more-icon').toggleClass('hidden');
