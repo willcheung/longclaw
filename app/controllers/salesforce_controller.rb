@@ -64,7 +64,8 @@ class SalesforceController < ApplicationController
         # show every risk regardless of private conversation
         @notifications = @project.notifications
       elsif @actiontype == "arg_tab" # Account Relationship Graph
-        @data = @project.activities.where(category: %w(Conversation Meeting))
+        @data = @project.activities.where(category: %w(Conversation Meeting)).ids
+        @contacts = @project.contact_relationship_metrics
       end
     end
 
