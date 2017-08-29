@@ -1,6 +1,6 @@
 development:
-  google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
-  google_client_secret: ZbgIgjg6M2LhCUc2RIIOS-TQ
+  google_client_id: 290954624013-nq59r23lvm30ehcl36ihk4h65dpc9rgu.apps.googleusercontent.com
+  google_client_secret: 59VJa6QBgrJrIxmLwGLI1_l8
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
   csback_base_url: http://104.198.4.24:8888
@@ -23,8 +23,8 @@ development:
   encryption_key: ;?\x8E\xF4\xEC\xCB\xB7B\x17%\t\x9A\x8F\x01\x16y\xB4^\xBENo\x872\x03\xC3\xCCW\xE6\xB7\xCCDO
 
 test:
-  google_client_id: 9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com
-  google_client_secret: kMCmqlzYF6pYp6L8-SIP8IGY
+  google_client_id: 290954624013-o82ebj65g5l6knamiaa06jiu09epo2vk.apps.googleusercontent.com
+  google_client_secret: L2Jt5992udy8Wk3k5oSJz11H
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
