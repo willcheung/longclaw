@@ -21,7 +21,7 @@ class TrackingRequest < ActiveRecord::Base
            -> { order(date: :desc) }
 
   def recipients_to_list
-    self.recipients.join('')
+    self.recipients.join(', ')
   end
 
   def someone
