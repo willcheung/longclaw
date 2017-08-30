@@ -51,7 +51,7 @@ class TrackingController < ApplicationController
       host_name = Resolv.getname(request.remote_ip) rescue 'Unknown'
       domain = extract_domain_name(host_name)
       # if request comes from a google proxy, we can't locate the user
-      location = if host_name.start_with?('google-proxy') then
+      location = if host_name.start_with?('google-proxy')
                    user_agent = ''
                    'Gmail'
                  else
