@@ -139,34 +139,39 @@
     </div>
     <div>
         <div class="panel-group" id="accordion">
-            <div class="panel panel-default" id="Email1">
+            <% @people.each_with_index do |p, i| %>
+            <% profile_fullname = p[:fullname].present? ? p[:fullname] : p[:email] %>
+            <div class="panel <%= "panel-default" if i == 0 %>" id="Profile<%= p[:id] %>">
                 <div>
-                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseEmail1">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseProfile<%= p[:id] %>">
                         <table>
                             <tbody>
                                 <tr>
                                     <td>
-                                        <img src="http://www.clker.com/cliparts/c/f/8/5/1194985032288254263blacksmith_anvil_ganson.svg.hi.png" class="profile-pic" title="profile pic">
-                                        <!--<%= get_rounded_initials_from_name("Jon Contact", "profile-pic") %>-->
+                                    <% if p[:profileimgurl].present? %>
+                                        <img src="<%= p[:profileimgurl] %>" class="profile-pic" title="profile pic">
+                                    <% else %>
+                                        <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
+                                    <% end %>
                                     </td>
                                     <td>
                                         <table>
                                             <tbody class="contact-info">
-                                                <tr><td class="contact-name panel-title"><extrastrong>Jon Contact</extrastrong></td></tr>
-                                                <tr><td>Chief Executive Officer</td></tr>
-                                                <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i><span class="link" url="http://thecompany.com">&nbsp;thecompany.com</span></td></tr>
+                                                <tr><td class="contact-name panel-title"><extrastrong><%= profile_fullname %></extrastrong></td></tr>
+                                                <tr><td><%= p[:title] %></td></tr>
+                                                <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i><span class="link" url="http://<%= get_domain(p[:email]) %>">&nbsp;<%= get_domain(p[:email]) %></span></td></tr>
                                             </tbody>
                                         </table>
                                     </td>
                                     <td>
-                                        <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusEmail1"></i>
+                                        <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile<%= p[:id] %>"></i>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </a>
                 </div>
-                <div id="collapseEmail1" class="panel-collapse collapse in">
+                <div id="collapseProfile<%= p[:id] %>" class="panel-collapse collapse <%= "in" if i == 0 %>">
                     <div class="panel-body">
                         <table>
                             <tr>
@@ -189,7 +194,7 @@
                                                 <td class="phone-icon">
                                                     <table>
                                                         <tr><td>
-                                                        <i class="fa fa-phone fa-2x" aria-hidden="true"></i></td><td class="phone-number"><span>408-123-4500</span></td>
+                                                        <i class="fa fa-phone fa-2x" aria-hidden="true"></i></td><td class="phone-number"><span><%= p[:phone] %></span></td>
                                                     </table>
                                                 </td>
                                             </tr>
@@ -231,19 +236,22 @@
                                 </table></td>
                             </tr>
                         </table>
+                    <% if p[:detail].present? %>
                         <table>
-                            <tr><td><span class="panel-title"><extrastrong>More about Jon Contact</extrastrong></span></td></tr>
+                            <tr><td><span class="panel-title"><extrastrong>More about <%= profile_fullname %></extrastrong></span></td></tr>
                             <tr><td>
                             <table>
                                 <tr>
-                                    <td>Software Engineer Extraordinaire. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim a veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo sic astro consequat. Duis aute irure dolor in eminem...</td>
+                                    <td><%= p[:detail][0...200] %><%= "..." if p[:detail].length > 200 %></td>
                                 </tr>
                             </table>
                             </td></tr>
                         </table>
+                    <% end %>
                     </div>
                 </div>
             </div>
+            <% end # end: @people.each do |p| %>
             
             <span class="contact-group"><br/>PEOPLE IN <%= @project.name.upcase %></span>
             

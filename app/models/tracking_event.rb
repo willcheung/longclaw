@@ -3,7 +3,7 @@
 # Table name: tracking_events
 #
 #  id          :integer          not null, primary key
-#  tracking_id :string(255)
+#  tracking_id :string
 #  date        :datetime
 #  user_agent  :string
 #  place_name  :string
