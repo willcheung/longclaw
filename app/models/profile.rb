@@ -11,8 +11,9 @@
 #
 
 class Profile < ActiveRecord::Base
+  before_save :downcase_emails
 
-  scope :where_by_email, -> (email) { where('emails @> ?', '{' + email + '}') }
+  scope :where_by_email, -> (email) { where('emails @> ?', '{' + email.downcase + '}') }
 
   def self.find_by_email(email)
     where_by_email(email).first
@@ -40,6 +41,12 @@ class Profile < ActiveRecord::Base
   # data.status == 4xx: data could not be pulled from FullContact
   def data
     Hashie::Mash.new(read_attribute(:data))
+  end
+
+  private
+
+  def downcase_emails
+    self.emails.map!(&:downcase)
   end
 
 end
