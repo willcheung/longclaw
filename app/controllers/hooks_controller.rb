@@ -59,4 +59,11 @@ class HooksController < ApplicationController
     render nothing: true
   end
 
+  def fullcontact
+    data = Hashie::Mash.new(JSON.parse(request.body.read))
+    Profile.find(data.webhookId).update(data: data.result)
+
+    render nothing: true
+  end
+
 end

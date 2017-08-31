@@ -59,6 +59,11 @@ module Longclaw
     # Set ActionMailer default return url here, set config var on Heroku per domain
     config.action_mailer.default_url_options = { :host => ENV['BASE_URL'] }
 
+    FullContact.configure do |config|
+      config.api_key = 'f0b46d476a4d8c60'
+      config.auth_type = :header
+    end
+
     require 'contextsmith_parser'
     require 'utils'
   end
