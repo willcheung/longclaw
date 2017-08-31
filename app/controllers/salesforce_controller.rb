@@ -64,7 +64,8 @@ class SalesforceController < ApplicationController
         # show every risk regardless of private conversation
         @notifications = @project.notifications
       elsif @actiontype == "arg_tab" # Account Relationship Graph
-        @data = @project.activities.where(category: %w(Conversation Meeting))
+        @data = @project.activities.where(category: %w(Conversation Meeting)).ids
+        @contacts = @project.contact_relationship_metrics
       end
     end
 
@@ -673,17 +674,20 @@ class SalesforceController < ApplicationController
   ### TODO: get_show_data and load_timeline are copies from ProjectsController, should be combined for better maintenance/to keep in sync with projects#show
   def get_show_data
     # metrics
-    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_open_risks_count = @project.notifications.open.alerts.count
-    @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
     @project_open_tasks_count = @project.notifications.open.count
-    project_rag_score = @project.activities.latest_rag_score.first
 
-    if project_rag_score
-      @project_rag_status = project_rag_score['rag_score']
-    end
+    # Removing RAG status - old metric
+    # project_rag_score = @project.activities.latest_rag_score.first
+    # if project_rag_score
+    #   @project_rag_status = project_rag_score['rag_score']
+    # end
 
     # old metrics
+    # @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    # @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    # @project_open_risks_count = @project.notifications.open.alerts.count
     # @project_last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
     # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
     # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
@@ -699,7 +703,7 @@ class SalesforceController < ApplicationController
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
     @clearbit_domain = @project.account.domain? ? @project.account.domain : (@project.account.contacts.present? ? @project.account.contacts.first.email.split("@").last : "")
 
-    # for merging projects/opportunities, for future use
+    # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
   end
 
