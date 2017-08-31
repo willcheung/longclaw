@@ -46,7 +46,8 @@ class TrackingController < ApplicationController
   def view
     tracking_id = params[:tracking_id]
     tr = check_tracking_id(tracking_id)
-    if tr && not_viewed_by_self(tr)
+    event_date = DateTime.current
+    if tr && not_viewed_by_self(tr) && !within_threshold(tracking_id, event_date)
       user_agent = request.headers['user-agent']
       host_name = Resolv.getname(request.remote_ip) rescue 'Unknown'
       domain = extract_domain_name(host_name)
@@ -63,7 +64,7 @@ class TrackingController < ApplicationController
           place_name: location,
           domain: domain,
           event_type: 'email-view',
-          date: DateTime.current
+          date: event_date
       )
     end
     expires_now
@@ -129,5 +130,18 @@ class TrackingController < ApplicationController
   def extract_domain_name(host)
     md = /(^|\.)([a-zA-Z0-9-]{1,63}\.[a-zA-Z0-9-]{1,63})$/.match(host)
     md ? md[2] : nil
+  end
+
+  # ignore TE happening withing `threshold` seconds
+  # new config var. If set to -1 will be ignored
+  def within_threshold(tracking_id, date)
+    threshold = ENV['tracking_threshold_seconds'].to_i
+    threshold = 15 if threshold.zero?
+
+    if threshold == -1
+      false
+    else
+      te = TrackingEvent.where(date: threshold.seconds.ago(date)..date, tracking_id: tracking_id).first
+    end
   end
 end
