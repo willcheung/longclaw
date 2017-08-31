@@ -50,13 +50,9 @@ class ExtensionController < ApplicationController
 
   def account
     @people = []
-    @people << {id: 1, email: "joncontact@thecompany.com", fullname: "John Contact", title: "Chief Executive Officer", profileimgurl: "http://www.clker.com/cliparts/c/f/8/5/1194985032288254263blacksmith_anvil_ganson.svg.hi.png", phone: "408-123-4500", detail: "Software Engineer Extraordinaire. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim a veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo sic astro consequat. Duis aute irure dolor in eminem eminem eminem eminem eminem eminem eminem eminem eminem eminem."}
-    @people << {id: 2, email: "mario@thecompany.com", fullname: "Mario", title: "Chief Mushroom Officer", profileimgurl: "http://images.wikia.com/nintendo/en/images/3/3e/Mario-Icon.png", phone: "408-123-9900", detail: "It's-a-him: Mario! From the mushroom kingdom, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim a veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo sic astro consequat. Duis aute irure dolor in eminem eminem eminem eminem eminem eminem eminem eminem eminem eminem."}
-    @people << {id: 3, email: "starfox@customer.com", fullname: "Star Fox", title: "Chief Planetary Officer", profileimgurl: "http://orig10.deviantart.net/c3b4/f/2014/125/1/3/fox_mccloud_icon_by_isara_la-d7ha85q.png", phone: "510-880-1000", detail: "Do a barrel roll!!! Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim a veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo sic astro consequat. Duis aute irure dolor in eminem eminem eminem eminem eminem eminem eminem eminem eminem eminem."}
-    @people << {id: 4, email: "dk@customer.com", fullname: "Donkey Kong", title: "Salesgorilla", profileimgurl: "http://static4.wikia.nocookie.net/__cb20120612014321/fantendo/images/8/8a/MPWii_U_DK_icon.png", phone: "510-880-8000", detail: "No monkey business here: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim a veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo sic astro consequat. Duis aute irure dolor in eminem eminem eminem eminem eminem eminem eminem eminem eminem eminem."}
-    @people << {id: 5, email: "jdoe@customer.com"}
-    # @people << {email: "@customer.com", fullname: "xxx", title: "xxx", profileimgurl: "http://xxx", phone: "xxx-xxx-xxxx", detail: "xxxxxxxxxx Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim a veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo sic astro consequat. Duis aute irure dolor in eminem eminem eminem eminem eminem eminem eminem eminem eminem eminem."}
-    # @activities = @project.activities.visible_to(current_user.email).take(8)
+    params[:external].values.each do |e|
+      @people << {email: e.second.to_s, profile: Profile.find_or_create_by_email(e.second.to_s)}
+    end
   end
 
   def alerts_tasks

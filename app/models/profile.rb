@@ -43,6 +43,75 @@ class Profile < ActiveRecord::Base
     Hashie::Mash.new(read_attribute(:data))
   end
 
+  def valid?
+    (data.status == 200)
+  end
+
+  def fullname
+    valid? && data.contact_info.present? ? data.contact_info.full_name : nil
+  end
+
+  def email
+    self.emails.first
+  end
+
+  def title
+    valid? && data.organizations.present? ? data.organizations.first.title : nil
+  end
+
+  def organization
+    valid? && data.organizations.present? ? data.organizations.first.name : nil
+  end
+
+  def profileimg_url
+    valid? && data.photos.present? ? data.photos.first.url : nil
+  end
+
+  def linkedin_url
+    data.social_profiles.each do |sp|
+      return sp.url if sp.type.downcase == "linkedin"
+    end if valid?
+    nil
+  end
+
+  def twitter_url
+    data.social_profiles.each do |sp|
+      return sp.url if sp.type.downcase == "twitter"
+    end if valid?
+    nil
+  end
+
+  def facebook_url
+    data.social_profiles.each do |sp|
+      return sp.url if sp.type.downcase == "facebook"
+    end if valid?
+    nil
+  end
+
+  # temporary placeholder (might remove)
+  def phone
+    nil
+  end
+
+  def bio
+    return nil if !valid?
+    bio_str = "" + data.demographics.gender + " —— " + data.demographics.location_general
+    if data.contact_info.websites.present?
+      arr = []
+      data.contact_info.websites.each do |ws|
+        arr << ws.url
+      end
+      bio_str += " —— Websites: " + arr.join(", ")
+    end
+    if data.social_profiles.present?
+      arr = []
+      data.social_profiles.each do |sp|
+        arr << "(" + sp.type[0].upcase + sp.type[1..sp.type.length] + ") " + sp.bio if sp.bio.present?
+      end
+      bio_str += " —— Social Network Bios: " + arr.join("; ")
+    end
+  end
+
   private
 
   def downcase_emails
