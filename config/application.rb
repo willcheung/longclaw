@@ -60,7 +60,7 @@ module Longclaw
     config.action_mailer.default_url_options = { :host => ENV['BASE_URL'] }
 
     FullContact.configure do |config|
-      config.api_key = 'f0b46d476a4d8c60'
+      config.api_key = ENV['fullcontact_api_key']
       config.auth_type = :header
     end
 

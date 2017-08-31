@@ -21,6 +21,7 @@ development:
   # tells the backend to limit e-mails to this number
   max_emails: 500
   encryption_key: ;?\x8E\xF4\xEC\xCB\xB7B\x17%\t\x9A\x8F\x01\x16y\xB4^\xBENo\x872\x03\xC3\xCCW\xE6\xB7\xCCDO
+  fullcontact_api_key: f0b46d476a4d8c60
 
 test:
   google_client_id: 290954624013-o82ebj65g5l6knamiaa06jiu09epo2vk.apps.googleusercontent.com
