@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170829191553) do
+ActiveRecord::Schema.define(version: 20170829195150) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -264,6 +264,14 @@ ActiveRecord::Schema.define(version: 20170829191553) do
     t.uuid     "owner_id"
   end
 
+  create_table "profiles", force: :cascade do |t|
+    t.text     "emails",     default: [],              array: true
+    t.datetime "expires_at"
+    t.jsonb    "data"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+  end
+
   create_table "project_members", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.uuid     "project_id"
     t.uuid     "contact_id"
@@ -365,6 +373,7 @@ ActiveRecord::Schema.define(version: 20170829191553) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.string   "forecast_category_name"
     t.string   "owner_id"
   end

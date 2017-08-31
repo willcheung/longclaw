@@ -31,6 +31,7 @@ gem 'device_detector'
 gem 'geocoder'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'graphql'
+gem 'fullcontact'
 
 # Gems used only for assets and not required
 # in production environments by default.
