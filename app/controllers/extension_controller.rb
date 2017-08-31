@@ -12,6 +12,8 @@ class ExtensionController < ApplicationController
   end
 
   def index
+    # gmail extension provided an e-mail adress of the currently logged in user
+    @gmail_user = params[:email] ? params[:email] : nil
   end
 
   def new

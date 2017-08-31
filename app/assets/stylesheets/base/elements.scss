@@ -426,6 +426,11 @@ a.list-group-item.active, a.list-group-item.active:hover, a.list-group-item.acti
   position: relative;
 }
 
+.list-group-item-info {
+    color: #31708f;
+    background-color: #d9edf7;
+}
+
 .elements-list .list-group-item {
   border-left: none;
   border-right: none;

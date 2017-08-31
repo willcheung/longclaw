@@ -34,6 +34,7 @@ Longclaw::Application.routes.draw do
 
     resources :project_members
     resources :users
+    get 'user/me' => 'users#me'
 
     resources :notifications, only: [:index, :update, :create] do
       member do
