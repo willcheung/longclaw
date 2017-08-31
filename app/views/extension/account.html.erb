@@ -1,28 +1,253 @@
-<div id="extension-timeline">
-  <% @activities.each do |a| %>
-    <%= render 'activities/extension_block', a: a %>
-  <% end %>
-</div>
-
-<p class="text-center"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>" target="_blank">View more and filter timeline &rarr;</a></p>
-
-<!-- <p>Email me: <input type="checkbox" name=""> weekly <input type="checkbox" name=""> daily</p> -->
-
-<!-- <button class="btn btn-primary">Sync Activites with Salesforce</button> -->
+<style type="text/css">
+    body {
+        color: #999;
+        font-size: 11px;
+    }
+    extrastrong {
+        font-weight: bold;
+        color: black;
+    }
+    td > a {
+        text-decoration: underline;
+    }
+    .contact-group {
+        font-size: 11px;
+        font-weight: bold;
+        /*color: #999;*/
+        padding: 2em 0;
+    }
+    .panel-group {
+        border-radius: 0px;
+    }
+    .panel {
+        border: none;
+        border-bottom: 2px solid #EEE;
+    }
+    .profile-pic {
+        height: 48px;
+        width: 48px;
+        border-radius: 48px;
+        margin: 12px;
+        border: 1.5px solid grey;
+        font-size: 22px;
+        line-height: 42px;
+    }
+    .panel-title { /* contact-name */
+        font-size: 14px;
+    }
+    .contact-info {
+        font-size: 12px;
+        color: #999;
+        font-weight: normal;
+    }
+    .company-name {
+        /*font-size: 11px;*/
+        color: #337ab7; /* link blue */
+    }
+    .panel-body {
+        padding: 0 8px;
+    }
+    .panel-body > table {
+        margin: 7px;
+        width: 98%;
+        border-top: 1px solid #EEE; 
+        /*border-bottom: 1px solid #EEE; */
+        /*border: 2px solid blue;*/
+    }
+    .social-group {
+        margin: 6px 0;
+    }
+    .social-group td {  /* social icons */
+        margin: 0px 3px;
+        display: inline-block;
+    }
+    .fa-plus-square {
+        color: #999;
+        padding: 0 1em;
+        display: none;  /* disabled until we find functionality for the "+" */
+    }
+    .sfdc-icon {
+        width: 1.5em;
+    }
+    .linkedin-icon {
+        color: #0077b5; /* LinkedIn blue */
+    }
+    .twitter-icon {
+        color: #31b8f0; /* Twitter blue */
+    }
+    .fb-icon {
+        color: #3b5998; /* Facebook blue */
+    }
+    .phone-icon {
+        padding: 0 0 0 0.5em;
+        /*color: navy;*/
+    }
+    .phone-number {
+        font-size: 12px;
+        padding-bottom: 3px;
+    }
+    .emailmtgs-group td {
+        vertical-align: text-top;
+    }
+    .emailmtgs-group td:first-child {
+        padding: 10px 12px 0 0;
+        text-align: right;
+    }
+    button { /* used for easy styling: need to change */
+        width: 75px;
+        margin: 2px;
+        color: grey;
+        background-color: white;
+        border: 2px solid grey;
+        border-radius: 5px;
+        pointer-events: none;
+    }
+    .statistics {
+        font-size: 14px;
+        font-weight: bold;
+    }
+</style>
 
 <!-- TODO: move this script to extension.js -->
 <script type="text/javascript">
-    function toggle_visibility_for_pair(id1, id2) {
-        toggle_visibility(id1);
-        toggle_visibility(id2);
-    }
+    $(document).ready(function(){
+        // $(".panel-default").hover(
+        //     function() {
+        //         var hoveredDiv = $(this).attr("id");
+        //         $("#plus" + hoveredDiv).show();
+        //         console.log("#plus" + hoveredDiv);
+        //     },
+        //     function() {
+        //         var hoveredDiv = $(this).attr("id");
+        //         $("#plus" + hoveredDiv).hide();
+        //     }
+        // );
 
-    function toggle_visibility(id) {
-        //console.log("toggling: " + id)
-        var e = document.getElementById(id);
-        if(e.style.display == 'block')
-            e.style.display = 'none';
-        else
-            e.style.display = 'block';
-    }
+        // anchor "link" workaround code to allow accordion to keep working, but allow user to click an anchor link inside of it
+        $(".link").click(function(){
+                // console.log("clicked on " + $(this).attr("url"));
+                window.open($(this).attr("url")); 
+                return false; //don't collapse section in extension
+            }
+        );
+    });
 </script>
+
+<body>
+    <div>
+        <span class="contact-group"><br/>PEOPLE IN E-MAIL</span>
+    </div>
+    <div>
+        <div class="panel-group" id="accordion">
+            <div class="panel panel-default" id="Email1">
+                <div>
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseEmail1">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <img src="http://www.clker.com/cliparts/c/f/8/5/1194985032288254263blacksmith_anvil_ganson.svg.hi.png" class="profile-pic" title="profile pic">
+                                        <!--<%= get_rounded_initials_from_name("Jon Contact", "profile-pic") %>-->
+                                    </td>
+                                    <td>
+                                        <table>
+                                            <tbody class="contact-info">
+                                                <tr><td class="contact-name panel-title"><extrastrong>Jon Contact</extrastrong></td></tr>
+                                                <tr><td>Chief Executive Officer</td></tr>
+                                                <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i><span class="link" url="http://thecompany.com">&nbsp;thecompany.com</span></td></tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusEmail1"></i>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </a>
+                </div>
+                <div id="collapseEmail1" class="panel-collapse collapse in">
+                    <div class="panel-body">
+                        <table>
+                            <tr>
+                                <td>
+                                    <table class="social-group">
+                                        <tbody>
+                                            <tr>
+                                                <td class="fa-lg">
+                                                    <img src="/assets/images/salesforce.png" class="sfdc-icon disabled"/>
+                                                </td>
+                                                <td class="linkedin-icon">
+                                                    <a href="https://www.linkedin.com/search/results/people/?company=<%= get_domain("placeholder@linkedin.com") %>&keywords=<%= 'Jeff%20Weiner' %>" target="_blank" title="Search contact in LinkedIn"><i class="fa fa-linkedin-square fa-2x" aria-hidden="true"></i></a>
+                                                </td>
+                                                <td class="twitter-icon">
+                                                    <i class="fa fa-twitter fa-2x" aria-hidden="true"></i>
+                                                </td>
+                                                <td class="fb-icon">
+                                                    <i class="fa fa-facebook-square fa-2x" aria-hidden="true"></i>
+                                                </td>
+                                                <td class="phone-icon">
+                                                    <table>
+                                                        <tr><td>
+                                                        <i class="fa fa-phone fa-2x" aria-hidden="true"></i></td><td class="phone-number"><span>408-123-4500</span></td>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        <table class="emailmtgs-group">
+                            <tr>
+                                <td>LAST E-MAIL <i class="fa fa-envelope-o" aria-hidden="true"></i></td>
+                                <td><extrastrong>Great to see you today!</extrastrong> - Nov 10<br>Opened Nov 10 - 3:32pm</td>
+                            </tr>
+                            <tr>
+                                <td>NEXT MEETING <i class="fa fa-calendar-o" aria-hidden="true"></i></td>
+                                <td><a href="#">Schedule Meeting</a></td>
+                            </tr>
+                            <tr>
+                                <td>LAST MEETING <i class="fa fa-calendar-check-o" aria-hidden="true"></i></td>
+                                <td><extrastrong>ContextSmith Sales Call</extrastrong><br>Aug 30 - 3:00pm</td>
+                            </tr>
+                            <tr>
+                                <td >ACTIONS</td>
+                                <td><a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= "somebody.com" %>&su=<%= "My subject" %>&body=<%= "Body" %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"> Send e-mail</a>
+                                &nbsp;&middot;&nbsp;
+                                <a href="#" target="_blank"> Add a Note</a></td>
+                            </tr>
+                        </table>
+                        <table>
+                            <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days</td></tr>
+                            <tr>
+                                <td><table>
+                                <!-- TODO: Don't use buttons! -->
+                                    <tr>
+                                        <td><button><i class="fa fa-envelope-o fa-2x"></i>&nbsp;<span class="statistics">126</span><br/>Sent</button></td>
+                                        <td><button><i class="fa fa-envelope-o fa-2x"></i>&nbsp;<span class="statistics">30%</span><br/>Opened</button></td>
+                                        <td><button><i class="fa fa-reply fa-2x"></i>&nbsp;<span class="statistics">10</span><br/>Replied</button></td>
+                                    </tr>
+                                </table></td>
+                            </tr>
+                        </table>
+                        <table>
+                            <tr><td><span class="panel-title"><extrastrong>More about Jon Contact</extrastrong></span></td></tr>
+                            <tr><td>
+                            <table>
+                                <tr>
+                                    <td>Software Engineer Extraordinaire. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim a veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo sic astro consequat. Duis aute irure dolor in eminem...</td>
+                                </tr>
+                            </table>
+                            </td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <span class="contact-group"><br/>PEOPLE IN <%= @project.name.upcase %></span>
+            
+        </div>
+    </div>
+</body>
+

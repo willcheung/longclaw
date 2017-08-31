@@ -49,7 +49,11 @@ class ExtensionController < ApplicationController
   end
 
   def account
-    @activities = @project.activities.visible_to(current_user.email).take(8)
+    @people = []
+    1..2.times do |a|
+      @people << "tester"
+    end
+    # @activities = @project.activities.visible_to(current_user.email).take(8)
   end
 
   def alerts_tasks
