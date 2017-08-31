@@ -12,6 +12,10 @@
 #  updated_at  :datetime         not null
 #  domain      :string
 #
+# Indexes
+#
+#  index_tracking_events_on_tracking_id  (tracking_id)
+#
 
 require 'device_detector'
 

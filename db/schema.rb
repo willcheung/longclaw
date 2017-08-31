@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170829195150) do
+ActiveRecord::Schema.define(version: 20170831173418) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -390,6 +390,8 @@ ActiveRecord::Schema.define(version: 20170829195150) do
     t.string   "domain"
   end
 
+  add_index "tracking_events", ["tracking_id"], name: "index_tracking_events_on_tracking_id", using: :btree
+
   create_table "tracking_requests", force: :cascade do |t|
     t.uuid     "user_id"
     t.string   "tracking_id", limit: 255
@@ -402,6 +404,8 @@ ActiveRecord::Schema.define(version: 20170829195150) do
     t.datetime "created_at",                           null: false
     t.datetime "updated_at",                           null: false
   end
+
+  add_index "tracking_requests", ["tracking_id"], name: "index_tracking_requests_on_tracking_id", using: :btree
 
   create_table "tracking_settings", force: :cascade do |t|
     t.uuid     "user_id"
