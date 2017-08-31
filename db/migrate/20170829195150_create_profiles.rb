@@ -3,7 +3,7 @@ class CreateProfiles < ActiveRecord::Migration
     create_table :profiles do |t|
       t.text :emails, array: true, default: []
       t.datetime :expires_at
-      t.jsonb :data, default: { status: 404, message:  }
+      t.jsonb :data
 
       t.timestamps null: false
     end
