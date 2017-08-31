@@ -17,10 +17,10 @@ class TrackingController < ApplicationController
         'car browser' => 'fa-car',
         'camera' => 'fa-camera'
     }
+    # TODO: use a time window for this
     @trackings = TrackingRequest.includes(:tracking_events).where(user_id: current_user.id).order('tracking_events.date DESC')
     @opened, @unopened = @trackings.partition {|t| t.tracking_events.size > 0}
     @tracking_setting = get_tracking_setting
-    #@trackings = TrackingRequest.includes(:tracking_events).where(:belong)
 
   end
 
@@ -48,9 +48,10 @@ class TrackingController < ApplicationController
     tr = check_tracking_id(tracking_id)
     if tr && not_viewed_by_self(tr)
       user_agent = request.headers['user-agent']
-      host_name = Resolv.getname(request.remote_ip)
+      host_name = Resolv.getname(request.remote_ip) rescue 'Unknown'
+      domain = extract_domain_name(host_name)
       # if request comes from a google proxy, we can't locate the user
-      location = if host_name.start_with?('google-proxy') then
+      location = if host_name.start_with?('google-proxy')
                    user_agent = ''
                    'Gmail'
                  else
@@ -60,6 +61,7 @@ class TrackingController < ApplicationController
           tracking_id: tr.tracking_id,
           user_agent: user_agent,
           place_name: location,
+          domain: domain,
           event_type: 'email-view',
           date: DateTime.current
       )
@@ -108,7 +110,7 @@ class TrackingController < ApplicationController
   end
 
   def location_lookup(ip)
-    Geocoder.address(ip)
+    Geocoder.address(ip) rescue 'Unknown'
   end
 
   def to_email_address(emails)
@@ -121,5 +123,11 @@ class TrackingController < ApplicationController
 
   def check_tracking_id(tracking_id)
     TrackingRequest.find_by_tracking_id_and_status(tracking_id, 'active')
+  end
+
+  # extract the domain part from the host name, or nil if host name doesn't match
+  def extract_domain_name(host)
+    md = /(^|\.)([a-zA-Z0-9-]{1,63}\.[a-zA-Z0-9-]{1,63})$/.match(host)
+    md ? md[2] : nil
   end
 end
