@@ -203,7 +203,7 @@
                                 </tr>
                             </tbody>
                         </table>
-                        <% if person.websites.present? || person.bio.present? %>
+                        <% if person.location.present? || person.websites.present? || person.bio.present? %>
                         <table class="additionalinfo-group">
                             <tr><td></td></tr>
                             <tr><td><span class="panel-title"><extrastrong>More about <%= profile_fullname %></extrastrong></span></td></tr>
@@ -219,7 +219,7 @@
                             <% end %>
                             <% if person.bio.present? %>
                                 <tr><td>
-                                    <%= person.bio[0...325] %><%= "..." if person.bio.length > 325 %></td>
+                                    <strong>Biography:</strong>&nbsp; <%= person.bio[0...325] %><%= "..." if person.bio.length > 325 %></td>
                                 </td></tr>
                             <% end %>
                         </table>

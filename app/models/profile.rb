@@ -48,7 +48,7 @@ class Profile < ActiveRecord::Base
   end
 
   def fullname
-    data_is_valid? && data.contact_info.present? ? data.contact_info.full_name : nil
+    data.contact_info.full_name if data_is_valid? && data.contact_info.present?
   end
 
   def email
@@ -56,45 +56,32 @@ class Profile < ActiveRecord::Base
   end
 
   def title
-    data_is_valid? && data.organizations.present? ? data.organizations.first.title : nil
+    data.organizations.first.title if data_is_valid? && data.organizations.present?
   end
 
   def organization
-    data_is_valid? && data.organizations.present? ? data.organizations.first.name : nil
+    data.organizations.first.name if data_is_valid? && data.organizations.present?
   end
 
   def profileimg_url
-    data_is_valid? && data.photos.present? ? data.photos.first.url : nil
+    data.photos.first.url if data_is_valid? && data.photos.present?
   end
 
   def linkedin_url
-    data.social_profiles.each do |sp|
-      return sp.url if sp.type.downcase == "linkedin"
-    end if data_is_valid?
-    nil
+    social_url("linkedin")
   end
 
   def twitter_url
-    data.social_profiles.each do |sp|
-      return sp.url if sp.type.downcase == "twitter"
-    end if data_is_valid?
-    nil
+    social_url("twitter")
   end
 
   def facebook_url
-    data.social_profiles.each do |sp|
-      return sp.url if sp.type.downcase == "facebook"
-    end if data_is_valid?
-    nil
+    social_url("facebook")
   end
 
   def websites
     if data_is_valid? && data.contact_info.present? && data.contact_info.websites.present?
-      arr = []
-      data.contact_info.websites.each do |ws|
-        arr << ws.url
-      end
-      return arr.join(", ")
+      return data.contact_info.websites.map(&:url).join(", ")
     end
     []
   end
@@ -130,10 +117,15 @@ class Profile < ActiveRecord::Base
     arr << linkedin_bio if linkedin_bio.present?
     arr << twitter_bio if twitter_bio.present?
     arr << facebook_bio if facebook_bio.present?
-    arr.present? ? "Social Bios: " + arr.join(" —— ") : nil 
+    "Social: " + arr.join(" —— ") if arr.present?
   end
 
   private
+
+  def social_url(social_type)
+    sp = data.social_profiles.find{ |sp| sp.type.downcase == social_type } if data_is_valid? && data.social_profiles.present?
+    sp.url if sp.present?
+  end
 
   def downcase_emails
     self.emails.map!(&:downcase)
