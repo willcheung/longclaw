@@ -43,7 +43,89 @@ class Profile < ActiveRecord::Base
     Hashie::Mash.new(read_attribute(:data))
   end
 
+  def data_is_valid?
+    data.status == 200
+  end
+
+  def fullname
+    data.contact_info.full_name if data_is_valid? && data.contact_info.present?
+  end
+
+  def email
+    self.emails.first
+  end
+
+  def title
+    data.organizations.first.title if data_is_valid? && data.organizations.present?
+  end
+
+  def organization
+    data.organizations.first.name if data_is_valid? && data.organizations.present?
+  end
+
+  def profileimg_url
+    data.photos.first.url if data_is_valid? && data.photos.present?
+  end
+
+  def linkedin_url
+    social_url("linkedin")
+  end
+
+  def twitter_url
+    social_url("twitter")
+  end
+
+  def facebook_url
+    social_url("facebook")
+  end
+
+  def websites
+    if data_is_valid? && data.contact_info.present? && data.contact_info.websites.present?
+      return data.contact_info.websites.map(&:url).join(", ")
+    end
+    []
+  end
+
+  def location
+    (data_is_valid? && data.demographics.present?) ? (data.demographics.location_general || data.demographics.location_deduced.normalized_location || data.demographics.location_deduced.deduced_location) : nil
+  end
+
+  # TODO: temporary placeholder (might remove)
+  def phone
+    nil
+  end
+
+  def bio
+    return nil if !data_is_valid?
+
+    linkedin_bio = nil
+    twitter_bio = nil
+    facebook_bio = nil
+    data.social_profiles.each do |sp|
+      if sp.bio.present?
+        linkedin_bio = "(LinkedIn) " + sp.bio if sp.type.downcase == "linkedin"
+        twitter_bio = "(Twitter) " + sp.bio if sp.type.downcase == "twitter"
+        facebook_bio = "(Facebook) " + sp.bio if sp.type.downcase == "facebook"
+        # puts "sp.type.downcase: #{sp.type.downcase}"
+        # puts "linkedin_bio: #{linkedin_bio}"
+        # puts "twitter_bio: #{twitter_bio}"
+        # puts "facebook_bio: #{facebook_bio}"
+      end
+    end
+
+    arr = []
+    arr << linkedin_bio if linkedin_bio.present?
+    arr << twitter_bio if twitter_bio.present?
+    arr << facebook_bio if facebook_bio.present?
+    "Social: " + arr.join(" —— ") if arr.present?
+  end
+
   private
+
+  def social_url(social_type)
+    sp = data.social_profiles.find{ |sp| sp.type.downcase == social_type } if data_is_valid? && data.social_profiles.present?
+    sp.url if sp.present?
+  end
 
   def downcase_emails
     self.emails.map!(&:downcase)

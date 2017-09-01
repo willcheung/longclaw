@@ -9,7 +9,7 @@
 
     <!-- Include style per-controller - vendor plugins -->
     <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" %>
-    <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" %>
+    <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" %>
 
     <!-- Main css styles -->
     <%= stylesheet_link_tag 'application', media: 'all' %>
@@ -18,6 +18,7 @@
     <%= javascript_include_tag 'application' %>
     <%= javascript_include_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js" %>
     <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" %>
+    <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js" %>
     
     <%= csrf_meta_tags %>
 </head>
@@ -36,16 +37,16 @@
                         </span>
                     </a>
                 </span>
-                <li class="dropdown" style="width:25px; height:40px; vertical-align:top; margin:5px 0; padding:0 3px;display:inline-block; border-left: 1px solid #EEE; float:right">
+                <!-- <li class="dropdown" style="width:30px; height:40px; vertical-align:top; margin:3px 0; padding:3px;display:inline-block; border-left: 1px solid #EEE; float:right">
                     <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:0px;"/>
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"> 
-                    <img src="/assets/images/salesforce.png" style="width:20px" title="<%= @salesforce_user.present? ? "Connected to Salesforce" : "Not connected to Salesforce" %>"/></a>
+                    <img src="/assets/images/salesforce.png" style="width:26px" title="<%= @salesforce_user.present? ? "Connected to Salesforce" : "Not connected to Salesforce" %>"/></a>
                     </a>
                     <span class="caret" style="margin-left:2px;display:inline"></span>
                     <ul class="dropdown-menu" style="width:200px; position:absolute; left:-175px; margin-top:6px">
                         <div style="margin:0.5em; line-height:2.5em">
                             <% if @salesforce_user.present? %>
-                                <!-- SFDC user logged in -->
+                                < !-- SFDC user logged in -- >
                                 <li style="line-height: 1em"><strong><%= @salesforce_user.oauth_user_name %></strong></li>
                                 <li><a href="<%= salesforce_disconnect_path(@salesforce_user.id) %>">(<i class='fa fa-sign-out'></i> Sign out)</a></li> 
                                 <li class="divider"></li>
@@ -62,7 +63,7 @@
                                 <%= @enable_sfdc_refresh ? "Synchronize Contacts with an e-mail from the linked Salesforce Account." : "To synchronize Contacts from Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
                                 "></i></li>
                             <% else %>
-                                <!-- SFDC user not logged in -->
+                                < !-- SFDC user not logged in -- >
                                 <li>
                                 <% if @enable_sfdc_login_and_linking %>
                                     <a href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Connect to Salesforce</a>
@@ -73,11 +74,18 @@
                             <% end %>
                         </div>
                     </ul>
-                </li>
-            </div>
+                </li> -->
 
+            <div>
+                <ul class="nav nav-tabs">
+                    <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">People</a></li>
+                    <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
+                    <li role="presentation" class="<%= is_active_action('alerts_tasks') %> disabled"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>"><img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
+                </ul>
+            </div>
+            </div>
             <% if @project %>
-                <div style="">
+                <!-- <div style="">
                     <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
                     <div>
                         <h3 class="m-t-sm m-l" style="margin-bottom: 9px" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="
@@ -91,13 +99,13 @@
                             <strong>Linked to Salesforce:</strong>&nbsp;&nbsp;
                             <span>
                             <% if @project.salesforce_opportunity.nil? && @project.account.salesforce_accounts.empty? %>
-                                <!-- No SFDC Accounts/Opportunities linked -->
+                                <!-- No SFDC Accounts/Opportunities linked -- >
                                 <% if !@sfdc_accounts_exist %>
                                     <i class="fa fa-exclamation-triangle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="
                                     <%= @enable_sfdc_login_and_linking ? "In the Salesforce menu above, log in and select the option to refresh the list of Salesforce Accounts!" : "To link and/or refresh Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator." %>
                                     "></i> <span>No Salesforce Accounts found! Refresh needed.</span>
                                 <% else %>
-                                    <!-- SFDC accounts found! -->
+                                    <!-- SFDC accounts found! -- >
                                     <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="
                                     <%= @salesforce_user.present? ? "Link Salesforce Accounts here." : (@enable_sfdc_login_and_linking ? "Click on Salesforce menu above and log in first!" : "To link and/or refresh Salesforce Accounts, please contact ContextSmith support or your ContextSmith administrator.") %>
                                     "></i>
@@ -112,17 +120,17 @@
                                                 <div class="col-lg-2" style="margin:0px; padding-left:0px; vertical-align: text-bottom; display: inline-block">
                                                   <input type="submit" name="commit" value="Link" class="btn btn-primary btn-sm" style="padding-top:4px; height:2.7em; font-size:9px">
                                                 </div>
-                                            <%end%> <!-- End: form_tag do -->
+                                            <%end%> <!-- End: form_tag do -- >
                                         </div>
                                     <% else %>
-                                        <!-- User has no permission to link -->
+                                        <!-- User has no permission to link -- >
                                         Not linked.
                                     <% end %>
-                                    <!-- End: SFDC accounts found -->
+                                    <!-- End: SFDC accounts found -- >
                                 <% end %>
-                                <!-- End: No SFDC Accounts/Opportunities linked -->
+                                <!-- End: No SFDC Accounts/Opportunities linked -- >
                             <% else %>
-                                <!-- SFDC Accounts/Opportunities linked -->
+                                <!-- SFDC Accounts/Opportunities linked -- >
                                 <% if @project.salesforce_opportunity.nil? %>
                                     <% @project.account.salesforce_accounts.each_with_index do |sfa, i| %>
                                         <% if @salesforce_base_URL.present? %>
@@ -134,7 +142,7 @@
                                             [<a href="/delete_salesforce_account/<%=sfa.id%>" data-method="delete">unlink</a>]
                                         <% end %>
                                         <%= "," if i < @project.account.salesforce_accounts.count - 1 %>
-                                    <% end %> <!-- end: each_with_index do -->
+                                    <% end %> <!-- end: each_with_index do -- >
                                 <% else %>
                                     <% if @salesforce_base_URL.present? %>
                                         <a href="<%= @salesforce_base_URL + "/" + @project.salesforce_opportunity.salesforce_opportunity_id %>" title="View in Salesforce" target="_blank"><%= @project.salesforce_opportunity.name %></a>
@@ -145,144 +153,135 @@
                                         [<a href="/delete_salesforce_opportunity/<%=@project.salesforce_opportunity.id%>" data-method="delete">unlink</a>]
                                     <% end %>
                                 <% end %>
-                            <% end %> <!-- End: No SFDC Accounts/Opportunities linked -->
+                            <% end %> <!-- End: No SFDC Accounts/Opportunities linked -- >
                             </span>
                         </div>
                     </div>
-                </div>
-
-                <ul class="nav nav-tabs m-b-sm m-t-md">
-                    <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">Activities</a></li>
-                    <li role="presentation" class="<%= is_active_action('alerts_tasks') %>"><a href="<%= extension_alerts_tasks_path(internal: params[:internal], external: params[:external]) %>"> To Do & Alerts</a></li>
-                    <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li>
-                </ul>
-
+                </div> -->
             <% end %>
 
             <!-- Main view  -->
             <%= yield %>
-
         </div>
-
     </div>
 
     <%= yield :javascript %>
 
     <script>
-        $('[data-toggle="tooltip"]').tooltip();
+        // $('[data-toggle="tooltip"]').tooltip();
 
-        $("#salesforce-entity-search").selectize({
-            closeAfterSelect: true,
-            valueField: 'id',
-            labelField: 'name',
-            searchField: ['name'],
-            create: false,
-            sortField: [
-                {
-                    field: 'name',
-                    direction: 'asc'
-                },
-                {
-                    field: '$score'
-                }
-            ],
-            render: {
-              item: function(item, escape) {
-                return '<div>' +
-                    (item.name ? '<span class="name">' + escape(item.name) + '</span>' : '') +
-                    (item.account ? '<span class="account">' + escape(item.account) + '</span>' : '') +
-                '</div>';
-              },
-              option: function(item, escape) {
-                var label = item.name || item.account;
-                var caption = item.name ? item.account : null;
-                return '<div>' +
-                    '<span class="label">' + escape(label) + '</span>' +
-                    (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
-                '</div>';
-              }
-            },
-            load: function (term, callback) {
-              if (!term.length) return callback()
-              // use # to search for projects by name
-              // console.log(callback);
-              $.getJSON( '/search/autocomplete_salesforce_account_name.json', { term: encodeURIComponent(term) } )
-                .done( function (data) {
-                  // console.log(data);
-                  callback(data);
-                })
-                .fail( function () {
-                  console.log("fail");
-                  callback();
-                })
+        // $("#salesforce-entity-search").selectize({
+        //     closeAfterSelect: true,
+        //     valueField: 'id',
+        //     labelField: 'name',
+        //     searchField: ['name'],
+        //     create: false,
+        //     sortField: [
+        //         {
+        //             field: 'name',
+        //             direction: 'asc'
+        //         },
+        //         {
+        //             field: '$score'
+        //         }
+        //     ],
+        //     render: {
+        //       item: function(item, escape) {
+        //         return '<div>' +
+        //             (item.name ? '<span class="name">' + escape(item.name) + '</span>' : '') +
+        //             (item.account ? '<span class="account">' + escape(item.account) + '</span>' : '') +
+        //         '</div>';
+        //       },
+        //       option: function(item, escape) {
+        //         var label = item.name || item.account;
+        //         var caption = item.name ? item.account : null;
+        //         return '<div>' +
+        //             '<span class="label">' + escape(label) + '</span>' +
+        //             (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
+        //         '</div>';
+        //       }
+        //     },
+        //     load: function (term, callback) {
+        //       if (!term.length) return callback()
+        //       // use # to search for projects by name
+        //       // console.log(callback);
+        //       $.getJSON( '/search/autocomplete_salesforce_account_name.json', { term: encodeURIComponent(term) } )
+        //         .done( function (data) {
+        //           // console.log(data);
+        //           callback(data);
+        //         })
+        //         .fail( function () {
+        //           console.log("fail");
+        //           callback();
+        //         })
               
-            },
-            onDropdownOpen: function ($dropdown) {
-              // Manually prevent dropdown from opening when:
-              // 1. There is no search term, or
-              // 2. The search term does not begin with #
-              // 3. At least one project has been selected already
-              if (!this.lastQuery.length || this.items.length) {
-                this.close();
-              }
-            },
-            onBlur: function () {
-              // Manually prevent input box from being cleared on blur
-              this.setTextboxValue(this.lastQuery);
-            }
-        });
+        //     },
+        //     onDropdownOpen: function ($dropdown) {
+        //       // Manually prevent dropdown from opening when:
+        //       // 1. There is no search term, or
+        //       // 2. The search term does not begin with #
+        //       // 3. At least one project has been selected already
+        //       if (!this.lastQuery.length || this.items.length) {
+        //         this.close();
+        //       }
+        //     },
+        //     onBlur: function () {
+        //       // Manually prevent input box from being cleared on blur
+        //       this.setTextboxValue(this.lastQuery);
+        //     }
+        // });
 
 <% if @enable_sfdc_refresh %>
-        $('.sfdc-refresh').click(function(){
-            var entity_type;
-            var buttonTxtStr = self.attr("btnLabel");
-            var self = $(this);
-            if ($(this).attr("id").includes("salesforce-ext-acc-refresh")) {  //clicked on 'Refresh Accounts'
-                entity_type = "account";
-                requestURL = "/salesforce/import/account";
-            }
-            // else if ($(this).attr("id").includes("salesforce-opp-refresh")) {
-            //     entity_type = "project";
-            //     requestURL = "/salesforce/import/project";
-            // }
-            else if ($(this).attr("id").includes("salesforce-ext-cont-import")) {  //clicked on 'Import Contacts'
-                entity_type = "contact";
-                requestURL = "/salesforce/sync";
-            }
-            else {
-                return;
-            }
+        // $('.sfdc-refresh').click(function(){
+        //     var entity_type;
+        //     var buttonTxtStr = self.attr("btnLabel");
+        //     var self = $(this);
+        //     if ($(this).attr("id").includes("salesforce-ext-acc-refresh")) {  //clicked on 'Refresh Accounts'
+        //         entity_type = "account";
+        //         requestURL = "/salesforce/import/account";
+        //     }
+        //     // else if ($(this).attr("id").includes("salesforce-opp-refresh")) {
+        //     //     entity_type = "project";
+        //     //     requestURL = "/salesforce/import/project";
+        //     // }
+        //     else if ($(this).attr("id").includes("salesforce-ext-cont-import")) {  //clicked on 'Import Contacts'
+        //         entity_type = "contact";
+        //         requestURL = "/salesforce/sync";
+        //     }
+        //     else {
+        //         return;
+        //     }
 
-            $.ajax(requestURL, {
-                async: true,
-                method: "POST",
-                data: { "entity_type": entity_type },
-                beforeSend: function () {
-                    self.css("pointer-events", "none");
-                    $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
-                },
-                error: function(data) {
-                    var res = JSON.parse(data.responseText);
-                    self.addClass('error-btn-highlight');
-                    alert("Encountered " + buttonTxtStr + " error!\n\n" + res.error);
-                },
-                statusCode: {
-                    500: function() {
-                        //self.css("margin-left","0px");
-                        self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
-                    },
-                    503: function() {
-                        //self.css("margin-left","0px");
-                        self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
-                    },
-                },
-                complete: function() {
-                    self.css("pointer-events", "auto");
-                    $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
-                    location.reload();
-                }
-            });
-        });
+        //     $.ajax(requestURL, {
+        //         async: true,
+        //         method: "POST",
+        //         data: { "entity_type": entity_type },
+        //         beforeSend: function () {
+        //             self.css("pointer-events", "none");
+        //             $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
+        //         },
+        //         error: function(data) {
+        //             var res = JSON.parse(data.responseText);
+        //             self.addClass('error-btn-highlight');
+        //             alert("Encountered " + buttonTxtStr + " error!\n\n" + res.error);
+        //         },
+        //         statusCode: {
+        //             500: function() {
+        //                 //self.css("margin-left","0px");
+        //                 self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+        //             },
+        //             503: function() {
+        //                 //self.css("margin-left","0px");
+        //                 self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+        //             },
+        //         },
+        //         complete: function() {
+        //             self.css("pointer-events", "auto");
+        //             $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
+        //             location.reload();
+        //         }
+        //     });
+        // });
 <% end %>
 
         var popupWindowRef = null;
@@ -303,17 +302,17 @@
             }
         };
 
-        // Button to show the form to link SFDC account
-        function show_link_account_form_btn_clicked () {
-            $("#show-link-account-form-btn").hide();
-            $("#search-form-div").show();
-        }
+        // // Button to show the form to link SFDC account
+        // function show_link_account_form_btn_clicked () {
+        //     $("#show-link-account-form-btn").hide();
+        //     $("#search-form-div").show();
+        // }
 
-        // Disable the "Link" submit button after clicking it
-        $("#search-form").submit(function () {
-            $("#search-form .btn").attr("disabled", true);
-            return true;
-        });
+        // // Disable the "Link" submit button after clicking it
+        // $("#search-form").submit(function () {
+        //     $("#search-form .btn").attr("disabled", true);
+        //     return true;
+        // });
     </script>
 
     <%= javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js" %>
@@ -334,10 +333,34 @@
 
     <!-- TODO: Remove this hardcoded CSS workaround -->
     <style>
-        .dropdown-menu {
+        .nav {
+            padding-bottom: 1px;
+        }
+        .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus 
+        {
+            color: #3C8DC5;
+            border: none;
+            border-bottom: 2px solid #3C8DC5;
+            pointer-events: none;
+        }
+        .nav-tabs > li > a:hover, .nav-tabs > li > a:focus {
+            color: #7cb5ec;
+            background-color: transparent;
+            border: none;
+            border-bottom: 2px solid #7cb5ec;
+        }
+        .nav-tabs > li > a {
+            color: #676a6c;
+            border: none;
+            border-bottom: 2px solid white;
+        }
+        .nav-tabs > li.inactive > a {
+            /*border-bottom: 2px solid white;*/
+        }
+        /*.dropdown-menu {
             border: 1px solid #aaa;
             z-index: 2003;
-        }
+        }*/
         .selectize-input {
             height: 1.75em;
             display: inline-block;
@@ -356,8 +379,10 @@
             padding-top: 0em;
             padding-bottom: 0em;
         }
-        .btn:disabled {
+        .disabled, .btn:disabled {
             color: #DDD;
+            opacity: 0.3;
+            pointer-events: none;
         }
     </style>
 </body>

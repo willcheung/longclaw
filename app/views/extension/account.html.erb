@@ -1,28 +1,237 @@
-<div id="extension-timeline">
-  <% @activities.each do |a| %>
-    <%= render 'activities/extension_block', a: a %>
-  <% end %>
-</div>
-
-<p class="text-center"><a type="button" class="btn btn-outline btn-primary btn-sm" href="<%= project_path(@project) %>" target="_blank">View more and filter timeline &rarr;</a></p>
-
-<!-- <p>Email me: <input type="checkbox" name=""> weekly <input type="checkbox" name=""> daily</p> -->
-
-<!-- <button class="btn btn-primary">Sync Activites with Salesforce</button> -->
+<style type="text/css">
+    body {
+        color: #999;
+        font-size: 11px;
+    }
+    extrastrong {
+        font-weight: bold;
+        color: black;
+    }
+    td > a, .link:hover  {
+        text-decoration: underline;
+    }
+    .contact-group {
+        font-size: 12px;
+        font-weight: bold;
+        /*color: #999;*/
+        padding: 2em 0;
+    }
+    .panel-group {
+        border-radius: 0px;
+    }
+    .panel {
+        border: none;
+        border-bottom: 2px solid #EEE;
+    }
+    .profile-pic {
+        height: 48px;
+        width: 48px;
+        border-radius: 48px;
+        margin: 12px;
+        border: 1.5px solid grey;
+        font-size: 22px;
+        line-height: 42px;
+    }
+    .panel-title { /* contact-name */
+        font-size: 14px;
+    }
+    .contact-info {
+        font-size: 12px;
+        color: #999;
+        font-weight: normal;
+    }
+    .company-name {
+        font-size: 11px;
+        color: #337ab7; /* link blue */
+    }
+    .panel-body {
+        padding: 0 15px 15px 15px;
+    }
+    .panel-body > table {
+        width: 98%;
+        /*margin: 1em 0;*/
+        border-top: 1px solid #EEE; 
+        /*border-bottom: 1px solid #EEE; */
+        /*border: 2px solid blue;*/
+    }
+    .social-group td {  /* social icons */
+        margin: 7px 3px;
+        display: inline-block;
+    }
+    .fa-plus-square {
+        color: #999;
+        padding: 0 1em;
+        display: none;  /* disabled until we find functionality for the "+" */
+    }
+    .sfdc-icon {
+        width: 1.5em;
+    }
+    .linkedin-icon {
+        color: #0077b5; /* LinkedIn blue */
+    }
+    .twitter-icon {
+        color: #31b8f0; /* Twitter blue */
+    }
+    .fb-icon {
+        color: #3b5998; /* Facebook blue */
+    }
+    .phone-icon {
+        padding: 0 0 0 0.5em;
+        /*color: navy;*/
+    }
+    .phone-number {
+        font-size: 12px;
+        padding-bottom: 3px;
+    }
+    .emailmtgs-group td {
+        vertical-align: text-top;
+    }
+    .emailmtgs-group td:first-child {
+        /*font-size: 8px;*/
+        padding: 10px 12px 0 0;
+        text-align: right;
+    }
+    button { /* used for easy styling: need to change */
+        width: 75px;
+        margin: 2px;
+        color: grey;
+        background-color: white;
+        border: 2px solid grey;
+        border-radius: 5px;
+        pointer-events: none;
+    }
+    .statistics {
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .additionalinfo-group td {
+        padding: 2px 0;
+    }
+</style>
 
 <!-- TODO: move this script to extension.js -->
 <script type="text/javascript">
-    function toggle_visibility_for_pair(id1, id2) {
-        toggle_visibility(id1);
-        toggle_visibility(id2);
-    }
+    $(document).ready(function(){
+        // $(".panel-default").hover(
+        //     function() {
+        //         var hoveredDiv = $(this).attr("id");
+        //         $("#plus" + hoveredDiv).show();
+        //         console.log("#plus" + hoveredDiv);
+        //     },
+        //     function() {
+        //         var hoveredDiv = $(this).attr("id");
+        //         $("#plus" + hoveredDiv).hide();
+        //     }
+        // );
 
-    function toggle_visibility(id) {
-        //console.log("toggling: " + id)
-        var e = document.getElementById(id);
-        if(e.style.display == 'block')
-            e.style.display = 'none';
-        else
-            e.style.display = 'block';
-    }
+        // anchor "link" workaround code to allow accordion to keep working, but allow user to click an anchor link inside of it
+        $(".link").click(function(){
+                // console.log("clicked on " + $(this).attr("url"));
+                window.open($(this).attr("url")); 
+                return false; //don't collapse section in extension
+            }
+        );
+    });
 </script>
+
+<body>
+    <div>
+        <span class="contact-group"><br/>PEOPLE IN E-MAIL</span>
+    </div>
+    <div>
+        <div class="panel-group" id="accordion">
+            <% @people.each_with_index do |p, i| %>
+            <% person = p[:profile] %>
+            <% profile_fullname = person.fullname.present? ? person.fullname : p[:email] %>
+            <div class="panel <%= "panel-default" if i == 0 %>" id="Profile<%= person.id %>">
+                <div>
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseProfile<%= person.id %>">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                    <% if person.profileimg_url.present? %>
+                                        <img src="<%= person.profileimg_url %>" class="profile-pic" title="profile pic">
+                                    <% else %>
+                                        <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
+                                    <% end %>
+                                    </td>
+                                    <td>
+                                        <table>
+                                            <tbody class="contact-info">
+                                                <tr><td class="contact-name panel-title"><extrastrong><%= profile_fullname %></extrastrong></td></tr>
+                                                <tr><td><%= person.title %></td></tr>
+                                                <% if person.organization.present? || valid_domain?(get_domain(p[:email])) %>
+                                                    <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization.present? ? person.organization : get_domain(p[:email]) %></span></td></tr>
+                                                <% end %>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile<%= person.id %>"></i>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </a>
+                </div>
+                <div id="collapseProfile<%= person.id %>" class="panel-collapse collapse <%= "in" if i == 0 %>">
+                    <div class="panel-body">
+                        <table class="social-group">
+                           <tbody>
+                                <tr style="margin-left: auto; margin-right: auto; width: 100px">
+                                    <td class="fa-lg">
+                                        <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce disabled" alt="Salesforce disabled"/>
+                                    </td>
+                                    <td <%= "class=disabled" if person.linkedin_url.blank? %>>
+                                        <a href="<%= person.linkedin_url %>" target="_blank" title="<%= person.linkedin_url %>"><i class="linkedin-icon fa fa-linkedin-square fa-2x" aria-hidden="true"></i></a>
+                                    </td>
+                                    <td <%= "class=disabled" if person.twitter_url.blank? %>>
+                                        <a href="<%= person.twitter_url %>" target="_blank" title="<%= person.twitter_url %>"><i class="twitter-icon fa fa-twitter fa-2x" aria-hidden="true"></i></a>
+                                    </td>
+                                    <td <%= "class=disabled" if person.facebook_url.blank? %>>
+                                        <a href="<%= person.facebook_url %>" target="_blank" title="<%= person.facebook_url %>"><i class="fb-icon fa fa-facebook-square fa-2x" aria-hidden="true"></i></a>
+                                    </td>
+                                    <% if person.phone.present? %>
+                                        <td class="phone-icon">
+                                            <table>
+                                                <tr><td>
+                                                <i class="fa fa-phone fa-2x" aria-hidden="true"></i></td><td class="phone-number"><span><%= person.phone %></span></td>
+                                            </table>
+                                        </td>
+                                    <% end %>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <% if person.location.present? || person.websites.present? || person.bio.present? %>
+                        <table class="additionalinfo-group">
+                            <tr><td></td></tr>
+                            <tr><td><span class="panel-title"><extrastrong>More about <%= profile_fullname %></extrastrong></span></td></tr>
+                            <% if person.location.present? %>
+                                <tr><td>
+                                    <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp;<strong>Location:</strong>&nbsp; <%= person.location %>
+                                </td></tr>
+                            <% end %>                            
+                            <% if person.websites.present? %>
+                                <tr><td>
+                                    <i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<strong>Websites:</strong>&nbsp; <%= person.websites %>
+                                </td></tr>
+                            <% end %>
+                            <% if person.bio.present? %>
+                                <tr><td>
+                                    <strong>Biography:</strong>&nbsp; <%= person.bio[0...325] %><%= "..." if person.bio.length > 325 %></td>
+                                </td></tr>
+                            <% end %>
+                        </table>
+                        <% end %>
+                    </div>
+                </div>
+            </div>
+            <% end # end: @people.each do |p| %>
+            
+            <span class="contact-group"><br/>PEOPLE IN <%= @project.name.upcase %></span>
+            
+        </div>
+    </div>
+</body>
+
