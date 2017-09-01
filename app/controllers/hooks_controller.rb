@@ -71,3 +71,5 @@ class HooksController < ApplicationController
 
     render nothing: true
   end
+
+end
