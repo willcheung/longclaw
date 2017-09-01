@@ -161,8 +161,8 @@
                                             <tbody class="contact-info">
                                                 <tr><td class="contact-name panel-title"><extrastrong><%= profile_fullname %></extrastrong></td></tr>
                                                 <tr><td><%= person.title %></td></tr>
-                                                <% if person.data_is_valid? %>
-                                                    <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization %></span></td></tr>
+                                                <% if person.organization.present? || valid_domain?(get_domain(p[:email])) %>
+                                                    <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization.present? ? person.organization : get_domain(p[:email]) %></span></td></tr>
                                                 <% end %>
                                             </tbody>
                                         </table>
@@ -202,42 +202,6 @@
                                     <% end %>
                                 </tr>
                             </tbody>
-                        </table>
-                        <table class="emailmtgs-group">
-                            <tr>
-                                <td>LAST E-MAIL&nbsp;<i class="fa fa-envelope-o" aria-hidden="true"></i></td>
-                                <td><extrastrong>Great to see you today!</extrastrong> - Nov 10<br>Opened Nov 10 - 3:32pm</td>
-                            </tr>
-                            <tr>
-                                <td>NEXT MEETING&nbsp;<i class="fa fa-calendar-o" aria-hidden="true"></i></td>
-                                <td><a href="#">Schedule Meeting</a></td>
-                            </tr>
-                            <tr>
-                                <td>LAST MEETING&nbsp;<i class="fa fa-calendar-check-o" aria-hidden="true"></i></td>
-                                <td><extrastrong>ContextSmith Sales Call</extrastrong><br>Aug 30 - 3:00pm</td>
-                            </tr>
-                            <tr>
-                                <td >ACTIONS</td>
-                                <td><a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= p[:email] %>&su=<%= "" %>&body=<%= "" %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"> Send e-mail</a>
-                                &nbsp;&middot;&nbsp;
-                                <a href="#" target="_blank"> Add a Note</a></td>
-                            </tr>
-                            <tr><td></td></tr>
-                        </table>
-                        <table>
-                            <tr><td>&nbsp;</td></tr>
-                            <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days</td></tr>
-                            <tr>
-                                <td><table>
-                                <!-- TODO: Don't use buttons! -->
-                                    <tr>
-                                        <td><button><i class="fa fa-envelope-o fa-2x" aria-hidden="true"></i>&nbsp;<span class="statistics">126</span><br/>Sent</button></td>
-                                        <td><button><i class="fa fa-envelope-open-o fa-2x" aria-hidden="true"></i>&nbsp;<span class="statistics">60%</span><br/>Opened</button></td>
-                                        <td><button><i class="fa fa-reply fa-2x" aria-hidden="true"></i>&nbsp;<span class="statistics">25%</span><br/>Replied</button></td>
-                                    </tr>
-                                </table></td>
-                            </tr>
-                            <tr><td>&nbsp;</td></tr>
                         </table>
                         <% if person.websites.present? || person.bio.present? %>
                         <table class="additionalinfo-group">

@@ -119,10 +119,10 @@ class Profile < ActiveRecord::Base
         linkedin_bio = "(LinkedIn) " + sp.bio if sp.type.downcase == "linkedin"
         twitter_bio = "(Twitter) " + sp.bio if sp.type.downcase == "twitter"
         facebook_bio = "(Facebook) " + sp.bio if sp.type.downcase == "facebook"
-        puts "sp.type.downcase: #{sp.type.downcase}"
-        puts "linkedin_bio: #{linkedin_bio}"
-        puts "twitter_bio: #{twitter_bio}"
-        puts "facebook_bio: #{facebook_bio}"
+        # puts "sp.type.downcase: #{sp.type.downcase}"
+        # puts "linkedin_bio: #{linkedin_bio}"
+        # puts "twitter_bio: #{twitter_bio}"
+        # puts "facebook_bio: #{facebook_bio}"
       end
     end
 
