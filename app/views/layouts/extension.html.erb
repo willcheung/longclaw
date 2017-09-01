@@ -142,7 +142,7 @@
                                         <%= @project.salesforce_opportunity.name %>
                                     <% end %>
                                     <% if @enable_sfdc_login_and_linking %>
-                                        [<a href="/delete_salesforce_opportunity/<%=@project.salesforce_opportunity.id%>" data-method="delete">unlink</i></a>]
+                                        [<a href="/delete_salesforce_opportunity/<%=@project.salesforce_opportunity.id%>" data-method="delete">unlink</a>]
                                     <% end %>
                                 <% end %>
                             <% end %> <!-- End: No SFDC Accounts/Opportunities linked -->
