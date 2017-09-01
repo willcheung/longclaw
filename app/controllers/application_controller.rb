@@ -37,6 +37,14 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def after_sign_out_path_for(resource_or_scope)
+    if params[:extension]
+      root_path + 'extension'
+    else
+      root_path
+    end
+  end
+
   protected
 
   def layout_by_resource
