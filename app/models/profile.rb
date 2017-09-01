@@ -43,12 +43,12 @@ class Profile < ActiveRecord::Base
     Hashie::Mash.new(read_attribute(:data))
   end
 
-  def valid?
-    (data.status == 200)
+  def data_is_valid?
+    data.status == 200
   end
 
   def fullname
-    valid? && data.contact_info.present? ? data.contact_info.full_name : nil
+    data_is_valid? && data.contact_info.present? ? data.contact_info.full_name : nil
   end
 
   def email
@@ -56,60 +56,81 @@ class Profile < ActiveRecord::Base
   end
 
   def title
-    valid? && data.organizations.present? ? data.organizations.first.title : nil
+    data_is_valid? && data.organizations.present? ? data.organizations.first.title : nil
   end
 
   def organization
-    valid? && data.organizations.present? ? data.organizations.first.name : nil
+    data_is_valid? && data.organizations.present? ? data.organizations.first.name : nil
   end
 
   def profileimg_url
-    valid? && data.photos.present? ? data.photos.first.url : nil
+    data_is_valid? && data.photos.present? ? data.photos.first.url : nil
   end
 
   def linkedin_url
     data.social_profiles.each do |sp|
       return sp.url if sp.type.downcase == "linkedin"
-    end if valid?
+    end if data_is_valid?
     nil
   end
 
   def twitter_url
     data.social_profiles.each do |sp|
       return sp.url if sp.type.downcase == "twitter"
-    end if valid?
+    end if data_is_valid?
     nil
   end
 
   def facebook_url
     data.social_profiles.each do |sp|
       return sp.url if sp.type.downcase == "facebook"
-    end if valid?
+    end if data_is_valid?
     nil
   end
 
-  # temporary placeholder (might remove)
+  def websites
+    if data_is_valid? && data.contact_info.present? && data.contact_info.websites.present?
+      arr = []
+      data.contact_info.websites.each do |ws|
+        arr << ws.url
+      end
+      return arr.join(", ")
+    end
+    []
+  end
+
+  def location
+    (data_is_valid? && data.demographics.present?) ? (data.demographics.location_general || data.demographics.location_deduced.normalized_location || data.demographics.location_deduced.deduced_location) : nil
+  end
+
+  # TODO: temporary placeholder (might remove)
   def phone
     nil
   end
 
   def bio
-    return nil if !valid?
-    bio_str = "" + data.demographics.gender + " —— " + data.demographics.location_general
-    if data.contact_info.websites.present?
-      arr = []
-      data.contact_info.websites.each do |ws|
-        arr << ws.url
+    return nil if !data_is_valid?
+
+    linkedin_bio = nil
+    twitter_bio = nil
+    facebook_bio = nil
+    data.social_profiles.each do |sp|
+      if sp.bio.present?
+        linkedin_bio = "(LinkedIn) " + sp.bio if sp.type.downcase == "linkedin"
+        twitter_bio = "(Twitter) " + sp.bio if sp.type.downcase == "twitter"
+        facebook_bio = "(Facebook) " + sp.bio if sp.type.downcase == "facebook"
+        puts "sp.type.downcase: #{sp.type.downcase}"
+        puts "linkedin_bio: #{linkedin_bio}"
+        puts "twitter_bio: #{twitter_bio}"
+        puts "facebook_bio: #{facebook_bio}"
       end
-      bio_str += " —— Websites: " + arr.join(", ")
     end
-    if data.social_profiles.present?
-      arr = []
-      data.social_profiles.each do |sp|
-        arr << "(" + sp.type[0].upcase + sp.type[1..sp.type.length] + ") " + sp.bio if sp.bio.present?
-      end
-      bio_str += " —— Social Network Bios: " + arr.join("; ")
-    end
+
+    arr = []
+    arr << linkedin_bio if linkedin_bio.present?
+    arr << twitter_bio if twitter_bio.present?
+    arr << facebook_bio if facebook_bio.present?
+    arr.present? ? "Social Bios: " + arr.join(" —— ") : nil 
   end
 
   private

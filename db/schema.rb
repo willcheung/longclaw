@@ -394,7 +394,7 @@ ActiveRecord::Schema.define(version: 20170831173418) do
 
   create_table "tracking_requests", force: :cascade do |t|
     t.uuid     "user_id"
-    t.string   "tracking_id", limit: 255
+    t.string   "tracking_id"
     t.string   "message_id",  limit: 255
     t.string   "subject"
     t.text     "recipients",              default: [],              array: true
