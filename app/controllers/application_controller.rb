@@ -13,24 +13,32 @@ class ApplicationController < ActionController::Base
   around_action :set_time_zone, if: :current_user
   around_action :check_google_oauth_valid_token, if: :current_user
 
-  def after_sign_in_path_for(resource)    
+  def after_sign_in_path_for(resource)
+
     if resource.is_a?(User)
-      case resource.onboarding_step
-      when Utils::ONBOARDING[:onboarded] # Fully onboarded
-        stored_location_for(resource) || root_path
-      when Utils::ONBOARDING[:confirm_projects]
-        if resource.cluster_create_date.nil?
-          # Clusters not ready yet
-          onboarding_creating_clusters_path
-        else
-          onboarding_confirm_projects_path
-        end
-      when Utils::ONBOARDING[:tutorial]
-        onboarding_tutorial_path
-      when Utils::ONBOARDING[:fill_in_info]
-        onboarding_fill_in_info_path
+      stored_location = stored_location_for(resource)
+      if stored_location[0..9] == '/extension'
+        stored_location || root_path
       else
-        stored_location_for(resource) || root_path
+
+        case resource.onboarding_step
+        when Utils::ONBOARDING[:onboarded] # Fully onboarded
+          stored_location || root_path
+        when Utils::ONBOARDING[:confirm_projects]
+          if resource.cluster_create_date.nil?
+            # Clusters not ready yet
+            onboarding_creating_clusters_path
+          else
+            onboarding_confirm_projects_path
+          end
+        when Utils::ONBOARDING[:tutorial]
+          onboarding_tutorial_path
+        when Utils::ONBOARDING[:fill_in_info]
+          onboarding_fill_in_info_path
+        else
+          stored_location || root_path
+        end
+
       end
     else
       super
