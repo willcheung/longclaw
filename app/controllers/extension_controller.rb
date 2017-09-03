@@ -51,7 +51,10 @@ class ExtensionController < ApplicationController
   end
 
   def account
-    @activities = @project.activities.visible_to(current_user.email).take(8)
+    @people = []
+    params[:external].values.each do |e|
+      @people << {email: e.second.to_s, profile: Profile.find_or_create_by_email(e.second.to_s)}
+    end
   end
 
   def alerts_tasks
