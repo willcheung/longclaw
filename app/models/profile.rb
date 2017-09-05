@@ -79,9 +79,10 @@ class Profile < ActiveRecord::Base
     social_url("facebook")
   end
 
+  # Returns an array of websites associated with this profile
   def websites
     if data_is_valid? && data.contact_info.present? && data.contact_info.websites.present?
-      return data.contact_info.websites.map(&:url).join(", ")
+      return data.contact_info.websites.map(&:url)
     end
     []
   end
@@ -95,6 +96,7 @@ class Profile < ActiveRecord::Base
     nil
   end
 
+  # Obtain the bio found in LinkedIn, Twitter, and Facebook (in that order), and returns an array of hashes with type and (bio) text. 
   def bio
     return nil if !data_is_valid?
 

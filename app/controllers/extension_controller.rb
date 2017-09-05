@@ -51,10 +51,32 @@ class ExtensionController < ApplicationController
   end
 
   def account
-    @people = []
+    # puts "current_user.tracking_requests.count: #{current_user.tracking_requests.count}"
+    @people_with_profile = []
     params[:external].values.each do |e|
-      @people << {email: e.second.to_s, profile: Profile.find_or_create_by_email(e.second.to_s)}
+      @people_with_profile << {email: e.second.to_s, profile: Profile.find_or_create_by_email(e.second.to_s)}
     end
+    @conversations_thispastmonth = @account.projects.first.activities.conversations#.from_lastmonth
+    
+    # Only show confirmed and external contacts
+    @project_members_with_profile = []
+    @account.projects.first.project_members.each do |pm|
+      if pm.contact.present? 
+        email = pm.contact.email
+        @project_members_with_profile << {email: email, profile: Profile.find_or_create_by_email(email)}
+      end
+    end
+
+    @emails = @people_with_profile.map{|p| p[:email]} | @project_members_with_profile.map{|p| p[:email]}
+    puts "@emails: #{@emails}"
+
+    @emails_sent_per_person = {}
+    # @emails.map do |e|
+    #   @emails_sent_per_person[e] = @conversations_thispastmonth.inject(0){ |sum, a| sum + Activity.email_messages_sent_to(a, current_user.email, [e]) }
+    # end 
+
+    # @conversations_from_thisuser_thispastmonth = @account.projects.first.activities.conversations.from_lastmonth.where("\"from\" @> '[{\"address\":\"#{ current_user.email }\"}]'::jsonb").where("\"to\" || \"cc\" @> '[{\"address\":\"#{ "shelby@plugandplaytechcenter.com" }\"}]'::jsonb")
+    # @activities_lastmonth.where("\"from\" @> '[{\"address\":\"#{ current_user.email }\"}]'::jsonb AND \"to\" || \"cc\" @> '[{\"address\":\"#{ "shelby@plugandplaytechcenter.com" }\"}]'::jsonb")
   end
 
   def alerts_tasks
