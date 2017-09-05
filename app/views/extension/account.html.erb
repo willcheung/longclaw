@@ -23,6 +23,15 @@
         border: none;
         border-bottom: 2px solid #EEE;
     }
+    .mainprofile-group {
+        width: 100%;
+    }
+    .panel-title { /* sections; includes contact-name */
+        font-size: 14px;
+    }
+    .mainprofile-group .profile-pic-container {
+        width: 48px;
+    }
     .profile-pic {
         height: 48px;
         width: 48px;
@@ -31,9 +40,6 @@
         border: 1.5px solid grey;
         font-size: 22px;
         line-height: 42px;
-    }
-    .panel-title { /* contact-name */
-        font-size: 14px;
     }
     .contact-info {
         font-size: 12px;
@@ -108,7 +114,8 @@
         padding: 2px 0;
     }
     .hover * {
-        text-shadow: 2px 2px 4px #AAA;
+        background-color: #EEE;
+
     }
 </style>
 
@@ -160,10 +167,10 @@
                 <div class="panel <%= "panel-default" if n == 0 && i == 0 %>" id="Profile-<%= person.id %>-<%= n %>">
                     <div>
                         <a data-toggle="collapse" data-parent="#accordion" href="#collapseProfile-<%= person.id %>-<%= n %>">
-                            <table>
+                            <table class="mainprofile-group">
                                 <tbody>
                                     <tr>
-                                        <td>
+                                        <td class="profile-pic-container">
                                         <% if person.profileimg_url.present? %>
                                             <img src="<%= person.profileimg_url %>" class="profile-pic" title="profile pic">
                                         <% else %>
