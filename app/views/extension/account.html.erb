@@ -107,6 +107,9 @@
     .additionalinfo-group td {
         padding: 2px 0;
     }
+    .hover * {
+        text-shadow: 2px 2px 4px #AAA;
+    }
 </style>
 
 <!-- TODO: move this script to extension.js -->
@@ -125,12 +128,18 @@
         // );
 
         // anchor "link" workaround code to allow accordion to keep working, but allow user to click an anchor link inside of it
-        $(".link").click(function(){
-                // console.log("clicked on " + $(this).attr("url"));
-                window.open($(this).attr("url")); 
-                return false; //don't collapse section in extension
+        $("a").hover(
+            function(){
+                $(this).addClass("hover");
+            }, function() {
+                $(this).removeClass("hover");
             }
         );
+        $(".link").click(function(){
+            // console.log("clicked on " + $(this).attr("url"));
+            window.open($(this).attr("url")); 
+            return false; //don't collapse section in extension
+        });
     });
 </script>
 
