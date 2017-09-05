@@ -15,6 +15,8 @@ class Profile < ActiveRecord::Base
 
   scope :where_by_email, -> (email) { where('emails @> ?', '{' + email.downcase + '}') }
 
+  SOCIAL_TYPE = { Linkedin: 'LinkedIn', Twitter: 'Twitter', Facebook: 'Facebook' }
+
   def self.find_by_email(email)
     where_by_email(email).first
   end
@@ -116,9 +118,9 @@ class Profile < ActiveRecord::Base
     end
 
     socialbio_arr = []
-    socialbio_arr << {type: "LinkedIn", text: linkedin_bio} if linkedin_bio.present?
-    socialbio_arr << {type: "Twitter", text: twitter_bio} if twitter_bio.present?
-    socialbio_arr << {type: "Facebook", text: facebook_bio} if facebook_bio.present?
+    socialbio_arr << {socialtype: SOCIAL_TYPE[:Linkedin], text: linkedin_bio} if linkedin_bio.present?
+    socialbio_arr << {socialtype: SOCIAL_TYPE[:Twitter], text: twitter_bio} if twitter_bio.present?
+    socialbio_arr << {socialtype: SOCIAL_TYPE[:Facebook], text: facebook_bio} if facebook_bio.present?
     socialbio_arr
   end
 

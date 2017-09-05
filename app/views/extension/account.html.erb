@@ -265,7 +265,15 @@
                                 <% if person.bio.present? %>
                                     <% person.bio.each do |b| %>
                                         <tr><td>
-                                            <strong><%= b[:type] %> Bio:</strong>&nbsp; <%= b[:text][0...190] %><%= "..." if b[:text].length > 190 %></td>
+                                            <strong>
+                                            <% if b[:socialtype] == Profile::SOCIAL_TYPE[:Linkedin] %>
+                                                <i class="fa fa-linkedin-square" aria-hidden="true"></i>
+                                            <% elsif b[:socialtype] == Profile::SOCIAL_TYPE[:Twitter] %>
+                                                <i class="fa fa-twitter" aria-hidden="true"></i>
+                                            <% elsif b[:socialtype] == Profile::SOCIAL_TYPE[:Facebook] %>
+                                                <i class="fa fa-facebook-square" aria-hidden="true"></i>
+                                            <% end %>
+                                            <%= b[:socialtype] %> bio: </strong>&nbsp;<%= b[:text][0...190] %><%= "..." if b[:text].length > 190 %></td>
                                         </td></tr>
                                     <% end %>
                                 <% end %>
