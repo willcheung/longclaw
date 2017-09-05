@@ -53,6 +53,7 @@ class Activity < ActiveRecord::Base
   scope :meetings, -> { where category: CATEGORY[:Meeting] }
   scope :from_yesterday, -> { where last_sent_date: Time.current.yesterday.midnight..Time.current.yesterday.end_of_day }
   scope :from_lastweek, -> { where last_sent_date: 1.week.ago.midnight..Time.current.yesterday.end_of_day }
+  scope :from_lastmonth, -> { where last_sent_date: 1.month.ago.midnight..Time.current.yesterday.end_of_day }
   scope :next_week, -> { where last_sent_date: Time.current..1.week.from_now.midnight }
   scope :reverse_chronological, -> { order last_sent_date: :desc }
   scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
@@ -478,7 +479,7 @@ class Activity < ActiveRecord::Base
   end
 
   def email_addresses
-    carbon_copy =  cc || []
+    carbon_copy = cc || []
     sent_to = to || []
 
     emails = Set.new
@@ -513,6 +514,22 @@ class Activity < ActiveRecord::Base
       a.save
     end
     self.save
+  end
+
+  # Ignores "from" field, counts the # of email messages in an activity that contains at least one of the recipients in array
+  # TODO: Why doesn't this work as an instance method?
+  def self.email_messages_sent_to(a, sender_email, recipients_arr)
+    count = 0
+    a.email_messages.each do |m|
+      # puts "\n\n\tfrom: #{m.from.first}"
+      # puts "\n\tto: #{m.to}"
+      # puts "\n\tcc: #{m.cc}\n\n"
+
+      # puts "contains #{recipients_arr.first}?-> #{m.from.first.key(recipients_arr.first).present?}"
+      # puts "\twas a recipient?=#{(m.cc.present? && m.cc.find{|to| recipients_arr.include? to.address}.present?) || (m.to.present? && m.to.find{|to| recipients_arr.include? to.address}.present?)}"
+      count += 1 if m.from.first.key(sender_email).present? && ((m.cc.present? && m.cc.find{|to| recipients_arr.include? to.address}.present?) || (m.to.present? && m.to.find{|to| recipients_arr.include? to.address}.present?))
+    end if recipients_arr.present?
+    count
   end
 
   # finds all instances of email1 and replaces all with email2 in from/to/cc and email_messages for the activity

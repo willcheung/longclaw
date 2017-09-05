@@ -67,11 +67,10 @@ class ExtensionController < ApplicationController
       end
     end
 
-    @emails = @people_with_profile.map{|p| p[:email]} | @project_members_with_profile.map{|p| p[:email]}
-    puts "@emails: #{@emails}"
+    people_emails = @people_with_profile.map{|p| p[:email]} | @project_members_with_profile.map{|p| p[:email]}
 
     @emails_sent_per_person = {}
-    # @emails.map do |e|
+    # people_emails.map do |e|
     #   @emails_sent_per_person[e] = @conversations_thispastmonth.inject(0){ |sum, a| sum + Activity.email_messages_sent_to(a, current_user.email, [e]) }
     # end 
 
