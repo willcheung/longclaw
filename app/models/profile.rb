@@ -87,7 +87,7 @@ class Profile < ActiveRecord::Base
   end
 
   def location
-    (data_is_valid? && data.demographics.present?) ? (data.demographics.location_general || data.demographics.location_deduced.normalized_location || data.demographics.location_deduced.deduced_location) : nil
+    data.demographics.location_general || (data.demographics.location_deduced.present? && (data.demographics.location_deduced.normalized_location || data.demographics.location_deduced.deduced_location)) if (data_is_valid? && data.demographics.present?)
   end
 
   # TODO: temporary placeholder (might remove)
@@ -103,9 +103,9 @@ class Profile < ActiveRecord::Base
     facebook_bio = nil
     data.social_profiles.each do |sp|
       if sp.bio.present?
-        linkedin_bio = "(LinkedIn) " + sp.bio if sp.type.downcase == "linkedin"
-        twitter_bio = "(Twitter) " + sp.bio if sp.type.downcase == "twitter"
-        facebook_bio = "(Facebook) " + sp.bio if sp.type.downcase == "facebook"
+        linkedin_bio = sp.bio if sp.type.downcase == "linkedin"
+        twitter_bio = sp.bio if sp.type.downcase == "twitter"
+        facebook_bio = sp.bio if sp.type.downcase == "facebook"
         # puts "sp.type.downcase: #{sp.type.downcase}"
         # puts "linkedin_bio: #{linkedin_bio}"
         # puts "twitter_bio: #{twitter_bio}"
@@ -113,11 +113,11 @@ class Profile < ActiveRecord::Base
       end
     end
 
-    arr = []
-    arr << linkedin_bio if linkedin_bio.present?
-    arr << twitter_bio if twitter_bio.present?
-    arr << facebook_bio if facebook_bio.present?
-    "Social: " + arr.join(" —— ") if arr.present?
+    socialbio_arr = []
+    socialbio_arr << {type: "LinkedIn", text: linkedin_bio} if linkedin_bio.present?
+    socialbio_arr << {type: "Twitter", text: twitter_bio} if twitter_bio.present?
+    socialbio_arr << {type: "Facebook", text: facebook_bio} if facebook_bio.present?
+    socialbio_arr
   end
 
   private
