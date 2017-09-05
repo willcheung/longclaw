@@ -184,34 +184,31 @@ class User < ActiveRecord::Base
   def self.find_for_google_oauth2(auth, time_zone='UTC')
     info = auth.info
     credentials = auth.credentials
-    user = User.where(:oauth_provider => auth.provider, :oauth_provider_uid => auth.uid ).first
+    user = User.find_by(oauth_provider: auth.provider, oauth_provider_uid: auth.uid )
 
     if user
-      if credentials["refresh_token"].nil? or credentials["refresh_token"].empty?
-        user.update_attributes(oauth_access_token: credentials["token"],
-                               oauth_expires_at: Time.at(credentials["expires_at"]),
-                               time_zone: time_zone)
-      else
-        user.update_attributes(oauth_access_token: credentials["token"],
-                               oauth_expires_at: Time.at(credentials["expires_at"]),
-                               oauth_refresh_token: credentials["refresh_token"],
-                               time_zone: time_zone)
-      end
-      return user
+      user_attributes = {
+        oauth_access_token: credentials.token,
+        oauth_expires_at: Time.at(credentials.expires_at),
+        time_zone: time_zone
+      }
+      user_attributes[:oauth_refresh_token] = credentials.refresh_token if credentials.refresh_token.present?
+      user.update_attributes(user_attributes)
+      user
     else
       # Considered referred user if e-mail exists but not oauth elements
-      referred_user = User.where(:email => auth.info.email).first
+      referred_user = User.find_by_email(info.email)
       user_attributes = {
-        first_name: info["first_name"],
-        last_name: info["last_name"],
+        first_name: info.first_name,
+        last_name: info.last_name,
         oauth_provider: auth.provider,
-        email: info["email"],
-        image_url: info["image"],
+        email: info.email,
+        image_url: info.image,
         oauth_provider_uid: auth.uid,
         password: Devise.friendly_token[0,20],
-        oauth_access_token: credentials["token"],
-        oauth_refresh_token: credentials["refresh_token"],
-        oauth_expires_at: Time.at(credentials["expires_at"]),
+        oauth_access_token: credentials.token,
+        oauth_refresh_token: credentials.refresh_token,
+        oauth_expires_at: Time.at(credentials.expires_at),
         onboarding_step: Utils::ONBOARDING[:fill_in_info],
         role: OTHER_ROLE[:Trial],
         is_disabled: false,
@@ -225,8 +222,9 @@ class User < ActiveRecord::Base
         return referred_user
       else # New User
         user = User.create(user_attributes)
+        domain = info.email.include?('gmail.com') ? info.email : get_domain(info.email)
 
-        org = Organization.create_or_update_user_organization(get_domain(info["email"]), user)
+        org = Organization.create_or_update_user_organization(domain, user)
         user.update_attributes(organization_id: org.id)
 
         return user

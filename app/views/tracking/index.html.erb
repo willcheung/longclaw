@@ -54,7 +54,7 @@
                           <%= te.place_name %>
                       <% end %>
                     </span>
-                    <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i><%= device.name %> <%= device.os_name %> <%= device.device_name %>
+                    <span class="text-muted">&nbsp;&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %>
                       <% if te.domain %>
                           on <b><%= te.domain %></b> network
                       <% end %>
@@ -82,7 +82,7 @@
                                 <%= te.place_name %>
                             <% end %>
                           </span>
-                          <span class="text-muted">&nbsp;<% if device_class %><i class="fa <%= device_class %>"></i><%= device.name %> <%= device.os_name %> <%= device.device_name %><% end %>
+                          <span class="text-muted">&nbsp;&nbsp;<% if device_class %><i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %><% end %>
                             <% if te.domain %>
                                 <span>on <b><%= te.domain %></b> network</span>
                             <% end %>
@@ -124,7 +124,7 @@
           $('.tr-enable').toggleClass('hidden');
       }
       $('.tr-time').each(function () {
-          this.textContent = moment(this.textContent).fromNow() + ' (' + moment(this.textContent).format('lll') + ')';
+          this.textContent = moment(this.textContent).fromNow() + ' (' + moment(this.textContent).format('MMM D, h:mm A') + ')';
       });
       $('.tr-top-tracking').on('ajax:success', function (event, data) {
           console.log(data);
