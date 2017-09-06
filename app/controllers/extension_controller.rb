@@ -51,6 +51,10 @@ class ExtensionController < ApplicationController
   end
 
   def account
+    @arrowcollapsed = "⌃" # 'wider' caret / "\u2303".encode('utf-8')
+    # @arrowright = "►"   # collapsed / "\u25ba".encode('utf-8')
+    # @arrowdown = "▼"    # expanded / "\u25bc".encode('utf-8')
+
     # puts "current_user.tracking_requests.count: #{current_user.tracking_requests.count}"
     @people_with_profile = []
     params[:external].values.each do |e|

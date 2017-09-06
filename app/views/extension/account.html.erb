@@ -7,8 +7,14 @@
         font-weight: bold;
         color: black;
     }
+    .hover * {
+        background-color: #EEE;
+    }
     td > a, .link:hover  {
         text-decoration: underline;
+    }
+    .arrow-expanded {
+        transform: translateY(18px) rotateX(180deg);
     }
     .contact-group {
         font-size: 12px;
@@ -23,20 +29,32 @@
         border: none;
         border-bottom: 2px solid #EEE;
     }
-    .mainprofile-group {
+    .titleinfo-group {
         width: 100%;
+        margin: 2px 0;
     }
     .panel-title { /* sections; includes contact-name */
         font-size: 14px;
     }
-    .mainprofile-group .profile-pic-container {
+    .arrow { /* .titleinfo-group */
+        width: 1px;
+        height: 1px;
+        padding: 4px 22px;
+        font-size: 18px;
+        color: #AAA;
+        float: right;
+    }
+    .arrow .hidden { /* .titleinfo-group */
+        display: none;
+    }
+    .titleinfo-group .profile-pic-container {
         width: 48px;
     }
     .profile-pic {
-        height: 48px;
         width: 48px;
+        height: 48px;
         border-radius: 48px;
-        margin: 12px;
+        margin: 10px 6px;
         border: 1.5px solid grey;
         font-size: 22px;
         line-height: 42px;
@@ -64,11 +82,12 @@
         margin: 7px 3px;
         display: inline-block;
     }
-    .fa-plus-square {
+    /* disabled until we find functionality for the "+" */
+    /*.fa-plus-square {
         color: #999;
         padding: 0 1em;
-        display: none;  /* disabled until we find functionality for the "+" */
-    }
+        display: none;   
+    }*/
     .sfdc-icon {
         width: 1.5em;
     }
@@ -114,10 +133,6 @@
     .additionalinfo-group td {
         padding: 2px 0;
     }
-    .hover * {
-        background-color: #EEE;
-
-    }
 </style>
 
 <!-- TODO: move any relevant scripts to extension.js -->
@@ -125,7 +140,6 @@
     // $(function () {
     //     $('[data-toggle="tooltip"]').tooltip();
     // });
-
     $(document).ready(function(){
         // $(".panel-default").hover(
         //     function() {
@@ -139,12 +153,34 @@
         //     }
         // );
 
+        $("a").click(function(){
+            // Save the state of the arrow of the clicked element
+            var this_arrow_td = $('.arrow', this);
+            var arrow_is_expanded = this_arrow_td.attr("class").includes("arrow-expanded");
+
+            //Set all arrows to the collapsed state
+            $('.arrow').html("<%= @arrowcollapsed %>").removeClass('arrow-expanded').addClass('arrow-collapsed');
+
+            // Using saved state, toggle the arrow of the clicked element
+            if (arrow_is_expanded) {
+                this_arrow_td.removeClass('arrow-expanded');
+                this_arrow_td.html("<%= @arrowcollapsed %>");
+                this_arrow_td.addClass('arrow-collapsed');
+            } else {
+                this_arrow_td.removeClass('arrow-collapsed');
+                this_arrow_td.html("<%= @arrowcollapsed %>");
+                this_arrow_td.addClass('arrow-expanded');
+            }
+        });
+
         // anchor "link" workaround code to allow accordion to keep working, but allow user to click an anchor link inside of it
         $("a").hover(
             function(){
                 $(this).addClass("hover");
+                $('.arrow', this).removeClass('hidden');
             }, function() {
                 $(this).removeClass("hover");
+                $('.arrow', this).addClass('hidden');
             }
         );
         $(".link").click(function(){
@@ -160,7 +196,7 @@
         <span class="contact-group"><br/>PEOPLE IN E-MAIL</span>
     </div>
     <div>
-        <div class="panel-group" id="accordion">
+        <div id="accordion" class="panel-group">
         <% 2.times do |n| %>
             <% contacts_with_profile = (n == 0 ? @people_with_profile : @project_members_with_profile) %>
             <% if n == 1 && contacts_with_profile.present? %>
@@ -172,7 +208,7 @@
                 <div class="panel <%= "panel-default" if n == 0 && i == 0 %>" id="Profile-<%= person.id %>-<%= n %>">
                     <div>
                         <a data-toggle="collapse" data-parent="#accordion" href="#collapseProfile-<%= person.id %>-<%= n %>">
-                            <table class="mainprofile-group">
+                            <table class="titleinfo-group">
                                 <tbody>
                                     <tr>
                                         <td class="profile-pic-container">
@@ -193,9 +229,14 @@
                                                 </tbody>
                                             </table>
                                         </td>
-                                        <td>
+                                        <% if n == 0 && i == 0 %>
+                                            <td class="arrow arrow-expanded hidden"><%= @arrowcollapsed %></td>
+                                        <% else %>
+                                            <td class="arrow arrow-collapsed hidden"><%= @arrowcollapsed %></td>
+                                        <% end %>
+                                        <!-- <td>
                                             <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= person.id %>-<%= n %>"></i>
-                                        </td>
+                                        </td> -->
                                     </tr>
                                 </tbody>
                             </table>
@@ -316,4 +357,3 @@
         </div>
     </div>
 </body>
-
