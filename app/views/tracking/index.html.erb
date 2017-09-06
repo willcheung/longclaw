@@ -138,7 +138,7 @@
       })
 
       function sendShowMessage(email_id) {
-          parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
+          parent.parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
       }
   </script>
 </div>
