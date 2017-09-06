@@ -101,6 +101,7 @@ class ExtensionController < ApplicationController
     emails_uniq_opened_per_person.each { |e,c| @emails_pct_opened_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
     @emails_engagement_per_person = {}
     emails_total_opened_per_person.each { |e,c| @emails_engagement_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
+    puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
   def alerts_tasks

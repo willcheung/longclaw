@@ -98,8 +98,8 @@
         text-align: right;
     }
     button { /* used for easy styling: need to change */
-        width: 75px;
-        margin: 2px;
+        width: 80px;
+        margin: 1px;
         color: grey;
         background-color: white;
         border: 2px solid grey;
@@ -267,7 +267,7 @@
                                         <tr>
                                             <td><button><i class="fa fa-envelope-o fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_sent_per_person[p[:email]].present? ? @emails_sent_per_person[p[:email]] : 0 %></span><br/>Sent</button></td>
                                             <td><button><i class="fa fa-envelope-open-o fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_pct_opened_per_person[p[:email]].present? ? (@emails_pct_opened_per_person[p[:email]] * 100).round(0) : 0 %>%</span><br/>Opened</button></td>
-                                            <td><button><i class="fa fa-envelope-open fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_engagement_per_person[p[:email]].present? ? (@emails_engagement_per_person[p[:email]] * 100).round(1) : 0.0 %></span><br/>Engagement</button></td>
+                                            <td><button><i class="fa fa-envelope-open fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_engagement_per_person[p[:email]].present? ? (@emails_engagement_per_person[p[:email]]).round(1) : 0 %>x</span><br/>Engagement</button></td>
                                         </tr>
                                     </table></td>
                                 </tr>
