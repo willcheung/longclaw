@@ -228,27 +228,36 @@
                                     </tr>
                                 </tbody>
                             </table>
-                            <!-- <table class="emailmtgs-group">
+                            <table class="emailmtgs-group">
                                 <tr>
                                     <td>LAST E-MAIL&nbsp;<i class="fa fa-envelope-o" aria-hidden="true"></i></td>
-                                    <td><extrastrong>Great to see you today!</extrastrong> - Nov 10<br>Opened Nov 10 - 3:32pm</td>
+                                    <td>
+                                    <% if @last_email_sent_per_person[p[:email]].blank? %>
+                                        None
+                                    <% else %>
+                                        <extrastrong><%= @last_email_sent_per_person[p[:email]][:trackingrequest].subject %></extrastrong> - <%= @last_email_sent_per_person[p[:email]][:trackingrequest].sent_at.strftime('%b %d') %><br/>
+                                        <% if @last_email_sent_per_person[p[:email]][:trackingevent].present? %>
+                                            Opened <%= @last_email_sent_per_person[p[:email]][:trackingevent].date.strftime('%b %d') %> - <%= @last_email_sent_per_person[p[:email]][:trackingevent].date.strftime("%l:%M%P") %>
+                                        <% end %>
+                                    <% end %>
+                                    </td>
                                 </tr>
-                                <tr>
+                                <!-- <tr>
                                     <td>NEXT MEETING&nbsp;<i class="fa fa-calendar-o" aria-hidden="true"></i></td>
                                     <td><a href="#">Schedule Meeting</a></td>
                                 </tr>
                                 <tr>
                                     <td>LAST MEETING&nbsp;<i class="fa fa-calendar-check-o" aria-hidden="true"></i></td>
                                     <td><extrastrong>ContextSmith Sales Call</extrastrong><br>Aug 30 - 3:00pm</td>
-                                </tr>
+                                </tr> -->
                                 <tr>
                                     <td>ACTIONS</td>
                                     <td><a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= p[:email] %>&su=<%= "" %>&body=<%= "" %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"> Send e-mail</a>
-                                    &nbsp;&middot;&nbsp;
-                                    <a href="#" target="_blank"> Add a Note</a></td>
+                                    <!-- &nbsp;&middot;&nbsp;
+                                    <a href="#" target="_blank"> Add a Note</a></td> -->
                                 </tr>
                                 <tr><td></td></tr>
-                            </table> -->
+                            </table>
                             <table>
                                 <tr><td>&nbsp;</td></tr>
                                 <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activity of tracked e-mails. To track an e-mail, check the tracking checkbox when composing and sending an e-mail." title="Activity of tracked e-mails. To track an e-mail, check the tracking checkbox when composing and sending an e-mail."></i></td></tr>

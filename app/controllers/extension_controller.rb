@@ -66,29 +66,33 @@ class ExtensionController < ApplicationController
       end
     end
 
-    people_emails = @people_with_profile.map{|p| p[:email]} | @project_members_with_profile.map{|p| p[:email]}
-    # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com']
-    tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current)#.limit(5)
+    people_emails = @people_with_profile.map{|p| p[:email].downcase} | @project_members_with_profile.map{|p| p[:email].downcase}
+    tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
     
+    @last_email_sent_per_person = {}
     @emails_sent_per_person = {}
     emails_uniq_opened_per_person = {}
     emails_total_opened_per_person = {}
     tracking_requests_this_pastmonth.each do |r| 
       people_emails.map do |e|
-        if r.recipients.include? e
+        if r.recipients.map{ |r| r.downcase }.include? e
           emails_sent = @emails_sent_per_person[e].present? ? @emails_sent_per_person[e] : 0
           emails_sent += 1 
 
           emails_uniq_opens = emails_uniq_opened_per_person[e].present? ? emails_uniq_opened_per_person[e] : 0
           emails_total_opens = emails_total_opened_per_person[e].present? ? emails_total_opened_per_person[e] : 0
 
-          tracking_events = r.tracking_events
+          tracking_events = r.tracking_events.order("date DESC")
           emails_uniq_opens += 1 if tracking_events.limit(1).present?
           emails_total_opens += tracking_events.count
 
           @emails_sent_per_person[e] = emails_sent
           emails_uniq_opened_per_person[e] = emails_uniq_opens
-          emails_total_opened_per_person[e] = emails_total_opens 
+          emails_total_opened_per_person[e] = emails_total_opens
+          
+          if @last_email_sent_per_person[e].blank?
+            @last_email_sent_per_person[e] = {trackingrequest: r, trackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil}
+          end
         end
       end # End: people_emails.map do |e|
     end 
