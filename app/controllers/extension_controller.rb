@@ -12,7 +12,7 @@ class ExtensionController < ApplicationController
   end
 
   def index
-    # gmail extension provided an e-mail adress of the currently logged in user
+    # gmail extension provided an email address of the currently logged in user
     @gmail_user = params[:email] ? params[:email] : nil
   end
 
@@ -270,7 +270,7 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact e-mails; returns nil if one cannot be determined.
+  # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact emails; returns nil if one cannot be determined.
   def find_matching_sfdc_account(client, emails=[])
 
     return nil if client.nil? || emails.blank?  # abort if connection invalid or no emails passed
@@ -285,10 +285,10 @@ class ExtensionController < ApplicationController
 
     return if contacts_with_accounts.nil?
 
-    #### Match SFDC Account by contact e-mail
-    print "Attempting to match contacts by e-mail..."  
+    #### Match SFDC Account by contact email
+    print "Attempting to match contacts by email..."  
 
-    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new(Array.new)) { |p, memo| memo[p[0]] += [p[1]] }  # obtain a hash of contact e-mails with AccountId as the keys
+    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new(Array.new)) { |p, memo| memo[p[0]] += [p[1]] }  # obtain a hash of contact emails with AccountId as the keys
 
     account_contact_matches_by_email = Hash.new(0)
     emails.each do |e| 
@@ -296,7 +296,7 @@ class ExtensionController < ApplicationController
     end
 
     account_contact_matches_by_email = account_contact_matches_by_email.to_a.sort_by {|r| r[1]}.reverse  # sort by most-frequent first
-    #puts "E-mail matches by account: #{account_contact_matches_by_email}" 
+    #puts "Email matches by account: #{account_contact_matches_by_email}" 
     if account_contact_matches_by_email.empty?
       #puts "No match!"  # continue with domain matching
     elsif account_contact_matches_by_email.length == 1 || account_contact_matches_by_email.first[1] != account_contact_matches_by_email.second[1]
@@ -306,7 +306,7 @@ class ExtensionController < ApplicationController
       #puts "Ambiguous, because tied!"  # continue with domain matching
     end
 
-    #### Match SFDC Account by contact e-mail domains
+    #### Match SFDC Account by contact email domains
     print "unsuccessful. Trying to match contacts by domain..."
     
     domains = emails.map {|e| get_domain(e)}
@@ -320,7 +320,7 @@ class ExtensionController < ApplicationController
       else
         memo[c_domain][c_account] = memo[c_domain][c_account].nil? ? 1 : memo[c_domain][c_account] + 1
       end
-    end # obtain a hash of another hash (AccountId's with the total occurence of domains found in contact e-mails) with domains as the keys. 
+    end # obtain a hash of another hash (AccountId's with the total occurence of domains found in contact emails) with domains as the keys. 
     # e.g.,:  { "aol.com"   => {"AccountA"=>1, "AccountC"=>2}, 
     #           "apple.com" => {"AccountA"=>1},
     #           "gmail.com" => {"AccountB"=>1} }
