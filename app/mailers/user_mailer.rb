@@ -17,7 +17,8 @@ class UserMailer < ApplicationMailer
     @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
  
     puts "Checking daily subscription for #{user.email}"
-    unless @subs.blank? && @upcoming_meetings.blank?
+    # Currently, will not send a daily summary e-mail unless user is subscribed to at least one project/opportunity.  TODO: Create a setting for subscribing to daily e-mail for calendar events.
+    unless @subs.blank? #&& @upcoming_meetings.blank?
       @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email, :account_with_contacts_for_daily_email)
       @updates_today = @updates_today.map do |proj|
         # create a copy of each project to avoid deleting records when filtering relations
