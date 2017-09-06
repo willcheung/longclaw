@@ -212,6 +212,7 @@ class User < ActiveRecord::Base
         onboarding_step: Utils::ONBOARDING[:fill_in_info],
         role: ROLE[:Basic],
         is_disabled: false,
+        refresh_inbox: false,
         time_zone: time_zone
       }
 

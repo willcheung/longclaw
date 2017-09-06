@@ -22,6 +22,7 @@ module Devise
               onboarding_step: Utils::ONBOARDING[:fill_in_info],
               role: User::ROLE[:Basic],
               is_disabled: false,
+              refresh_inbox: false,
               organization: org
             )
           end
