@@ -96,6 +96,7 @@
         /*font-size: 8px;*/
         padding: 10px 12px 0 0;
         text-align: right;
+        width: 85px;
     }
     button { /* used for easy styling: need to change */
         width: 80px;
@@ -163,7 +164,7 @@
         <% 2.times do |n| %>
             <% contacts_with_profile = (n == 0 ? @people_with_profile : @project_members_with_profile) %>
             <% if n == 1 && contacts_with_profile.present? %>
-                <span class="contact-group"><br/>PEOPLE IN <%= @project.name.upcase %></span>
+                <span class="contact-group"><br/>MORE PEOPLE AT <%= @project.name.upcase %></span>
             <% end %>
             <% contacts_with_profile.each_with_index do |p, i| %>
                 <% person = p[:profile] %>

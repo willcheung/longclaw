@@ -57,16 +57,19 @@ class ExtensionController < ApplicationController
       @people_with_profile << {email: e.second.to_s, profile: Profile.find_or_create_by_email(e.second.to_s)}
     end
     
+    people_emails = @people_with_profile.map{|p| p[:email].downcase}
+
     # Only show confirmed and external contacts
     @project_members_with_profile = []
     @account.projects.first.project_members.each do |pm|
-      if pm.contact.present? 
+      if pm.contact.present? && !(people_emails.include? pm.contact.email)
         email = pm.contact.email
         @project_members_with_profile << {email: email, profile: Profile.find_or_create_by_email(email)}
       end
     end
 
-    people_emails = @people_with_profile.map{|p| p[:email].downcase} | @project_members_with_profile.map{|p| p[:email].downcase}
+    people_emails += @project_members_with_profile.map{|p| p[:email].downcase}
+    # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
     tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
     
     @last_email_sent_per_person = {}
@@ -101,7 +104,7 @@ class ExtensionController < ApplicationController
     emails_uniq_opened_per_person.each { |e,c| @emails_pct_opened_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
     @emails_engagement_per_person = {}
     emails_total_opened_per_person.each { |e,c| @emails_engagement_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
-    puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
+    # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
   def alerts_tasks
