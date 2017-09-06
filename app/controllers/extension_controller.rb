@@ -56,7 +56,6 @@ class ExtensionController < ApplicationController
     params[:external].values.each do |e|
       @people_with_profile << {email: e.second.to_s, profile: Profile.find_or_create_by_email(e.second.to_s)}
     end
-    @conversations_thispastmonth = @account.projects.first.activities.conversations#.from_lastmonth
     
     # Only show confirmed and external contacts
     @project_members_with_profile = []
@@ -68,14 +67,36 @@ class ExtensionController < ApplicationController
     end
 
     people_emails = @people_with_profile.map{|p| p[:email]} | @project_members_with_profile.map{|p| p[:email]}
-
+    # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com']
+    tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current)#.limit(5)
+    
     @emails_sent_per_person = {}
-    # people_emails.map do |e|
-    #   @emails_sent_per_person[e] = @conversations_thispastmonth.inject(0){ |sum, a| sum + Activity.email_messages_sent_to(a, current_user.email, [e]) }
-    # end 
+    emails_uniq_opened_per_person = {}
+    emails_total_opened_per_person = {}
+    tracking_requests_this_pastmonth.each do |r| 
+      people_emails.map do |e|
+        if r.recipients.include? e
+          emails_sent = @emails_sent_per_person[e].present? ? @emails_sent_per_person[e] : 0
+          emails_sent += 1 
 
-    # @conversations_from_thisuser_thispastmonth = @account.projects.first.activities.conversations.from_lastmonth.where("\"from\" @> '[{\"address\":\"#{ current_user.email }\"}]'::jsonb").where("\"to\" || \"cc\" @> '[{\"address\":\"#{ "shelby@plugandplaytechcenter.com" }\"}]'::jsonb")
-    # @activities_lastmonth.where("\"from\" @> '[{\"address\":\"#{ current_user.email }\"}]'::jsonb AND \"to\" || \"cc\" @> '[{\"address\":\"#{ "shelby@plugandplaytechcenter.com" }\"}]'::jsonb")
+          emails_uniq_opens = emails_uniq_opened_per_person[e].present? ? emails_uniq_opened_per_person[e] : 0
+          emails_total_opens = emails_total_opened_per_person[e].present? ? emails_total_opened_per_person[e] : 0
+
+          tracking_events = r.tracking_events
+          emails_uniq_opens += 1 if tracking_events.limit(1).present?
+          emails_total_opens += tracking_events.count
+
+          @emails_sent_per_person[e] = emails_sent
+          emails_uniq_opened_per_person[e] = emails_uniq_opens
+          emails_total_opened_per_person[e] = emails_total_opens 
+        end
+      end # End: people_emails.map do |e|
+    end 
+
+    @emails_pct_opened_per_person = {}
+    emails_uniq_opened_per_person.each { |e,c| @emails_pct_opened_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
+    @emails_engagement_per_person = {}
+    emails_total_opened_per_person.each { |e,c| @emails_engagement_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
   end
 
   def alerts_tasks

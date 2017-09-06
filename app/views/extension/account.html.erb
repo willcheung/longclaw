@@ -119,8 +119,12 @@
     }
 </style>
 
-<!-- TODO: move this script to extension.js -->
+<!-- TODO: move any relevant scripts to extension.js -->
 <script type="text/javascript">
+    // $(function () {
+    //     $('[data-toggle="tooltip"]').tooltip();
+    // });
+
     $(document).ready(function(){
         // $(".panel-default").hover(
         //     function() {
@@ -245,6 +249,21 @@
                                 </tr>
                                 <tr><td></td></tr>
                             </table> -->
+                            <table>
+                                <tr><td>&nbsp;</td></tr>
+                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activity of tracked e-mails. To track an e-mail, check the tracking checkbox when composing and sending an e-mail." title="Activity of tracked e-mails. To track an e-mail, check the tracking checkbox when composing and sending an e-mail."></i></td></tr>
+                                <tr>
+                                    <td><table>
+                                    <!-- TODO: Don't use buttons to style? -->
+                                        <tr>
+                                            <td><button><i class="fa fa-envelope-o fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_sent_per_person[p[:email]].present? ? @emails_sent_per_person[p[:email]] : 0 %></span><br/>Sent</button></td>
+                                            <td><button><i class="fa fa-envelope-open-o fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_pct_opened_per_person[p[:email]].present? ? (@emails_pct_opened_per_person[p[:email]] * 100).round(0) : 0 %>%</span><br/>Opened</button></td>
+                                            <td><button><i class="fa fa-envelope-open fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_engagement_per_person[p[:email]].present? ? (@emails_engagement_per_person[p[:email]] * 100).round(1) : 0.0 %></span><br/>Engagement</button></td>
+                                        </tr>
+                                    </table></td>
+                                </tr>
+                                <tr><td>&nbsp;</td></tr>
+                            </table>
                             <% if person.location.present? || person.websites.present? || person.bio.present? %>
                             <table class="additionalinfo-group">
                                 <tr><td></td></tr>
