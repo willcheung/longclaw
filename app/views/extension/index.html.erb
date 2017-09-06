@@ -3,7 +3,8 @@
 
 <script>
     // inform the extension code that the user is logged in
-    parent.postMessage({type: 'cs-user-logged-in'}, "https://mail.google.com");
+    // iframe is embedded deep, thus we need to post from parent of parent
+    parent.parent.postMessage({type: 'cs-user-logged-in'}, "https://mail.google.com");
 </script>
 <% if @gmail_user && @gmail_user != current_user.email %>
     <div class="container text-center well">
