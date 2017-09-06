@@ -3,13 +3,18 @@
 # Table name: tracking_events
 #
 #  id          :integer          not null, primary key
-#  tracking_id :string(255)
+#  tracking_id :string
 #  date        :datetime
 #  user_agent  :string
 #  place_name  :string
 #  event_type  :string
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
+#  domain      :string
+#
+# Indexes
+#
+#  index_tracking_events_on_tracking_id  (tracking_id)
 #
 
 require 'device_detector'

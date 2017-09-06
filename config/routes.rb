@@ -34,6 +34,7 @@ Longclaw::Application.routes.draw do
 
     resources :project_members
     resources :users
+    get 'user/me' => 'users#me'
 
     resources :notifications, only: [:index, :update, :create] do
       member do
@@ -171,6 +172,7 @@ Longclaw::Application.routes.draw do
   scope "hooks", controller: :hooks, as: 'hooks' do
     post "jira"
     post "zendesk"
+    post 'fullcontact'
   end
 
   #scope 'tracking', controller: :tracking, as: 'tracking' do

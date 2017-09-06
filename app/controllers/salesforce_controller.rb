@@ -3,7 +3,7 @@ class SalesforceController < ApplicationController
   before_action :get_current_org_users, only: :index
 
   # For accessing Project#show page+tabs from a Salesforce Visualforce iframe page
-  # The route is in the form GET http(s)://<root_url>/salesforce/?id=<sfdc_opportunity_id>&pid=<cs_opportunity_id> ("&actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
+  # The route is in the form GET http(s)://<host_url>/salesforce/?id=<salesforce_account_id>&pid=<contextsmith_project_id> ("&pid" and &actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
   def index
     @category_param = []
     @filter_email = []
@@ -26,7 +26,7 @@ class SalesforceController < ApplicationController
 
     @is_mapped_to_CS_account = true
 
-    @actiontype = (params[:actiontype].present? && (["index", "show", "filter_timeline", "more_timeline", "pinned_tab", "tasks_tab", "insights_tab", "arg_tab"].include? params[:actiontype])) ? params[:actiontype] : 'show'
+    @actiontype = (params[:actiontype].present? && (["index", "show", "filter_timeline", "more_timeline", "tasks_tab", "insights_tab", "arg_tab"].include? params[:actiontype])) ? params[:actiontype] : 'show'
 
     # check if CS account_id is valid and in the scope
     @opportunities_mapped = Project.visible_to(current_user.organization_id, current_user.id).where(account_id: cs_account.id)
@@ -56,13 +56,16 @@ class SalesforceController < ApplicationController
         @final_filter_user = @project.all_involved_people(current_user.email)
         # get data for time series filter
         @activities_by_category_date = @project.daily_activities(current_user.time_zone).group_by { |a| a.category }
-      elsif @actiontype == "pinned_tab"
-        @pinned_activities = @project.activities.pinned.visible_to(current_user.email).includes(:comments)
+        @pinned_activities = @project.activities.pinned.visible_to(current_user.email).reverse
+        # get categories for category filter
+        @categories = @activities_by_category_date.keys
+        @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
       elsif @actiontype == "tasks_tab"
         # show every risk regardless of private conversation
         @notifications = @project.notifications
       elsif @actiontype == "arg_tab" # Account Relationship Graph
-        @data = @project.activities.where(category: %w(Conversation Meeting))
+        @data = @project.activities.where(category: %w(Conversation Meeting)).ids
+        @contacts = @project.contact_relationship_metrics
       end
     end
 
@@ -671,17 +674,20 @@ class SalesforceController < ApplicationController
   ### TODO: get_show_data and load_timeline are copies from ProjectsController, should be combined for better maintenance/to keep in sync with projects#show
   def get_show_data
     # metrics
-    #@project_risk_score = @project.new_risk_score(current_user.time_zone)
-    @project_open_risks_count = @project.notifications.open.alerts.count
-    @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    @project_close_date = @project.close_date.nil? ? nil : @project.close_date.strftime('%Y-%m-%d')
+    @project_renewal_date = @project.renewal_date.nil? ? nil : @project.renewal_date.strftime('%Y-%m-%d')
     @project_open_tasks_count = @project.notifications.open.count
-    project_rag_score = @project.activities.latest_rag_score.first
 
-    if project_rag_score
-      @project_rag_status = project_rag_score['rag_score']
-    end
+    # Removing RAG status - old metric
+    # project_rag_score = @project.activities.latest_rag_score.first
+    # if project_rag_score
+    #   @project_rag_status = project_rag_score['rag_score']
+    # end
 
     # old metrics
+    # @project_risk_score = @project.new_risk_score(current_user.time_zone)
+    # @project_pinned_count = @project.activities.pinned.visible_to(current_user.email).count
+    # @project_open_risks_count = @project.notifications.open.alerts.count
     # @project_last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
     # project_last_touch = @project.conversations.find_by(last_sent_date: @project_last_activity_date)
     # @project_last_touch_by = project_last_touch ? project_last_touch.from[0].personal : "--"
@@ -697,17 +703,39 @@ class SalesforceController < ApplicationController
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
     @clearbit_domain = @project.account.domain? ? @project.account.domain : (@project.account.contacts.present? ? @project.account.contacts.first.email.split("@").last : "")
 
-    # for merging projects/opportunities, for future use
+    # for merging projects, for future use
     # @account_projects = @project.account.projects.where.not(id: @project.id).pluck(:id, :name)
   end
 
+  # Copied directly from ProjectsController#load_timeline
   def load_timeline
-    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :comments)
+    activities = @project.activities.visible_to(current_user.email).includes(:notifications, :attachments, :comments)
+    @pinned_ids = activities.pinned.ids.reverse # get ids of Key Activities to show number on stars
     # filter by categories
     @filter_category = []
     if params[:category].present?
       @filter_category = params[:category].split(',')
-      activities = activities.where(category: @filter_category)
+
+      # special cases: if Attachment or Pinned category filters selected, remove from normal WHERE condition and handle differently below
+      if @filter_category.include?(Notification::CATEGORY[:Attachment]) || @filter_category.include?(Activity::CATEGORY[:Pinned])
+        where_categories = @filter_category - [Notification::CATEGORY[:Attachment], Activity::CATEGORY[:Pinned]]
+        category_condition = "activities.category IN ('#{where_categories.join("','")}')"
+
+        # Attachment filter selected, need to INCLUDE conversations with child attachments but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Notification::CATEGORY[:Attachment])
+          activities = activities.joins("LEFT JOIN notifications AS attachment_notifications ON attachment_notifications.activity_id = activities.id AND attachment_notifications.category = '#{Notification::CATEGORY[:Attachment]}'").distinct
+          category_condition += " OR (activities.category = '#{Activity::CATEGORY[:Conversation]}' AND attachment_notifications.id IS NOT NULL)"
+        end
+
+        # Pinned filter selected, need to INCLUDE pinned activities regardless of type but NOT EXCLUDE other categories chosen with filter
+        if @filter_category.include?(Activity::CATEGORY[:Pinned])
+          category_condition += " OR activities.is_pinned IS TRUE"
+        end
+
+        activities = activities.where(category_condition)
+      else
+        activities = activities.where(category: @filter_category)
+      end
     end
     # filter by people
     @filter_email = []

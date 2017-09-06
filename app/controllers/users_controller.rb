@@ -9,6 +9,12 @@ class UsersController < ApplicationController
     end
   end
 
+  def me
+    @user = current_user.slice(:first_name, :last_name, :email, :image_url, :time_zone, :title)
+
+    render json: @user
+  end
+
   def destroy
     @user.destroy
     respond_to do |format|

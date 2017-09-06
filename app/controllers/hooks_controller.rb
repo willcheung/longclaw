@@ -59,4 +59,17 @@ class HooksController < ApplicationController
     render nothing: true
   end
 
+  def fullcontact
+    data = Hashie::Mash.new(JSON.parse(request.body.read))
+    data.webhookId = JSON.parse(data.webhookId)
+    profile = Profile.find_by_id(data.webhookId.id) || Profile.find_by_email(data.webhookId.email)
+    if profile.present?
+      profile.update(data: data.result)
+    else
+      puts "** Caution: FullContact webhook tried to update a Profile with id=#{data.webhookId.id} or email=#{data.webhookId.email}, but it could not be found! **"
+    end
+
+    render nothing: true
+  end
+
 end

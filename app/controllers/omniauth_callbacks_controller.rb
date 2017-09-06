@@ -11,13 +11,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
 	def google_oauth2
-    allowed_emails = %w(willycheung@gmail.com indifferenzetester@gmail.com)
     auth = request.env["omniauth.auth"]
-
-    if auth.info.email.include?('gmail.com') and !allowed_emails.include?(auth.info.email)
-      redirect_to home_access_denied_path
-      return
-    end
 
     @user = User.find_for_google_oauth2(auth, (cookies[:timezone] || 'UTC'))
 

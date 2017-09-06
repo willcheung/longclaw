@@ -6,8 +6,8 @@
 -->
 
   <ul class="nav nav-tabs navbar-fixed-top" style="background-color: white;" role="tablist">
-    <li class="active" role="presentation"><a href="#section1" aria-controls="home" role="tab" data-toggle="tab">Opened</a></li>
-    <li role="presentation"><a href="#section2" aria-controls="profile" role="tab" data-toggle="tab">Unopened</a></li>
+    <li class="active" role="presentation"><a href="#section1" aria-controls="home" role="tab" data-toggle="tab"><i class="fa fa-envelope-open-o" aria-hidden="true"></i>Opened</a></li>
+    <li role="presentation"><a href="#section2" aria-controls="profile" role="tab" data-toggle="tab"><i class="fa fa-envelope-o" aria-hidden="true"></i>Unopened</a></li>
   </ul>
 
   <div class="tab-content" style="padding-top: 70px;">
@@ -15,24 +15,50 @@
     <div id="section1" class="container-fluid tab-pane active">
       <!-- <h3>Opened</h3 >-->
       <ul class="list-group">
-        <% if @opened.size == 0 %>
-            <li class="list-group-item"><span class="text-muted">None</span></li>
+        <% if @unopened.size == 0 && @opened.size == 0 %>
+            <div class="">
+              <div class="container">
+                <h2 class="text-center">
+                  <i class="fa fa-frown-o" aria-hidden="true"></i> No emails tracked yet. Send some emails and see if your recipients are reading them.
+                </h2>
+                <div class="text-center">
+                  <img height="400px" src="/assets/images/no_emails.svg">
+                </div>
+              </div>
+            </div>
+        <% elsif @opened.size == 0 %>
+            <li class="list-group-item"><span class="text-muted"><i class="fa fa-frown-o" aria-hidden="true"></i> None of your emails have been opened yet</span></li>
         <% else %>
             <% @opened.each do |tr| %>
-                <% latest = tr.tracking_events[0]
-                   device = latest.device
+                <% te = tr.tracking_events[0]
+                   device = te.device
                    device_class = @device_to_icon[device.device_type]
-                   new_event = latest.date > @tracking_setting.last_seen ? 'list-group-item-info' : ''
+                   new_event = te.date > @tracking_setting.last_seen ? 'list-group-item-info' : ''
+                   nice_place = (te.place_name != 'Unknown' && te.place_name != 'Gmail')
                 %>
                 <li class="list-group-item <%= new_event %>">
-                  <div class="pull-right"><%= button_to (tr.status == 'active' ? 'Pause Tracking' : 'Resume Tracking'), {action: 'toggle', tracking_id: tr.tracking_id}, {class: 'btn btn-default btn-sm', form_class: 'tr-top-tracking', remote: true} %></div>
-                  <div><b><%= tr.recipients_to_list %></b> opened your message
-                    <b><span class="tr-time"><%= latest.date %></span></b></div>
+                  <div class="pull-right">
+                    <button class="btn btn-default btn-sm btn-outline" onclick="sendShowMessage('<%= tr.email_id %>');">Show</button>
+                    <div style="display:inline-block;"><%= button_to (tr.status == 'active' ? 'Pause Tracking' : 'Resume Tracking'), {action: 'toggle', tracking_id: tr.tracking_id}, {class: 'btn btn-default btn-sm btn-outline', form_class: 'tr-top-tracking', remote: true} %>
+                    </div>
+                  </div>
+
+                  <div><b><%= tr.someone.capitalize %></b> opened your message
+                    <b><span class="tr-time"><%= te.date %></span></b></div>
                   <div><b><%= tr.subject %></b> that was sent by you <span class="tr-time"><%= tr.sent_at %></span>
                   </div>
                   <div>
-                    <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<%= latest.place_name %></span>
-                    <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %></span>
+                    <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>
+                      <% if nice_place %><a target="_blank" href="https://maps.google.com/?q=<%= te.place_name %>"><%= te.place_name %></a>
+                      <% else %>
+                          <%= te.place_name %>
+                      <% end %>
+                    </span>
+                    <span class="text-muted">&nbsp;&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %>
+                      <% if te.domain %>
+                          on <b><%= te.domain %></b> network
+                      <% end %>
+                    </span>
                   </div>
                   <div class="text-muted"><a src="#" class="tr-show-more">Opened <%= tr.tracking_events.length %>
                     time<%= 's' if tr.tracking_events.length > 1 %>.
@@ -45,12 +71,22 @@
                     <% tr.tracking_events.each do |te| %>
                         <% device = te.device
                            device_class = @device_to_icon[device.device_type]
-                           new_event = latest.date > @tracking_setting.last_seen ? 'text-info' : ''
+                           new_event = te.date > @tracking_setting.last_seen ? 'text-info' : ''
+                           nice_place = (te.place_name != 'Unknown' && te.place_name != 'Gmail')
                         %>
                         <div>
-                          <b><span class="tr-time <%= new_event %>"><%= te.date %></span></b>
-                          <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<%= te.place_name %></span>
-                          <span class="text-muted">&nbsp;<i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %></span>
+                          <b><span class="tr-time <%= new_event %>"><%= te.date %></span>&nbsp;&nbsp;</b>
+                          <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>
+                            <% if nice_place %><a target="_blank" href="https://maps.google.com/?q=<%= te.place_name %>"><%= te.place_name %></a>
+                            <% else %>
+                                <%= te.place_name %>
+                            <% end %>
+                          </span>
+                          <span class="text-muted">&nbsp;&nbsp;<% if device_class %><i class="fa <%= device_class %>"></i>&nbsp;<%= device.name %> <%= device.os_name %> <%= device.device_name %><% end %>
+                            <% if te.domain %>
+                                <span>on <b><%= te.domain %></b> network</span>
+                            <% end %>
+                          </span>
                         </div>
                     <% end %>
                   </div>
@@ -62,11 +98,19 @@
     <div id="section2" class="container-fluid tab-pane">
       <!-- <h3>Unopened</h3> -->
       <ul class="list-group">
-        <% if @unopened.size == 0 %>
-            <li class="list-group-item"><span class="text-muted">None</span></li>
+         <% if @unopened.size == 0 && @opened.size == 0 %>
+            <div>
+              <i class="fa fa-frown-o" aria-hidden="true"></i> No emails tracked yet. Send some emails and see if your recipients are reading them.
+            </div>
+        <% elsif @unopened.size == 0 %>
+            <li class="list-group-item"><span class="text-muted"><i class="fa fa-smile-o" aria-hidden="true"></i> Great, all your emails have been opened!</span></li>
         <% else %>
         <% @unopened.each do |tr| %>
             <li class="list-group-item">
+              <div class="pull-right">
+                <button class="btn btn-default btn-sm btn-outline" onclick="sendShowMessage('<%= tr.email_id %>');">Show</button>
+              </div>
+
               <div><b><%= tr.recipients_to_list %></b> hasn't opened the message</div>
               <div><b><%= tr.subject %></b> that was sent by you <span class="tr-time"><%= tr.sent_at %></span></div>
             </li>
@@ -76,21 +120,25 @@
     </div>
   </div>
   <script>
-    if (Notification.permission === 'default') {
-        $('.tr-enable').toggleClass('hidden');
-    }
+      if (Notification.permission === 'default') {
+          $('.tr-enable').toggleClass('hidden');
+      }
       $('.tr-time').each(function () {
-          this.textContent = moment(this.textContent).fromNow() + ' (' + moment(this.textContent).format('lll') + ')';
+          this.textContent = moment(this.textContent).fromNow() + ' (' + moment(this.textContent).format('MMM D, h:mm A') + ')';
       });
       $('.tr-top-tracking').on('ajax:success', function (event, data) {
           console.log(data);
           let active = data.status && data.status != 'inactive';
-          $(this).find('.btn').val(active ? 'Stop Tracking' : 'Continue Tracking');
+          $(this).find('.btn').val(active ? 'Pause Tracking' : 'Resume Tracking');
       });
       $('.tr-show-more').click(function () {
           $(this).find('.tr-show-more-icon').toggleClass('hidden');
           $(this).parent().siblings('.tr-all-events').toggleClass('hidden');
 
       })
+
+      function sendShowMessage(email_id) {
+          parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
+      }
   </script>
 </div>
