@@ -478,7 +478,7 @@ class Activity < ActiveRecord::Base
   end
 
   def email_addresses
-    carbon_copy =  cc || []
+    carbon_copy = cc || []
     sent_to = to || []
 
     emails = Set.new
