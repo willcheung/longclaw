@@ -24,6 +24,8 @@ class TrackingRequest < ActiveRecord::Base
   has_many :tracking_events, :primary_key => "tracking_id", :foreign_key => "tracking_id", :class_name => "TrackingEvent"
            -> { order(date: :desc) }
 
+  scope :from_lastmonth, -> { where sent_at: 1.month.ago.midnight..Time.current }
+
   def recipients_to_list
     self.recipients.join(', ')
   end
