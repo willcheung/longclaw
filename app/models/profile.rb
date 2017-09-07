@@ -100,7 +100,7 @@ class Profile < ActiveRecord::Base
 
   # Obtain the bio found in LinkedIn, Twitter, and Facebook (in that order), and returns an array of hashes with type and (bio) text. 
   def bio
-    return nil if !data_is_valid?
+    return nil if !data_is_valid? || data.social_profiles.blank?
 
     linkedin_bio = nil
     twitter_bio = nil
