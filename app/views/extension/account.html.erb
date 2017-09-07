@@ -13,9 +13,6 @@
     td > a, .link:hover  {
         text-decoration: underline;
     }
-    .arrow-expanded {
-        transform: translateY(18px) rotateX(180deg);
-    }
     .contact-group {
         font-size: 12px;
         font-weight: bold;
@@ -37,15 +34,18 @@
         font-size: 14px;
     }
     .arrow { /* .titleinfo-group */
-        width: 1px;
-        height: 1px;
-        padding: 4px 22px;
-        font-size: 18px;
         color: #AAA;
+        background-color: transparent;
+        padding: 0px 4px;
+        font-size: 18px;
         float: right;
+        white-space:nowrap;
     }
-    .arrow .hidden { /* .titleinfo-group */
-        display: none;
+    .arrow-expanded {
+        transform: translateY(-8px) rotateX(180deg);
+    }
+    .visibility-hidden { /* bootstrap overrides .hidden  */
+        visibility: hidden;
     }
     .titleinfo-group .profile-pic-container {
         width: 48px;
@@ -177,10 +177,10 @@
         $("a").hover(
             function(){
                 $(this).addClass("hover");
-                $('.arrow', this).removeClass('hidden');
+                $('.arrow', this).removeClass('visibility-hidden');
             }, function() {
                 $(this).removeClass("hover");
-                $('.arrow', this).addClass('hidden');
+                $('.arrow', this).addClass('visibility-hidden');
             }
         );
         $(".link").click(function(){
@@ -230,9 +230,9 @@
                                             </table>
                                         </td>
                                         <% if n == 0 && i == 0 %>
-                                            <td class="arrow arrow-expanded hidden"><%= @arrowcollapsed %></td>
+                                            <td class="arrow arrow-expanded visibility-hidden"><%= @arrowcollapsed %></td>
                                         <% else %>
-                                            <td class="arrow arrow-collapsed hidden"><%= @arrowcollapsed %></td>
+                                            <td class="arrow arrow-collapsed visibility-hidden"><%= @arrowcollapsed %></td>
                                         <% end %>
                                         <!-- <td>
                                             <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= person.id %>-<%= n %>"></i>
