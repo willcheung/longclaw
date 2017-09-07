@@ -13,7 +13,8 @@
       <a class="btn btn-primary btn-sm oauth" href="<%= destroy_user_session_path(:extension => true) %>"><span>Logout</span></a>
     </div>
 <% else %>
-    <h4 class="text-center middle-box" style="margin-top: 100px">Click on an e-mail to see<br/> more account info.</h4>
+    <h4 class="text-center middle-box" style="margin-top: 100px">Click on an email or hover over<br>the sender to see contact profile here.</h4>
+    <img class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
     <% if params[:login] %>
         <!-- if params[:login] is set, redirected here after signing in successfully from extension -->
         <script type="text/javascript">

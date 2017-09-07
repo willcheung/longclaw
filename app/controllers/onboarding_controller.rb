@@ -3,18 +3,20 @@ require "erb"
 include ERB::Util
 
 class OnboardingController < ApplicationController
-	layout 'empty', except: ['tutorial']
+	layout 'empty', except: ['tutorial', 'extension_tutorial']
+	# layout false, only: ['tutorial', 'extension_tutorial']
 
   def fill_in_info
     start_new_user
   end
 
   def extension_tutorial
+    render layout: false
     start_new_user(Utils::ONBOARDING[:onboarded])
   end
 
 	def tutorial
-		render layout: false
+    render layout: false
 		# change user onboarding status
 		if current_user.mark_private == true # Skip this step if you're VP level or above (all 1-1 e-mails are private)
 			current_user.update_attributes(onboarding_step: Utils::ONBOARDING[:onboarded])
