@@ -44,7 +44,7 @@ module ApplicationHelper
     when Activity::CATEGORY[:Basecamp2]
       '#91e8e1'
     else
-      '#7cb5ec'  # light blue
+      '#7cb5ec'  # "CS blue" / light blue
     end
   end
 

@@ -85,6 +85,7 @@ class Contact < ActiveRecord::Base
   end
 
   def self.find_or_create_from_email_info(address, personal, project, status=ProjectMember::STATUS[:Pending], source=nil)
+    address = address.downcase
     org = project.account.organization
     domain = get_domain(address)
     puts "** Skipped creating Contact for #{address}, invalid domain='#{domain}'. **" && return unless valid_domain?(domain)

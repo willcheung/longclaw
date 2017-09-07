@@ -57,24 +57,17 @@ class ExtensionController < ApplicationController
     # @arrowright = "►"   # collapsed / "\u25ba".encode('utf-8')
     # @arrowdown = "▼"    # expanded / "\u25bc".encode('utf-8')
 
-    external = params[:external].present? ? params[:external].values : []
-    internal = params[:internal].present? ? params[:internal].values : []
-    @people_with_profile = (external | internal).each_with_object([]) do |e, memo|
-      email = e.second.to_s
-      memo << {email: email, profile: Profile.find_or_create_by_email(email)} if email != current_user.email 
+    external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
+    internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
+    people_emails = external_emails | internal_emails - [current_user.email.downcase]
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
+
+    @account_contacts_with_profile = @account.blank? ? [] : @account.contacts.each_with_object([]) do |c, memo|
+      c_email = c.email.downcase
+      memo << {email: c_email, profile: Profile.find_or_create_by_email(c_email)} if !(people_emails.include? c_email)
     end
 
-    people_emails = @people_with_profile.map{|p| p[:email].downcase}
-
-    # Only show confirmed and external contacts
-    @project_members_with_profile = @account.blank? ? [] : @account.projects.first.project_members.each_with_object([]) do |pm, memo|
-      if pm.contact.present? && !(people_emails.include? pm.contact.email)
-        email = pm.contact.email
-        memo << {email: email, profile: Profile.find_or_create_by_email(email)}
-      end
-    end
-
-    people_emails += @project_members_with_profile.map{|p| p[:email].downcase}
+    people_emails += @account_contacts_with_profile.map{|p| p[:email]}
     # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
     tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
     
@@ -275,7 +268,7 @@ class ExtensionController < ApplicationController
 
   # New before_action helper to be used for new Basic User "People" page.  Matches an opportunity (project) with the external and internal users in params.
   def set_account_and_project_for_people
-    external = params[:external].present? ? params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } } : []
+    external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
     ex_emails = external.map(&:second).reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) }
 
     # group by ex_emails by domain frequency, order by most frequent domain
@@ -466,7 +459,7 @@ class ExtensionController < ApplicationController
       end 
     end
 
-    external = params[:external].present? ? params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } } : []
+    external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
     # p "*** creating new external members for project #{@project.name} ***"
     external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
