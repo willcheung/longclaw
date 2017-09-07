@@ -105,7 +105,7 @@
         <% elsif @unopened.size == 0 %>
             <li class="list-group-item"><span class="text-muted"><i class="fa fa-smile-o" aria-hidden="true"></i> Great, all your emails have been opened!</span></li>
         <% else %>
-        <% @unopened.each do |tr| %>
+        <% @unopened.sort { |a,b| b.sent_at <=> a.sent_at }.each do |tr| %>
             <li class="list-group-item">
               <div class="pull-right">
                 <button class="btn btn-default btn-sm btn-outline" onclick="sendShowMessage('<%= tr.email_id %>');">Show</button>
@@ -138,7 +138,7 @@
       })
 
       function sendShowMessage(email_id) {
-          parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
+          parent.parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
       }
   </script>
 </div>

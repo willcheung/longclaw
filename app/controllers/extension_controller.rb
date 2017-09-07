@@ -12,7 +12,7 @@ class ExtensionController < ApplicationController
   end
 
   def index
-    # gmail extension provided an e-mail adress of the currently logged in user
+    # gmail extension provided an email address of the currently logged in user
     @gmail_user = params[:email] ? params[:email] : nil
   end
 
@@ -51,22 +51,29 @@ class ExtensionController < ApplicationController
   end
 
   def account
+    @arrowcollapsed = "⌃" # 'wider' caret / "\u2303".encode('utf-8')
+    # @arrowright = "►"   # collapsed / "\u25ba".encode('utf-8')
+    # @arrowdown = "▼"    # expanded / "\u25bc".encode('utf-8')
+
     # puts "current_user.tracking_requests.count: #{current_user.tracking_requests.count}"
     @people_with_profile = []
     params[:external].values.each do |e|
       @people_with_profile << {email: e.second.to_s, profile: Profile.find_or_create_by_email(e.second.to_s)}
     end
     
+    people_emails = @people_with_profile.map{|p| p[:email].downcase}
+
     # Only show confirmed and external contacts
     @project_members_with_profile = []
     @account.projects.first.project_members.each do |pm|
-      if pm.contact.present? 
+      if pm.contact.present? && !(people_emails.include? pm.contact.email)
         email = pm.contact.email
         @project_members_with_profile << {email: email, profile: Profile.find_or_create_by_email(email)}
       end
     end
 
-    people_emails = @people_with_profile.map{|p| p[:email].downcase} | @project_members_with_profile.map{|p| p[:email].downcase}
+    people_emails += @project_members_with_profile.map{|p| p[:email].downcase}
+    # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
     tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
     
     @last_email_sent_per_person = {}
@@ -101,7 +108,7 @@ class ExtensionController < ApplicationController
     emails_uniq_opened_per_person.each { |e,c| @emails_pct_opened_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
     @emails_engagement_per_person = {}
     emails_total_opened_per_person.each { |e,c| @emails_engagement_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
-    puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
+    # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
   def alerts_tasks
@@ -263,7 +270,7 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact e-mails; returns nil if one cannot be determined.
+  # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact emails; returns nil if one cannot be determined.
   def find_matching_sfdc_account(client, emails=[])
 
     return nil if client.nil? || emails.blank?  # abort if connection invalid or no emails passed
@@ -278,10 +285,10 @@ class ExtensionController < ApplicationController
 
     return if contacts_with_accounts.nil?
 
-    #### Match SFDC Account by contact e-mail
-    print "Attempting to match contacts by e-mail..."  
+    #### Match SFDC Account by contact email
+    print "Attempting to match contacts by email..."  
 
-    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new(Array.new)) { |p, memo| memo[p[0]] += [p[1]] }  # obtain a hash of contact e-mails with AccountId as the keys
+    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new(Array.new)) { |p, memo| memo[p[0]] += [p[1]] }  # obtain a hash of contact emails with AccountId as the keys
 
     account_contact_matches_by_email = Hash.new(0)
     emails.each do |e| 
@@ -289,7 +296,7 @@ class ExtensionController < ApplicationController
     end
 
     account_contact_matches_by_email = account_contact_matches_by_email.to_a.sort_by {|r| r[1]}.reverse  # sort by most-frequent first
-    #puts "E-mail matches by account: #{account_contact_matches_by_email}" 
+    #puts "Email matches by account: #{account_contact_matches_by_email}" 
     if account_contact_matches_by_email.empty?
       #puts "No match!"  # continue with domain matching
     elsif account_contact_matches_by_email.length == 1 || account_contact_matches_by_email.first[1] != account_contact_matches_by_email.second[1]
@@ -299,7 +306,7 @@ class ExtensionController < ApplicationController
       #puts "Ambiguous, because tied!"  # continue with domain matching
     end
 
-    #### Match SFDC Account by contact e-mail domains
+    #### Match SFDC Account by contact email domains
     print "unsuccessful. Trying to match contacts by domain..."
     
     domains = emails.map {|e| get_domain(e)}
@@ -313,7 +320,7 @@ class ExtensionController < ApplicationController
       else
         memo[c_domain][c_account] = memo[c_domain][c_account].nil? ? 1 : memo[c_domain][c_account] + 1
       end
-    end # obtain a hash of another hash (AccountId's with the total occurence of domains found in contact e-mails) with domains as the keys. 
+    end # obtain a hash of another hash (AccountId's with the total occurence of domains found in contact emails) with domains as the keys. 
     # e.g.,:  { "aol.com"   => {"AccountA"=>1, "AccountC"=>2}, 
     #           "apple.com" => {"AccountA"=>1},
     #           "gmail.com" => {"AccountB"=>1} }
