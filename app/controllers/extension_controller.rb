@@ -2,8 +2,9 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
-  before_action :set_account_and_project, only: [:account, :alerts_tasks, :contacts, :metrics]
-  before_action :set_sfdc_status_and_accounts, only: [:account, :alerts_tasks, :contacts, :metrics]
+  before_action :set_account_and_project, only: [:alerts_tasks, :contacts, :metrics]
+  before_action :set_account_and_project_for_people, only: [:account]
+  before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
   before_action :get_account_types, only: :no_account
   before_action :get_current_org_users, only: :alerts_tasks
 
@@ -12,7 +13,7 @@ class ExtensionController < ApplicationController
   end
 
   def index
-    # gmail extension provided an e-mail adress of the currently logged in user
+    # gmail extension provided an email address of the currently logged in user
     @gmail_user = params[:email] ? params[:email] : nil
   end
 
@@ -50,23 +51,24 @@ class ExtensionController < ApplicationController
     @users.concat create_and_return_internal_users(new_internal_users)
   end
 
+  # TODO: Rename this to "People" .html and path
   def account
-    # puts "current_user.tracking_requests.count: #{current_user.tracking_requests.count}"
-    @people_with_profile = []
-    params[:external].values.each do |e|
-      @people_with_profile << {email: e.second.to_s, profile: Profile.find_or_create_by_email(e.second.to_s)}
-    end
-    
-    # Only show confirmed and external contacts
-    @project_members_with_profile = []
-    @account.projects.first.project_members.each do |pm|
-      if pm.contact.present? 
-        email = pm.contact.email
-        @project_members_with_profile << {email: email, profile: Profile.find_or_create_by_email(email)}
-      end
+    @arrowcollapsed = "⌃" # 'wider' caret / "\u2303".encode('utf-8')
+    # @arrowright = "►"   # collapsed / "\u25ba".encode('utf-8')
+    # @arrowdown = "▼"    # expanded / "\u25bc".encode('utf-8')
+
+    external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
+    internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
+    people_emails = external_emails | internal_emails - [current_user.email.downcase]
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
+
+    @account_contacts_with_profile = @account.blank? ? [] : @account.contacts.each_with_object([]) do |c, memo|
+      c_email = c.email.downcase
+      memo << {email: c_email, profile: Profile.find_or_create_by_email(c_email)} if !(people_emails.include? c_email)
     end
 
-    people_emails = @people_with_profile.map{|p| p[:email].downcase} | @project_members_with_profile.map{|p| p[:email].downcase}
+    people_emails += @account_contacts_with_profile.map{|p| p[:email]}
+    # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
     tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
     
     @last_email_sent_per_person = {}
@@ -101,7 +103,7 @@ class ExtensionController < ApplicationController
     emails_uniq_opened_per_person.each { |e,c| @emails_pct_opened_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
     @emails_engagement_per_person = {}
     emails_total_opened_per_person.each { |e,c| @emails_engagement_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
-    puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
+    # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
   def alerts_tasks
@@ -159,6 +161,7 @@ class ExtensionController < ApplicationController
     end
   end
 
+  # Old before_action helper
   def set_account_and_project
     # p "*** set account and project ***"
     # p params
@@ -170,7 +173,7 @@ class ExtensionController < ApplicationController
     redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if params[:external].blank?
 
     external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
-    ex_emails = external.map(&:second).reject { |email| get_domain(email) == current_user.organization.domain || !valid_domain?(get_domain(email)) }
+    ex_emails = external.map(&:second).reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) }
 
     # if somehow request was made without external people or external people were filtered out due to invalid domain, redirect to extension#private_domain page
     redirect_to extension_private_domain_path+"\?"+{ internal: params[:internal] }.to_param and return if ex_emails.blank? 
@@ -242,7 +245,7 @@ class ExtensionController < ApplicationController
         else
           @account = accounts.first
         end 
-      end
+      end # end: if contacts.blank?
     end
     @account ||= contacts.first.account
     @project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
@@ -263,12 +266,59 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact e-mails; returns nil if one cannot be determined.
+  # New before_action helper to be used for new Basic User "People" page.  Matches an opportunity (project) with the external and internal users in params.
+  def set_account_and_project_for_people
+    external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
+    ex_emails = external.map(&:second).reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) }
+
+    # group by ex_emails by domain frequency, order by most frequent domain
+    ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
+    order_emails_by_domain_freq = ex_emails.map { |email| "email = #{Contact.sanitize(email)} DESC" }.join(',')
+    # find all contacts within current_user org that match the external emails, in the order of ex_emails
+    contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
+    if contacts.present?
+      # get all opportunities that these contacts are members of
+      projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
+      if projects.present?
+        # set most frequent project as opportunity
+        @project = projects.group_by(&:id).values.max_by(&:size).first
+        @account = @project.account
+      end
+    else
+      domains = ex_emails.map { |email| get_domain(email) }.uniq
+      where_domain_matches = domains.map { |domain| "email LIKE '%#{domain}'"}.join(" OR ")
+      order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
+      # find all contacts within current_user org that have a similar email domain to external emails, in the order of domain frequency
+      contacts = Contact.joins(:account).where(accounts: { organization_id: current_user.organization_id }).where(where_domain_matches).order(order_domain_frequency)
+      if contacts.blank?
+        order_domain_frequency = domains.map { |domain| "domain = '#{domain}' DESC" }.join(',')
+        # find all accounts within current_user org whose domain is the email domain for external emails, in the order of domain frequency
+        accounts = Account.where(domain: domains, organization: current_user.organization).order(order_domain_frequency)
+        # If no accounts are found that match our external email domains at this point stop (don't create a new account)
+        return if accounts.blank?
+          
+        @account = accounts.first
+      end # end: if contacts.blank?
+    end
+    @account ||= contacts.first.account
+    @project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
+
+    if @project.blank?
+      create_project
+      @project.subscribers.create(user: current_user)
+    elsif params[:action] == "account" 
+      # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
+      # since project already exists, any new external members found should be added as suggested members, let user confirm
+      create_people
+    end
+  end
+
+  # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact emails; returns nil if one cannot be determined.
   def find_matching_sfdc_account(client, emails=[])
 
     return nil if client.nil? || emails.blank?  # abort if connection invalid or no emails passed
 
-    client = SalesforceService.connect_salesforce(current_user.organization_id)
+    # client = SalesforceService.connect_salesforce(current_user.organization_id) # not necessary to reconnect!!
     query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email" # Use GROUP BY as a workaround to get Salesforce to SELECT distinct AccountID's and Email's
     sfdc_contacts_results = SalesforceService.query_salesforce(client, query_statement)
 
@@ -278,10 +328,10 @@ class ExtensionController < ApplicationController
 
     return if contacts_with_accounts.nil?
 
-    #### Match SFDC Account by contact e-mail
-    print "Attempting to match contacts by e-mail..."  
+    #### Match SFDC Account by contact email
+    print "Attempting to match contacts by email..."  
 
-    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new(Array.new)) { |p, memo| memo[p[0]] += [p[1]] }  # obtain a hash of contact e-mails with AccountId as the keys
+    contacts_by_account_h = contacts_with_accounts.each_with_object(Hash.new(Array.new)) { |p, memo| memo[p[0]] += [p[1]] }  # obtain a hash of contact emails with AccountId as the keys
 
     account_contact_matches_by_email = Hash.new(0)
     emails.each do |e| 
@@ -289,7 +339,7 @@ class ExtensionController < ApplicationController
     end
 
     account_contact_matches_by_email = account_contact_matches_by_email.to_a.sort_by {|r| r[1]}.reverse  # sort by most-frequent first
-    #puts "E-mail matches by account: #{account_contact_matches_by_email}" 
+    #puts "Email matches by account: #{account_contact_matches_by_email}" 
     if account_contact_matches_by_email.empty?
       #puts "No match!"  # continue with domain matching
     elsif account_contact_matches_by_email.length == 1 || account_contact_matches_by_email.first[1] != account_contact_matches_by_email.second[1]
@@ -299,7 +349,7 @@ class ExtensionController < ApplicationController
       #puts "Ambiguous, because tied!"  # continue with domain matching
     end
 
-    #### Match SFDC Account by contact e-mail domains
+    #### Match SFDC Account by contact email domains
     print "unsuccessful. Trying to match contacts by domain..."
     
     domains = emails.map {|e| get_domain(e)}
@@ -313,7 +363,7 @@ class ExtensionController < ApplicationController
       else
         memo[c_domain][c_account] = memo[c_domain][c_account].nil? ? 1 : memo[c_domain][c_account] + 1
       end
-    end # obtain a hash of another hash (AccountId's with the total occurence of domains found in contact e-mails) with domains as the keys. 
+    end # obtain a hash of another hash (AccountId's with the total occurence of domains found in contact emails) with domains as the keys. 
     # e.g.,:  { "aol.com"   => {"AccountA"=>1, "AccountC"=>2}, 
     #           "apple.com" => {"AccountA"=>1},
     #           "gmail.com" => {"AccountB"=>1} }
@@ -336,12 +386,12 @@ class ExtensionController < ApplicationController
     if account_wt_match_score_by_domain.empty?
       # puts "Still no match!"  # match unsuccessful
     elsif account_wt_match_score_by_domain.length == 1 || account_wt_match_score_by_domain.first[1] != account_wt_match_score_by_domain.second[1]
-      puts "SFDC account match was found! " + account_wt_match_score_by_domain.first[0]
+      # puts "SFDC account match was found! " + account_wt_match_score_by_domain.first[0]
       return account_wt_match_score_by_domain.first[0]
     else
       # puts "Still tied!"  # match unsuccessful
     end
-    puts "unsuccessful. No SFDC Accounts were found to likely match these contacts during search!"
+    # puts "Unsuccessful. No SFDC Accounts were found to unambiguously match these contacts during search!"
     nil
   end
 
@@ -409,7 +459,7 @@ class ExtensionController < ApplicationController
       end 
     end
 
-    external = params[:external].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } }
+    external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
     # p "*** creating new external members for project #{@project.name} ***"
     external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
