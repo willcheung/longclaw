@@ -10,6 +10,7 @@ class ApplicationController < ActionController::Base
 
   protect_from_forgery with: :null_session, only: Proc.new { |c| c.request.format.json? }
   layout :layout_by_resource
+  before_action :restrict_access, if: :current_user
   around_action :set_time_zone, if: :current_user
   around_action :check_google_oauth_valid_token, if: :current_user
 
@@ -17,39 +18,39 @@ class ApplicationController < ActionController::Base
 
     if resource.is_a?(User)
       stored_location = stored_location_for(resource)
-      p 'stored location:'
-      p stored_location
 
       if stored_location.present? && stored_location[0..9] == '/extension'
         case resource.onboarding_step
-        when Utils::ONBOARDING[:onboarded]
-          stored_location || root_path
-        when Utils::ONBOARDING[:fill_in_info]
-          onboarding_extension_tutorial_path
-        else
-          stored_location || root_path
+          when Utils::ONBOARDING[:onboarded]
+            stored_location || root_path
+          when Utils::ONBOARDING[:fill_in_info]
+            onboarding_extension_tutorial_path
+          else
+            stored_location || root_path
+        end
+      # check if at least biz? level access
+      elsif resource.biz?
+        case resource.onboarding_step
+          when Utils::ONBOARDING[:onboarded] # Fully onboarded
+            stored_location || root_path
+          when Utils::ONBOARDING[:confirm_projects]
+            if resource.cluster_create_date.nil?
+              # Clusters not ready yet
+              onboarding_creating_clusters_path
+            else
+              onboarding_confirm_projects_path
+            end
+          when Utils::ONBOARDING[:tutorial]
+            onboarding_tutorial_path
+          when Utils::ONBOARDING[:fill_in_info]
+            onboarding_fill_in_info_path
+          else
+            stored_location || root_path
         end
       else
-
-        case resource.onboarding_step
-        when Utils::ONBOARDING[:onboarded] # Fully onboarded
-          stored_location || root_path
-        when Utils::ONBOARDING[:confirm_projects]
-          if resource.cluster_create_date.nil?
-            # Clusters not ready yet
-            onboarding_creating_clusters_path
-          else
-            onboarding_confirm_projects_path
-          end
-        when Utils::ONBOARDING[:tutorial]
-          onboarding_tutorial_path
-        when Utils::ONBOARDING[:fill_in_info]
-          onboarding_fill_in_info_path
-        else
-          stored_location || root_path
-        end
-
+        home_access_denied_path
       end
+
     else
       super
     end
@@ -74,6 +75,11 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  def restrict_access
+    # whitelist for basic users: extension pages, extension tutorial, everything else redirects to access_denied page
+    redirect_to home_access_denied_path unless params[:controller] == 'extension' || params[:action] == 'access_denied' || params[:action] == 'extension_tutorial' || current_user.biz?
+  end
 
   def set_time_zone(&block)
     if current_user.time_zone == 'UTC' and !cookies[:timezone].nil?
