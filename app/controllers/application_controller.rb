@@ -17,8 +17,18 @@ class ApplicationController < ActionController::Base
 
     if resource.is_a?(User)
       stored_location = stored_location_for(resource)
-      if stored_location[0..9] == '/extension'
-        stored_location || root_path
+      p 'stored location:'
+      p stored_location
+
+      if stored_location.present? && stored_location[0..9] == '/extension'
+        case resource.onboarding_step
+        when Utils::ONBOARDING[:onboarded]
+          stored_location || root_path
+        when Utils::ONBOARDING[:fill_in_info]
+          onboarding_extension_tutorial_path
+        else
+          stored_location || root_path
+        end
       else
 
         case resource.onboarding_step

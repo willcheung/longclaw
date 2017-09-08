@@ -20,8 +20,9 @@ module Devise
             resource.assign_attributes(
               oauth_provider: "exchange_pwd",
               onboarding_step: Utils::ONBOARDING[:fill_in_info],
-              role: User::OTHER_ROLE[:Trial],
+              role: User::ROLE[:Basic],
               is_disabled: false,
+              refresh_inbox: false,
               organization: org
             )
           end
