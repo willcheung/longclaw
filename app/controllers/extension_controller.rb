@@ -1,4 +1,6 @@
 class ExtensionController < ApplicationController
+  NUM_ACCOUNT_CONTACT_SHOW_LIMIT = 10  # How many Account Contacts to show
+  
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
@@ -59,17 +61,19 @@ class ExtensionController < ApplicationController
 
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
     internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
-    people_emails = external_emails | internal_emails - [current_user.email.downcase]
-    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
+    account_contacts_emails = @account.contacts.present? ? @account.contacts.map{|c| c.email.downcase}.sort : []
 
-    @account_contacts_with_profile = @account.blank? ? [] : @account.contacts.each_with_object([]) do |c, memo|
-      c_email = c.email.downcase
-      memo << {email: c_email, profile: Profile.find_or_create_by_email(c_email)} if !(people_emails.include? c_email)
-    end
+    people_emails = external_emails | internal_emails - [current_user.email.downcase]
+    account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]
+
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
+    @account_contacts_with_profile = account_contacts_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
 
     people_emails += @account_contacts_with_profile.map{|p| p[:email]}
+
+    # people_emails = ['joe@plugandplaytechcenter.com']
     # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
-    tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
+    tracking_requests_this_pastmonth = current_user.tracking_requests.has_recipients(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
     
     @last_email_sent_per_person = {}
     @emails_sent_per_person = {}
@@ -103,6 +107,7 @@ class ExtensionController < ApplicationController
     emails_uniq_opened_per_person.each { |e,c| @emails_pct_opened_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
     @emails_engagement_per_person = {}
     emails_total_opened_per_person.each { |e,c| @emails_engagement_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
+
     # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
