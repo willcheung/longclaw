@@ -106,8 +106,6 @@ Longclaw::Application.routes.draw do
       get "autocomplete_salesforce_account_name"
       get "autocomplete_salesforce_opportunity_name"
     end
-    get "onboarding/tutorial", "onboarding/creating_clusters", "onboarding/confirm_projects", "onboarding/fill_in_info"
-    post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
     
     scope "reports", controller: :reports, as: 'reports' do
       get 'd_account_success'
@@ -165,8 +163,16 @@ Longclaw::Application.routes.draw do
   get '/users/auth/37signals/callback' => 'settings#basecamp'
 
 
-  # Cluster callback
-  post 'onboarding/:user_id/create_clusters/' => 'onboarding#create_clusters'
+  scope "onboarding", controller: :onboarding, as: 'onboarding' do
+    get 'tutorial'
+    get 'creating_clusters'
+    get 'confirm_projects'
+    get 'fill_in_info'
+    get 'extension_tutorial'
+    # Cluster callback
+    post ':user_id/create_clusters' => 'onboarding#create_clusters'
+  end
+  post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
   get 'home/access_denied'
 
   scope "hooks", controller: :hooks, as: 'hooks' do
