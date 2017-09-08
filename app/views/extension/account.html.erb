@@ -7,7 +7,7 @@
         font-weight: bold;
         color: black;
     }
-    .hover * {
+    .hover *:not(.tooltip):not(.tooltip-inner):not(.arrow) {
         background-color: #EEE;
     }
     td > a, .link:hover  {
@@ -221,7 +221,9 @@
                                         <td>
                                             <table>
                                                 <tbody class="contact-info">
-                                                    <tr><td class="contact-name panel-title"><extrastrong><%= profile_fullname %></extrastrong></td></tr>
+                                                    <tr><td class="contact-name panel-title" 
+                                                      <%= "title=#{p[:email]}" if profile_fullname != p[:email] %>
+                                                    ><extrastrong><%= profile_fullname %></extrastrong></td></tr>
                                                     <tr><td><%= person.title %></td></tr>
                                                     <% if person.organization.present? || valid_domain?(get_domain(p[:email])) %>
                                                         <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization.present? ? person.organization : get_domain(p[:email]) %></span></td></tr>
@@ -328,6 +330,7 @@
                                     <tr><td>
                                         <i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<strong>Websites:</strong>&nbsp; 
                                         <% person.websites.each do |site| %>
+                                            <% site = URI.encode(site) %>
                                             <a href="<%= site %>" target="_blank" title="Open link in a new window"><%= URI.parse(site).host.sub(/^www\./, '') %></a>
                                         <% end %>
                                     </td></tr>
