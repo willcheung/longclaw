@@ -198,7 +198,7 @@
     <div>
         <div id="accordion" class="panel-group">
         <% 2.times do |n| %>
-            <% contacts_with_profile = (n == 0 ? @people_with_profile : @project_members_with_profile) %>
+            <% contacts_with_profile = (n == 0 ? @people_with_profile : @account_contacts_with_profile) %>
             <% if n == 1 && contacts_with_profile.present? %>
                 <span class="contact-group"><br/>MORE PEOPLE AT <%= @project.name.upcase %></span>
             <% end %>
@@ -207,7 +207,7 @@
                 <% profile_fullname = person.fullname.present? ? person.fullname : p[:email] %>
                 <div class="panel <%= "panel-default" if n == 0 && i == 0 %>" id="Profile-<%= person.id %>-<%= n %>">
                     <div>
-                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseProfile-<%= person.id %>-<%= n %>">
+                        <a href="#collapseProfile-<%= person.id %>-<%= n %>" data-toggle="collapse" data-parent="#accordion">
                             <table class="titleinfo-group">
                                 <tbody>
                                     <tr>
