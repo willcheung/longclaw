@@ -61,7 +61,7 @@ class ExtensionController < ApplicationController
 
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
     internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
-    account_contacts_emails = @account.contacts.present? ? @account.contacts.map{|c| c.email.downcase}.sort : []
+    account_contacts_emails = (@account.present? && @account.contacts.present?) ? @account.contacts.map{|c| c.email.downcase}.sort : []
 
     people_emails = external_emails | internal_emails - [current_user.email.downcase]
     account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]
