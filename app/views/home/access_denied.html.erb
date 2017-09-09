@@ -22,7 +22,7 @@
     </script>
     <% else %>
     <!-- Inline install link for extension -->
-    <a style="font-size: 16px;font-weight: bold;" href="#" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)">Install our Chrome Extension for Gmail.</a>
+    <a class="btn btn-primary" href="#" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)">Install our Chrome Extension for Gmail</a>
     <script>
       function successCallback () {
         $('#chrome-notification-bar').hide();
@@ -44,6 +44,6 @@
 	      <li><a href="https://www.linkedin.com/company/contextsmith" target="_blank"><i class="fa fa-linkedin"></i></a>
 	      </li>
 	  </ul>
-		<a href="http://www.contextsmith.com" class="btn btn-primary">Back to Homepage</a>
+		<a href="http://www.contextsmith.com">&larr; Back to Homepage</a>
 	</div>
 </div>
