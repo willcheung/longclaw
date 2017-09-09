@@ -77,8 +77,8 @@ class ApplicationController < ActionController::Base
   private
 
   def restrict_access
-    # whitelist for basic users: extension pages, extension tutorial, everything else redirects to access_denied page
-    redirect_to home_access_denied_path unless params[:controller] == 'extension' || params[:action] == 'access_denied' || params[:action] == 'extension_tutorial' || current_user.biz?
+    # whitelist for basic users: extension pages, extension tutorial, extension/tracking related stuff, everything else redirects to access_denied page
+    redirect_to home_access_denied_path unless params[:controller] == 'extension' || params[:controller] == 'tracking' || params[:action] == 'me' || params[:action] == 'access_denied' || params[:action] == 'extension_tutorial' || current_user.biz?
   end
 
   def set_time_zone(&block)
