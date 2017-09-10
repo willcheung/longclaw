@@ -25,7 +25,7 @@ class TrackingRequest < ActiveRecord::Base
            -> { order(date: :desc) }
 
   scope :from_lastmonth, -> { where sent_at: 1.month.ago.midnight..Time.current }
-  scope :has_recipients, -> (email_array) { where "'{#{ email_array.join(",") }}'::text[] && recipients" }
+  scope :has_recipients, -> (email_array) { where "'{#{ email_array.map{|e| Contact.sanitize(e.downcase)}.map{|e| e[1...e.size-1]}.join(",") }}'::text[] && recipients" }
 
   def recipients_to_list
     self.recipients.join(', ')

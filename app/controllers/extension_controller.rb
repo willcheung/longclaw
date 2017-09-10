@@ -271,10 +271,15 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # New before_action helper to be used for new Basic User "People" page.  Matches an opportunity (project) with the external and internal users in params.
+  # New before_action helper to be used for new Basic User "People" page.  Matches an account+opportunity (project) with the external contacts in params (i.e., if no external contacts exist, no account or opportunity is returned). 
+  # Note: Ignores "invalid" email domains such as "gmail.com" and "yahoo.com" in matching account contacts because they are too general and can easily match the wrong account.
   def set_account_and_project_for_people
+    return if params[:external].blank?
+
     external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
     ex_emails = external.map(&:second).reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) }
+
+    return if ex_emails.blank?  # After filtering the external e-mail list, no valid external e-mails remain
 
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
@@ -307,15 +312,6 @@ class ExtensionController < ApplicationController
     end
     @account ||= contacts.first.account
     @project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
-
-    if @project.blank?
-      create_project
-      @project.subscribers.create(user: current_user)
-    elsif params[:action] == "account" 
-      # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
-      # since project already exists, any new external members found should be added as suggested members, let user confirm
-      create_people
-    end
   end
 
   # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact emails; returns nil if one cannot be determined.
