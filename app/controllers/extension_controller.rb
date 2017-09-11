@@ -1,4 +1,6 @@
 class ExtensionController < ApplicationController
+  NUM_ACCOUNT_CONTACT_SHOW_LIMIT = 10  # How many Account Contacts to show
+  
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
@@ -15,6 +17,7 @@ class ExtensionController < ApplicationController
   def index
     # gmail extension provided an email address of the currently logged in user
     @gmail_user = params[:email] ? params[:email] : nil
+    render layout: "empty"
   end
 
   def new
@@ -59,17 +62,19 @@ class ExtensionController < ApplicationController
 
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
     internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
-    people_emails = external_emails | internal_emails - [current_user.email.downcase]
-    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
+    account_contacts_emails = (@account.present? && @account.contacts.present?) ? @account.contacts.map{|c| c.email.downcase}.sort : []
 
-    @account_contacts_with_profile = @account.blank? ? [] : @account.contacts.each_with_object([]) do |c, memo|
-      c_email = c.email.downcase
-      memo << {email: c_email, profile: Profile.find_or_create_by_email(c_email)} if !(people_emails.include? c_email)
-    end
+    people_emails = external_emails | internal_emails - [current_user.email.downcase]
+    account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]  # filter by users already in e-mail thread, then truncate list
+
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
+    @account_contacts_with_profile = account_contacts_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
 
     people_emails += @account_contacts_with_profile.map{|p| p[:email]}
+
+    # people_emails = ['joe@plugandplaytechcenter.com']
     # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
-    tracking_requests_this_pastmonth = current_user.tracking_requests.where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
+    tracking_requests_this_pastmonth = current_user.tracking_requests.has_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
     
     @last_email_sent_per_person = {}
     @emails_sent_per_person = {}
@@ -103,6 +108,7 @@ class ExtensionController < ApplicationController
     emails_uniq_opened_per_person.each { |e,c| @emails_pct_opened_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
     @emails_engagement_per_person = {}
     emails_total_opened_per_person.each { |e,c| @emails_engagement_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
+
     # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
@@ -259,32 +265,40 @@ class ExtensionController < ApplicationController
       create_people
     end
     
-    @MEMBERS_LIST_LIMIT = 8
     @all_members = @project.users + @project.contacts
-    @members = @all_members.first(@MEMBERS_LIST_LIMIT) # same value as 
+    @members = @all_members.first(NUM_ACCOUNT_CONTACT_SHOW_LIMIT) # same value as 
 
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # New before_action helper to be used for new Basic User "People" page.  Matches an opportunity (project) with the external and internal users in params.
+  # New before_action helper to be used for new Basic User "People" page.  Matches an account+opportunity (project) with the external contacts in params (i.e., if no external contacts exist, no account or opportunity is returned). 
+  # Note: E-mail domains that are typically "invalid" such as "gmail.com", "yahoo.com", "hotmail.com" may be used to identify a "matching" account if we can find the Contact with the e-mail.  Otherwise, we stop and do not attempt to identify a matching account using "invalid" domains, because these domains are too general and can easily match the wrong account.
   def set_account_and_project_for_people
-    external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
-    ex_emails = external.map(&:second).reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) }
+    return if params[:external].blank?
+
+    external = params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } }
+    ex_emails = external.map(&:second)
 
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
     order_emails_by_domain_freq = ex_emails.map { |email| "email = #{Contact.sanitize(email)} DESC" }.join(',')
     # find all contacts within current_user org that match the external emails, in the order of ex_emails
     contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
+
     if contacts.present?
       # get all opportunities that these contacts are members of
       projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
       if projects.present?
         # set most frequent project as opportunity
         @project = projects.group_by(&:id).values.max_by(&:size).first
+
         @account = @project.account
       end
     else
+      ex_emails = ex_emails.reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) } # remove e-mails with domains that are too general
+
+      return if ex_emails.blank?  # quit if no "valid" e-mails remain
+
       domains = ex_emails.map { |email| get_domain(email) }.uniq
       where_domain_matches = domains.map { |domain| "email LIKE '%#{domain}'"}.join(" OR ")
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
@@ -302,15 +316,6 @@ class ExtensionController < ApplicationController
     end
     @account ||= contacts.first.account
     @project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
-
-    if @project.blank?
-      create_project
-      @project.subscribers.create(user: current_user)
-    elsif params[:action] == "account" 
-      # extension always routes to "account" action first, don't need to run create_people for other tabs (contacts or alerts_tasks)
-      # since project already exists, any new external members found should be added as suggested members, let user confirm
-      create_people
-    end
   end
 
   # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact emails; returns nil if one cannot be determined.

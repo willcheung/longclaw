@@ -2,11 +2,37 @@
      <div class="m-t-md">
         <img alt="image" style="width:220px" src="/assets/logo.png">
     </div>
-    <span>Ooops...</span>
+    <span>Oops...</span>
 </div>
 <div class="middle-box text-center lockscreen animated fadeInDown">
 	<div class="m-t-md">
-    <p style="font-size:16px;font-weight:200">We currently don't support personal e-mail accounts.  <br/>Please sign up using your company e-mail.</p>
+    <p style="font-size:16px;font-weight:200;">Basic and Professional users only<br>have access to our Chrome Extension.</p>
+    <% if @extension_downloaded %>
+    <!-- Automatically redirect to their Gmail window -->
+    <p style="font-size:16px;font-weight:200;">Redirecting you to your Gmail in <span id="countdown-number">5</span>...</p>
+    <script type="text/javascript" charset="utf-8">
+      setInterval(function () {
+        var $timer = $('#countdown-number');
+        var countdown = Number($timer.text()) - 1;
+        $timer.text(countdown);
+        if (countdown <= 0) {
+          window.location.replace('https://mail.google.com/mail/?authuser=<%= current_user.email %>');
+        }
+      }, 1000)
+    </script>
+    <% else %>
+    <!-- Inline install link for extension -->
+    <a class="btn btn-primary" href="#" onclick="chrome.webstore.install('https://chrome.google.com/webstore/detail/idihnnlkpfggfgjinfiodninabjggfop', successCallback, failureCallback)">Install our Chrome Extension for Gmail</a>
+    <script>
+      function successCallback () {
+        $('#chrome-notification-bar').hide();
+        window.alert('Install successful! Please refresh your Gmail for the extension to take effect.');
+      }
+      function failureCallback () {
+        window.alert('Cannot install extension. Please contact support@contextsmith.com for help.');
+      }
+    </script>
+    <% end %>
 	</div>
 
 	<div class="m-t-lg">
@@ -18,7 +44,6 @@
 	      <li><a href="https://www.linkedin.com/company/contextsmith" target="_blank"><i class="fa fa-linkedin"></i></a>
 	      </li>
 	  </ul>
-		<a href="http://www.contextsmith.com" class="btn btn-primary">Back to homepage</a>
+		<a href="http://www.contextsmith.com">&larr; Back to Homepage</a>
 	</div>
 </div>
-

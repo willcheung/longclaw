@@ -88,7 +88,7 @@ class User < ActiveRecord::Base
   attr_encrypted :password, key: ENV['encryption_key'], if: proc { |user| user.oauth_provider == User::AUTH_TYPE[:Exchange] }
 
   PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
-  ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer' }
+  ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer', Basic: 'Basic', Pro: 'Professional', Biz: 'Business' }
   OTHER_ROLE = { Trial: 'Trial', Chromeuser: "Chrome user" }  # TODO: remove "Chrome user"
   AUTH_TYPE = { Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }
   WORDS_PER_SEC = { Read: 2.0, Write: 0.42 }   # Reading=120WPM(<200)  Typing=~25WPM(<40)
@@ -210,8 +210,9 @@ class User < ActiveRecord::Base
         oauth_refresh_token: credentials.refresh_token,
         oauth_expires_at: Time.at(credentials.expires_at),
         onboarding_step: Utils::ONBOARDING[:fill_in_info],
-        role: OTHER_ROLE[:Trial],
+        role: ROLE[:Basic],
         is_disabled: false,
+        refresh_inbox: false,
         time_zone: time_zone
       }
 
@@ -916,15 +917,27 @@ class User < ActiveRecord::Base
   end
 
   def power_user?
-    self.role == ROLE[:Poweruser] or self.admin?
+    self.role == ROLE[:Poweruser] || self.admin?
   end
 
   def contributor?
-    self.role == ROLE[:Contributor] or self.admin? or self.power_user?
+    self.role == ROLE[:Contributor] || self.power_user?
   end
 
   def observer?
-    self.role == ROLE[:Observer] or self.admin? or self.power_user? or self.contributor?
+    self.role == ROLE[:Observer] || self.contributor?
+  end
+
+  def biz?
+    self.role == ROLE[:Biz] || self.observer?
+  end
+
+  def pro?
+    self.role == ROLE[:Pro] || self.biz?
+  end
+
+  def basic?
+    self.role == ROLE[:Basic] || self.pro?
   end
 
   def trial?

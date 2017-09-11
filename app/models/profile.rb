@@ -66,7 +66,7 @@ class Profile < ActiveRecord::Base
   end
 
   def profileimg_url
-    data.photos.first.url if data_is_valid? && data.photos.present?
+    URI.encode(data.photos.first.url) if data_is_valid? && data.photos.present?
   end
 
   def linkedin_url
@@ -84,7 +84,7 @@ class Profile < ActiveRecord::Base
   # Returns an array of websites associated with this profile
   def websites
     if data_is_valid? && data.contact_info.present? && data.contact_info.websites.present?
-      return data.contact_info.websites.map(&:url)
+      return data.contact_info.websites.map{ |w| URI.encode(w.url) }
     end
     []
   end
@@ -128,7 +128,7 @@ class Profile < ActiveRecord::Base
 
   def social_url(social_type)
     sp = data.social_profiles.find{ |sp| sp.type.downcase == social_type } if data_is_valid? && data.social_profiles.present?
-    sp.url if sp.present?
+    URI.encode(sp.url) if sp.present?
   end
 
   def downcase_emails

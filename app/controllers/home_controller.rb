@@ -109,7 +109,9 @@ class HomeController < ApplicationController
   end
 
   def access_denied
-    # Nothing here
+    # @extension_downloaded = true
+    @extension_downloaded = request.user_agent.downcase.match(/chrome/) && cookies[:chromeNotificationBar] == 'false'
+    # redirect_to 'https://mail.google.com/mail/?authuser=' + current_user.email if request.user_agent.downcase.match(/chrome/) && cookies[:chromeNotificationBar] == 'false'
   end
 
   private
