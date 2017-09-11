@@ -277,7 +277,7 @@ class ExtensionController < ApplicationController
   def set_account_and_project_for_people
     return if params[:external].blank?
 
-    external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
+    external = params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } }
     ex_emails = external.map(&:second).reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) }
 
     return if ex_emails.blank?  # After filtering the external e-mail list, no valid external e-mails remain
