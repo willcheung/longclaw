@@ -100,6 +100,9 @@
     .fb-icon {
         color: #3b5998; /* Facebook blue */
     }
+    .globe-icon{
+        color: #7cb5ec; /* "CS blue" / light blue */
+    }
     .phone-icon {
         padding: 0 0 0 0.5em;
         /*color: navy;*/
@@ -137,9 +140,6 @@
 
 <!-- TODO: move any relevant scripts to extension.js -->
 <script type="text/javascript">
-    // $(function () {
-    //     $('[data-toggle="tooltip"]').tooltip();
-    // });
     $(document).ready(function(){
         // $(".panel-default").hover(
         //     function() {
@@ -228,6 +228,11 @@
                                                     <% if person.organization.present? || valid_domain?(get_domain(p[:email])) %>
                                                         <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization.present? ? person.organization : get_domain(p[:email]) %></span></td></tr>
                                                     <% end %>
+                                                    <% if person.location.present? %>
+                                                        <tr><td>
+                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp; <%= person.location.gsub!(", United States", "")  %>
+                                                        </td></tr>
+                                                    <% end %>
                                                 </tbody>
                                             </table>
                                         </td>
@@ -253,14 +258,21 @@
                                             <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce disabled" alt="Salesforce disabled"/>
                                         </td>
                                         <td <%= "class=disabled" if person.linkedin_url.blank? %>>
-                                            <a href="<%= person.linkedin_url %>" target="_blank" title="Open <%= person.linkedin_url %> in new window"><i class="linkedin-icon fa fa-linkedin-square fa-2x" aria-hidden="true"></i></a>
+                                            <a href="<%= person.linkedin_url %>" target="_blank" title="Open <%= person.linkedin_url %> in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true"></i></a>
                                         </td>
                                         <td <%= "class=disabled" if person.twitter_url.blank? %>>
-                                            <a href="<%= person.twitter_url %>" target="_blank" title="Open <%= person.twitter_url %> in new window"><i class="twitter-icon fa fa-twitter fa-2x" aria-hidden="true"></i></a>
+                                            <a href="<%= person.twitter_url %>" target="_blank" title="Open <%= person.twitter_url %> in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true"></i></a>
                                         </td>
                                         <td <%= "class=disabled" if person.facebook_url.blank? %>>
-                                            <a href="<%= person.facebook_url %>" target="_blank" title="Open <%= person.facebook_url %> in new window"><i class="fb-icon fa fa-facebook-square fa-2x" aria-hidden="true"></i></a>
+                                            <a href="<%= person.facebook_url %>" target="_blank" title="Open <%= person.facebook_url %> in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true"></i></a>
                                         </td>
+                                        <td <%= "class=disabled" if person.websites.blank? %>>
+                                            <a href="#" target="_blank"><i class="fa fa-globe fa-2x globe-icon" aria-hidden="true"></i></a>
+                                        </td>
+                                                
+                                               <!--  <@% person.websites.each do |site| %>
+                                                    <a href="<@%= site %>" target="_blank" title="Open link in a new window"><@%= URI.parse(site).host.sub(/^www\./, '') %></a>
+                                                <@% end %> -->
                                         <% if person.phone.present? %>
                                             <td class="phone-icon">
                                                 <table>
@@ -304,7 +316,7 @@
                             </table>
                             <table>
                                 <tr><td>&nbsp;</td></tr>
-                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activity of tracked emails. To track an email, check the CS Tracking checkbox when composing and sending an email." title="Activity of tracked emails. To track an email, check the CS Tracking checkbox when composing and sending an email."></i></td></tr>
+                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS Tracking</b> checkbox when composing and sending an email."></i></td></tr>
                                 <tr>
                                     <td><table>
                                     <!-- TODO: Don't use buttons to style? -->
@@ -317,23 +329,10 @@
                                 </tr>
                                 <tr><td>&nbsp;</td></tr>
                             </table>
-                            <% if person.location.present? || person.websites.present? || person.bio.present? %>
+                            <% if person.websites.present? || person.bio.present? %>
                             <table class="additionalinfo-group">
                                 <tr><td></td></tr>
                                 <tr><td><span class="panel-title"><extrastrong>More about <%= profile_fullname %></extrastrong></span></td></tr>
-                                <% if person.location.present? %>
-                                    <tr><td>
-                                        <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp;<strong>Location:</strong>&nbsp; <%= person.location %>
-                                    </td></tr>
-                                <% end %>                            
-                                <% if person.websites.present? %>
-                                    <tr><td>
-                                        <i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<strong>Websites:</strong>&nbsp; 
-                                        <% person.websites.each do |site| %>
-                                            <a href="<%= site %>" target="_blank" title="Open link in a new window"><%= URI.parse(site).host.sub(/^www\./, '') %></a>
-                                        <% end %>
-                                    </td></tr>
-                                <% end %>
                                 <% if person.bio.present? %>
                                     <% person.bio.each do |b| %>
                                         <tr><td>

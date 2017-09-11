@@ -57,8 +57,6 @@ class ExtensionController < ApplicationController
   # TODO: Rename this to "People" .html and path
   def account
     @arrowcollapsed = "⌃" # 'wider' caret / "\u2303".encode('utf-8')
-    # @arrowright = "►"   # collapsed / "\u25ba".encode('utf-8')
-    # @arrowdown = "▼"    # expanded / "\u25bc".encode('utf-8')
 
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
     internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
@@ -284,11 +282,12 @@ class ExtensionController < ApplicationController
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
     order_emails_by_domain_freq = ex_emails.map { |email| "email = #{Contact.sanitize(email)} DESC" }.join(',')
     # find all contacts within current_user org that match the external emails, in the order of ex_emails
-    contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
+    contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id }).order(order_emails_by_domain_freq) 
 
     if contacts.present?
       # get all opportunities that these contacts are members of
       projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
+
       if projects.present?
         # set most frequent project as opportunity
         @project = projects.group_by(&:id).values.max_by(&:size).first
@@ -470,7 +469,7 @@ class ExtensionController < ApplicationController
       end 
     end
 
-    external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
+    external = params[:external].present? ? params[:external].values.map { |person| [person.first, person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
     # p "*** creating new external members for project #{@project.name} ***"
     external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
