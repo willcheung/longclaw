@@ -289,7 +289,6 @@ class ExtensionController < ApplicationController
     if contacts.present?
       # get all opportunities that these contacts are members of
       projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
-
       if projects.present?
         # set most frequent project as opportunity
         @project = projects.group_by(&:id).values.max_by(&:size).first
@@ -306,6 +305,11 @@ class ExtensionController < ApplicationController
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
       # find all contacts within current_user org that have a similar email domain to external emails, in the order of domain frequency
       contacts = Contact.joins(:account).where(accounts: { organization_id: current_user.organization_id }).where(where_domain_matches).order(order_domain_frequency)
+      puts "domains: #{domains}"
+      puts "where_domain_matches: #{where_domain_matches}"
+      puts "order_domain_frequency: #{order_domain_frequency}"
+      puts "contacts:"
+      contacts.each {|c| puts "contact: #{c.email}" }
       if contacts.blank?
         order_domain_frequency = domains.map { |domain| "domain = '#{domain}' DESC" }.join(',')
         # find all accounts within current_user org whose domain is the email domain for external emails, in the order of domain frequency
