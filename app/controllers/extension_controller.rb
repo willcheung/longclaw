@@ -1,5 +1,6 @@
 class ExtensionController < ApplicationController
   NUM_ACCOUNT_CONTACT_SHOW_LIMIT = 10  # How many Account Contacts to show
+  NUM_LAST_EMAIL_ACTIVITY_SHOW_LIMIT = 8
   
   layout "extension", except: [:test, :new]
 
@@ -74,7 +75,7 @@ class ExtensionController < ApplicationController
     # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
     tracking_requests_this_pastmonth = current_user.tracking_requests.has_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
     
-    @last_email_sent_per_person = {}
+    @last_emails_sent_per_person = {}
     @emails_sent_per_person = {}
     emails_uniq_opened_per_person = {}
     emails_total_opened_per_person = {}
@@ -95,9 +96,8 @@ class ExtensionController < ApplicationController
           emails_uniq_opened_per_person[e] = emails_uniq_opens
           emails_total_opened_per_person[e] = emails_total_opens
           
-          if @last_email_sent_per_person[e].blank?
-            @last_email_sent_per_person[e] = {trackingrequest: r, trackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil}
-          end
+          @last_emails_sent_per_person[e] = [] if @last_emails_sent_per_person[e].blank?
+          @last_emails_sent_per_person[e] += [{trackingrequest: r, trackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil}] if @last_emails_sent_per_person[e].length < NUM_LAST_EMAIL_ACTIVITY_SHOW_LIMIT
         end
       end # End: people_emails.map do |e|
     end 
