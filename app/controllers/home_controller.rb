@@ -111,7 +111,10 @@ class HomeController < ApplicationController
   def access_denied
     # @extension_downloaded = true
     @extension_downloaded = request.user_agent.downcase.match(/chrome/) && cookies[:chromeNotificationBar] == 'false'
-    # redirect_to 'https://mail.google.com/mail/?authuser=' + current_user.email if request.user_agent.downcase.match(/chrome/) && cookies[:chromeNotificationBar] == 'false'
+    # in case a Basic user signs up through main page, force sign out here so that they will sign in through extension and trigger onboarding
+    if current_user.present? && current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
+      sign_out current_user
+    end
   end
 
   private

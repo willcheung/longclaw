@@ -18,15 +18,17 @@ class ApplicationController < ActionController::Base
 
     if resource.is_a?(User)
       stored_location = stored_location_for(resource)
+      location = stored_location[1..9] if stored_location.present?
+      request_origin = request.env['omniauth.origin']
+      origin = URI.parse(request_origin).path[1..9] if request_origin.present?
+      auth_params = request.env['omniauth.params']
 
-      if stored_location.present? && stored_location[0..9] == '/extension'
-        case resource.onboarding_step
-          when Utils::ONBOARDING[:onboarded]
-            stored_location || root_path
-          when Utils::ONBOARDING[:fill_in_info]
-            onboarding_extension_tutorial_path
-          else
-            stored_location || root_path
+      # check if sign in from extension, multiple redundancies to make sure extension users stay in extension
+      if auth_params['extension'] == 'true' || origin == 'extension' || location == 'extension'
+        if resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
+          onboarding_extension_tutorial_path
+        else
+          stored_location || extension_path(login: true)
         end
       # check if at least biz? level access
       elsif resource.biz?
