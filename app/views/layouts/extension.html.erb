@@ -32,13 +32,7 @@
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
                 <span style="width:150px; display:inline-block">
-                    <a 
-                    <% if current_user.role != User::ROLE[:Basic] %>
-                        href="<%= root_path %>" target="_blank" 
-                    <% else %>
-                        style="pointer-events: none; cursor: default;"
-                    <% end %>
-                    class="navbar-brand">
+                    <a href="<%= ([User::ROLE[:Basic],User::ROLE[:Pro]].include? current_user.role) ? "http://www.contextsmith.com" : root_path %>" target="_blank" class="navbar-brand">
                         <span class="clear">
                             <div class="block logo">&nbsp;</div>
                         </span>
