@@ -17,11 +17,11 @@ class ApplicationController < ActionController::Base
   def after_sign_in_path_for(resource)
 
     if resource.is_a?(User)
-      stored_location = stored_location_for(resource)
-      location = stored_location[1..9] if stored_location.present?
+      auth_params = request.env['omniauth.params']
       request_origin = request.env['omniauth.origin']
       origin = URI.parse(request_origin).path[1..9] if request_origin.present?
-      auth_params = request.env['omniauth.params']
+      stored_location = stored_location_for(resource)
+      location = stored_location[1..9] if stored_location.present?
 
       # check if sign in from extension, multiple redundancies to make sure extension users stay in extension
       if auth_params['extension'] == 'true' || origin == 'extension' || location == 'extension'
