@@ -56,9 +56,10 @@ class ExtensionController < ApplicationController
 
   # TODO: Rename this to "People" .html and path
   def account
+    @SOCIAL_BIO_TEXT_LENGTH_MAX = 192
+    @EMAIL_SUBJECT_TEXT_LENGTH_MAX = 65
+    @NUM_LATEST_TRACKED_EMAIL_ACTIVITY_LIMIT = 8 # Number of newest tracked email activities shown in timeline
     @arrowcollapsed = "⌃" # 'wider' caret / "\u2303".encode('utf-8')
-    # @arrowright = "►"   # collapsed / "\u25ba".encode('utf-8')
-    # @arrowdown = "▼"    # expanded / "\u25bc".encode('utf-8')
 
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
     internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
@@ -74,9 +75,9 @@ class ExtensionController < ApplicationController
 
     # people_emails = ['joe@plugandplaytechcenter.com']
     # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
-    tracking_requests_this_pastmonth = current_user.tracking_requests.has_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at desc")
+    tracking_requests_this_pastmonth = current_user.tracking_requests.has_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at DESC")
     
-    @last_email_sent_per_person = {}
+    @last_emails_sent_per_person = {}
     @emails_sent_per_person = {}
     emails_uniq_opened_per_person = {}
     emails_total_opened_per_person = {}
@@ -97,9 +98,8 @@ class ExtensionController < ApplicationController
           emails_uniq_opened_per_person[e] = emails_uniq_opens
           emails_total_opened_per_person[e] = emails_total_opens
           
-          if @last_email_sent_per_person[e].blank?
-            @last_email_sent_per_person[e] = {trackingrequest: r, trackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil}
-          end
+          @last_emails_sent_per_person[e] = [] if @last_emails_sent_per_person[e].blank?
+          @last_emails_sent_per_person[e] << { trackingrequest: r, lasttrackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil, totaltrackingevents: tracking_events.count } if @last_emails_sent_per_person[e].length < @NUM_LATEST_TRACKED_EMAIL_ACTIVITY_LIMIT
         end
       end # End: people_emails.map do |e|
     end 
@@ -279,15 +279,17 @@ class ExtensionController < ApplicationController
     external = params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } }
     ex_emails = external.map(&:second)
 
+    # ex_emails = ["nat.ferrante@451research.com","pauloshan@yahoo.com","sheila.gladhill@browz.com", "romeo.henry@mondo.com", "lzion@liveintent.com","invalid'o@gmail.com"]
     # group by ex_emails by domain frequency, order by most frequent domain
     ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
     order_emails_by_domain_freq = ex_emails.map { |email| "email = #{Contact.sanitize(email)} DESC" }.join(',')
     # find all contacts within current_user org that match the external emails, in the order of ex_emails
-    contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id}).order(order_emails_by_domain_freq) 
+    contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id }).order(order_emails_by_domain_freq) 
 
     if contacts.present?
       # get all opportunities that these contacts are members of
       projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
+
       if projects.present?
         # set most frequent project as opportunity
         @project = projects.group_by(&:id).values.max_by(&:size).first
@@ -304,6 +306,11 @@ class ExtensionController < ApplicationController
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
       # find all contacts within current_user org that have a similar email domain to external emails, in the order of domain frequency
       contacts = Contact.joins(:account).where(accounts: { organization_id: current_user.organization_id }).where(where_domain_matches).order(order_domain_frequency)
+      puts "domains: #{domains}"
+      puts "where_domain_matches: #{where_domain_matches}"
+      puts "order_domain_frequency: #{order_domain_frequency}"
+      puts "contacts:"
+      contacts.each {|c| puts "contact: #{c.email}" }
       if contacts.blank?
         order_domain_frequency = domains.map { |domain| "domain = '#{domain}' DESC" }.join(',')
         # find all accounts within current_user org whose domain is the email domain for external emails, in the order of domain frequency
@@ -464,7 +471,7 @@ class ExtensionController < ApplicationController
       end 
     end
 
-    external = params[:external].present? ? params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
+    external = params[:external].present? ? params[:external].values.map { |person| [person.first, person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
     # p "*** creating new external members for project #{@project.name} ***"
     external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
