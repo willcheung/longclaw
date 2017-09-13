@@ -56,9 +56,9 @@ class ExtensionController < ApplicationController
 
   # TODO: Rename this to "People" .html and path
   def account
-    @SOCIAL_BIO_LENGTH_MAX = 192
-    @EMAIL_SUBJECT_LENGTH_MAX = 65
-    @NUM_LAST_EMAIL_ACTIVITY_SHOW_LIMIT = 8
+    @SOCIAL_BIO_TEXT_LENGTH_MAX = 192
+    @EMAIL_SUBJECT_TEXT_LENGTH_MAX = 65
+    @NUM_LATEST_TRACKED_EMAIL_ACTIVITY_LIMIT = 8 # Number of newest tracked email activities shown in timeline
     @arrowcollapsed = "⌃" # 'wider' caret / "\u2303".encode('utf-8')
 
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
@@ -99,7 +99,7 @@ class ExtensionController < ApplicationController
           emails_total_opened_per_person[e] = emails_total_opens
           
           @last_emails_sent_per_person[e] = [] if @last_emails_sent_per_person[e].blank?
-          @last_emails_sent_per_person[e] << { trackingrequest: r, lasttrackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil, totaltrackingevents: tracking_events.count } if @last_emails_sent_per_person[e].length < @NUM_LAST_EMAIL_ACTIVITY_SHOW_LIMIT
+          @last_emails_sent_per_person[e] << { trackingrequest: r, lasttrackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil, totaltrackingevents: tracking_events.count } if @last_emails_sent_per_person[e].length < @NUM_LATEST_TRACKED_EMAIL_ACTIVITY_LIMIT
         end
       end # End: people_emails.map do |e|
     end 

@@ -254,21 +254,21 @@
                                         <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
                                             <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Click to open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
-                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_LENGTH_MAX) %>"
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
                                         <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
                                             <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Click to open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if person.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
-                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_LENGTH_MAX) %>"
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
                                         <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
                                             <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Click to open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if person.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
-                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_LENGTH_MAX) %>"
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
@@ -323,7 +323,7 @@
                                                 <i class="fa fa-envelope"></i>
                                             </div>
                                             <div class="extension-timeline-content">
-                                                <extrastrong><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_LENGTH_MAX) %></extrastrong><br/>
+                                                <extrastrong><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></extrastrong><br/>
                                                 <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
                                                 <% if tp[:lasttrackingevent].present? %>
                                                     <p class="time-ago"><i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>
