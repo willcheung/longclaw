@@ -102,6 +102,7 @@
     }
     .globe-icon{
         color: #7cb5ec; /* "CS blue" / light blue */
+        text-decoration: none;
     }
     .phone-icon {
         padding: 0 0 0 0.5em;
@@ -164,7 +165,7 @@
             }
         });
 
-        // anchor "link" workaround code to allow accordion to keep working, but allow user to click an anchor link inside of it
+        // Show/hide the expand/collapse arrow
         $("a").hover(
             function(){
                 $(this).addClass("hover");
@@ -174,6 +175,8 @@
                 $('.arrow', this).addClass('visibility-hidden');
             }
         );
+
+        // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it, e.g. company name
         $(".link").click(function(){
             // console.log("clicked on " + $(this).attr("url"));
             window.open($(this).attr("url")); 
@@ -246,31 +249,31 @@
                                <tbody>
                                     <tr style="margin-left: auto; margin-right: auto; width: 100px">
                                         <td class="fa-lg">
-                                            <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce disabled" alt="Salesforce disabled"/>
+                                            <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce"/>
                                         </td>
                                         <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
-                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Open <%= person.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %> in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Click to open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
                                                 data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @MAX_SOCIAL_BIO_LENGTH) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
                                         <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
-                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Open <%= person.social_url(Profile::SOCIAL_TYPE[:Twitter]) %> in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Click to open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if person.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
                                                 data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @MAX_SOCIAL_BIO_LENGTH) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
                                         <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
-                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Open <%= person.social_url(Profile::SOCIAL_TYPE[:Facebook]) %> in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Click to open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if person.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
                                                 data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @MAX_SOCIAL_BIO_LENGTH) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
                                         <td <%= "class=disabled" if person.websites.blank? %>>
-                                            <i class="fa fa-globe fa-2x globe-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" data-trigger='click' data-delay='{"show": 0, "hide": 0}' 
+                                            <a class="fa fa-globe fa-2x globe-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" data-trigger='click' data-delay='{"show": 0, "hide": 0}' 
                                             <% if person.websites.present? %>
                                                 data-original-title="
                                                 <% person.websites.each do |site| %>
@@ -278,7 +281,7 @@
                                                 <% end %>
                                                 "
                                             <% end %>
-                                            ></i></a>
+                                            ></a>
                                         </td>
                                         <% if person.phone.present? %>
                                             <td class="phone-icon">
