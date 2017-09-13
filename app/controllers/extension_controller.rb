@@ -1,6 +1,8 @@
 class ExtensionController < ApplicationController
   NUM_ACCOUNT_CONTACT_SHOW_LIMIT = 10  # How many Account Contacts to show
   NUM_LAST_EMAIL_ACTIVITY_SHOW_LIMIT = 8
+  MAX_SOCIAL_BIO_LENGTH = 192
+  MAX_EMAIL_SUBJECT_LENGTH = 65
   
   layout "extension", except: [:test, :new]
 
@@ -57,6 +59,8 @@ class ExtensionController < ApplicationController
 
   # TODO: Rename this to "People" .html and path
   def account
+    @MAX_SOCIAL_BIO_LENGTH = MAX_SOCIAL_BIO_LENGTH
+    @MAX_EMAIL_SUBJECT_LENGTH = MAX_EMAIL_SUBJECT_LENGTH
     @arrowcollapsed = "⌃" # 'wider' caret / "\u2303".encode('utf-8')
 
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
@@ -97,7 +101,7 @@ class ExtensionController < ApplicationController
           emails_total_opened_per_person[e] = emails_total_opens
           
           @last_emails_sent_per_person[e] = [] if @last_emails_sent_per_person[e].blank?
-          @last_emails_sent_per_person[e] += [{trackingrequest: r, trackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil}] if @last_emails_sent_per_person[e].length < NUM_LAST_EMAIL_ACTIVITY_SHOW_LIMIT
+          @last_emails_sent_per_person[e] += [{ trackingrequest: r, lasttrackingevent: tracking_events.limit(1).present? ? tracking_events.limit(1).first : nil, totaltrackingevents: tracking_events.count }] if @last_emails_sent_per_person[e].length < NUM_LAST_EMAIL_ACTIVITY_SHOW_LIMIT
         end
       end # End: people_emails.map do |e|
     end 

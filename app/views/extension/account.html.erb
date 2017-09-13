@@ -124,9 +124,6 @@
         font-size: 13px;
         font-weight: bold;
     }
-    .additionalinfo-group td {
-        padding: 2px 0;
-    }
     .extension-timeline-content {
         font-size: 12px;
     }
@@ -251,21 +248,33 @@
                                         <td class="fa-lg">
                                             <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce disabled" alt="Salesforce disabled"/>
                                         </td>
-                                        <td <%= "class=disabled" if person.linkedin_url.blank? %>>
-                                            <a href="<%= person.linkedin_url %>" target="_blank" title="Open <%= person.linkedin_url %> in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true"></i></a>
+                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Open <%= person.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %> in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @MAX_SOCIAL_BIO_LENGTH) %>"
+                                            <% end %>
+                                            ></i></a>
                                         </td>
-                                        <td <%= "class=disabled" if person.twitter_url.blank? %>>
-                                            <a href="<%= person.twitter_url %>" target="_blank" title="Open <%= person.twitter_url %> in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true"></i></a>
+                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Open <%= person.social_url(Profile::SOCIAL_TYPE[:Twitter]) %> in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @MAX_SOCIAL_BIO_LENGTH) %>"
+                                            <% end %>
+                                            ></i></a>
                                         </td>
-                                        <td <%= "class=disabled" if person.facebook_url.blank? %>>
-                                            <a href="<%= person.facebook_url %>" target="_blank" title="Open <%= person.facebook_url %> in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true"></i></a>
+                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Open <%= person.social_url(Profile::SOCIAL_TYPE[:Facebook]) %> in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @MAX_SOCIAL_BIO_LENGTH) %>"
+                                            <% end %>
+                                            ></i></a>
                                         </td>
                                         <td <%= "class=disabled" if person.websites.blank? %>>
-                                            <i class="fa fa-globe fa-2x globe-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" data-delay='{"show": 0, "hide": 3000}'
+                                            <i class="fa fa-globe fa-2x globe-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" data-trigger='click' data-delay='{"show": 0, "hide": 0}' 
                                             <% if person.websites.present? %>
-                                                data-original-title="Visit:</br>
+                                                data-original-title="
                                                 <% person.websites.each do |site| %>
-                                                <a href='<%=site%>' target='_blank'><%= URI.parse(site).host.sub(/^www\./, '') %> </a></br>
+                                                  <a href='<%=site%>' target='_blank'><%= URI.parse(site).host.sub(/^www\./, '') %> </a></br>
                                                 <% end %>
                                                 "
                                             <% end %>
@@ -297,6 +306,7 @@
                                 </tr>
                                 <tr><td>&nbsp;</td></tr>
                             </table>
+                        <% if @last_emails_sent_per_person[p[:email]].present? %>
                             <table class="timeline-group">
                                 <tr><td>&nbsp;</td></tr>
                                 <tr><td>
@@ -310,11 +320,16 @@
                                                 <i class="fa fa-envelope"></i>
                                             </div>
                                             <div class="extension-timeline-content">
-                                                <extrastrong><%= tp[:trackingrequest].subject %></extrastrong><br/>
-                                                <span style="color: grey; float: left;"><%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
-                                                <span style="word-wrap: break-word;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%= tp[:trackingrequest].recipients.join(", ") %></span>
-                                                <% if tp[:trackingevent].present? %>
-                                                    <p class="time-ago">Opened <%= time_ago_in_words(tp[:trackingevent].date) %> ago <%= tp[:trackingevent].date.strftime('%b %d') %> - <%= tp[:trackingevent].date.strftime("%l:%M%P") %></p>
+                                                <extrastrong><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @MAX_EMAIL_SUBJECT_LENGTH) %></extrastrong><br/>
+                                                <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
+                                                <% if tp[:lasttrackingevent].present? %>
+                                                    <p class="time-ago"><i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>
+                                                    <% if tp[:totaltrackingevents] > 1 %>
+                                                        (<%= tp[:totaltrackingevents] %>)&nbsp;&nbsp;Last opened
+                                                    <% else %>
+                                                        &nbsp;Opened
+                                                    <% end %>
+                                                    <%= time_ago_in_words(tp[:lasttrackingevent].date) %> ago <%= tp[:lasttrackingevent].date.strftime('%b %d') %> - <%= tp[:lasttrackingevent].date.strftime("%l:%M%P") %></p>
                                                 <% end %>
                                             </div>
                                         <% end %>
@@ -324,25 +339,7 @@
                                 </td></tr>
                                 <tr><td>&nbsp;</td></tr>
                             </table>
-                            <% if person.bio.present? %>
-                            <table class="additionalinfo-group">
-                                <tr><td></td></tr>
-                                <tr><td><span class="panel-title"><extrastrong>More about <%= profile_fullname %></extrastrong></span></td></tr>
-                                <% person.bio.each do |b| %>
-                                    <tr><td>
-                                        <strong>
-                                        <% if b[:socialtype] == Profile::SOCIAL_TYPE[:Linkedin] %>
-                                            <i class="fa fa-linkedin-square" aria-hidden="true"></i>
-                                        <% elsif b[:socialtype] == Profile::SOCIAL_TYPE[:Twitter] %>
-                                            <i class="fa fa-twitter" aria-hidden="true"></i>
-                                        <% elsif b[:socialtype] == Profile::SOCIAL_TYPE[:Facebook] %>
-                                            <i class="fa fa-facebook-square" aria-hidden="true"></i>
-                                        <% end %>
-                                        <%= b[:socialtype] %> bio: </strong>&nbsp;<%= b[:text][0...190] %><%= "..." if b[:text].length > 190 %></td>
-                                    </td></tr>
-                                <% end %>
-                            </table>
-                            <% end %>
+                        <% end %>
                         </div>
                     </div>
                 </div>

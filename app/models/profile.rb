@@ -69,16 +69,10 @@ class Profile < ActiveRecord::Base
     URI.encode(data.photos.first.url) if data_is_valid? && data.photos.present?
   end
 
-  def linkedin_url
-    social_url("linkedin")
-  end
-
-  def twitter_url
-    social_url("twitter")
-  end
-
-  def facebook_url
-    social_url("facebook")
+  def social_url(socialtype)
+    socialtype = get_FullContact_social_profile_type(socialtype)
+    sp = data.social_profiles.find{ |sp| sp.type.downcase == socialtype } if socialtype.present? && data_is_valid? && data.social_profiles.present?
+    URI.encode(sp.url) if sp.present? && sp.url.present?
   end
 
   # Returns an array of websites associated with this profile
@@ -98,37 +92,23 @@ class Profile < ActiveRecord::Base
     nil
   end
 
-  # Obtain the bio found in LinkedIn, Twitter, and Facebook (in that order), and returns an array of hashes with type and (bio) text. 
-  def bio
-    return nil if !data_is_valid? || data.social_profiles.blank?
-
-    linkedin_bio = nil
-    twitter_bio = nil
-    facebook_bio = nil
-    data.social_profiles.each do |sp|
-      if sp.bio.present?
-        linkedin_bio = sp.bio if sp.type.downcase == "linkedin"
-        twitter_bio = sp.bio if sp.type.downcase == "twitter"
-        facebook_bio = sp.bio if sp.type.downcase == "facebook"
-        # puts "sp.type.downcase: #{sp.type.downcase}"
-        # puts "linkedin_bio: #{linkedin_bio}"
-        # puts "twitter_bio: #{twitter_bio}"
-        # puts "facebook_bio: #{facebook_bio}"
-      end
-    end
-
-    socialbio_arr = []
-    socialbio_arr << {socialtype: SOCIAL_TYPE[:Linkedin], text: linkedin_bio} if linkedin_bio.present?
-    socialbio_arr << {socialtype: SOCIAL_TYPE[:Twitter], text: twitter_bio} if twitter_bio.present?
-    socialbio_arr << {socialtype: SOCIAL_TYPE[:Facebook], text: facebook_bio} if facebook_bio.present?
-    socialbio_arr
+  def social_bio(socialtype)
+    socialtype = get_FullContact_social_profile_type(socialtype)
+    sp = data.social_profiles.find{ |sp| sp.type.downcase == socialtype } if socialtype.present? && data_is_valid? && data.social_profiles.present?
+    sp.bio if sp.present?
   end
 
   private
 
-  def social_url(social_type)
-    sp = data.social_profiles.find{ |sp| sp.type.downcase == social_type } if data_is_valid? && data.social_profiles.present?
-    URI.encode(sp.url) if sp.present?
+  def get_FullContact_social_profile_type(cs_social_type)
+    case cs_social_type
+    when SOCIAL_TYPE[:Linkedin]
+      return "linkedin"
+    when SOCIAL_TYPE[:Twitter]
+      return "twitter"
+    when SOCIAL_TYPE[:Facebook]
+      return "facebook"
+    end
   end
 
   def downcase_emails
