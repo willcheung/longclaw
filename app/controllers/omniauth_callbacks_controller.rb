@@ -12,7 +12,6 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
 	def google_oauth2
     auth = request.env["omniauth.auth"]
-
     @user = User.find_for_google_oauth2(auth, (cookies[:timezone] || 'UTC'))
 
     if @user.persisted?

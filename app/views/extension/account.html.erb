@@ -7,10 +7,10 @@
         font-weight: bold;
         color: black;
     }
-    .hover *:not(.tooltip):not(.tooltip-inner):not(.arrow) {
+    .titleinfo-group:hover {
         background-color: #EEE;
     }
-    td > a, .link:hover  {
+    td > a, .link:hover {
         text-decoration: underline;
     }
     .contact-group {
@@ -69,7 +69,7 @@
         color: #337ab7; /* link blue */
     }
     .panel-body {
-        padding: 0 15px 15px 15px;
+        padding: 0 10px 15px 10px;
     }
     .panel-body > table {
         width: 98%;
@@ -100,6 +100,10 @@
     .fb-icon {
         color: #3b5998; /* Facebook blue */
     }
+    .globe-icon{
+        color: #7cb5ec; /* "CS blue" / light blue */
+        text-decoration: none;
+    }
     .phone-icon {
         padding: 0 0 0 0.5em;
         /*color: navy;*/
@@ -108,17 +112,8 @@
         font-size: 12px;
         padding-bottom: 3px;
     }
-    .emailmtgs-group td {
-        vertical-align: text-top;
-    }
-    .emailmtgs-group td:first-child {
-        /*font-size: 8px;*/
-        padding: 10px 12px 0 0;
-        text-align: right;
-        width: 85px;
-    }
     button { /* used for easy styling: need to change */
-        width: 80px;
+        width: 79px;
         margin: 1px;
         color: grey;
         background-color: white;
@@ -127,19 +122,16 @@
         pointer-events: none;
     }
     .statistics {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: bold;
     }
-    .additionalinfo-group td {
-        padding: 2px 0;
+    .extension-timeline-content {
+        font-size: 12px;
     }
 </style>
 
 <!-- TODO: move any relevant scripts to extension.js -->
 <script type="text/javascript">
-    // $(function () {
-    //     $('[data-toggle="tooltip"]').tooltip();
-    // });
     $(document).ready(function(){
         // $(".panel-default").hover(
         //     function() {
@@ -173,7 +165,7 @@
             }
         });
 
-        // anchor "link" workaround code to allow accordion to keep working, but allow user to click an anchor link inside of it
+        // Show/hide the expand/collapse arrow
         $("a").hover(
             function(){
                 $(this).addClass("hover");
@@ -183,6 +175,8 @@
                 $('.arrow', this).addClass('visibility-hidden');
             }
         );
+
+        // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it, e.g. company name
         $(".link").click(function(){
             // console.log("clicked on " + $(this).attr("url"));
             window.open($(this).attr("url")); 
@@ -228,6 +222,11 @@
                                                     <% if person.organization.present? || valid_domain?(get_domain(p[:email])) %>
                                                         <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization.present? ? person.organization : get_domain(p[:email]) %></span></td></tr>
                                                     <% end %>
+                                                    <% if person.location.present? %>
+                                                        <tr><td>
+                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp; <%= person.location.gsub!(", United States", "")  %>
+                                                        </td></tr>
+                                                    <% end %>
                                                 </tbody>
                                             </table>
                                         </td>
@@ -250,16 +249,39 @@
                                <tbody>
                                     <tr style="margin-left: auto; margin-right: auto; width: 100px">
                                         <td class="fa-lg">
-                                            <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce disabled" alt="Salesforce disabled"/>
+                                            <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce"/>
                                         </td>
-                                        <td <%= "class=disabled" if person.linkedin_url.blank? %>>
-                                            <a href="<%= person.linkedin_url %>" target="_blank" title="Open <%= person.linkedin_url %> in new window"><i class="linkedin-icon fa fa-linkedin-square fa-2x" aria-hidden="true"></i></a>
+                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Click to open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+                                            <% end %>
+                                            ></i></a>
                                         </td>
-                                        <td <%= "class=disabled" if person.twitter_url.blank? %>>
-                                            <a href="<%= person.twitter_url %>" target="_blank" title="Open <%= person.twitter_url %> in new window"><i class="twitter-icon fa fa-twitter fa-2x" aria-hidden="true"></i></a>
+                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Click to open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+                                            <% end %>
+                                            ></i></a>
                                         </td>
-                                        <td <%= "class=disabled" if person.facebook_url.blank? %>>
-                                            <a href="<%= person.facebook_url %>" target="_blank" title="Open <%= person.facebook_url %> in new window"><i class="fb-icon fa fa-facebook-square fa-2x" aria-hidden="true"></i></a>
+                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
+                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Click to open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+                                            <% end %>
+                                            ></i></a>
+                                        </td>
+                                        <td <%= "class=disabled" if person.websites.blank? %>>
+                                            <a class="fa fa-globe fa-2x globe-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" data-trigger='click' data-delay='{"show": 0, "hide": 0}' 
+                                            <% if person.websites.present? %>
+                                                data-original-title="
+                                                <% person.websites.each do |site| %>
+                                                  <a href='<%=site%>' target='_blank'><%= URI.parse(site).host.sub(/^www\./, '') %> </a></br>
+                                                <% end %>
+                                                "
+                                            <% end %>
+                                            ></a>
                                         </td>
                                         <% if person.phone.present? %>
                                             <td class="phone-icon">
@@ -272,39 +294,9 @@
                                     </tr>
                                 </tbody>
                             </table>
-                            <table class="emailmtgs-group">
-                                <tr>
-                                    <td>LAST EMAIL</td>
-                                    <td>
-                                    <% if @last_email_sent_per_person[p[:email]].blank? %>
-                                        None
-                                    <% else %>
-                                        <extrastrong><%= @last_email_sent_per_person[p[:email]][:trackingrequest].subject %></extrastrong> - <%= @last_email_sent_per_person[p[:email]][:trackingrequest].sent_at.strftime('%b %d') %><br/>
-                                        <% if @last_email_sent_per_person[p[:email]][:trackingevent].present? %>
-                                            Opened <%= @last_email_sent_per_person[p[:email]][:trackingevent].date.strftime('%b %d') %> - <%= @last_email_sent_per_person[p[:email]][:trackingevent].date.strftime("%l:%M%P") %>
-                                        <% end %>
-                                    <% end %>
-                                    </td>
-                                </tr>
-                                <!-- <tr>
-                                    <td>NEXT MEETING&nbsp;<i class="fa fa-calendar-o" aria-hidden="true"></i></td>
-                                    <td><a href="#">Schedule Meeting</a></td>
-                                </tr>
-                                <tr>
-                                    <td>LAST MEETING&nbsp;<i class="fa fa-calendar-check-o" aria-hidden="true"></i></td>
-                                    <td><extrastrong>ContextSmith Sales Call</extrastrong><br>Aug 30 - 3:00pm</td>
-                                </tr> -->
-                                <tr>
-                                    <td>ACTIONS</td>
-                                    <td><a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= p[:email] %>&su=<%= "" %>&body=<%= "" %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"> Send Email</a>
-                                    <!-- &nbsp;&middot;&nbsp;
-                                    <a href="#" target="_blank"> Add a Note</a></td> -->
-                                </tr>
-                                <tr><td></td></tr>
-                            </table>
-                            <table>
+                            <table class="activity-group">
                                 <tr><td>&nbsp;</td></tr>
-                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Activity of tracked emails. To track an email, check the CS Tracking checkbox when composing and sending an email." title="Activity of tracked emails. To track an email, check the CS Tracking checkbox when composing and sending an email."></i></td></tr>
+                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS Tracking</b> checkbox when composing and sending an email."></i></td></tr>
                                 <tr>
                                     <td><table>
                                     <!-- TODO: Don't use buttons to style? -->
@@ -317,40 +309,40 @@
                                 </tr>
                                 <tr><td>&nbsp;</td></tr>
                             </table>
-                            <% if person.location.present? || person.websites.present? || person.bio.present? %>
-                            <table class="additionalinfo-group">
-                                <tr><td></td></tr>
-                                <tr><td><span class="panel-title"><extrastrong>More about <%= profile_fullname %></extrastrong></span></td></tr>
-                                <% if person.location.present? %>
-                                    <tr><td>
-                                        <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp;<strong>Location:</strong>&nbsp; <%= person.location %>
-                                    </td></tr>
-                                <% end %>                            
-                                <% if person.websites.present? %>
-                                    <tr><td>
-                                        <i class="fa fa-globe" aria-hidden="true"></i>&nbsp;<strong>Websites:</strong>&nbsp; 
-                                        <% person.websites.each do |site| %>
-                                            <a href="<%= site %>" target="_blank" title="Open link in a new window"><%= URI.parse(site).host.sub(/^www\./, '') %></a>
+                        <% if @last_emails_sent_per_person[p[:email]].present? %>
+                            <table class="timeline-group">
+                                <tr><td>&nbsp;</td></tr>
+                                <tr><td>
+                                    <div id="extension-timeline">
+                                    <% @last_emails_sent_per_person[p[:email]].each do |tp| %>
+                                        <!-- TODO: Create a view for tracking_requests -->
+                                        <!-- < %= render 'tracking_requests/extension_block', t: t %> -->
+                                        <div class="vertical-timeline-block extension-block">
+                                        <% if true %>
+                                            <div class="vertical-timeline-icon secondary-bg">
+                                                <i class="fa fa-envelope"></i>
+                                            </div>
+                                            <div class="extension-timeline-content">
+                                                <extrastrong><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></extrastrong><br/>
+                                                <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
+                                                <% if tp[:lasttrackingevent].present? %>
+                                                    <p class="time-ago"><i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>
+                                                    <% if tp[:totaltrackingevents] > 1 %>
+                                                        (<%= tp[:totaltrackingevents] %>)&nbsp;&nbsp;Last opened
+                                                    <% else %>
+                                                        &nbsp;Opened
+                                                    <% end %>
+                                                    <%= time_ago_in_words(tp[:lasttrackingevent].date) %> ago <%= tp[:lasttrackingevent].date.strftime('%b %d') %> - <%= tp[:lasttrackingevent].date.strftime("%l:%M%P") %></p>
+                                                <% end %>
+                                            </div>
                                         <% end %>
-                                    </td></tr>
-                                <% end %>
-                                <% if person.bio.present? %>
-                                    <% person.bio.each do |b| %>
-                                        <tr><td>
-                                            <strong>
-                                            <% if b[:socialtype] == Profile::SOCIAL_TYPE[:Linkedin] %>
-                                                <i class="fa fa-linkedin-square" aria-hidden="true"></i>
-                                            <% elsif b[:socialtype] == Profile::SOCIAL_TYPE[:Twitter] %>
-                                                <i class="fa fa-twitter" aria-hidden="true"></i>
-                                            <% elsif b[:socialtype] == Profile::SOCIAL_TYPE[:Facebook] %>
-                                                <i class="fa fa-facebook-square" aria-hidden="true"></i>
-                                            <% end %>
-                                            <%= b[:socialtype] %> bio: </strong>&nbsp;<%= b[:text][0...190] %><%= "..." if b[:text].length > 190 %></td>
-                                        </td></tr>
-                                    <% end %>
-                                <% end %>
+                                        </div>
+                                    <% end if @last_emails_sent_per_person[p[:email]].present? %>
+                                    </div>
+                                </td></tr>
+                                <tr><td>&nbsp;</td></tr>
                             </table>
-                            <% end %>
+                        <% end %>
                         </div>
                     </div>
                 </div>

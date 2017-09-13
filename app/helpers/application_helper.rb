@@ -302,4 +302,9 @@ module ApplicationHelper
             "<a href=\"#"+ id + "\" onclick=\"toggle_visibility_for_pair('" + id + "-short', '" + id + "-full');\">&nbsp;[less]</a></span>" if text.length >length
     return html
   end
+
+  # Truncate a string if it is longer than the maxlength, and append ellipses to the end. If it is shorter, then return the string with no change.
+  def truncate_with_ellipsis(string, maxlength)
+    string[0...maxlength] + (string.length > maxlength ? "…" : "")
+  end
 end
