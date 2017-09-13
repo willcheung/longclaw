@@ -5,7 +5,7 @@
       
       	<h1 class="logo-name oauth" style="font-size:19px;">Just one more step.</h1>
 
-        <a class="btn btn-lg btn-primary" style="margin: 25px 0;" href="<%= user_omniauth_authorize_url(:google_oauth2) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log in Using Google</span></a>
+        <a class="btn btn-lg btn-primary" style="margin: 25px 0;" href="<%= omniauth_authorize_path(:user, :google_oauth2, extension: true) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log in Using Google</span></a>
 
         <p class="oauth" style="font-size:10px;margin-top:15em;">By clicking this button, you agree to our <br><a href="https://www.contextsmith.com/terms/" target="_blank">Terms of Service</a>.</p>
   	</div>
