@@ -37,7 +37,7 @@ class TrackingController < ApplicationController
           user_id: current_user.id,
           status: 'active'
       )
-      render :json => result
+      render :json => tr
     else
       render json: {}, status: 401
     end
