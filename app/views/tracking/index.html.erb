@@ -45,7 +45,7 @@
 
                   <div><b><%= tr.someone.capitalize %></b> opened your message
                     <b><span class="tr-time"><%= te.date %></span></b></div>
-                  <div><b><%= tr.subject %></b> that was sent by you <span class="tr-time"><%= tr.sent_at %></span>
+                  <div><b><%= tr.subject %></b> that you sent <span class="tr-time"><%= tr.sent_at %></span>
                   </div>
                   <div>
                     <span class="text-muted"><i class="fa fa-globe" aria-hidden="true"></i>
@@ -112,7 +112,7 @@
               </div>
 
               <div><b><%= tr.recipients_to_list %></b> hasn't opened the message</div>
-              <div><b><%= tr.subject %></b> that was sent by you <span class="tr-time"><%= tr.sent_at %></span></div>
+              <div><b><%= tr.subject %></b> that you sent <span class="tr-time"><%= tr.sent_at %></span></div>
             </li>
             <% end %>
         <% end %>
