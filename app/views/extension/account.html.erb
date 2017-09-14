@@ -48,7 +48,7 @@
         transform: translateY(20px) translateX(-5px) rotate(-90deg);
     }
     .visibility-hidden { /* bootstrap overrides .hidden  */
-        /*visibility: hidden;*/
+        visibility: hidden;
     }
     .titleinfo-group .profile-pic-container {
         width: 48px;
@@ -173,17 +173,6 @@
             }
         });
 
-        // Show/hide the expand/collapse arrow
-        $("a").hover(
-            function(){
-                $(this).addClass("hover");
-                $('.arrow', this).removeClass('visibility-hidden');
-            }, function() {
-                $(this).removeClass("hover");
-                $('.arrow', this).addClass('visibility-hidden');
-            }
-        );
-
         // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it, e.g. company name
         $(".link").click(function(){
             // console.log("clicked on " + $(this).attr("url"));
@@ -241,9 +230,9 @@
                                             </table>
                                         </td>
                                         <% if n == 0 && i == 0 %>
-                                            <td class="arrow arrow-section-expanded visibility-hidden"><%= @widecaret %></td>
+                                            <td class="arrow arrow-section-expanded"><%= @widecaret %></td>
                                         <% else %>
-                                            <td class="arrow arrow-section-collapsed visibility-hidden"><%= @widecaret %></td>
+                                            <td class="arrow arrow-section-collapsed"><%= @widecaret %></td>
                                         <% end %>
                                         <!-- <td>
                                             <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= person.id %>-<%= n %>"></i>
