@@ -113,7 +113,7 @@
         padding-bottom: 3px;
     }
     button { /* used for easy styling: need to change */
-        width: 79px;
+        width: 77px;
         margin: 1px;
         color: grey;
         background-color: white;
@@ -193,7 +193,9 @@
         <div id="accordion" class="panel-group">
         <% 2.times do |n| %>
             <% contacts_with_profile = (n == 0 ? @people_with_profile : @account_contacts_with_profile) %>
-            <% if n == 1 && contacts_with_profile.present? %>
+            <% if n == 0 && contacts_with_profile.blank? %>
+                <h3>No valid contacts were selected or found in email.</h3>
+            <% elsif n == 1 && contacts_with_profile.present? %>
                 <span class="contact-group"><br/>MORE PEOPLE AT <%= @project.name.upcase %></span>
             <% end %>
             <% contacts_with_profile.each_with_index do |p, i| %>
@@ -224,7 +226,7 @@
                                                     <% end %>
                                                     <% if person.location.present? %>
                                                         <tr><td>
-                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp; <%= person.location.gsub!(", United States", "")  %>
+                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp; <%= person.location.gsub(", United States", "") %>
                                                         </td></tr>
                                                     <% end %>
                                                 </tbody>
@@ -324,13 +326,13 @@
                                             </div>
                                             <div class="extension-timeline-content">
                                                 <extrastrong><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></extrastrong><br/>
-                                                <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
+                                                <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago - <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
                                                 <% if tp[:lasttrackingevent].present? %>
-                                                    <p class="time-ago"><i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>
+                                                    <p class="time-ago">
                                                     <% if tp[:totaltrackingevents] > 1 %>
-                                                        (<%= tp[:totaltrackingevents] %>)&nbsp;&nbsp;Last opened
+                                                        <%= tp[:totaltrackingevents] %> <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;Last opened
                                                     <% else %>
-                                                        &nbsp;Opened
+                                                        <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;Opened
                                                     <% end %>
                                                     <%= time_ago_in_words(tp[:lasttrackingevent].date) %> ago <%= tp[:lasttrackingevent].date.strftime('%b %d') %> - <%= tp[:lasttrackingevent].date.strftime("%l:%M%P") %></p>
                                                 <% end %>
