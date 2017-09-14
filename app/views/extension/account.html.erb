@@ -326,13 +326,13 @@
                                             </div>
                                             <div class="extension-timeline-content">
                                                 <extrastrong><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></extrastrong><br/>
-                                                <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
+                                                <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago - <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
                                                 <% if tp[:lasttrackingevent].present? %>
-                                                    <p class="time-ago"><i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>
+                                                    <p class="time-ago">
                                                     <% if tp[:totaltrackingevents] > 1 %>
-                                                        (<%= tp[:totaltrackingevents] %>)&nbsp;&nbsp;Last opened
+                                                        <%= tp[:totaltrackingevents] %> <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;Last opened
                                                     <% else %>
-                                                        &nbsp;Opened
+                                                        <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;Opened
                                                     <% end %>
                                                     <%= time_ago_in_words(tp[:lasttrackingevent].date) %> ago <%= tp[:lasttrackingevent].date.strftime('%b %d') %> - <%= tp[:lasttrackingevent].date.strftime("%l:%M%P") %></p>
                                                 <% end %>
