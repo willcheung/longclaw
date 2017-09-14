@@ -80,7 +80,7 @@ class User < ActiveRecord::Base
   scope :ordered_by_first_name, -> { order('LOWER(first_name) ASC') }
 
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
-         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce, :salesforce_sandbox]
+         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :salesforce, :salesforce_sandbox]
 
   validates :email, uniqueness: true
 

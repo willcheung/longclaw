@@ -26,20 +26,21 @@ class TrackingController < ApplicationController
 
   def create
     data = Hashie::Mash.new(JSON.parse(request.body.read))
-    # TODO validation
-    tr = TrackingRequest.create(
-        message_id: data.message_id,
-        email_id: data.email_id, # internal email_id like the google mail id
-        tracking_id: data.tracking_id,
-        recipients: to_email_address(data.recipients),
-        subject: data.subject,
-        sent_at: data.sent_at.to_datetime,
-        user_id: current_user.id,
-        status: 'active'
-    )
-
-
-    render :json => tr
+    if current_user.email == data.user_email
+      tr = TrackingRequest.create(
+          message_id: data.message_id,
+          email_id: data.email_id, # internal email_id like the google mail id
+          tracking_id: data.tracking_id,
+          recipients: to_email_address(data.recipients),
+          subject: data.subject,
+          sent_at: data.sent_at.to_datetime,
+          user_id: current_user.id,
+          status: 'active'
+      )
+      render :json => tr
+    else
+      render json: {}, status: 401
+    end
   end
 
   # callback from tracking img tags

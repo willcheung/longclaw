@@ -1,6 +1,14 @@
 # Subclass the GoogleOauth2 Omniauth strategy for
 # Google Apps Marketplace V2 SSO.
 
+ module OmniAuth::Strategies
+   class GoogleOauth2Basic < GoogleOauth2
+     def name
+       :google_oauth2_basic
+     end
+   end
+ end
+
 # require 'basecamp2'
 # Not being used right now.
 # module OmniAuth
