@@ -41,8 +41,11 @@
         float: right;
         white-space:nowrap;
     }
-    .arrow-expanded {
-        transform: translateY(-8px) rotateX(180deg);
+    .arrow-section-expanded {  /* arrow style for section that is expanded */
+        transform: translateY(18px) translateX(-8px) rotate(180deg);
+    }
+    .arrow-section-collapsed {
+        transform: translateY(20px) translateX(-5px) rotate(-90deg);
     }
     .visibility-hidden { /* bootstrap overrides .hidden  */
         visibility: hidden;
@@ -63,6 +66,8 @@
         font-size: 12px;
         color: #999;
         font-weight: normal;
+        overflow-wrap: break-word; 
+        word-break: break-all;
     }
     .company-name {
         font-size: 11px;
@@ -113,13 +118,16 @@
         padding-bottom: 3px;
     }
     button { /* used for easy styling: need to change */
-        width: 77px;
+        width: 75px;
         margin: 1px;
         color: grey;
         background-color: white;
         border: 2px solid grey;
         border-radius: 5px;
         pointer-events: none;
+    }
+    .activity-group .fa {
+        font-size: 16px;
     }
     .statistics {
         font-size: 13px;
@@ -148,33 +156,22 @@
         $("a").click(function(){
             // Save the state of the arrow of the clicked element
             var this_arrow_td = $('.arrow', this);
-            var arrow_is_expanded = this_arrow_td.attr("class").includes("arrow-expanded");
+            var section_is_expanded = this_arrow_td.attr("class").includes("arrow-section-expanded");
 
             //Set all arrows to the collapsed state
-            $('.arrow').html("<%= @arrowcollapsed %>").removeClass('arrow-expanded').addClass('arrow-collapsed');
+            $('.arrow').html("<%= @widecaret %>").removeClass('arrow-section-expanded').addClass('arrow-section-collapsed');
 
             // Using saved state, toggle the arrow of the clicked element
-            if (arrow_is_expanded) {
-                this_arrow_td.removeClass('arrow-expanded');
-                this_arrow_td.html("<%= @arrowcollapsed %>");
-                this_arrow_td.addClass('arrow-collapsed');
+            if (section_is_expanded) {
+                this_arrow_td.removeClass('arrow-section-expanded');
+                this_arrow_td.html("<%= @widecaret %>");
+                this_arrow_td.addClass('arrow-section-collapsed');
             } else {
-                this_arrow_td.removeClass('arrow-collapsed');
-                this_arrow_td.html("<%= @arrowcollapsed %>");
-                this_arrow_td.addClass('arrow-expanded');
+                this_arrow_td.removeClass('arrow-section-collapsed');
+                this_arrow_td.html("<%= @widecaret %>");
+                this_arrow_td.addClass('arrow-section-expanded');
             }
         });
-
-        // Show/hide the expand/collapse arrow
-        $("a").hover(
-            function(){
-                $(this).addClass("hover");
-                $('.arrow', this).removeClass('visibility-hidden');
-            }, function() {
-                $(this).removeClass("hover");
-                $('.arrow', this).addClass('visibility-hidden');
-            }
-        );
 
         // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it, e.g. company name
         $(".link").click(function(){
@@ -217,7 +214,7 @@
                                         <td>
                                             <table>
                                                 <tbody class="contact-info">
-                                                    <tr><td class="contact-name panel-title" 
+                                                    <tr><td class="contact-name panel-title"
                                                       <%= "title=#{p[:email]}" if profile_fullname != p[:email] %>
                                                     ><extrastrong><%= profile_fullname %></extrastrong></td></tr>
                                                     <tr><td><%= person.title %></td></tr>
@@ -233,9 +230,9 @@
                                             </table>
                                         </td>
                                         <% if n == 0 && i == 0 %>
-                                            <td class="arrow arrow-expanded visibility-hidden"><%= @arrowcollapsed %></td>
+                                            <td class="arrow arrow-section-expanded"><%= @widecaret %></td>
                                         <% else %>
-                                            <td class="arrow arrow-collapsed visibility-hidden"><%= @arrowcollapsed %></td>
+                                            <td class="arrow arrow-section-collapsed"><%= @widecaret %></td>
                                         <% end %>
                                         <!-- <td>
                                             <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= person.id %>-<%= n %>"></i>
@@ -301,11 +298,10 @@
                                 <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS Tracking</b> checkbox when composing and sending an email."></i></td></tr>
                                 <tr>
                                     <td><table>
-                                    <!-- TODO: Don't use buttons to style? -->
                                         <tr>
-                                            <td><button><i class="fa fa-envelope-o fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_sent_per_person[p[:email]].present? ? @emails_sent_per_person[p[:email]] : 0 %></span><br/>Sent</button></td>
-                                            <td><button><i class="fa fa-envelope-open-o fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_pct_opened_per_person[p[:email]].present? ? (@emails_pct_opened_per_person[p[:email]] * 100).round(0) : 0 %>%</span><br/>Opened</button></td>
-                                            <td><button><i class="fa fa-envelope-open fa-2x" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_engagement_per_person[p[:email]].present? ? (@emails_engagement_per_person[p[:email]]).round(1) : 0 %>x</span><br/>Engagement</button></td>
+                                            <td><button><i class="fa fa-envelope-o" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_sent_per_person[p[:email]].present? ? @emails_sent_per_person[p[:email]] : 0 %></span><br/>Sent</button></td>
+                                            <td><button><i class="fa fa-envelope-open-o" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_pct_opened_per_person[p[:email]].present? ? (@emails_pct_opened_per_person[p[:email]] * 100).round(0) : 0 %>%</span><br/>Opened</button></td>
+                                            <td><button><i class="fa fa-envelope-open" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_engagement_per_person[p[:email]].present? ? (@emails_engagement_per_person[p[:email]]).round(1) : 0 %>x</span><br/>Engagement</button></td>
                                         </tr>
                                     </table></td>
                                 </tr>

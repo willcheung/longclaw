@@ -59,7 +59,7 @@ class ExtensionController < ApplicationController
     @SOCIAL_BIO_TEXT_LENGTH_MAX = 192
     @EMAIL_SUBJECT_TEXT_LENGTH_MAX = 65
     @NUM_LATEST_TRACKED_EMAIL_ACTIVITY_LIMIT = 8 # Number of newest tracked email activities shown in timeline
-    @arrowcollapsed = "⌃" # 'wider' caret / "\u2303".encode('utf-8')
+    @widecaret = "⌃" # 'wider' than standard, from:  / "\u2303".encode('utf-8')
 
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
     internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
