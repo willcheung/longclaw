@@ -193,7 +193,10 @@
         <% 2.times do |n| %>
             <% contacts_with_profile = (n == 0 ? @people_with_profile : @account_contacts_with_profile) %>
             <% if n == 0 && contacts_with_profile.blank? %>
-                <h3>No valid contacts were selected or found in email.</h3>
+                <div>
+                    <h3 style="padding: 1em;">No valid contacts were selected or found in the email.</h3>
+                    <img style="padding: 5em 0;" class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
+                </div>
             <% elsif n == 1 && contacts_with_profile.present? %>
                 <span class="contact-group"><br/>MORE PEOPLE AT <%= @project.name.upcase %></span>
             <% end %>
