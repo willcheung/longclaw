@@ -17,7 +17,7 @@ class ApplicationController < ActionController::Base
   def after_sign_in_path_for(resource)
 
     if resource.is_a?(User)
-      auth_params = request.env['omniauth.params']
+      auth_params = request.env['omniauth.params'] || {}
       request_origin = request.env['omniauth.origin']
       origin = URI.parse(request_origin).path[1..9] if request_origin.present?
       stored_location = stored_location_for(resource)
