@@ -1,8 +1,9 @@
 <% remote ||= false %>
 <% url ||= user_session_path %>
 <% button_text ||= 'Log In' %>
+<% role ||= nil %>
 
-<a id="google-login" class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_url(:google_oauth2) %>"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Google</span></a>
+<a id="google-login" class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_path(:google_oauth2, role: role) %>"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Google</span></a>
 
 <button id="outlook-login" class="btn btn-lg btn-primary oauth m-t-lg"><img src="/assets/images/outlook-logo-white.png" width="26" height="26" /></i>&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Outlook</span></button>
 
