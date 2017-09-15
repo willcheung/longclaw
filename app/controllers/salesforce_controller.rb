@@ -78,6 +78,17 @@ class SalesforceController < ApplicationController
     end
   end
 
+  # Actions to take when user initially logs into SFDC
+  def self.initial_SFDC_login(current_user)
+    puts "\n#{get_full_name(current_user)} (email=#{current_user.email}) initial login to SFDC..."
+    sfdc_oauth_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+
+    if sfdc_oauth_user.present?
+      SalesforceAccount.load_accounts(current_user) if current_user.organization.salesforce_accounts.limit(1).blank?
+      SalesforceOpportunity.load_opportunities(current_user)  
+    end
+  end
+
   # Links a CS account to a Salesforce account.  If a Power User or trial/Chrome User links a SFDC account, then automatically import the SFDC contacts.
   def link_salesforce_account
     # One CS Account can be linked to many Salesforce Accounts
@@ -136,12 +147,12 @@ class SalesforceController < ApplicationController
   def import_salesforce
     case params[:entity_type]
     when "account"
-      SalesforceAccount.load_accounts(current_user.organization_id)
-      refresh_fields(params[:entity_type])
+      SalesforceAccount.load_accounts(current_user)
+      refresh_fields(params[:entity_type]) # refresh/update the standard and custom field values of mapped accts
       return
     when "project"
-      SalesforceOpportunity.load_opportunities(current_user.organization_id)
-      refresh_fields(params[:entity_type])
+      SalesforceOpportunity.load_opportunities(current_user)
+      refresh_fields(params[:entity_type]) # refresh/update the standard and custom field values of mapped opps
       return
     when "activity"
       # Ignores exported CS data residing on SFDC.

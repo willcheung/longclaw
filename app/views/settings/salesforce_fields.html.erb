@@ -18,7 +18,7 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="ibox float-e-margins">
         <div id="top" class="ibox-content">
-            <% if current_user.role != User::ROLE[:Admin] %>
+            <% if !current_user.admin? %>
               Must be a Salesforce admin to access Organization Salesforce Integration.  <a href="<%= settings_path %>">Return to Settings</a>
             <% elsif @salesforce_user.nil? %> 
               <a class="btn btn-primary btn-sm" style="font-size:12px" href="<%=user_omniauth_authorize_url(:salesforce) %>">Log in to Salesforce</a>

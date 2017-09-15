@@ -2,6 +2,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
     User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
     #puts "****** session return_to_path: #{ session[:return_to_path] }"
+    SalesforceController.initial_SFDC_login(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
@@ -65,6 +66,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def user_omniauth_auth_helper
     # Save the redirect path which will be used in the OAuth callback
     session[:return_to_path] = params[:source] == "chrome" ? extension_path(login: true) : URI.escape(request.referer, ".")
+    # puts "session[:return_to_path]=#{session[:return_to_path]}"
     redirect_to user_omniauth_authorize_path(params[:provider])
   end
 end

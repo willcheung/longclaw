@@ -4,7 +4,7 @@ class SalesforceService
     salesforce_client_id = ENV['salesforce_client_id']
     salesforce_client_secret = ENV['salesforce_client_secret']
     hostURL = 'login.salesforce.com'
-    # try to get salesforce production. if not connect, check if it is connected to salesforce sandbox
+    # Try to get salesforce production. If not connected, check if it is connected to SFDC sandbox
     if user_id
       salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id)
     else
@@ -49,6 +49,30 @@ class SalesforceService
 
     #return nil  # simulates a Salesforce connection error
     client
+  end
+
+  def self.get_salesforce_user_uuid(organization_id, user_id=nil)
+    # Try to get salesforce production
+    salesforce_user = user_id ? OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id) : OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
+
+    # If not connected, check if it is connected to SFDC sandbox
+    if (salesforce_user.nil?)
+      salesforce_user = user_id ? OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id, user_id: user_id) : OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
+    end
+
+    salesforce_user.oauth_provider_uid[salesforce_user.oauth_provider_uid.rindex(/\//)+1...salesforce_user.oauth_provider_uid.length] if salesforce_user.present?
+  end
+
+  def self.get_salesforce_organization_uuid(organization_id, user_id=nil)
+    # Try to get salesforce production
+    salesforce_user = user_id ? OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id) : OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
+
+    # If not connected, check if it is connected to SFDC sandbox
+    if (salesforce_user.nil?)
+      salesforce_user = user_id ? OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id, user_id: user_id) : OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
+    end
+
+    (salesforce_user.oauth_provider_uid.match /(.+)\/(.+)\/(.+)/)[2] if salesforce_user.present?
   end
 
   # Parameters: client - connection to Salesforce

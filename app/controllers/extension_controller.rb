@@ -4,11 +4,11 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
-  before_action :set_account_and_project, only: [:alerts_tasks, :contacts, :metrics]
+  # before_action :set_account_and_project, only: [:alerts_tasks, :contacts, :metrics]
   before_action :set_account_and_project_for_people, only: [:account]
-  before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
+  # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
   before_action :get_account_types, only: :no_account
-  before_action :get_current_org_users, only: :alerts_tasks
+  # before_action :get_current_org_users, only: :alerts_tasks
 
   def test
     render layout: "empty"
@@ -306,11 +306,8 @@ class ExtensionController < ApplicationController
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
       # find all contacts within current_user org that have a similar email domain to external emails, in the order of domain frequency
       contacts = Contact.joins(:account).where(accounts: { organization_id: current_user.organization_id }).where(where_domain_matches).order(order_domain_frequency)
-      puts "domains: #{domains}"
-      puts "where_domain_matches: #{where_domain_matches}"
-      puts "order_domain_frequency: #{order_domain_frequency}"
-      puts "contacts:"
-      contacts.each {|c| puts "contact: #{c.email}" }
+      # puts "contacts:"
+      # contacts.each {|c| puts "contact: #{c.email}" }
       if contacts.blank?
         order_domain_frequency = domains.map { |domain| "domain = '#{domain}' DESC" }.join(',')
         # find all accounts within current_user org whose domain is the email domain for external emails, in the order of domain frequency
@@ -413,18 +410,18 @@ class ExtensionController < ApplicationController
   end
 
   # Set the various status flags and complete operations related to SFDC and linked SFDC entity
-  def set_sfdc_status_and_accounts
-    @sfdc_accounts_exist = SalesforceAccount.where(contextsmith_organization_id: current_user.organization_id).limit(1).present?
-    @linked_to_sfdc = @project && (!@project.salesforce_opportunity.nil? || @project.account.salesforce_accounts.present?)
-    @enable_sfdc_login_and_linking = current_user.admin? || current_user.power_or_trial_only?
-    @enable_sfdc_refresh = @enable_sfdc_login_and_linking  # refresh and login/linking permissions can be separate in the future
+  # def set_sfdc_status_and_accounts
+  #   @sfdc_accounts_exist = current_user.organization.salesforce_accounts.limit(1).present?
+  #   @linked_to_sfdc = @project && (!@project.salesforce_opportunity.nil? || @project.account.salesforce_accounts.present?)
+  #   @enable_sfdc_login_and_linking = current_user.admin? || current_user.power_or_trial_only?
+  #   @enable_sfdc_refresh = @enable_sfdc_login_and_linking  # refresh and login/linking permissions can be separate in the future
 
-    # If no SFDC accounts found, automatically refresh the SFDC accounts list
-    if !@sfdc_accounts_exist && @enable_sfdc_login_and_linking
-      SalesforceAccount.load_accounts(current_user.organization_id) 
-      @sfdc_accounts_exist = true
-    end
-  end
+  #   # If no SFDC accounts found, automatically refresh the SFDC accounts list
+  #   if !@sfdc_accounts_exist && @enable_sfdc_login_and_linking
+  #     SalesforceAccount.load_accounts(current_user.organization_id) 
+  #     @sfdc_accounts_exist = true
+  #   end
+  # end
 
   def create_project
     # p "*** creating project for account #{@account.name} ***"
