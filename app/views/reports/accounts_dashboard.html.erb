@@ -5,63 +5,70 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="font-bold col-md-12">Filter:</div>
-            <div class="col-md-12 m-t-sm filter-space">
-                <!-- Account Type -->
-                <select id="account-filter" class="category_filter col-md-3" data-placeholder="Select Account Type">
-                     <option value=""></option>  <!-- no filter -->
-                    <% @account_types.each do |k,v| %>
-                      <option <% if params[:account] == v %> selected <% end %> ><%= v %></option>
-                    <% end %>
-                </select>
-                <!-- Opportunity Type -->
-                <select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Opportunity Type">
-                    <option value=""></option> <!-- no filter -->
-                    <% @opportunity_types.each do |k,v|    %>
-                      <option <% if params[:category] == v %> selected <% end %> ><%= v %></option>
-                    <% end %>
-                </select>
-                <!-- Owner -->
-                <select id="owner-filter" class="category_filter col-md-3" data-placeholder="Select Owner">
-                    <option value=""></option> <!-- no filter -->
-                    <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >Owner: Me</option>
-                    <% @owners.each do |u| %>
-                        <% if u.id != current_user.id %>
-                            <option value="<%= u.id %>" <% if params[:owner]==u.id %> selected <% end %> >
-                                <%= get_full_name(u) %>
-                            </option>
-                        <% end %>
-                    <% end %>
-                    <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >Unassigned</option>
-                </select>
-                <!-- <div class="col-md-3"></div> -->
-            </div>
-        </div>
-    </div>
+  <strong>Filter:</strong>
+  <div class="row filter-space">
+      <!-- Account Type -->
+      <!--<select id="account-filter" class="category_filter col-md-3" data-placeholder="Select Account Type">-->
+           <!--<option value=""></option>  &lt;!&ndash; no filter &ndash;&gt;-->
+          <!--< % @account_types.each do |k,v| %>-->
+            <!--<option < % if params[:account] == v %> selected < % end %> >< %= v %></option>-->
+          <!--< % end %>-->
+      <!--</select>-->
+      <!-- Opportunity Type -->
+      <!--<select id="category-filter" class="category_filter col-md-3" data-placeholder="Select Opportunity Type">-->
+          <!--<option value=""></option> &lt;!&ndash; no filter &ndash;&gt;-->
+          <!--< % @opportunity_types.each do |k,v|    %>-->
+            <!--<option < % if params[:category] == v %> selected < % end %> >< %= v %></option>-->
+          <!--< % end %>-->
+      <!--</select>-->
+      <!-- Owner -->
+      <select id="owner-filter" class="category_filter col-md-3" data-placeholder="Select Owner">
+          <option value=""></option> <!-- no filter -->
+          <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >Owner: Me</option>
+          <% @owners.each do |u| %>
+              <% if u.id != current_user.id %>
+                  <option value="<%= u.id %>" <% if params[:owner]==u.id %> selected <% end %> >
+                      <%= get_full_name(u) %>
+                  </option>
+              <% end %>
+          <% end %>
+          <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >Unassigned</option>
+      </select>
+      <select id="close-date-filter" class="category_filter col-md-3">
+          <optgroup label="Quarter">
+              <option selected>This Quarter</option>
+              <option>Last Quarter</option>
+              <option>Next Quarter</option>
+          </optgroup>
+          <optgroup label="x-To-Date">
+              <option>QTD</option>
+              <option>YTD</option>
+          </optgroup>
+      </select>
+      <!-- <div class="col-md-3"></div> -->
+  </div>
 
-    <div class="row border-bottom white-bg dashboard-header">
-        <!-- LEFT (metric sort) -->
-        <div class="col-lg-5">
-            <h4 class="m-l-md">Metric:
-                <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
-                <% ReportsController::ACCOUNT_DASHBOARD_METRIC.each do |k,label| %>
-                    <option <%= "selected" if params[:sort] == label %>><%= label %></option>
-                <% end %>
-                </select>
-            </h4>
-            <div id="left-chart" class="left-chart" style="height:1200px"></div>
-        </div>
+  <div class="row border-bottom white-bg dashboard-header">
+      <!-- LEFT (metric sort) -->
+      <div class="col-lg-5">
+          <h4 class="m-l-md">Metric:
+              <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
+              <% ReportsController::ACCOUNT_DASHBOARD_METRIC.each do |k,label| %>
+                  <option <%= "selected" if params[:sort] == label %>><%= label %></option>
+              <% end %>
+              </select>
+          </h4>
+          <div id="left-chart" class="left-chart" style="height:1200px"></div>
+      </div>
 
-        <!-- RIGHT (account/opportunity detail) -->
-        <div class="col-lg-7" style="margin-top:45px">
-            <div id="account-data">
-                <div class="row" style="margin-top:50px">
-                    <h3>&larr; Click on a bar/label to see details about the opportunity.</h3>
-                </div>
-            </div>
-        </div>
+      <!-- RIGHT (account/opportunity detail) -->
+      <div class="col-lg-7" style="margin-top:45px">
+          <div id="account-data">
+              <div class="row" style="margin-top:50px">
+                  <h3>&larr; Click on a bar/label to see details about the opportunity.</h3>
+              </div>
+          </div>
+      </div>
     </div>
 </div>
 
@@ -69,12 +76,19 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        $('#sort-type, #account-filter, #owner-filter, #category-filter').change( function () {
+        $('#sort-type, #owner-filter, #close-date-filter').change( function () {
             // Clear Opportunity data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
 
             // Build URL for AJAX call for filtered data
-            var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param({ account: $('#account-filter').val(), category: $('#category-filter').val(), owner: $('#owner-filter').val() });
+            let params = {};
+            if ($('#owner-filter').val()) {
+              params.owner = $('#owner-filter').val();
+            }
+            if ($('#close-date-filter').val()) {
+              params.close_date = $('#close-date-filter').val();
+            }
+            var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
             $.getScript(url)
         });
 

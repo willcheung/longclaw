@@ -19,8 +19,9 @@ class ReportsController < ApplicationController
     @metric = params[:sort]
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    projects = projects.where(category: params[:category]) if params[:category].present?
-    projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account].present?
+    projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
+    # projects = projects.where(category: params[:category]) if params[:category].present?
+    # projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account].present?
 
     users_emails = current_user.organization.users.pluck(:email)
 

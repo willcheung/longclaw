@@ -107,5 +107,25 @@ class ApplicationController < ActionController::Base
     @users_reverse = current_user.organization.users.registered.order(:first_name).map { |u| [u.id, get_full_name(u)] }.to_h
   end
 
+  def get_close_date_range(range_description)
+    case range_description
+      when 'This Quarter'
+        date = Time.current
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when 'Next Quarter'
+        date = Time.current.next_quarter
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when 'Last Quarter'
+        date = Time.current.prev_quarter
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when 'QTD'
+        (Time.current.beginning_of_quarter...Time.current)
+      when 'YTD'
+        (Time.current.beginning_of_year...Time.current)
+      else # use 'This Quarter' by default
+        date = Time.current
+        (date.beginning_of_quarter...date.end_of_quarter)
+    end
+  end
 
 end
