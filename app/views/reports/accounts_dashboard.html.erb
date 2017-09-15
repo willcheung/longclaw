@@ -8,7 +8,7 @@
   <div class="row filter-space">
     <strong>Filter:</strong>
   </div>
-  <div class="row filter-space">
+  <div class="row filter-space filter-group">
       <!-- Account Type -->
       <!--<select id="account-filter" class="category_filter col-md-3" data-placeholder="Select Account Type">-->
            <!--<option value=""></option>  &lt;!&ndash; no filter &ndash;&gt;-->
@@ -93,6 +93,11 @@
             }
             var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
             $.getScript(url)
+        });
+
+        $('.filter-group').hover( function () {
+          $('.chosen-container-single').css('cursor', 'pointer');
+          $('.chosen-single').css('cursor', 'pointer');
         });
 
         $('#left-chart').highcharts({
