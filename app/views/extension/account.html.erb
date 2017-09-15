@@ -297,7 +297,7 @@
                             </table>
                             <table class="activity-group">
                                 <tr><td>&nbsp;</td></tr>
-                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS Tracking</b> checkbox when composing and sending an email."></i></td></tr>
+                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS&nbsp;Track</b> checkbox in the compose email window."></i></td></tr>
                                 <tr>
                                     <td><table>
                                         <tr>
@@ -328,9 +328,9 @@
                                                 <% if tp[:lasttrackingevent].present? %>
                                                     <p class="time-ago">
                                                     <% if tp[:totaltrackingevents] > 1 %>
-                                                        <%= tp[:totaltrackingevents] %> <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;Last opened
+                                                        <%= tp[:totaltrackingevents] %> <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;&nbsp;Last opened
                                                     <% else %>
-                                                        <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;Opened
+                                                        <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;&nbsp;Opened
                                                     <% end %>
                                                     <%= time_ago_in_words(tp[:lasttrackingevent].date) %> ago <%= tp[:lasttrackingevent].date.strftime('%b %d') %> - <%= tp[:lasttrackingevent].date.strftime("%l:%M%P") %></p>
                                                 <% end %>
