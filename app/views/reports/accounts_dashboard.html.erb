@@ -5,7 +5,9 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-  <strong>Filter:</strong>
+  <div class="row filter-space">
+    <strong>Filter:</strong>
+  </div>
   <div class="row filter-space">
       <!-- Account Type -->
       <!--<select id="account-filter" class="category_filter col-md-3" data-placeholder="Select Account Type">-->
@@ -34,15 +36,16 @@
           <% end %>
           <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >Unassigned</option>
       </select>
-      <select id="close-date-filter" class="category_filter col-md-3">
+      <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
+          <option value=""></option> <!-- no filter -->
           <optgroup label="Quarter">
-              <option selected>This Quarter</option>
-              <option>Last Quarter</option>
-              <option>Next Quarter</option>
+              <option <%= 'selected' if params[:close_date] == 'This Quarter' %> >This Quarter</option>
+              <option <%= 'selected' if params[:close_date] == 'Last Quarter' %> >Last Quarter</option>
+              <option <%= 'selected' if params[:close_date] == 'Next Quarter' %> >Next Quarter</option>
           </optgroup>
           <optgroup label="x-To-Date">
-              <option>QTD</option>
-              <option>YTD</option>
+              <option <%= 'selected' if params[:close_date] == 'QTD' %> >QTD</option>
+              <option <%= 'selected' if params[:close_date] == 'YTD' %> >YTD</option>
           </optgroup>
       </select>
       <!-- <div class="col-md-3"></div> -->
