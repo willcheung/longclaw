@@ -29,6 +29,10 @@ class SalesforceOpportunity < ActiveRecord::Base
 	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id", primary_key: "salesforce_account_id"
   belongs_to  :project, foreign_key: "contextsmith_project_id"
 
+  scope :is_open, -> {where("is_closed IS false")}
+  # scope :is_linked, -> {where("contextsmith_project_id IS NOT NULL")}
+  scope :is_not_linked, -> {where("contextsmith_project_id IS NULL")}
+
   # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.
   # Params:    query_range: The limit for SFDC query results
   # Returns:   A hash that represents the execution status/result. Consists of:
@@ -48,7 +52,7 @@ class SalesforceOpportunity < ActiveRecord::Base
 
     total_opportunities = 0
     error_occurred = false
-    if false #current_user.admin?
+    if current_user.admin?
       sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: organization_id).is_linked
 
       sfdc_accounts.each do |a|
@@ -96,8 +100,8 @@ class SalesforceOpportunity < ActiveRecord::Base
     else # if !current_user.admin? (i.e., single SFDC user)
       sfdc_userid = SalesforceService.get_salesforce_user_uuid(organization_id, current_user)
       query_statements = []
-      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = TRUE AND CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')} LIMIT #{query_range}"  # "Closed YTD"
-      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = FALSE ORDER BY CloseDate DESC LIMIT 10" # "recent 10 Open"
+      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"  # "Closed YTD & all Open Opps"
+      # query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = FALSE ORDER BY CloseDate DESC LIMIT 10" # "recent 10 Open Opps"
 
       query_statements.each do |query_statement|
         query_result = SalesforceService.query_salesforce(client, query_statement)

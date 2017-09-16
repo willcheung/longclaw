@@ -40,7 +40,7 @@
 
               <div class="row col-lg-9" style="padding:0px; display: inline;"> 
                 <span class="pull-right">
-                  <%= link_to "Disconnect (#{@salesforce_user.oauth_user_name})", salesforce_disconnect_path(@salesforce_user.id), data: {confirm: "Disconnecting from Salesforce will cause all mapped Salesforce information to be lost!  Are you sure you wish to proceed?"}, class: "btn btn-danger btn-sm btn-outline pull-right", style: "font-size:12px" %>
+                  <%= link_to "Disconnect (#{@salesforce_user.oauth_user_name})", salesforce_disconnect_path(@salesforce_user.id), data: {confirm: "Are you sure you wish to disconnect from Salesforce?"}, class: "btn btn-danger btn-sm btn-outline pull-right", style: "font-size:12px" %>
                 </span>
               </div>
 

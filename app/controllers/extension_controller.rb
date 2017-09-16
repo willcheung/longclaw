@@ -418,7 +418,7 @@ class ExtensionController < ApplicationController
 
   #   # If no SFDC accounts found, automatically refresh the SFDC accounts list
   #   if !@sfdc_accounts_exist && @enable_sfdc_login_and_linking
-  #     SalesforceAccount.load_accounts(current_user.organization_id) 
+  #     SalesforceAccount.load_accounts(current_user) 
   #     @sfdc_accounts_exist = true
   #   end
   # end
