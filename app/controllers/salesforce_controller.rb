@@ -78,7 +78,7 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Special automatic actions to take when user initially logs into SFDC.  e.g., Loading new SFDC Accounts and Opportunities; for single users, creating CS opportunities and corresponding accounts for loaded SFDC entities.
+  # Automatic actions to take when user initially logs into SFDC. e.g., Loading new SFDC Accounts and Opportunities.  Special action for single users: creating CS opportunities and corresponding accounts for loaded SFDC entities, and updating Contacts.
   def self.initial_SFDC_login(current_user)
     puts "\n#{get_full_name(current_user)} (email=#{current_user.email}) initial login to SFDC..."
     sfdc_oauth_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
@@ -87,7 +87,7 @@ class SalesforceController < ApplicationController
       SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
       SalesforceOpportunity.load_opportunities(current_user)
 
-      if false #!current_user.admin?
+      if !current_user.admin?
         sfdc_userid = SalesforceService.get_salesforce_user_uuid(current_user.organization_id, current_user)
         open_sfdc_opps = SalesforceOpportunity.is_open.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
 

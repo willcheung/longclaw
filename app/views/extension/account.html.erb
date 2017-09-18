@@ -40,15 +40,15 @@
         font-size: 18px;
         float: right;
         white-space:nowrap;
+        transform: translateX(-10px) translateY(25px);
+        transition: 0.4s;
     }
     .arrow-section-expanded {  /* arrow style for section that is expanded */
-        transform: translateY(18px) translateX(-8px) rotate(180deg);
-        transition: 0.4s;
+        transform: translateX(-10px) translateY(25px) rotate(-90deg);
     }
-    .arrow-section-collapsed {
-        transform: translateY(20px) translateX(-5px) rotate(270deg);
-        transition: 0.4s;
-    }
+    /*.arrow-section-collapsed {
+        transform: translateX(-10px) translateY(25px);
+    }*/
     .visibility-hidden { /* bootstrap overrides .hidden  */
         visibility: hidden;
     }
@@ -161,16 +161,14 @@
             var section_is_expanded = this_arrow_td.attr("class").includes("arrow-section-expanded");
 
             //Set all arrows to the collapsed state
-            $('.arrow').html("<%= @widecaret %>").removeClass('arrow-section-expanded').addClass('arrow-section-collapsed');
+            $('.arrow').removeClass('arrow-section-expanded').addClass('arrow-section-collapsed');
 
             // Using saved state, toggle the arrow of the clicked element
             if (section_is_expanded) {
                 this_arrow_td.removeClass('arrow-section-expanded');
-                this_arrow_td.html("<%= @widecaret %>");
                 this_arrow_td.addClass('arrow-section-collapsed');
             } else {
                 this_arrow_td.removeClass('arrow-section-collapsed');
-                this_arrow_td.html("<%= @widecaret %>");
                 this_arrow_td.addClass('arrow-section-expanded');
             }
         });
@@ -234,11 +232,7 @@
                                                 </tbody>
                                             </table>
                                         </td>
-                                        <% if n == 0 && i == 0 %>
-                                            <td class="arrow arrow-section-expanded"><%= @widecaret %></td>
-                                        <% else %>
-                                            <td class="arrow arrow-section-collapsed"><%= @widecaret %></td>
-                                        <% end %>
+                                        <td class="arrow fa fa-angle-down fa-2x <%= (n == 0 && i == 0) ? "arrow-section-expanded" : "arrow-section-collapsed" %>" aria-hidden="true"></td>
                                         <!-- <td>
                                             <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= person.id %>-<%= n %>"></i>
                                         </td> -->
