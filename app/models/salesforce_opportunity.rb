@@ -29,9 +29,9 @@ class SalesforceOpportunity < ActiveRecord::Base
 	belongs_to	:salesforce_account, foreign_key: "salesforce_account_id", primary_key: "salesforce_account_id"
   belongs_to  :project, foreign_key: "contextsmith_project_id"
 
-  scope :is_open, -> {where("is_closed IS false")}
+  scope :is_open, -> {where(is_closed: false)}
   # scope :is_linked, -> {where("contextsmith_project_id IS NOT NULL")}
-  scope :is_not_linked, -> {where("contextsmith_project_id IS NULL")}
+  scope :is_not_linked, -> {where(contextsmith_project_id: nil)}
 
   # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.
   # Params:    query_range: The limit for SFDC query results
