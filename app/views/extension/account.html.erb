@@ -43,10 +43,10 @@
         transition: 0.4s;
     }
     .arrow-section-expanded {
-        transform: translateX(-10px) translateY(25px) rotate(-90deg);
+        transform: translateX(-14px) translateY(25px) rotate(-90deg);
     }
     .arrow-section-collapsed {
-        transform: translateX(-10px) translateY(25px);
+        transform: translateX(-14px) translateY(25px);
     }
     .visibility-hidden { /* bootstrap overrides .hidden  */
         visibility: hidden;
@@ -231,7 +231,7 @@
                                                 </tbody>
                                             </table>
                                         </td>
-                                        <td class="arrow fa fa-chevron-down fa-2x <%= (n == 0 && i == 0) ? "arrow-section-expanded" : "arrow-section-collapsed" %>" aria-hidden="true"><i class="fa fa-google-wallet" aria-hidden="true" ></i></td>
+                                        <td class="arrow fa fa-angle-down fa-2x <%= (n == 0 && i == 0) ? "arrow-section-expanded" : "arrow-section-collapsed" %>" aria-hidden="true"></td>
                                         <!-- <td>
                                             <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= person.id %>-<%= n %>"></i>
                                         </td> -->
