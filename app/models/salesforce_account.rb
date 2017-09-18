@@ -58,10 +58,10 @@ class SalesforceAccount < ActiveRecord::Base
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of accounts added/updated; if an error occurred, contains the title of the error.
   #             detail - details of any errors.
-  # TODO: This does not recover if an error occurs while running a SFDC query during the process.  Might want to add recovery/resume code.
-	def self.load_accounts(current_user, query_range=500)
+  # Note: This will not recover (will abort) if an error occurs while running query SFDC during the process -- if it will happen, likely will happen on first run not in middle of subsequent runs.
+  def self.load_accounts(current_user, query_range=500)
     organization_id = current_user.organization_id
-		client = SalesforceService.connect_salesforce(organization_id)
+    client = SalesforceService.connect_salesforce(organization_id)
     if client.nil?
       puts "** SalesforceService error: During loading SFDC accounts, an attempt to connect to Salesforce using SalesforceService.connect_salesforce in SalesforceAccount.load_accounts failed!"
       return { status: "ERROR", result: "SalesforceService Connection error", detail: "During loading SFDC accounts, an attempt to connect to Salesforce failed." } 
@@ -98,7 +98,7 @@ class SalesforceAccount < ActiveRecord::Base
 
       # start transaction
       if query_result[:status] == "ERROR"
-        puts "** SalesforceService error: During loading SFDC accounts, a query to Salesforce using SalesforceService.query_salesforce in SalesforceAccount.load_accounts had errors!  #{ query_result[:result] } Detail: #{ query_result[:detail] }"
+        puts "** SalesforceService error: During loading SFDC accounts, query_salesforce() in SalesforceAccount.load_accounts had errors!  #{ query_result[:result] } Detail: #{ query_result[:detail] }"
         return { status: "ERROR", result: query_result[:result], detail: "During loading SFDC accounts, a query to Salesforce had errors. Detail: #{query_result[:detail]}" } 
       end
       break if query_result[:result].length == 0  # batch loop is completed

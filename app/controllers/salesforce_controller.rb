@@ -210,11 +210,21 @@ class SalesforceController < ApplicationController
   def import_salesforce
     case params[:entity_type]
     when "account"
-      SalesforceAccount.load_accounts(current_user)
+      import_result = SalesforceAccount.load_accounts(current_user)
+      if import_result[:status] == "ERROR"
+        error_detail = "Error while attempting to import Salesforce accounts.  Result: #{ import_result[:result] } Details: #{ import_result[:detail] }"
+        render_internal_server_error("import_salesforce#account()", "SalesforceAccount.load_accounts()", error_detail)
+        return
+      end
       refresh_fields(params[:entity_type]) # refresh/update the standard and custom field values of mapped accts
       return
     when "project"
-      SalesforceOpportunity.load_opportunities(current_user)
+      import_result = SalesforceOpportunity.load_opportunities(current_user)
+      if import_result[:status] == "ERROR"
+        error_detail = "Error while attempting to import Salesforce opportunities.  Result: #{ import_result[:result] } Details: #{ import_result[:detail] }"
+        render_internal_server_error("import_salesforce#project()", "SalesforceOpportunity.load_opportunities()", error_detail)
+        return
+      end
       refresh_fields(params[:entity_type]) # refresh/update the standard and custom field values of mapped opps
       return
     when "activity"

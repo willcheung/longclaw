@@ -107,7 +107,7 @@ class SalesforceOpportunity < ActiveRecord::Base
         query_result = SalesforceService.query_salesforce(client, query_statement)
         
         if query_result[:status] == "ERROR"
-          puts "** SalesforceService error: During loading SFDC opportunities, a query to Salesforce using SalesforceService.query_salesforce in SalesforceOpportunity.load_opportunities had errors!  #{ query_result[:result] } Detail: #{ query_result[:detail] }"
+          puts "** SalesforceService error: During loading SFDC opportunities, query_salesforce() in SalesforceOpportunity.load_opportunities had errors!  #{ query_result[:result] } Detail: #{ query_result[:detail] }"
           error_occurred = true
         else
           query_result[:result].each do |opp|
