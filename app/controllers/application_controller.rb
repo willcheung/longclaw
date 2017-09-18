@@ -122,6 +122,8 @@ class ApplicationController < ActionController::Base
         (Time.current.beginning_of_quarter...Time.current)
       when 'YTD'
         (Time.current.beginning_of_year...Time.current)
+      when 'All Closed'
+        (Time.at(0)...Time.current)
       else # use 'This Quarter' by default
         date = Time.current
         (date.beginning_of_quarter...date.end_of_quarter)

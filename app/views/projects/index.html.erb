@@ -47,6 +47,7 @@
           </select>
           <select id="close-date-filter" class="category_filter col-sm-3" data-placeholder="Select Close Date">
             <option value=""></option> <!-- no filter -->
+            <option <%= 'selected' if params[:close_date] == 'All Closed' %> >All Closed</option>
             <optgroup label="Quarter">
               <option <%= 'selected' if params[:close_date] == 'This Quarter' %> >This Quarter</option>
               <option <%= 'selected' if params[:close_date] == 'Last Quarter' %> >Last Quarter</option>
