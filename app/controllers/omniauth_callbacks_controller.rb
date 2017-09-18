@@ -10,9 +10,15 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
+  # login for basic users. only requires email/profile scope
+  def google_oauth2_basic
+    google_oauth2
+  end
+
 	def google_oauth2
     auth = request.env["omniauth.auth"]
-    @user = User.find_for_google_oauth2(auth, (cookies[:timezone] || 'UTC'))
+    request_params = request.env['omniauth.params']
+    @user = User.find_for_google_oauth2(auth, (cookies[:timezone] || 'UTC'), request_params)
 
     if @user.persisted?
     	session["devise.google_data"] = auth

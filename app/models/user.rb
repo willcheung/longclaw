@@ -80,7 +80,7 @@ class User < ActiveRecord::Base
   scope :ordered_by_first_name, -> { order('LOWER(first_name) ASC') }
 
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
-         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :salesforce, :salesforce_sandbox]
+         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :salesforce, :salesforce_sandbox]
 
   validates :email, uniqueness: true
 
@@ -181,7 +181,7 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.find_for_google_oauth2(auth, time_zone='UTC')
+  def self.find_for_google_oauth2(auth, time_zone='UTC', params)
     info = auth.info
     credentials = auth.credentials
     user = User.find_by(oauth_provider: auth.provider, oauth_provider_uid: auth.uid )
@@ -215,6 +215,7 @@ class User < ActiveRecord::Base
         refresh_inbox: false,
         time_zone: time_zone
       }
+      user_attributes[:role] = params['role'] if params['role']
 
       if referred_user
         # Change referred_user into real user

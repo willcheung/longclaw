@@ -161,10 +161,11 @@
                                             <% end %>
                                             </span>
                                             <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to weekly updates and alerts." data-delay='{"show":"300"}'>
+                                            <!-- TODO: Uncomment below to undo #1011 -->
                                             <% if p.weekly %>
-                                                <%= link_to "<i class=\"fa fa-check\"></i> Weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-index-unfollow-weekly-#{p.id}", class: "block m-b-xs", title: "Following weekly" %>
+                                                <!-- < %= link_to "<i class=\"fa fa-check\"></i> Weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-index-unfollow-weekly-#{p.id}", class: "block m-b-xs", title: "Following weekly" %> -->
                                             <% else %>
-                                                <%= link_to "<i class=\"fa fa-bell-o\"></i> Weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{p.id}", class: "block m-b-xs", title: "Follow weekly" %>
+                                                <!-- < %= link_to "<i class=\"fa fa-bell-o\"></i> Weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{p.id}", class: "block m-b-xs", title: "Follow weekly" %> -->
                                             <% end %>
                                             </span>
                                         </td>

@@ -51,8 +51,8 @@
                     <% elsif params[:m] %>
                         <a class="btn btn-lg btn-primary oauth" href="https://mail.google.com"><i class="fa fa-envelope-o oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Go to Gmail</span></a>
                     <% else %>
-
-                        <%= render "users/form_login", button_text: "Sign Up" %>
+                        <% role = User::ROLE[:Biz] if params[:c] %>
+                        <%= render "users/form_login", button_text: "Sign Up", role: role %>
                         
                     <% end %>
                 </div>
@@ -67,47 +67,6 @@
             </div>
         </div>
     </div>
-
-    <% unless params[:c] or params[:m] %>
-    <hr class="m-t-xl m-b-xl"/>
-    <h2 class="m-b-md"> Frequently Asked Questions</h2>
-
-    <div class="row m-t-lg">
-
-        <div class="col-md-4">
-            <h3>How does ContextSmith work?</h3>
-            <p>ContextSmith accelerates sales by automatically tracking activities from e-mails, meetings, and syncing them with Salesforce. We enable reps to find new contacts and opportunities that are typically missed in multiple e-mail threads.</p>
-        </div>
-
-        <div class="col-md-4">
-            <h3>Is the ContextSmith platform secure?</h3>
-            <p>Absolutely. We respect and protect your important business data. We don't save your password. Your data is encrypted and transmitted using SSL. We are also EU – U.S. Privacy Shield certified. Take a look at our <a target="_blank" href="https://www.contextsmith.com/privacy/">privacy policy</a>.</p>
-        </div>
-
-        <div class="col-md-4">
-            <h3>What do you do with the data?</h3>
-            <p>Your contact information and e-mail data are yours alone and safe with us. We use the data to improve your business and productivity, and never for anything else. Take a look at our <a target="_blank" href="https://www.contextsmith.com/privacy/">privacy policy</a>.</p>
-        </div>
-
-    </div>
-    <div class="row m-t-lg">
-        <div class="col-md-4">
-            <h3>Do you provide training and support?</h3>
-            <p>We have great success and support teams. And we're also constantly investing in our <a href="https://contextsmith.zendesk.com/agent/" target="_blank">knowledge base articles</a>.</p>
-        </div>
-
-        <div class="col-md-4">
-            <h3>What happens at the end of my trial?</h3>
-            <p>Don’t worry, we’ll e-mail you when your trial is nearing its end. Once it expires, you can upgrade to a paid plan, starting at $29/month.</p>
-        </div>
-
-        <div class="col-md-4">
-            <h3>Do you support Outlook?</h3>
-            <p>Contextsmith now supports most implementations Outlook. Click the button above to sign up!</p>
-        </div>
-
-    </div>
-    <% end %>
 
     <hr />
     <div class="row text-center">
