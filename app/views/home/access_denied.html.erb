@@ -15,9 +15,9 @@
         var $timer = $('#countdown-number');
         var countdown = Number($timer.text()) - 1;
         $timer.text(countdown);
-        if (countdown <= 0) {
-          window.location.replace('https://mail.google.com/mail/?authuser=<%= current_user.email %>');
-        }
+          if (countdown <= 0) {
+              window.location.replace('https://mail.google.com/mail/?authuser=<%= current_user.nil? ? '' : current_user.email %>');
+          }
       }, 1000)
     </script>
     <% else %>
