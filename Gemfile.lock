@@ -142,9 +142,10 @@ GEM
       launchy (~> 2.2)
     loofah (2.0.3)
       nokogiri (>= 1.5.9)
-    mail (2.6.3)
+    mail (2.7.0.rc1)
       mime-types (>= 1.16, < 3)
     mime-types (2.99)
+    mini_mime (0.1.4)
     mini_portile2 (2.0.0)
     minitest (5.8.3)
     multi_json (1.11.2)
@@ -295,6 +296,8 @@ DEPENDENCIES
   jbuilder (~> 1.2)
   jquery-rails
   letter_opener
+  mail (~> 2.7.0rc1)
+  mini_mime
   oauth2 (~> 1.0)
   omniauth-google-oauth2!
   omniauth-oauth2 (~> 1.4)
