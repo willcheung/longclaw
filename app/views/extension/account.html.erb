@@ -10,7 +10,7 @@
     .titleinfo-group:hover {
         background-color: #EEE;
     }
-    td > a, .link:hover {
+    td > a, .link {
         text-decoration: underline;
     }
     .contact-group {
@@ -179,6 +179,10 @@
             return false; //don't collapse section in extension
         });
     });
+
+    function sendShowMessage(email_id) {
+        parent.parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
+    }
 </script>
 
 <body>
@@ -319,7 +323,7 @@
                                                 <i class="fa fa-envelope"></i>
                                             </div>
                                             <div class="extension-timeline-content">
-                                                <extrastrong><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></extrastrong><br/>
+                                                <extrastrong><a href="" class="link" onclick="sendShowMessage('<%= tp[:trackingrequest].email_id %>');"><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></a></extrastrong><br/>
                                                 <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago - <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
                                                 <% if tp[:lasttrackingevent].present? %>
                                                     <p class="time-ago">
