@@ -1,4 +1,11 @@
 GIT
+  remote: https://github.com/mikel/mail.git
+  revision: 56626a6752efe2c278a627d378ae926a1ca19819
+  specs:
+    mail (2.7.0.rc1)
+      mini_mime (>= 0.1.1)
+
+GIT
   remote: https://github.com/zquestz/omniauth-google-oauth2
   revision: 4b48dff2479469c02ab2c31097524f749bb47c1f
   branch: master
@@ -142,9 +149,7 @@ GEM
       launchy (~> 2.2)
     loofah (2.0.3)
       nokogiri (>= 1.5.9)
-    mail (2.6.3)
-      mime-types (>= 1.16, < 3)
-    mime-types (2.99)
+    mini_mime (0.1.4)
     mini_portile2 (2.0.0)
     minitest (5.8.3)
     multi_json (1.11.2)
@@ -295,6 +300,8 @@ DEPENDENCIES
   jbuilder (~> 1.2)
   jquery-rails
   letter_opener
+  mail!
+  mini_mime
   oauth2 (~> 1.0)
   omniauth-google-oauth2!
   omniauth-oauth2 (~> 1.4)

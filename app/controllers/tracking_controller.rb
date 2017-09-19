@@ -116,7 +116,18 @@ class TrackingController < ApplicationController
   end
 
   def to_email_address(emails)
-    emails.map {|a| Mail::Address.new(a).address}
+    emails.map { |a| parse_email(a) }.reject(&:nil?)
+  end
+
+  def parse_email(a)
+    begin
+      Mail::Address.new(a).address
+    rescue StandardError => e
+      # a probably has non-ascii characters, try to extract just the e-mail address
+      a.match(/.*<(.*)>/) do |match|
+        match[1]
+      end
+    end
   end
 
   def not_viewed_by_self(tracking_request)
