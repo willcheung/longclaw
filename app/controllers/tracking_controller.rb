@@ -115,11 +115,11 @@ class TrackingController < ApplicationController
     Geocoder.address(ip) rescue 'Unknown'
   end
 
-  def self.to_email_address(emails)
+  def to_email_address(emails)
     emails.map { |a| parse_email(a) }.reject(&:nil?)
   end
 
-  def self.parse_email(a)
+  def parse_email(a)
     begin
       Mail::Address.new(a).address
     rescue StandardError => e

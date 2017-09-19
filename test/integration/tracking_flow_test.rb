@@ -10,6 +10,7 @@ class TrackingFlowTest < ActionDispatch::IntegrationTest
     { message_id: random_message_id,
       tracking_id: random_tracking_id,
       recipients: ['beders@contextsmith.com'],
+      user_email: 'joe.user@org1.com',
       sent_at: DateTime.current.to_s}
   end
 
