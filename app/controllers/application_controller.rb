@@ -28,7 +28,7 @@ class ApplicationController < ActionController::Base
         if resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
           onboarding_extension_tutorial_path
         else
-          stored_location || extension_path(login: true)
+          extension_path(login: true)
         end
       # check if at least biz? level access
       elsif resource.biz?

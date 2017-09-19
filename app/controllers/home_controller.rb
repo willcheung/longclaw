@@ -62,7 +62,7 @@ class HomeController < ApplicationController
     end
 
     # Load project data for "My Opportunities"
-    @projects = (@current_user_projects + subscribed_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
+    @projects = (subscribed_projects + @current_user_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
     unless @projects.empty?
       project_ids_a = @projects.map(&:id)
 
