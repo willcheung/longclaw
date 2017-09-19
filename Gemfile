@@ -32,7 +32,7 @@ gem 'geocoder'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'graphql'
 gem 'fullcontact'
-gem 'mail', '~> 2.7.0rc1'
+gem 'mail', :git => 'https://github.com/mikel/mail.git'
 gem 'mini_mime'
 
 # Gems used only for assets and not required
