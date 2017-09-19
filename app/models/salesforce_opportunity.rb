@@ -52,7 +52,7 @@ class SalesforceOpportunity < ActiveRecord::Base
 
     total_opportunities = 0
     error_occurred = false
-    if current_user.admin? && !current_user.superadmin?  # TODO: Remove this Superadmin hack that allows developers to test Basic user functionality using web app.  Remove after enabling proper SFDC sign-in in Chrome extension.
+    if current_user.admin?
       sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: organization_id).is_linked
 
       sfdc_accounts.each do |a|
