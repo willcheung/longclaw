@@ -199,8 +199,8 @@ class User < ActiveRecord::Base
       # Considered referred user if e-mail exists but not oauth elements
       referred_user = User.find_by_email(info.email)
       user_attributes = {
-        first_name: info.first_name,
-        last_name: info.last_name,
+        first_name: info.first_name || '',
+        last_name: info.last_name || '',
         oauth_provider: auth.provider,
         email: info.email,
         image_url: info.image,
