@@ -951,6 +951,10 @@ class User < ActiveRecord::Base
     [ROLE[:Poweruser], OTHER_ROLE[:Chromeuser], OTHER_ROLE[:Trial]].include? (self.role) 
   end
 
+  def superadmin?
+    %w(wcheung@contextsmith.com will@context-smith.com beders@contextsmith.com klu@contextsmith.com vluong@contextsmith.com syong@contextsmith.com chobbs@contextsmith.com craig@context-smith.com churst@contextsmith.com).include?(self.email)
+  end
+
   ######### End Basic ACL ##########
 
   def is_internal_user?
