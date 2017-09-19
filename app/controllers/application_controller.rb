@@ -109,20 +109,20 @@ class ApplicationController < ActionController::Base
 
   def get_close_date_range(range_description)
     case range_description
-      when 'This Quarter'
+      when Project::CLOSE_DATE_RANGE[:ThisQuarter]
         date = Time.current
         (date.beginning_of_quarter...date.end_of_quarter)
-      when 'Next Quarter'
+      when Project::CLOSE_DATE_RANGE[:NextQuarter]
         date = Time.current.next_quarter
         (date.beginning_of_quarter...date.end_of_quarter)
-      when 'Last Quarter'
+      when Project::CLOSE_DATE_RANGE[:LastQuarter]
         date = Time.current.prev_quarter
         (date.beginning_of_quarter...date.end_of_quarter)
-      when 'QTD'
+      when Project::CLOSE_DATE_RANGE[:QTD]
         (Time.current.beginning_of_quarter...Time.current)
-      when 'YTD'
+      when Project::CLOSE_DATE_RANGE[:YTD]
         (Time.current.beginning_of_year...Time.current)
-      when 'All Closed'
+      when Project::CLOSE_DATE_RANGE[:Closed]
         (Time.at(0)...Time.current)
       else # use 'This Quarter' by default
         date = Time.current

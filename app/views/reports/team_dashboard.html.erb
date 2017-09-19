@@ -25,16 +25,16 @@
         </select>
         <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
             <option value=""></option> <!-- no filter -->
-            <option <%= 'selected' if params[:close_date] == 'All Closed' %> >All Closed</option>
+            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
             <optgroup label="Quarter">
-                  <option <%= 'selected' if params[:close_date] == 'This Quarter' %> >This Quarter</option>
-                  <option <%= 'selected' if params[:close_date] == 'Last Quarter' %> >Last Quarter</option>
-                  <option <%= 'selected' if params[:close_date] == 'Next Quarter' %> >Next Quarter</option>
-              </optgroup>
-              <optgroup label="x-To-Date">
-                  <option <%= 'selected' if params[:close_date] == 'QTD' %> >QTD</option>
-                  <option <%= 'selected' if params[:close_date] == 'YTD' %> >YTD</option>
-              </optgroup>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:NextQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:NextQuarter] %></option>
+            </optgroup>
+            <optgroup label="x-To-Date">
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:QTD] %> ><%= Project::CLOSE_DATE_RANGE[:QTD] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
+            </optgroup>
         </select>
     </div>
     
