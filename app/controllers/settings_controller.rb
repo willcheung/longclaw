@@ -1,5 +1,4 @@
 class SettingsController < ApplicationController
-	before_filter :get_super_admin
 	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
 	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce_accounts', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
 	around_action :check_if_super_admin, only: ['super_user', 'user_analytics']
@@ -210,7 +209,7 @@ class SettingsController < ApplicationController
 	end
 
 	def organization_jump
-		if @super_admin.include?(current_user.email)
+		if current_user.superadmin?
 			person = User.find_by(id: params[:user]['user'])
 			person.update_columns(organization_id: params[:user]['organization_id']) if person.present?
 		end
@@ -261,13 +260,8 @@ class SettingsController < ApplicationController
 		end
 	end
 
-	# To be used to decide if show "update SFDC ActivityHistory" export button, or enable other super admin functions
-	def get_super_admin
-		@super_admin = %w(wcheung@contextsmith.com syong@contextsmith.com vluong@contextsmith.com klu@contextsmith.com beders@contextsmith.com chobbs@contextsmith.com)	
-	end
-
 	def check_if_super_admin
-		if @super_admin.include?(current_user.email)
+		if current_user.superadmin?
 			yield
 		else
 			redirect_to root_path
