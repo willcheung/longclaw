@@ -1,5 +1,23 @@
 
 <div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row m-b-sm filter-group">
+        <!-- Empty div here to push close date filter to right side -->
+        <div class="col-sm-9"></div>
+        <select id="close-date-filter" class="col-sm-3" data-placeholder="Filter by Close Date">
+            <option value=""></option> <!-- no filter -->
+            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
+            <optgroup label="Quarter">
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:NextQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:NextQuarter] %></option>
+            </optgroup>
+            <optgroup label="x-To-Date">
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:QTD] %> ><%= Project::CLOSE_DATE_RANGE[:QTD] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
+            </optgroup>
+        </select>
+    </div>
+
     <div class="row">
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
@@ -45,22 +63,6 @@
                             <%= render "notifications/table", :notifications => @open_total_tasks %>
                         <% end %>
                     </div>
-                <!-- <h2>Tasks Overdue / Due Today</h2>
-                    <div class="col-lg-12 m-b-md">
-                        < % if @overdue_tasks.empty? %>
-                            <p>Hooray, no tasks due immediately!</p>
-                        < % else %>
-                            < %= render "notifications/table", :notifications => @overdue_tasks %>
-                        < % end %>
-                    </div> -->
-                <!-- <h2>Open Tasks</h2>
-                     <div class="col-lg-12 m-b-md">
-                        < % if @open_tasks_not_overdue.empty? %>
-                            <p>Nothing here, nice.</p>
-                        < % else %>
-                            < %= render "notifications/table", :notifications => @open_tasks_not_overdue %>
-                        < % end %>
-                    </div> -->
                 <p><a href="<%= notifications_path %>/?type=incomplete&assignee=me">See more Alerts & Tasks &raquo;</a>
             </div>
         </div>

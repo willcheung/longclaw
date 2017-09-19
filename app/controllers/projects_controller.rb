@@ -21,6 +21,7 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters
+    projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date]
     if params[:owner].present? && params[:owner] != "0"
       if params[:owner] == "none"
         projects = projects.where(owner_id: nil)
@@ -28,9 +29,9 @@ class ProjectsController < ApplicationController
           projects = projects.where(owner_id: params[:owner])
       end
     end
-    if params[:type].present? && params[:type] != "none"
-      projects = projects.where(category: params[:type])
-    end
+    # if params[:type].present? && params[:type] != "none"
+    #   projects = projects.where(category: params[:type])
+    # end
     
     # all projects and their accounts, sorted by account name alphabetically
     @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
