@@ -133,6 +133,7 @@ Longclaw::Application.routes.draw do
       get 'no_account/:domain', to: 'extension#no_account', as: :no_account
       get 'private_domain'
       get 'project_error'
+      get 'salesforce'
       post 'create_account'
     end
 

@@ -277,8 +277,8 @@
                                             <a class="fa fa-globe fa-2x globe-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" data-trigger='click' data-delay='{"show": 0, "hide": 0}' 
                                             <% if person.websites.present? %>
                                                 data-original-title="
-                                                <% person.websites.each do |site| %>
-                                                  <a href='<%=site%>' target='_blank'><%= URI.parse(site).host.sub(/^www\./, '') %> </a></br>
+                                                <% person.websites.each do |site, site_name| %>
+                                                  <a href='<%=site%>' target='_blank'><%= site_name %></a></br>
                                                 <% end %>
                                                 "
                                             <% end %>
