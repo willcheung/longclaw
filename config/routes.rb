@@ -156,12 +156,13 @@ Longclaw::Application.routes.draw do
       get 'confirm_projects'
       get 'fill_in_info'
       get 'extension_tutorial'
-      # Cluster callback
-      post ':user_id/create_clusters' => 'onboarding#create_clusters'
     end
-    post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
     get 'home/access_denied'
+    post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
   end
+
+  # Cluster callback
+  post 'onboarding/:user_id/create_clusters' => 'onboarding#create_clusters'
 
   devise_scope :user do # Unauthenticated user
     # root to: "sessions#new"
