@@ -63,27 +63,54 @@
             </div>
             
         </div>
-        <div class="row text-center">
-            <h3><%= link_to "See Alerts & Next Steps &rarr;".html_safe, project_path(@project)+"/tasks", class: "btn btn-outline btn-primary btn-xs" %></h3>
-        </div>
     </div>
 </div>
 <!-- end id="account-header" -->
 
 <div id="account-charts">
-    <div id="charts-container" class="ibox-content">
+    <div class="ibox-content">
+        <h3><i class="fa fa-bell-o" aria-hidden="true"></i>&nbsp;&nbsp;Alerts & Tasks</h3>
+        <ul class="todo-list m-t">
+            <% @alerts_tasks.each do |n| %>
+            <li>
+                <input type="checkbox" class="i-checks" id=<%= n.id %> <% if n.is_complete %> checked <% end %> >
+                <%= n.name %>
+                <% labels = { Notification::CATEGORY[:Action] => 'label-primary',
+                                 Notification::CATEGORY[:Opportunity] => 'label-success',
+                                 Notification::CATEGORY[:Todo] => 'label-info',
+                                 Notification::CATEGORY[:Alert] => 'label-danger' }
+                   not_label = labels[n.category]
+                %>
+                <small class="label <%= not_label %>"><%= n.category %></small>
+                <% if n.original_due_date.present? %>
+                <small class="label label-primary"><i class="fa fa-clock-o"></i> Due <%= Time.zone.at(n.original_due_date).strftime('%b %e') %></small>
+                <% end %>
+            </li>
+            <% end %>
+        </ul>
 
-        <!-- <div class="row m-t-md">
-            <div id="risk-detection-chart" style='margin-right:10px;margin-left:14px;'></div>
-        </div> -->
+        <div class="row m-t-md">
+            <h3 class="m-t-md"><i class="fa fa-calendar"></i>  Next Meeting:</h3>
+            <% if @next_meeting.present? %>
+            <p>
+              <strong><%= @next_meeting.title %></strong>
+              <%= Time.zone.at(@next_meeting.last_sent_date).strftime('%b %d, %R%P') %>
+            </p>
+            <% else %>
+            <p class="text-danger">No meetings setup.</p>
+            <% end %>
+        </div>
+
+        <div class="row m-t-md text-center">
+            <h3><%= link_to "See Alerts & Next Steps &rarr;".html_safe, tasks_project_path(@project), class: "btn btn-outline btn-primary btn-xs" %></h3>
+        </div>
+    </div>
+
+    <div id="charts-container" class="ibox-content">
 
         <div class="row m-t-md">
             <div id="activities-chart"></div>
         </div>
-
-        <!-- <div class="row m-t-md">
-            <div id="risk-chart" style="height:240px;margin-right:13px;margin-left:5px"></div>
-        </div> -->
 
         <div class="row m-t-lg text-center">
             <h3><%= link_to "See activities &rarr;".html_safe, project_path(@project), class: "btn btn-outline btn-primary btn-xs" %></h3>
@@ -97,11 +124,14 @@
         </div>
 
         <div class="row m-t-lg text-center">
-            <h3><a href="<%= project_path(@project) %>/arg" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
+            <h3><%= link_to "See Account Relationship Graph &rarr;".html_safe, arg_project_path(@project), class: "btn btn-outline btn-primary btn-xs" %></h3>
         </div>
     </div>
 </div>
 <script type="text/javascript">
+
+    // initialize iCheck for dynamically added Notifications
+    $('.i-checks').iCheck({checkboxClass: 'icheckbox_square-green'});
 
     /***********
     Synchronize Charts
@@ -297,178 +327,6 @@
               <% end %>
             ]
         });
-
-
-        // $('#risk-chart').highcharts({
-        //     title: {
-        //         text: "Risk Score (Last 14 days)",
-        //         align: 'left',
-        //         margin: 0,
-        //         x: 35,
-        //         style: {
-        //             color: '#555555',
-        //             fontSize: '16px'
-        //         }
-        //     },
-        //     xAxis: {
-        //         type: 'datetime',
-        //         crosshair: true,
-        //         events: {
-        //             setExtremes: syncExtremes
-        //         }
-        //     },
-        //     yAxis: {
-        //         title: {
-        //             text: ''
-        //         },
-        //         labels: { enabled: true },
-        //         gridLineWidth: 0,
-        //         minorGridLineWidth: 0,
-        //         plotLines: [{
-        //             value: 0,
-        //             width: 1,
-        //             color: '#808080'
-        //         }],
-        //         min: 0,
-        //         max: 100,
-        //         plotBands: [ { // Low Risk
-        //             from: 0,
-        //             to: 60,
-        //             color: 'rgba(170, 252, 174, 0.1)',
-        //             label: {
-        //                 text: 'Low Risk',
-        //                 style: {
-        //                     color: '#606060'
-        //                 }
-        //             }
-        //             }, { // Medium Risk
-        //                 from: 60,
-        //                 to: 80,
-        //                 color: 'rgba(246, 188, 42, 0.1)',
-        //                 label: {
-        //                     text: 'Medium Risk',
-        //                     style: {
-        //                         color: '#606060'
-        //                     }
-        //                 }
-        //             }, { // High Risk
-        //                 from: 80,
-        //                 to: 100,
-        //                 color: 'rgba(246, 42, 46, 0.1)',
-        //                 label: {
-        //                     text: 'High Risk',
-        //                     style: {
-        //                         color: '#606060'
-        //                     }
-        //                 }
-        //             }]
-        //         },
-        //         tooltip: {
-        //             positioner: function () {
-        //                 return {
-        //                     x: this.chart.chartWidth - this.label.width, // right aligned
-        //                     y: -15 // align to title
-        //                 };
-        //             },
-        //             borderWidth: 0,
-        //             backgroundColor: 'none',
-        //             pointFormat: '{point.y}',
-        //             xDateFormat: '%b %e',
-        //             shadow: false,
-        //             style: {
-        //                 fontSize: '16px',
-        //                 color: '#555555'
-        //             }
-        //         },
-        //         credits: {
-        //             enabled: false
-        //         },
-        //         legend: {
-        //             enabled: false
-        //         },
-        //         series: [{
-        //             pointInterval: <%= 1.day * 1000 %>,
-        //             pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-        //             data: <%= @risk_score_trend %>
-        //         }]
-        //     });
-
-        // $('#risk-detection-chart').highcharts({
-
-        //     chart: {
-        //         height: 140,
-        //         events:{
-        //           load: function(event) {
-        //             var extremes = this.yAxis[0].getExtremes();
-        //               if(extremes.dataMax == 0){
-        //                 extremes.max = 100;
-        //                 this.yAxis[0].setExtremes(0, 100);
-        //               }
-
-        //             }
-        //         }
-        //     },
-        //     credits: {
-        //         enabled: false
-        //     },
-        //     title: {
-        //         text: "% Negative Sentiment / Engagement",
-        //             align: 'left',
-        //             margin: 0,
-        //             x: 35,
-        //             style: {
-        //                 color: '#555555',
-        //                 fontSize: '16px'
-        //             }
-        //     },
-        //     xAxis: {
-        //         type: 'datetime',
-        //         crosshair: true,
-        //         events: {
-        //             setExtremes: syncExtremes
-        //         }
-        //     },
-        //     yAxis: {
-        //         title: { text: '' },
-        //         labels: { enabled: true },
-        //         minorGridLineWidth: 0
-        //     },
-        //     legend: {
-        //         enabled: false
-        //     },
-        //     tooltip: {
-        //         positioner: function () {
-        //             return {
-        //                 x: this.chart.chartWidth - this.label.width, // right aligned
-        //                 y: -15 // align to title
-        //             };
-        //         },
-        //         borderWidth: 0,
-        //         backgroundColor: 'none',
-        //         pointFormat: '{point.y:.0f}'+"%" ,
-        //         xDateFormat: '%b %e',
-        //         shadow: false,
-        //         style: {
-        //             fontSize: '16px',
-        //             color: '#555555'
-        //         }
-        //     },
-        //     plotOptions: {
-        //         series: {
-        //             stacking: 'normal'
-        //         }
-        //     },
-        //     series: [{
-        //         type: 'area',
-        //         name: 'New Risk',
-        //         color: '#FF5050',
-        //         pointInterval: < %= 1.day * 1000 %>,
-        //         pointStart: < %= 14.days.ago.at_midnight.to_i * 1000 %>,
-        //         data: < %= @risk_activity_engagement.to_json.html_safe  %>,
-        //     }
-
-        //   ]
-        // });
 
         $('#activities-chart').highcharts({
             chart: {
