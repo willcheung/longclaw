@@ -31,13 +31,22 @@
 
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
-                <span style="width:150px; display:inline-block">
+                <span style="width:100px; display:inline-block">
                     <a href="<%= ([User::ROLE[:Basic],User::ROLE[:Pro]].include? current_user.role) ? "http://www.contextsmith.com" : root_path %>" target="_blank" class="navbar-brand">
                         <span class="clear">
                             <div class="block logo">&nbsp;</div>
                         </span>
                     </a>
                 </span>
+              <div class="pull-right"><ul class="nav nav-pills">
+                <li class="dropdown pull-right" style="margin-left:-30px">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#" class="invite-action"><i class="fa fa-envelope-o"></i> Invite</a></li>
+                    <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Share</a></li>
+                  </ul>
+                </li>
+              </ul></div>
             </div>
             <div>
                 <ul class="nav nav-tabs">
@@ -56,7 +65,14 @@
 
     <script>
         $('[data-toggle="tooltip"]').tooltip();
-        
+        $('.share-action').click(e => {
+            e.preventDefault();
+            popupCenter('/extension/share','Share the goodness', 400, 210);
+        });
+        $('.invite-action').click(e => {
+            e.preventDefault();
+            parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
+        });
         // $("#salesforce-entity-search").selectize({
         //     closeAfterSelect: true,
         //     valueField: 'id',
@@ -188,6 +204,13 @@
                 popupWindowRef.focus();
             }
         };
+
+        function popupCenter(url, title, w,h) {
+            var left = (screen.width/2)-(w/2);
+            var top = (screen.height/2)-(h/2);
+            return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+        }
+
 
         // // Button to show the form to link SFDC account
         // function show_link_account_form_btn_clicked () {

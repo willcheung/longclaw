@@ -154,7 +154,7 @@
         //     }
         // );
 
-        $("a").click(function(){
+        $('a.profile').click(function(){
             // Save the state of the arrow of the clicked element
             var this_arrow_td = $('.arrow', this);
             var section_is_expanded = this_arrow_td.attr("class").includes("arrow-section-expanded");
@@ -206,7 +206,7 @@
                 <% profile_fullname = person.fullname.present? ? person.fullname : p[:email] %>
                 <div class="panel <%= "panel-default" if n == 0 && i == 0 %>" id="Profile-<%= person.id %>-<%= n %>">
                     <div>
-                        <a href="#collapseProfile-<%= person.id %>-<%= n %>" data-toggle="collapse" data-parent="#accordion">
+                        <a class="profile" href="#collapseProfile-<%= person.id %>-<%= n %>" data-toggle="collapse" data-parent="#accordion">
                             <table class="titleinfo-group">
                                 <tbody>
                                     <tr>

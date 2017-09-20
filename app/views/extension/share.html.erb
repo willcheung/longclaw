@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Share us with the world!</title>
+
+
+  <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css"/>
+
+  <!-- <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+  <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-classic.css" /> -->
+  <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-minima.css"/>
+  <!-- <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-plain.css" /> -->
+
+</head>
+<body>
+<div class="jumbotron center-block">
+  <div class="container">
+    <h2 class="text-center">Share ContextSmith with the world!</h2>
+    <p></p>
+    <div class="text-center" id="share"></div>
+  </div>
+</div>
+<div class="copier">
+  <p></p>
+</div>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<script>
+    var copyToClipboard = (function () {
+        var _dataString = null;
+        document.addEventListener("copy", function (e) {
+            if (_dataString !== null) {
+                try {
+                    e.clipboardData.setData("text/plain", _dataString);
+                    e.preventDefault();
+                } finally {
+                    _dataString = null;
+                }
+            }
+        });
+        return function (data) {
+            _dataString = data;
+            document.execCommand("copy");
+            $('.jssocials-share.jssocials-share-copy > a > span').text("Copied!");
+        };
+    })();
+
+    jsSocials.shares.copy = {
+        label: "Clipboard",
+        logo: "fa fa-clipboard",
+        shareUrl: "javascript:(function() { copyToClipboard('{url}'); return false; })()",
+        countUrl: "",
+        shareIn: "self"
+    };
+
+    $("#share").jsSocials({
+        url: 'http://bit.ly/contextsmith_chrome',
+        text: 'ContextSmith for E-Mail Tracking and Profiling',
+        showCount: true,
+        showLabel: true,
+        shares: ['twitter', 'facebook', 'linkedin', 'copy']
+    });
+</script>
+</body>
+</html>

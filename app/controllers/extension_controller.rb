@@ -14,6 +14,10 @@ class ExtensionController < ApplicationController
     render layout: "empty"
   end
 
+  def share
+    render layout: "empty"
+  end
+
   def index
     # gmail extension provided an email address of the currently logged in user
     @gmail_user = params[:email] ? params[:email] : nil
