@@ -2,36 +2,69 @@
   <div class="gray-bg">
     <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
   </div>
+  <div class="container-fluid">
 
-<h1 class="text-center m-b-md">Welcome!</h1>
-<h4 class="text-center">You're logged in as <%= current_user.email %></h4>
+    <h1 class="text-center m-b-md">Welcome!</h1>
+    <h4 class="text-center">You're logged in as <%= current_user.email %></h4>
 
-  <script>
-      // inform the extension code that the user is logged in
-      // iframe is embedded deep, thus we need to post from parent of parent
-      parent.parent.postMessage({type: 'cs-user-logged-in'}, "https://mail.google.com");
-  </script>
-  <% if @gmail_user && @gmail_user != current_user.email %>
-      <div class="container-fluid text-center well" style="margin-top: 20px;">
-        <div class="row">
-        <h3 class="text-center" style="line-height: unset;"><i class="text-warning fa fa-exclamation-triangle"></i>&nbsp;Please log out and sign in as <b><%= @gmail_user %></b> to use the ContextSmith
-          extension </h3>
-        </div>
-        <div class="row">
-          <div class="col-md-2">
-          <a class="btn btn-primary" href="<%= destroy_user_session_path(:extension => true) %>"><span>Logout</span></a>
+    <script>
+        // inform the extension code that the user is logged in
+        // iframe is embedded deep, thus we need to post from parent of parent
+        parent.parent.postMessage({type: 'cs-user-logged-in'}, "https://mail.google.com");
+    </script>
+    <% if @gmail_user && @gmail_user != current_user.email %>
+        <div class="container-fluid text-center well" style="margin-top: 20px;">
+          <div class="row">
+            <h3 class="text-center" style="line-height: unset;"><i class="text-warning fa fa-exclamation-triangle"></i>
+              &nbsp;Please log out and sign in as <b><%= @gmail_user %></b> to use the ContextSmith extension </h3>
+          </div>
+          <div class="row">
+            <div class="col-md-2">
+              <a class="btn btn-primary" href="<%= destroy_user_session_path(:extension => true) %>"><span>Logout</span></a>
+            </div>
           </div>
         </div>
-      </div>
-  <% else %>
-      <h4 class="text-center middle-box" style="margin-top: 100px">Click on an email or hover over<br>the sender to see contact profile here.</h4>
-      <img class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
-      <% if params[:login] %>
-          <!-- if params[:login] is set, redirected here after signing in successfully from extension -->
-          <script type="text/javascript">
-              // Close this window, extension sidebar will refresh
-              window.close();
-          </script>
-      <% end %>
-  <% end %>
-</div>
+    <% else %>
+        <div class="row text-center" style="margin-top: 50px;">
+          <div class="" role="group" aria-label="...">
+            <button type="button" class="invite-action btn btn-default btn-sm btn-outline">
+              <i class="fa fa-envelope-o"></i> Invite
+            </button>
+            <button type="button" class="share-action btn btn-default btn-sm btn-outline"><i class="fa fa-heart-o"></i>
+              Share
+            </button>
+            <a class="btn btn-default btn-sm btn-outline" href="https://support.contextsmith.com/hc/en-us/categories/115000211594-Chrome-Email-Tracker" target="_blank">Support</a>
+          </div>
+        </div>
+
+        <h4 class="text-center middle-box" style="margin-top: 100px">Click on an email or hover over<br>the sender to
+          see contact profile here.</h4>
+        <img class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
+        </div>
+        <% if params[:login] %>
+            <!-- if params[:login] is set, redirected here after signing in successfully from extension -->
+            <script type="text/javascript">
+                // Close this window, extension sidebar will refresh
+                window.close();
+            </script>
+        <% end %>
+    <% end %>
+    <script>
+
+        $('.share-action').click(e => {
+            e.preventDefault();
+            popupCenter('/extension/share', 'Share the goodness', 600, 400);
+        });
+        $('.invite-action').click(e => {
+            e.preventDefault();
+            parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
+        });
+
+        function popupCenter(url, title, w, h) {
+            var left = (screen.width / 2) - (w / 2);
+            var top = (screen.height / 2) - (h / 2);
+            return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+        }
+
+    </script>
+    </div>
