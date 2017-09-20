@@ -6,17 +6,13 @@
 
 
   <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css"/>
-
-  <!-- <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
-  <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-classic.css" /> -->
   <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-minima.css"/>
-  <!-- <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-plain.css" /> -->
 
 </head>
 <body>
-<div class="jumbotron center-block">
+<div class="gray-bg jumbotron center-block">
   <div class="container">
-    <h3 class="text-center">Share ContextSmith with the world!</h3>
+    <h2 class="text-center">Share ContextSmith with the world!</h2>
     <p></p>
     <div class="text-center" id="share"></div>
   </div>
@@ -46,20 +42,21 @@
     })();
 
     jsSocials.shares.copy = {
-        label: "Clipboard",
-        logo: "fa fa-clipboard",
-        shareUrl: "javascript:(function() { copyToClipboard('{url}'); return false; })()",
-        countUrl: "",
-        shareIn: "self"
+        label: 'Clipboard',
+        logo: 'fa fa-clipboard',
+        shareUrl: 'javascript:(function() { copyToClipboard(\'{url}\'); return false; })()',
+        countUrl: ''
     };
 
-    $("#share").jsSocials({
+    $('#share').jsSocials({
         url: 'http://bit.ly/contextsmith_chrome',
-        text: 'ContextSmith for E-Mail Tracking and Profiling',
+        text: 'ContextSmith for E-Mail Tracking and Profiling #EmailTracking',
         showCount: true,
         showLabel: true,
+        shareIn: 'self',
         shares: ['twitter', 'facebook', 'linkedin', 'copy']
     });
+    $('.jssocials-shares').css({'font-size': '16pt'});
 </script>
 </body>
 </html>
