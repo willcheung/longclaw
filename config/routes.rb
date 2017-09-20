@@ -132,6 +132,7 @@ Longclaw::Application.routes.draw do
       get 'no_account/:domain', to: 'extension#no_account', as: :no_account
       get 'private_domain'
       get 'project_error'
+      get 'salesforce'
       post 'create_account'
     end
 
@@ -149,10 +150,22 @@ Longclaw::Application.routes.draw do
     resources :custom_lists, only: [:create, :update, :destroy]
     resources :custom_lists_metadata, only: [:create, :update, :destroy]  #for /settings/custom_lists
     resources :custom_configurations, only: [:update, :destroy]
+
+    scope "onboarding", controller: :onboarding, as: 'onboarding' do
+      get 'tutorial'
+      get 'creating_clusters'
+      get 'confirm_projects'
+      get 'fill_in_info'
+      get 'extension_tutorial'
+      # Cluster callback
+      post ':user_id/create_clusters' => 'onboarding#create_clusters'
+    end
+    post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
+    get 'home/access_denied'
   end
 
   devise_scope :user do # Unauthenticated user
-  	# root to: "sessions#new"
+    # root to: "sessions#new"
     root to: redirect('/auth/basecamp')
     get '/auth/:provider/callback' => 'setting#basecamp'
     get "/user/omniauth/auth/:provider", to:  "omniauth_callbacks#user_omniauth_auth_helper", as: "user_omniauth_auth_helper"
@@ -161,19 +174,6 @@ Longclaw::Application.routes.draw do
 
   get '/users/auth/basecamp2' => 'basecamps#basecamp2'
   get '/users/auth/37signals/callback' => 'settings#basecamp'
-
-
-  scope "onboarding", controller: :onboarding, as: 'onboarding' do
-    get 'tutorial'
-    get 'creating_clusters'
-    get 'confirm_projects'
-    get 'fill_in_info'
-    get 'extension_tutorial'
-    # Cluster callback
-    post ':user_id/create_clusters' => 'onboarding#create_clusters'
-  end
-  post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
-  get 'home/access_denied'
 
   scope "hooks", controller: :hooks, as: 'hooks' do
     post "jira"

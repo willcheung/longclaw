@@ -75,10 +75,16 @@ class Profile < ActiveRecord::Base
     URI.encode(sp.url) if sp.present? && sp.url.present?
   end
 
-  # Returns an array of websites associated with this profile
+  # Returns an array of [website, website's subdomain/domain "short" name] associated with this profile
   def websites
     if data_is_valid? && data.contact_info.present? && data.contact_info.websites.present?
-      return data.contact_info.websites.map{ |w| URI.encode(w.url) }
+      return data.contact_info.websites.map do |w| 
+                begin
+                  [URI.encode(w.url), URI.parse(w.url).host.sub(/^www\./, '') ]
+                rescue Exception => e
+                  [URI.encode(w.url), w.url ]
+                end
+              end
     end
     []
   end

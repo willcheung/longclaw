@@ -199,8 +199,8 @@ class User < ActiveRecord::Base
       # Considered referred user if e-mail exists but not oauth elements
       referred_user = User.find_by_email(info.email)
       user_attributes = {
-        first_name: info.first_name,
-        last_name: info.last_name,
+        first_name: info.first_name || '',
+        last_name: info.last_name || '',
         oauth_provider: auth.provider,
         email: info.email,
         image_url: info.image,
@@ -575,9 +575,8 @@ class User < ActiveRecord::Base
   end
 
   # Count of number of activities for accounts in array_of_account_ids, and for users in array_of_user_ids, and between a range of days (default=last 14d)
-  def self.count_all_activities_by_user(array_of_account_ids, array_of_user_ids, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
-    array_of_project_ids = Project.where(account_id: array_of_account_ids).pluck(:id)
-    return [] if array_of_account_ids.blank? || array_of_user_ids.blank? || array_of_project_ids.blank?
+  def self.count_all_activities_by_user(array_of_project_ids, array_of_user_ids, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+    return [] if array_of_project_ids.blank? || array_of_user_ids.blank?
     query = <<-SQL
       (
         SELECT users.id, 'E-mails Received' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
@@ -911,7 +910,8 @@ class User < ActiveRecord::Base
   end
 
   ######### Basic ACL ##########
-  # Roles have cascading effect, eg. if you're an "admin", then you also have access to what other roles have.
+  # Roles have cascading effect, e.g. if you're an "admin", then you also have access to what other roles have.  
+  # Note: The member helpers below is used to determine if the user has access to the appropriate features of that role level ("has_rolelevel_access?".  e.g., "admin?" means user has access to the appropriate features of the Admin role level ("has_admin_access?"); similarly, "power_user?" = user has access to features that a power user may access ("has_power_user_access?"), which implies admin also can access this too.
 
   def admin?
     self.role == ROLE[:Admin]
@@ -948,6 +948,10 @@ class User < ActiveRecord::Base
   # Trial user = Chrome User (TODO: remove "Chrome user")
   def power_or_trial_only?
     [ROLE[:Poweruser], OTHER_ROLE[:Chromeuser], OTHER_ROLE[:Trial]].include? (self.role) 
+  end
+
+  def superadmin?
+    %w(wcheung@contextsmith.com will@context-smith.com beders@contextsmith.com klu@contextsmith.com vluong@contextsmith.com syong@contextsmith.com chobbs@contextsmith.com craig@context-smith.com churst@contextsmith.com).include?(self.email)
   end
 
   ######### End Basic ACL ##########

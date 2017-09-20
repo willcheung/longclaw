@@ -10,7 +10,7 @@
     .titleinfo-group:hover {
         background-color: #EEE;
     }
-    td > a, .link:hover {
+    td > a, .link {
         text-decoration: underline;
     }
     .contact-group {
@@ -40,12 +40,13 @@
         font-size: 18px;
         float: right;
         white-space:nowrap;
+        transition: 0.4s;
     }
-    .arrow-section-expanded {  /* arrow style for section that is expanded */
-        transform: translateY(18px) translateX(-8px) rotate(180deg);
+    .arrow-section-expanded {
+        transform: translateX(-14px) translateY(25px) rotate(-90deg);
     }
     .arrow-section-collapsed {
-        transform: translateY(20px) translateX(-5px) rotate(-90deg);
+        transform: translateX(-14px) translateY(25px);
     }
     .visibility-hidden { /* bootstrap overrides .hidden  */
         visibility: hidden;
@@ -60,7 +61,7 @@
         margin: 10px 6px;
         border: 1.5px solid grey;
         font-size: 22px;
-        line-height: 42px;
+        line-height: 39px;
     }
     .contact-info {
         font-size: 12px;
@@ -159,16 +160,14 @@
             var section_is_expanded = this_arrow_td.attr("class").includes("arrow-section-expanded");
 
             //Set all arrows to the collapsed state
-            $('.arrow').html("<%= @widecaret %>").removeClass('arrow-section-expanded').addClass('arrow-section-collapsed');
+            $('.arrow').removeClass('arrow-section-expanded').addClass('arrow-section-collapsed');
 
             // Using saved state, toggle the arrow of the clicked element
             if (section_is_expanded) {
                 this_arrow_td.removeClass('arrow-section-expanded');
-                this_arrow_td.html("<%= @widecaret %>");
                 this_arrow_td.addClass('arrow-section-collapsed');
             } else {
                 this_arrow_td.removeClass('arrow-section-collapsed');
-                this_arrow_td.html("<%= @widecaret %>");
                 this_arrow_td.addClass('arrow-section-expanded');
             }
         });
@@ -180,6 +179,10 @@
             return false; //don't collapse section in extension
         });
     });
+
+    function sendShowMessage(email_id) {
+        parent.parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
+    }
 </script>
 
 <body>
@@ -191,7 +194,10 @@
         <% 2.times do |n| %>
             <% contacts_with_profile = (n == 0 ? @people_with_profile : @account_contacts_with_profile) %>
             <% if n == 0 && contacts_with_profile.blank? %>
-                <h3>No valid contacts were selected or found in email.</h3>
+                <div>
+                    <h3 style="padding: 1em;">No valid contacts were selected or found in the email.</h3>
+                    <img style="padding: 5em 0;" class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
+                </div>
             <% elsif n == 1 && contacts_with_profile.present? %>
                 <span class="contact-group"><br/>MORE PEOPLE AT <%= @project.name.upcase %></span>
             <% end %>
@@ -229,11 +235,7 @@
                                                 </tbody>
                                             </table>
                                         </td>
-                                        <% if n == 0 && i == 0 %>
-                                            <td class="arrow arrow-section-expanded"><%= @widecaret %></td>
-                                        <% else %>
-                                            <td class="arrow arrow-section-collapsed"><%= @widecaret %></td>
-                                        <% end %>
+                                        <td class="arrow fa fa-angle-down fa-2x <%= (n == 0 && i == 0) ? "arrow-section-expanded" : "arrow-section-collapsed" %>" aria-hidden="true"></td>
                                         <!-- <td>
                                             <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= person.id %>-<%= n %>"></i>
                                         </td> -->
@@ -275,8 +277,8 @@
                                             <a class="fa fa-globe fa-2x globe-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" data-trigger='click' data-delay='{"show": 0, "hide": 0}' 
                                             <% if person.websites.present? %>
                                                 data-original-title="
-                                                <% person.websites.each do |site| %>
-                                                  <a href='<%=site%>' target='_blank'><%= URI.parse(site).host.sub(/^www\./, '') %> </a></br>
+                                                <% person.websites.each do |site, site_name| %>
+                                                  <a href='<%=site%>' target='_blank'><%= site_name %></a></br>
                                                 <% end %>
                                                 "
                                             <% end %>
@@ -295,7 +297,7 @@
                             </table>
                             <table class="activity-group">
                                 <tr><td>&nbsp;</td></tr>
-                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS Tracking</b> checkbox when composing and sending an email."></i></td></tr>
+                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS&nbsp;Track</b> checkbox in the compose email window."></i></td></tr>
                                 <tr>
                                     <td><table>
                                         <tr>
@@ -321,14 +323,14 @@
                                                 <i class="fa fa-envelope"></i>
                                             </div>
                                             <div class="extension-timeline-content">
-                                                <extrastrong><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></extrastrong><br/>
+                                                <extrastrong><a href="" class="link" onclick="sendShowMessage('<%= tp[:trackingrequest].email_id %>');"><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></a></extrastrong><br/>
                                                 <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago - <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
                                                 <% if tp[:lasttrackingevent].present? %>
                                                     <p class="time-ago">
                                                     <% if tp[:totaltrackingevents] > 1 %>
-                                                        <%= tp[:totaltrackingevents] %> <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;Last opened
+                                                        <%= tp[:totaltrackingevents] %> <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;&nbsp;Last opened
                                                     <% else %>
-                                                        <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;Opened
+                                                        <i class="fa fa-envelope-open-o fa-sm" aria-hidden="true"></i>&nbsp;&nbsp;Opened
                                                     <% end %>
                                                     <%= time_ago_in_words(tp[:lasttrackingevent].date) %> ago <%= tp[:lasttrackingevent].date.strftime('%b %d') %> - <%= tp[:lasttrackingevent].date.strftime("%l:%M%P") %></p>
                                                 <% end %>

@@ -28,7 +28,7 @@ class ApplicationController < ActionController::Base
         if resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
           onboarding_extension_tutorial_path
         else
-          stored_location || extension_path(login: true)
+          extension_path(login: true)
         end
       # check if at least biz? level access
       elsif resource.biz?
@@ -107,5 +107,27 @@ class ApplicationController < ActionController::Base
     @users_reverse = current_user.organization.users.registered.order(:first_name).map { |u| [u.id, get_full_name(u)] }.to_h
   end
 
+  def get_close_date_range(range_description)
+    case range_description
+      when Project::CLOSE_DATE_RANGE[:ThisQuarter]
+        date = Time.current
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when Project::CLOSE_DATE_RANGE[:NextQuarter]
+        date = Time.current.next_quarter
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when Project::CLOSE_DATE_RANGE[:LastQuarter]
+        date = Time.current.prev_quarter
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when Project::CLOSE_DATE_RANGE[:QTD]
+        (Time.current.beginning_of_quarter...Time.current)
+      when Project::CLOSE_DATE_RANGE[:YTD]
+        (Time.current.beginning_of_year...Time.current)
+      when Project::CLOSE_DATE_RANGE[:Closed]
+        (Time.at(0)...Time.current)
+      else # use 'This Quarter' by default
+        date = Time.current
+        (date.beginning_of_quarter...date.end_of_quarter)
+    end
+  end
 
 end

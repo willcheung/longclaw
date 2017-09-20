@@ -5,26 +5,37 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="font-bold col-md-12">Filter:</div>
-            <div class="col-md-12 m-t-sm filter-space">
-                <select id="team-filter" class="category_filter col-md-3" data-placeholder="Select Team">
-                    <option></option> <!-- no filter -->
-                    <% @departments.each do |d| %>
-                    <option value="<%=d %>"  <% if params[:team] == d  %> selected   <% end %> ><%=d %></option>
-                    <% end %>
-                    <option value="none">(No Team)</option>
-                </select>
-                <select id="title-filter" class="category_filter col-md-3" data-placeholder="Select Title">
-                    <option></option>
-                    <% @titles.each do |t| %>
-                    <option value="<%=t %>"  <% if params[:title] == t  %> selected   <% end %> ><%=t %></option>
-                    <% end %>
-                    <option value="none">(No Title)</option>
-                </select> 
-            </div>
-        </div>
+    <div class="row filter-space">
+      <strong>Filter:</strong>
+    </div>
+    <div class="row filter-space filter-group">
+        <select id="team-filter" class="category_filter col-md-3" data-placeholder="Select Team">
+            <option></option> <!-- no filter -->
+            <% @departments.each do |d| %>
+            <option value="<%=d %>"  <% if params[:team] == d  %> selected   <% end %> ><%=d %></option>
+            <% end %>
+            <option value="none">(No Team)</option>
+        </select>
+        <select id="title-filter" class="category_filter col-md-3" data-placeholder="Select Title">
+            <option></option>
+            <% @titles.each do |t| %>
+            <option value="<%=t %>"  <% if params[:title] == t  %> selected   <% end %> ><%=t %></option>
+            <% end %>
+            <option value="none">(No Title)</option>
+        </select>
+        <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
+            <option value=""></option> <!-- no filter -->
+            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
+            <optgroup label="Quarter">
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:NextQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:NextQuarter] %></option>
+            </optgroup>
+            <optgroup label="x-To-Date">
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:QTD] %> ><%= Project::CLOSE_DATE_RANGE[:QTD] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
+            </optgroup>
+        </select>
     </div>
     
     <div class="row border-bottom white-bg dashboard-header">
@@ -62,12 +73,22 @@
 
     $(function () {
 
-        $('#sort-type, #team-filter, #title-filter').change( function () {
+        $('#sort-type, #team-filter, #title-filter, #close-date-filter').change( function () {
             // Clear Opportunity data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the rep.</h3></div>");
 
             // Build URL for AJAX call for filtered data
-            var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param({ team: $('#team-filter').val(), title: $('#title-filter').val() });
+            let params = {};
+            if ($('#team-filter').val()) {
+              params.team = $('#team-filter').val();
+            }
+            if ($('#title-filter').val()) {
+              params.title = $('#title-filter').val();
+            }
+            if ($('#close-date-filter').val()) {
+              params.close_date = $('#close-date-filter').val();
+            }
+            var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
             $.getScript(url)
         });
 

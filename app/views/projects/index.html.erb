@@ -21,17 +21,17 @@
     <div class="row">
         <div class="col-lg-6 filter-group">
           <div class="font-bold m-b-xs">Filter:</div>
-          <select class="category_filter col-sm-3" data-placeholder="Select Type">
+          <!--<select class="category_filter col-sm-3" data-placeholder="Select Type">-->
+            <!--<option value="0"></option>-->
+            <!--< % @opportunity_types.each do |k,v| %>-->
+            <!--<option value="< %= v %>" < % if params[:type] == v %>selected< % end %> >-->
+              <!--< %= v %>-->
+            <!--</option>-->
+            <!--< % end %>-->
+          <!--</select>-->
+          <select id="owner-filter" class="category_filter col-sm-3" data-placeholder="Select Owner">
             <option value="0"></option>
-            <% @opportunity_types.each do |k,v| %>
-            <option value="<%= v %>" <% if params[:type] == v %>selected<% end %> >
-              <%= v %>
-            </option>
-            <% end %>
-          </select>
-          <select class="owner_filter col-sm-3" data-placeholder="Select Owner">
-            <option value="0"></option>
-            <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >  
+            <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >
               Owner: Me
             </option>
             <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
@@ -44,6 +44,19 @@
             <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >
               Unassigned
             </option>
+          </select>
+          <select id="close-date-filter" class="category_filter col-sm-3" data-placeholder="Select Close Date">
+            <option value=""></option> <!-- no filter -->
+            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
+            <optgroup label="Quarter">
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:NextQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:NextQuarter] %></option>
+            </optgroup>
+            <optgroup label="x-To-Date">
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:QTD] %> ><%= Project::CLOSE_DATE_RANGE[:QTD] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
+            </optgroup>
           </select>
         </div>
 

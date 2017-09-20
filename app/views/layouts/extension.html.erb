@@ -43,7 +43,9 @@
                 <ul class="nav nav-tabs">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">People</a></li>
                     <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
-                    <li role="presentation" class="<%= is_active_action('alerts_tasks') %> disabled"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>"><img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
+                    <li role="presentation" class="<%= is_active_action('salesforce') %> 
+                    <%= "disabled" if !current_user.superadmin? %>
+                    "><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>"><img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
                 </ul>
             </div>
 
@@ -170,24 +172,6 @@
         //     });
         // });
 <% end %>
-
-        var popupWindowRef = null;
-        var openSignInPopup = function (strUrl, strTarget) {
-            var strOptions = "width=700,height=700";
-            if (popupWindowRef == null || popupWindowRef.closed) {
-                popupWindowRef = window.open(strUrl, strTarget, strOptions);
-                // Poll popup window, refresh this page when it is closed
-                var pollPopupClosed = window.setInterval(function() {
-                    if (popupWindowRef.closed) {
-                        window.clearInterval(pollPopupClosed);
-                        window.location.reload(true)
-                    }
-                }, 200);
-            }
-            else {
-                popupWindowRef.focus();
-            }
-        };
 
         // // Button to show the form to link SFDC account
         // function show_link_account_form_btn_clicked () {

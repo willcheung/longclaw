@@ -1,0 +1,39 @@
+<div class="white-bg">
+    <div class="row">
+        <div class="ibox-content text-center">
+            <!-- <h2>Salesforce</h2> -->
+            <div class="m-b-sm">
+                <img src="/assets/images/salesforce.png"/ style="height:75px;"/>
+            </div>
+
+            <% if current_user.superadmin? %>
+                <% if @salesforce_user.nil? %>
+                    <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
+                <% else %>
+                    <div style="margin: 1em;">
+                        <span style="display: block; padding-bottom: 1em;">You're connected as <strong><%= @salesforce_user.oauth_user_name %></strong></span>
+                        <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect!</a></span></div>
+                <% end %>
+            <% end %>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var popupWindowRef = null;
+    var openSignInPopup = function (strUrl, strTarget) {
+        var strOptions = "width=700,height=700";
+        if (popupWindowRef == null || popupWindowRef.closed) {
+            popupWindowRef = window.open(strUrl, strTarget, strOptions);
+            // Poll popup window, refresh this page when it is closed
+            var pollPopupClosed = window.setInterval(function() {
+                if (popupWindowRef.closed) {
+                    window.clearInterval(pollPopupClosed);
+                    window.location.reload(true)
+                }
+            }, 200);
+        }
+        else {
+            popupWindowRef.focus();
+        }
+    };
+</script>
