@@ -1,20 +1,21 @@
 <div class="white-bg">
     <div class="row">
         <div class="ibox-content text-center">
+            <div class="m-b-sm" style="margin: 60% 0">
             <!-- <h2>Salesforce</h2> -->
-            <div class="m-b-sm">
-                <img src="/assets/images/salesforce.png"/ style="height:75px;"/>
-            </div>
-
-            <% if current_user.superadmin? %>
-                <% if @salesforce_user.nil? %>
-                    <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
+                <img src="/assets/images/salesforce.png" style="height:75px;"/>
+                <% if current_user.superadmin? %>
+                    <% if @salesforce_user.nil? %>
+                        <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
+                    <% else %>
+                        <div style="margin: 1em;">
+                            <span style="display: block; padding-bottom: 1em;">You're connected as <strong><%= @salesforce_user.oauth_user_name %></strong></span>
+                            <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect!</a></span></div>
+                    <% end %>
                 <% else %>
-                    <div style="margin: 1em;">
-                        <span style="display: block; padding-bottom: 1em;">You're connected as <strong><%= @salesforce_user.oauth_user_name %></strong></span>
-                        <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect!</a></span></div>
+                    <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
                 <% end %>
-            <% end %>
+            </div>
         </div>
     </div>
 </div>

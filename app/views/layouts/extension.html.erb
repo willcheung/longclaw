@@ -44,8 +44,12 @@
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">People</a></li>
                     <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
                     <li role="presentation" class="<%= is_active_action('salesforce') %> 
-                    <%= "disabled" if !current_user.superadmin? %>
-                    "><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>"><img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
+                    <% if !current_user.superadmin? %>
+                    disabled"><a href="#">
+                    <% else %>
+                    "><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>">
+                    <% end %>
+                    <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
                 </ul>
             </div>
 
