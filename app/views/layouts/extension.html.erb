@@ -45,7 +45,7 @@
                     <li><a href="#" class="invite-action"><i class="fa fa-envelope-o"></i> Invite</a></li>
                     <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Share</a></li>
                     <li role="separator" class="divider"></li>
-                    <li><a href="https://support.contextsmith.com/hc/en-us/categories/115000211594-Chrome-Email-Tracker" target="_blank" class=""><i class="fa "></i> Support</a></li>
+                    <li><a href="https://support.contextsmith.com/hc/en-us/categories/115000211594-Chrome-Email-Tracker" target="_blank" class="">Support</a></li>
                   </ul>
                 </li>
               </ul></div>
@@ -121,7 +121,7 @@
         //           console.log("fail");
         //           callback();
         //         })
-              
+
         //     },
         //     onDropdownOpen: function ($dropdown) {
         //       // Manually prevent dropdown from opening when:
@@ -191,30 +191,11 @@
         // });
 <% end %>
 
-        var popupWindowRef = null;
-        var openSignInPopup = function (strUrl, strTarget) {
-            var strOptions = "width=700,height=700";
-            if (popupWindowRef == null || popupWindowRef.closed) {
-                popupWindowRef = window.open(strUrl, strTarget, strOptions);
-                // Poll popup window, refresh this page when it is closed
-                var pollPopupClosed = window.setInterval(function() {
-                    if (popupWindowRef.closed) {
-                        window.clearInterval(pollPopupClosed);
-                        window.location.reload(true)
-                    }
-                }, 200);
-            }
-            else {
-                popupWindowRef.focus();
-            }
-        };
-
         function popupCenter(url, title, w,h) {
             var left = (screen.width/2)-(w/2);
             var top = (screen.height/2)-(h/2);
             return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
         }
-
 
         // // Button to show the form to link SFDC account
         // function show_link_account_form_btn_clicked () {
