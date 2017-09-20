@@ -87,7 +87,7 @@ class SalesforceController < ApplicationController
       SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
       SalesforceOpportunity.load_opportunities(current_user)
 
-      if !current_user.admin? || current_user.superadmin?  # TODO: Remove this Superadmin hack that allows developers to test Basic user functionality using web app.  Remove after enabling proper SFDC sign-in in Chrome extension.
+      if !current_user.admin?  # Basic, etc. user
         sfdc_userid = SalesforceService.get_salesforce_user_uuid(current_user.organization_id, current_user)
         open_sfdc_opps = SalesforceOpportunity.is_open.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
 
