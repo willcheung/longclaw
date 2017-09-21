@@ -52,16 +52,16 @@
         visibility: hidden;
     }
     .titleinfo-group .profile-pic-container {
-        width: 48px;
+        width: 56px;
     }
     .profile-pic {
-        width: 48px;
-        height: 48px;
-        border-radius: 48px;
+        width: 56px;
+        height: 56px;
+        border-radius: 56px;
         margin: 10px 6px;
-        border: 1.5px solid grey;
+        border: 2px solid #7cb5ec;  /* "CS blue" */
         font-size: 22px;
-        line-height: 39px;
+        line-height: 47px;
     }
     .contact-info {
         font-size: 12px;
@@ -172,8 +172,8 @@
             }
         });
 
-        // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it, e.g. company name
-        $(".link").click(function(){
+        // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it
+        $(".company-link").click(function(){
             // console.log("clicked on " + $(this).attr("url"));
             window.open($(this).attr("url")); 
             return false; //don't collapse section in extension
@@ -225,7 +225,7 @@
                                                     ><extrastrong><%= profile_fullname %></extrastrong></td></tr>
                                                     <tr><td><%= person.title %></td></tr>
                                                     <% if person.organization.present? || valid_domain?(get_domain(p[:email])) %>
-                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization.present? ? person.organization : get_domain(p[:email]) %></span></td></tr>
+                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link company-link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization.present? ? person.organization : get_domain(p[:email]) %></span></td></tr>
                                                     <% end %>
                                                     <% if person.location.present? %>
                                                         <tr><td>
@@ -313,7 +313,7 @@
                             <table class="timeline-group">
                                 <tr><td>&nbsp;</td></tr>
                                 <tr><td>
-                                    <div id="extension-timeline">
+                                    <div class="extension-timeline">
                                     <% @last_emails_sent_per_person[p[:email]].each do |tp| %>
                                         <!-- TODO: Create a view for tracking_requests -->
                                         <!-- < %= render 'tracking_requests/extension_block', t: t %> -->
@@ -323,7 +323,7 @@
                                                 <i class="fa fa-envelope"></i>
                                             </div>
                                             <div class="extension-timeline-content">
-                                                <extrastrong><a href="" class="link" onclick="sendShowMessage('<%= tp[:trackingrequest].email_id %>');"><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></a></extrastrong><br/>
+                                                <extrastrong><a href="#" class="link" onclick="sendShowMessage('<%= tp[:trackingrequest].email_id %>');"><%= truncate_with_ellipsis(tp[:trackingrequest].subject, @EMAIL_SUBJECT_TEXT_LENGTH_MAX) %></a></extrastrong><br/>
                                                 <span style="color: grey">Sent <%= time_ago_in_words(tp[:trackingrequest].sent_at) %> ago - <%= tp[:trackingrequest].sent_at.strftime('%b %d') %></span>
                                                 <% if tp[:lasttrackingevent].present? %>
                                                     <p class="time-ago">
