@@ -34,6 +34,7 @@ class SalesforceOpportunity < ActiveRecord::Base
   scope :is_not_linked, -> {where(contextsmith_project_id: nil)}
 
   # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.
+  # For Admin users, this will get all SFDC opportunities belonging to linked SFDC accounts, and Open or was Closed within the last year.  For all other users, this will get all SFDC opportunities belonging to the individual's SFDC user, and is Open or was Closed within the last year.
   # Params:    query_range: The limit for SFDC query results
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
@@ -100,7 +101,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     else # if !current_user.admin? (i.e., single SFDC user)
       sfdc_userid = SalesforceService.get_salesforce_user_uuid(organization_id, current_user)
       query_statements = []
-      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"  # "Closed YTD & all Open Opps"
+      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"  # "Closed within the last year & all Open Opps"
       # query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = FALSE ORDER BY CloseDate DESC LIMIT 10" # "recent 10 Open Opps"
 
       query_statements.each do |query_statement|
