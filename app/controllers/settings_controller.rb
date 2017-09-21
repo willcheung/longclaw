@@ -219,7 +219,20 @@ class SettingsController < ApplicationController
 	def user_analytics
 		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
 		@institution = Organization.all
-		@latest_user_activity = Ahoy::Event.latest_activities
+
+		# Get last 30 days of aggregate actions per user (excluding contextsmith.com)
+		query = <<-SQL
+				select to_char("time", 'MM/DD') as "date", 
+							users.email, 
+							ahoy_events.name as action, 
+							ahoy_events.properties->'page' as page, 
+							count(ahoy_events.properties->'page') as count 
+				from ahoy_events join users on users.id=ahoy_events.user_id 
+				where time >= current_date - interval '30' day and email not like '%contextsmith.com' 
+				group by to_char("time", 'MM/DD'), users.email, action, page 
+				order by "date" asc;
+      SQL
+		@latest_user_activity = ActiveRecord::Base.connection.execute(query)
 		activity_org = Ahoy::Event.all_ahoy_events
 		@event_date = activity_org.map(&:date)
 		@event_count = activity_org.map{ |n| n['events']}

@@ -13,7 +13,7 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-     <div class="row">
+     <!-- <div class="row">
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
@@ -49,7 +49,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
     <div class = "ibox-content">
         <h3>Raw Ahoy_events from the last 30 days includes contextsmith members</h3>
         <div id="activity-container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
@@ -60,18 +60,20 @@
                             <th></th>
                             <th>Date</th>
                             <th>Email</th>
-                            <th>Name</th>
-                            <th>Properties</th>
+                            <th>Action</th>
+                            <th>Page</th>
+                            <th>Count</th>
                         </tr>
                     </thead>
                     <tbody>
                     <% @latest_user_activity.each do |u| %>
                         <tr>
                             <td></td>
-                            <td><%=u.date%></td>
-                            <td><%=u.email%></td>
-                            <td><%=u.name%></td>
-                            <td><%=u.properties%></td>
+                            <td><%=u['date']%></td>
+                            <td><%=u['email']%></td>
+                            <td><%=u['action']%></td>
+                            <td><%=u['page']%></td>
+                            <td><%= u['count']%></td>
                         </tr>
                     <%end%>
                 </table>
