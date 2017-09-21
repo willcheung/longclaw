@@ -225,7 +225,7 @@ class SettingsController < ApplicationController
 				from ahoy_events join users on users.id=ahoy_events.user_id 
 				where time >= current_date - interval '30' day and email not like '%contextsmith.com' 
 				group by to_char("time", 'MM/DD'), users.email, action, page 
-				order by "date" asc;
+				order by "date";
       SQL
 		@latest_user_activity = ActiveRecord::Base.connection.execute(query)
 		activity_org = Ahoy::Event.all_ahoy_events
