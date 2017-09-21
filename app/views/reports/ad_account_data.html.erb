@@ -69,25 +69,31 @@
 
 <div id="account-charts">
     <div class="ibox-content">
-        <h3><i class="fa fa-bell-o" aria-hidden="true"></i>&nbsp;&nbsp;Alerts & Tasks</h3>
-        <ul class="todo-list m-t">
-            <% @alerts_tasks.each do |n| %>
-            <li>
-                <input type="checkbox" class="i-checks" id=<%= n.id %> <% if n.is_complete %> checked <% end %> >
-                <%= n.name %>
-                <% labels = { Notification::CATEGORY[:Action] => 'label-primary',
-                                 Notification::CATEGORY[:Opportunity] => 'label-success',
-                                 Notification::CATEGORY[:Todo] => 'label-info',
-                                 Notification::CATEGORY[:Alert] => 'label-danger' }
-                   not_label = labels[n.category]
-                %>
-                <small class="label <%= not_label %>"><%= n.category %></small>
-                <% if n.original_due_date.present? %>
-                <small class="label label-primary"><i class="fa fa-clock-o"></i> Due <%= Time.zone.at(n.original_due_date).strftime('%b %e') %></small>
+        <div class="row m-t-md">
+            <h3><i class="fa fa-bell-o" aria-hidden="true"></i>&nbsp;&nbsp;Alerts & Tasks</h3>
+            <% if @alerts_tasks.present? %>
+            <ul class="todo-list m-t">
+                <% @alerts_tasks.each do |n| %>
+                <li>
+                    <input type="checkbox" class="i-checks" id=<%= n.id %> <% if n.is_complete %> checked <% end %> >
+                    <%= n.name %>
+                    <% labels = { Notification::CATEGORY[:Action] => 'label-primary',
+                                     Notification::CATEGORY[:Opportunity] => 'label-success',
+                                     Notification::CATEGORY[:Todo] => 'label-info',
+                                     Notification::CATEGORY[:Alert] => 'label-danger' }
+                       not_label = labels[n.category]
+                    %>
+                    <small class="label <%= not_label %>"><%= n.category %></small>
+                    <% if n.original_due_date.present? %>
+                    <small class="label label-primary"><i class="fa fa-clock-o"></i> Due <%= Time.zone.at(n.original_due_date).strftime('%b %e') %></small>
+                    <% end %>
+                </li>
                 <% end %>
-            </li>
+            </ul>
+            <% else %>
+            <p class="text-danger">No Alerts & Tasks.</p>
             <% end %>
-        </ul>
+        </div>
 
         <div class="row m-t-md">
             <h3 class="m-t-md"><i class="fa fa-calendar"></i>  Next Meeting:</h3>
@@ -97,7 +103,7 @@
               <%= Time.zone.at(@next_meeting.last_sent_date).strftime('%b %d, %R%P') %>
             </p>
             <% else %>
-            <p class="text-danger">No meetings setup.</p>
+            <p class="text-danger">No meetings set up.</p>
             <% end %>
         </div>
 
@@ -109,7 +115,7 @@
     <div id="charts-container" class="ibox-content">
 
         <div class="row m-t-md">
-            <div id="activities-chart"></div>
+            <div id="project-activities-trend-chart"></div>
         </div>
 
         <div class="row m-t-lg text-center">
@@ -182,7 +188,7 @@
     Render right charts
     ******/
 
-    function renderCharts(riskScore) {
+    function renderProjectCharts(riskScore) {
         /**
          * Override the reset function, we don't need to hide the tooltips and crosshairs.
          */
@@ -328,7 +334,7 @@
             ]
         });
 
-        $('#activities-chart').highcharts({
+        $('#project-activities-trend-chart').highcharts({
             chart: {
                 height: 240,
                 events:{
