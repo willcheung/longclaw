@@ -130,10 +130,18 @@
                         <% else %>
                             <% if @project.salesforce_opportunity.nil? %>
                                 <% @project.account.salesforce_accounts.each do |sfa| %>
-                                  <a href="<%= @salesforce_base_URL + "/" + sfa.salesforce_account_id %>" title="View '<%= sfa.salesforce_account_name %>' in Salesforce" target="_blank"><%= sfa.salesforce_account_name %><br></a>
+                                    <a
+                                    <% if @salesforce_base_URL.present? %>
+                                      href="<%= @salesforce_base_URL + "/" + sfa.salesforce_account_id %>" title="View <%= sfa.salesforce_account_name %> (<%= sfa.salesforce_account_id %>) in Salesforce" target="_blank"
+                                    <% end %>
+                                    ><%= sfa.salesforce_account_name %><br></a>
                                 <% end %> 
                             <% else %>
-                                <a href="<%= @salesforce_base_URL + "/" + @project.salesforce_opportunity.salesforce_opportunity_id %>" title="View '<%= @project.salesforce_opportunity.name %>' in Salesforce" target="_blank"><%= @project.salesforce_opportunity.name %></a>
+                                <a
+                                <% if @salesforce_base_URL.present? %>
+                                  href="<%= @salesforce_base_URL + "/" + @project.salesforce_opportunity.salesforce_opportunity_id %>" title="View <%= @project.salesforce_opportunity.name %> (<%= @project.salesforce_opportunity.salesforce_opportunity_id %>) in Salesforce" target="_blank"
+                                <% end %> 
+                                ><%= @project.salesforce_opportunity.name %></a>
                             <% end %>
                         <% end %>
                     </span>
