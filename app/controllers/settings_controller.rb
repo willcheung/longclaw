@@ -162,11 +162,6 @@ class SettingsController < ApplicationController
 			if @sfdc_fields.empty?  # SFDC connection error
 				@salesforce_connection_error = true
 			else
-				current_org_entity_fields_metadatum = current_user.organization.entity_fields_metadatum
-        # SFDC connection exists, so check if there are no existing EntityFieldsMetadatum records (because this is a new organization) or there is no mapping (from a SFDC reconnect). For either case, create a default mapping to SFDC fields
-				EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
-				EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
-
 				# add ("nil") options to remove mapping 
 				@sfdc_fields[:sfdc_account_fields] << ["","(Unmapped)"] 
 				@sfdc_fields[:sfdc_opportunity_fields] << ["","(Unmapped)"] 
@@ -217,9 +212,22 @@ class SettingsController < ApplicationController
 	end
 
 	def user_analytics
-		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
-		@institution = Organization.all
-		@latest_user_activity = Ahoy::Event.latest_activities
+		#@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+		#@institution = Organization.all
+
+		# Get last 30 days of aggregate actions per user (excluding contextsmith.com)
+		query = <<-SQL
+				select to_char("time", 'MM/DD') as "date", 
+							users.email, 
+							ahoy_events.name as action, 
+							ahoy_events.properties->'page' as page, 
+							count(ahoy_events.properties->'page') as count 
+				from ahoy_events join users on users.id=ahoy_events.user_id 
+				where time >= current_date - interval '30' day and email not like '%contextsmith.com' 
+				group by to_char("time", 'MM/DD'), users.email, action, page 
+				order by "date" asc;
+      SQL
+		@latest_user_activity = ActiveRecord::Base.connection.execute(query)
 		activity_org = Ahoy::Event.all_ahoy_events
 		@event_date = activity_org.map(&:date)
 		@event_count = activity_org.map{ |n| n['events']}

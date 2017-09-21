@@ -31,21 +31,37 @@
 
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
-                <span style="width:150px; display:inline-block">
+                <span style="width:100px; display:inline-block">
                     <a href="<%= ([User::ROLE[:Basic],User::ROLE[:Pro]].include? current_user.role) ? "http://www.contextsmith.com" : root_path %>" target="_blank" class="navbar-brand">
                         <span class="clear">
                             <div class="block logo">&nbsp;</div>
                         </span>
                     </a>
                 </span>
+              <div class="pull-right"><ul class="nav nav-pills">
+                <li class="dropdown pull-right" style="margin-left:-30px">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i style="font-size: 15px; color: #777;" class="fa fa-ellipsis-v"></i></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#" class="invite-action"><i class="fa fa-envelope-o"></i> Invite</a></li>
+                    <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Share</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li><a href="https://support.contextsmith.com/hc/en-us/categories/115000211594-Chrome-Email-Tracker" target="_blank" class="">Support</a></li>
+                  </ul>
+                </li>
+              </ul></div>
             </div>
             <div>
                 <ul class="nav nav-tabs">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">People</a></li>
                     <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
                     <li role="presentation" class="<%= is_active_action('salesforce') %> 
-                    <%= "disabled" if !current_user.superadmin? %>
-                    "><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>"><img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
+                    <% if !current_user.superadmin? %>
+                    disabled"><a href="#">
+                    <% else %>
+                    "><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>">
+                    <% end %>
+                    <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
+
                 </ul>
             </div>
 
@@ -58,7 +74,14 @@
 
     <script>
         $('[data-toggle="tooltip"]').tooltip();
-        
+        $('.share-action').click(e => {
+            e.preventDefault();
+            popupCenter('/extension/share','Share the goodness', 600, 400);
+        });
+        $('.invite-action').click(e => {
+            e.preventDefault();
+            parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
+        });
         // $("#salesforce-entity-search").selectize({
         //     closeAfterSelect: true,
         //     valueField: 'id',
@@ -103,7 +126,7 @@
         //           console.log("fail");
         //           callback();
         //         })
-              
+
         //     },
         //     onDropdownOpen: function ($dropdown) {
         //       // Manually prevent dropdown from opening when:
@@ -172,6 +195,12 @@
         //     });
         // });
 <% end %>
+
+        function popupCenter(url, title, w,h) {
+            var left = (screen.width/2)-(w/2);
+            var top = (screen.height/2)-(h/2);
+            return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+        }
 
         // // Button to show the form to link SFDC account
         // function show_link_account_form_btn_clicked () {

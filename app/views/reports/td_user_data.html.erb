@@ -68,7 +68,7 @@
         </div>
 
         <div class="row m-t-md">
-            <div id="activities-chart" style="height:240px"></div>
+            <div id="user-activities-trend-chart" style="height:240px"></div>
         </div>
 
     </div>
@@ -86,7 +86,7 @@
     Render right charts
     ******/
 
-    function renderCharts(riskScore) {
+    function renderUserCharts(riskScore) {
 
         $('#customers-interaction-chart').highcharts({
             chart: {
@@ -142,6 +142,18 @@
             },
             plotOptions: {
                 series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                              $.get("ad_account_data/" + this.options.id, function (data) {
+                                $("#opportunity-profile").html(data);
+                                $('#opportunity-modal').modal('show')
+                                renderProjectCharts(this.y);
+                              });
+                            }
+                        }
+                    },
                     stacking: 'normal'
                 }
             },
@@ -150,7 +162,14 @@
               {
                 name: '<%= category %>',
                 color: "<%= highcharts_series_color(category.to_s) %>",
-                data: <%= @interaction_time_per_account.map(&category).to_json.html_safe %>,
+                data: [
+                  <% @interaction_time_per_account.each do |it| %>
+                  {
+                    y: <%= it.send(category) %>,
+                    id: "<%= it.id %>"
+                  },
+                  <% end if @interaction_time_per_account.present? %>
+                ],
                 tooltip: {
                   pointFormatter: function() {
                     return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
@@ -216,7 +235,7 @@
         });
 
 
-        $('#activities-chart').highcharts({
+        $('#user-activities-trend-chart').highcharts({
             chart: {
                 events:{
                   load: function(event) {
@@ -280,7 +299,8 @@
                 color: '<%= highcharts_series_color(category) %>',
                 pointInterval: <%= 1.day * 1000 %>,
                 pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= activities_by_date.map {|c| c.num_activities }.to_json.html_safe %>
+                data: <%= activities_by_date.map(&:num_activities).to_json.html_safe %>,
+                showInLegend: <%= activities_by_date.map(&:num_activities).reduce(:+) > 0 ? true : false %>
             },
             <% end %>
             // {
