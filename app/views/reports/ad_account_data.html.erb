@@ -139,73 +139,11 @@
     // initialize iCheck for dynamically added Notifications
     $('.i-checks').iCheck({checkboxClass: 'icheckbox_square-green'});
 
-    /***********
-    Synchronize Charts
-    ************/
-
-     /**
-     * In order to synchronize tooltips and crosshairs, override the
-     * built-in events with handlers defined on the parent element.
-     */
-    $('#charts-container').bind('mousemove touchmove touchstart', function (e) {
-        var chart,
-            point,
-            i,
-            event;
-
-        // console.log(Highcharts.charts);
-
-        for (i = 3; i < Highcharts.charts.length; i = i + 1) { // i=3 to exclude first chart #left-chart
-            chart = Highcharts.charts[i];
-            event = chart.pointer.normalize(e.originalEvent); // Find coordinates within the chart
-            point = chart.series[0].searchPoint(event, true); // Get the hovered point
-
-            if (point) {
-                point.highlight(e);
-            }
-        }
-    });
-
-
-    /**
-     * Synchronize zooming through the setExtremes event handler.
-     */
-    function syncExtremes(e) {
-        var thisChart = this.chart;
-
-        if (e.trigger !== 'syncExtremes') { // Prevent feedback loop
-            Highcharts.each(Highcharts.charts, function (chart) {
-                if (chart !== thisChart) {
-                    if (chart.xAxis[0].setExtremes) { // It is null while updating
-                        chart.xAxis[0].setExtremes(e.min, e.max, undefined, false, { trigger: 'syncExtremes' });
-                    }
-                }
-            });
-        }
-    }
-
     /*****
     Render right charts
     ******/
 
     function renderProjectCharts(riskScore) {
-        /**
-         * Override the reset function, we don't need to hide the tooltips and crosshairs.
-         */
-        Highcharts.Pointer.prototype.reset = function () {
-            return undefined;
-        };
-
-        /**
-         * Highlight a point by showing tooltip, setting hover state and draw crosshair
-         */
-        Highcharts.Point.prototype.highlight = function (event) {
-            this.onMouseOver(); // Show the hover marker
-            this.series.chart.tooltip.refresh(this); // Show the tooltip
-            this.series.chart.xAxis[0].drawCrosshair(event, this); // Show the crosshair
-        };
-
-
 
         $('#activities-breakdown').highcharts({
             chart: {
@@ -364,10 +302,6 @@
             },
             xAxis: {
                 type: 'datetime',
-                crosshair: true,
-                events: {
-                    setExtremes: syncExtremes
-                }
             },
             yAxis: {
                 title: { text: '' },
@@ -375,25 +309,12 @@
                 minTickInterval: 1,
                 minorGridLineWidth: 0,
                 min: 0,
+                stackLabels: {
+                    enabled: true
+                }
             },
             legend: {
                 enabled: true
-            },
-            tooltip: {
-                positioner: function () {
-                    return {
-                        x: this.chart.chartWidth - this.label.width, // right aligned
-                    };
-                },
-                borderWidth: 0,
-                backgroundColor: 'none',
-                pointFormat: '{point.stackTotal}',
-                xDateFormat: '%b %e',
-                shadow: false,
-                style: {
-                    fontSize: '16px',
-                    color: '#555555'
-                }
             },
             plotOptions: {
                 series: {
@@ -412,18 +333,7 @@
                 showInLegend: <%= activities_by_date.map(&:num_activities).reduce(:+) > 0 ? true : false %>
             },
             <% end %>
-            {
-                type: 'spline',
-                name: '30-day Average',
-                pointInterval: <%= 1.day * 1000 %>,
-                pointStart: <%= 14.days.ago.at_midnight.to_i * 1000 %>,
-                data: <%= @activities_moving_avg %>,
-                marker: {
-                    lineWidth: 2,
-                    lineColor: Highcharts.getOptions().colors[4],
-                    fillColor: 'white'
-                }
-            }]
+            ]
         });
     };
 
