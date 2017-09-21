@@ -163,8 +163,8 @@
                             click: function () {
                                 $.get("ad_account_data/" + this.options.id, function (data) {
                                     $("#account-data").html(data);
-                                    renderCharts(this.y);
-                                })
+                                    renderProjectCharts(this.y);
+                                });
                             }
                         }
                     }
