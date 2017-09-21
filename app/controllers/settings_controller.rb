@@ -212,8 +212,8 @@ class SettingsController < ApplicationController
 	end
 
 	def user_analytics
-		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
-		@institution = Organization.all
+		#@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+		#@institution = Organization.all
 
 		# Get last 30 days of aggregate actions per user (excluding contextsmith.com)
 		query = <<-SQL
