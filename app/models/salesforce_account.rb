@@ -134,9 +134,56 @@ class SalesforceAccount < ActiveRecord::Base
     end # End: while true
 
     if total_accounts > 0
-      return { status: "SUCCESS", result: "#{total_accounts} accounts added/updated.", detail: nil }
+      return { status: "SUCCESS", result: "#{total_accounts} accounts added/updated." }
     else
       return { status: "SUCCESS", result: "Warning: no accounts added." }
     end
 	end
+
+  # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC account to a field of a CS account, for all active accounts in current_user's organization. Process aborts immediately if there is an update/SFDC error.
+  # TODO: Refactor so that we only go through active accounts that have salesforce accounts (owned by this user) linked to it, for performance.
+  def self.refresh_fields(current_user)
+    accounts = current_user.organization.accounts.where(status: "Active")
+    account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
+    account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
+    # puts "any accounts mapped?=#{accounts.find{|a| a.salesforce_accounts.present?}.present?}"
+    # puts "\n\naccount_standard_fields: #{account_standard_fields}\naccount_custom_fields: #{account_custom_fields}\n"
+
+    unless accounts.blank? || current_user.organization.salesforce_accounts.where.not(contextsmith_account_id: nil).first.blank? || (account_standard_fields.blank? && account_custom_fields.blank?) # nothing to do if no active CS accounts, no SFDC accounts mapped, or no account field mappings are found
+      @client = SalesforceService.connect_salesforce(current_user.organization_id)
+      #@client=nil # simulates a Salesforce connection error
+
+      unless @client.nil?  # unless SFDC connection error
+        # standard fields
+        update_result = Account.update_fields_from_sfdc(client: @client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
+        if update_result[:status] == "ERROR"
+          detail = {}
+          detail[:failure_method_location] = "Account.update_fields_from_sfdc()"
+          detail[:error_detail] = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+          return { status: "ERROR", result: "Update error", detail: detail }
+        end
+
+        # custom fields
+        accounts.each do |a|
+          unless a.salesforce_accounts.first.nil? 
+            # puts "***** SFDC account:\"#{a.salesforce_accounts.first.salesforce_account_name}\" --> CS account:\"#{a.name}\" *****\n"
+            load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
+
+            if load_result[:status] == "ERROR"
+              detail = {}
+              detail[:failure_method_location] = "Account.load_salesforce_fields()"
+              detail[:error_detail] = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+              return { status: "ERROR", result: "Update error", detail: detail }
+            end
+          end
+        end # End: accounts.each do |s|
+      else
+        puts "****SFDC****: Salesforce error in SalesforceAccount.refresh_fields: Cannot establish a connection!"
+        return { status: "ERROR", result: SalesforceController::ERROR[:SalesforceConnectionError], detail: "Unable to connect to Salesforce." }
+      end
+    else # if accounts.blank? || current_user.organization.salesforce_accounts.where.not(contextsmith_account_id: nil).first.blank? || (account_standard_fields.blank? && account_custom_fields.blank?)
+      return { status: "SUCCESS", result: "Warning: no accounts updated." }
+    end
+    return { status: "SUCCESS", result: "Refresh completed." }
+  end
 end
