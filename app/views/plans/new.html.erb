@@ -1,0 +1,30 @@
+<div class="jumbtron">
+  <div class="plan">
+    <h2>ContextSmith Pro</h2>
+    <p>Automatically synchronize Salesforce contacts.</p>
+
+  </div>
+
+<%= form_tag plans_path do %>
+  <article>
+    <% if flash[:error].present? %>
+      <div id="error_explanation">
+        <p><%= flash[:error] %></p>
+      </div>
+    <% end %>
+    <label class="amount">
+      <span>$35/month - billed annually - 15 day trial - cancel anytime</span>
+    </label>
+  </article>
+
+  <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+          data-key="<%= Rails.configuration.stripe[:publishable_key] %>"
+          data-label="Subscribe"
+          data-panel-label="Pay {amount} after 15 days"
+          data-description="ContextSmith Pro"
+          data-amount="42000"
+          data-zip-code="true"
+          data-email="<%= current_user.email if current_user %>"
+          data-locale="auto"></script>
+<% end %>
+</div>

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170831173418) do
+ActiveRecord::Schema.define(version: 20170921223258) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -363,6 +363,7 @@ ActiveRecord::Schema.define(version: 20170831173418) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -393,15 +394,15 @@ ActiveRecord::Schema.define(version: 20170831173418) do
 
   create_table "tracking_requests", force: :cascade do |t|
     t.uuid     "user_id"
-    t.string   "tracking_id"
-    t.string   "message_id",  limit: 255
-    t.string   "subject"
-    t.text     "recipients",              default: [],              array: true
+    t.string   "message_id"
+    t.text     "recipients",  default: [],              array: true
     t.string   "status"
     t.datetime "sent_at"
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
+    t.string   "tracking_id"
+    t.string   "subject"
     t.string   "email_id"
-    t.datetime "created_at",                           null: false
-    t.datetime "updated_at",                           null: false
   end
 
   add_index "tracking_requests", ["tracking_id"], name: "index_tracking_requests_on_tracking_id", using: :btree
@@ -448,6 +449,8 @@ ActiveRecord::Schema.define(version: 20170831173418) do
     t.string   "role"
     t.boolean  "refresh_inbox",          default: true,  null: false
     t.string   "encrypted_password_iv"
+    t.string   "billing_email"
+    t.string   "stripe_customer_id"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
