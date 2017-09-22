@@ -160,15 +160,7 @@ class ExtensionController < ApplicationController
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
 
-    if current_user.admin?
-      # Try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id) if @salesforce_user.nil?
-    elsif current_user.superadmin?  # TODO: Enable superuser access only for now
-      # Basic role user OR individual power user or trial/Chrome user
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
-      @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @salesforce_user.nil?
-    end
+    @salesforce_user = SalesforceController.get_sfdc_oauthuser(current_user) if current_user.superadmin?  # TODO: Remove this gate that only allows superusers to connect to Salesforce 
   end
 
   # Old before_action helper
