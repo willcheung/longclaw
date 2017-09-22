@@ -247,15 +247,7 @@ class SettingsController < ApplicationController
 
 	# Gets SFDC connection for Organization (a single SFDC admin login only)
 	def get_salesforce_admin_user
-		if current_user.admin?
-			# try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
-			@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
-			if(@salesforce_user.nil?)
-			  @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
-			end
-		else
-			@salesforce_user = nil
-		end
+		@salesforce_user = SalesforceController.get_sfdc_oauthuser(current_user) if current_user.admin?
   end
 
   def get_basecamp2_user
