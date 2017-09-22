@@ -20,9 +20,9 @@ module Devise
             resource.assign_attributes(
               oauth_provider: "exchange_pwd",
               onboarding_step: Utils::ONBOARDING[:fill_in_info],
-              role: User::ROLE[:Basic],
+              role: User::ROLE[:Biz],
               is_disabled: false,
-              refresh_inbox: false,
+              refresh_inbox: true,
               organization: org
             )
           end
@@ -64,7 +64,7 @@ module Devise
         uri = URI(base_url)
         req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
         req.body = body.to_json
-        res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+        res = Net::HTTP.start(uri.host, uri.port, :read_timeout => 90 ) { |http| http.request(req) }
         data = JSON.parse(res.body.to_s)
         self.auth_response = data
         data["logged_in"]

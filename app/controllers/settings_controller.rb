@@ -212,22 +212,13 @@ class SettingsController < ApplicationController
 	end
 
 	def user_analytics
-		#@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
-		#@institution = Organization.all
+		@latest_user_activity = Ahoy::Event.last_14d_actions_by_page_by_user
+		@companies_with_activity = Ahoy::Event.companies_with_activity_last_14d
 
-		# Get last 30 days of aggregate actions per user (excluding contextsmith.com)
-		query = <<-SQL
-				select to_char("time", 'MM/DD') as "date", 
-							users.email, 
-							ahoy_events.name as action, 
-							ahoy_events.properties->'page' as page, 
-							count(ahoy_events.properties->'page') as count 
-				from ahoy_events join users on users.id=ahoy_events.user_id 
-				where time >= current_date - interval '30' day and email not like '%contextsmith.com' 
-				group by to_char("time", 'MM/DD'), users.email, action, page 
-				order by "date";
-      SQL
-		@latest_user_activity = ActiveRecord::Base.connection.execute(query)
+		daily_active_users = Ahoy::Event.daily_active_users
+		#@dau_date = daily_active_users.map(&:date)
+		@dau_count = daily_active_users.map { |n| n['dau']}
+
 		activity_org = Ahoy::Event.all_ahoy_events
 		@event_date = activity_org.map(&:date)
 		@event_count = activity_org.map{ |n| n['events']}
@@ -247,15 +238,7 @@ class SettingsController < ApplicationController
 
 	# Gets SFDC connection for Organization (a single SFDC admin login only)
 	def get_salesforce_admin_user
-		if current_user.admin?
-			# try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
-			@salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id)
-			if(@salesforce_user.nil?)
-			  @salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id)
-			end
-		else
-			@salesforce_user = nil
-		end
+		@salesforce_user = SalesforceController.get_sfdc_oauthuser(current_user) if current_user.admin?
   end
 
   def get_basecamp2_user
