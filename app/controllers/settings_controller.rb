@@ -162,11 +162,6 @@ class SettingsController < ApplicationController
 			if @sfdc_fields.empty?  # SFDC connection error
 				@salesforce_connection_error = true
 			else
-				current_org_entity_fields_metadatum = current_user.organization.entity_fields_metadatum
-        # SFDC connection exists, so check if there are no existing EntityFieldsMetadatum records (because this is a new organization) or there is no mapping (from a SFDC reconnect). For either case, create a default mapping to SFDC fields
-				EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
-				EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
-
 				# add ("nil") options to remove mapping 
 				@sfdc_fields[:sfdc_account_fields] << ["","(Unmapped)"] 
 				@sfdc_fields[:sfdc_opportunity_fields] << ["","(Unmapped)"] 
@@ -217,9 +212,13 @@ class SettingsController < ApplicationController
 	end
 
 	def user_analytics
-		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
-		@institution = Organization.all
-		@latest_user_activity = Ahoy::Event.latest_activities
+		@latest_user_activity = Ahoy::Event.last_14d_actions_by_page_by_user
+		@companies_with_activity = Ahoy::Event.companies_with_activity_last_14d
+
+		daily_active_users = Ahoy::Event.daily_active_users
+		#@dau_date = daily_active_users.map(&:date)
+		@dau_count = daily_active_users.map { |n| n['dau']}
+
 		activity_org = Ahoy::Event.all_ahoy_events
 		@event_date = activity_org.map(&:date)
 		@event_count = activity_org.map{ |n| n['events']}

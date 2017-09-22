@@ -34,6 +34,7 @@ class SalesforceOpportunity < ActiveRecord::Base
   scope :is_not_linked, -> {where(contextsmith_project_id: nil)}
 
   # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.
+  # For Admin users, this will get all SFDC opportunities belonging to linked SFDC accounts, and Open or was Closed within the last year.  For all other users, this will get all SFDC opportunities belonging to the individual's SFDC user, and is Open or was Closed within the last year.
   # Params:    query_range: The limit for SFDC query results
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
@@ -100,7 +101,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     else # if !current_user.admin? (i.e., single SFDC user)
       sfdc_userid = SalesforceService.get_salesforce_user_uuid(organization_id, current_user)
       query_statements = []
-      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"  # "Closed YTD & all Open Opps"
+      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"  # "Closed within the last year & all Open Opps"
       # query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = FALSE ORDER BY CloseDate DESC LIMIT 10" # "recent 10 Open Opps"
 
       query_statements.each do |query_statement|
@@ -150,4 +151,48 @@ class SalesforceOpportunity < ActiveRecord::Base
       return { status: "SUCCESS", result: "Warning: no opportunities added." }
     end
 	end
+
+  # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to a field of a CS opportunity. This is for all projects visible to current_user. Process aborts immediately if there is an update/SFDC error.
+  def self.refresh_fields(current_user)
+    # opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
+    opportunities = Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
+    opportunity_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
+    opportunity_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+    # puts "Any opps mapped?=#{opportunities.find{|p| p.salesforce_opportunity.present?}.blank?}"
+    # puts "\n\nopportunity_standard_fields: #{opportunity_standard_fields}\nopportunity_custom_fields: #{opportunity_custom_fields}\n"
+
+    unless opportunities.first.blank? || (opportunity_standard_fields.blank? && opportunity_custom_fields.blank?) # nothing to do if no active+confirmed opportunities or no opportunity field mappings are found
+      @client = SalesforceService.connect_salesforce(current_user.organization_id)
+      #@client=nil # simulates a Salesforce connection error
+
+      unless @client.nil?  # unless SFDC connection error
+        # standard fields
+        update_result = Project.update_fields_from_sfdc(client: @client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
+        if update_result[:status] == "ERROR"
+          detail = {}
+          detail[:failure_method_location] = "Project.update_fields_from_sfdc()"
+          detail[:error_detail] = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+          return { status: "ERROR", result: "Update error", detail: detail }
+        end
+
+        # custom fields
+        opportunities.each do |s|
+          unless s.salesforce_opportunity.nil?
+            # puts "***** SFDC opportunity:\"#{s.salesforce_opportunity.name}\" --> CS opportunity:\"#{s.name}\" *****\n"
+            load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
+
+            if load_result[:status] == "ERROR"
+              detail = {}
+              detail[:failure_method_location] = "Project.load_salesforce_fields()"
+              detail[:error_detail] = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+              return { status: "ERROR", result: "Update error", detail: detail }
+            end
+          end
+        end # End: opportunities.each do |s|
+      else
+        puts "****SFDC****: Salesforce error in SalesforceOpportunity.refresh_fields: Cannot establish a connection!"
+        return { status: "ERROR", result: SalesforceController::ERROR[:SalesforceConnectionError], detail: "Unable to connect to Salesforce." }
+      end
+    end
+  end
 end

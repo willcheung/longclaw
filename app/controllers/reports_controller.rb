@@ -99,8 +99,13 @@ class ReportsController < ApplicationController
 
     #@risk_score = @project.new_risk_score(current_user.time_zone)
     @open_tasks_count = @project.notifications.open.count
-    @last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
+    # @last_activity_date = @project.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).maximum("activities.last_sent_date")
     #@risk_score_trend = @project.new_risk_score_trend(current_user.time_zone)
+
+    # Alerts & Tasks
+    @alerts_tasks = @project.notifications.order(:is_complete, :created_at).limit(8)
+    # Next Meeting
+    @next_meeting = @project.meetings.next_week.last
 
     # Engagement Volume Chart
     @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)

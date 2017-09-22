@@ -3,6 +3,19 @@
 
 //= require daterangepicker/moment.min.js
 //= require daterangepicker/daterangepicker.js
+//= require iCheck/icheck.min.js
+
+// Checking/Unchecking Tasks
+// iCheck initialized on ad_account_data.html.erb
+$(document).on('ifChecked', 'input', function(event){
+  $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+});
+
+
+$(document).on('ifUnchecked', 'input', function(event){
+  $.ajax({url:'/notifications/'+$(this).attr('id')+'/update_is_complete'});
+});
+
 
 /* Tooltip */
 $('[data-toggle="tooltip"]').tooltip();

@@ -13,7 +13,7 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-     <div class="row">
+     <!-- <div class="row">
         <div class="col-lg-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
@@ -49,144 +49,63 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
     <div class = "ibox-content">
-        <h3>Raw Ahoy_events from the last 30 days includes contextsmith members</h3>
-        <div id="activity-container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-        <h3>non-contextsmith users Last activities in the past 30 days  </h3>
-        <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Date</th>
-                            <th>Email</th>
-                            <th>Name</th>
-                            <th>Properties</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <% @latest_user_activity.each do |u| %>
-                        <tr>
-                            <td></td>
-                            <td><%=u.date%></td>
-                            <td><%=u.email%></td>
-                            <td><%=u.name%></td>
-                            <td><%=u.properties%></td>
-                        </tr>
-                    <%end%>
-                </table>
-
-    </div>
-<!--  <% @users.each do |org, users| %>
-        <div class="ibox float-e-margins">
-            <div class="ibox-content">
-                <h1><%= best_in_place org, :name, :as => 'input' %>
-                
-                // Is Active? <%= best_in_place org, :is_active, :as => 'checkbox', :data => {:organization => org}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%>
-                </h1>
-                <div id="<%=org.name%>-container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+        <div class="row">
+            <h3>Raw Ahoy_events from the last 14 days includes contextsmith members</h3>
+            <div id="activity-container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-9">
+                <h3>Non-contextsmith users with activities (14 days)  </h3>
                 <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Use Frequencies in Last (14 days)</th>
-                            <th>Last Recorded Event</th>
-                            <th>Clicked</th>
-                            <th>Changed</th>
-                            <th>Submitted</th>
-                            <th>Last Activity</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% users.each do |u| %> 
-                        <tr>
-                            <td></td>
-                            <td><%= get_full_name(u) %></td>
-                            <td><%= u.email %></td>
-                            <td>in progress</td>
-                            <td>in progress</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                       <% end %> 
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Email</th>
+                                    <th>Action</th>
+                                    <th>Page</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <% @latest_user_activity.each do |u| %>
+                                <tr>
+                                    <td><%=u.date%></td>
+                                    <td><%=u.email%></td>
+                                    <td><%=u.action%></td>
+                                    <td><%=u.page%></td>
+                                    <td><%=u.count%></td>
+                                </tr>
+                            <%end%>
+                        </tbody>
+                </table>
+            </div>
+            <div class="col-lg-3">
+                <h3>Companies with activities (last 14 days)  </h3>
+                <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>Domain</th>
+                                    <th>User Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <% @companies_with_activity.each do |u| %>
+                                <tr>
+                                    <td><%=u.domain%></td>
+                                    <td><%=u.users_count%></td>
+                                </tr>
+                            <%end%>
+                        </tbody>
                 </table>
             </div>
         </div>
-  <% end %>  -->
+    </div>
 </div>
 
 
 <script>
-//HighChart Activity per Organization
-// <% @institution.each do |org| %>
-// Highcharts.chart('<%=org['name']%>-container', {
-//     chart: {
-//         type: 'areaspline'
-//     },
-//     title: {
-//         text: 'Average Active Usage in two weeks'
-//     },
-//     legend: {
-//         layout: 'vertical',
-//         align: 'left',
-//         verticalAlign: 'top',
-//         x: 150,
-//         y: 100,
-//         floating: true,
-//         borderWidth: 1,
-//         backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
-//     },
-//     xAxis: {
-//         categories: [
-//             'Start',
-//             'Tuesday',
-//             'Wednesday',
-//             'Thursday',
-//             'Friday',
-//             'Saturday',
-//             'Sunday',
-//             'Monday',
-//             'Tuesday',
-//             'Wednesday',
-//             'Thursday',
-//             'Friday',
-//             'Saturday',
-//             'End'
-//         ]
-//     },
-//     yAxis: {
-//         title: {
-//             text: 'Activity'
-//         }
-//     },
-//     tooltip: {
-//         shared: true,
-//         valueSuffix: ' units'
-//     },
-//     credits: {
-//         enabled: false
-//     },
-//     plotOptions: {
-//         areaspline: {
-//             fillOpacity: 0.5
-//         }
-//     },
-//     series: [{
-//         name: 'Support',
-//         data: [3, 4, 3, 5, 4, 10, 12, 3, 4, 3, 5, 4, 10, 12]
-//     }, {
-//         name: 'Service',
-//         data: [1, 3, 4, 3, 3, 5, 4, 1, 3, 4, 3, 3, 5, 4]
-//     }, {
-//       name: 'Target Test',
-//       data: [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10]
-//     }]
-// });
-// <%end%>
 //Highchart for Main Ahoy Event Activity
 
 Highcharts.chart('activity-container', {
@@ -200,8 +119,8 @@ Highcharts.chart('activity-container', {
         layout: 'vertical',
         align: 'left',
         verticalAlign: 'top',
-        x: 150,
-        y: 100,
+        x: 50,
+        y: 20,
         floating: true,
         borderWidth: 1,
         backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
@@ -209,14 +128,18 @@ Highcharts.chart('activity-container', {
     xAxis: {
         categories: <%= @event_date.to_json.html_safe %>
     },
-    yAxis: {
+    yAxis: [{
         title: {
-            text: 'Total Event Count'
+            text: 'Total Activities'
         }
-    },
+    },{
+        title: {
+            text: 'Daily Active Users'
+        },
+        opposite: true
+    }],
     tooltip: {
-        shared: true,
-        valueSuffix: ' event(s)'
+        shared: true
     },
     credits: {
         enabled: false
@@ -227,9 +150,14 @@ Highcharts.chart('activity-container', {
         }
     },
     series: [{
-        color: '#b3ff99',
-        name: 'Ahoy Event Activity',
+        color: '#1ab394',
+        name: 'Activity',
         data: <%= @event_count.to_json.html_safe %>
+    },{
+        color: '#f8ac59',
+        name: 'DAU',
+        yAxis: 1,
+        data: <%= @dau_count.to_json.html_safe %>
     }]
 });
 

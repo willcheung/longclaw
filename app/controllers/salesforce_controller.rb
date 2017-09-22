@@ -2,6 +2,8 @@ class SalesforceController < ApplicationController
   layout "empty", only: :index
   before_action :get_current_org_users, only: :index
 
+  ERRORS = { SalesforceConnectionError: "SalesforceConnectionError" }
+
   # For accessing Project#show page+tabs from a Salesforce Visualforce iframe page
   # The route is in the form GET http(s)://<host_url>/salesforce/?id=<salesforce_account_id>&pid=<contextsmith_project_id> ("&pid" and &actiontype=" is optional) , e.g. "https://app.contextsmith.com/salesforce?id=0014100000A88VlPVL"
   def index
@@ -78,16 +80,27 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Automatic actions to take when user initially logs into SFDC. e.g., Loading new SFDC Accounts and Opportunities.  Special action for single users: creating CS opportunities and corresponding accounts for loaded SFDC entities, and updating Contacts.
+  # Automatic actions to take when user initially logs into SFDC.
+  #  e.g., 
+  #    - Create a default mapping between CS and SFDC fields, if none exist for current user's org
+  #    - Load SFDC Accounts and new SFDC Opportunities, including updating values in mapped (standard and custom) fields
+  #    - Special action for single users: creating CS opportunities and corresponding accounts for loaded SFDC entities, and updating Contacts.
   def self.initial_SFDC_login(current_user)
-    puts "\n#{get_full_name(current_user)} (email=#{current_user.email}) initial login to SFDC..."
+    puts "\nInitial SFDC login for user=#{get_full_name(current_user)} (email=#{current_user.email}) ..."
     sfdc_oauth_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
 
     if sfdc_oauth_user.present?
+      # Create a default mapping between CS and SFDC fields
+      current_org_entity_fields_metadatum = current_user.organization.entity_fields_metadatum
+      EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
+      EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
+
+      # Load SFDC Accounts and new SFDC Opportunities
       SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
       SalesforceOpportunity.load_opportunities(current_user)
 
-      if !current_user.admin?  # Basic, etc. user
+      # Create CS Accounts and Opportunities for SFDC Opportunities for non-Admin (e.g., Basic) users and map them
+      if !current_user.admin?
         sfdc_userid = SalesforceService.get_salesforce_user_uuid(current_user.organization_id, current_user)
         open_sfdc_opps = SalesforceOpportunity.is_open.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
 
@@ -149,7 +162,11 @@ class SalesforceController < ApplicationController
           end
         end # end: open_sfdc_opps_acct_ids.each do |acct_id|
       end
-    end
+
+      # Refresh/update the standard and custom field values of mapped accts and opps
+      SalesforceAccount.refresh_fields(current_user)
+      SalesforceOpportunity.refresh_fields(current_user)
+    end # end: if Salesforce user present
   end
 
   # Links a CS account to a Salesforce account.  If a Power User or trial/Chrome User links a SFDC account, then automatically import the SFDC contacts.
@@ -525,90 +542,30 @@ class SalesforceController < ApplicationController
     render plain: ''
   end
 
-  # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. This is for all active accounts for user's organization.
+  # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to the field of a CS opportunity, or a field of a SFDC account to a field of a CS account. This is for all active accounts for user's organization, or opportunities visible to user.
   # Parameters:  entity_type - "account" or "opportunity".
   # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS Opportunity, an update will be carried out for each mapping.
   def refresh_fields(entity_type)
     method_name = "refresh_fields()"
     if entity_type == "account"
-      accounts = current_user.organization.accounts.where(status: "Active")
-      account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
-      account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
-      # puts "any accounts mapped=#{accounts.find{|a| a.salesforce_accounts.present?}.present?}"
-      # puts "\n\naccount_standard_fields: #{account_standard_fields}\naccount_custom_fields: #{account_custom_fields}\n"
-
-      unless accounts.blank? || current_user.organization.salesforce_accounts.where.not(contextsmith_account_id: nil).first.blank? || (account_standard_fields.blank? && account_custom_fields.blank?) # nothing to do if no active CS accounts, no SFDC accounts mapped, or no account field mappings are found
-        @client = SalesforceService.connect_salesforce(current_user.organization_id)
-        #@client=nil # simulates a Salesforce connection error
-
-        unless @client.nil?  # unless SFDC connection error
-          # standard fields
-          update_result = Account.update_fields_from_sfdc(client: @client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
-          if update_result[:status] == "ERROR"
-            failure_method_location = "Account.update_fields_from_sfdc()"
-            error_detail = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
-            render_internal_server_error(method_name, failure_method_location, error_detail)
-            return
-          end
-
-          # custom fields
-          accounts.each do |a|
-            unless a.salesforce_accounts.first.nil? 
-              # puts "***** SFDC account:\"#{a.salesforce_accounts.first.salesforce_account_name}\" --> CS account:\"#{a.name}\" *****\n"
-              load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
-
-              if load_result[:status] == "ERROR"
-                failure_method_location = "Account.load_salesforce_fields()"
-                error_detail = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                render_internal_server_error(method_name, failure_method_location, error_detail)
-                return
-              end
-            end
-          end # End: accounts.each do |s|
+      refresh_result = SalesforceAccount.refresh_fields(current_user)
+      if refresh_result[:status] == "ERROR"
+        if refresh_result[:result] == ERROR[:SalesforceConnectionError]
+          render_service_unavailable_error(method_name) 
         else
-          render_service_unavailable_error(method_name)
-          return
+          render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])
         end
+        return
       end
     elsif entity_type == "project"
-      opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
-      opportunity_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
-      opportunity_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
-      # puts "any opps mapped=#{opportunities.find{|p| p.salesforce_opportunity.present?}.blank?}"
-      # puts "\n\nopportunity_standard_fields: #{opportunity_standard_fields}\nopportunity_custom_fields: #{opportunity_custom_fields}\n"
-
-      unless opportunities.first.blank? || (opportunity_standard_fields.blank? && opportunity_custom_fields.blank?) # nothing to do if no active+confirmed opportunities or no opportunity field mappings are found
-        @client = SalesforceService.connect_salesforce(current_user.organization_id)
-        #@client=nil # simulates a Salesforce connection error
-
-        unless @client.nil?  # unless SFDC connection error
-          # standard fields
-          update_result = Project.update_fields_from_sfdc(client: @client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
-          if update_result[:status] == "ERROR"
-            failure_method_location = "Project.update_fields_from_sfdc()"
-            error_detail = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
-            render_internal_server_error(method_name, failure_method_location, error_detail)
-            return
-          end
-
-          # custom fields
-          opportunities.each do |s|
-            unless s.salesforce_opportunity.nil?
-              # puts "***** SFDC opportunity:\"#{s.salesforce_opportunity.name}\" --> CS opportunity:\"#{s.name}\" *****\n"
-              load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
-
-              if load_result[:status] == "ERROR"
-                failure_method_location = "Project.load_salesforce_fields()"
-                error_detail = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-                render_internal_server_error(method_name, failure_method_location, error_detail)
-                return
-              end
-            end
-          end # End: opportunities.each do |s|
+      refresh_result = SalesforceOpportunity.refresh_fields(current_user)
+      if refresh_result[:status] == "ERROR"
+        if refresh_result[:result] == ERROR[:SalesforceConnectionError]
+          render_service_unavailable_error(method_name) 
         else
-          render_service_unavailable_error(method_name)
-          return
+          render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])
         end
+        return
       end
     else
       error_detail = "Invalid entity_type parameter passed to refresh_fields(). entity_type=#{entity_type}"
@@ -652,17 +609,8 @@ class SalesforceController < ApplicationController
   def disconnect
     # delete salesforce oauth_user
     salesforce_user = OauthUser.find_by(id: params[:id])
-    if salesforce_user.present?
-      salesforce_user.destroy
-      # Unmap SFDC fields to standard fields
-      current_user.organization.entity_fields_metadatum.each do |fm|
-        fm.update(salesforce_field: nil)
-      end
-      # Unmap SFDC fields to custom fields
-      current_user.organization.custom_fields_metadatum.each do |fm|
-        fm.update(salesforce_field: nil)
-      end
-    end
+
+    salesforce_user.destroy if salesforce_user.present?
 
     respond_to do |format|
       format.html { redirect_to(request.referer || settings_path) }
