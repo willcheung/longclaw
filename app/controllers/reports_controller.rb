@@ -170,7 +170,7 @@ class ReportsController < ApplicationController
 
     @data = [] and return if users.blank?  #quit early if all users are filtered out
 
-    projects = Project.visible_to(current_user.organization_id, current_user.id)
+    projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
     projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
     case @metric
     when TEAM_DASHBOARD_METRIC[:activities_last14d]
