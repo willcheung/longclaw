@@ -240,9 +240,9 @@
                                                             <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                                             <%= render 'contacts/modal', modal_type: 'edit_contact_modal', modal_id: 'edit_contact_modal-'+contact.id, contact: contact %>
                                                         <% else %>
-                                                            <% newcontact = Contact.new(last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email, phone: profile.phone) %>
+                                                            <% newcontact = Contact.new(account: @account, last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email.downcase, phone: profile.phone) %>
                                                             <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
-                                                            <%= render 'contacts/modal', modal_type: 'new_contact_modal', modal_id: 'new_contact_modal-'+profile.id.to_s, contact:  newcontact %>
+                                                            <%= render 'contacts/modal', modal_type: 'new_contact_modal', modal_id: 'new_contact_modal-'+profile.id.to_s, contact: newcontact %>
                                                         <% end %>
                                                     <% end %>
                                                     </td></tr>
