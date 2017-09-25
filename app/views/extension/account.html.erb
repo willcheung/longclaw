@@ -282,24 +282,28 @@
                                <tbody>
                                     <tr style="margin-left: auto; margin-right: auto; width: 100px">
                                         <td class="fa-lg">
-                                            <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce"/>
+                                        <% if current_user.role != User::ROLE[:Basic] && @salesforce_base_URL.present? && contact.present? && contact.external_source_id.present? %>
+                                            <a href="<%= @salesforce_base_URL + "/" + contact.external_source_id %>" target="_blank"><img src="/assets/images/salesforce.png" class="sfdc-icon" title="Open Salesforce page in new window"/></a>
+                                        <% else %>
+                                            <img src="/assets/images/salesforce.png" class="sfdc-icon disabled"/>
+                                        <% end %>
                                         </td>
                                         <td <%= "class=disabled" if profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
-                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Click to open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if profile.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
                                                 data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(profile.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
                                         <td <%= "class=disabled" if profile.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
-                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Click to open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if profile.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
                                                 data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(profile.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
                                         <td <%= "class=disabled" if profile.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
-                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Click to open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if profile.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
                                                 data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(profile.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
