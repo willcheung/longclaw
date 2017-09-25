@@ -174,9 +174,12 @@
 
         // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it
         $(".company-link").click(function(){
-            // console.log("clicked on " + $(this).attr("url"));
             window.open($(this).attr("url")); 
-            return false; //don't collapse section in extension
+            return false; //don't expand/collapse section
+        });
+        $(".add-contact-link").click(function(){
+            // window.location($(this).attr("href"));
+            // return false; //don't expand/collapse section
         });
     });
 
@@ -191,7 +194,7 @@
     </div>
     <div>
         <div id="accordion" class="panel-group">
-        <% 2.times do |n| %>
+        <% (0..1).each do |n| %>
             <% contacts_with_profile = (n == 0 ? @people_with_profile : @account_contacts_with_profile) %>
             <% if n == 0 && contacts_with_profile.blank? %>
                 <div>
@@ -202,20 +205,35 @@
                 <span class="contact-group"><br/>MORE PEOPLE AT <%= @project.name.upcase %></span>
             <% end %>
             <% contacts_with_profile.each_with_index do |p, i| %>
-                <% person = p[:profile] %>
-                <% profile_fullname = person.fullname.present? ? person.fullname : p[:email] %>
-                <div class="panel <%= "panel-default" if n == 0 && i == 0 %>" id="Profile-<%= person.id %>-<%= n %>">
+                <% profile = p[:profile] %>
+                <% contact = p[:contact] %>
+                <% profile_fullname = profile.fullname.present? ? profile.fullname : p[:email] %>
+                <div class="panel <%= "panel-default" if n == 0 && i == 0 %>" id="Profile-<%= profile.id %>-<%= n %>">
                     <div>
-                        <a class="profile" href="#collapseProfile-<%= person.id %>-<%= n %>" data-toggle="collapse" data-parent="#accordion">
+                        <a class="profile" href="#collapseProfile-<%= profile.id %>-<%= n %>" data-toggle="collapse" data-parent="#accordion">
                             <table class="titleinfo-group">
                                 <tbody>
                                     <tr>
-                                        <td class="profile-pic-container">
-                                        <% if person.profileimg_url.present? %>
-                                            <img src="<%= person.profileimg_url %>" class="profile-pic" title="profile pic">
-                                        <% else %>
-                                            <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
-                                        <% end %>
+                                        <td style="width:60px;">
+                                            <table style="width: 100%;">
+                                                <tbody>
+                                                    <tr><td class="profile-pic-container">
+                                                    <% if profile.profileimg_url.present? %>
+                                                        <img src="<%= profile.profileimg_url %>" class="profile-pic" title="profile pic">
+                                                    <% else %>
+                                                        <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
+                                                    <% end %></td></tr>
+                                                    <tr style="width:60px"><td style="width:60px">
+                                                    <% if contact.present? %>
+                                                    <%= link_to "<i class=\"fa fa-plus\"></i><span> Edit</span>".html_safe, '#edit_contact_modal-' + contact.id, 'data-toggle' => 'modal', 'class' => 'add-contact-link' %>
+                                                    <%= render 'contacts/modal', modal_id: 'edit_contact_modal-' + contact.id, contact: contact %>
+                                                    <% else %>
+                                                    <%= link_to "<i class=\"fa fa-plus\"></i><span> Create</span>".html_safe, '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'add-contact-link' %>
+                                                    <%= render 'contacts/modal', modal_id: 'new_contact_modal', contact: nil  %>
+                                                    <% end %>
+                                                    </td></tr>
+                                                </tbody>
+                                            </table>
                                         </td>
                                         <td>
                                             <table>
@@ -223,13 +241,13 @@
                                                     <tr><td class="contact-name panel-title"
                                                       <%= "title=#{p[:email]}" if profile_fullname != p[:email] %>
                                                     ><extrastrong><%= profile_fullname %></extrastrong></td></tr>
-                                                    <tr><td><%= person.title %></td></tr>
-                                                    <% if person.organization.present? || valid_domain?(get_domain(p[:email])) %>
-                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link company-link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= person.organization.present? ? person.organization : get_domain(p[:email]) %></span></td></tr>
+                                                    <tr><td><%= profile.title %></td></tr>
+                                                    <% if profile.organization.present? || valid_domain?(get_domain(p[:email])) %>
+                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link company-link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= profile.organization.present? ? profile.organization : get_domain(p[:email]) %></span></td></tr>
                                                     <% end %>
-                                                    <% if person.location.present? %>
+                                                    <% if profile.location.present? %>
                                                         <tr><td>
-                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp; <%= person.location.gsub(", United States", "") %>
+                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp; <%= profile.location.gsub(", United States", "") %>
                                                         </td></tr>
                                                     <% end %>
                                                 </tbody>
@@ -237,14 +255,14 @@
                                         </td>
                                         <td class="arrow fa fa-angle-down fa-2x <%= (n == 0 && i == 0) ? "arrow-section-expanded" : "arrow-section-collapsed" %>" aria-hidden="true"></td>
                                         <!-- <td>
-                                            <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= person.id %>-<%= n %>"></i>
+                                            <i class="fa fa-plus-square fa-2x" aria-hidden="true" id="plusProfile-<%= profile.id %>-<%= n %>"></i>
                                         </td> -->
                                     </tr>
                                 </tbody>
                             </table>
                         </a>
                     </div>
-                    <div id="collapseProfile-<%= person.id %>-<%= n %>" class="panel-collapse collapse <%= "in" if n == 0 && i == 0 %>">
+                    <div id="collapseProfile-<%= profile.id %>-<%= n %>" class="panel-collapse collapse <%= "in" if n == 0 && i == 0 %>">
                         <div class="panel-body">
                             <table class="social-group">
                                <tbody>
@@ -252,43 +270,43 @@
                                         <td class="fa-lg">
                                             <img src="/assets/images/salesforce.png" class="sfdc-icon disabled" title="Salesforce"/>
                                         </td>
-                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
-                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Click to open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
-                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
-                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+                                        <td <%= "class=disabled" if profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
+                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Click to open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if profile.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(profile.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
-                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
-                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Click to open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
-                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
-                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+                                        <td <%= "class=disabled" if profile.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
+                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Click to open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if profile.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(profile.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
-                                        <td <%= "class=disabled" if person.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
-                                            <a href="<%= person.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Click to open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
-                                            <% if person.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
-                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(person.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+                                        <td <%= "class=disabled" if profile.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
+                                            <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Click to open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
+                                            <% if profile.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
+                                                data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(profile.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
                                             <% end %>
                                             ></i></a>
                                         </td>
-                                        <td <%= "class=disabled" if person.websites.blank? %>>
+                                        <td <%= "class=disabled" if profile.websites.blank? %>>
                                             <a class="fa fa-globe fa-2x globe-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" data-trigger='click' data-delay='{"show": 0, "hide": 0}' 
-                                            <% if person.websites.present? %>
+                                            <% if profile.websites.present? %>
                                                 data-original-title="
-                                                <% person.websites.each do |site, site_name| %>
+                                                <% profile.websites.each do |site, site_name| %>
                                                   <a href='<%=site%>' target='_blank'><%= site_name %></a></br>
                                                 <% end %>
                                                 "
                                             <% end %>
                                             ></a>
                                         </td>
-                                        <% if person.phone.present? %>
+                                        <% if profile.phone.present? %>
                                             <td class="phone-icon">
                                                 <table>
                                                     <tr><td>
-                                                    <i class="fa fa-phone fa-2x" aria-hidden="true"></i></td><td class="phone-number"><span><%= person.phone %></span></td>
+                                                    <i class="fa fa-phone fa-2x" aria-hidden="true"></i></td><td class="phone-number"><span><%= profile.phone %></span></td>
                                                 </table>
                                             </td>
                                         <% end %>
