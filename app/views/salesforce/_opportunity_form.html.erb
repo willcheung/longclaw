@@ -1,0 +1,27 @@
+<div class="entity-group container">
+    <div id="sfdc-opp-form-title">
+        <div class="entity-title" style="padding: 0"><br/>Salesforce Opportunity</div>
+    </div>
+    <table>
+        <tr><td><label for="opp_id">Id</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.salesforce_opportunity_id %>" id="opp_id" class="disabledinput"></td></tr>
+        <tr><td><label for="opp_owner_id">Owner Id</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.owner_id %>" id="opp_owner_id" class="disabledinput"></td></tr>
+        <tr><td><label for="opp_name">Name</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.name %>" id="opp_name"></td></tr>
+        <tr><td><label for="opp_stage">Stage</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.stage_name %>" id="opp_stage"></td></tr>
+        <tr><td><label for="opp_close_date">Close Date</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.close_date %>" id="opp_close_date"></td></tr>
+        <tr><td><label for="opp_probability">Probability</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.probability %>" id="opp_probability"></td></tr>
+        <tr><td><label for="opp_expected_revenue">Expected revenue</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.expected_revenue %>" id="opp_expected_revenue"></td></tr>
+        <tr><td><label for="opp_amount">Amount</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.amount %>" id="opp_amount"></td></tr>
+        <tr><td><label for="opp_forecast_category">Forecast category</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_opportunity.forecast_category_name %>" id="opp_forecast_category"></td></tr>
+        
+        <tr><td class="button-td"><button class="btn btn-primary btn-sm" disabled="disable">Update Salesforce</button></td></tr>
+    </table>
+</div>

@@ -179,11 +179,12 @@ class SalesforceAccount < ActiveRecord::Base
         end # End: accounts.each do |s|
       else
         puts "****SFDC****: Salesforce error in SalesforceAccount.refresh_fields: Cannot establish a connection!"
-        return { status: "ERROR", result: SalesforceController::ERROR[:SalesforceConnectionError], detail: "Unable to connect to Salesforce." }
+        return { status: "ERROR", result: SalesforceController::ERRORS[:SalesforceConnectionError], detail: "Unable to connect to Salesforce." }
       end
-    else # if accounts.blank? || current_user.organization.salesforce_accounts.where.not(contextsmith_account_id: nil).first.blank? || (account_standard_fields.blank? && account_custom_fields.blank?)
+    else # no active CS accounts, no SFDC accounts mapped, and no account field mappings found
       return { status: "SUCCESS", result: "Warning: no accounts updated." }
     end
+
     return { status: "SUCCESS", result: "Refresh completed." }
   end
 end

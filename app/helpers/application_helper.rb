@@ -1,5 +1,10 @@
 module ApplicationHelper
   include Utils
+  CONTEXTSMITH_BLUE = "#7cb5ec"  # "CS blue" / light blue
+
+  def get_contextsmith_blue
+    CONTEXTSMITH_BLUE
+  end
 
   def is_active_controller(controller_name)
     params[:controller] == controller_name ? "active" : nil
@@ -44,7 +49,7 @@ module ApplicationHelper
     when Activity::CATEGORY[:Basecamp2]
       '#91e8e1'
     else
-      '#7cb5ec'  # "CS blue" / light blue
+      CONTEXTSMITH_BLUE
     end
   end
 
