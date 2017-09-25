@@ -58,7 +58,7 @@
         width: 56px;
         height: 56px;
         border-radius: 56px;
-        margin: 10px 6px;
+        margin: 2px 6px;
         border: 2px solid <%= get_contextsmith_blue %>;
         font-size: 22px;
         line-height: 47px;
@@ -234,14 +234,16 @@
                                                     <% else %>
                                                         <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
                                                     <% end %></td></tr>
-                                                    <tr style="width:60px"><td style="padding-left: 12px">
-                                                    <% if contact.present? %>
-                                                        <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
-                                                        <%= render 'contacts/modal', modal_type: 'edit_contact_modal', modal_id: 'edit_contact_modal-'+contact.id, contact: contact %>
-                                                    <% else %>
-                                                        <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
-                                                        <% newcontact = Contact.new(last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email, phone: profile.phone) %>
-                                                        <%= render 'contacts/modal', modal_type: 'new_contact_modal', modal_id: 'new_contact_modal', contact: newcontact  %>
+                                                    <tr style="width:60px"><td style="padding-left: 10px">
+                                                    <% if current_user.role != User::ROLE[:Basic] %>
+                                                        <% if contact.present? %>
+                                                            <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
+                                                            <%= render 'contacts/modal', modal_type: 'edit_contact_modal', modal_id: 'edit_contact_modal-'+contact.id, contact: contact %>
+                                                        <% else %>
+                                                            <% newcontact = Contact.new(last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email, phone: profile.phone) %>
+                                                            <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
+                                                            <%= render 'contacts/modal', modal_type: 'new_contact_modal', modal_id: 'new_contact_modal-'+profile.id.to_s, contact:  newcontact %>
+                                                        <% end %>
                                                     <% end %>
                                                     </td></tr>
                                                 </tbody>
