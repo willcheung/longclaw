@@ -118,7 +118,7 @@
         font-size: 12px;
         padding-bottom: 3px;
     }
-    button { /* used for easy styling: need to change */
+    .activity-group button { /* used for easy styling: need to change */
         width: 75px;
         margin: 1px;
         color: grey;
@@ -177,9 +177,20 @@
             window.open($(this).attr("url")); 
             return false; //don't expand/collapse section
         });
-        $(".add-contact-link").click(function(){
+        $(".edit-contact-link").click(function(){
+            // var parent_a = $("#" + $(this).attr("sectionid") + " a");
+            // console.log("parent_a.class (before) = " + parent_a.attr("class"));
+            // if (parent_a.attr("class").includes("collapsed")) {
+            //     console.log("adding...");
+            //     parent_a.addClass('collapsed');
+            // } else {
+            //     console.log("removing...");
+            //     parent_a.removeClass('collapsed');
+            // }
+            // console.log("parent_a.class (after) = " + parent_a.attr("class"));
+
             // window.location($(this).attr("href"));
-            // return false; //don't expand/collapse section
+            // // return false; //don't expand/collapse section
         });
     });
 
@@ -223,13 +234,14 @@
                                                     <% else %>
                                                         <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
                                                     <% end %></td></tr>
-                                                    <tr style="width:60px"><td style="width:60px">
+                                                    <tr style="width:60px"><td style="padding-left: 16px">
                                                     <% if contact.present? %>
-                                                    <%= link_to "<i class=\"fa fa-plus\"></i><span> Edit</span>".html_safe, '#edit_contact_modal-' + contact.id, 'data-toggle' => 'modal', 'class' => 'add-contact-link' %>
-                                                    <%= render 'contacts/modal', modal_id: 'edit_contact_modal-' + contact.id, contact: contact %>
+                                                        <%= link_to "<i class=\"fa fa-pencil\"></i><span> Edit</span>".html_safe, '#edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
+                                                        <%= render 'contacts/modal', modal_type: 'edit_contact_modal', modal_id: 'edit_contact_modal-'+contact.id, contact: contact %>
                                                     <% else %>
-                                                    <%= link_to "<i class=\"fa fa-plus\"></i><span> Create</span>".html_safe, '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'add-contact-link' %>
-                                                    <%= render 'contacts/modal', modal_id: 'new_contact_modal', contact: nil  %>
+                                                        <%= link_to "<i class=\"fa fa-plus\"></i><span> Add</span>".html_safe, '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
+                                                        <% newcontact = Contact.new(last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email, phone: profile.phone) %>
+                                                        <%= render 'contacts/modal', modal_type: 'new_contact_modal', modal_id: 'new_contact_modal', contact: newcontact  %>
                                                     <% end %>
                                                     </td></tr>
                                                 </tbody>
