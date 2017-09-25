@@ -234,12 +234,12 @@
                                                     <% else %>
                                                         <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
                                                     <% end %></td></tr>
-                                                    <tr style="width:60px"><td style="padding-left: 16px">
+                                                    <tr style="width:60px"><td style="padding-left: 12px">
                                                     <% if contact.present? %>
-                                                        <%= link_to "<i class=\"fa fa-pencil\"></i><span> Edit</span>".html_safe, '#edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
+                                                        <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                                         <%= render 'contacts/modal', modal_type: 'edit_contact_modal', modal_id: 'edit_contact_modal-'+contact.id, contact: contact %>
                                                     <% else %>
-                                                        <%= link_to "<i class=\"fa fa-plus\"></i><span> Add</span>".html_safe, '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
+                                                        <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#new_contact_modal', 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
                                                         <% newcontact = Contact.new(last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email, phone: profile.phone) %>
                                                         <%= render 'contacts/modal', modal_type: 'new_contact_modal', modal_id: 'new_contact_modal', contact: newcontact  %>
                                                     <% end %>

@@ -17,9 +17,9 @@
           <%= render 'contacts/form', remote: true, modal_type: modal_type, contact: contact %>
         </div>
       </div>
-      <% if modal_type == 'edit_contact_modal' %>
+      <% if modal_type == 'edit_contact_modal' && contact.present? %>
         <div class="modal-footer">
-          <%= (link_to "Delete contact", contact, method: :delete, data: {confirm: "Contact will be deleted! Are you sure?"}) if contact.present? %>
+          <%= link_to "<i class=\"fa fa-trash\"></i> Delete contact".html_safe, contact, method: :delete, data: {confirm: "Contact will be deleted! Are you sure?"} %>
         </div>
       <% end %>
     </div>
