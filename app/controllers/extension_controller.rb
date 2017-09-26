@@ -4,10 +4,10 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
-  # before_action :set_account_and_project, only: [:alerts_tasks, :contacts, :metrics]
-  before_action :set_account_and_project_for_people, only: [:account]
-  # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
+  before_action :set_account_and_project
   before_action :get_account_types, only: :no_account
+  # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
+  # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
   # before_action :get_current_org_users, only: :alerts_tasks
 
   def test
@@ -71,8 +71,8 @@ class ExtensionController < ApplicationController
     people_emails = external_emails | internal_emails - [current_user.email.downcase]
     account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]  # filter by users already in e-mail thread, then truncate list
 
-    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
-    @account_contacts_with_profile = account_contacts_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e)} }
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e) } }
+    @account_contacts_with_profile = account_contacts_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e) } }
 
     people_emails += @account_contacts_with_profile.map{|p| p[:email]}
 
@@ -113,6 +113,11 @@ class ExtensionController < ApplicationController
     emails_total_opened_per_person.each { |e,c| @emails_engagement_per_person[e] = c.to_f/@emails_sent_per_person[e].to_f if @emails_sent_per_person[e].present? }
 
     # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
+  end
+
+  def salesforce
+    @salesforce_account = @account.salesforce_accounts.first
+    @salesforce_opportunity = @project.salesforce_opportunity
   end
 
   def alerts_tasks
@@ -164,7 +169,7 @@ class ExtensionController < ApplicationController
   end
 
   # Old before_action helper
-  def set_account_and_project
+  def set_account_and_project_old
     # p "*** set account and project ***"
     # p params
     ### url example: .../extension/account?internal%5B0%5D%5B%5D=Will%20Cheung&internal%5B0%5D%5B%5D=wcheung%40contextsmith.com&internal%5B1%5D%5B%5D=Kelvin%20Lu&internal%5B1%5D%5B%5D=klu%40contextsmith.com&internal%5B2%5D%5B%5D=Richard%20Wang&internal%5B2%5D%5B%5D=rcwang%40contextsmith.com&internal%5B3%5D%5B%5D=Yu-Yun%20Liu&internal%5B3%5D%5B%5D=liu%40contextsmith.com&external%5B0%5D%5B%5D=Richard%20Wang&external%5B0%5D%5B%5D=rcwang%40enfind.com&external%5B1%5D%5B%5D=Brad%20Barbin&external%5B1%5D%5B%5D=brad%40enfind.com
@@ -267,9 +272,9 @@ class ExtensionController < ApplicationController
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # New before_action helper to be used for new Basic User "People" page.  Matches an account+opportunity (project) with the external contacts in params (i.e., if no external contacts exist, no account or opportunity is returned). 
+  # (New) before_action helper to determine a matching account+opportunity from the set of recipients (the external contacts in params). i.e., if no external contacts exist, no account or opportunity is returned.
   # Note: E-mail domains that are typically "invalid" such as "gmail.com", "yahoo.com", "hotmail.com" may be used to identify a "matching" account if we can find the Contact with the e-mail.  Otherwise, we stop and do not attempt to identify a matching account using "invalid" domains, because these domains are too general and can easily match the wrong account.
-  def set_account_and_project_for_people
+  def set_account_and_project
     return if params[:external].blank?
 
     external = params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } }
@@ -444,7 +449,7 @@ class ExtensionController < ApplicationController
     success
   end
 
-  # Helper method for creating people, used in set_account_and_project & create_project (@project should already be set before calling this)
+  # Helper method for creating people, used in set_account_and_project_old & create_project (@project should already be set before calling this)
   # By default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
   def create_people(status=ProjectMember::STATUS[:Pending])
     if params[:internal].present?

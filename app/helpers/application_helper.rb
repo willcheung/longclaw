@@ -1,5 +1,10 @@
 module ApplicationHelper
   include Utils
+  CONTEXTSMITH_BLUE = "#7cb5ec"  # "CS blue" / light blue
+
+  def get_contextsmith_blue
+    CONTEXTSMITH_BLUE
+  end
 
   def is_active_controller(controller_name)
     params[:controller] == controller_name ? "active" : nil
@@ -44,7 +49,7 @@ module ApplicationHelper
     when Activity::CATEGORY[:Basecamp2]
       '#91e8e1'
     else
-      '#7cb5ec'  # "CS blue" / light blue
+      CONTEXTSMITH_BLUE
     end
   end
 
@@ -251,8 +256,10 @@ module ApplicationHelper
       name = ""
     elsif name.include?(', ') # first and last name reverse because of comma
       s = name.split(', ').last[0,1] + name.split(', ').first[0,1]
+    elsif name.include?(' ')
+      s = name.split(' ').first[0,1] + name.split(' ').last[0,1] 
     else
-      s = name.split(' ').first[0,1] + name.split(' ').last[0,1]
+      s = name[0,2]
     end
 
     return ('<div class="rounded-initials ' + css_class + '" title="' + name + '" style="background:' + User::PROFILE_COLOR[(name.length)%9] + '">' + s + '</div>').html_safe

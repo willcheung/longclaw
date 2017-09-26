@@ -54,14 +54,14 @@
                 <ul class="nav nav-tabs">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">People</a></li>
                     <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
-                    <li role="presentation" class="<%= is_active_action('salesforce') %> 
+                    <li role="presentation" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="Connected as <b><%= @salesforce_user.oauth_user_name if @salesforce_user.present? %></b>" class="<%= is_active_action('salesforce') %> 
                     <% if !current_user.superadmin? %>
                     disabled"><a href="#">
                     <% else %>
                     "><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>">
                     <% end %>
-                    <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
-
+                    <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a>
+                    </li>
                 </ul>
             </div>
 
@@ -244,10 +244,10 @@
             pointer-events: none;
         }
         .nav-tabs > li > a:hover, .nav-tabs > li > a:focus {
-            color: #7cb5ec;
+            color: <%= get_contextsmith_blue %>;
             background-color: transparent;
             border: none;
-            border-bottom: 2px solid #7cb5ec;
+            border-bottom: 2px solid <%= get_contextsmith_blue %>;
         }
         .nav-tabs > li > a {
             color: #676a6c;
