@@ -26,19 +26,32 @@
   <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" %>
   <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js" %>
 
+  <%= csrf_meta_tags %>
 
-  <script>
+  <% if Rails.env.production? %>
+      <!-- Google Tag Manager -->
+      <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-PW3DCFF');</script>
+      <!-- End Google Tag Manager -->
+  <% end %>
 
-</script>
-
-    <%= csrf_meta_tags %>
 </head>
 <body class="white-bg">
-<div id="wrapper" class="<%= params[:controller] %>.<%= params[:action] %>">
+  <% if Rails.env.production? %>
+      <!-- Google Tag Manager (noscript) -->
+      <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PW3DCFF"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+      <!-- End Google Tag Manager (noscript) -->
+  <% end %>
+  
+  <div id="wrapper" class="<%= params[:controller] %>.<%= params[:action] %>">
 
-  <div class="white-bg">
-    <!-- Main view  -->
-    <%= yield %>
+    <div class="white-bg">
+      <!-- Main view  -->
+      <%= yield %>
+    </div>
   </div>
-</div>
 </body>
