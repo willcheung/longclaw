@@ -1,12 +1,11 @@
 <% contact ||= @contact || Contact.new %>
-<%# modal_type == "edit_contact_modal" is currently only from Chrome extension %>
 <% modal_type ||= modal_id %>
 <div class="modal inmodal fade" id="<%= modal_id %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <% if modal_type == 'edit_contact_modal' %>
+        <% if modal_type == 'extension_edit_contact_modal' %>
           <h4 class="modal-title">Edit Contact</h4>
         <% else %>
           <h4 class="modal-title">New Contact</h4>
@@ -15,10 +14,10 @@
       <div class="modal-body">
         <div class="row">
           <%# Render the new person form (passing modal => true to enable remote => true); but use remote:false if editing from Chrome extension to enable closing of modal + redirect %>
-          <%= render 'contacts/form', remote: (modal_type != 'edit_contact_modal'), modal_type: modal_type, contact: contact %>
+          <%= render 'contacts/form', remote: (modal_type != 'extension_edit_contact_modal'), modal_type: modal_type, contact: contact %>
         </div>
       </div>
-      <% if modal_type == 'edit_contact_modal' && contact.present? %>
+      <% if modal_type == 'extension_edit_contact_modal' && contact.present? %>
         <div class="modal-footer">
           <%= link_to "<i class=\"fa fa-trash\"></i> Delete contact".html_safe, contact, method: :delete, data: {confirm: "Contact will be deleted! Are you sure?"} %>
         </div>

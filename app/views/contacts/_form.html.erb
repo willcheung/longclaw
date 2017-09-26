@@ -1,5 +1,5 @@
 <% remote ||= false %>
-<% url = (modal_type == 'edit_contact_modal') ? contact_path(id: contact.id) : contacts_path %>
+<% url = (modal_type == 'extension_edit_contact_modal') ? contact_path(id: contact.id) : contacts_path %>
 <%= simple_form_for contact, remote: remote, html: {role: :form, 'data-model' => 'contact', id: 'new_contact'}, url: url do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
@@ -12,7 +12,11 @@
       <%= f.input :phone, wrapper_html: { class: 'col-md-4'} %>
       <%= f.input :account_id, as: :hidden, input_html: { value: contact.account_id || params[:id] }, wrapper_html: { class: 'col-md-4'} %>
 
-	<div class="clearfix">&nbsp;</div>  
-  <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
+  <div class="clearfix">&nbsp;</div>
+  <% if ['extension_new_contact_modal','extension_edit_contact_modal'].include? modal_type %>
+    <%= f.button :submit, class: 'btn-primary pull-right form-group', style: 'width: 100%' %>
+  <% else %>
+    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
+  <% end %>
 
 <% end %>
