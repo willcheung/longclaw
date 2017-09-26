@@ -116,8 +116,8 @@ class ExtensionController < ApplicationController
   end
 
   def salesforce
-    @salesforce_account = @account.salesforce_accounts.first
-    @salesforce_opportunity = @project.salesforce_opportunity
+    @salesforce_account = @account.salesforce_accounts.first if @account.present?
+    @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
   end
 
   def alerts_tasks
