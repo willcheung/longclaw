@@ -80,6 +80,21 @@ class SalesforceController < ApplicationController
     end
   end
 
+  # Depending on the user passed, will return the appropriate SFDC OauthUser object.  i.e., if the role of this user is admin, then use the login belonging to the "organization".  Otherwise, use individual logins.
+  # TODO: Might have to modify OauthUser table to distinguish between admin logins and single-user logins (e.g., store a "special" user_id).
+  def self.get_sfdc_oauthuser(user)
+    if user.admin?
+      # Try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
+      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: user.organization_id)
+      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: user.organization_id) if salesforce_user.nil?
+    else
+      # Basic role user OR individual power user or trial/Chrome user
+      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: user.organization_id, user_id: user.id)
+      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: user.organization_id, user_id: user.id) if salesforce_user.nil?
+    end
+    salesforce_user
+  end
+
   # Automatic actions to take when user initially logs into SFDC.
   #  e.g., 
   #    - Create a default mapping between CS and SFDC fields, if none exist for current user's org
@@ -87,7 +102,8 @@ class SalesforceController < ApplicationController
   #    - Special action for single users: creating CS opportunities and corresponding accounts for loaded SFDC entities, and updating Contacts.
   def self.initial_SFDC_login(current_user)
     puts "\nInitial SFDC login for user=#{get_full_name(current_user)} (email=#{current_user.email}) ..."
-    sfdc_oauth_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
+
+    sfdc_oauth_user = SalesforceController.get_sfdc_oauthuser(current_user)
 
     if sfdc_oauth_user.present?
       # Create a default mapping between CS and SFDC fields
