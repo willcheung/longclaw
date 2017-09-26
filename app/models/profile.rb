@@ -49,6 +49,16 @@ class Profile < ActiveRecord::Base
     data.status == 200
   end
 
+  # "First name"
+  def given_name
+    data.contact_info.given_name if data_is_valid? && data.contact_info.present?
+  end
+
+  # "Last name"
+  def family_name
+    data.contact_info.family_name if data_is_valid? && data.contact_info.present?
+  end
+
   def fullname
     data.contact_info.full_name if data_is_valid? && data.contact_info.present?
   end

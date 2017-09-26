@@ -1,26 +1,91 @@
-<div class="white-bg">
-    <div class="row">
-        <div class="ibox-content text-center">
-            <div class="m-b-sm" style="margin: 60% 0">
-            <!-- <h2>Salesforce</h2> -->
-                <img src="/assets/images/salesforce.png" style="height:75px;"/>
-                <div style="margin: 1.5em 0">
-                <% if current_user.superadmin? %>
-                    <% if @salesforce_user.nil? %>
-                        <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a><br/>
-                    <% else %>
-                        <div style="margin: 1em;">
-                            <span style="display: block; padding-bottom: 1em;">You're connected as <strong><%= @salesforce_user.oauth_user_name %></strong></span>
-                            <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect!</a></span></div>
-                    <% end %>
+<style type="text/css">
+    body {
+        color: #999;
+        /* color: <%= get_contextsmith_blue %>; */
+        font-size: 11px;
+    }
+    extrastrong {
+        font-weight: bold;
+        color: black;
+    }
+    .entity-title {
+        font-size: 12px;
+        font-weight: bold;
+        /*color: #999;*/
+        padding: 2em 0;
+    }
+    .entity-group {
+        border-top: 1px solid #EEE;
+    }
+
+    /* form styles */
+    #sfdc-acct-form-title {
+        width: 50%;
+        margin: 0 25%;
+    }
+    #sfdc-opp-form-title {
+        width: 60%; 
+        margin: 0 23%;
+    }
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    td label {
+        padding-top: 1em;
+    }
+    input {
+        color: #666;
+        width: 100%;
+    }
+    .disabledinput {
+        color: #BBB;
+        border: none;
+        pointer-events: none;
+    }
+    button {
+        background-color: <%= get_contextsmith_blue %>;
+        width: 100%;
+    }
+    .button-td{
+        padding: 2.5em 0;
+    }
+</style>
+
+<body>
+    <div class="white-bg">
+        <div>
+            <% if current_user.superadmin? %>
+                <% if @salesforce_user.nil? %>
+                    <div class="ibox-content text-center">
+                        <div class="m-b-sm" style="margin: 60% 0">
+                            <img src="/assets/images/salesforce.png" style="height:75px;"/>
+                            <div style="margin: 1.5em 0">
+                                <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a><br/>
+                            </div>
+                        </div>
+                    </div>
                 <% else %>
-                    <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
+                    <div class="text-center" style="padding: 1em;">
+                        <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size: 9px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect <strong><%= truncate_with_ellipsis(@salesforce_user.oauth_user_name, 20) %></strong></a></span>
+                    </div>
                 <% end %>
-                </div>
+            <% else # if !current_user.superadmin? %>
+                <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
+            <% end %>
+            <% if @salesforce_user.present? %>
+            <div>
+                <%= render 'salesforce/account_form' if @salesforce_account.present? %>
+                <%= render 'salesforce/opportunity_form' if @salesforce_opportunity.present? %>
+
+                <%= render 'salesforce/link_account_form' if @salesforce_account.blank? %>
+                <%= render 'salesforce/link_opportunity_form' if @salesforce_opportunity.blank? %>
             </div>
+            <% end %>
         </div>
     </div>
-</div>
+</body>
+
 <script type="text/javascript">
     var popupWindowRef = null;
     var openSignInPopup = function (strUrl, strTarget) {

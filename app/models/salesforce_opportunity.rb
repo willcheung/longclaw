@@ -191,8 +191,12 @@ class SalesforceOpportunity < ActiveRecord::Base
         end # End: opportunities.each do |s|
       else
         puts "****SFDC****: Salesforce error in SalesforceOpportunity.refresh_fields: Cannot establish a connection!"
-        return { status: "ERROR", result: SalesforceController::ERROR[:SalesforceConnectionError], detail: "Unable to connect to Salesforce." }
+        return { status: "ERROR", result: SalesforceController::ERRORS[:SalesforceConnectionError], detail: "Unable to connect to Salesforce." }
       end
+    else # no active+confirmed opportunities and no opportunity field mappings found
+      return { status: "SUCCESS", result: "Warning: no opportunities updated." }
     end
+
+    return { status: "SUCCESS", result: "Refresh completed." }
   end
 end

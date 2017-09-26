@@ -566,7 +566,7 @@ class SalesforceController < ApplicationController
     if entity_type == "account"
       refresh_result = SalesforceAccount.refresh_fields(current_user)
       if refresh_result[:status] == "ERROR"
-        if refresh_result[:result] == ERROR[:SalesforceConnectionError]
+        if refresh_result[:result] == ERRORS[:SalesforceConnectionError]
           render_service_unavailable_error(method_name) 
         else
           render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])
@@ -576,7 +576,7 @@ class SalesforceController < ApplicationController
     elsif entity_type == "project"
       refresh_result = SalesforceOpportunity.refresh_fields(current_user)
       if refresh_result[:status] == "ERROR"
-        if refresh_result[:result] == ERROR[:SalesforceConnectionError]
+        if refresh_result[:result] == ERRORS[:SalesforceConnectionError]
           render_service_unavailable_error(method_name) 
         else
           render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])

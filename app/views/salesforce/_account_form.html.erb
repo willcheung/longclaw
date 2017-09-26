@@ -1,0 +1,12 @@
+<div class="entity-group container">
+    <div id="sfdc-acct-form-title">
+        <div class="entity-title" style="padding: 0"><br/>Salesforce Account</div>
+    </div>
+    <table>
+        <tr><td><label for="acct_id">Id</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_account.salesforce_account_id %>" class="disabledinput" id="acct_id"></td></tr>
+        <tr><td><label for="acct_name">Name</label></td></tr>
+        <tr><td><input type="text" value="<%= @salesforce_account.salesforce_account_name %>" id="acct_name"></td></tr>
+        <tr><td class="button-td"><button class="btn btn-primary btn-sm" disabled="disable">Update Salesforce</button></td></tr>
+    </table>
+</div>

@@ -1,17 +1,18 @@
 <% remote ||= false %>
-<%= simple_form_for @contact, url: :contacts, remote: remote, html: {role: :form, 'data-model' => 'contact', id: 'new_contact'}  do |f| %>
+<% url = (modal_type == 'edit_contact_modal') ? contact_path(id: contact.id) : contacts_path %>
+<%= simple_form_for contact, remote: remote, html: {role: :form, 'data-model' => 'contact', id: 'new_contact'}, url: url do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
       <span class="help-block" style="color:red"></span>
       <%= f.input :first_name, wrapper_html: { class: 'col-md-6'} %>
       <%= f.input :last_name, wrapper_html: { class: 'col-md-6'} %>
-      <%= f.input :email, wrapper_html: { class: 'col-md-4'}, :required => true %>
-      <%= f.input :title, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :title, wrapper_html: { class: 'col-md-6'} %>
+      <%= f.input :department, wrapper_html: { class: 'col-md-6'} %>
+      <%= f.input :email, wrapper_html: { class: 'col-md-6'}, :required => true %>
       <%= f.input :phone, wrapper_html: { class: 'col-md-4'} %>
-      <%= f.input :account_id, as: :hidden, input_html: { value: params[:id] }, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :account_id, as: :hidden, input_html: { value: contact.account_id || params[:id] }, wrapper_html: { class: 'col-md-4'} %>
 
 	<div class="clearfix">&nbsp;</div>  
-    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
- 
+  <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
 
 <% end %>

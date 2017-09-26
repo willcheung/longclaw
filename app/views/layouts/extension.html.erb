@@ -15,15 +15,31 @@
     <%= stylesheet_link_tag 'application', media: 'all' %>
 
     <!-- Main javascript files -->
-  <%= javascript_include_tag 'application' %>
-  <!-- <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js" %>-->
-  <%= javascript_include_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js" %>
-  <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" %>
-
+    <%= javascript_include_tag 'application' %>
+    <!-- <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js" %>-->
+    <%= javascript_include_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js" %>
+    <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" %>
 
     <%= csrf_meta_tags %>
+
+    <% if Rails.env.production? %>
+        <!-- Google Tag Manager -->
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-PW3DCFF');</script>
+        <!-- End Google Tag Manager -->
+    <% end %>
 </head>
 <body>
+    <% if Rails.env.production? %>
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PW3DCFF"
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+    <% end %>
+
     <!-- Wrapper-->
     <div id="wrapper" class="<%= params[:controller] %>.<%= params[:action] %>">
 
@@ -54,14 +70,14 @@
                 <ul class="nav nav-tabs">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">People</a></li>
                     <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
-                    <li role="presentation" class="<%= is_active_action('salesforce') %> 
+                    <li role="presentation" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="Connected as <b><%= @salesforce_user.oauth_user_name if @salesforce_user.present? %></b>" class="<%= is_active_action('salesforce') %> 
                     <% if !current_user.superadmin? %>
                     disabled"><a href="#">
                     <% else %>
                     "><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>">
                     <% end %>
-                    <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a></li>
-
+                    <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a>
+                    </li>
                 </ul>
             </div>
 
@@ -244,10 +260,10 @@
             pointer-events: none;
         }
         .nav-tabs > li > a:hover, .nav-tabs > li > a:focus {
-            color: #7cb5ec;
+            color: <%= get_contextsmith_blue %>;
             background-color: transparent;
             border: none;
-            border-bottom: 2px solid #7cb5ec;
+            border-bottom: 2px solid <%= get_contextsmith_blue %>;
         }
         .nav-tabs > li > a {
             color: #676a6c;
