@@ -388,6 +388,51 @@ class SalesforceController < ApplicationController
     render plain: ''
   end
 
+  def update_all_salesforce
+    case params[:entity_type]
+    when "account"
+      method_name = "update_all_salesforce#account()"
+      begin
+        salesforce_account = SalesforceAccount.find(params[:id])
+      rescue ActiveRecord::RecordNotFound => e
+        render_internal_server_error(method_name, "Invalid SalesforceAccount id", e.to_s)
+        return
+      end
+
+      if salesforce_account.blank?
+        render_internal_server_error(method_name, "Invalid SalesforceAccount id", "Cannot find SalesforceAccount with id=#{params[:id]}")
+        return
+      end
+
+      client = nil #SalesforceService.connect_salesforce(current_user.organization_id)
+      SalesforceAccount.update_all_salesforce(client: client, salesforce_account: salesforce_account, fields: params[:fields], current_user: current_user)
+    when "opportunity"
+      method_name = "update_all_salesforce#opportunity()"
+      begin
+        salesforce_opportunity = SalesforceOpportunity.find(params[:id])
+      rescue ActiveRecord::RecordNotFound => e
+        render_internal_server_error(method_name, "Invalid SalesforceOpportunity id", e.to_s)
+        return
+      end
+
+      if salesforce_opportunity.blank?
+        render_internal_server_error(method_name, "Invalid SalesforceOpportunity id", "Cannot find SalesforceOpportunity with id=#{params[:id]}")
+        return
+      end
+
+      client = nil #SalesforceService.connect_salesforce(current_user.organization_id)
+      SalesforceOpportunity.update_all_salesforce(client: client, salesforce_opportunity: salesforce_opportunity, fields: params[:fields], current_user: current_user)
+    else
+      method_name = "update_all_salesforce"
+      error_detail = "Invalid entity_type parameter passed to update_all_salesforce(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
+    end
+
+    render plain: ''
+  end
+
   # Synchronize entities in CS and SFDC consisting of an import of a SFDC entity to ContextSmith, followed by an export back to SFDC, using SFDC <-> CS fields mapping.
   # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account. Imports SFDC Activities (not exported from CS) into CS Opportunities.
   # For Contacts -- merges Contacts depending on the explicit mapping of a SFDC Account to a CS Account. ("Sync" is used loosely, because some Contacts is missing information like e-mail address)

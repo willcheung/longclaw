@@ -104,4 +104,79 @@
             popupWindowRef.focus();
         }
     };
+
+    function changedValue(entity_type) {
+        if (!entity_type) 
+            return;  // is undefined (e.g., on tab)
+
+        if (entity_type == "account" ) {
+            $("#update_account").prop("disabled", null);
+        } else if (entity_type == "opportunity" ) {
+            $("#update_opportunity").prop("disabled", null);
+        }
+    }
+
+    $(document).ready(function(){
+        $(".update_salesforce").click(function() {
+            if ($(this).attr("id") == "update_account" ) {
+                entity_type = "account"
+                entity_id = $("#sfa_id").val();
+                fields = {}
+                fields["salesforce_account_name"] = $("#salesforce_account_name").val();
+            } else if ($(this).attr("id") == "update_opportunity" ) {
+                entity_type = "opportunity"
+                entity_id = $("#sfo_id").val();
+                fields = {}
+                fields["owner_id"] = $("#owner_id").val(); 
+                fields["name"] = $("#name").val(); 
+                fields["stage_name"] = $("#stage_name").val(); 
+                fields["close_date"] = $("#close_date").val(); 
+                fields["probability"] = $("#probability").val(); 
+                fields["expected_revenue"] = $("#expected_revenue").val(); 
+                fields["amount"] = $("#amount").val(); 
+                fields["forecast_category_name"] = $("#forecast_category_name").val(); 
+            }
+            else {
+                return;
+            }
+            // fields = $.param(fields));
+
+            $(this).prop("disabled", "disable");
+
+            // $.ajax('/salesforce/update_all/', {
+            $.ajax('/salesforce/update_all/'+entity_type+"/"+entity_id, {
+                async: true,
+                method: "POST",
+                data: { "fields": fields },
+                beforeSend: function () {
+                    // self.css("pointer-events", "none");
+                    // $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
+                },
+                success: function() {
+                    // self.addClass('success-btn-highlight');
+                    // self.html("✓ " + buttonTxtStr);
+                },
+                error: function(data) {
+                    // var res = JSON.parse(data.responseText);
+                    // self.addClass('error-btn-highlight');
+                    // console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                    alert("There was an update Salesforce " + entity_type + " error, but it has been logged and our team will get right on it shortly to resolve it!");
+                },
+                statusCode: {
+                    500: function() {
+                        // self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                    },
+                    503: function() {
+                        // self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                    },
+                },
+                complete: function() {
+                    // self.css("pointer-events", "auto");
+                    // $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
+                    alert("Successfully updated Salesforce!");
+                    // location.reload();
+                }
+            });
+        });
+    });
 </script>

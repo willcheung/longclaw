@@ -140,6 +140,28 @@ class SalesforceAccount < ActiveRecord::Base
     end
 	end
 
+  # For salesforce_account, updates the local copy and pushes change to salesforce
+  def self.update_all_salesforce(client: , salesforce_account: , fields: , current_user: )
+    return { status: "ERROR", result: "Salesforce account update error", detail: "Salesforce account does not exist or this user does not exist." } if salesforce_account.blank? || current_user.blank?
+
+    if salesforce_account.organization == current_user.organization
+      # puts "\n\nUpdating #{salesforce_account.salesforce_account_name}.... "
+
+      #Update Contextsmith model
+      begin
+        salesforce_account.update(salesforce_account_name: fields[:salesforce_account_name])
+      rescue => e
+        return { status: "ERROR", result: "Salesforce account update error", detail: e }
+      end
+
+      #Update Salesforce
+    else
+      return { status: "ERROR", result: "Salesforce account update error", detail: "Salesforce account does not exist or this user does not have access to it." } 
+    end
+
+    return { status: "SUCCESS", result: "Update completed." }
+  end
+
   # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC account to a field of a CS account, for all active accounts in current_user's organization. Process aborts immediately if there is an update/SFDC error.
   # TODO: Refactor so that we only go through active accounts that have salesforce accounts (owned by this user) linked to it, for performance.
   def self.refresh_fields(current_user)

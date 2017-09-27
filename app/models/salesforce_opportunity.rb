@@ -152,6 +152,37 @@ class SalesforceOpportunity < ActiveRecord::Base
     end
 	end
 
+  # For salesforce_opportunity, updates the local copy and pushes change to salesforce
+  def self.update_all_salesforce(client: , salesforce_opportunity: , fields: , current_user: )
+    return { status: "ERROR", result: "Salesforce opportunity update error", detail: "Salesforce opportunity does not exist or this user does not exist." } if salesforce_opportunity.blank? || current_user.blank?
+
+    if salesforce_opportunity.salesforce_account.organization == current_user.organization
+      # puts "\n\nUpdating #{salesforce_opportunity.name}.... "
+
+      begin
+        close_date = Date.strptime(fields[:close_date], "%m-%d-%Y")
+      rescue ArgumentError => e
+        begin
+          close_date = Date.strptime(fields[:close_date], "%m/%d/%Y")
+        rescue ArgumentError => e
+          return { status: "ERROR", result: "Salesforce opportunity update error", detail: e + ". Cannot parse close_date '#{fields[:close_date]}'" }
+        end
+      end
+
+      #Update Contextsmith model
+      begin
+        salesforce_opportunity.update(name: fields[:name], stage_name: fields[:stage_name], close_date: close_date, probability: fields[:probability], expected_revenue: fields[:expected_revenue], amount: fields[:amount], forecast_category_name: fields[:forecast_category_name])
+      rescue => e
+        return { status: "ERROR", result: "Salesforce opportunity update error", detail: e }
+      end
+      #Update Salesforce
+    else
+      return { status: "ERROR", result: "Salesforce opportunity update error", detail: "Salesforce opportunity does not exist or this user does not have access to it." } 
+    end
+
+    return { status: "SUCCESS", result: "Update completed." }
+  end
+
   # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to a field of a CS opportunity. This is for all projects visible to current_user. Process aborts immediately if there is an update/SFDC error.
   def self.refresh_fields(current_user)
     # opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")

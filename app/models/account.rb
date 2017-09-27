@@ -118,6 +118,7 @@ class Account < ActiveRecord::Base
     #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
     #             result - if status == "ERROR", contains the title of the error
     #             detail - if status == "ERROR", contains the details of the error
+    # TODO: Might want to move to SalesforceAccount.rb
     def self.update_fields_from_sfdc(client: , accounts: , sfdc_fields_mapping: )
         result = nil
 
@@ -184,6 +185,7 @@ class Account < ActiveRecord::Base
     #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
     #             result - if status == "ERROR", contains the title of the error
     #             detail - if status == "ERROR", contains the details of the error
+    # TODO: Might want to move to SalesforceAccount.rb
     def self.load_salesforce_fields(client: , account_id: , sfdc_account_id: , account_custom_fields: )
         result = nil
 
