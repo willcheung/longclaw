@@ -13,8 +13,8 @@
       </div>
       <div class="modal-body">
         <div class="row">
-          <%# Render the new person form (passing modal => true to enable remote => true); but use remote:false if editing from Chrome extension to enable closing of modal + redirect %>
-          <%= render 'contacts/form', remote: (modal_type != 'extension_edit_contact_modal'), modal_type: modal_type, contact: contact %>
+          <%# Render the new person form (passing modal => true to enable remote => true) %>
+          <%= render 'contacts/form', remote: true, modal_type: modal_type, contact: contact %>
         </div>
       </div>
       <% if modal_type == 'extension_edit_contact_modal' && contact.present? %>

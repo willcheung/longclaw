@@ -1,8 +1,10 @@
 <% remote ||= false %>
+<% modal_type ||= nil %>
 <% url = (modal_type == 'extension_edit_contact_modal') ? contact_path(id: contact.id) : contacts_path %>
-<%= simple_form_for contact, remote: remote, html: {role: :form, 'data-model' => 'contact', id: 'new_contact'}, url: url do |f| %>
+<%= simple_form_for contact, remote: remote, html: {role: :form, 'data-model' => 'contact'}, url: url do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
+  <%# TODO: Update contact error messages are currently not being displayed.  Will need to address this lack of error feedback to user. %>
       <span class="help-block" style="color:red"></span>
       <%= f.input :first_name, wrapper_html: { class: 'col-md-6'} %>
       <%= f.input :last_name, wrapper_html: { class: 'col-md-6'} %>
