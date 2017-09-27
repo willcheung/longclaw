@@ -107,12 +107,19 @@
                 align: 'left'
             },
             tooltip: {
+                headerFormat: '',
                 pointFormatter: function() {
-                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
+                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
                 }
             },
             xAxis: {
-                categories: <%= @interaction_time_per_account.map(&:name).to_json.html_safe %>,
+              categories: <%= @interaction_time_per_account.map { |it| [it.name, (it.deal_size.nil? ? "" : "$"+number_to_human(it.deal_size)), (it.close_date.nil? ? "" : it.close_date.strftime('%b%e')), it.id] }.to_json.html_safe %>,
+              labels: {
+                  formatter: function () {
+                    // this.value = [project_name, deal_size, close_date, project_id]
+                    return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                  }
+                }
             },
             yAxis: {
                 min: 0,
@@ -169,12 +176,7 @@
                     id: "<%= it.id %>"
                   },
                   <% end if @interaction_time_per_account.present? %>
-                ],
-                tooltip: {
-                  pointFormatter: function() {
-                    return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
-                  }
-                }
+                ]
               },
               <% end %>
             ]

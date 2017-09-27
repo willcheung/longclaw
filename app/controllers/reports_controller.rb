@@ -295,12 +295,12 @@ class ReportsController < ApplicationController
     meeting_time = @user.meeting_time_by_project
     attachment_time = @user.sent_attachments_by_project
     @interaction_time_per_account = email_time.map do |p|
-      Hashie::Mash.new(name: p.name, id: p.id, 'Meetings': 0, 'Attachments': 0, 'Sent E-mails': p.outbound, 'Read E-mails': p.inbound, total: p.inbound + p.outbound)
+      Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': 0, 'Attachments': 0, 'Sent E-mails': p.outbound, 'Read E-mails': p.inbound, total: p.inbound + p.outbound)
     end
     meeting_time.each do |p|
       i_t = @interaction_time_per_account.find { |it| it.id == p.id }
       if i_t.nil?
-        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, 'Meetings': p.total_meeting_hours, 'Attachments': 0, 'Sent E-mails': 0, 'Read E-mails': 0, total: p.total_meeting_hours)
+        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': p.total_meeting_hours, 'Attachments': 0, 'Sent E-mails': 0, 'Read E-mails': 0, total: p.total_meeting_hours)
       else
         i_t.Meetings = p.total_meeting_hours
         i_t.total += p.total_meeting_hours
@@ -310,15 +310,15 @@ class ReportsController < ApplicationController
       attachment_t = p.attachment_count * User::ATTACHMENT_TIME_SEC
       i_t = @interaction_time_per_account.find { |it| it.id == p.id }
       if i_t.nil?
-        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, 'Meetings': 0, 'Attachments': attachment_t, 'Sent E-mails': 0, 'Read E-mails': 0, total: attachment_t)
+        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': 0, 'Attachments': attachment_t, 'Sent E-mails': 0, 'Read E-mails': 0, total: attachment_t)
       else
         i_t.Attachments = attachment_t
         i_t.total += attachment_t
       end
     end
     @interaction_time_per_account.sort_by! { |it| it.total.to_f }.reverse!
-    # take the top 10 interaction time per account, currently allotted space only fits about 10 categories on xAxis before labels are cut off
-    @interaction_time_per_account = @interaction_time_per_account.take(10)
+    # take the top 8 interaction time per account, currently allotted space only fits about 8 categories on xAxis before labels are cut off
+    @interaction_time_per_account = @interaction_time_per_account.take(8)
 
     render layout: false
   end
