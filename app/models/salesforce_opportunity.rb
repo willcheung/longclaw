@@ -33,8 +33,7 @@ class SalesforceOpportunity < ActiveRecord::Base
   scope :is_linked, -> {where.not(contextsmith_project_id: nil)}
   scope :is_not_linked, -> {where(contextsmith_project_id: nil)}
 
-  validates :name, presence: true
-  validates :close_date, presence: true
+  validates :name, :close_date, presence: true
 
   # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.
   # For Admin users, this will get all SFDC opportunities belonging to linked SFDC accounts, and Open or was Closed within the last year.  For all other users, this will get all SFDC opportunities belonging to the individual's SFDC user, and is Open or was Closed within the last year.

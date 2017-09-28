@@ -392,16 +392,10 @@ class SalesforceController < ApplicationController
     case params[:entity_type]
     when "account"
       method_name = "update_all_salesforce#account()"
-      begin
-        salesforce_account = SalesforceAccount.find(params[:id])
-        if salesforce_account.blank?
-          detail = "Invalid SalesforceAccount id. Cannot find SalesforceAccount with id=#{params[:id]} "
-          puts "****SFDC**** Salesforce error calling SalesforceAccount.find() in #{method_name}. Detail: #{detail}"
-          render_internal_server_error(method_name, "SalesforceAccount.find()", detail)
-          return
-        end
-      rescue ActiveRecord::RecordNotFound => e
-        detail = "Invalid SalesforceAccount id. Cannot find SalesforceAccount with id=#{params[:id]} Error:#{e.to_s}"
+
+      salesforce_account = SalesforceAccount.find(params[:id])
+      if salesforce_account.blank?
+        detail = "Invalid SalesforceAccount id. Cannot find SalesforceAccount with id=#{params[:id]} "
         puts "****SFDC**** Salesforce error calling SalesforceAccount.find() in #{method_name}. Detail: #{detail}"
         render_internal_server_error(method_name, "SalesforceAccount.find()", detail)
         return
@@ -423,16 +417,10 @@ class SalesforceController < ApplicationController
       end
     when "opportunity"
       method_name = "update_all_salesforce#opportunity()"
-      begin
-        salesforce_opportunity = SalesforceOpportunity.find(params[:id])
-        if salesforce_opportunity.blank?
-          detail = "Invalid SalesforceOpportunity id. Cannot find SalesforceOpportunity with id=#{params[:id]} "
-          puts "****SFDC**** Salesforce error calling SalesforceOpportunity.find() in #{method_name}. Detail: #{detail}"
-          render_internal_server_error(method_name, "SalesforceOpportunity.find()", detail)
-          return
-        end
-      rescue ActiveRecord::RecordNotFound => e
-        detail = "Invalid SalesforceOpportunity id. Cannot find SalesforceOpportunity with id=#{params[:id]} Error:#{e.to_s}"
+
+      salesforce_opportunity = SalesforceOpportunity.find(params[:id])
+      if salesforce_opportunity.blank?
+        detail = "Invalid SalesforceOpportunity id. Cannot find SalesforceOpportunity with id=#{params[:id]} "
         puts "****SFDC**** Salesforce error calling SalesforceOpportunity.find() in #{method_name}. Detail: #{detail}"
         render_internal_server_error(method_name, "SalesforceOpportunity.find()", detail)
         return

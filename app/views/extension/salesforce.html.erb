@@ -144,30 +144,32 @@
     $(document).ready(function(){
         $(".update_salesforce").click(function() {
             var self = $(this);
-            if ($(this).attr("id") == "update_account" ) {
+            if (self.attr("id") == "update_account" ) {
                 entity_type = "account";
                 entity_id = $("#sfa_id").val();
-                fields = {};
-                fields["salesforce_account_name"] = $("#salesforce_account_name").val();
-            } else if ($(this).attr("id") == "update_opportunity" ) {
+                fields = {
+                    salesforce_account_name: $("#salesforce_account_name").val()
+                };
+            } else if (self.attr("id") == "update_opportunity" ) {
                 entity_type = "opportunity";
                 entity_id = $("#sfo_id").val();
-                fields = {};
-                fields["owner_id"] = $("#owner_id").val(); 
-                fields["name"] = $("#name").val(); 
-                fields["stage_name"] = $("#stage_name").val(); 
-                fields["close_date"] = $("#close_date").val(); 
-                fields["probability"] = $("#probability").val(); 
-                // fields["expected_revenue"] = $("#expected_revenue").val(); 
-                fields["amount"] = $("#amount").val(); 
-                fields["forecast_category_name"] = $("#forecast_category_name").val(); 
+                fields = {
+                    owner_id:    $("#owner_id").val(),
+                    name:        $("#name").val(),
+                    stage_name:  $("#stage_name").val(), 
+                    close_date:  $("#close_date").val(), 
+                    probability: $("#probability").val(), 
+                    amount:      $("#amount").val(), 
+                    forecast_category_name: $("#forecast_category_name").val()
+                //  expected_revenue: $("#expected_revenue").val(), 
+                };
             }
             else {
                 return;
             }
             // fields = $.param(fields));
 
-            $(this).prop("disabled", "disable");
+            self.prop("disabled", "disable");
 
             $.ajax('/salesforce/update_all/'+entity_type+"/"+entity_id, {
                 async: true,
