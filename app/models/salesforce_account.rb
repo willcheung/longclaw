@@ -23,6 +23,8 @@ class SalesforceAccount < ActiveRecord::Base
 
   scope :is_linked, -> {where("contextsmith_account_id is not null")}
 
+  validates :salesforce_account_name, presence: true
+
   #################################################################################################
   # salesforce offset sucks, don't use it
   # if offset is larger than 2000 it will return a  NUMBER_OUTSIDE_VALID_RANGE 
@@ -140,22 +142,37 @@ class SalesforceAccount < ActiveRecord::Base
     end
 	end
 
-  # For salesforce_account, updates the local copy and pushes change to salesforce
+  # For salesforce_account, updates the local copy and pushes change to Salesforce
   def self.update_all_salesforce(client: , salesforce_account: , fields: , current_user: )
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
+    return { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." } if client.nil?
+
     return { status: "ERROR", result: "Salesforce account update error", detail: "Salesforce account does not exist or this user does not exist." } if salesforce_account.blank? || current_user.blank?
 
     if salesforce_account.organization == current_user.organization
       # puts "\n\nUpdating #{salesforce_account.salesforce_account_name}.... "
 
-      #Update Contextsmith model
+      #TODO: Make update of CS and SFDC a single Unit of work (2 phase commit?)
+      # Update Contextsmith model
       begin
         salesforce_account.update(salesforce_account_name: fields[:salesforce_account_name])
       rescue => e
-        return { status: "ERROR", result: "Salesforce account update error", detail: e }
+        return { status: "ERROR", result: "Salesforce account update error", detail: e.to_s }
       end
 
-      #Update Salesforce
-    else
+      # Update Salesforce
+      # Put the fields and values to be updated into a hash object.
+      sObject_meta = { id: salesforce_account.salesforce_account_id, type: "account" }
+      sObject_fields = { name: fields[:salesforce_account_name] }
+      update_result = SalesforceService.update_salesforce(client: client, update_type: "account", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+
+      if update_result[:status] == "SUCCESS"
+        puts "-> SFDC account was updated from a ContextSmith salesforce_account. SFDC Account Id='#{ update_result[:result] }'."
+      else  # Salesforce update failure
+        puts "****SFDC****: Salesforce error in SalesforceAccount.update_all_salesforce().  #{update_result[:result]}  Details: #{ update_result[:detail] }."
+        return { status: "ERROR", result: update_result[:result], detail: update_result[:detail] + " sObject_fields=#{ sObject_fields }" } 
+      end
+    else # End: if salesforce_account.organization == current_user.organization
       return { status: "ERROR", result: "Salesforce account update error", detail: "Salesforce account does not exist or this user does not have access to it." } 
     end
 
@@ -188,7 +205,7 @@ class SalesforceAccount < ActiveRecord::Base
         # custom fields
         accounts.each do |a|
           unless a.salesforce_accounts.first.nil? 
-            # puts "***** SFDC account:\"#{a.salesforce_accounts.first.salesforce_account_name}\" --> CS account:\"#{a.name}\" *****\n"
+            # puts "**** SFDC account:\"#{a.salesforce_accounts.first.salesforce_account_name}\" --> CS account:\"#{a.name}\" ****\n"
             load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
 
             if load_result[:status] == "ERROR"

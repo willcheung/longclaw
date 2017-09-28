@@ -1,6 +1,8 @@
 class SalesforceService
 
   def self.connect_salesforce(organization_id, user_id=nil)
+    #return nil  # simulates a Salesforce connection error
+
     salesforce_client_id = ENV['salesforce_client_id']
     salesforce_client_secret = ENV['salesforce_client_secret']
     hostURL = 'login.salesforce.com'
@@ -47,7 +49,6 @@ class SalesforceService
       end
     end
 
-    #return nil  # simulates a Salesforce connection error
     client
   end
 
@@ -101,10 +102,13 @@ class SalesforceService
     result
   end
 
-  # This is used to export/create a single CS activity or a contact to the linked/mapped SFDC account/opportunity. 
+  # This is used to export a single CS Salesforce account or opportunity back to Salesforce, or to export/create a single CS activity or a contact to the linked/mapped SFDC account/opportunity.
   # Parameters: client - connection to Salesforce
   #             params[:sObject_meta] - a hash that contains the :id (and :type, optional) of the SFDC sObject we are updating
-  #             params[:update_type] - "activity" to export activity to SFDC ActivityHistory, "contacts" to export contacts to SFDC Contacts
+  #             params[:update_type] - "account" to update (no create yet) a SFDC account with a CS salesforce_account,
+  #                                    "opportunity" to update (no create yet) a SFDC opportunity with a CS salesforce_opportunity,
+  #                                    "activity" to export CS activity to SFDC ActivityHistory, or
+  #                                    "contacts" to export CS contacts to SFDC Contacts
   #             params[:sObject_fields] - hash containing entity field values (for specific fields, see the individual types below)
   # Returns:   A hash that represents the execution status/result of the update. Consists of:
   #             status - "SUCCESS" if successful; otherwise, "ERROR" 
@@ -114,10 +118,35 @@ class SalesforceService
     client = params[:client]
     result = nil
 
-    # return { status: "ERROR", result: "Salesforce error", detail: "This is just a simulated Salesforce error" }  # simulates a Salesforce query error
+    # return { status: "ERROR", result: "Salesforce error", detail: "Just a simulated Salesforce error in SalesforceService.update_salesforce()" } # simulates a Salesforce query error
 
     if (!client.nil?)
       case (params[:update_type])
+      when "account"
+        begin
+          # puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
+          update_result = client.update!('Account', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name])
+
+          # update_result is the new Task's sObject Id
+          result = { status: "SUCCESS", result: update_result, detail: "" }
+        rescue => e
+          detail = "Update Salesforce Account error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
+          puts "*** SalesforceService error: #{ detail }"
+          result = { status: "ERROR", result: "SalesforceService error on update!", detail: detail }
+        end
+      when "opportunity"
+        begin
+          puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
+          update_result = client.update!('Opportunity', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name], CloseDate: params[:sObject_fields][:close_date].strftime("%Y-%m-%d"), Probability: params[:sObject_fields][:probability], Amount: params[:sObject_fields][:amount])
+          # params[:sObject_fields] = { name: ... , stage_name: ... , close_date: ... , probability: ... , amount: ... , forecast_category_name: ...  }
+
+          # update_result is the new Task's sObject Id
+          result = { status: "SUCCESS", result: update_result, detail: "" }
+        rescue => e
+          detail = "Update Salesforce Opportunity error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
+          puts "*** SalesforceService error: #{ detail }"
+          result = { status: "ERROR", result: "SalesforceService error on update!", detail: detail }
+        end
       when "activity"
         begin
           # Insert CS activity into the corresponding SFDC account/opportunity.

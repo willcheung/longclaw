@@ -74,13 +74,26 @@
                 <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
             <% end %>
             <% if @salesforce_user.present? %>
-            <div>
-                <%= render 'salesforce/account_form' if @salesforce_account.present? %>
-                <%= render 'salesforce/opportunity_form' if @salesforce_opportunity.present? %>
-
-                <%= render 'salesforce/link_account_form' if @salesforce_account.blank? %>
-                <%= render 'salesforce/link_opportunity_form' if @salesforce_opportunity.blank? %>
-            </div>
+                <% if @salesforce_account.present? %>
+                    <%= render 'salesforce/account_form' %>
+                    <% if @salesforce_base_URL.present? %>
+                        <div class="container" style="padding-bottom: 2em">
+                            <a href="<%= @salesforce_base_URL + "/" + @salesforce_account.salesforce_account_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit account in Salesforce</a>
+                        </div>
+                    <% end %>
+                <% else %>
+                    <%= render 'salesforce/link_account_form' %>
+                <% end %>
+                <% if @salesforce_opportunity.present? %>
+                    <%= render 'salesforce/opportunity_form' %>
+                    <% if @salesforce_base_URL.present? %>
+                        <div class="container" style="padding-bottom: 2em">
+                            <a href="<%= @salesforce_base_URL + "/" + @salesforce_opportunity.salesforce_opportunity_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit opportunity in Salesforce</a>
+                        </div>
+                    <% end %>
+                <% else %>
+                    <%= render 'salesforce/link_opportunity_form' %>
+                <% end %>
             <% end %>
         </div>
     </div>
@@ -132,7 +145,7 @@
                 fields["stage_name"] = $("#stage_name").val(); 
                 fields["close_date"] = $("#close_date").val(); 
                 fields["probability"] = $("#probability").val(); 
-                fields["expected_revenue"] = $("#expected_revenue").val(); 
+                // fields["expected_revenue"] = $("#expected_revenue").val(); 
                 fields["amount"] = $("#amount").val(); 
                 fields["forecast_category_name"] = $("#forecast_category_name").val(); 
             }
@@ -143,7 +156,6 @@
 
             $(this).prop("disabled", "disable");
 
-            // $.ajax('/salesforce/update_all/', {
             $.ajax('/salesforce/update_all/'+entity_type+"/"+entity_id, {
                 async: true,
                 method: "POST",
@@ -155,11 +167,12 @@
                 success: function() {
                     // self.addClass('success-btn-highlight');
                     // self.html("✓ " + buttonTxtStr);
+                    alert("Successfully updated Salesforce " + entity_type + "!");
                 },
                 error: function(data) {
-                    // var res = JSON.parse(data.responseText);
+                    var res = JSON.parse(data.responseText);
                     // self.addClass('error-btn-highlight');
-                    // console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                    console.log("Update Salesforce" + entity_type + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
                     alert("There was an update Salesforce " + entity_type + " error, but it has been logged and our team will get right on it shortly to resolve it!");
                 },
                 statusCode: {
@@ -173,7 +186,6 @@
                 complete: function() {
                     // self.css("pointer-events", "auto");
                     // $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
-                    alert("Successfully updated Salesforce!");
                     // location.reload();
                 }
             });

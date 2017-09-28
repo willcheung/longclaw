@@ -394,34 +394,64 @@ class SalesforceController < ApplicationController
       method_name = "update_all_salesforce#account()"
       begin
         salesforce_account = SalesforceAccount.find(params[:id])
+        if salesforce_account.blank?
+          detail = "Invalid SalesforceAccount id. Cannot find SalesforceAccount with id=#{params[:id]} "
+          puts "****SFDC**** Salesforce error calling SalesforceAccount.find() in #{method_name}. Detail: #{detail}"
+          render_internal_server_error(method_name, "SalesforceAccount.find()", detail)
+          return
+        end
       rescue ActiveRecord::RecordNotFound => e
-        render_internal_server_error(method_name, "Invalid SalesforceAccount id", e.to_s)
+        detail = "Invalid SalesforceAccount id. Cannot find SalesforceAccount with id=#{params[:id]} Error:#{e.to_s}"
+        puts "****SFDC**** Salesforce error calling SalesforceAccount.find() in #{method_name}. Detail: #{detail}"
+        render_internal_server_error(method_name, "SalesforceAccount.find()", detail)
         return
       end
 
-      if salesforce_account.blank?
-        render_internal_server_error(method_name, "Invalid SalesforceAccount id", "Cannot find SalesforceAccount with id=#{params[:id]}")
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      if client.nil?
+        puts "****SFDC****: Salesforce error in SalesforceController#update_all_salesforce: Cannot establish a connection!"
+        render_service_unavailable_error(method_name)
         return
       end
 
-      client = nil #SalesforceService.connect_salesforce(current_user.organization_id)
-      SalesforceAccount.update_all_salesforce(client: client, salesforce_account: salesforce_account, fields: params[:fields], current_user: current_user)
+      update_result = SalesforceAccount.update_all_salesforce(client: client, salesforce_account: salesforce_account, fields: params[:fields], current_user: current_user)
+      if update_result[:status] == "ERROR"
+        detail = "Error while attempting to update SalesforceAccount Id=#{params[:id]}. #{ update_result[:result] } Details: #{ update_result[:detail] }"
+        puts "****SFDC**** Salesforce error calling SalesforceAccount.update_all_salesforce in #{method_name}. #{detail}"
+        render_internal_server_error(method_name, "SalesforceAccount.update_all_salesforce()", detail)
+        return
+      end
     when "opportunity"
       method_name = "update_all_salesforce#opportunity()"
       begin
         salesforce_opportunity = SalesforceOpportunity.find(params[:id])
+        if salesforce_opportunity.blank?
+          detail = "Invalid SalesforceOpportunity id. Cannot find SalesforceOpportunity with id=#{params[:id]} "
+          puts "****SFDC**** Salesforce error calling SalesforceOpportunity.find() in #{method_name}. Detail: #{detail}"
+          render_internal_server_error(method_name, "SalesforceOpportunity.find()", detail)
+          return
+        end
       rescue ActiveRecord::RecordNotFound => e
-        render_internal_server_error(method_name, "Invalid SalesforceOpportunity id", e.to_s)
+        detail = "Invalid SalesforceOpportunity id. Cannot find SalesforceOpportunity with id=#{params[:id]} Error:#{e.to_s}"
+        puts "****SFDC**** Salesforce error calling SalesforceOpportunity.find() in #{method_name}. Detail: #{detail}"
+        render_internal_server_error(method_name, "SalesforceOpportunity.find()", detail)
         return
       end
 
-      if salesforce_opportunity.blank?
-        render_internal_server_error(method_name, "Invalid SalesforceOpportunity id", "Cannot find SalesforceOpportunity with id=#{params[:id]}")
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      if client.nil?
+        puts "****SFDC****: Salesforce error in SalesforceController#update_all_salesforce: Cannot establish a connection!"
+        render_service_unavailable_error(method_name)
         return
       end
 
-      client = nil #SalesforceService.connect_salesforce(current_user.organization_id)
-      SalesforceOpportunity.update_all_salesforce(client: client, salesforce_opportunity: salesforce_opportunity, fields: params[:fields], current_user: current_user)
+      update_result = SalesforceOpportunity.update_all_salesforce(client: client, salesforce_opportunity: salesforce_opportunity, fields: params[:fields], current_user: current_user)
+      if update_result[:status] == "ERROR"
+        detail = "Error while attempting to update SalesforceOpportunity Id=#{params[:id]}. #{ update_result[:result] } Details: #{ update_result[:detail] }"
+        puts "****SFDC**** Salesforce error calling SalesforceOpportunity.update_all_salesforce in #{method_name}. #{detail}"
+        render_internal_server_error(method_name, "SalesforceOpportunity.update_all_salesforce()", detail)
+        return
+      end
     else
       method_name = "update_all_salesforce"
       error_detail = "Invalid entity_type parameter passed to update_all_salesforce(). entity_type=#{params[:entity_type]}"

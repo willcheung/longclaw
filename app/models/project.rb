@@ -1174,7 +1174,7 @@ class Project < ActiveRecord::Base
   #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
-    # TODO: Might want to move to SalesforceOpportunity.rb
+  # TODO: Might want to move to SalesforceOpportunity.rb
   def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
     result = nil
 
