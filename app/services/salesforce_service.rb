@@ -127,7 +127,6 @@ class SalesforceService
           # puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
           update_result = client.update!('Account', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name])
 
-          # update_result is the new Task's sObject Id
           result = { status: "SUCCESS", result: update_result, detail: "" }
         rescue => e
           detail = "Update Salesforce Account error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
@@ -140,7 +139,6 @@ class SalesforceService
           update_result = client.update!('Opportunity', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name], CloseDate: params[:sObject_fields][:close_date].strftime("%Y-%m-%d"), Probability: params[:sObject_fields][:probability], Amount: params[:sObject_fields][:amount])
           # params[:sObject_fields] = { name: ... , stage_name: ... , close_date: ... , probability: ... , amount: ... , forecast_category_name: ...  }
 
-          # update_result is the new Task's sObject Id
           result = { status: "SUCCESS", result: update_result, detail: "" }
         rescue => e
           detail = "Update Salesforce Opportunity error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"

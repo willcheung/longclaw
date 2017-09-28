@@ -189,9 +189,9 @@ class SalesforceOpportunity < ActiveRecord::Base
       update_result = SalesforceService.update_salesforce(client: client, update_type: "opportunity", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
       if update_result[:status] == "SUCCESS"
-        puts "-> SFDC account was updated from a ContextSmith salesforce_account. SFDC Account Id='#{ update_result[:result] }'."
+        puts "-> SFDC opportunity was updated from a ContextSmith salesforce_opportunity. SFDC Opportunity Id='#{ salesforce_opportunity.salesforce_opportunity_id }'."
       else  # Salesforce update failure
-        puts "****SFDC****: Salesforce error in SalesforceAccount.update_all_salesforce().  #{update_result[:result]}  Details: #{ update_result[:detail] }."
+        puts "****SFDC****: Salesforce error in SalesforceOpportunity.update_all_salesforce().  #{update_result[:result]}  Details: #{ update_result[:detail] }."
         return { status: "ERROR", result: update_result[:result], detail: update_result[:detail] + " sObject_fields=#{ sObject_fields }" } 
       end
     else # End: if salesforce_opportunity.salesforce_account.organization == current_user.organization

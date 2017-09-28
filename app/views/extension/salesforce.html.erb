@@ -50,6 +50,10 @@
     .button-td{
         padding: 2.5em 0;
     }
+    .btn.btn-primary:disabled {
+        opacity: .65;
+        color: white;
+    }
 </style>
 
 <body>
@@ -100,6 +104,8 @@
 </body>
 
 <script type="text/javascript">
+    var update_sfdc_button_html = "Update&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>";
+
     var popupWindowRef = null;
     var openSignInPopup = function (strUrl, strTarget) {
         var strOptions = "width=700,height=700";
@@ -123,23 +129,30 @@
             return;  // is undefined (e.g., on tab)
 
         if (entity_type == "account" ) {
-            $("#update_account").prop("disabled", null);
+            btn = $("#update_account")
         } else if (entity_type == "opportunity" ) {
-            $("#update_opportunity").prop("disabled", null);
+            btn = $("#update_opportunity")
+        } else {
+            return;
         }
+
+        btn.prop("disabled", null);
+        btn.removeClass('btn-danger btn-success');
+        btn.html(update_sfdc_button_html);
     }
 
     $(document).ready(function(){
         $(".update_salesforce").click(function() {
+            var self = $(this);
             if ($(this).attr("id") == "update_account" ) {
-                entity_type = "account"
+                entity_type = "account";
                 entity_id = $("#sfa_id").val();
-                fields = {}
+                fields = {};
                 fields["salesforce_account_name"] = $("#salesforce_account_name").val();
             } else if ($(this).attr("id") == "update_opportunity" ) {
-                entity_type = "opportunity"
+                entity_type = "opportunity";
                 entity_id = $("#sfo_id").val();
-                fields = {}
+                fields = {};
                 fields["owner_id"] = $("#owner_id").val(); 
                 fields["name"] = $("#name").val(); 
                 fields["stage_name"] = $("#stage_name").val(); 
@@ -161,17 +174,18 @@
                 method: "POST",
                 data: { "fields": fields },
                 beforeSend: function () {
-                    // self.css("pointer-events", "none");
-                    // $("#" + self.attr("id") + " .fa.fa-refresh").addClass('fa-spin');
+                    self.addClass("btn-outline");
+                    self.html("<i class='fa fa-refresh fa-spin'></i>&nbsp;Updating&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>...");
                 },
                 success: function() {
-                    // self.addClass('success-btn-highlight');
-                    // self.html("✓ " + buttonTxtStr);
-                    alert("Successfully updated Salesforce " + entity_type + "!");
+                    self.addClass("btn-success");
+                    self.html("✓&nbsp;Success!&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+                    // alert("Successfully updated Salesforce " + entity_type + "!");
                 },
                 error: function(data) {
                     var res = JSON.parse(data.responseText);
-                    // self.addClass('error-btn-highlight');
+                    self.addClass('btn-danger');
+                    self.html("<strong>X</strong>&nbsp;Error&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
                     console.log("Update Salesforce" + entity_type + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
                     alert("There was an update Salesforce " + entity_type + " error, but it has been logged and our team will get right on it shortly to resolve it!");
                 },
@@ -184,8 +198,7 @@
                     },
                 },
                 complete: function() {
-                    // self.css("pointer-events", "auto");
-                    // $("#" + self.attr("id") + " .fa.fa-refresh").removeClass('fa-spin');
+                    self.removeClass("btn-outline");
                     // location.reload();
                 }
             });
