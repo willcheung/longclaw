@@ -50,7 +50,9 @@ class TrackingController < ApplicationController
     event_date = DateTime.current
     if tr && not_viewed_by_self(tr) && !within_threshold(tracking_id, event_date)
       user_agent = request.headers['user-agent']
-      host_name = Resolv.getname(request.remote_ip) rescue 'Unknown'
+      start = Time.now
+      host_name = Resolv.getname(request.remote_ip) rescue 'Unknown' # timeout 5s
+      puts "Resolving #{request.remote_ip} took #{Time.now - start} ms"
       domain = extract_domain_name(host_name)
       # if request comes from a google proxy, we can't locate the user
       location = if host_name.start_with?('google-proxy')
@@ -112,7 +114,10 @@ class TrackingController < ApplicationController
   end
 
   def location_lookup(ip)
-    Geocoder.address(ip) rescue 'Unknown'
+    start = Time.now
+    address = Geocoder.address(ip) rescue 'Unknown'
+    puts "Geocoding #{ip} took #{Time.now - start} ms"
+    address
   end
 
   def to_email_address(emails)
