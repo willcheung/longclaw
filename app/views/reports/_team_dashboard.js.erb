@@ -115,7 +115,7 @@ chart.setSize(undefined, 70 + Math.min(1150, <%= @data.size %> * 110)); //set gr
 $('.highcharts-xaxis-labels text tspan').click(function() {
     $.get("td_user_data/" + get_category_uuid($(this).text()), function (data) {
         $("#user-data").html(data);
-        renderCharts(this.y);
+        renderUserCharts(this.y);
     })
 });
 $('.highcharts-xaxis-labels text').css("cursor", "pointer");

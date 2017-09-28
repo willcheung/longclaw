@@ -69,7 +69,7 @@ chart.setSize(undefined, 50 + Math.min(1150, <%= @data.present? ? @data.size : 0
 $('.highcharts-xaxis-labels text').click(function() {
     $.get("ad_account_data/" + get_category_uuid($(this).children(0)[0].firstChild.data), function (data) {
         $("#account-data").html(data);
-        renderCharts(this.y);
+        renderProjectCharts(this.y);
     })
 });
 $('.highcharts-xaxis-labels text').css("cursor", "pointer");
