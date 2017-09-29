@@ -142,14 +142,17 @@ class ReportsController < ApplicationController
     @departments = users.pluck(:department).compact.uniq
     @titles = users.pluck(:title).compact.uniq
 
-    params[:sort] = TEAM_DASHBOARD_METRIC[:activities_last14d]
+    params[:sort] = TEAM_DASHBOARD_METRIC[:win_rate]
+    params[:metric] = TEAM_DASHBOARD_METRIC[:time_spent_last14d]
     td_sort_data
   end
 
   # for loading metrics data (left panel) on Team Dashboard
   def td_sort_data
+    # NOTE: `sort` and `sort_by` are keywords for Hash, would have used these as keys for @dashboard_data but can't due to this conflict!
+    @dashboard_data = Hashie::Mash.new(sorted_by: { type: params[:sort] }, metric: { type: params[:metric] })
     users = current_user.organization.users
-    
+
     # Incrementally apply filters
     if params[:team].present?
       if params[:team] == "none"
@@ -167,13 +170,13 @@ class ReportsController < ApplicationController
       end
     end
 
-    @sorted_data = [] and return if users.blank?  # quit early if all users are filtered out
+    return if users.blank?  # quit early if all users are filtered out
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
     projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
 
-    @sort = params[:sort]
-    @sorted_data, @sorted_data_categories = get_leaderboard_data(@sort, users, projects)
+    @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
+    @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
   end
 
   # for loading User details (right panel) on Team Dashboard
@@ -251,7 +254,7 @@ class ReportsController < ApplicationController
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
   end
 
-  def get_leaderboard_data(metric, users, projects)
+  def get_leaderboard_data(metric, users, projects, ordered_by=nil)
     data = []
     categories = nil
     case metric
@@ -334,14 +337,22 @@ class ReportsController < ApplicationController
         return [data, categories]
     end
 
-    if categories
-      data.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: user name, case-insensitive in alphabetical order
-    else  # sort by y instead
-      data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }
+    if ordered_by
+    #   use order of the data already passed in
+      data = data.index_by(&:id).values_at(*ordered_by.map(&:id))
+    else
+      if categories
+        data.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: user name, case-insensitive in alphabetical order
+      else  # sort by y instead
+        data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }
+      end
     end
 
-    puts "**************** data(#{data.present? ? data.length : 0}): #{data} \t\t ****** categories(#{categories.present? ? categories.length : 0}):  #{categories}"
     data = data.take(25)  # TODO: real left chart pagination
+    puts "**************** data(#{data.present? ? data.length : 0}) ************"
+    puts data
+    puts "************ categories(#{categories.present? ? categories.length : 0}) *************"
+    puts categories
 
     [data, categories]
   end

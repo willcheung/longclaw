@@ -6,110 +6,118 @@ while(chart.series.length > 0) {
   chart.series[0].remove();
 }
 
-<% if @sorted_data.present? %>
-  chart.xAxis[0].setCategories(<%= @sorted_data.map(&:name).to_json.html_safe %>, false);
+<% if @dashboard_data.sorted_by.data.present? %>
+  chart.xAxis[0].setCategories(<%= @dashboard_data.sorted_by.data.map(&:name).to_json.html_safe %>, false);
 
   // Add the data via series
-  <% if @sort == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
-    // chart.legend.update({enabled: true});
-
-    <% @sorted_data_categories.each.with_index do |c, i| %>
-    chart.addSeries({
-      name: "<%= c %>",
-      color: "<%= highcharts_series_color(c) %>", //set color according to category
-      <%= 'showInLegend: false,' if c.blank? %>
-      data: [ 
-      <% @sorted_data.each do |d| %>
-        <% m = d.y.find{|m| m.category == c} if d.y.present? %>  //find metric for this user
+  <% @dashboard_data.each do |key, value| %>
+    <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
+      <% value.categories.each.with_index do |c, i| %>
+      chart.addSeries({
+        name: "<%= c %>",
+        color: "<%= highcharts_series_color(c) %>", //set color according to category
+        <%= 'showInLegend: false,' if c.blank? %>
+        <%= 'yAxis: 1,' if key == 'metric' %>
+        data: [
+        <% value.data.each do |d| %>
+          <% m = d.y.find{|m| m.category == c} if d.y.present? %>  //find metric for this user
+          {
+            y: <%= (m.present? && m.num_activities.present?) ? m.num_activities : 0 %>,
+            id: "<%= d.id %>"
+          },
+        <% end if value.data.present? %>
+        ]
+      }, false);
+      <% end unless value.data.blank? %>
+    <% elsif value.type == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
+      // chart.legend.update({enabled: true});
+      <% value.categories.each do |c| %>
+      chart.addSeries({
+        name: "<%= c %>",
+        color: "<%= highcharts_series_color(c) %>",  //set color according to category
+        tooltip: {
+          pointFormatter: function() {
+            return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
+          }
+        },
+        <%= 'showInLegend: false,' if c.blank? %>
+        <%= 'yAxis: 1,' if key == 'metric' %>
+        data: [
+        <% value.data.each do |d| %>
         {
-          y: <%= (m.present? && m.num_activities.present?) ? m.num_activities : 0 %>,
+          y: <%= d.y[c] %>,
           id: "<%= d.id %>"
-        }, 
-      <% end if @sorted_data.present? %>
-      ]
-    }, false);
-    <% end unless @sorted_data_categories.blank? %>
-  <% elsif @sort == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
-    // chart.legend.update({enabled: true});
-    <% @sorted_data_categories.each do |c| %>
-    chart.addSeries({
-      name: "<%= c %>",
-      color: "<%= highcharts_series_color(c) %>",  //set color according to category
-      tooltip: {
-        pointFormatter: function() {
-          return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
+        },
+        <% end %>
+        ]
+      }, false);
+      <% end unless value.data.blank? %>
+    <% else %>
+      // chart.legend.update({enabled: false});
+      chart.addSeries({
+        name: '<%= value.type.html_safe %>',
+        color: '<%= highcharts_series_color() %>',
+        <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:win_rate] %>
+        tooltip: {
+          pointFormatter: function() {
+            return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '%</b>';
+          }
+        },
+        <% end %>
+        // showInLegend: false,
+        <%= 'yAxis: 1,' if key == 'metric' %>
+        data: [ <% value.data.each do |d| %>
+        {
+          y: <%= d.y %>,
+          id: "<%= d.id %>"
+        },
+        <% end %> ]
+      }, false);
+    <% end %>
+
+    // Set/reset the axis labels and subtitles on chart
+    <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
+      chart.yAxis[0].update({
+        stackLabels: {
+          enabled: true,
+          formatter: function () {
+            return convert_secs_to_hhmm(this.total);
+          }
         }
-      },
-      <%= 'showInLegend: false,' if c.blank? %>
-      data: [ 
-      <% @sorted_data.each do |d| %>
-      {
-        y: <%= d.y[c] %>,
-        id: "<%= d.id %>"
-      },
-      <% end %> 
-      ]
-    }, false);
-    <% end unless @sorted_data_categories.blank? %>
-  <% else %>
-    // chart.legend.update({enabled: false});
-    chart.addSeries({
-      name: '<%= @sort.html_safe %>',
-      color: '<%= highcharts_series_color() %>',
-      <% if @sort == ReportsController::TEAM_DASHBOARD_METRIC[:win_rate] %>
-      tooltip: {
-        pointFormatter: function() {
-          return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '%</b>';
+      });
+
+      chart.subtitle.update({
+        text: '(in hh:mm)'
+      });
+    <% elsif value.type == ReportsController::TEAM_DASHBOARD_METRIC[:win_rate] %>
+      chart.yAxis[0].update({
+        stackLabels: {
+          enabled: true,
+          formatter: function () {
+            return this.total + "%";
+          }
         }
-      },
-      <% end %>
-      // showInLegend: false,
-      data: [ <% @sorted_data.each do |d| %>
-      {
-        y: <%= d.y %>,
-        id: "<%= d.id %>"
-      },
-      <% end %> ]
-    }, false);
+      });
+    <% else %>
+      reset_labels_on_axis(chart.yAxis[0]);
+      reset_subtitles_on_chart(chart);
+    <% end %>
   <% end %>
 
-  // Set/reset the axis labels and subtitles on chart
-  <% if @sort == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
-    chart.yAxis[0].update({
-      stackLabels: {
-        enabled: true,
-        formatter: function () {
-          return convert_secs_to_hhmm(this.total);
-        }
-      }
-    });
-
-    chart.subtitle.update({
-      text: '(in hh:mm)'
-    });
-  <% elsif @sort == ReportsController::TEAM_DASHBOARD_METRIC[:win_rate] %>
-    chart.yAxis[0].update({
-      stackLabels: {
-        enabled: true,
-        formatter: function () {
-          return this.total + "%";
-        }
-      }
-    });
-  <% else %>
-    reset_labels_on_axis(chart.yAxis[0]);
-    reset_subtitles_on_chart(chart);
-  <% end %>
-
-<% else %> // if @sorted_data not present
+<% else %> // if @dashboard_data.sorted_by.data not present
   // reset_labels_on_axis(chart.yAxis[0]);
   reset_subtitles_on_chart(chart);
 <% end %>
 
 //console.log("datamax=" + chart.yAxis[0].dataMax);
-chart.setSize(undefined, 70 + Math.min(1150, <%= @sorted_data.size %> * 110)); //set graph height
+chart.setSize(undefined, 70 + Math.min(1150, <%= @dashboard_data.sorted_by.data.size %> * 110)); //set graph height
 
-// <% @sorted_data.each do |d| %>console.log("<%= d.name.html_safe %>: <%= d %>");<% end %>
+<% @dashboard_data.each do |k,v| %>
+  console.log("<%= k %>");
+  <% v.data.each do |d| %>
+    console.log("<%= d.name.html_safe %>: <%= d %>");
+  <% end %>
+<% end %>
 
 // handle clicking on user label
 $('.highcharts-xaxis-labels text tspan').click(function() {
@@ -121,11 +129,11 @@ $('.highcharts-xaxis-labels text tspan').click(function() {
 $('.highcharts-xaxis-labels text').css("cursor", "pointer");
 
 function get_category_uuid (catname) {
-  <% if @sorted_data.blank? %>
+  <% if @dashboard_data.sorted_by.data.blank? %>
     return "";
   <% else %>
     var map = {
-    <% @sorted_data.each do |d| %>
+    <% @dashboard_data.sorted_by.data.each do |d| %>
       "<%= d.name.html_safe %>": "<%= d.id %>",
     <% end %>
     };

@@ -95,7 +95,7 @@
 
     $(function () {
 
-        $('#sort-type, #team-filter, #title-filter, #close-date-filter').change( function () {
+        $('#sort-type, #metric-type, #team-filter, #title-filter, #close-date-filter').change( function () {
             // Clear Opportunity data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the rep.</h3></div>");
 
@@ -110,7 +110,7 @@
             if ($('#close-date-filter').val()) {
               params.close_date = $('#close-date-filter').val();
             }
-            var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
+            var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "/" + encodeURIComponent($('#metric-type').val()) + "?" + $.param(params);
             $.getScript(url)
         });
 
