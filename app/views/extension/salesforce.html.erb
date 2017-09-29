@@ -50,6 +50,10 @@
     .button-td{
         padding: 2.5em 0;
     }
+    .btn.btn-primary:disabled {
+        opacity: .65;
+        color: white;
+    }
 </style>
 
 <body>
@@ -74,19 +78,34 @@
                 <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
             <% end %>
             <% if @salesforce_user.present? %>
-            <div>
-                <%= render 'salesforce/account_form' if @salesforce_account.present? %>
-                <%= render 'salesforce/opportunity_form' if @salesforce_opportunity.present? %>
-
-                <%= render 'salesforce/link_account_form' if @salesforce_account.blank? %>
-                <%= render 'salesforce/link_opportunity_form' if @salesforce_opportunity.blank? %>
-            </div>
+                <% if @salesforce_account.present? %>
+                    <%= render 'salesforce/account_form' %>
+                    <% if @salesforce_base_URL.present? %>
+                        <div class="container" style="padding-bottom: 2em">
+                            <a href="<%= @salesforce_base_URL + "/" + @salesforce_account.salesforce_account_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit account in Salesforce</a>
+                        </div>
+                    <% end %>
+                <% else %>
+                    <%= render 'salesforce/link_account_form' %>
+                <% end %>
+                <% if @salesforce_opportunity.present? %>
+                    <%= render 'salesforce/opportunity_form' %>
+                    <% if @salesforce_base_URL.present? %>
+                        <div class="container" style="padding-bottom: 2em">
+                            <a href="<%= @salesforce_base_URL + "/" + @salesforce_opportunity.salesforce_opportunity_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit opportunity in Salesforce</a>
+                        </div>
+                    <% end %>
+                <% else %>
+                    <%= render 'salesforce/link_opportunity_form' %>
+                <% end %>
             <% end %>
         </div>
     </div>
 </body>
 
 <script type="text/javascript">
+    var update_sfdc_button_html = "Update&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>";
+
     var popupWindowRef = null;
     var openSignInPopup = function (strUrl, strTarget) {
         var strOptions = "width=700,height=700";
@@ -104,4 +123,87 @@
             popupWindowRef.focus();
         }
     };
+
+    function changedValue(entity_type) {
+        if (!entity_type) 
+            return;  // is undefined (e.g., on tab)
+
+        if (entity_type == "account" ) {
+            btn = $("#update_account")
+        } else if (entity_type == "opportunity" ) {
+            btn = $("#update_opportunity")
+        } else {
+            return;
+        }
+
+        btn.prop("disabled", null);
+        btn.removeClass('btn-danger btn-success');
+        btn.html(update_sfdc_button_html);
+    }
+
+    $(document).ready(function(){
+        $(".update_salesforce").click(function() {
+            var self = $(this);
+            if (self.attr("id") == "update_account" ) {
+                entity_type = "account";
+                entity_id = $("#sfa_id").val();
+                fields = {
+                    salesforce_account_name: $("#salesforce_account_name").val()
+                };
+            } else if (self.attr("id") == "update_opportunity" ) {
+                entity_type = "opportunity";
+                entity_id = $("#sfo_id").val();
+                fields = {
+                    owner_id:    $("#owner_id").val(),
+                    name:        $("#name").val(),
+                    stage_name:  $("#stage_name").val(), 
+                    close_date:  $("#close_date").val(), 
+                    probability: $("#probability").val(), 
+                    amount:      $("#amount").val(), 
+                    forecast_category_name: $("#forecast_category_name").val()
+                //  expected_revenue: $("#expected_revenue").val(), 
+                };
+            }
+            else {
+                return;
+            }
+            // fields = $.param(fields));
+
+            self.prop("disabled", "disable");
+
+            $.ajax('/salesforce/update_all/'+entity_type+"/"+entity_id, {
+                async: true,
+                method: "POST",
+                data: { "fields": fields },
+                beforeSend: function () {
+                    self.addClass("btn-outline");
+                    self.html("<i class='fa fa-refresh fa-spin'></i>&nbsp;Updating&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>...");
+                },
+                success: function() {
+                    self.addClass("btn-success");
+                    self.html("✓&nbsp;Success!&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+                    // alert("Successfully updated Salesforce " + entity_type + "!");
+                },
+                error: function(data) {
+                    var res = JSON.parse(data.responseText);
+                    self.addClass('btn-danger');
+                    self.html("<strong>X</strong>&nbsp;Error&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+                    console.log("Update Salesforce" + entity_type + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                    alert("There was an update Salesforce " + entity_type + " error, but it has been logged and our team will get right on it shortly to resolve it!");
+                },
+                statusCode: {
+                    500: function() {
+                        // self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                    },
+                    503: function() {
+                        // self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                    },
+                },
+                complete: function() {
+                    self.removeClass("btn-outline");
+                    // location.reload();
+                }
+            });
+        });
+    });
 </script>

@@ -48,11 +48,11 @@ class ContactsController < ApplicationController
         # format.html { redirect_to @contact, notice: 'Contact was successfully updated.' }
         format.html { redirect_to :back, notice: 'Contact was successfully updated.' }
         format.json { respond_with_bip(@contact) }
-        # format.js { render action: 'show', status: :created, location: @contact }
+        format.js
       else
         format.html { render action: 'edit' }
         format.json { respond_with_bip(@contact) }
-        # format.js { render json: @contact.errors, status: :unprocessable_entity }
+        format.js { render json: @contact.errors, status: :unprocessable_entity }
       end
     end
   end

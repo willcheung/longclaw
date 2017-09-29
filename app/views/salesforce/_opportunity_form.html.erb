@@ -3,25 +3,26 @@
         <div class="entity-title" style="padding: 0"><br/>Salesforce Opportunity</div>
     </div>
     <table>
-        <tr><td><label for="opp_id">Id</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.salesforce_opportunity_id %>" id="opp_id" class="disabledinput"></td></tr>
-        <tr><td><label for="opp_owner_id">Owner Id</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.owner_id %>" id="opp_owner_id" class="disabledinput"></td></tr>
-        <tr><td><label for="opp_name">Name</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.name %>" id="opp_name"></td></tr>
-        <tr><td><label for="opp_stage">Stage</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.stage_name %>" id="opp_stage"></td></tr>
-        <tr><td><label for="opp_close_date">Close Date</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.close_date %>" id="opp_close_date"></td></tr>
-        <tr><td><label for="opp_probability">Probability</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.probability %>" id="opp_probability"></td></tr>
-        <tr><td><label for="opp_expected_revenue">Expected revenue</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.expected_revenue %>" id="opp_expected_revenue"></td></tr>
-        <tr><td><label for="opp_amount">Amount</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.amount %>" id="opp_amount"></td></tr>
-        <tr><td><label for="opp_forecast_category">Forecast category</label></td></tr>
-        <tr><td><input type="text" value="<%= @salesforce_opportunity.forecast_category_name %>" id="opp_forecast_category"></td></tr>
+        <tr><td><input type="hidden" id="sfo_id" value="<%= @salesforce_opportunity.id %>"></td></tr>
+        <tr><td><label for="salesforce_opportunity_id">Id</label></td></tr>
+        <tr><td><input type="text" id="salesforce_opportunity_id" class="disabledinput" value="<%= @salesforce_opportunity.salesforce_opportunity_id %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <tr><td><label for="owner_id">Owner Id</label></td></tr>
+        <tr><td><input type="text" id="owner_id" class="disabledinput" value="<%= @salesforce_opportunity.owner_id %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <tr><td><label for="name">Name *</label></td></tr>
+        <tr><td><input type="text" id="name" value="<%= @salesforce_opportunity.name %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <tr><td><label for="stage_name">Stage</label></td></tr>
+        <tr><td><input type="text" id="stage_name" class="disabledinput" value="<%= @salesforce_opportunity.stage_name %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <tr><td><label for="close_date">Close Date (mm/dd/yyyy)</label></td></tr>
+        <tr><td><input type="text" id="close_date" value="<%= @salesforce_opportunity.close_date %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <tr><td><label for="probability">Probability</label></td></tr>
+        <tr><td><input type="text" id="probability" value="<%= @salesforce_opportunity.probability %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <!-- <tr><td><label for="expected_revenue">Expected revenue</label></td></tr>
+        <tr><td><input type="text" id="expected_revenue" value="<%= @salesforce_opportunity.expected_revenue %>" onkeyup="changedValue('opportunity')"></td></tr> -->
+        <tr><td><label for="amount">Amount</label></td></tr>
+        <tr><td><input type="text" id="amount" value="<%= @salesforce_opportunity.amount %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <tr><td><label for="forecast_category_name">Forecast category</label></td></tr>
+        <tr><td><input type="text" id="forecast_category_name" class="disabledinput" value="<%= @salesforce_opportunity.forecast_category_name %>" onkeyup="changedValue('opportunity')"></td></tr>
         
-        <tr><td class="button-td"><button class="btn btn-primary btn-sm" disabled="disable">Update Salesforce</button></td></tr>
+        <tr><td class="button-td"><button id="update_opportunity" class="btn btn-primary btn-sm update_salesforce" disabled="disable">Update&nbsp;<img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:30px;"/></button></td></tr>
     </table>
 </div>

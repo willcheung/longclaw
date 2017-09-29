@@ -259,7 +259,7 @@ module ApplicationHelper
     elsif name.include?(' ')
       s = name.split(' ').first[0,1] + name.split(' ').last[0,1] 
     else
-      s = name[0,2]
+      s = name[0,1]
     end
 
     return ('<div class="rounded-initials ' + css_class + '" title="' + name + '" style="background:' + User::PROFILE_COLOR[(name.length)%9] + '">' + s + '</div>').html_safe

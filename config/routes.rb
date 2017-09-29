@@ -13,7 +13,7 @@ Longclaw::Application.routes.draw do
 
     resources :accounts
     post "/account_bulk" => 'accounts#bulk'
-    get "/update_salesforce" => 'accounts#set_salesforce_account'
+    # get "/update_salesforce" => 'accounts#set_salesforce_account'
 
     resources :contacts, only: [:create, :update, :destroy]
     resources :projects do
@@ -56,6 +56,10 @@ Longclaw::Application.routes.draw do
     # post "/salesforce_fields_refresh" => 'salesforce#refresh_fields'
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
+    post "/salesforce/update_all/:entity_type/:id" => 'salesforce#update_all_salesforce'
+
+    # resources :salesforce_accounts, only: [:index, :update, :destroy]
+    # resources :salesforce_opportunities, only: [:index, :update, :destroy]
 
     resources :basecamp, only: [:index]
     get "basecamp_controller/index"
