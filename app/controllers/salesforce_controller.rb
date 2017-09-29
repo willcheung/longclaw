@@ -393,7 +393,7 @@ class SalesforceController < ApplicationController
     when "account"
       method_name = "update_all_salesforce#account()"
 
-      salesforce_account = SalesforceAccount.find_by(params[:id])
+      salesforce_account = SalesforceAccount.find_by(id: params[:id])
       if salesforce_account.blank?
         detail = "Invalid SalesforceAccount id. Cannot find SalesforceAccount with id=#{params[:id]} "
         puts "****SFDC**** Salesforce error calling SalesforceAccount.find() in #{method_name}. Detail: #{detail}"
@@ -418,7 +418,7 @@ class SalesforceController < ApplicationController
     when "opportunity"
       method_name = "update_all_salesforce#opportunity()"
 
-      salesforce_opportunity = SalesforceOpportunity.find_by(params[:id])
+      salesforce_opportunity = SalesforceOpportunity.find_by(id: params[:id])
       if salesforce_opportunity.blank?
         detail = "Invalid SalesforceOpportunity id. Cannot find SalesforceOpportunity with id=#{params[:id]} "
         puts "****SFDC**** Salesforce error calling SalesforceOpportunity.find() in #{method_name}. Detail: #{detail}"
