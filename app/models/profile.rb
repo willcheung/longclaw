@@ -18,7 +18,11 @@ class Profile < ActiveRecord::Base
   SOCIAL_TYPE = { Linkedin: 'LinkedIn', Twitter: 'Twitter', Facebook: 'Facebook' }
 
   def self.find_by_email(email)
-    where_by_email(email).first
+    begin
+      where_by_email(email).first
+    rescue => e
+      puts "**** Error while running Profile.find_by_email(#{email}):\nException: #{e.to_s}\n****
+    end
   end
 
   ### finds or creates a Profile and tries to populate it with data from FullContact
