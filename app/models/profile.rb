@@ -21,7 +21,7 @@ class Profile < ActiveRecord::Base
     begin
       where_by_email(email).first
     rescue => e
-      puts "**** Error while running Profile.find_by_email(#{email}):\nException: #{e.to_s}\n****
+      puts "**** Error while running Profile.find_by_email(#{email}):\nException: #{e.to_s}\n****"
     end
   end
 
