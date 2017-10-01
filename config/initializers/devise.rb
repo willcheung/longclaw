@@ -249,7 +249,8 @@ Devise.setup do |config|
             'https://www.googleapis.com/auth/plus.me',
             'email',
             'profile'],
-    skip_jwt: true
+    skip_jwt: true,
+    include_granted_scopes: true
   }
 
   google_oauth2_basic_options = {
@@ -257,7 +258,8 @@ Devise.setup do |config|
     prompt: "consent",
     scope: ['profile',
             'email'],
-    skip_jwt: true
+    skip_jwt: true,
+    include_granted_scopes: true
   }
   # Devise.setup do |config|
   config.omniauth :google_oauth2_basic, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_basic_options

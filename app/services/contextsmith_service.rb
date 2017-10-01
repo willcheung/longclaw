@@ -102,7 +102,15 @@ class ContextsmithService
       res = Net::HTTP.start(uri.host, uri.port 
         #, use_ssl: uri.scheme == "https"
         ) { |http| http.request(req) }
-      data = JSON.parse(res.body.to_s)
+      case res
+        when Net::HTTPSuccess
+          data = JSON.parse(res.body.to_s)
+        when Net::HTTPServerError
+          data = nil
+          puts "Server error #{response.message}"
+        else
+          data = nil
+      end
     rescue => e
       puts "ERROR: Something went wrong: " + e.message
       puts e.backtrace.join("\n")

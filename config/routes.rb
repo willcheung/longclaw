@@ -2,7 +2,7 @@ Longclaw::Application.routes.draw do
   unauthenticated do
     get "extension" => "extension#new"
     get "extension/account" => "extension#new"
-    resources :plans
+    # resources :plans
   end
 
   devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
@@ -36,6 +36,8 @@ Longclaw::Application.routes.draw do
     resources :project_members
     resources :users
     get 'user/me' => 'users#me'
+    get 'plans/upgrade' => 'plans#upgrade'
+    resources :plans
 
     resources :notifications, only: [:index, :update, :create] do
       member do
@@ -98,7 +100,7 @@ Longclaw::Application.routes.draw do
     end
     
     resources :organizations
-    resources :plans
+
 
     scope "search", controller: :search, as: 'search' do
       # get "results"
@@ -147,7 +149,6 @@ Longclaw::Application.routes.draw do
       post 'seen'
     end
 
-    resources :plans
     resources :entity_fields_metadatum, controller: 'entity_fields_metadata', only: [:create, :update, :destroy] #for /settings/salesforce_fields/standard
     resources :custom_fields, only: [:update]
     resources :custom_fields_metadatum, only: [:create, :update, :destroy]  #for /settings/custom_fields

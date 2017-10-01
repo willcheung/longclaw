@@ -1,30 +1,308 @@
-<div class="jumbtron">
-  <div class="plan">
-    <h2>ContextSmith Pro</h2>
-    <p>Automatically synchronize Salesforce contacts.</p>
+<style>
+  table.plan th {
+    text-align:center;
+  }
 
-  </div>
+  table.plan td {
+    text-align: center;
+  }
 
-<%= form_tag plans_path do %>
-  <article>
-    <% if flash[:error].present? %>
-      <div id="error_explanation">
+  table.plan tr td.header {
+    text-align: left;
+    font-weight: bold;
+  }
+
+  table.plan tr td.subheader {
+    text-align: left;
+    padding-left: 25px;
+  }
+
+  div.plan-action {
+    vertical-align: bottom;
+  }
+
+    .btn-default.btn-on.active{background-color: #5BB75B;color: white;}
+ .btn-default.btn-off.active{background-color: #5BB75B;color: white;}
+
+  table th h1 {
+    font-size: 40px;
+  }
+
+</style>
+
+<div class="container center-block">
+  <% if flash[:error].present? %>
+      <div class="well" id="error_explanation">
         <p><%= flash[:error] %></p>
       </div>
-    <% end %>
-    <label class="amount">
-      <span>$35/month - billed annually - 15 day trial - cancel anytime</span>
-    </label>
-  </article>
+  <% end %>
+  <%= form_tag plans_path, :id => 'upgrade' do %>
+      <input type="hidden" name="plan" id="plan" value="">
+      <input type="hidden" name="stripeToken" id="stripeToken">
+  <% end %>
+  <div class="container">
+	<div class="row">
+	<table class="plan table table-hover table-bordered table-striped text-center">
+    <thead>
+    <tr>
+      <th colspan="6">
+        <h2>Features</h2>
+      </th>
 
-  <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-          data-key="<%= Rails.configuration.stripe[:publishable_key] %>"
-          data-label="Subscribe"
-          data-panel-label="Pay {amount} after 15 days"
-          data-description="ContextSmith Pro"
-          data-amount="42000"
-          data-zip-code="true"
-          data-email="<%= current_user.email if current_user %>"
-          data-locale="auto"></script>
-<% end %>
+      <th colspan="2">
+        <h2>Basic</h2>
+
+        <div class="" >
+          <div style="height: 30px;"></div>
+          <!--<div class="btn-group" id="status" data-toggle="buttons">
+            <label class="btn btn-default btn-on btn-sm active basic-yearly">
+              <input type="radio" value="1" name="basic-v1" checked="checked">Yearly</label>
+            <label class="btn btn-default btn-off btn-sm basic-monthly">
+              <input type="radio" value="0" name="pro-monthly-v1">Monthly</label>
+          </div> -->
+          <div><h1 class="basic-price">Free</h1></div>
+        </div>
+        <p class="muted"><h3>14 days free trial</h3><br>
+        </p>
+
+        <div class="plan-action">
+          <a class="btn btn-primary btn-block btn-large" disabled href=
+              "#"><%= (current_user.pro? || current_user.biz?) ? 'Included' : 'Your current plan' %></a>
+        </div>
+      </th>
+
+      <th colspan="2">
+        <h2>Pro</h2>
+
+        <div class="">
+          <div class="btn-group" id="status" data-toggle="buttons">
+            <label class="btn btn-default btn-on btn-sm active pro-yearly">
+              <input type="radio" value="1" name="pro-v1" checked="checked">Yearly</label>
+            <label class="btn btn-default btn-off btn-sm pro-monthly">
+              <input type="radio" value="0" name="pro-monthly-v1">Monthly</label>
+          </div>
+          <div><h1 class="pro-price">$35/mo</h1></div>
+        </div>
+
+        <p class="muted"><h3>14 days free trial</h3><br>
+        </p>
+
+        <div class="plan-action">
+          <% if current_user.pro? %>
+          <a class="btn btn-primary btn-block btn-large" disabled href="#">Thanks for upgrading!</a>
+              <% else %>
+              <a class="btn btn-primary btn-block btn-large upgrade pro-upgrade" data-amount=42000 data-plan="pro-v1" href=
+                  "#">Upgrade Now</a>
+          <% end %>
+        </div>
+
+      </th>
+
+      <th colspan="2">
+        <h2>Business</h2>
+
+        <div class="">
+          <div class="btn-group" id="status" data-toggle="buttons">
+            <label class="btn btn-default btn-on btn-sm active biz-yearly">
+              <input type="radio" value="1" name="pro-v1" checked="checked">Yearly</label>
+            <label class="btn btn-default btn-off btn-sm biz-monthly">
+              <input type="radio" value="0" name="biz-monthly-v1">Monthly</label>
+          </div>
+          <div><h1 class="biz-price">$85/mo</h1></div>
+        </div>
+
+         <p class="muted"><h3>14 days free trial</h3><br>
+        </p>
+        <div class="plan-action">
+          <% if current_user.biz? %>
+          <a class="btn btn-primary btn-block btn-large" disabled href="#">Thanks for upgrading!</a>
+              <% else %>
+          <a class="btn btn-primary btn-block btn-large upgrade biz-upgrade" data-amount=102000 data-plan="biz-v1" href=
+              "#">Upgrade Now</a>
+          <% end %>
+        </div>
+      </th>
+    </tr>
+        </thead>
+
+        <tbody>
+            <tr><td colspan="6" class="header">Google Mail Integration</td></tr>
+            <tr>
+              <td colspan="6" class="subheader">Email Tracking</td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="subheader">Profiles</td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr><td colspan="6" class="header">Salesforce Integration</td></tr>
+            <tr>
+              <td colspan="6" class="subheader">Update Salesforce from Gmail</td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="subheader">Sync Contacts</td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="subheader">Sync Emails</td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="subheader">Sync Meetings</td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="subheader">Advanced Salesforce Integration</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="header">Exchange Online and Office365 Integration</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr><td colspan="6" class="header">Account Management</td></tr>
+             <tr>
+              <td colspan="6" class="subheader">Maximum Users</td>
+              <td colspan="2">Individual</td>
+              <td colspan="2">Individual</td>
+              <td colspan="2">10</td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="subheader">Shared Account Management</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="subheader">Account Relationship Graph</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="subheader">Sentiment Analysis</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="subheader">Team Scoreboard</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="subheader">Account Dashboard</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+         <tr>
+              <td colspan="6" class="subheader">Intelligent Forecasting</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="subheader">Smart Alerts</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="header">Priority Support</td>
+              <td colspan="2"></td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+        </tbody>
+  </table>
+  </div>
+  </div>
+
 </div>
+<script src="https://checkout.stripe.com/checkout.js"></script>
+<script>
+    $.fn.extend({
+        animateCss: function (animationName) {
+            var animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend';
+            this.addClass('animated ' + animationName).one(animationEnd, function() {
+                $(this).removeClass('animated ' + animationName);
+            });
+            return this;
+        }
+    });
+    function togglePrice(target, priceTarget, priceAction, price, amount, planID) {
+        $(target).click(function(evt) {
+            $(priceTarget).text('$' + price + '/mo').animateCss('fadeInUp');
+            $(priceAction).attr({'data-amount': amount, 'data-plan': planID});
+            return true;
+        });
+    }
+
+    togglePrice('.pro-yearly', '.pro-price', '.pro-upgrade', 35, 42000, 'pro-v1');
+    togglePrice('.pro-monthly', '.pro-price', '.pro-upgrade', 39, 3900, 'pro-monthly-v1');
+    togglePrice('.biz-yearly', '.biz-price', '.biz-upgrade', 85, 102000, 'biz-v1');
+    togglePrice('.biz-monthly', '.biz-price', '.biz-upgrade', 89, 8900, 'biz-monthly-v1');
+    //$('.stripe-button-el span').attr('style', null);
+    //$('.stripe-button-el').removeClass('stripe-button-el').addClass('btn btn-primary btn-block btn-large')
+
+    var handler = StripeCheckout.configure({
+        key: '<%= Rails.configuration.stripe[:publishable_key] %>',
+        email: '<%= current_user.email if current_user %>',
+        allowRememberMe: false,
+        zipCode: true,
+        locale: 'auto',
+        name: 'ContextSmith',
+        description: 'Secured by Stripe',
+        panelLabel: 'Pay {amount} after 14 days',
+
+        token: function(token) {
+            $('input#stripeToken').val(token.id);
+            $('form#upgrade').submit();
+        }
+    });
+
+    $('.upgrade').click(function(evt) {
+        evt.preventDefault();
+        $('input#plan').val(evt.target.dataset.plan);
+        handler.open({
+            amount: +evt.target.dataset.amount
+        });
+    });
+
+    // Close Checkout on page navigation
+    $(window).on('popstate', function() {
+        handler.close();
+    });
+
+
+</script>

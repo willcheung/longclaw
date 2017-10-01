@@ -5,7 +5,7 @@
             <!-- <h2>Salesforce</h2> -->
                 <img src="/assets/images/salesforce.png" style="height:75px;"/>
                 <div style="margin: 1.5em 0">
-                <% if current_user.superadmin? %>
+                <% if current_user.pro? %>
                     <% if @salesforce_user.nil? %>
                         <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a><br/>
                     <% else %>
@@ -14,7 +14,11 @@
                             <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect!</a></span></div>
                     <% end %>
                 <% else %>
-                    <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
+                    <h2 style="margin: 1em">
+                      <%= link_to  '/plans/new',  class: 'btn btn-default btn-lg btn-outline', target: "_blank" do %>
+                          <i class="fa fa-star"></i> Upgrade
+                      <% end %><br>
+                      your plan to activate Salesforce!</h2>
                 <% end %>
                 </div>
             </div>

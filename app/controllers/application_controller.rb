@@ -24,7 +24,7 @@ class ApplicationController < ActionController::Base
       location = stored_location[1..9] if stored_location.present?
 
       # check if sign in from extension, multiple redundancies to make sure extension users stay in extension
-      if auth_params['extension'] == 'true' || origin == 'extension' || location == 'extension'
+      if auth_params['extension'] == 'true' || origin == 'extension' || (location && location.start_with?('extension','plans'))
         if resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
           onboarding_extension_tutorial_path
         else
