@@ -30,7 +30,6 @@ while(chart.series.length > 0) {
       }, false);
       <% end unless value.data.blank? %>
     <% elsif value.type == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
-      // chart.legend.update({enabled: true});
       <% value.categories.each do |c| %>
       chart.addSeries({
         name: "<%= c %>",
@@ -53,10 +52,9 @@ while(chart.series.length > 0) {
       }, false);
       <% end unless value.data.blank? %>
     <% else %>
-      // chart.legend.update({enabled: false});
       chart.addSeries({
         name: '<%= value.type.html_safe %>',
-        color: '<%= highcharts_series_color() %>',
+        color: '<%= highcharts_series_color(key) %>',
         <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:win_rate] %>
         tooltip: {
           pointFormatter: function() {
@@ -64,8 +62,16 @@ while(chart.series.length > 0) {
           }
         },
         <% end %>
-        // showInLegend: false,
         <%= 'yAxis: 1,' if key == 'metric' %>
+        dataLabels: {
+        <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:win_rate] %>
+          format: '{y}%',
+        <% end %>
+          enabled: true,
+          style: {
+            color: (Highcharts.theme && Highcharts.theme.textColor) || 'white'
+          }
+        },
         data: [ <% value.data.each do |d| %>
         {
           y: <%= d.y %>,
@@ -73,35 +79,54 @@ while(chart.series.length > 0) {
         },
         <% end %> ]
       }, false);
+
     <% end %>
 
-    // Set/reset the axis labels and subtitles on chart
-    <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
-      chart.yAxis[0].update({
-        stackLabels: {
-          enabled: true,
-          formatter: function () {
-            return convert_secs_to_hhmm(this.total);
+      var axis = chart.yAxis[<%= key == 'metric' ? 1 : 0 %>]
+      //console.log('<%= value.type %>')
+      // Set/reset the axis labels and subtitles on chart
+      <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
+        axis.update({
+          stackLabels: {
+            enabled: true,
+            align: 'center',
+            x: <%= key == 'metric' ? '365' : '-10' %>,
+            style: {
+              color: (Highcharts.theme && Highcharts.theme.textColor) || 'white'
+            },
+            formatter: function () {
+              return convert_secs_to_hhmm(this.total);
+            }
           }
-        }
-      });
+        });
 
-      chart.subtitle.update({
-        text: '(in hh:mm)'
-      });
-    <% elsif value.type == ReportsController::TEAM_DASHBOARD_METRIC[:win_rate] %>
-      chart.yAxis[0].update({
-        stackLabels: {
-          enabled: true,
-          formatter: function () {
-            return this.total + "%";
+        chart.subtitle.update({
+          text: '(in hh:mm)'
+        });
+      <% elsif value.type == ReportsController::TEAM_DASHBOARD_METRIC[:activities_last14d] %>
+        axis.update({
+          stackLabels: {
+            enabled: true,
+            align: 'center',
+            x: <%= key == 'metric' ? '365' : '-10' %>,
+            style: {
+                  color: (Highcharts.theme && Highcharts.theme.textColor) || 'white'
+            },
+            formatter: function () {
+              return this.total;
+            }
           }
-        }
-      });
-    <% else %>
-      reset_labels_on_axis(chart.yAxis[0]);
-      reset_subtitles_on_chart(chart);
-    <% end %>
+        });
+      <% else %>
+        axis.update({
+          stackLabels: {
+            enabled: false
+          }
+        });
+//        reset_labels_on_axis(axis);
+        reset_subtitles_on_chart(chart);
+      <% end %><!-- if value.type == ?? -->
+
   <% end %>
 
 <% else %> // if @dashboard_data.sorted_by.data not present
@@ -112,12 +137,13 @@ while(chart.series.length > 0) {
 //console.log("datamax=" + chart.yAxis[0].dataMax);
 chart.setSize(undefined, 70 + Math.min(1150, <%= @dashboard_data.sorted_by.data.size %> * 110)); //set graph height
 
-<% @dashboard_data.each do |k,v| %>
-  console.log("<%= k %>");
-  <% v.data.each do |d| %>
-    console.log("<%= d.name.html_safe %>: <%= d %>");
-  <% end %>
-<% end %>
+<!--<% @dashboard_data.each do |k,v| %>-->
+//  console.log("<%= k %>");
+//  console.log('<%= v.type %>')
+////  < % v.data.each do |d| %>
+////    console.log("< %= d.name.html_safe %>: < %= d %>");
+////  < % end %>
+<!--<% end %>-->
 
 // handle clicking on user label
 $('.highcharts-xaxis-labels text tspan').click(function() {
