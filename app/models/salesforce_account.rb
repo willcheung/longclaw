@@ -162,7 +162,7 @@ class SalesforceAccount < ActiveRecord::Base
 
       # Update Salesforce
       # Put the fields and values to be updated into a hash object.
-      sObject_meta = { id: salesforce_account.salesforce_account_id, type: "account" }
+      sObject_meta = { id: salesforce_account.salesforce_account_id, type: "Account" }
       sObject_fields = { name: fields[:salesforce_account_name] }
       update_result = SalesforceService.update_salesforce(client: client, update_type: "account", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 

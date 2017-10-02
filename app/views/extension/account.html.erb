@@ -1,12 +1,4 @@
 <style type="text/css">
-    body {
-        color: #999;
-        font-size: 11px;
-    }
-    extrastrong {
-        font-weight: bold;
-        color: black;
-    }
     .titleinfo-group:hover {
         background-color: #EEE;
     }
@@ -177,6 +169,7 @@
             window.open($(this).attr("url")); 
             return false; //don't expand/collapse section
         });
+
         $(".edit-contact-link").click(function(){
             // var parent_a = $("#" + $(this).attr("sectionid") + " a");
             // console.log("parent_a.class (before) = " + parent_a.attr("class"));
@@ -192,7 +185,79 @@
             // window.location($(this).attr("href"));
             // // return false; //don't expand/collapse section
         });
+
+        $(".update_salesforce").click(function() {
+            var self = $(this);
+            var this_form = $("#"+self.attr("modal_id"));
+            var button_text = self.attr("button_text");
+            var entity_type = "contact";
+            var entity_id = this_form.find("#contact_id")[0].value || "0";
+            fields = {
+                first_name: this_form.find("#contact_first_name")[0].value,
+                last_name:  this_form.find("#contact_last_name")[0].value,
+                title:      this_form.find("#contact_title")[0].value,
+                department: this_form.find("#contact_department")[0].value,
+                email:      this_form.find("#contact_email")[0].value,
+                phone:      this_form.find("#contact_phone")[0].value,
+                account_id: this_form.find("#contact_account_id")[0].value,
+                source:     this_form.find("#contact_source")[0].value,
+                external_source_id:  this_form.find("#contact_external_source_id")[0].value 
+            };
+
+            // fields = $.param(fields));
+
+            $.ajax('/salesforce/update_all/'+entity_type+"/"+entity_id, {
+                async: true,
+                method: "POST",
+                data: { "fields": fields },
+                beforeSend: function () {
+                    $(".help-block").html(""); //clear errors
+                    self.prop("disabled", "disable");
+                    self.html("<i class='fa fa-refresh fa-spin'></i>&nbsp;" + button_text.substring(0, button_text.length-1) + "ing&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>...");
+                },
+                success: function() {
+                    self.addClass("btn-success");
+                    self.html("✓&nbsp;Success!&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+                    alert("Successfully " + button_text.toLowerCase() + "ed " + entity_type + "!");
+                    location.reload();  // reload page
+                    return false; // don't take the default action (create/update CS Contact),  because this was already done in AJAX request
+                },
+                error: function(data) {
+                    var res = JSON.parse(data.responseText);
+                    self.addClass('btn-danger');
+                    self.html("<strong>X</strong>&nbsp;Error&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+                    $(".help-block").html(res.error.substring(0,120));  //display errors, length truncated 
+                    console.log(button_text + " " + entity_type + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                    alert("There was a(n) " + button_text.toLowerCase() + " " + entity_type + " error, but it has been logged and our team will get right on it shortly to resolve it!");
+                    return false; // error updating contact -- stay on form
+                },
+                statusCode: {
+                    500: function() {
+                        // self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                    },
+                    503: function() {
+                        // self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                    },
+                },
+                complete: function() {
+                    // self.prop("disabled", null);
+                }
+            });
+        });
     });
+
+    function changedValue(modal_id) {
+        var self = $(this);
+        if (!modal_id) 
+            return;  // is undefined (e.g., on tab)
+        var this_form = $("#"+modal_id);
+        var btn = this_form.find("button.update_salesforce");
+        var button_text = btn.attr("button_text");
+
+        btn.prop("disabled", null);
+        btn.removeClass('btn-danger btn-success');
+        btn.html(button_text + "&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+    }
 
     function sendShowMessage(email_id) {
         parent.parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
@@ -240,7 +305,7 @@
                                                             <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
                                                         <% else %>
-                                                            <% newcontact = Contact.new(account: @account, last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email.downcase, phone: profile.phone) %>
+                                                            <% newcontact = Contact.new(account: @account, last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email.downcase, phone: profile.phone, account_id: (@account.present? ? @account.id : nil)) %>
                                                             <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_new_contact_modal', modal_id: 'extension_new_contact_modal-'+profile.id.to_s, contact: newcontact %>
                                                         <% end %>
