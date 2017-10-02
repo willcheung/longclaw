@@ -952,7 +952,7 @@ class User < ActiveRecord::Base
   end
 
   def superadmin?
-    %w(wcheung@contextsmith.com will@context-smith.com beders@contextsmith.com klu@contextsmith.com vluong@contextsmith.com syong@contextsmith.com chobbs@contextsmith.com craig@context-smith.com churst@contextsmith.com).include?(self.email)
+    ENV['super_admins'].split(' ').include?(self.email)
   end
 
   ######### End Basic ACL ##########
