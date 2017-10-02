@@ -48,6 +48,8 @@ module ApplicationHelper
       '#ed5565'
     when Activity::CATEGORY[:Basecamp2]
       '#91e8e1'
+    when 'metric'
+      '#434348'
     else
       CONTEXTSMITH_BLUE
     end

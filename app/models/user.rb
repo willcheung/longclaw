@@ -789,7 +789,7 @@ class User < ActiveRecord::Base
         AND project_id IN ('#{array_of_project_ids.join("','")}')
         AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
       )
-      SELECT projects.id, projects.name, SUM(outbound_wc)::float AS outbound, SUM(inbound_wc)::float AS inbound, COALESCE(SUM(outbound_wc),0) + COALESCE(SUM(inbound_wc),0) AS total
+      SELECT projects.id, projects.name, projects.amount, projects.close_date, SUM(outbound_wc)::float AS outbound, SUM(inbound_wc)::float AS inbound, COALESCE(SUM(outbound_wc),0) + COALESCE(SUM(inbound_wc),0) AS total
       FROM (
         SELECT outbound_emails.project_id, SUM(outbound_emails.word_count) AS outbound_wc, 0 AS inbound_wc
         FROM (
@@ -851,7 +851,7 @@ class User < ActiveRecord::Base
 
   def meeting_time_by_project(array_of_project_ids=Project.visible_to(self.organization_id, self.id).pluck(:id), start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc) # array_of_user_emails
     query = <<-SQL
-      SELECT projects.id, projects.name, SUM((messages->>'end_epoch')::integer - last_sent_date_epoch::integer)::float AS total_meeting_hours
+      SELECT projects.id, projects.name, projects.amount, projects.close_date, SUM((messages->>'end_epoch')::integer - last_sent_date_epoch::integer)::float AS total_meeting_hours
       FROM activities
       INNER JOIN projects
       ON projects.id = activities.project_id,
@@ -885,7 +885,7 @@ class User < ActiveRecord::Base
 
   def sent_attachments_by_project(array_of_project_ids=Project.visible_to(self.organization_id, self.id).pluck(:id), start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc) # array_of_user_emails
     query = <<-SQL
-      SELECT projects.id, projects.name, COUNT(DISTINCT message_id) AS attachment_count
+      SELECT projects.id, projects.name, projects.amount, projects.close_date, COUNT(DISTINCT message_id) AS attachment_count
       FROM projects
       JOIN notifications
       ON projects.id = notifications.project_id
