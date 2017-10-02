@@ -388,6 +388,69 @@ class SalesforceController < ApplicationController
     render plain: ''
   end
 
+  def update_all_salesforce
+    case params[:entity_type]
+    when "account"
+      method_name = "update_all_salesforce#account()"
+
+      salesforce_account = SalesforceAccount.find_by(id: params[:id])
+      if salesforce_account.blank?
+        detail = "Invalid SalesforceAccount id. Cannot find SalesforceAccount with id=#{params[:id]} "
+        puts "****SFDC**** Salesforce error calling SalesforceAccount.find() in #{method_name}. Detail: #{detail}"
+        render_internal_server_error(method_name, "SalesforceAccount.find()", detail)
+        return
+      end
+
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      if client.nil?
+        puts "****SFDC****: Salesforce error in SalesforceController#update_all_salesforce: Cannot establish a connection!"
+        render_service_unavailable_error(method_name)
+        return
+      end
+
+      update_result = SalesforceAccount.update_all_salesforce(client: client, salesforce_account: salesforce_account, fields: params[:fields], current_user: current_user)
+      if update_result[:status] == "ERROR"
+        detail = "Error while attempting to update SalesforceAccount Id=#{params[:id]}. #{ update_result[:result] } Details: #{ update_result[:detail] }"
+        puts "****SFDC**** Salesforce error calling SalesforceAccount.update_all_salesforce in #{method_name}. #{detail}"
+        render_internal_server_error(method_name, "SalesforceAccount.update_all_salesforce()", detail)
+        return
+      end
+    when "opportunity"
+      method_name = "update_all_salesforce#opportunity()"
+
+      salesforce_opportunity = SalesforceOpportunity.find_by(id: params[:id])
+      if salesforce_opportunity.blank?
+        detail = "Invalid SalesforceOpportunity id. Cannot find SalesforceOpportunity with id=#{params[:id]} "
+        puts "****SFDC**** Salesforce error calling SalesforceOpportunity.find() in #{method_name}. Detail: #{detail}"
+        render_internal_server_error(method_name, "SalesforceOpportunity.find()", detail)
+        return
+      end
+
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      if client.nil?
+        puts "****SFDC****: Salesforce error in SalesforceController#update_all_salesforce: Cannot establish a connection!"
+        render_service_unavailable_error(method_name)
+        return
+      end
+
+      update_result = SalesforceOpportunity.update_all_salesforce(client: client, salesforce_opportunity: salesforce_opportunity, fields: params[:fields], current_user: current_user)
+      if update_result[:status] == "ERROR"
+        detail = "Error while attempting to update SalesforceOpportunity Id=#{params[:id]}. #{ update_result[:result] } Details: #{ update_result[:detail] }"
+        puts "****SFDC**** Salesforce error calling SalesforceOpportunity.update_all_salesforce in #{method_name}. #{detail}"
+        render_internal_server_error(method_name, "SalesforceOpportunity.update_all_salesforce()", detail)
+        return
+      end
+    else
+      method_name = "update_all_salesforce"
+      error_detail = "Invalid entity_type parameter passed to update_all_salesforce(). entity_type=#{params[:entity_type]}"
+      puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
+    end
+
+    render plain: ''
+  end
+
   # Synchronize entities in CS and SFDC consisting of an import of a SFDC entity to ContextSmith, followed by an export back to SFDC, using SFDC <-> CS fields mapping.
   # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account. Imports SFDC Activities (not exported from CS) into CS Opportunities.
   # For Contacts -- merges Contacts depending on the explicit mapping of a SFDC Account to a CS Account. ("Sync" is used loosely, because some Contacts is missing information like e-mail address)
@@ -566,7 +629,7 @@ class SalesforceController < ApplicationController
     if entity_type == "account"
       refresh_result = SalesforceAccount.refresh_fields(current_user)
       if refresh_result[:status] == "ERROR"
-        if refresh_result[:result] == ERROR[:SalesforceConnectionError]
+        if refresh_result[:result] == ERRORS[:SalesforceConnectionError]
           render_service_unavailable_error(method_name) 
         else
           render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])
@@ -576,7 +639,7 @@ class SalesforceController < ApplicationController
     elsif entity_type == "project"
       refresh_result = SalesforceOpportunity.refresh_fields(current_user)
       if refresh_result[:status] == "ERROR"
-        if refresh_result[:result] == ERROR[:SalesforceConnectionError]
+        if refresh_result[:result] == ERRORS[:SalesforceConnectionError]
           render_service_unavailable_error(method_name) 
         else
           render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])

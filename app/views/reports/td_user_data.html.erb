@@ -264,27 +264,13 @@
                 labels: { enabled: true },
                 minTickInterval: 1,
                 minorGridLineWidth: 0,
-                softMax: 1
+                softMax: 1,
+                stackLabels: {
+                    enabled: true
+                }
             },
             legend: {
                 enabled: true
-            },
-            tooltip: {
-                positioner: function () {
-                    return {
-                        x: this.chart.chartWidth - this.label.width, // right aligned
-                        y: -15 // align to title
-                    };
-                },
-                borderWidth: 0,
-                backgroundColor: 'none',
-                pointFormat: '{point.stackTotal}',
-                xDateFormat: '%b %e',
-                shadow: false,
-                style: {
-                    fontSize: '16px',
-                    color: '#555555'
-                }
             },
             plotOptions: {
                 series: {

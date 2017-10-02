@@ -1,31 +1,111 @@
-<div class="white-bg">
-    <div class="row">
-        <div class="ibox-content text-center">
-            <div class="m-b-sm" style="margin: 60% 0">
-            <!-- <h2>Salesforce</h2> -->
-                <img src="/assets/images/salesforce.png" style="height:75px;"/>
-                <div style="margin: 1.5em 0">
-                <% if current_user.pro? %>
-                    <% if @salesforce_user.nil? %>
-                        <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a><br/>
-                    <% else %>
-                        <div style="margin: 1em;">
-                            <span style="display: block; padding-bottom: 1em;">You're connected as <strong><%= @salesforce_user.oauth_user_name %></strong></span>
-                            <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect!</a></span></div>
+<style type="text/css">
+    body {
+        color: #999;
+        /* color: <%= get_contextsmith_blue %>; */
+        font-size: 11px;
+    }
+    extrastrong {
+        font-weight: bold;
+        color: black;
+    }
+    .entity-title {
+        font-size: 12px;
+        font-weight: bold;
+        /*color: #999;*/
+        padding: 2em 0;
+    }
+    .entity-group {
+        border-top: 1px solid #EEE;
+    }
+
+    /* form styles */
+    #sfdc-acct-form-title {
+        width: 50%;
+        margin: 0 25%;
+    }
+    #sfdc-opp-form-title {
+        width: 60%;
+        margin: 0 23%;
+    }
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    td label {
+        padding-top: 1em;
+    }
+    input {
+        color: #666;
+        width: 100%;
+    }
+    .disabledinput {
+        color: #BBB;
+        border: none;
+        pointer-events: none;
+    }
+    button {
+        background-color: <%= get_contextsmith_blue %>;
+        width: 100%;
+    }
+    .button-td{
+        padding: 2.5em 0;
+    }
+    .btn.btn-primary:disabled {
+        opacity: .65;
+        color: white;
+    }
+</style>
+
+<body>
+    <div class="white-bg">
+        <div>
+            <% if current_user.superadmin? %>
+                <% if @salesforce_user.nil? %>
+                    <div class="ibox-content text-center">
+                        <div class="m-b-sm" style="margin: 60% 0">
+                            <img src="/assets/images/salesforce.png" style="height:75px;"/>
+                            <div style="margin: 1.5em 0">
+                                <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a><br/>
+                            </div>
+                        </div>
+                    </div>
+                <% else %>
+                    <div class="text-center" style="padding: 1em;">
+                        <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size: 9px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect <strong><%= truncate_with_ellipsis(@salesforce_user.oauth_user_name, 20) %></strong></a></span>
+                    </div>
+                <% end %>
+            <% else # if !current_user.superadmin? %>
+                <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
+            <% end %>
+            <% if @salesforce_user.present? %>
+                <% if @salesforce_account.present? %>
+                    <%= render 'salesforce/account_form' %>
+                    <% if @salesforce_base_URL.present? %>
+                        <div class="container" style="padding-bottom: 2em">
+                            <a href="<%= @salesforce_base_URL + "/" + @salesforce_account.salesforce_account_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit account in Salesforce</a>
+                        </div>
                     <% end %>
                 <% else %>
-                    <h2 style="margin: 1em">
-                      <%= link_to  '/plans/new',  class: 'btn btn-default btn-lg btn-outline', target: "_blank" do %>
-                          <i class="fa fa-star"></i> Upgrade
-                      <% end %><br>
-                      your plan to activate Salesforce!</h2>
+                    <%= render 'salesforce/link_account_form' %>
                 <% end %>
-                </div>
-            </div>
+                <% if @salesforce_opportunity.present? %>
+                    <%= render 'salesforce/opportunity_form' %>
+                    <% if @salesforce_base_URL.present? %>
+                        <div class="container" style="padding-bottom: 2em">
+                            <a href="<%= @salesforce_base_URL + "/" + @salesforce_opportunity.salesforce_opportunity_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit opportunity in Salesforce</a>
+                        </div>
+                    <% end %>
+                <% else %>
+                    <%= render 'salesforce/link_opportunity_form' %>
+                <% end %>
+            <% end %>
         </div>
     </div>
-</div>
+</body>
+
 <script type="text/javascript">
+    var update_sfdc_button_html = "Update&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>";
+
     var popupWindowRef = null;
     var openSignInPopup = function (strUrl, strTarget) {
         var strOptions = "width=700,height=700";
@@ -43,4 +123,87 @@
             popupWindowRef.focus();
         }
     };
+
+    function changedValue(entity_type) {
+        if (!entity_type)
+            return;  // is undefined (e.g., on tab)
+
+        if (entity_type == "account" ) {
+            btn = $("#update_account")
+        } else if (entity_type == "opportunity" ) {
+            btn = $("#update_opportunity")
+        } else {
+            return;
+        }
+
+        btn.prop("disabled", null);
+        btn.removeClass('btn-danger btn-success');
+        btn.html(update_sfdc_button_html);
+    }
+
+    $(document).ready(function(){
+        $(".update_salesforce").click(function() {
+            var self = $(this);
+            if (self.attr("id") == "update_account" ) {
+                entity_type = "account";
+                entity_id = $("#sfa_id").val();
+                fields = {
+                    salesforce_account_name: $("#salesforce_account_name").val()
+                };
+            } else if (self.attr("id") == "update_opportunity" ) {
+                entity_type = "opportunity";
+                entity_id = $("#sfo_id").val();
+                fields = {
+                    owner_id:    $("#owner_id").val(),
+                    name:        $("#name").val(),
+                    stage_name:  $("#stage_name").val(),
+                    close_date:  $("#close_date").val(),
+                    probability: $("#probability").val(),
+                    amount:      $("#amount").val(),
+                    forecast_category_name: $("#forecast_category_name").val()
+                //  expected_revenue: $("#expected_revenue").val(),
+                };
+            }
+            else {
+                return;
+            }
+            // fields = $.param(fields));
+
+            self.prop("disabled", "disable");
+
+            $.ajax('/salesforce/update_all/'+entity_type+"/"+entity_id, {
+                async: true,
+                method: "POST",
+                data: { "fields": fields },
+                beforeSend: function () {
+                    self.addClass("btn-outline");
+                    self.html("<i class='fa fa-refresh fa-spin'></i>&nbsp;Updating&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>...");
+                },
+                success: function() {
+                    self.addClass("btn-success");
+                    self.html("✓&nbsp;Success!&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+                    // alert("Successfully updated Salesforce " + entity_type + "!");
+                },
+                error: function(data) {
+                    var res = JSON.parse(data.responseText);
+                    self.addClass('btn-danger');
+                    self.html("<strong>X</strong>&nbsp;Error&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+                    console.log("Update Salesforce" + entity_type + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                    alert("There was an update Salesforce " + entity_type + " error, but it has been logged and our team will get right on it shortly to resolve it!");
+                },
+                statusCode: {
+                    500: function() {
+                        // self.html("<i class='fa fa-exclamation'></i> Salesforce query error");
+                    },
+                    503: function() {
+                        // self.html("<i class='fa fa-exclamation'></i> Salesforce connection error");
+                    },
+                },
+                complete: function() {
+                    self.removeClass("btn-outline");
+                    // location.reload();
+                }
+            });
+        });
+    });
 </script>

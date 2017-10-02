@@ -45,11 +45,14 @@ class ContactsController < ApplicationController
     respond_to do |format|
       #if Contact.where(id: @contact.id).update_all(contact_params)  #allows updating Contact if e-mail is null
       if @contact.update(contact_params)
-        format.html { redirect_to @contact, notice: 'Contact was successfully updated.' }
+        # format.html { redirect_to @contact, notice: 'Contact was successfully updated.' }
+        format.html { redirect_to :back, notice: 'Contact was successfully updated.' }
         format.json { respond_with_bip(@contact) }
+        format.js
       else
         format.html { render action: 'edit' }
         format.json { respond_with_bip(@contact) }
+        format.js { render json: @contact.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -70,7 +73,8 @@ class ContactsController < ApplicationController
       begin
         @contact = Contact.visible_to(current_user).find(params[:id])
       rescue ActiveRecord::RecordNotFound
-        redirect_to root_url, :flash => { :error => "Contact not found or is private." }
+        # redirect_to root_url, :flash => { :error => "Contact not found or is private." }
+        redirect_to :back, :flash => { :error => "Contact not found or is private." }
       end
     end
 

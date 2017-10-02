@@ -216,6 +216,7 @@ class User < ActiveRecord::Base
         time_zone: time_zone
       }
       user_attributes[:role] = params['role'] if params['role']
+      user_attributes[:refresh_inbox] = true if params['role'] == 'Business' # TODO: make this process a little more flexible/robust
 
       if referred_user
         # Change referred_user into real user
