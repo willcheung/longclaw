@@ -249,6 +249,14 @@
 
     <!-- TODO: Remove this hardcoded CSS workaround -->
     <style>
+        body {
+        color: #999;
+        font-size: 11px;
+        }
+        extrastrong {
+            font-weight: bold;
+            color: black;
+        }
         .nav {
             padding-bottom: 1px;
         }
@@ -295,10 +303,14 @@
             padding-top: 0em;
             padding-bottom: 0em;
         }
-        .disabled, .btn:disabled {
-            color: #DDD;
-            opacity: 0.3;
+        td.disabled {  /* social icons */
+            opacity: .3;
             pointer-events: none;
+        }
+        .btn.btn-danger:disabled {  /* update buttons */
+            color: white;
+            opacity: .9;
+            /*pointer-events: none;*/
         }
     </style>
 </body>

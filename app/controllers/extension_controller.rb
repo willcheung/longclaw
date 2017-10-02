@@ -267,7 +267,7 @@ class ExtensionController < ApplicationController
     end
     
     @all_members = @project.users + @project.contacts
-    @members = @all_members.first(NUM_ACCOUNT_CONTACT_SHOW_LIMIT) # same value as 
+    @members = @all_members.first(NUM_ACCOUNT_CONTACT_SHOW_LIMIT)
 
     @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end

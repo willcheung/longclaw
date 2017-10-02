@@ -48,11 +48,11 @@ class ContactsController < ApplicationController
         # format.html { redirect_to @contact, notice: 'Contact was successfully updated.' }
         format.html { redirect_to :back, notice: 'Contact was successfully updated.' }
         format.json { respond_with_bip(@contact) }
-        # format.js { render action: 'show', status: :created, location: @contact }
+        format.js
       else
         format.html { render action: 'edit' }
         format.json { respond_with_bip(@contact) }
-        # format.js { render json: @contact.errors, status: :unprocessable_entity }
+        format.js { render json: @contact.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -80,6 +80,6 @@ class ContactsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def contact_params
-      params.require(:contact).permit(:account_id, :first_name, :last_name, :email, :phone, :title, :buyer_role, :department, :background_info)
+      params.require(:contact).permit(:account_id, :first_name, :last_name, :email, :phone, :title, :buyer_role, :department, :background_info, :external_source_id)
     end
 end

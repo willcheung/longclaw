@@ -127,11 +127,11 @@ class SalesforceController < ApplicationController
           if sfa.contextsmith_account_id.present? # SFDC account is linked
             account = current_user.organization.accounts.find(sfa.contextsmith_account_id) 
           else # SFDC account is not linked
-            account = Account.new(domain: sfa.salesforce_account_name.gsub(" ", "").strip.downcase + ".com", 
+            account = Account.new(domain: '', # like a custom account
                         name: sfa.salesforce_account_name.strip, 
                         owner_id: current_user.id, 
                         organization_id: current_user.organization_id,
-                        description: "Automatically imported from Salesforce",
+                        description: "Automatically imported from Salesforce by ContextSmith",
                         created_by: current_user.id,
                         updated_by: current_user.id
                         )
@@ -381,6 +381,167 @@ class SalesforceController < ApplicationController
     else
       error_detail = "Invalid entity_type parameter passed to export_salesforce(). entity_type=#{params[:entity_type]}"
       puts error_detail
+      render_internal_server_error(method_name, method_name, error_detail)
+      return
+    end
+
+    render plain: ''
+  end
+
+  def update_all_salesforce
+    case params[:entity_type]
+    when "account"
+      method_name = "update_all_salesforce#account()"
+
+      # salesforce_account = SalesforceAccount.find_by(id: params[:id])
+      salesforce_account = current_user.organization.salesforce_accounts.find_by(id: params[:id])
+      if salesforce_account.blank?
+        detail = "Invalid SalesforceAccount id. Cannot find SalesforceAccount with id=#{params[:id]} "
+        puts "****SFDC**** Salesforce error calling SalesforceAccount.find_by() in #{method_name}. Detail: #{detail}"
+        render_internal_server_error(method_name, "SalesforceAccount.find_by()", detail)
+        return
+      end
+
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      if client.nil?
+        puts "****SFDC****: Salesforce error in SalesforceController#update_all_salesforce: Cannot establish a connection!"
+        render_service_unavailable_error(method_name)
+        return
+      end
+
+      update_result = SalesforceAccount.update_all_salesforce(client: client, salesforce_account: salesforce_account, fields: params[:fields], current_user: current_user)
+      if update_result[:status] == "ERROR"
+        detail = "Error while attempting to update SalesforceAccount Id=#{params[:id]}. #{ update_result[:result] } Details: #{ update_result[:detail] }"
+        puts "****SFDC**** Salesforce error calling SalesforceAccount.update_all_salesforce in #{method_name}. #{detail}"
+        render_internal_server_error(method_name, "SalesforceAccount.update_all_salesforce()", detail)
+        return
+      end
+    when "opportunity"
+      method_name = "update_all_salesforce#opportunity()"
+
+      salesforce_opportunity = SalesforceOpportunity.find_by(id: params[:id])
+      if salesforce_opportunity.blank? || (salesforce_opportunity.salesforce_account.contextsmith_organization_id != current_user.organization_id)
+        detail = "Invalid SalesforceOpportunity id. Cannot find SalesforceOpportunity with id=#{params[:id]} "
+        puts "****SFDC**** Salesforce error calling SalesforceOpportunity.find_by() in #{method_name}. Detail: #{detail}"
+        render_internal_server_error(method_name, "SalesforceOpportunity.find_by()", detail)
+        return
+      end
+
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      if client.nil?
+        puts "****SFDC****: Salesforce error in SalesforceController#update_all_salesforce: Cannot establish a connection!"
+        render_service_unavailable_error(method_name)
+        return
+      end
+
+      update_result = SalesforceOpportunity.update_all_salesforce(client: client, salesforce_opportunity: salesforce_opportunity, fields: params[:fields], current_user: current_user)
+      if update_result[:status] == "ERROR"
+        detail = "Error while attempting to update SalesforceOpportunity Id=#{params[:id]}. #{ update_result[:result] } Details: #{ update_result[:detail] }"
+        puts "****SFDC**** Salesforce error calling SalesforceOpportunity.update_all_salesforce in #{method_name}. #{detail}"
+        render_internal_server_error(method_name, "SalesforceOpportunity.update_all_salesforce()", detail)
+        return
+      end
+    when "contact"
+      # Note: in order for export to SFDC to work, CS account must be linked to a SFDC account
+      method_name = "update_all_salesforce#contact()"
+      # puts "params[:fields]:#{params[:fields]}"
+
+      account = Account.find_by(id: params[:fields][:account_id])
+      if account.blank? || !(Account.visible_to(current_user).pluck(:id).include? account.id)
+        detail = "Invalid Account id. Cannot find Account with id=#{params[:fields][:account_id]} "
+        puts "****SFDC**** Salesforce error calling Account.find_by() in #{method_name}. Detail: #{detail}"
+        render_internal_server_error(method_name, "Account.find_by()", detail)
+        return
+      end
+
+      if params[:id] == "0" #new Contact
+        contact = Contact.new(
+            first_name: params[:fields][:first_name],
+            last_name: params[:fields][:last_name],
+            title: params[:fields][:title],
+            department: params[:fields][:department],
+            email: params[:fields][:email],
+            phone: params[:fields][:phone],
+            account_id: params[:fields][:account_id],
+            # source: params[:fields][:source],
+            # external_source_id: params[:fields][:external_source_id]
+          )
+        if !contact.save
+          e = contact.errors.messages
+          error_messages = e.keys.select{|k| e[k].present? }.map{ |k| "#{k} #{e[k][1]}: #{e[k][0]}"}.join(', ')
+          detail = "Cannot create new Contact. Errors: #{error_messages} "
+          puts "****SFDC**** Salesforce error: Cannot create contact using Contact.new in #{method_name}. Params: #{params[:fields]}  Errors: #{error_messages}"
+          render_internal_server_error(method_name, "Contact.new()", detail)
+          return
+        end
+      else # update Contact
+        contact = Contact.find_by(id: params[:id])
+        if contact.blank? || !(Account.visible_to(current_user).pluck(:id).include? contact.account_id) # || (contact.account.organization_id != current_user.organization_id) 
+          detail = "Invalid Contact id. Cannot find Contact with id=#{params[:id]} "
+          puts "****SFDC**** Salesforce error calling Contact.find() in #{method_name}. Detail: #{detail}"
+          render_internal_server_error(method_name, "Contact.find()", detail)
+          return
+        end
+
+        if !contact.update(first_name: params[:fields][:first_name],
+            last_name: params[:fields][:last_name],
+            title: params[:fields][:title],
+            department: params[:fields][:department],
+            email: params[:fields][:email],
+            phone: params[:fields][:phone],
+            account_id: params[:fields][:account_id],
+            #source: params[:fields][:source],
+            #external_source_id: params[:fields][:external_source_id]
+        )
+          e = contact.errors.messages
+          error_messages = e.keys.select{|k| e[k].present? }.map{ |k| "#{k} #{e[k][1]}: #{e[k][0]}"}.join(', ')
+          detail = "Cannot update Contact. Errors: #{error_messages} "
+          puts "****SFDC**** Salesforce error: Cannot update contact using contact.update in #{method_name}. Params: #{params[:fields]}  Errors: #{error_messages}"
+          render_internal_server_error(method_name, "Contact.update()", detail)
+          return
+        end
+      end # End: update Contact
+
+      client = SalesforceService.connect_salesforce(current_user.organization_id)
+      if client.nil?
+        puts "****SFDC****: Salesforce error in SalesforceController#update_all_salesforce: Cannot establish a connection!"
+        render_service_unavailable_error(method_name)
+        return
+      end
+
+      if account.salesforce_accounts.present?
+        salesforce_account = account.salesforce_accounts.first
+      else
+        detail = "No Salesforce account linked to ContextSmith account \"#{account.name}\"! Cannot create SFDC contact! #{params[:fields][:account_id]} "
+        puts "****SFDC**** Salesforce error creating/updating Salesforce contact in #{method_name}. Detail: #{detail}"
+        render_internal_server_error(method_name, "Account.find()", detail)
+        return
+      end
+
+      update_result = Contact.update_all_salesforce(client: client, sfdc_account_id: salesforce_account.salesforce_account_id, contact: contact, fields: params[:fields], current_user: current_user)
+
+      if update_result[:status] == "ERROR"
+        detail = "Error while attempting to create/update SFDC Contact Id='#{contact.external_source_id}' for CS contact Id='#{contact.id}'. #{ update_result[:result] } Details: #{ update_result[:detail] }"
+        puts "****SFDC**** Salesforce error calling Contact.update_all_salesforce in #{method_name}. #{detail}"
+        render_internal_server_error(method_name, "Contact.update_all_salesforce()", detail)
+        return
+      end
+
+      # Finally, update CS contact to point back to SFDC contact
+      if !contact.update(source: "Salesforce2",
+                         external_source_id: update_result[:result]
+        )
+        e = contact.errors.messages
+        error_messages = e.keys.select{|k| e[k].present? }.map{ |k| "#{k} #{e[k][1]}: #{e[k][0]}"}.join(', ')
+        detail = "Cannot update Contact sfdc_id '#{update_result[:status]}'. Errors: #{error_messages} "
+        puts "****SFDC**** Salesforce error: Cannot update contact's external_source_id (id='#{update_result[:status]}') using contact.update in #{method_name}. Params: #{params[:fields]}  Errors: #{error_messages}"
+        render_internal_server_error(method_name, "Contact.update()", detail)
+        return
+      end
+    else
+      method_name = "update_all_salesforce"
+      error_detail = "Invalid entity_type parameter passed to update_all_salesforce(). entity_type=#{params[:entity_type]}"
+      puts "****SFDC**** #{error_detail}"
       render_internal_server_error(method_name, method_name, error_detail)
       return
     end

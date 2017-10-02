@@ -8,18 +8,18 @@
         <% if modal_type == 'extension_edit_contact_modal' %>
           <h4 class="modal-title">Edit Contact</h4>
         <% else %>
-          <h4 class="modal-title">New Contact</h4>
+          <h4 class="modal-title">Add Contact</h4>
         <% end %>
       </div>
       <div class="modal-body">
         <div class="row">
-          <%# Render the new person form (passing modal => true to enable remote => true); but use remote:false if editing from Chrome extension to enable closing of modal + redirect %>
-          <%= render 'contacts/form', remote: (modal_type != 'extension_edit_contact_modal'), modal_type: modal_type, contact: contact %>
+          <%# Render the new person form (passing modal => true to enable remote => true) %>
+          <%= render 'contacts/form', remote: true, modal_id: modal_id, modal_type: modal_type, contact: contact %>
         </div>
       </div>
       <% if modal_type == 'extension_edit_contact_modal' && contact.present? %>
         <div class="modal-footer">
-          <%= link_to "<i class=\"fa fa-trash\"></i> Delete contact".html_safe, contact, method: :delete, data: {confirm: "Contact will be deleted! Are you sure?"} %>
+          <%= link_to "<i class=\"fa fa-trash\"></i> Delete contact".html_safe, contact, method: :delete, data: {confirm: "Contact will be deleted" + (@salesforce_user.present? ? " on ContextSmith only" : "") + "! Are you sure?"} %>
         </div>
       <% end %>
     </div>

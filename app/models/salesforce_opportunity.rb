@@ -30,8 +30,10 @@ class SalesforceOpportunity < ActiveRecord::Base
   belongs_to  :project, foreign_key: "contextsmith_project_id"
 
   scope :is_open, -> {where(is_closed: false)}
-  # scope :is_linked, -> {where.not(contextsmith_project_id: nil)}
+  scope :is_linked, -> {where.not(contextsmith_project_id: nil)}
   scope :is_not_linked, -> {where(contextsmith_project_id: nil)}
+
+  validates :name, :close_date, presence: true
 
   # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.
   # For Admin users, this will get all SFDC opportunities belonging to linked SFDC accounts, and Open or was Closed within the last year.  For all other users, this will get all SFDC opportunities belonging to the individual's SFDC user, and is Open or was Closed within the last year.
@@ -152,6 +154,53 @@ class SalesforceOpportunity < ActiveRecord::Base
     end
 	end
 
+  # For salesforce_opportunity, updates the local copy and pushes change to Salesforce
+  def self.update_all_salesforce(client: , salesforce_opportunity: , fields: , current_user: )
+    # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
+    return { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." } if client.nil?
+    return { status: "ERROR", result: "Salesforce opportunity update error", detail: "Salesforce opportunity does not exist or this user does not exist." } if salesforce_opportunity.blank? || current_user.blank?
+
+    if salesforce_opportunity.salesforce_account.organization == current_user.organization
+      # puts "\n\nUpdating #{salesforce_opportunity.name}.... "
+
+      begin
+        fields[:close_date].strip!
+        close_date = fields[:close_date].blank? ? nil : Date.strptime(fields[:close_date], "%m-%d-%Y")
+      rescue ArgumentError => e
+        begin
+          close_date = Date.strptime(fields[:close_date], "%m/%d/%Y")
+        rescue ArgumentError => e
+          return { status: "ERROR", result: "Salesforce opportunity update error", detail: e.to_s + ". Cannot parse close_date '#{fields[:close_date]}'" }
+        end
+      end
+
+      #TODO: Make update of CS and SFDC a single Unit of work (2 phase commit?)
+      # Update Contextsmith model
+      begin
+        salesforce_opportunity.update(name: fields[:name], stage_name: fields[:stage_name], close_date: close_date, probability: fields[:probability], amount: fields[:amount], forecast_category_name: fields[:forecast_category_name]) # omitted: expected_revenue: fields[:expected_revenue]
+      rescue => e
+        return { status: "ERROR", result: "Salesforce opportunity update error", detail: e.to_s }
+      end
+
+      # Update Salesforce
+      # Put the fields and values to be updated into a hash object.
+      sObject_meta = { id: salesforce_opportunity.salesforce_opportunity_id, type: "Opportunity" }
+      sObject_fields = { name: fields[:name], stage_name: fields[:stage_name], close_date: close_date, probability: fields[:probability], amount: fields[:amount], forecast_category_name: fields[:forecast_category_name] }
+      update_result = SalesforceService.update_salesforce(client: client, update_type: "opportunity", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+
+      if update_result[:status] == "SUCCESS"
+        puts "-> SFDC opportunity was updated from a ContextSmith salesforce_opportunity. SFDC Opportunity Id='#{ salesforce_opportunity.salesforce_opportunity_id }'."
+      else  # Salesforce update failure
+        puts "****SFDC****: Salesforce error in SalesforceOpportunity.update_all_salesforce().  #{update_result[:result]}  Details: #{ update_result[:detail] }."
+        return { status: "ERROR", result: update_result[:result], detail: update_result[:detail] + " sObject_fields=#{ sObject_fields }" } 
+      end
+    else # End: if salesforce_opportunity.salesforce_account.organization == current_user.organization
+      return { status: "ERROR", result: "Salesforce opportunity update error", detail: "Salesforce opportunity does not exist or this user does not have access to it." } 
+    end
+
+    return { status: "SUCCESS", result: "Update completed." }
+  end
+
   # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to a field of a CS opportunity. This is for all projects visible to current_user. Process aborts immediately if there is an update/SFDC error.
   def self.refresh_fields(current_user)
     # opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
@@ -178,7 +227,7 @@ class SalesforceOpportunity < ActiveRecord::Base
         # custom fields
         opportunities.each do |s|
           unless s.salesforce_opportunity.nil?
-            # puts "***** SFDC opportunity:\"#{s.salesforce_opportunity.name}\" --> CS opportunity:\"#{s.name}\" *****\n"
+            # puts "**** SFDC opportunity:\"#{s.salesforce_opportunity.name}\" --> CS opportunity:\"#{s.name}\" ****\n"
             load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
 
             if load_result[:status] == "ERROR"

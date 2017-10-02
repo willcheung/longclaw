@@ -48,6 +48,8 @@ module ApplicationHelper
       '#ed5565'
     when Activity::CATEGORY[:Basecamp2]
       '#91e8e1'
+    when 'metric'
+      '#434348'
     else
       CONTEXTSMITH_BLUE
     end
@@ -259,7 +261,7 @@ module ApplicationHelper
     elsif name.include?(' ')
       s = name.split(' ').first[0,1] + name.split(' ').last[0,1] 
     else
-      s = name[0,2]
+      s = name[0,1]
     end
 
     return ('<div class="rounded-initials ' + css_class + '" title="' + name + '" style="background:' + User::PROFILE_COLOR[(name.length)%9] + '">' + s + '</div>').html_safe
