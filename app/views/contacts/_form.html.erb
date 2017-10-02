@@ -1,22 +1,36 @@
 <% remote ||= false %>
 <% modal_type ||= nil %>
 <% url = (modal_type == 'extension_edit_contact_modal') ? contact_path(id: contact.id) : contacts_path %>
+<% account_id = contact.account_id || params[:id] %>
 <%= simple_form_for contact, remote: remote, html: {role: :form, 'data-model' => 'contact'}, url: url do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
   <%# TODO: Update contact error messages are currently not being displayed.  Will need to address this lack of error feedback to user. %>
       <span class="help-block" style="color:red"></span>
-      <%= f.input :first_name, wrapper_html: { class: 'col-md-6'} %>
-      <%= f.input :last_name, wrapper_html: { class: 'col-md-6'} %>
-      <%= f.input :title, wrapper_html: { class: 'col-md-6'} %>
-      <%= f.input :department, wrapper_html: { class: 'col-md-6'} %>
-      <%= f.input :email, wrapper_html: { class: 'col-md-6'}, :required => true %>
-      <%= f.input :phone, wrapper_html: { class: 'col-md-4'} %>
-      <%= f.input :account_id, as: :hidden, input_html: { value: contact.account_id || params[:id] }, wrapper_html: { class: 'col-md-4'} %>
+      <%= f.input :first_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
+      <%= f.input :last_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
+      <%= f.input :title, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
+      <%= f.input :department, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
+      <%= f.input :email, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" }, :required => true %>
+      <%= f.input :phone, wrapper_html: { class: 'col-md-4', onkeyup: "changedValue('" + modal_id +"')" } %>
+      <div class='col-md-12'>
+        <div title="test"><%= f.label :account %>
+        <h4><%= Account.find(account_id).name if account_id.present? %></h4>
+        </div>
+      </div>
+      <%= f.input :account_id, as: :hidden, input_html: { value: account_id }, wrapper_html: { class: 'col-md-6'} %>
+      <%= f.input :id, as: :hidden %>
+      <%= f.input :source, as: :hidden %>
+      <%= f.input :external_source_id, as: :hidden %>
 
   <div class="clearfix">&nbsp;</div>
-  <% if ['extension_new_contact_modal','extension_edit_contact_modal'].include? modal_type %>
-    <%= f.button :submit, class: 'btn-primary pull-right form-group', style: 'width: 100%' %>
+  <% if ['extension_new_contact_modal','extension_edit_contact_modal'].include? modal_type  # from Chrome extension %>
+    <% if @salesforce_user.present? %>
+      <% button_text = (modal_type == 'extension_new_contact_modal') ? "Create" : "Update" %>
+      <button modal_id="<%= modal_id %>" button_text="<%= button_text %>" class="btn btn-primary pull-right form-group update_salesforce" style="width: 100%"><%= button_text %>&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/></button>
+    <% else %>
+      <%= f.button :submit, class: 'btn-primary pull-right form-group', style: 'width: 100%' %>
+    <% end %>
   <% else %>
     <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
   <% end %>
