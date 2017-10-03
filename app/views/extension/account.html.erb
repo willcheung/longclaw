@@ -300,7 +300,7 @@
                                                         <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
                                                     <% end %></td></tr>
                                                     <tr style="width:60px"><td style="padding-left: 10px">
-                                                    <% if current_user.role != User::ROLE[:Basic] %>
+                                                    <% if current_user.role != User::ROLE[:Basic] || current_user.superadmin? %>
                                                         <% if contact.present? %>
                                                             <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
@@ -347,7 +347,7 @@
                                <tbody>
                                     <tr style="margin-left: auto; margin-right: auto; width: 100px">
                                         <td class="fa-lg">
-                                        <% if current_user.role != User::ROLE[:Basic] && @salesforce_base_URL.present? && contact.present? && contact.external_source_id.present? %>
+                                        <% if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?) && @salesforce_base_URL.present? && contact.present? && contact.external_source_id.present? %>
                                             <a href="<%= @salesforce_base_URL + "/" + contact.external_source_id %>" target="_blank"><img src="/assets/images/salesforce.png" class="sfdc-icon" title="Open Salesforce page in new window"/></a>
                                         <% else %>
                                             <img src="/assets/images/salesforce.png" class="sfdc-icon disabled"/>

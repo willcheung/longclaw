@@ -46,7 +46,7 @@
 <body>
     <div class="white-bg">
         <div>
-            <% if current_user.superadmin? %>
+            <% if current_user.role != User::ROLE[:Basic] || current_user.superadmin? %>
                 <% if @salesforce_user.nil? %>
                     <div class="ibox-content text-center">
                         <div class="m-b-sm" style="margin: 60% 0">
@@ -61,7 +61,7 @@
                         <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size: 9px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect <strong><%= truncate_with_ellipsis(@salesforce_user.oauth_user_name, 20) %></strong></a></span>
                     </div>
                 <% end %>
-            <% else # if !current_user.superadmin? %>
+            <% else # if current user is Basic & not superuser %>
                 <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
             <% end %>
             <% if @salesforce_user.present? %>
