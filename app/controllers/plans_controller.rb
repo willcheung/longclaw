@@ -2,7 +2,11 @@ class PlansController < ApplicationController
   layout 'empty'
 
   def index
-
+    @subscription = Hashie::Mash.new({plan: {name: 'Basic', id: 'basic'}})
+    if current_user.stripe_customer_id
+      customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions')
+      @subscription = customer.subscriptions.data.first if customer.subscriptions.data.first
+    end
   end
 
   def new
@@ -11,8 +15,6 @@ class PlansController < ApplicationController
   end
 
   def create
-    redirect_to action: 'index' if current_user.pro? # don't create subscription if user already is pro
-
     customer = if current_user.stripe_customer_id
                  find_or_create_customer(current_user, params[:stripeEmail], params[:stripeToken])
                else
@@ -58,7 +60,7 @@ class PlansController < ApplicationController
   end
 
   def upgrade
-    sign_out current_user
+    # sign_out current_user
   end
 
   private

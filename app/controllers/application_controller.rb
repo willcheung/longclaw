@@ -27,6 +27,8 @@ class ApplicationController < ActionController::Base
       if auth_params['extension'] == 'true' || origin == 'extension' || (location && location.start_with?('extension','plans'))
         if resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
           onboarding_extension_tutorial_path
+        elsif origin.start_with? 'plans'
+          plans_path(welcome: true)
         else
           extension_path(login: true)
         end

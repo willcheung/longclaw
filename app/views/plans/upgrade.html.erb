@@ -1,5 +1,7 @@
 <div class="container">
-  <div class="row"><h1>Thanks for signing up!</h1></div>
+  <div class="jumbotron text-center">
+  <div class="row"><h1>Thanks for upgrading!</h1></div>
   <div class="row"><h3>In order to sync your emails and contacts, sign in again below</h3></div>
-  <div class="row"><a class="btn btn-lg btn-primary" style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log in Using Google</span></a></div>
+  <div class="row"><a class="btn btn-lg btn-primary" style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Log in Using Google</span></a></div>
+  </div>
 </div>
