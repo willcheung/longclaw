@@ -278,7 +278,7 @@
                     <img style="padding: 5em 0;" class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
                 </div>
             <% elsif n == 1 && contacts_with_profile.present? %>
-                <span class="contact-group"><br/>MORE PEOPLE AT <%= @project.name.upcase %></span>
+                <span class="contact-group"><br/>MORE PEOPLE AT <%= @account.name.upcase %></span>
             <% end %>
             <% contacts_with_profile.each_with_index do |p, i| %>
                 <% profile = p[:profile] %>
