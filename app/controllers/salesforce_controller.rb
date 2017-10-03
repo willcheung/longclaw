@@ -115,7 +115,7 @@ class SalesforceController < ApplicationController
       SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
       SalesforceOpportunity.load_opportunities(current_user)
 
-      # Create CS Accounts and Opportunities for SFDC Opportunities for non-Admin (e.g., Basic) users and map them
+      # Create CS Accounts and Opportunities for SFDC Opportunities for non-Admin (e.g., Pro) users and map them
       if !current_user.admin?
         sfdc_userid = SalesforceService.get_salesforce_user_uuid(current_user.organization_id, current_user)
         open_sfdc_opps = SalesforceOpportunity.is_open.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
@@ -177,7 +177,7 @@ class SalesforceController < ApplicationController
             puts "****SFDC**** Error attempting to connect to SFDC client during automatic import of SFDC contacts for user_id=#{current_user.id} of organization_id=#{current_user.organization_id}"
           end
         end # end: open_sfdc_opps_acct_ids.each do |acct_id|
-      end
+      end # end: if !current_user.admin?
 
       # Refresh/update the standard and custom field values of mapped accts and opps
       SalesforceAccount.refresh_fields(current_user)
