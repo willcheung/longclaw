@@ -953,7 +953,6 @@ class User < ActiveRecord::Base
 
   def superadmin?
     ENV['super_admins'].split(' ').include?(self.email)
-    false
   end
 
   ######### End Basic ACL ##########
