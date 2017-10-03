@@ -13,11 +13,16 @@
       <%= f.input :department, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
       <%= f.input :email, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" }, :required => true %>
       <%= f.input :phone, wrapper_html: { class: 'col-md-4', onkeyup: "changedValue('" + modal_id +"')" } %>
-      <div class='col-md-12'>
-        <div title="test"><%= f.label :account %>
-        <h4><%= Account.find(account_id).name if account_id.present? %></h4>
+
+      <% account = Account.find_by(id: account_id) %>
+      <% if account %>
+        <div class='col-md-12'>
+          <div title="test"><%= f.label :account %>
+          <h4><%= account.name  %></h4>
+          </div>
         </div>
-      </div>
+      <% end %>
+
       <%= f.input :account_id, as: :hidden, input_html: { value: account_id }, wrapper_html: { class: 'col-md-6'} %>
       <%= f.input :id, as: :hidden %>
       <%= f.input :source, as: :hidden %>
