@@ -70,13 +70,13 @@
                 <ul class="nav nav-tabs">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">People</a></li>
                     <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
-                    <li role="presentation" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="Connected as <b><%= @salesforce_user.oauth_user_name if @salesforce_user.present? %></b>" class="<%= is_active_action('salesforce') %> 
-                    <% if !current_user.superadmin? %>
-                    disabled"><a href="#">
+                    <li role="presentation" data-toggle="tooltip" data-placement="bottom" data-html="true" class="<%= is_active_action('salesforce') %>"
+                    <% if @salesforce_user.present? %>
+                      data-original-title="Connected as <b><%= @salesforce_user.oauth_user_name %></b>" 
                     <% else %>
-                    "><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>">
+                      data-original-title="Not connected" 
                     <% end %>
-                    <img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a>
+                    ><a href="<%= extension_salesforce_path(internal: params[:internal], external: params[:external]) %>"><img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:15px;"/>&nbsp;Salesforce</a>
                     </li>
                 </ul>
             </div>
@@ -302,10 +302,6 @@
         .selectize-control.multi .selectize-input.has-items div {
             padding-top: 0em;
             padding-bottom: 0em;
-        }
-        td.disabled {  /* social icons */
-            opacity: .3;
-            pointer-events: none;
         }
         .btn.btn-danger:disabled {  /* update buttons */
             color: white;
