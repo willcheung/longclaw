@@ -142,15 +142,17 @@ class ReportsController < ApplicationController
     @departments = users.pluck(:department).compact.uniq
     @titles = users.pluck(:title).compact.uniq
 
-    params[:sort] = TEAM_DASHBOARD_METRIC[:activities_last14d]
+    params[:sort] = TEAM_DASHBOARD_METRIC[:win_rate]
+    params[:metric] = TEAM_DASHBOARD_METRIC[:time_spent_last14d]
     td_sort_data
   end
 
   # for loading metrics data (left panel) on Team Dashboard
   def td_sort_data
-    @metric = params[:sort]
+    # NOTE: `sort` and `sort_by` are keywords for Hash, would have used these as keys for @dashboard_data but can't due to this conflict!
+    @dashboard_data = Hashie::Mash.new(sorted_by: { type: params[:sort] }, metric: { type: params[:metric] })
     users = current_user.organization.users
-    
+
     # Incrementally apply filters
     if params[:team].present?
       if params[:team] == "none"
@@ -168,91 +170,13 @@ class ReportsController < ApplicationController
       end
     end
 
-    @data = [] and return if users.blank?  #quit early if all users are filtered out
+    return if users.blank?  # quit early if all users are filtered out
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
     projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
-    case @metric
-    when TEAM_DASHBOARD_METRIC[:activities_last14d]
-      user_activities = User.count_all_activities_by_user(projects.ids, users.ids).group_by { |u| u.id }
-      @data = [] and @categories = [] and return if user_activities.blank?
 
-      @data = user_activities.map do |uid, activities|
-        user = users.find { |usr| usr.id == uid }
-        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
-      end
-      #@data = @data.select {|a| a.total > 0}
-
-      @categories = @data.inject([nil]) do |memo, p|
-        memo | p.y.select {|a| a.num_activities > 0}.map(&:category)
-      end  # get (and show in legend) only categories that have data
-    when TEAM_DASHBOARD_METRIC[:time_spent_last14d]
-      project_ids = projects.ids
-      user_emails = users.pluck(:email)
-      @data = [] and @categories = [] and return if project_ids.blank? || user_emails.blank?
-
-      email_time = User.team_usage_report(project_ids, user_emails)
-      meeting_time = User.meeting_report(project_ids, user_emails)
-      attachment_count = User.sent_attachments_count(project_ids, user_emails)
-      @data = users.map do |user|
-        email_t = email_time.find { |et| et.email == user.email }
-        if email_t.nil?
-          email_t = { "Read E-mails": 0, "Sent E-mails": 0 }
-        else
-          # TODO: figure out why some email_t are not nil but email_t.inbound or email_t.outbound are nil (Issue #692)
-          email_t = { 
-            "Read E-mails": (email_t.inbound / User::WORDS_PER_SEC[:Read]).round,
-            "Sent E-mails": (email_t.outbound / User::WORDS_PER_SEC[:Write]).round
-          }
-        end
-        meeting_t = meeting_time.find { |mt| mt.email == user.email }
-        meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total }
-        attachment_t = attachment_count.find { |at| at.email == user.email }
-        attachment_t = attachment_t.nil? ? { Attachments: 0 } : { Attachments: attachment_t.attachment_count * User::ATTACHMENT_TIME_SEC }
-        time_hash = email_t.merge(meeting_t).merge(attachment_t)
-        # time_hash = [email_t, meeting_t, attachment_t].reduce(&:merge)
-        Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
-      end
-      @categories = ["Meetings", "Attachments", "Read E-mails", "Sent E-mails"]
-    when TEAM_DASHBOARD_METRIC[:opportunities]
-      opportunities_owned = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count").joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}')").group('users.id').order("project_count DESC")
-      @data = opportunities_owned.map do |u|
-        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.project_count })
-      end
-    when TEAM_DASHBOARD_METRIC[:win_rate]
-      win_rates = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count, COUNT(DISTINCT salesforce_opportunities.id) AS win_count, COUNT(DISTINCT salesforce_opportunities.id)/GREATEST(COUNT(DISTINCT projects.id)::float, 1) * 100 AS win_rate")
-                      .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') LEFT JOIN salesforce_opportunities ON salesforce_opportunities.contextsmith_project_id = projects.id AND salesforce_opportunities.is_won IS TRUE")
-                      .group('users.id').order("win_rate DESC")
-      @data = win_rates.map do |u|
-        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.win_rate.round(2) })
-      end
-    when TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d]
-      new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
-      @data = new_tasks.map do |u|
-        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
-      end
-    when TEAM_DASHBOARD_METRIC[:closed_alerts_and_tasks_last14d]
-      closed_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND notifications.is_complete IS TRUE AND EXTRACT(EPOCH FROM notifications.complete_date) >= #{14.days.ago.midnight.to_i}").group('users.id').order("task_count DESC")
-      @data = closed_tasks.map do |u|
-        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
-      end
-    when TEAM_DASHBOARD_METRIC[:open_alerts_and_tasks]
-      open_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count").joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND notifications.is_complete IS FALSE").group('users.id').order("task_count DESC")
-      @data = open_tasks.map do |u|
-        Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
-      end
-    else # Invalid
-      @data = []
-    end
-
-    if @categories
-      @data.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: user name, case-insensitive in alphabetical order
-    else  # sort by y instead
-      @data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }
-    end
-
-    # puts "**************** @data(#{@data.present? ? @data.length : 0}): #{@data} \t\t ****** @categories(#{@categories.present? ? @categories.length : 0}):  #{@categories}"
-    @data = @data.take(25)  # TODO: real left chart pagination
+    @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
+    @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
   end
 
   # for loading User details (right panel) on Team Dashboard
@@ -295,12 +219,12 @@ class ReportsController < ApplicationController
     meeting_time = @user.meeting_time_by_project
     attachment_time = @user.sent_attachments_by_project
     @interaction_time_per_account = email_time.map do |p|
-      Hashie::Mash.new(name: p.name, id: p.id, 'Meetings': 0, 'Attachments': 0, 'Sent E-mails': p.outbound, 'Read E-mails': p.inbound, total: p.inbound + p.outbound)
+      Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': 0, 'Attachments': 0, 'Sent E-mails': p.outbound, 'Read E-mails': p.inbound, total: p.inbound + p.outbound)
     end
     meeting_time.each do |p|
       i_t = @interaction_time_per_account.find { |it| it.id == p.id }
       if i_t.nil?
-        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, 'Meetings': p.total_meeting_hours, 'Attachments': 0, 'Sent E-mails': 0, 'Read E-mails': 0, total: p.total_meeting_hours)
+        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': p.total_meeting_hours, 'Attachments': 0, 'Sent E-mails': 0, 'Read E-mails': 0, total: p.total_meeting_hours)
       else
         i_t.Meetings = p.total_meeting_hours
         i_t.total += p.total_meeting_hours
@@ -310,15 +234,15 @@ class ReportsController < ApplicationController
       attachment_t = p.attachment_count * User::ATTACHMENT_TIME_SEC
       i_t = @interaction_time_per_account.find { |it| it.id == p.id }
       if i_t.nil?
-        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, 'Meetings': 0, 'Attachments': attachment_t, 'Sent E-mails': 0, 'Read E-mails': 0, total: attachment_t)
+        @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': 0, 'Attachments': attachment_t, 'Sent E-mails': 0, 'Read E-mails': 0, total: attachment_t)
       else
         i_t.Attachments = attachment_t
         i_t.total += attachment_t
       end
     end
     @interaction_time_per_account.sort_by! { |it| it.total.to_f }.reverse!
-    # take the top 10 interaction time per account, currently allotted space only fits about 10 categories on xAxis before labels are cut off
-    @interaction_time_per_account = @interaction_time_per_account.take(10)
+    # take the top 8 interaction time per account, currently allotted space only fits about 8 categories on xAxis before labels are cut off
+    @interaction_time_per_account = @interaction_time_per_account.take(8)
 
     render layout: false
   end
@@ -328,6 +252,109 @@ class ReportsController < ApplicationController
 
   def get_owners_in_org
     @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
+  end
+
+  def get_leaderboard_data(metric, users, projects, ordered_by=nil)
+    data = []
+    categories = nil
+    case metric
+      when TEAM_DASHBOARD_METRIC[:activities_last14d]
+        user_activities = User.count_all_activities_by_user(projects.ids, users.ids).group_by { |u| u.id }
+        return [data, categories] if user_activities.blank?
+
+        data = user_activities.map do |uid, activities|
+          user = users.find { |usr| usr.id == uid }
+          Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: activities, total: activities.sum(&:num_activities) })
+        end
+
+        categories = data.inject([nil]) do |memo, p|
+          memo | p.y.select {|a| a.num_activities > 0}.map(&:category)
+        end  # get (and show in legend) only categories that have data
+      when TEAM_DASHBOARD_METRIC[:time_spent_last14d]
+        project_ids = projects.ids
+        user_emails = users.pluck(:email)
+        return [data, categories] if project_ids.blank? || user_emails.blank?
+
+        email_time = User.team_usage_report(project_ids, user_emails)
+        meeting_time = User.meeting_report(project_ids, user_emails)
+        attachment_count = User.sent_attachments_count(project_ids, user_emails)
+        data = users.map do |user|
+          email_t = email_time.find { |et| et.email == user.email }
+          if email_t.nil?
+            email_t = { "Read E-mails": 0, "Sent E-mails": 0 }
+          else
+            # TODO: figure out why some email_t are not nil but email_t.inbound or email_t.outbound are nil (Issue #692)
+            email_t = {
+                "Read E-mails": (email_t.inbound / User::WORDS_PER_SEC[:Read]).round,
+                "Sent E-mails": (email_t.outbound / User::WORDS_PER_SEC[:Write]).round
+            }
+          end
+          meeting_t = meeting_time.find { |mt| mt.email == user.email }
+          meeting_t = meeting_t.nil? ? { Meetings: 0 } : { Meetings: meeting_t.total }
+          attachment_t = attachment_count.find { |at| at.email == user.email }
+          attachment_t = attachment_t.nil? ? { Attachments: 0 } : { Attachments: attachment_t.attachment_count * User::ATTACHMENT_TIME_SEC }
+          time_hash = email_t.merge(meeting_t).merge(attachment_t)
+          # time_hash = [email_t, meeting_t, attachment_t].reduce(&:merge)
+          Hashie::Mash.new({ id: user.id, name: get_full_name(user), y: time_hash, total: time_hash.values.sum })
+        end
+        categories = ["Meetings", "Attachments", "Read E-mails", "Sent E-mails"]
+      when TEAM_DASHBOARD_METRIC[:opportunities]
+        opportunities_owned = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count")
+                                  .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}')")
+                                  .group('users.id').order("project_count DESC")
+        data = opportunities_owned.map do |u|
+          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.project_count })
+        end
+      when TEAM_DASHBOARD_METRIC[:win_rate]
+        win_rates = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count, COUNT(DISTINCT salesforce_opportunities.id) AS win_count, COUNT(DISTINCT salesforce_opportunities.id)/GREATEST(COUNT(DISTINCT projects.id)::float, 1) * 100 AS win_rate")
+                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') LEFT JOIN salesforce_opportunities ON salesforce_opportunities.contextsmith_project_id = projects.id AND salesforce_opportunities.is_won IS TRUE")
+                        .group('users.id').order("win_rate DESC")
+        data = win_rates.map do |u|
+          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.win_rate.round(2) })
+        end
+      when TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d]
+        new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count")
+                        .joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}")
+                        .group('users.id').order("task_count DESC")
+        data = new_tasks.map do |u|
+          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+        end
+      when TEAM_DASHBOARD_METRIC[:closed_alerts_and_tasks_last14d]
+        closed_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count")
+                           .joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND notifications.is_complete IS TRUE AND EXTRACT(EPOCH FROM notifications.complete_date) >= #{14.days.ago.midnight.to_i}")
+                           .group('users.id').order("task_count DESC")
+        data = closed_tasks.map do |u|
+          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+        end
+      when TEAM_DASHBOARD_METRIC[:open_alerts_and_tasks]
+        open_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count")
+                         .joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND notifications.is_complete IS FALSE")
+                         .group('users.id').order("task_count DESC")
+        data = open_tasks.map do |u|
+          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+        end
+      else # Invalid
+        return [data, categories]
+    end
+
+    if ordered_by
+    #   use order of the data already passed in
+      data = data.index_by(&:id).values_at(*ordered_by.map(&:id))
+    else
+      if categories
+        data.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: user name, case-insensitive in alphabetical order
+      else  # sort by y instead
+        data.sort!{ |d1, d2| (d1.y != d2.y) ? d2.y <=> d1.y : d1.name.upcase <=> d2.name.upcase }
+      end
+    end
+
+    data = data.take(25)  # TODO: real left chart pagination
+    puts "**************** data(#{data.present? ? data.length : 0}) ************"
+    puts data
+    puts "************ categories(#{categories.present? ? categories.length : 0}) *************"
+    puts categories
+
+    [data, categories]
   end
 
 end

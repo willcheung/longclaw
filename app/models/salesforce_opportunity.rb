@@ -184,7 +184,7 @@ class SalesforceOpportunity < ActiveRecord::Base
 
       # Update Salesforce
       # Put the fields and values to be updated into a hash object.
-      sObject_meta = { id: salesforce_opportunity.salesforce_opportunity_id, type: "opportunity" }
+      sObject_meta = { id: salesforce_opportunity.salesforce_opportunity_id, type: "Opportunity" }
       sObject_fields = { name: fields[:name], stage_name: fields[:stage_name], close_date: close_date, probability: fields[:probability], amount: fields[:amount], forecast_category_name: fields[:forecast_category_name] }
       update_result = SalesforceService.update_salesforce(client: client, update_type: "opportunity", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 

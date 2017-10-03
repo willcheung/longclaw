@@ -196,11 +196,10 @@ class Contact < ActiveRecord::Base
     result
   end
 
-  # Takes Contacts in a CS account and exports them into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.  Note: If a value exists in the CS Contact field, then this value will overwrite the corresponding field in the matched target SFDC Contact.
+  # Exports all Contacts in a CS account and into a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.  Note: If a value exists in the CS Contact field, then this value will overwrite the corresponding field in the matched target SFDC Contact.
   # Parameters: client - connection to Salesforce
   #             account_id - the CS account from which this exports contacts
   #             sfdc_account_id - id of SFDC account to which this exports contacts 
-  #             limit (optional) - the max number of contacts to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
@@ -218,7 +217,7 @@ class Contact < ActiveRecord::Base
       #puts "----> sObject_meta:\t #{sObject_meta}\n"
       #puts "----> sObject_fields:\t #{sObject_fields}\n"
       sObject_fields[:external_sfdc_id] = c.external_source_id if c.is_source_from_salesforce?
-      update_result = SalesforceService.update_salesforce(client: client, update_type: "contacts", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+      update_result = SalesforceService.update_salesforce(client: client, update_type: "contact", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
       if update_result[:status] == "SUCCESS"
         puts "-> a SFDC Contact (#{c.last_name}, #{c.first_name}, #{c.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ update_result[:result] }'."
@@ -234,6 +233,43 @@ class Contact < ActiveRecord::Base
     end # End: Account.find(account_id).contacts.each do
 
     result
+  end
+
+  # Exports a single contact to a SFDC account.  Makes an attempt to identify duplicates (by external_sfdc_id if a Salesforce contact; or account + email) and performs an upsert.  Note: If a value exists in the CS Contact field, then this value will overwrite the corresponding field in the matched target SFDC Contact.
+  # Parameters: client - connection to Salesforce
+  #             sfdc_account_id - id of SFDC account to which this exports/update the contact 
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contact to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             result - the sObject SFDC id's that were successfully created in SFDC, or nil if none were created.
+  #             detail - a list of all errors, or an empty list if no errors occurred. 
+  def export_cs_contact(client, sfdc_account_id)
+    # return { status: "ERROR", result: "Simulated SFDC error in export_cs_contact", detail: "Simulated detail" }
+    # puts "## Exporting CS contact to sfdc_account_id = #{ sfdc_account_id } ..." 
+
+    sObject_meta = { id: sfdc_account_id, type: "Account" }
+    sObject_fields = { FirstName: self.first_name, LastName: self.last_name, Email: self.email, Title: self.title, Department: self.department, Phone: self.phone, MobilePhone: self.mobile }
+    # Unused: LeadSource: self.source, Description: self.background_info
+    #puts "----> sObject_meta:\t #{sObject_meta}\n"
+    #puts "----> sObject_fields:\t #{sObject_fields}\n"
+    sObject_fields[:external_sfdc_id] = self.external_source_id if self.is_source_from_salesforce?
+    update_result = SalesforceService.update_salesforce(client: client, update_type: "contact", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+
+    if update_result[:status] == "SUCCESS"
+      puts "-> a SFDC Contact (#{self.last_name}, #{self.first_name}, #{self.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ update_result[:result] }'."
+      result = { status: "SUCCESS", result: update_result[:result], detail: update_result[:detail] }
+    else  # Salesforce query failure
+      # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
+      result = { status: "ERROR", result: update_result[:result], detail: update_result[:detail] + " sObject_fields=#{ sObject_fields }" }
+    end
+
+    result
+  end
+
+  # For a valid contact, creates a new SFDC contact or updates fields of linked SFDC Contact (does NOT update the CS copy of contact)
+  # Parameters: client - connection to Salesforce
+  #             sfdc_account_id - id of SFDC account to which this exports/update the contact 
+  def self.update_all_salesforce(client: , sfdc_account_id: , contact: , fields: , current_user: )
+    contact.export_cs_contact(client, sfdc_account_id)
   end
 
   private

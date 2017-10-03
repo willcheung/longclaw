@@ -6,8 +6,10 @@
         <tr><td><input type="hidden" id="sfa_id" value="<%= @salesforce_account.id %>"></td></tr>
         <tr><td><label for="salesforce_account_id">Id</label></td></tr>
         <tr><td><input type="text" id="salesforce_account_id" class="disabledinput" value="<%= @salesforce_account.salesforce_account_id %>" onkeyup="changedValue('account')"></td></tr>
-        <tr><td><label for="salesforce_account_name">Name *</label></td></tr>
+        <tr><td><label for="salesforce_account_name">* Name</label></td></tr>
         <tr><td><input type="text" id="salesforce_account_name" value="<%= @salesforce_account.salesforce_account_name %>" onkeyup="changedValue('account')"></td></tr>
+        <tr><td><label>* = required field</label></td></tr>
+
         <tr><td class="button-td"><button id="update_account" class="btn btn-primary btn-sm update_salesforce" disabled="disable">Update&nbsp;<img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:30px;"/></button></td></tr>
     </table>
 </div>

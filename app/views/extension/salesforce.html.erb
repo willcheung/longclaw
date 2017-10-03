@@ -1,13 +1,4 @@
 <style type="text/css">
-    body {
-        color: #999;
-        /* color: <%= get_contextsmith_blue %>; */
-        font-size: 11px;
-    }
-    extrastrong {
-        font-weight: bold;
-        color: black;
-    }
     .entity-title {
         font-size: 12px;
         font-weight: bold;
@@ -38,7 +29,7 @@
         color: #666;
         width: 100%;
     }
-    .disabledinput {
+    .disabledinput {  /* uneditable fields */
         color: #BBB;
         border: none;
         pointer-events: none;
@@ -49,10 +40,6 @@
     }
     .button-td{
         padding: 2.5em 0;
-    }
-    .btn.btn-primary:disabled {
-        opacity: .65;
-        color: white;
     }
 </style>
 
@@ -173,14 +160,12 @@
             }
             // fields = $.param(fields));
 
-            self.prop("disabled", "disable");
-
             $.ajax('/salesforce/update_all/'+entity_type+"/"+entity_id, {
                 async: true,
                 method: "POST",
                 data: { "fields": fields },
                 beforeSend: function () {
-                    self.addClass("btn-outline");
+                    self.prop("disabled", "disable");
                     self.html("<i class='fa fa-refresh fa-spin'></i>&nbsp;Updating&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>...");
                 },
                 success: function() {
@@ -204,7 +189,6 @@
                     },
                 },
                 complete: function() {
-                    self.removeClass("btn-outline");
                     // location.reload();
                 }
             });
