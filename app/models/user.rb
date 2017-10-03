@@ -246,7 +246,8 @@ class User < ActiveRecord::Base
         email: m.address,
         organization_id: organization_id,
         invited_by_id: invited_by_id,
-        invitation_created_at: Time.now
+        invitation_created_at: Time.now,
+        role: ROLE[:Unregistered]
       )
     end
   end
