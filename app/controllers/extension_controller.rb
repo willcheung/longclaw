@@ -64,6 +64,8 @@ class ExtensionController < ApplicationController
     @EMAIL_SUBJECT_TEXT_LENGTH_MAX = 65
     @NUM_LATEST_TRACKED_EMAIL_ACTIVITY_LIMIT = 8 # Number of newest tracked email activities shown in timeline
 
+    @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order("upper(accounts.name)") # for account picklist
+
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
     internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
     account_contacts_emails = (@account.present? && @account.contacts.present?) ? @account.contacts.map{|c| c.email.downcase}.sort : []

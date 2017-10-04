@@ -133,6 +133,9 @@
     .extension-timeline-content {
         font-size: 12px;
     }
+    div.chosen-container.chosen-container-single {
+        width: 100%;
+    }
 </style>
 
 <!-- TODO: move any relevant scripts to extension.js -->
@@ -248,7 +251,17 @@
                 }
             });
         });
-    });
+
+        $('.contextsmith_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});
+
+        $('.contextsmith_account_box').on('change',function(evt,params){
+            if(params){
+                var self = $(this);
+                var this_form = $("#"+self.attr("modal_id"));
+                this_form.find("#contact_account_id").attr("value", this_form.find("select option:selected").attr("value"));
+            }
+        });
+    }); /* end: $(document).ready */
 
     function changedValue(modal_id) {
         var self = $(this);
