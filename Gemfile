@@ -34,6 +34,7 @@ gem 'graphql'
 gem 'fullcontact'
 gem 'mail', :git => 'https://github.com/mikel/mail.git'
 gem 'mini_mime'
+gem 'stripe', :git => 'https://github.com/stripe/stripe-ruby'
 
 # Gems used only for assets and not required
 # in production environments by default.
