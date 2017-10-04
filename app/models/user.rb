@@ -72,7 +72,7 @@ class User < ActiveRecord::Base
   has_many    :projects, through: "project_members"
   has_many    :projects_all, through: "project_members_all", source: :project
 
-  scope :registered, -> { where.not encrypted_password: '' } # ecrypted_password is set for all registered users, whether they auth through google_oauth2 or exchange_pwd
+  scope :registered, -> { where.not role: 'Unregistered' }
   scope :not_disabled, -> { where is_disabled: false }
   scope :allow_refresh_inbox, -> { where refresh_inbox: true }
   scope :onboarded, -> { where onboarding_step: Utils::ONBOARDING[:onboarded] }
@@ -87,13 +87,16 @@ class User < ActiveRecord::Base
   # attr_encrypted :oauth_access_token
   attr_encrypted :password, key: ENV['encryption_key'], if: proc { |user| user.oauth_provider == User::AUTH_TYPE[:Exchange] }
 
-  PROFILE_COLOR = %w(#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565)
-  ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer', Basic: 'Basic', Pro: 'Professional', Biz: 'Business' }
-  OTHER_ROLE = { Trial: 'Trial', Chromeuser: "Chrome user" }  # TODO: remove "Chrome user"
-  AUTH_TYPE = { Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }
-  WORDS_PER_SEC = { Read: 2.0, Write: 0.42 }   # Reading=120WPM(<200)  Typing=~25WPM(<40)
-  #WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
-  ATTACHMENT_TIME_SEC = 60*9
+  PROFILE_COLOR = %w[#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565].freeze
+  ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer',
+           Basic: 'Basic', Pro: 'Professional', Biz: 'Business', Unregistered: 'Unregistered' }.freeze
+  OTHER_ROLE = { Trial: 'Trial', Chromeuser: 'Chrome user' }.freeze # TODO: remove "Chrome user"
+  AUTH_TYPE = { GmailBasic: 'google_oauth2_basic', Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }.freeze 
+  FREE_EMAIL_PROVIDERS = ENV['FREE_EMAIL_PROVIDERS'] || %w[yahoo.com gmail.com zoho.com outlook.com aol.com verizon.net comcast.net earthlink.net]
+
+  WORDS_PER_SEC = { Read: 2.0, Write: 0.42 }.freeze # Reading=120WPM(<200)  Typing=~25WPM(<40)
+  # WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
+  ATTACHMENT_TIME_SEC = 60 * 9
 
   def valid_streams_subscriptions
     self.subscriptions.joins(:project).where(projects: {id: Project.visible_to(self.organization_id, self.id).pluck(:id)})
@@ -184,55 +187,53 @@ class User < ActiveRecord::Base
   def self.find_for_google_oauth2(auth, time_zone='UTC', params)
     info = auth.info
     credentials = auth.credentials
-    user = User.find_by(oauth_provider: auth.provider, oauth_provider_uid: auth.uid )
 
+    oauth_attributes = {
+      oauth_provider: auth.provider,
+      oauth_access_token: credentials.token,
+      oauth_expires_at: Time.at(credentials.expires_at),
+      time_zone: time_zone,
+      oauth_provider_uid: auth.uid
+    }
+    oauth_attributes[:oauth_refresh_token] = credentials.refresh_token if credentials.refresh_token.present?
+
+    basic_attributes = {
+      first_name: info.first_name || '',
+      last_name: info.last_name || '',
+      email: info.email,
+      image_url: info.image,
+      is_disabled: false,
+      refresh_inbox: false,
+      role: ROLE[:Basic],
+      onboarding_step: Utils::ONBOARDING[:fill_in_info]
+    }
+
+    user = User.find_by_email(info.email)
     if user
-      user_attributes = {
-        oauth_access_token: credentials.token,
-        oauth_expires_at: Time.at(credentials.expires_at),
-        time_zone: time_zone
-      }
-      user_attributes[:oauth_refresh_token] = credentials.refresh_token if credentials.refresh_token.present?
-      user.update_attributes(user_attributes)
-      user
-    else
-      # Considered referred user if e-mail exists but not oauth elements
-      referred_user = User.find_by_email(info.email)
-      user_attributes = {
-        first_name: info.first_name || '',
-        last_name: info.last_name || '',
-        oauth_provider: auth.provider,
-        email: info.email,
-        image_url: info.image,
-        oauth_provider_uid: auth.uid,
-        password: Devise.friendly_token[0,20],
-        oauth_access_token: credentials.token,
-        oauth_refresh_token: credentials.refresh_token,
-        oauth_expires_at: Time.at(credentials.expires_at),
-        onboarding_step: Utils::ONBOARDING[:fill_in_info],
-        role: ROLE[:Basic],
-        is_disabled: false,
-        refresh_inbox: false,
-        time_zone: time_zone
-      }
-      user_attributes[:role] = params['role'] if params['role']
-      user_attributes[:refresh_inbox] = true if params['role'] == 'Business' # TODO: make this process a little more flexible/robust
-
-      if referred_user
-        # Change referred_user into real user
-        referred_user.update_attributes(user_attributes)
-
-        return referred_user
-      else # New User
-        user = User.create(user_attributes)
-        domain = info.email.include?('gmail.com') ? info.email : get_domain(info.email)
-
-        org = Organization.create_or_update_user_organization(domain, user)
-        user.update_attributes(organization_id: org.id)
-
-        return user
+      user.assign_attributes(oauth_attributes)
+      if user.role == ROLE[:Unregistered] # user was added through discovery
+        user.assign_attributes(basic_attributes)
+        user.password = Devise.friendly_token[0, 20] if user.password.blank? # for legacy users
       end
+    else
+      user = new_user(oauth_attributes.merge(basic_attributes))
     end
+
+    user.maybe_upgrade # do we have to upgrade the user as the organization plan is available
+    user.save
+    user
+  end
+
+  def self.new_user(initial_attributes)
+    email = initial_attributes[:email]
+    user = User.new(initial_attributes)
+    user.password = Devise.friendly_token[0, 20]
+
+    domain = FREE_EMAIL_PROVIDERS.include?(get_domain(email)) ? email : get_domain(email)
+    org = Organization.create_or_update_user_organization(domain, user)
+    user.organization_id = org.id
+
+    user
   end
 
   def self.create_from_clusters(internal_members, invited_by_id, organization_id)
@@ -245,7 +246,8 @@ class User < ActiveRecord::Base
         email: m.address,
         organization_id: organization_id,
         invited_by_id: invited_by_id,
-        invitation_created_at: Time.now
+        invitation_created_at: Time.now,
+        role: ROLE[:Unregistered]
       )
     end
   end
@@ -904,10 +906,27 @@ class User < ActiveRecord::Base
     ROLE.each do |r| #self.ROLE.each do |clm|
       roles_map[r[1]] = r[1]
     end
-    OTHER_ROLE.each do |r| #self.ROLE.each do |clm|
-      roles_map[r[1]] = r[1]
-    end if include_other_roles
-    return roles_map
+    if include_other_roles
+      OTHER_ROLE.each do |r| # self.ROLE.each do |clm|
+        roles_map[r[1]] = r[1]
+      end
+    end
+    roles_map
+  end
+
+  # check if user needs to be upgraded based on org plan and if so, do it
+  def maybe_upgrade
+    if organization.plan_id.present? && organization.plan_id.start_with?('enterprise')
+      upgrade(:Biz)
+    end
+  end
+
+  def upgrade(role)
+    puts "User #{email} upgraded to #{role}"
+    if role == :Biz
+      self.refresh_inbox = true
+    end
+    self.role = ROLE[role]
   end
 
   ######### Basic ACL ##########

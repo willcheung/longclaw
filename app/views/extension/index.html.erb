@@ -37,10 +37,28 @@
           </div>
         </div>
 
+        <% if current_user.pro? && current_user.oauth_provider == 'google_oauth2_basic' %>
+
+            <div class="row well text-center reminder" style="margin-top: 30px;">
+            <p>Please grant us additional permissions to sync your emails and contacts:<br>
+              <a class="btn btn-primary" style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="popupCenter(this.href, 'Sign in', 400, 600); $('.reminder').remove(); return false;"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Click Here</span></a>
+            </p>
+            </div>
+        <% end %>
+        <div class="row text-center" style="margin-top: 50px;">
+          <div class="" role="group" aria-label="...">
+            <%= link_to  'plans/new',  class: 'btn btn-default btn-sm btn-outline', target: "_blank" do %>
+                <i class="fa fa-star"></i> Upgrade
+            <% end %>
+          </div>
+        </div>
+
         <h4 class="text-center middle-box" style="margin-top: 100px">Click on an email or hover over<br>the sender to
           see contact profile here.</h4>
         <img class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
         </div>
+
+
         <% if params[:login] %>
             <!-- if params[:login] is set, redirected here after signing in successfully from extension -->
             <script type="text/javascript">
