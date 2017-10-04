@@ -73,7 +73,7 @@ class ExtensionController < ApplicationController
     people_emails = external_emails | internal_emails - [current_user.email.downcase]
     account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]  # filter by users already in e-mail thread, then truncate list
 
-    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e) } }
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e), name_from_params: (params[:external].values.find{|p| p.second.downcase == e} || [nil]).first } }
     @account_contacts_with_profile = account_contacts_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e) } }
 
     people_emails += @account_contacts_with_profile.map{|p| p[:email]}
