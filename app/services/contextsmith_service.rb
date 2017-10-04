@@ -1,3 +1,5 @@
+require 'securerandom'
+
 class ContextsmithService
 
   def self.load_emails_from_backend(project, max=100, query=nil, save_in_db=true, after=nil, is_time=true, neg_sentiment=0, request=true, is_test=false)
@@ -19,13 +21,13 @@ class ContextsmithService
       result
     end
   end
-  
+
   # 6.months.ago or more is too long ago, returns nil. 150.days is just less than 6.months and should work.
   def self.load_calendar_from_backend(project, max=100, after=150.days.ago.to_i, before=1.week.from_now.to_i, save_in_db=true)
     base_url = ENV["csback_script_base_url"] + "/newsfeed/event"
     params =  "?max=" + max.to_s + "&before=" + before.to_s + "&after=" + after.to_s
-    
-    load_for_project_from_backend(project, base_url + params) do |data| 
+
+    load_for_project_from_backend(project, base_url + params) do |data|
       puts "Found #{data[0]['conversations'].size} calendar events!\n"
       Activity.load_calendar(data, project, save_in_db)
     end
@@ -54,7 +56,7 @@ class ContextsmithService
     if Rails.env.production?
       sources = [user_auth_params(user)]
       in_domain = ""
-    elsif Rails.env.test? # Test / DEBUG 
+    elsif Rails.env.test? # Test / DEBUG
       sources = [user_auth_params(user)]
       in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
     else # Dev environment
@@ -63,12 +65,21 @@ class ContextsmithService
       in_domain = "&in_domain=comprehend.com"
     end
     final_url = base_url + "?preview=true&time=true&neg_sentiment=0&cluster_method=BY_EMAIL_DOMAIN&max=" + max.to_s + "&callback=" + callback_url + in_domain
-    puts "Calling backend service for clustering: " + final_url
+    r = request_id(user.nil? ? '' : user.email)
+    puts 'Calling backend service for clustering: ' + final_url + ' X-Request-ID:' + r
 
     uri = URI(final_url)
-    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'X-Request-ID' => r)
     req.body = { sources: sources }.to_json
     res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+  end
+
+  def self.request_id(prefix=nil)
+    if prefix
+      prefix + '_' + SecureRandom.urlsafe_base64(10)
+    else
+      SecureRandom.urlsafe_base64(10)
+    end
   end
 
   private
@@ -91,15 +102,16 @@ class ContextsmithService
     in_domain = Rails.env.development? ? "&in_domain=comprehend.com" : ""
 
     final_url = url + in_domain
-    puts "Calling backend service: " + final_url
+    r = request_id
+    puts 'Calling backend service: ' + final_url + ' X-Request-ID:' + r
 
     p sources
 
     begin
       uri = URI(final_url)
-      req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+      req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'X-Request-ID' => r)
       req.body = { sources: sources, external_clusters: ex_clusters }.to_json
-      res = Net::HTTP.start(uri.host, uri.port 
+      res = Net::HTTP.start(uri.host, uri.port
         #, use_ssl: uri.scheme == "https"
         ) { |http| http.request(req) }
       data = JSON.parse(res.body.to_s)
@@ -131,7 +143,7 @@ class ContextsmithService
       success = user.token_expired? ? user.refresh_token! : true
       unless success
         puts "Warning: Gmail token refresh failed for: #{ user.first_name } #{ user.last_name } #{ user.email } (Organization=#{ user.organization.name }, Role=#{ user.role.nil? ? "nil" : user.role }, Onboarding Step=#{ user.onboarding_step.nil? ? "nil" : user.onboarding_step }, Last sign-in=#{ user.last_sign_in_at.nil? ? "none" : user.last_sign_in_at })."
-        return nil 
+        return nil
       end
       { token: user.oauth_access_token, email: user.email, kind: "gmail" }
     when User::AUTH_TYPE[:Exchange]
