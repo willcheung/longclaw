@@ -173,7 +173,7 @@
 
         // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it
         $(".company-link").click(function(){
-            window.open($(this).attr("url")); 
+            window.open($(this).attr("url"));
             return false; //don't expand/collapse section
         });
 
@@ -339,7 +339,12 @@
                                                     ><extrastrong><%= profile_fullname %></extrastrong></td></tr>
                                                     <tr><td><%= profile.title %></td></tr>
                                                     <% if profile.organization.present? || valid_domain?(get_domain(p[:email])) %>
-                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link company-link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= profile.organization.present? ? profile.organization : get_domain(p[:email]) %></span></td></tr>
+                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>
+                                                        <span
+                                                        <% if valid_domain?(get_domain(p[:email])) %>
+                                                            class="link company-link" url="<%= 'http://'+get_domain(p[:email]) %>" title="Visit company website"
+                                                        <% end %>
+                                                        ><%= profile.organization.present? ? profile.organization : get_domain(p[:email]) %></span></td></tr>
                                                     <% end %>
                                                     <% if profile.location.present? %>
                                                         <tr><td>
