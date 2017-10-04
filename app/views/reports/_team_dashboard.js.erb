@@ -98,7 +98,7 @@ while(chart.series.length > 0) {
           stackLabels: {
             enabled: true,
             align: 'center',
-            x: <%= key == 'metric' ? '365' : '-10' %>,
+            x: <%= '-' if key == 'sorted_by' %>axis.pos,
             style: {
               color: (Highcharts.theme && Highcharts.theme.textColor) || 'white'
             },
@@ -116,7 +116,7 @@ while(chart.series.length > 0) {
           stackLabels: {
             enabled: true,
             align: 'center',
-            x: <%= key == 'metric' ? '365' : '-10' %>,
+            x: <%= '-' if key == 'sorted_by' %>axis.pos,
             style: {
                   color: (Highcharts.theme && Highcharts.theme.textColor) || 'white'
             },
