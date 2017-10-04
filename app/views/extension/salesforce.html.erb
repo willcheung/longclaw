@@ -46,7 +46,7 @@
 <body>
     <div class="white-bg">
         <div>
-            <% if current_user.superadmin? %>
+            <% if current_user.role != User::ROLE[:Basic] || current_user.superadmin? %>
                 <% if @salesforce_user.nil? %>
                     <div class="ibox-content text-center">
                         <div class="m-b-sm" style="margin: 60% 0">
@@ -56,35 +56,33 @@
                             </div>
                         </div>
                     </div>
-                <% else %>
+                <% else # connected to SFDC %>
                     <div class="text-center" style="padding: 1em;">
                         <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size: 9px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect <strong><%= truncate_with_ellipsis(@salesforce_user.oauth_user_name, 20) %></strong></a></span>
                     </div>
+                    <% if @salesforce_account.present? %>
+                        <%= render 'salesforce/account_form' %>
+                        <% if @salesforce_base_URL.present? %>
+                            <div class="container" style="padding-bottom: 2em">
+                                <a href="<%= @salesforce_base_URL + "/" + @salesforce_account.salesforce_account_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit account in Salesforce</a>
+                            </div>
+                        <% end %>
+                    <% else %>
+                        <%= render 'salesforce/link_account_form' %>
+                    <% end %>
+                    <% if @salesforce_opportunity.present? %>
+                        <%= render 'salesforce/opportunity_form' %>
+                        <% if @salesforce_base_URL.present? %>
+                            <div class="container" style="padding-bottom: 2em">
+                                <a href="<%= @salesforce_base_URL + "/" + @salesforce_opportunity.salesforce_opportunity_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit opportunity in Salesforce</a>
+                            </div>
+                        <% end %>
+                    <% else %>
+                        <%= render 'salesforce/link_opportunity_form' %>
+                    <% end %>
                 <% end %>
-            <% else # if !current_user.superadmin? %>
+            <% else # if current user is Basic & not superuser %>
                 <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
-            <% end %>
-            <% if @salesforce_user.present? %>
-                <% if @salesforce_account.present? %>
-                    <%= render 'salesforce/account_form' %>
-                    <% if @salesforce_base_URL.present? %>
-                        <div class="container" style="padding-bottom: 2em">
-                            <a href="<%= @salesforce_base_URL + "/" + @salesforce_account.salesforce_account_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit account in Salesforce</a>
-                        </div>
-                    <% end %>
-                <% else %>
-                    <%= render 'salesforce/link_account_form' %>
-                <% end %>
-                <% if @salesforce_opportunity.present? %>
-                    <%= render 'salesforce/opportunity_form' %>
-                    <% if @salesforce_base_URL.present? %>
-                        <div class="container" style="padding-bottom: 2em">
-                            <a href="<%= @salesforce_base_URL + "/" + @salesforce_opportunity.salesforce_opportunity_id %>" target="_blank"><i class="fa fa-external-link"></i> Visit opportunity in Salesforce</a>
-                        </div>
-                    <% end %>
-                <% else %>
-                    <%= render 'salesforce/link_opportunity_form' %>
-                <% end %>
             <% end %>
         </div>
     </div>
