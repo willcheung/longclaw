@@ -66,8 +66,7 @@
         </p>
 
         <div class="plan-action">
-          <a class="btn btn-primary btn-block btn-large" disabled href=
-              "#"><%= (current_user.pro? || current_user.biz?) ? 'Included' : 'Your current plan' %></a>
+          <a class="btn btn-primary btn-block btn-large" disabled href="#"><%= (current_user.pro? || current_user.biz?) ? 'Included' : 'Your current plan' %></a>
         </div>
       </th>
 
@@ -91,8 +90,7 @@
           <% if current_user.pro? %>
           <a class="btn btn-primary btn-block btn-large" disabled href="#">Thanks for upgrading!</a>
               <% else %>
-              <a class="btn btn-primary btn-block btn-large upgrade pro-upgrade" data-amount=42000 data-plan="pro-v1" href=
-                  "#">Upgrade Now</a>
+              <a class="btn btn-primary btn-block btn-large upgrade pro-upgrade" data-amount=42000 data-plan="pro-v1" href="#">Upgrade Now</a>
           <% end %>
         </div>
 

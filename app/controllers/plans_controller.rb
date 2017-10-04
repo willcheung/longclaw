@@ -16,9 +16,9 @@ class PlansController < ApplicationController
 
   def create
     customer = if current_user.stripe_customer_id
-                 find_or_create_customer(current_user, params[:stripeEmail], params[:stripeToken])
+                 find_or_create_customer(current_user, current_user.email, params[:stripeToken])
                else
-                 create_customer(current_user, params[:stripeEmail], params[:stripeToken])
+                 create_customer(current_user, current_user.email, params[:stripeToken])
                end
     params.require(:plan)
     plan = params[:plan]

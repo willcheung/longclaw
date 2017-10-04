@@ -4,7 +4,7 @@
     <% if params[:welcome] %>
     <h1>Thank you for upgrading!</h1>
     <% end %>
-    <h2>Your are subscribed to plan: <%= @subscription.plan.name %></h2>
+    <h2>Your subscribed plan is: <%= plan.name %></h2>
 
     <% if current_user.role == User::ROLE[:Pro] %>
         <p class="muted"><small>You can <a href="#" class="btn btn-xs btn-outline btn-primary" onclick="window.close();">close</a> this window and return to your e-mail client</small></p>

@@ -91,7 +91,7 @@ class User < ActiveRecord::Base
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer',
            Basic: 'Basic', Pro: 'Professional', Biz: 'Business', Unregistered: 'Unregistered' }.freeze
   OTHER_ROLE = { Trial: 'Trial', Chromeuser: 'Chrome user' }.freeze # TODO: remove "Chrome user"
-  AUTH_TYPE = { Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }.freeze # there's also google_oauth2_basic
+  AUTH_TYPE = { GmailBasic: 'google_oauth2_basic', Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }.freeze 
   FREE_EMAIL_PROVIDERS = ENV['FREE_EMAIL_PROVIDERS'] || %w[yahoo.com gmail.com zoho.com outlook.com aol.com verizon.net comcast.net earthlink.net]
 
   WORDS_PER_SEC = { Read: 2.0, Write: 0.42 }.freeze # Reading=120WPM(<200)  Typing=~25WPM(<40)
