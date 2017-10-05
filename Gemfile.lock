@@ -117,6 +117,8 @@ GEM
       responders
       thread_safe (~> 0.1)
       warden (~> 1.2.3)
+    email_validator (1.6.0)
+      activemodel
     encryptor (3.0.0)
     errbase (0.0.3)
     erubis (2.7.0)
@@ -298,6 +300,7 @@ DEPENDENCIES
   d3-rails (~> 3.5)
   device_detector
   devise (~> 3.4.1)
+  email_validator
   exception_notification
   ffaker
   fullcontact

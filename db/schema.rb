@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171002215716) do
+ActiveRecord::Schema.define(version: 20171005043912) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -413,8 +413,9 @@ ActiveRecord::Schema.define(version: 20171002215716) do
   create_table "tracking_settings", force: :cascade do |t|
     t.uuid     "user_id"
     t.datetime "last_seen"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+    t.string   "bcc_email",  default: ""
   end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|

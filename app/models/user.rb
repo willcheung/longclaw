@@ -37,6 +37,8 @@
 #  role                   :string
 #  refresh_inbox          :boolean          default(TRUE), not null
 #  encrypted_password_iv  :string
+#  billing_email          :string
+#  stripe_customer_id     :string
 #
 # Indexes
 #
