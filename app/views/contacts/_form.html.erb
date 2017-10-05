@@ -7,16 +7,16 @@
   <%# Added Bootstrap classes, and help-block container for error messages %>
   <%# TODO: Update contact error messages are currently not being displayed.  Will need to address this lack of error feedback to user. %>
       <span class="help-block" style="color:red"></span>
-      <%= f.input :first_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
-      <%= f.input :last_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
-      <%= f.input :title, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
-      <%= f.input :department, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" } %>
-      <%= f.input :email, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" }, :required => true %>
-      <%= f.input :phone, wrapper_html: { class: 'col-md-4', onkeyup: "changedValue('" + modal_id +"')" } %>
+      <%= f.input :first_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.first_name } %>
+      <%= f.input :last_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.last_name } %>
+      <%= f.input :title, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.title } %>
+      <%= f.input :department, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.department } %>
+      <%= f.input :email, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.email }, :required => true %>
+      <%= f.input :phone, wrapper_html: { class: 'col-md-4', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.phone } %>
 
-      <div class="form-group string optional contact_account_id col-md-12">
+      <div class="form-group string required contact_account_id col-md-12" onchange="changedValue('<%= modal_id %>')" old_value="<%= contact.account_id %>">
         <%= f.label :account %>
-        <select class="contextsmith_account_box" data-placeholder="Select an account" onchange="changedValue('<%= modal_id %>')" name="contact[account_id]" id="contact_account_id">
+        <select class="contextsmith_account_box" data-placeholder="Select an account" name="contact[account_id]" id="contact_account_id">
           <% if @accounts.blank?  %>
             <option value="nil" disabled>--No accounts available--</option>
           <% else %>
