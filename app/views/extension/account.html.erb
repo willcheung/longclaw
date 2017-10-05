@@ -133,6 +133,9 @@
     .extension-timeline-content {
         font-size: 12px;
     }
+    div.chosen-container.chosen-container-single {
+        width: 100%;
+    }
 </style>
 
 <!-- TODO: move any relevant scripts to extension.js -->
@@ -170,7 +173,7 @@
 
         // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it
         $(".company-link").click(function(){
-            window.open($(this).attr("url")); 
+            window.open($(this).attr("url"));
             return false; //don't expand/collapse section
         });
 
@@ -222,7 +225,7 @@
                 success: function() {
                     self.addClass("btn-success");
                     self.html("✓&nbsp;Success!&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
-                    alert("Successfully " + button_text.toLowerCase() + "ed " + entity_type + "!");
+                    alert(toTitleCase(button_text) + " " + entity_type + " successful!");
                     location.reload();  // reload page
                     return false; // don't take the default action (create/update CS Contact),  because this was already done in AJAX request
                 },
@@ -248,7 +251,9 @@
                 }
             });
         });
-    });
+
+        $('.contextsmith_account_box').chosen({allow_single_deselect: true, width: $('.contextsmith_account').width() + 'px'});
+    }); /* end: $(document).ready */
 
     function changedValue(modal_id) {
         var self = $(this);
@@ -285,9 +290,12 @@
                 <span class="contact-group"><br/>MORE PEOPLE AT <%= @account.name.upcase %></span>
             <% end %>
             <% contacts_with_profile.each_with_index do |p, i| %>
-                <% profile = p[:profile] %>
                 <% contact = p[:contact] %>
-                <% profile_fullname = profile.fullname.present? ? profile.fullname : p[:email] %>
+                <% profile = p[:profile] %>
+                <% fullname = (contact.present? && get_full_name(contact) != contact.email) ? get_full_name(contact) : (p[:name_from_params].present? ? p[:name_from_params] : (profile.fullname || p[:email])) %>
+                <% title = (contact.present? && contact.title.present?) ? contact.title : profile.title %>
+                <% first_name = (p[:name_from_params].split(" ").first if p[:name_from_params].present?) || profile.given_name %>
+                <% last_name = (p[:name_from_params][first_name.length..p[:name_from_params].length].strip if p[:name_from_params].present?) || profile.family_name %>
                 <div class="panel <%= "panel-default" if n == 0 && i == 0 %>" id="Profile-<%= profile.id %>-<%= n %>">
                     <div>
                         <a class="profile" href="#collapseProfile-<%= profile.id %>-<%= n %>" data-toggle="collapse" data-parent="#accordion">
@@ -301,7 +309,7 @@
                                                     <% if profile.profileimg_url.present? %>
                                                         <img src="<%= profile.profileimg_url %>" class="profile-pic" title="profile pic">
                                                     <% else %>
-                                                        <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
+                                                        <%= get_rounded_initials_from_name(fullname, "profile-pic") %>
                                                     <% end %></td></tr>
                                                     <tr style="width:60px"><td style="padding-left: 10px">
                                                     <% if current_user.role != User::ROLE[:Basic] || current_user.superadmin? %>
@@ -309,7 +317,7 @@
                                                             <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
                                                         <% else %>
-                                                            <% newcontact = Contact.new(account: @account, last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email.downcase, phone: profile.phone, account_id: (@account.present? ? @account.id : nil)) %>
+                                                            <% newcontact = Contact.new(account: @account, last_name: last_name, first_name: first_name, title: profile.title, email: profile.email.downcase, phone: profile.phone, account_id: (@account.present? ? @account.id : nil)) %>
                                                             <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_new_contact_modal', modal_id: 'extension_new_contact_modal-'+profile.id.to_s, contact: newcontact %>
                                                         <% end %>
@@ -322,11 +330,16 @@
                                             <table>
                                                 <tbody class="contact-info">
                                                     <tr><td class="contact-name panel-title"
-                                                      <%= "title=#{p[:email]}" if profile_fullname != p[:email] %>
-                                                    ><extrastrong><%= profile_fullname %></extrastrong></td></tr>
-                                                    <tr><td><%= profile.title %></td></tr>
+                                                      <%= "title=#{p[:email]}" if fullname != p[:email] %>
+                                                    ><extrastrong><%= fullname %></extrastrong></td></tr>
+                                                    <tr><td><%= title %></td></tr>
                                                     <% if profile.organization.present? || valid_domain?(get_domain(p[:email])) %>
-                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link company-link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= profile.organization.present? ? profile.organization : get_domain(p[:email]) %></span></td></tr>
+                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>
+                                                        <span
+                                                        <% if valid_domain?(get_domain(p[:email])) %>
+                                                            class="link company-link" url="<%= 'http://'+get_domain(p[:email]) %>" title="Visit company website"
+                                                        <% end %>
+                                                        ><%= profile.organization.present? ? profile.organization : get_domain(p[:email]) %></span></td></tr>
                                                     <% end %>
                                                     <% if profile.location.present? %>
                                                         <tr><td>

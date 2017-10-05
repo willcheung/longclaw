@@ -14,16 +14,20 @@
       <%= f.input :email, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id +"')" }, :required => true %>
       <%= f.input :phone, wrapper_html: { class: 'col-md-4', onkeyup: "changedValue('" + modal_id +"')" } %>
 
-      <% account = Account.find_by(id: account_id) %>
-      <% if account %>
-        <div class='col-md-12'>
-          <div title="test"><%= f.label :account %>
-          <h4><%= account.name  %></h4>
-          </div>
+      <div class="form-group">
+        <%= f.label :account, class: 'col-md-3'%>
+        <div class="contextsmith_account col-lg-12">
+          <select class="contextsmith_account_box" data-placeholder="Select Contextsmith Account" onchange="changedValue('<%= modal_id %>')" name="contact[account_id]" id="contact_account_id">
+            <option value="nil">Select an account</option>
+            <% if !@accounts.nil?  %>
+              <% @accounts.each do |a| %>
+                <option value="<%=a.id %>" <%= "selected" if a.id == account_id %>><%=a.name %></option>
+              <% end %>
+            <% end  %>
+          </select>
         </div>
-      <% end %>
+      </div>
 
-      <%= f.input :account_id, as: :hidden, input_html: { value: account_id }, wrapper_html: { class: 'col-md-6'} %>
       <%= f.input :id, as: :hidden %>
       <%= f.input :source, as: :hidden %>
       <%= f.input :external_source_id, as: :hidden %>

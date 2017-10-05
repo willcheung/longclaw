@@ -518,7 +518,7 @@ class SalesforceController < ApplicationController
         return
       end
 
-      update_result = Contact.update_all_salesforce(client: client, sfdc_account_id: salesforce_account.salesforce_account_id, contact: contact, fields: params[:fields], current_user: current_user)
+      update_result = Contact.update_all_salesforce(client: client, sfdc_account_id: salesforce_account.salesforce_account_id, contact: contact) # params[:fields], current_user
 
       if update_result[:status] == "ERROR"
         detail = "Error while attempting to create/update SFDC Contact Id='#{contact.external_source_id}' for CS contact Id='#{contact.id}'. #{ update_result[:result] } Details: #{ update_result[:detail] }"
@@ -528,7 +528,7 @@ class SalesforceController < ApplicationController
       end
 
       # Finally, update CS contact to point back to SFDC contact
-      if !contact.update(source: "Salesforce2",
+      if !contact.update(source: "Salesforce",
                          external_source_id: update_result[:result]
         )
         e = contact.errors.messages

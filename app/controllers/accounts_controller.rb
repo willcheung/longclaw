@@ -11,11 +11,11 @@ class AccountsController < ApplicationController
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
 
     if params[:account_type] == "none"
-      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
+      @accounts = Account.eager_load(:projects, :user).where(organization_id: current_user.organization_id).order("upper(accounts.name)")
     elsif params[:account_type]
-      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ? AND accounts.category = ?", current_user.organization_id, params[:account_type]).order('accounts.name')
+      @accounts = Account.eager_load(:projects, :user).where(organization_id: current_user.organization_id, category: params[:account_type]).order("upper(accounts.name)")
     else
-      @accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order('accounts.name')
+      @accounts = Account.eager_load(:projects, :user).where(organization_id: current_user.organization_id).order("upper(accounts.name)")
     end
 
     # Incrementally apply filters
