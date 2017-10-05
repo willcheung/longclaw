@@ -4,11 +4,10 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
-  before_action :set_account_and_project
+  before_action :set_account_and_project, only: [:account, :salesforce]
   before_action :get_account_types, only: :no_account
   # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
   # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
-  # before_action :get_current_org_users, only: :alerts_tasks
 
   def test
     render layout: "empty"
@@ -122,17 +121,17 @@ class ExtensionController < ApplicationController
     @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
   end
 
-  def alerts_tasks
-    @notifications = @project.notifications.order(:is_complete).take(15)
-  end
+  # def alerts_tasks
+  #   @notifications = @project.notifications.order(:is_complete).take(15)
+  # end
 
-  def contacts
-    @project_members = @project.project_members
-    @suggested_members = @project.project_members_all.pending
-  end
+  # def contacts
+  #   @project_members = @project.project_members
+  #   @suggested_members = @project.project_members_all.pending
+  # end
 
-  def metrics
-  end
+  # def metrics
+  # end
 
   def create_account
     @account = Account.new(account_params.merge(
