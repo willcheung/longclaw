@@ -2,7 +2,7 @@ class ReportsController < ApplicationController
   before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
 
   ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :days_inactive => "Days Inactive", :open_alerts_and_tasks => "Open Alerts & Tasks", :overdue_tasks => "Total Overdue Tasks", :deal_size => "Deal Size", :days_to_close => "Days to Close"} # Removed: :risk_score => "Risk Score"
-  TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :opportunities => "Opportunities", :win_rate => "Win Rate", :new_alerts_and_tasks_last14d => "New Alerts & Tasks (Last 14d)", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks"}
+  TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :closed_won => "Closed Won", :win_rate => "Win Rate", :opportunities => "Opportunities", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks" } # Removed: :new_alerts_and_tasks_last_14d
 
   # "accounts_dashboard" is actually referring to opportunities, AKA projects
   def accounts_dashboard
@@ -305,6 +305,13 @@ class ReportsController < ApplicationController
         data = opportunities_owned.map do |u|
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.project_count })
         end
+      when TEAM_DASHBOARD_METRIC[:closed_won]
+        closed_won = users.select("users.*, COALESCE(SUM(salesforce_opportunities.amount), 0) AS closed_won_amount")
+                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') LEFT JOIN salesforce_opportunities ON salesforce_opportunities.contextsmith_project_id = projects.id AND salesforce_opportunities.is_won IS TRUE")
+                        .group('users.id').order("closed_won_amount DESC")
+        data = closed_won.map do |u|
+          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.closed_won_amount.round(2) })
+        end
       when TEAM_DASHBOARD_METRIC[:win_rate]
         win_rates = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count, COUNT(DISTINCT salesforce_opportunities.id) AS win_count, COUNT(DISTINCT salesforce_opportunities.id)/GREATEST(COUNT(DISTINCT projects.id)::float, 1) * 100 AS win_rate")
                         .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') LEFT JOIN salesforce_opportunities ON salesforce_opportunities.contextsmith_project_id = projects.id AND salesforce_opportunities.is_won IS TRUE")
@@ -312,13 +319,13 @@ class ReportsController < ApplicationController
         data = win_rates.map do |u|
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.win_rate.round(2) })
         end
-      when TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d]
-        new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count")
-                        .joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}")
-                        .group('users.id').order("task_count DESC")
-        data = new_tasks.map do |u|
-          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
-        end
+      # when TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d]
+      #   new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count")
+      #                   .joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND EXTRACT(EPOCH FROM notifications.created_at) >= #{14.days.ago.midnight.to_i}")
+      #                   .group('users.id').order("task_count DESC")
+      #   data = new_tasks.map do |u|
+      #     Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.task_count })
+      #   end
       when TEAM_DASHBOARD_METRIC[:closed_alerts_and_tasks_last14d]
         closed_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count")
                            .joins("LEFT JOIN notifications ON notifications.assign_to = users.id AND notifications.category != '#{Notification::CATEGORY[:Attachment]}' AND notifications.project_id IN ('#{projects.ids.join("','")}') AND notifications.is_complete IS TRUE AND EXTRACT(EPOCH FROM notifications.complete_date) >= #{14.days.ago.midnight.to_i}")
@@ -349,10 +356,10 @@ class ReportsController < ApplicationController
     end
 
     data = data.take(25)  # TODO: real left chart pagination
-    puts "**************** data(#{data.present? ? data.length : 0}) ************"
-    puts data
-    puts "************ categories(#{categories.present? ? categories.length : 0}) *************"
-    puts categories
+    # puts "**************** data(#{data.present? ? data.length : 0}) ************"
+    # puts data
+    # puts "************ categories(#{categories.present? ? categories.length : 0}) *************"
+    # puts categories
 
     [data, categories]
   end
