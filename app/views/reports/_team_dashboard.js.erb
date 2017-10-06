@@ -143,7 +143,7 @@ while(chart.series.length > 0) {
 <% end %>
 
 //console.log("datamax=" + chart.yAxis[0].dataMax);
-chart.setSize(undefined, 70 + Math.min(1150, <%= @dashboard_data.sorted_by.data.size %> * 110)); //set graph height
+chart.setSize(undefined, 70 + Math.min(1150, <%= @dashboard_data.sorted_by.data? ? @dashboard_data.sorted_by.data.size : 0 %> * 110)); //set graph height
 
 <!--<% @dashboard_data.each do |k,v| %>-->
 //  console.log("<%= k %>");
