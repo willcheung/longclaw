@@ -99,7 +99,7 @@ class SettingsController < ApplicationController
 		if current_user.role == User::ROLE[:Admin]
 			@accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order("upper(accounts.name)")
 
-			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where('contextsmith_organization_id = ?',current_user.organization_id).is_linked.order("upper(accounts.name)")
+			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where(contextsmith_organization_id: current_user.organization_id).is_linked.order("upper(accounts.name)")
 		end
 		@linked_to_sfdc = @salesforce_link_accounts.present?
 	end

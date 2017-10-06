@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170831173418) do
+ActiveRecord::Schema.define(version: 20171005043912) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -258,10 +258,13 @@ ActiveRecord::Schema.define(version: 20170831173418) do
   create_table "organizations", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name"
     t.string   "domain"
-    t.boolean  "is_active",  default: true
-    t.datetime "created_at",                null: false
-    t.datetime "updated_at",                null: false
+    t.boolean  "is_active",          default: true
+    t.datetime "created_at",                        null: false
+    t.datetime "updated_at",                        null: false
     t.uuid     "owner_id"
+    t.string   "billing_email"
+    t.string   "stripe_customer_id"
+    t.string   "plan_id"
   end
 
   create_table "profiles", force: :cascade do |t|
@@ -363,6 +366,7 @@ ActiveRecord::Schema.define(version: 20170831173418) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -409,8 +413,9 @@ ActiveRecord::Schema.define(version: 20170831173418) do
   create_table "tracking_settings", force: :cascade do |t|
     t.uuid     "user_id"
     t.datetime "last_seen"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+    t.string   "bcc_email",  default: ""
   end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
@@ -448,6 +453,8 @@ ActiveRecord::Schema.define(version: 20170831173418) do
     t.string   "role"
     t.boolean  "refresh_inbox",          default: true,  null: false
     t.string   "encrypted_password_iv"
+    t.string   "billing_email"
+    t.string   "stripe_customer_id"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree

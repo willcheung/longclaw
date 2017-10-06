@@ -1,0 +1,22 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+<div class="container-fluid">
+  <%= form_tag 'save_settings', {'data-toggle'=>"validator"} do %>
+      <!-- <h2>Settings</h2> -->
+  <section>
+    <h2>CRM Settings</h2>
+    <p>Automatically add an email address to BCC. This setting is enabled when CRM checkbox is checked inside your compose window.</p>
+    <div class="form-horizontal">
+        <div class="form-group">
+          <!-- <label for="bcc-address" class="col-sm-2 control-label">Email</label> -->
+          <div class="col-sm-10">
+            <input type="email" class="form-control" name="bcc_email" value="<%= @ts.bcc_email %>" placeholder="BCC Address">
+            <div class="help-block with-errors"></div>
+          </div>
+
+        </div>
+    </div>
+  </section>
+      <button class="pull-right btn btn-default btn-primary btn-outline save" type="submit">Save</button>
+  <% end %>
+  <section><!-- denotes end section --></section>
+</div>

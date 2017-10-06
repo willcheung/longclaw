@@ -170,7 +170,7 @@
 
         // Anchor "link" workaround code to allow the accordion expand/collapse sections to keep working, but allow user to click an anchor link inside of it
         $(".company-link").click(function(){
-            window.open($(this).attr("url")); 
+            window.open($(this).attr("url"));
             return false; //don't expand/collapse section
         });
 
@@ -222,7 +222,7 @@
                 success: function() {
                     self.addClass("btn-success");
                     self.html("✓&nbsp;Success!&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
-                    alert("Successfully " + button_text.toLowerCase() + "ed " + entity_type + "!");
+                    alert(toTitleCase(button_text) + " " + entity_type + " successful!");
                     location.reload();  // reload page
                     return false; // don't take the default action (create/update CS Contact),  because this was already done in AJAX request
                 },
@@ -248,7 +248,9 @@
                 }
             });
         });
-    });
+
+        $('.contextsmith_account_box').chosen({allow_single_deselect: true, width: "100%"});
+    }); /* end: $(document).ready */
 
     function changedValue(modal_id) {
         var self = $(this);
@@ -285,9 +287,14 @@
                 <span class="contact-group"><br/>MORE PEOPLE AT <%= @account.name.upcase %></span>
             <% end %>
             <% contacts_with_profile.each_with_index do |p, i| %>
-                <% profile = p[:profile] %>
+                <% user = p[:user] %>
                 <% contact = p[:contact] %>
-                <% profile_fullname = profile.fullname.present? ? profile.fullname : p[:email] %>
+                <% profile = p[:profile] %>
+                <% profile_pic = (user.present? && user.image_url.present?) ? user.image_url : profile.profileimg_url %>
+                <% fullname = (get_full_name(user) if (user.present? && get_full_name(user) != user.email)) || (get_full_name(contact) if (contact.present? && get_full_name(contact) != contact.email)) || (p[:name_from_params] if p[:name_from_params].present?) || profile.fullname || p[:email] %>
+                <% title = (user.title if user.present?) || (contact.title if contact.present?) || profile.title %>
+                <% first_name = (p[:name_from_params].split(" ").first if p[:name_from_params].present?) || profile.given_name %>
+                <% last_name = (p[:name_from_params][first_name.length..p[:name_from_params].length].strip if p[:name_from_params].present?) || profile.family_name %>
                 <div class="panel <%= "panel-default" if n == 0 && i == 0 %>" id="Profile-<%= profile.id %>-<%= n %>">
                     <div>
                         <a class="profile" href="#collapseProfile-<%= profile.id %>-<%= n %>" data-toggle="collapse" data-parent="#accordion">
@@ -298,18 +305,18 @@
                                             <table style="width: 100%;">
                                                 <tbody>
                                                     <tr><td class="profile-pic-container">
-                                                    <% if profile.profileimg_url.present? %>
-                                                        <img src="<%= profile.profileimg_url %>" class="profile-pic" title="profile pic">
+                                                    <% if profile_pic.present? %>
+                                                        <img src="<%= profile_pic %>" class="profile-pic" title="profile pic">
                                                     <% else %>
-                                                        <%= get_rounded_initials_from_name(profile_fullname, "profile-pic") %>
+                                                        <%= get_rounded_initials_from_name(fullname, "profile-pic") %>
                                                     <% end %></td></tr>
                                                     <tr style="width:60px"><td style="padding-left: 10px">
                                                     <% if current_user.role != User::ROLE[:Basic] || current_user.superadmin? %>
                                                         <% if contact.present? %>
                                                             <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
-                                                        <% else %>
-                                                            <% newcontact = Contact.new(account: @account, last_name: profile.family_name, first_name: profile.given_name, title: profile.title, email: profile.email.downcase, phone: profile.phone, account_id: (@account.present? ? @account.id : nil)) %>
+                                                        <% elsif user.blank? %>
+                                                            <% newcontact = Contact.new(account: @account, last_name: last_name, first_name: first_name, title: profile.title, email: profile.email.downcase, phone: profile.phone, account_id: (@account.present? ? @account.id : nil)) %>
                                                             <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_new_contact_modal', modal_id: 'extension_new_contact_modal-'+profile.id.to_s, contact: newcontact %>
                                                         <% end %>
@@ -322,11 +329,16 @@
                                             <table>
                                                 <tbody class="contact-info">
                                                     <tr><td class="contact-name panel-title"
-                                                      <%= "title=#{p[:email]}" if profile_fullname != p[:email] %>
-                                                    ><extrastrong><%= profile_fullname %></extrastrong></td></tr>
-                                                    <tr><td><%= profile.title %></td></tr>
+                                                      <%= "title=#{p[:email]}" if fullname != p[:email] %>
+                                                    ><extrastrong><%= fullname %></extrastrong></td></tr>
+                                                    <tr><td><%= title %></td></tr>
                                                     <% if profile.organization.present? || valid_domain?(get_domain(p[:email])) %>
-                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>&nbsp;<span class="link company-link" url="<%= valid_domain?(get_domain(p[:email])) ? 'http://'+get_domain(p[:email]) : '#' %>" title="Visit company website"><%= profile.organization.present? ? profile.organization : get_domain(p[:email]) %></span></td></tr>
+                                                        <tr><td class="company-name"><i class="fa fa-building-o" aria-hidden="true"></i>
+                                                        <span
+                                                        <% if valid_domain?(get_domain(p[:email])) %>
+                                                            class="link company-link" url="<%= 'http://'+get_domain(p[:email]) %>" title="Visit company website"
+                                                        <% end %>
+                                                        ><%= profile.organization.present? ? profile.organization : get_domain(p[:email]) %></span></td></tr>
                                                     <% end %>
                                                     <% if profile.location.present? %>
                                                         <tr><td>
@@ -350,13 +362,15 @@
                             <table class="social-group">
                                <tbody>
                                     <tr style="margin-left: auto; margin-right: auto; width: 100px">
-                                        <td class="fa-lg">
-                                        <% if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?) && @salesforce_base_URL.present? && contact.present? && contact.external_source_id.present? %>
-                                            <a href="<%= @salesforce_base_URL + "/" + contact.external_source_id %>" target="_blank"><img src="/assets/images/salesforce.png" class="sfdc-icon" title="Open Salesforce page in new window"/></a>
+                                        <% if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?) && @salesforce_base_URL.present? && contact.present? && contact.source == 'Salesforce' %>
+                                            <td>
+                                                <a href="<%= @salesforce_base_URL + "/" + contact.external_source_id %>" target="_blank"><img src="/assets/images/salesforce.png" class="sfdc-icon" title="Open Salesforce page in new window"/></a>
+                                            </td>
                                         <% else %>
-                                            <img src="/assets/images/salesforce.png" class="sfdc-icon disabled"/>
+                                            <td class="disabled">
+                                                <img src="/assets/images/salesforce.png" class="sfdc-icon"/>
+                                            </td>
                                         <% end %>
-                                        </td>
                                         <td <%= "class=disabled" if profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
                                             <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if profile.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>

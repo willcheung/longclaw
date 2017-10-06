@@ -229,6 +229,10 @@
         //     $("#search-form .btn").attr("disabled", true);
         //     return true;
         // });
+        function toTitleCase(str)
+        {
+            return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+        }
     </script>
 
     <%= javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js" %>

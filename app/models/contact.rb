@@ -268,7 +268,9 @@ class Contact < ActiveRecord::Base
   # For a valid contact, creates a new SFDC contact or updates fields of linked SFDC Contact (does NOT update the CS copy of contact)
   # Parameters: client - connection to Salesforce
   #             sfdc_account_id - id of SFDC account to which this exports/update the contact 
-  def self.update_all_salesforce(client: , sfdc_account_id: , contact: , fields: , current_user: )
+  #             contact - the contact to export to SFDC
+  # def self.update_all_salesforce(client: , sfdc_account_id: , contact: , fields: , current_user: )
+  def self.update_all_salesforce(client: , sfdc_account_id: , contact: )
     contact.export_cs_contact(client, sfdc_account_id)
   end
 

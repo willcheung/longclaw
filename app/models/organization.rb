@@ -2,14 +2,17 @@
 #
 # Table name: organizations
 #
-#  id         :uuid             not null, primary key
-#  name       :string
-#  domain     :string
-#  is_active  :boolean          default(TRUE)
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  owner_id   :uuid
-
+#  id                 :uuid             not null, primary key
+#  name               :string
+#  domain             :string
+#  is_active          :boolean          default(TRUE)
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  owner_id           :uuid
+#  billing_email      :string
+#  stripe_customer_id :string
+#  plan_id            :string
+#
 
 class Organization < ActiveRecord::Base
   has_many :users, dependent: :destroy
@@ -38,6 +41,7 @@ class Organization < ActiveRecord::Base
       return existing_org
     else
       org_info = get_org_info(domain)
+      user.save if user.new_record?
       new_org = Organization.create(name: org_info[0], domain: domain, owner_id: user.id)
 
       # Create default risk settings and system Custom Lists for the brand new org

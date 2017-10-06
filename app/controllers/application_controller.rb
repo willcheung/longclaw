@@ -24,9 +24,11 @@ class ApplicationController < ActionController::Base
       location = stored_location[1..9] if stored_location.present?
 
       # check if sign in from extension, multiple redundancies to make sure extension users stay in extension
-      if auth_params['extension'] == 'true' || origin == 'extension' || location == 'extension'
+      if auth_params['extension'] == 'true' || origin == 'extension' || (location && location.start_with?('extension','plans'))
         if resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
           onboarding_extension_tutorial_path
+        elsif origin.start_with? 'plans'
+          plans_path(welcome: true)
         else
           extension_path(login: true)
         end
@@ -80,7 +82,10 @@ class ApplicationController < ActionController::Base
 
   def restrict_access
     # whitelist for basic users: extension pages, extension tutorial, extension/tracking related stuff, salesforce login, everything else redirects to access_denied page
-    redirect_to home_access_denied_path unless params[:controller] == 'extension' || params[:controller] == 'tracking' || params[:controller] == 'sessions' || params[:controller] == 'salesforce' || params[:controller] == 'omniauth_callbacks' || params[:action] == 'me' || params[:action] == 'access_denied' || params[:action] == 'extension_tutorial' || current_user.biz?
+    redirect_to home_access_denied_path unless
+        %w[extension tracking sessions salesforce omniauth_callbacks plans].include?(params[:controller]) ||
+        %w[me access_denied extension_tutorial].include?(params[:action]) ||
+        current_user.biz?
   end
 
   def set_time_zone(&block)

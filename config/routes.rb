@@ -2,6 +2,7 @@ Longclaw::Application.routes.draw do
   unauthenticated do
     get "extension" => "extension#new"
     get "extension/account" => "extension#new"
+    # resources :plans
   end
 
   devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
@@ -35,6 +36,8 @@ Longclaw::Application.routes.draw do
     resources :project_members
     resources :users
     get 'user/me' => 'users#me'
+    get 'plans/upgrade' => 'plans#upgrade'
+    resources :plans
 
     resources :notifications, only: [:index, :update, :create] do
       member do
@@ -102,6 +105,7 @@ Longclaw::Application.routes.draw do
     
     resources :organizations
 
+
     scope "search", controller: :search, as: 'search' do
       # get "results"
       get "autocomplete_project_name"
@@ -133,6 +137,8 @@ Longclaw::Application.routes.draw do
       get 'account'
       get 'alerts_tasks'
       get 'contacts'
+      get 'settings'
+      post 'save_settings'
       # get 'metrics'
       get 'no_account/:domain', to: 'extension#no_account', as: :no_account
       get 'private_domain'

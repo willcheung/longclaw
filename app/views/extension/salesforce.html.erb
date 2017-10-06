@@ -82,7 +82,11 @@
                     <% end %>
                 <% end %>
             <% else # if current user is Basic & not superuser %>
-                <h2 style="margin: 1em">Upgrade your plan to activate Salesforce!</h2>
+              <h2 style="margin: 1em">
+                      <%= link_to  '/plans/new',  class: 'btn btn-default btn-lg btn-outline', target: "_blank" do %>
+                          <i class="fa fa-star"></i> Upgrade
+                      <% end %><br>
+                      your plan to activate Salesforce!</h2>
             <% end %>
         </div>
     </div>

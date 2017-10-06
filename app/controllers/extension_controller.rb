@@ -4,31 +4,51 @@ class ExtensionController < ApplicationController
   layout "extension", except: [:test, :new]
 
   before_action :set_salesforce_user
-  before_action :set_account_and_project
+  before_action :set_account_and_project, only: [:account, :salesforce]
   before_action :get_account_types, only: :no_account
   # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
   # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
-  # before_action :get_current_org_users, only: :alerts_tasks
 
   def test
-    render layout: "empty"
+    render layout: 'empty'
   end
 
   def share
-    render layout: "empty"
+    render layout: 'empty'
+  end
+
+  def settings
+    @ts = get_tracking_setting
+
+    respond_to do |format|
+      format.html { render layout: 'empty'}
+      format.json { render json: @ts }
+    end
+  end
+
+  def save_settings
+    ts = get_tracking_setting
+
+    if params[:bcc_email].blank?
+      ts.bcc_email = ''
+    else
+      ts.bcc_email = params[:bcc_email]
+    end
+    ts.save
+    render layout: 'empty'
   end
 
   def index
     # gmail extension provided an email address of the currently logged in user
     @gmail_user = params[:email] ? params[:email] : nil
-    render layout: "empty"
+    render layout: 'empty'
   end
 
   def new
     # render a copy of the devise/sessions.new page that opens Google Account Chooser as a popup
     # store "/extension" as return location for when OmniauthCallbacksController#google_oauth2 calls sign_in_and_redirect
     store_location_for(:user, extension_path(login: true))
-    render layout: "empty"
+    render layout: 'empty'
   end
 
   def no_account
@@ -64,14 +84,16 @@ class ExtensionController < ApplicationController
     @EMAIL_SUBJECT_TEXT_LENGTH_MAX = 65
     @NUM_LATEST_TRACKED_EMAIL_ACTIVITY_LIMIT = 8 # Number of newest tracked email activities shown in timeline
 
+    @accounts = Account.eager_load(:projects, :user).where(organization_id: current_user.organization_id).order("upper(accounts.name)") # for account picklist
+
     external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
     internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
     account_contacts_emails = (@account.present? && @account.contacts.present?) ? @account.contacts.map{|c| c.email.downcase}.sort : []
 
     people_emails = external_emails | internal_emails - [current_user.email.downcase]
-    account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]  # filter by users already in e-mail thread, then truncate list
+    account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]  # filter by/remove users already in e-mail thread, then truncate list
 
-    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e) } }
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, user: current_user.organization.users.find_by_email(e), contact: current_user.organization.contacts.find_by_email(e), profile: Profile.find_or_create_by_email(e), name_from_params: ((params[:external].values.find{|p| p.second.downcase == e} if params[:external].present?) || (params[:internal].values.find{|p| p.second.downcase == e} if params[:internal].present?) || [nil]).first } }
     @account_contacts_with_profile = account_contacts_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e) } }
 
     people_emails += @account_contacts_with_profile.map{|p| p[:email]}
@@ -120,17 +142,17 @@ class ExtensionController < ApplicationController
     @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
   end
 
-  def alerts_tasks
-    @notifications = @project.notifications.order(:is_complete).take(15)
-  end
+  # def alerts_tasks
+  #   @notifications = @project.notifications.order(:is_complete).take(15)
+  # end
 
-  def contacts
-    @project_members = @project.project_members
-    @suggested_members = @project.project_members_all.pending
-  end
+  # def contacts
+  #   @project_members = @project.project_members
+  #   @suggested_members = @project.project_members_all.pending
+  # end
 
-  def metrics
-  end
+  # def metrics
+  # end
 
   def create_account
     @account = Account.new(account_params.merge(
@@ -502,5 +524,12 @@ class ExtensionController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   def account_params
     params.require(:account).permit(:name, :website, :phone, :description, :address, :category, :domain)
+  end
+
+  def get_tracking_setting
+    ts = TrackingSetting.where(user: current_user).first_or_create do |ts|
+      ts.last_seen = DateTime.now
+    end
+    ts
   end
 end
