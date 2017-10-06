@@ -212,6 +212,7 @@ class User < ActiveRecord::Base
 
     user = User.find_by_email(info.email)
     if user
+      oauth_attributes.delete(:oauth_provider) if user.oauth_provider == AUTH_TYPE[:Gmail] # don't overwrite oauth_provider if we already signed in with the larger scope
       user.assign_attributes(oauth_attributes)
       if user.role == ROLE[:Unregistered] # user was added through discovery
         user.assign_attributes(basic_attributes)
