@@ -10,24 +10,45 @@ class ExtensionController < ApplicationController
   # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
 
   def test
-    render layout: "empty"
+    render layout: 'empty'
   end
 
   def share
-    render layout: "empty"
+    render layout: 'empty'
+  end
+
+  def settings
+    @ts = get_tracking_setting
+
+    respond_to do |format|
+      format.html { render layout: 'empty'}
+      format.json { render json: @ts }
+    end
+  end
+
+  def save_settings
+    ts = get_tracking_setting
+
+    if params[:bcc_email].blank?
+      ts.bcc_email = ''
+    else
+      ts.bcc_email = params[:bcc_email]
+    end
+    ts.save
+    render layout: 'empty'
   end
 
   def index
     # gmail extension provided an email address of the currently logged in user
     @gmail_user = params[:email] ? params[:email] : nil
-    render layout: "empty"
+    render layout: 'empty'
   end
 
   def new
     # render a copy of the devise/sessions.new page that opens Google Account Chooser as a popup
     # store "/extension" as return location for when OmniauthCallbacksController#google_oauth2 calls sign_in_and_redirect
     store_location_for(:user, extension_path(login: true))
-    render layout: "empty"
+    render layout: 'empty'
   end
 
   def no_account
@@ -503,5 +524,12 @@ class ExtensionController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   def account_params
     params.require(:account).permit(:name, :website, :phone, :description, :address, :category, :domain)
+  end
+
+  def get_tracking_setting
+    ts = TrackingSetting.where(user: current_user).first_or_create do |ts|
+      ts.last_seen = DateTime.now
+    end
+    ts
   end
 end

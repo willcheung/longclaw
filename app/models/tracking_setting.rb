@@ -7,8 +7,10 @@
 #  last_seen  :datetime
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
+#  bcc_email  :string           default("")
 #
 
 class TrackingSetting < ActiveRecord::Base
   belongs_to :user
+  validates :bcc_email, email: true, allow_blank: true, allow_nil: true
 end
