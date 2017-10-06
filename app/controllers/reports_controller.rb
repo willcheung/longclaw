@@ -170,10 +170,10 @@ class ReportsController < ApplicationController
       end
     end
 
-    return if users.blank?  # quit early if all users are filtered out
-
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
     projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
+
+    return if users.blank? || projects.blank? # quit early if all users are filtered out
 
     @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
     @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
