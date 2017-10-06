@@ -23,6 +23,12 @@ class ApplicationController < ActionController::Base
       stored_location = stored_location_for(resource)
       location = stored_location[1..9] if stored_location.present?
 
+      # quick hack to allow Biz sign-ups from this URL
+      if request_origin.end_with? ('/users/sign_up')
+        resource.upgrade(:Biz)
+        resource.save
+      end
+
       # check if sign in from extension, multiple redundancies to make sure extension users stay in extension
       if auth_params['extension'] == 'true' || origin == 'extension' || (location && location.start_with?('extension','plans'))
         if resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
