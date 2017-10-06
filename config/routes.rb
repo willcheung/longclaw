@@ -153,7 +153,6 @@ Longclaw::Application.routes.draw do
       post 'toggle'
       get 'new_events'
       post 'seen'
-      get 'settings'
     end
 
     resources :entity_fields_metadatum, controller: 'entity_fields_metadata', only: [:create, :update, :destroy] #for /settings/salesforce_fields/standard
