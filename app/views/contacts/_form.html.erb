@@ -1,7 +1,7 @@
 <% remote ||= false %>
 <% modal_type ||= nil %>
 <% url = (modal_type == 'extension_edit_contact_modal') ? contact_path(id: contact.id) : contacts_path %>
-<% account_id = contact.account_id || params[:id] %>
+<% account_id = contact.account_id || @account.id || params[:id] %>
 <%= simple_form_for contact, remote: remote, html: {role: :form, 'data-model' => 'contact'}, url: url do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
@@ -14,6 +14,10 @@
       <%= f.input :email, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.email }, :required => true %>
       <%= f.input :phone, wrapper_html: { class: 'col-md-4', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.phone } %>
 
+      <% if modal_type == 'app_new_contact_modal' %>
+        <%= f.input :account_id, as: :hidden, value: account_id %>
+      <% else %>
+
       <div class="form-group string required contact_account_id col-md-12" onchange="changedValue('<%= modal_id %>')" old_value="<%= contact.account_id %>">
         <%= f.label :account %>
         <select class="contextsmith_account_box" data-placeholder="Select an account" name="contact[account_id]" id="contact_account_id">
@@ -21,11 +25,13 @@
             <option value="nil" disabled>--No accounts available--</option>
           <% else %>
             <% @accounts.each do |a| %>
-              <option value="<%=a.id %>" <%= "selected" if a.id == account_id %>><%=a.name %></option>
+              <option value="<%= a.id %>" <%= "selected" if a.id == account_id %>><%= a.name %></option>
             <% end %>
           <% end  %>
         </select>
       </div>
+
+      <% end %>
 
       <%= f.input :id, as: :hidden %>
       <%= f.input :source, as: :hidden %>
