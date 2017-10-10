@@ -18,7 +18,7 @@ class ApplicationController < ActionController::Base
 
     if resource.is_a?(User)
       auth_params = request.env['omniauth.params'] || {}
-      request_origin = request.env['omniauth.origin']
+      request_origin = request.env['omniauth.origin'] || ''
       origin = URI.parse(request_origin).path[1..9] if request_origin.present?
       stored_location = stored_location_for(resource)
       location = stored_location[1..9] if stored_location.present?
