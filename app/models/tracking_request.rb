@@ -25,7 +25,15 @@ class TrackingRequest < ActiveRecord::Base
            -> { order(date: :desc) }
 
   scope :from_lastmonth, -> { where sent_at: 1.month.ago.midnight..Time.current }
-  scope :has_any_recipient, -> (email_array) { where "'{#{ email_array.map{|e| Contact.sanitize(e.downcase)}.map{|e| e[1...e.size-1]}.join(",") }}'::text[] && recipients" }
+  scope :where_by_any_recipient, -> (email_array) { where "'{#{ email_array.map{|e| Contact.sanitize(e.downcase)}.map{|e| e[1...e.size-1]}.join(",") }}'::text[] && recipients" }
+
+  def self.find_by_any_recipient(email_array)
+    begin
+      where_by_any_recipient(email_array).load
+    rescue => e
+      puts "**** Error while running TrackingRequest.find_by_any_recipient(#{email_array}):\nException: #{e.to_s}\n****"
+    end
+  end
 
   def recipients_to_list
     self.recipients.join(', ')
