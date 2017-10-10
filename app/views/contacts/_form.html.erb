@@ -1,7 +1,7 @@
 <% remote ||= false %>
 <% modal_type ||= nil %>
 <% url = (modal_type == 'extension_edit_contact_modal') ? contact_path(id: contact.id) : contacts_path %>
-<% account_id = contact.account_id || @account.id || params[:id] %>
+<% account_id = (modal_type == 'app_new_contact_modal') ? @account.id : contact.account_id || params[:id] %>
 <%= simple_form_for contact, remote: remote, html: {role: :form, 'data-model' => 'contact'}, url: url do |f| %>
 
   <%# Added Bootstrap classes, and help-block container for error messages %>
