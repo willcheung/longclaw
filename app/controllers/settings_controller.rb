@@ -198,9 +198,10 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+		# Note: *gmail.com organizations are filtered out!
+		@users = User.all.includes(:organization).where("LOWER(organizations.name) NOT LIKE '%gmail.com'").references(:organization).order(:onboarding_step).group_by { |u| u.organization }
 		@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
-		@toggle_org = Organization.is_active
+		@toggle_org = Organization.is_active.where("LOWER(name) NOT LIKE '%gmail.com'") 
 	end
 
 	def organization_jump
