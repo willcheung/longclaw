@@ -35,18 +35,12 @@ class ReportsController < ApplicationController
     end 
 
     @this_qtr_range = get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
+
     @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
     # Dashboard top charts
-    @salesforce_opportunities = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.pluck(:id))
-    forecast_chart_result = @salesforce_opportunities.reject{|o| o.forecast_category_name == 'Omitted' || (o.is_closed == true && o.is_won == false)}.map{|o| o.is_closed == false ? [o.forecast_category_name, o.amount] : ['Closed Won', o.amount]}.sort_by{|n,a| n == 'Closed Won' ? "zzzzz" : n}.group_by{|n,a| n}
-    @forecast_chart_data = forecast_chart_result.map do |forecast_category_name, data|
-      Hashie::Mash.new({ forecast_category_name: forecast_category_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
-    end
-    stage_chart_result = @salesforce_opportunities.map{|o| !o.is_closed ? [o.stage_name, o.amount] : [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]}.sort_by{|n,a| n == 'Closed Lost' ? "zzzzzz" : n == 'Closed Won' ? "zzzzzy" : n}.group_by{|n,a| n}
-    @stage_chart_data = stage_chart_result.map do |stage_name, data|
-      Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
-    end
+    @top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.pluck(:id))
+    get_remaining_top_dashboard_data
 
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
@@ -182,6 +176,8 @@ class ReportsController < ApplicationController
       end
     end
 
+    @this_qtr_range = get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
+
     return if users.blank? # quit early if all users are filtered out
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
@@ -190,8 +186,8 @@ class ReportsController < ApplicationController
     return if projects.blank? # quit early if all projects are filtered out
 
     # Dashboard top charts
-    @salesforce_opportunities = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id INNER JOIN users on ').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND users.id IN (?)", current_user.organization_id, projects.pluck(:id), users.pluck(:id))
-
+    @top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id INNER JOIN users on projects.owner_id = users.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND users.id IN (?)", current_user.organization_id, projects.pluck(:id), users.pluck(:id))
+    get_remaining_top_dashboard_data
 
     @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
     @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
@@ -382,4 +378,14 @@ class ReportsController < ApplicationController
     [data, categories]
   end
 
+  def get_remaining_top_dashboard_data
+    forecast_chart_result = @top_dashboard_data.reject{|o| o.forecast_category_name == 'Omitted' || (o.is_closed == true && o.is_won == false)}.map{|o| o.is_closed == false ? [o.forecast_category_name, o.amount] : ['Closed Won', o.amount]}.sort_by{|n,a| n == 'Closed Won' ? "zzzzz" : n}.group_by{|n,a| n}
+    @forecast_chart_data = forecast_chart_result.map do |forecast_category_name, data|
+      Hashie::Mash.new({ forecast_category_name: forecast_category_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
+    end
+    stage_chart_result = @top_dashboard_data.map{|o| !o.is_closed ? [o.stage_name, o.amount] : [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]}.sort_by{|n,a| n == 'Closed Lost' ? "zzzzzz" : n == 'Closed Won' ? "zzzzzy" : n}.group_by{|n,a| n}
+    @stage_chart_data = stage_chart_result.map do |stage_name, data|
+      Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
+    end
+  end
 end
