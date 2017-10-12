@@ -15,6 +15,7 @@ module Devise
           auth.merge!(resource.auth_response)
           auth.merge!({ "url" => resource.hostname }) if resource.hostname.present?
           resource = resource.id ? find(resource.id) : find_by_email(auth["email"])
+          # TODO: should add some exception handling here, just in case resource cannot be found
           if resource.encrypted_password.blank? && resource.oauth_provider.blank?
             org = Organization.create_or_update_user_organization(get_domain(auth["email"]), resource)
             resource.assign_attributes(
@@ -26,9 +27,12 @@ module Devise
               organization: org
             )
           end
+          name = auth["contact"]
+          first_name = name.present? && name["givenName"].present? ? name["givenName"] : ''
+          last_name = name.present? && name["surName"].present? ? name["surName"] : ''
           resource.assign_attributes(
-            first_name: auth["contact"]["givenName"],
-            last_name: auth["contact"]["surName"],
+            first_name: first_name,
+            last_name: last_name,
             time_zone: time_zone
           )
           resource.oauth_provider_uid = auth["url"] if auth["url"]

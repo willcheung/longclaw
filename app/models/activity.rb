@@ -149,8 +149,17 @@ class Activity < ActiveRecord::Base
     data_hash.each do |d|
       d.conversations.each do |c|
         event = c.messages.first
+        # time adjustment for recurring meetings which have an end time before the start time
+        end_epoch = event.endTime
+        if c.lastSentDate > end_epoch
+          start_time = Time.at(c.lastSentDate).utc
+          end_time = Time.at(end_epoch).utc
+          end_time = start_time.midnight + end_time.hour.hours + end_time.min.minutes
+          end_time += 1.day if start_time > end_time
+          end_epoch = end_time.to_i
+        end
         # store miscellaneous data in email_messages column
-        messages_data = [{ created: event.createdTime, updated: event.updatedTime, end_epoch: event.endTime }]
+        messages_data = [{ created: event.createdTime, updated: event.updatedTime, end_epoch: end_epoch }]
 
         val << "('#{user_id}', '#{project.id}', '#{CATEGORY[:Meeting]}', #{Activity.sanitize(c.subject)}, true,
                  '#{c.conversationId}', '#{Time.at(c.lastSentDate).utc}', '#{c.lastSentDate}',
