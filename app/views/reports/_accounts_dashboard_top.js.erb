@@ -1,16 +1,12 @@
-var barColors = [
-  "#7cb5ec",   // "CS" light blue
-  '#FFA500',
-  'darkgreen',
-  'darkblue',
-  '#3cc5b9',
-  'gold',
-  '<%= highcharts_series_color() %>', 
-];
+var barColors = {
+  "Closed Won": '#A1DD36',  // light green
+  "Closed Lost": '#DDC3C3', // greyish pink
+  default: "#7CB5EC",   // "CS" light blue
+};
 
 var closed_won_amount = "$<%= number_to_human(@top_dashboard_data.present? ? @top_dashboard_data.where(is_closed: true, is_won: true).map(&:amount).compact.sum : 0) %>";
 <% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
-<% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / ((@this_qtr_range.last - @this_qtr_range.first)/86400).ceil) * 100 %>
+<% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
 // var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";
 $("#closedwon-box").html(
   "<div class='ibox-title'>" +
@@ -47,7 +43,7 @@ while(chart_stage.series.length > 0) {
   <% forecast_chart_data_cats.each_with_index do |c, i| %>
     chart_forecast.addSeries({
       name: "<%= c %>",
-      color: barColors["<%= c.each_char.map{|ch| ch.ord}.reduce(:+) %>" % barColors.length],
+      color: (barColors["<%= c %>"] ? barColors["<%= c %>"] : barColors["default"]),
       data: [ 
       <% @forecast_chart_data.each do |d| %>
         <%= d.forecast_category_name == c ? d.total_amount : 0 %>,
@@ -71,7 +67,7 @@ while(chart_stage.series.length > 0) {
   <% stage_chart_data_stages.each_with_index do |s, i| %>
     chart_stage.addSeries({
       name: "<%= s %>",
-      color: barColors["<%= s.each_char.map{|ch| ch.ord}.reduce(:+) %>" % barColors.length],
+      color: (barColors["<%= s %>"] ? barColors["<%= s %>"] : barColors["default"]),
       data: [ 
       <% @stage_chart_data.each do |d| %>
         <%= d.stage_name == s ? d.total_amount : 0 %>,
