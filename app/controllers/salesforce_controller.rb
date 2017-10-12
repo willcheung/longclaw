@@ -106,10 +106,12 @@ class SalesforceController < ApplicationController
     sfdc_oauth_user = SalesforceController.get_sfdc_oauthuser(current_user)
 
     if sfdc_oauth_user.present?
-      # Create a default mapping between CS and SFDC fields
-      current_org_entity_fields_metadatum = current_user.organization.entity_fields_metadatum
-      EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
-      EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
+      if current_user.admin?
+        # Create a default mapping between CS and SFDC fields
+        current_org_entity_fields_metadatum = current_user.organization.entity_fields_metadatum
+        EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
+        EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
+      end
 
       # Load SFDC Accounts and new SFDC Opportunities
       SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
@@ -816,7 +818,7 @@ class SalesforceController < ApplicationController
 
     entity_describe = client.describe('Account')
     entity_describe.fields.each do |f|
-      sfdc_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only || f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
@@ -826,7 +828,7 @@ class SalesforceController < ApplicationController
     end
     entity_describe = client.describe('Opportunity')
     entity_describe.fields.each do |f|
-      sfdc_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only || f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
@@ -836,7 +838,7 @@ class SalesforceController < ApplicationController
     end
     entity_describe = client.describe('Contact')
     entity_describe.fields.each do |f|
-      sfdc_contact_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_contact_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only || f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
@@ -844,6 +846,7 @@ class SalesforceController < ApplicationController
       metadata["nillable"] = f.nillable
       sfdc_contact_fields_metadata[f.name] = metadata
     end
+    # entity_describe = client.describe('OpportunityStage')
 
     sfdc_account_fields = sfdc_account_fields.sort_by { |k,v| v.upcase }
     sfdc_opportunity_fields = sfdc_opportunity_fields.sort_by { |k,v| v.upcase }

@@ -51,8 +51,6 @@ class EntityFieldsMetadatum < ActiveRecord::Base
         organization.entity_fields_metadatum.create!(entity_type: etype, name: name, read_permission_role: User::ROLE[:Observer], update_permission_role: User::ROLE[:Poweruser])
       end if meta.present?
     end
-
-    set_default_sfdc_fields_mapping_for(organization: organization)
   end
 
   # Set the default mapping of "standard" SFDC fields to CS fields for all entities: Accounts, Projects, and Contacts
@@ -96,6 +94,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "title").update(salesforce_field: "Title") if sfdc_contact_fields.include? "Title"
     end
   end
+
   # Returns a list of [mapped SFDC entity field name, CS entity field name] pairs, for a particular entity type (i.e., Account, Opportunity, or Contact).
   # Parameters:   organization_id - the Id of the organization
   #               entity_type - EntityFieldsMetadatum::ENTITY_TYPE 
