@@ -106,12 +106,10 @@ class SalesforceController < ApplicationController
     sfdc_oauth_user = SalesforceController.get_sfdc_oauthuser(current_user)
 
     if sfdc_oauth_user.present?
-      if current_user.admin?
-        # Create a default mapping between CS and SFDC fields
-        current_org_entity_fields_metadatum = current_user.organization.entity_fields_metadatum
-        EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
-        EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
-      end
+      # Create a default mapping between CS and SFDC fields
+      current_org_entity_fields_metadatum = current_user.organization.entity_fields_metadatum
+      EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
+      EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
 
       # Load SFDC Accounts and new SFDC Opportunities
       SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
