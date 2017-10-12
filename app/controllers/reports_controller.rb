@@ -34,11 +34,11 @@ class ReportsController < ApplicationController
       end
     end 
 
+    @this_qtr_range = get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
     @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
     # Dashboard top charts
     @salesforce_opportunities = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.pluck(:id))
-    @this_qtr_range = get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
     forecast_chart_result = @salesforce_opportunities.reject{|o| o.forecast_category_name == 'Omitted' || (o.is_closed == true && o.is_won == false)}.map{|o| o.is_closed == false ? [o.forecast_category_name, o.amount] : ['Closed Won', o.amount]}.sort_by{|n,a| n == 'Closed Won' ? "zzzzz" : n}.group_by{|n,a| n}
     @forecast_chart_data = forecast_chart_result.map do |forecast_category_name, data|
       Hashie::Mash.new({ forecast_category_name: forecast_category_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
@@ -189,7 +189,9 @@ class ReportsController < ApplicationController
 
     return if projects.blank? # quit early if all projects are filtered out
 
-    ##################
+    # Dashboard top charts
+    @salesforce_opportunities = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id INNER JOIN users on ').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND users.id IN (?)", current_user.organization_id, projects.pluck(:id), users.pluck(:id))
+
 
     @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
     @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
