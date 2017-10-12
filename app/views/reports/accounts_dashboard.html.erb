@@ -52,6 +52,28 @@
       <!-- <div class="col-md-3"></div> -->
   </div>
 
+  <!-- Top (3) Salesforce-linked Forecast and Stage reports -->
+  <div class="row border-bottom ">
+      <div class="col-lg-3">
+          <div class="ibox float-e-margins">
+              <div id="closedwon-box">
+              </div>
+          </div>
+      </div>
+
+      <div class="col-lg-3">
+          <div class="ibox float-e-margins">
+              <div id="forecast-chart" class="ibox-content forecast-chart" style="height:210px;padding-bottom:0"></div>
+          </div>
+      </div>
+
+      <div class="col-lg-6">
+          <div class="ibox float-e-margins">
+              <div id="stage-chart" class="ibox-content stage-chart" style="height:210px;padding-bottom:0"></div>
+          </div>
+      </div>
+  </div>
+
   <div class="row border-bottom white-bg dashboard-header">
       <!-- LEFT (metric sort) -->
       <div class="col-lg-5">
@@ -93,12 +115,158 @@
               params.close_date = $('#close-date-filter').val();
             }
             var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
-            $.getScript(url)
+            $.getScript(url);
         });
 
         $('.filter-group').hover( function () {
           $('.chosen-container-single').css('cursor', 'pointer');
           $('.chosen-single').css('cursor', 'pointer');
+        });
+
+        $('#forecast-chart').highcharts({
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Deals by Forecast',
+                style: {
+                    color: '#676a6c',
+                    fontSize: '14px',
+                    fontFamily: 'Roboto'
+                },
+                align: 'left'
+            },
+            credits: {
+                enabled: false
+            },
+            xAxis: {
+                crosshair: true,
+                labels: {
+                    style: {
+                        fontSize: '9px'
+                    },
+                    rotation: 0
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                labels: {
+                   enabled: false
+               },
+               stackLabels: {
+                    enabled: true,
+                    formatter: function () {
+                        return "$"+large_number_to_human(this.total);
+                    },
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                }
+            },
+            tooltip: {
+                enabled: true,
+                formatter: function () {
+                    return '$' + large_number_to_human(this.total) + ' in ' + this.x + '<br>$' + large_number_to_human(this.y) + ' ' + this.series.name;
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'normal',
+                    pointPadding: 0.2,
+                    borderWidth: 0,
+                    dataLabels: {
+                        enabled: false,
+                        format: '${y}',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                        }
+                    }
+                },
+                 series: {
+                    pointPadding: 0.1,
+                    groupPadding: 0,
+                    borderWidth: 0
+                }
+            }
+        });
+
+        $('#stage-chart').highcharts({
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Deals by Stage',
+                style: {
+                    color: '#676a6c',
+                    fontSize: '14px',
+                    fontFamily: 'Roboto'
+                },
+                align: 'left'
+            },
+            credits: {
+                enabled: false
+            },
+            xAxis: {
+                crosshair: true,
+                labels: {
+                    style: {
+                        fontSize: '9px'
+                    },
+                    rotation: 0
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                labels: {
+                   enabled: false
+                },
+                stackLabels: {
+                    enabled: true,
+                    formatter: function () {
+                        //return Highcharts.numberFormat(this.total, 0, null, "");
+                        return "$"+large_number_to_human(this.total);
+                    },
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                }
+            },
+            tooltip: {
+                enabled: true,
+                formatter: function () {
+                    return '$' + large_number_to_human(this.total) + ' in ' + this.x + '<br>$' + large_number_to_human(this.y) + ' ' + this.series.name;
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'normal',
+                    pointPadding: 0.2,
+                    borderWidth: 0,
+                    dataLabels: {
+                        format: '${y}',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                        }
+                    }
+                },
+                 series: {
+                    pointPadding: 0.1,
+                    groupPadding: 0.1,
+                    borderWidth: 0
+                }
+            }
         });
 
         $('#left-chart').highcharts({
@@ -180,8 +348,8 @@
         //     }
         // });
 
+        <%= render partial: "reports/accounts_dashboard_top.js" %>
         <%= render partial: "reports/accounts_dashboard.js" %>
-
     });
 
 </script>
