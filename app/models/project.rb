@@ -996,19 +996,23 @@ class Project < ActiveRecord::Base
   end
 
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.
+  # each cluster within data creates a Project, even if multiple Projects map to same Account due to subdomain rollup!
+  # avoid trying to load Activities from multiple clusters into same Project, since there may be common conversations between them
   def self.create_from_clusters(data, user_id, organization_id)
-    project_domains = get_project_top_domain(data)
+    project_subdomains = get_project_top_domain(data)
+    project_domains = project_subdomains.map { |subdomain| get_domain_from_subdomain(subdomain) }.uniq
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
 
-    project_domains.each do |p|
-      p_account = accounts.find { |a| a.domain == p }
-      project = Project.new(name: p_account.name,
+    project_subdomains.each do |p|
+      # find which Account this Project should belong to after getting domain from subdomain, Account for subdomain shouldn't exist
+      p_account = accounts.find { |a| a.domain == get_domain_from_subdomain(p) }
+      project = Project.new(name: p,
                            status: "Active",
                            category: "New Business",
                            created_by: user_id,
                            updated_by: user_id,
                            owner_id: user_id,
-                           account_id: p_account.id,
+                           account: p_account,
                            is_public: true,
                            is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
                           )
