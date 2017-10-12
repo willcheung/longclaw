@@ -100,7 +100,7 @@ class ExtensionController < ApplicationController
 
     # people_emails = ['joe@plugandplaytechcenter.com']
     # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
-    tracking_requests_this_pastmonth = current_user.tracking_requests.has_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at DESC")
+    tracking_requests_this_pastmonth = current_user.tracking_requests.find_by_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at DESC") #TODO: This line and the subsequent code is related to issue #1258.
     
     @last_emails_sent_per_person = {}
     @emails_sent_per_person = {}

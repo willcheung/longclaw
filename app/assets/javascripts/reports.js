@@ -67,13 +67,13 @@ function reset_subtitles_on_chart(chart) {
 };
 
 /*
-    Converts a number into human readable string.
-    Note: Returns undefined for numbers larger than 999 septillion or smaller than 999 septillionth
+    Converts a number (at least equal to 1) into a human readable string.
+    Note: Returns 0 for fractional values (absolute values less than 1), and undefined for numbers larger than 999 septillion (10^24-1) or smaller than -999 septillion (-10^24+1).
     Number names refs: http://wiki.answers.com/Q/What_number_is_after_vigintillion&src=ansTT
                        https://en.wikipedia.org/wiki/Names_of_large_numbers
 */
 function large_number_to_human(number) {
-    if (number == 0) return 0;
+    if (number == 0 || Math.abs(number) < 1) return 0;
     if (!number || Math.abs(number) > 100000000000000000000000000) return; // 10^24
     var sign = (number < 0) ? "-" : "";
     number = Math.abs(number);

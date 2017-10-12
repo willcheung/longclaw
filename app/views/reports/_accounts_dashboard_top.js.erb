@@ -1,0 +1,94 @@
+var barColors = [
+  "#7cb5ec",   // "CS" light blue
+  '#FFA500',
+  'darkgreen',
+  'darkblue',
+  '#3cc5b9',
+  'gold',
+  '<%= highcharts_series_color() %>', 
+];
+
+var closed_won_amount = "$<%= number_to_human(@top_dashboard_data.present? ? @top_dashboard_data.where(is_closed: true, is_won: true).map(&:amount).compact.sum : 0) %>";
+<% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
+<% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / ((@this_qtr_range.last - @this_qtr_range.first)/86400).ceil) * 100 %>
+// var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";
+$("#closedwon-box").html(
+  "<div class='ibox-title'>" +
+  "    <h5>Closed Won</h5>" +
+  "</div>" +
+  "<div class='ibox-content'>" +
+  "    <h1><strong>" + closed_won_amount + "</strong></h1>" +
+  "    <h4><strong>0%</strong> of &mdash; target</h4>" +
+  "    <div class='progress progress-mini'>" +
+  "        <div style='width: 0%;' class='progress-bar'></div>" +
+  "    </div>" +
+  "    <h4 style='margin-top:20px'><strong><%= days_remaining_in_qtr.to_s + ' ' + 'day'.pluralize(days_remaining_in_qtr) %></strong> left in this quarter</h4>" +
+  "    <div class='progress progress-mini'>" +
+  "        <div style='width: <%= progress_pct %>%;' class='progress-bar progress-bar-success'></div>" +
+  "    </div>" +
+  "</div>"
+);
+
+var chart_forecast = $('#forecast-chart').highcharts();
+var chart_stage = $('#stage-chart').highcharts();
+
+//clear all existing series
+while(chart_forecast.series.length > 0) {
+  chart_forecast.series[0].remove();
+}
+
+while(chart_stage.series.length > 0) {
+  chart_stage.series[0].remove();
+}
+
+<% if @top_dashboard_data.present? %>
+  <% forecast_chart_data_cats = @forecast_chart_data.map {|d| d.forecast_category_name} %>
+  chart_forecast.xAxis[0].setCategories(<%= forecast_chart_data_cats.to_json.html_safe %>, false);
+  <% forecast_chart_data_cats.each_with_index do |c, i| %>
+    chart_forecast.addSeries({
+      name: "<%= c %>",
+      color: barColors["<%= c.each_char.map{|ch| ch.ord}.reduce(:+) %>" % barColors.length],
+      data: [ 
+      <% @forecast_chart_data.each do |d| %>
+        <%= d.forecast_category_name == c ? d.total_amount : 0 %>,
+      <% end if @forecast_chart_data.present? %>
+      ]
+    }, true);
+  <% end unless forecast_chart_data_cats.blank? %>
+
+  <% stage_chart_data_stages = @stage_chart_data.map {|d| d.stage_name} %>
+  chart_stage.xAxis[0].setCategories(<%= stage_chart_data_stages.to_json.html_safe %>, false);
+  // chart_stage.xAxis[0].setCategories(
+  //   [
+  //     'Qualification',
+  //     'Demo',
+  //     'Buyer Bought-in',
+  //     'Negotiation',
+  //     'Legal',
+  //     'Closed Won',
+  //     'Closed Lost'
+  //   ], false);
+  <% stage_chart_data_stages.each_with_index do |s, i| %>
+    chart_stage.addSeries({
+      name: "<%= s %>",
+      color: barColors["<%= s.each_char.map{|ch| ch.ord}.reduce(:+) %>" % barColors.length],
+      data: [ 
+      <% @stage_chart_data.each do |d| %>
+        <%= d.stage_name == s ? d.total_amount : 0 %>,
+      <% end if @stage_chart_data.present? %>
+      ]
+    }, true);
+  <% end unless stage_chart_data_stages.blank? %>
+  // chart_stage.addSeries({
+  //   name: 'Low Risk',
+  //   data: [.5, 5.1, 4.2, 1.3, 1.6, {y: 6.4, color: '#3cc5b9'}, {y: 1.13, color: '#aaaaaa'}]
+  // }, {
+  //   name: 'Medium Risk',
+  //   data: [null, null, null, 1.1, null, null],
+  //   color: 'orange'
+  // }, {
+  //   name: 'High Risk',
+  //   data: [null, null, null, null, .2, null],
+  //   color: '#ed5565'
+  // }, true);
+<% end %> // if @top_dashboard_data.present?
