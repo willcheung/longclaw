@@ -24,7 +24,7 @@ class ApplicationController < ActionController::Base
       location = stored_location[1..9] if stored_location.present?
 
       # quick hack to allow Biz sign-ups from this URL
-      if request_origin.end_with? ('/users/sign_up')
+      if request_origin && request_origin.end_with?('/users/sign_up')
         resource.upgrade(:Biz)
         resource.save
       end
