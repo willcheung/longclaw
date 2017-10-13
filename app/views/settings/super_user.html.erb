@@ -13,10 +13,8 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-    <% if current_user.admin? %>
     <div class="ibox float-e-margins">
         <div class="ibox-content">
-        <% if current_user.admin? %>
             <h1>Super God Mode</h1>
           
             <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
@@ -44,10 +42,8 @@
                     </tr>
                 <%end%>
             </table> 
-        <%end%>
         </div>
     </div>
-    <% end %>
 
     <% @users.each do |org, users| %>
         <div class="ibox float-e-margins">
