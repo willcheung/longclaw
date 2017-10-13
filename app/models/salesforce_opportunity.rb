@@ -258,24 +258,23 @@ class SalesforceOpportunity < ActiveRecord::Base
     # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
 
     if query_result[:status] == "SUCCESS" && query_result[:result].present?
-      stages = []
-      forecast_cats = []
+      stages = Set.new
+      forecast_cats = Set.new
       query_result[:result].each do |stg|
-        stages = stages | [stg.MasterLabel]
-        forecast_cats = forecast_cats | [stg.ForecastCategory]
+        stages.add(stg.MasterLabel)
+        forecast_cats.add(stg.ForecastCategory)
       end
 
-      old_clm1 = organization.custom_lists_metadatum.find_by(name: "Stage Name", cs_app_list: true)
-      old_clm2 = organization.custom_lists_metadatum.find_by(name: "Forecast Category Name", cs_app_list: true)
+      old_stages_clm = organization.custom_lists_metadatum.find_by(name: "Stage Name", cs_app_list: true)
+      old_forecast_cats_clm = organization.custom_lists_metadatum.find_by(name: "Forecast Category Name", cs_app_list: true)
 
       new_clm = organization.custom_lists_metadatum.create(name: "Stage Name", cs_app_list: true)
       stages.each {|s| new_clm.custom_lists.create(option_value: s) } if new_clm
-
       new_clm = organization.custom_lists_metadatum.create(name: "Forecast Category Name", cs_app_list: true)
       forecast_cats.each {|fc| new_clm.custom_lists.create(option_value: fc) } if new_clm
 
-      old_clm1.destroy if old_clm1
-      old_clm2.destroy if old_clm2
+      old_stages_clm.destroy if old_stages_clm
+      old_forecast_cats_clm.destroy if old_forecast_cats_clm
     elsif query_result[:status] == "ERROR"
       puts "****SFDC**** Error querying SFDC while refreshing opportunity stages and forecast categories picklist. SOQL statement=\"#{query_statement}\" result: #{query_result[:result]} detail: #{query_result[:detail]}"
     elsif query_result[:result].blank?
