@@ -1024,12 +1024,12 @@ class Project < ActiveRecord::Base
         contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
         users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
 
-        external_members.each do |m|
-          project.project_members.create(contact_id: (contacts.find {|c| c.email == m.address}).id)
+        contacts.each do |c|
+          project.project_members.create(contact: c)
         end
 
-        internal_members.each do |m|
-          project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
+        users.each do |u|
+          project.project_members.create(user: u)
         end
 
         # Upsert project conversations.
