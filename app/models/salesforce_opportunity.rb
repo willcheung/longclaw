@@ -248,4 +248,39 @@ class SalesforceOpportunity < ActiveRecord::Base
 
     return { status: "SUCCESS", result: "Refresh completed." }
   end
+
+  # Create/recreate local custom lists copies of the available SFDC opportunity picklists (e.g., for Stage and Forecast Category) using SFDC connection 'client' (required) for organization.
+  def self.refresh_picklists(client: , organization: )
+    puts "Refresh custom lists of the available SFDC opportunity picklists..."
+    query_statement = "SELECT Id, MasterLabel, ForecastCategory, ForecastCategoryName, IsClosed, IsWon, Description, DefaultProbability, IsActive FROM OpportunityStage ORDER BY DefaultProbability"  
+    query_result = SalesforceService.query_salesforce(client, query_statement)
+    # puts "*** query: \"#{query_statement}\" ***"
+    # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
+
+    if query_result[:status] == "SUCCESS" && query_result[:result].present?
+      stages = []
+      forecast_cats = []
+      query_result[:result].each do |stg|
+        stages = stages | [stg.MasterLabel]
+        forecast_cats = forecast_cats | [stg.ForecastCategory]
+      end
+
+      old_clm1 = organization.custom_lists_metadatum.find_by(name: "Stage Name", cs_app_list: true)
+      old_clm2 = organization.custom_lists_metadatum.find_by(name: "Forecast Category Name", cs_app_list: true)
+
+      new_clm = organization.custom_lists_metadatum.create(name: "Stage Name", cs_app_list: true)
+      stages.each {|s| new_clm.custom_lists.create(option_value: s) } if new_clm
+
+      new_clm = organization.custom_lists_metadatum.create(name: "Forecast Category Name", cs_app_list: true)
+      forecast_cats.each {|fc| new_clm.custom_lists.create(option_value: fc) } if new_clm
+
+      old_clm1.destroy if old_clm1
+      old_clm2.destroy if old_clm2
+    elsif query_result[:status] == "ERROR"
+      puts "****SFDC**** Error querying SFDC while refreshing opportunity stages and forecast categories picklist. SOQL statement=\"#{query_statement}\" result: #{query_result[:result]} detail: #{query_result[:detail]}"
+    elsif query_result[:result].blank?
+      puts "****SFDC**** Warning: Did not refresh SFDC picklists, because no stages or forecast categories were found. SOQL statement=\"#{query_statement}\" detail: #{query_result[:detail]}"
+    end
+    puts "Refresh opp picklists successful!"
+  end
 end

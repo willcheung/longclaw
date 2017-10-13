@@ -55,8 +55,8 @@ class EntityFieldsMetadatum < ActiveRecord::Base
 
   # Set the default mapping of "standard" SFDC fields to CS fields for all entities: Accounts, Projects, and Contacts
   def self.set_default_sfdc_fields_mapping_for(organization:)
-    # Create lists of valid SFDC entity fields for reference, in case an expected "standard" SFDC field does not exist; We don't save SFDC custom fields (i.e., in our backend), so we query SFDC every time! :(
-    sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: organization.id)
+    # Create lists of valid SFDC entity fields for reference, in case an expected "standard" SFDC field does not exist; We don't save SFDC custom fields (i.e., in our backend), so we query SFDC to get field metadata every time! :(
+    sfdc_fields = SalesforceController.get_salesforce_fields(client: SalesforceService.connect_salesforce(organization))
 
     if sfdc_fields.present?
       sfdc_account_fields = sfdc_fields[:sfdc_account_fields].map{|f| f[0]}
