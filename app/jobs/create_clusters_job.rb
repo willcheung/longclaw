@@ -61,6 +61,9 @@ class CreateClustersJob < ActiveJob::Base
     puts "ERROR (Create Clusters): Something went wrong: " + e.message
     puts e.backtrace.join("\n")
     # ahoy.track("Error Create Cluster", message: e.message, backtrace: e.backtrace.join("\n"))
+  ensure
+    # run garbage collection to free up memory when done with create clusters
+    GC.start
   end
 
 end
