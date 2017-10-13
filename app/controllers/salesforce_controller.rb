@@ -95,7 +95,7 @@ class SalesforceController < ApplicationController
     salesforce_user
   end
 
-  # Automatic actions to take when user initially logs into SFDC.
+  # Automatic actions to take when user establishes a SFDC connection.
   #  e.g., 
   #    - Create a default mapping between CS and SFDC fields, if none exist for current user's org
   #    - Load SFDC Accounts and new SFDC Opportunities, including updating values in mapped (standard and custom) fields
@@ -103,13 +103,16 @@ class SalesforceController < ApplicationController
   def self.initial_SFDC_login(current_user)
     puts "\nInitial SFDC login for user=#{get_full_name(current_user)} (email=#{current_user.email}) ..."
 
-    sfdc_oauth_user = SalesforceController.get_sfdc_oauthuser(current_user)
+    sfdc_oauth_user = get_sfdc_oauthuser(current_user)
+    sfdc_client = SalesforceService.connect_salesforce(current_user.organization_id) if sfdc_oauth_user.present?
 
-    if sfdc_oauth_user.present?
-      # Create a default mapping between CS and SFDC fields
+    if sfdc_oauth_user.present? && sfdc_client.present?
+      # Create a default mapping between CS and SFDC fields if none exist (Note: Any user, including non-admins, may trigger this)
       current_org_entity_fields_metadatum = current_user.organization.entity_fields_metadatum
       EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
       EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
+      
+      SalesforceOpportunity.refresh_picklists(client: sfdc_client, organization: current_user.organization) # create/recreate forecast category and stage picklists
 
       # Load SFDC Accounts and new SFDC Opportunities
       SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
@@ -162,19 +165,14 @@ class SalesforceController < ApplicationController
               end
             end
           end
-          # Import Contacts from SFDC to ContextSmith 
-          client = SalesforceService.connect_salesforce(current_user.organization_id)
-          if client.present?
-            import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id)
-            failure_method_location = "Contact.load_salesforce_contacts()"
+          # Import Contacts from SFDC to ContextSmith
+          import_result = Contact.load_salesforce_contacts(sfdc_client, account.id, sfa.salesforce_account_id)
+          failure_method_location = "Contact.load_salesforce_contacts()"
 
-            if import_result[:status] == "ERROR"
-              puts "****SFDC**** Error at #{failure_method_location} during automatic import of contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{account.id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
-            else # import_result[:status] == SUCCESS
-              # puts "****SFDC**** Succesful automatic import of SFDC contacts for user_id=#{current_user.id} of organization_id=#{current_user.organization_id}"
-            end
-          else
-            puts "****SFDC**** Error attempting to connect to SFDC client during automatic import of SFDC contacts for user_id=#{current_user.id} of organization_id=#{current_user.organization_id}"
+          if import_result[:status] == "ERROR"
+            puts "****SFDC**** Error at #{failure_method_location} during automatic import of contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{account.id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
+          else # import_result[:status] == SUCCESS
+            # puts "****SFDC**** Succesful automatic import of SFDC contacts for user_id=#{current_user.id} of organization_id=#{current_user.organization_id}"
           end
         end # end: open_sfdc_opps_acct_ids.each do |acct_id|
       end # end: if !current_user.admin?
@@ -182,7 +180,10 @@ class SalesforceController < ApplicationController
       # Refresh/update the standard and custom field values of mapped accts and opps
       SalesforceAccount.refresh_fields(current_user)
       SalesforceOpportunity.refresh_fields(current_user)
-    end # end: if Salesforce user present
+    # end: if Salesforce user present and SFDC connection OK
+    elsif sfdc_oauth_user.present? && sfdc_client.nil?
+      puts "****SFDC**** Error attempting to connect to SFDC during initial_SFDC_login. user_id='#{current_user.id}' of organization_id=#{current_user.organization_id}"
+    end
   end
 
   # Links a CS account to a Salesforce account.  If a Power User or trial/Chrome User links a SFDC account, then automatically import the SFDC contacts.
@@ -205,7 +206,7 @@ class SalesforceController < ApplicationController
       # For Power Users and trial/Chrome Users: Automatically import SFDC contacts, then add all SFDC contacts as pending members ('Suggested People') in all opportunities in the linked CS account 
       if current_user.power_or_trial_only?
         puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked Account '#{salesforce_account.account.name}' to SFDC Account '#{salesforce_account.salesforce_account_name}'!"
-        SalesforceController.import_sfdc_contacts_and_add_as_members(client: SalesforceService.connect_salesforce(current_user.organization_id), account: salesforce_account.account, sfdc_account: salesforce_account) 
+        import_sfdc_contacts_and_add_as_members(client: SalesforceService.connect_salesforce(current_user.organization_id), account: salesforce_account.account, sfdc_account: salesforce_account) 
       end
     end
 
@@ -794,7 +795,7 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Gets Salesforce (custom) fields in the form of the following hash:
+  # Gets Salesforce (custom) fields from SFDC connection (client) in the form of the following hash:
   #   :sfdc_account_fields -- a list of SFDC account field names mapped to the field labels (visible to the user) in the form of [["acctfield1name", "acctfield1label (acctfield1name)"], ["acctfield2name", "acctfield2label (acctfield2name)"], ...]
   #   :sfdc_account_fields_metadata -- a hash of SFDC account field names with metadata info in the form of {"acctfield1" => {type: acctfield1.type, custom: acctfield1.custom, updateable: acctfield1.updateable, nillable: acctfield1.nillable} }
   #   :sfdc_opportunity_fields -- a list of SFDC opportunity field names mapped to the field labels (visible to the user) in a similar to :sfdc_account_fields
@@ -802,9 +803,7 @@ class SalesforceController < ApplicationController
   #   :sfdc_contact_fields -- a list of SFDC contact field names mapped to the field labels (visible to the user) in a similar to :sfdc_account_fields
   #   :sfdc_contact_fields_metadata -- similar to :sfdc_account_fields_metadata for sfdc_contact_fields
   # Returns {} if there is no SFDC connection detected for this Organization, or if there was a SFDC connection error.
-  def self.get_salesforce_fields(organization_id: , custom_fields_only: false)
-    client = SalesforceService.connect_salesforce(organization_id)
-
+  def self.get_salesforce_fields(client: , custom_fields_only: false)
     return {} if client.nil?
 
     sfdc_account_fields = {}
@@ -816,7 +815,7 @@ class SalesforceController < ApplicationController
 
     entity_describe = client.describe('Account')
     entity_describe.fields.each do |f|
-      sfdc_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_account_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only || f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
@@ -826,7 +825,7 @@ class SalesforceController < ApplicationController
     end
     entity_describe = client.describe('Opportunity')
     entity_describe.fields.each do |f|
-      sfdc_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_opportunity_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only || f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
@@ -836,7 +835,7 @@ class SalesforceController < ApplicationController
     end
     entity_describe = client.describe('Contact')
     entity_describe.fields.each do |f|
-      sfdc_contact_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only or f.custom)
+      sfdc_contact_fields[f.name] = f.label + " (" + f.name + ")" if (!custom_fields_only || f.custom)
       metadata = {}
       metadata["type"] = f.type
       metadata["custom"] = f.custom
@@ -844,6 +843,7 @@ class SalesforceController < ApplicationController
       metadata["nillable"] = f.nillable
       sfdc_contact_fields_metadata[f.name] = metadata
     end
+    # entity_describe = client.describe('OpportunityStage')
 
     sfdc_account_fields = sfdc_account_fields.sort_by { |k,v| v.upcase }
     sfdc_opportunity_fields = sfdc_opportunity_fields.sort_by { |k,v| v.upcase }

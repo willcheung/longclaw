@@ -11,7 +11,15 @@
         <tr><td><label for="name">* Name</label></td></tr>
         <tr><td><input type="text" id="name" value="<%= @salesforce_opportunity.name %>" onkeyup="changedValue('opportunity')"></td></tr>
         <tr><td><label for="stage_name">Stage</label></td></tr>
-        <tr><td><input type="text" id="stage_name" class="disabledinput" value="<%= @salesforce_opportunity.stage_name %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <tr><td><select data-placeholder="Select a stage" id="stage_name" onchange="changedValue('opportunity')">
+          <% if @opp_stages.blank?  %>
+            <option value="nil" disabled>--No stages available--</option>
+          <% else %>
+            <% @opp_stages.each do |a| %>
+              <option value="<%= a %>" <%= "selected" if a == @salesforce_opportunity.stage_name %>><%= a %></option>
+            <% end %>
+          <% end %>
+        </select></td></tr>
         <tr><td><label for="close_date">* Close Date (mm/dd/yyyy)</label></td></tr>
         <tr><td><input type="text" id="close_date" value="<%= @salesforce_opportunity.close_date %>" onkeyup="changedValue('opportunity')"></td></tr>
         <tr><td><label for="probability">Probability</label></td></tr>
@@ -21,7 +29,16 @@
         <tr><td><label for="amount">Amount</label></td></tr>
         <tr><td><input type="text" id="amount" value="<%= @salesforce_opportunity.amount %>" onkeyup="changedValue('opportunity')"></td></tr>
         <tr><td><label for="forecast_category_name">Forecast category</label></td></tr>
-        <tr><td><input type="text" id="forecast_category_name" class="disabledinput" value="<%= @salesforce_opportunity.forecast_category_name %>" onkeyup="changedValue('opportunity')"></td></tr>
+        <tr><td><select data-placeholder="Select a forecast category" id="forecast_category_name" onchange="changedValue('opportunity')">
+          <% if @opp_forecast_cats.blank?  %>
+            <option value="nil" disabled>--No forecast categories available--</option>
+          <% else %>
+            <% @opp_forecast_cats.each do |a| %>
+              <option value="<%= a %>" <%= "selected" if a == @salesforce_opportunity.forecast_category_name %>><%= a %></option>
+            <% end %>
+          <% end %>
+        </select></td></tr>
+
         <tr><td><label>* = required field</label></td></tr>
         
         <tr><td class="button-td"><button id="update_opportunity" class="btn btn-primary btn-sm update_salesforce" disabled="disable">Update&nbsp;<img id="sfdc-icon" src="/assets/images/salesforce.png" style="width:30px;"/></button></td></tr>

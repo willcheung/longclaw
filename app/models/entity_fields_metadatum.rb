@@ -51,14 +51,12 @@ class EntityFieldsMetadatum < ActiveRecord::Base
         organization.entity_fields_metadatum.create!(entity_type: etype, name: name, read_permission_role: User::ROLE[:Observer], update_permission_role: User::ROLE[:Poweruser])
       end if meta.present?
     end
-
-    set_default_sfdc_fields_mapping_for(organization: organization)
   end
 
   # Set the default mapping of "standard" SFDC fields to CS fields for all entities: Accounts, Projects, and Contacts
   def self.set_default_sfdc_fields_mapping_for(organization:)
-    # Create lists of valid SFDC entity fields for reference, in case an expected "standard" SFDC field does not exist; We don't save SFDC custom fields (i.e., in our backend), so we query SFDC every time! :(
-    sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: organization.id)
+    # Create lists of valid SFDC entity fields for reference, in case an expected "standard" SFDC field does not exist; We don't save SFDC custom fields (i.e., in our backend), so we query SFDC to get field metadata every time! :(
+    sfdc_fields = SalesforceController.get_salesforce_fields(client: SalesforceService.connect_salesforce(organization))
 
     if sfdc_fields.present?
       sfdc_account_fields = sfdc_fields[:sfdc_account_fields].map{|f| f[0]}
@@ -96,6 +94,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Contact], name: "title").update(salesforce_field: "Title") if sfdc_contact_fields.include? "Title"
     end
   end
+
   # Returns a list of [mapped SFDC entity field name, CS entity field name] pairs, for a particular entity type (i.e., Account, Opportunity, or Contact).
   # Parameters:   organization_id - the Id of the organization
   #               entity_type - EntityFieldsMetadatum::ENTITY_TYPE 
