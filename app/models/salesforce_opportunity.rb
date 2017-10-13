@@ -252,7 +252,7 @@ class SalesforceOpportunity < ActiveRecord::Base
   # Create/recreate local custom lists copies of the available SFDC opportunity picklists (e.g., for Stage and Forecast Category) using SFDC connection 'client' (required) for organization.
   def self.refresh_picklists(client: , organization: )
     puts "Refresh custom lists of the available SFDC opportunity picklists..."
-    query_statement = "SELECT Id, MasterLabel, ForecastCategory, ForecastCategoryName, IsClosed, IsWon, Description, DefaultProbability, IsActive FROM OpportunityStage ORDER BY DefaultProbability"  
+    query_statement = "SELECT Id, MasterLabel, ForecastCategory, ForecastCategoryName, IsClosed, IsWon, Description, DefaultProbability, IsActive FROM OpportunityStage ORDER BY SortOrder"  
     query_result = SalesforceService.query_salesforce(client, query_statement)
     # puts "*** query: \"#{query_statement}\" ***"
     # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
