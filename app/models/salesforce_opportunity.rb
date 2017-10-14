@@ -293,4 +293,22 @@ class SalesforceOpportunity < ActiveRecord::Base
     end
     puts "Refresh opp picklists successful!"
   end
+
+  # Returns the Opportunity Stage Name picklist in an array form of:
+  #     [stage_name, custom_list_id]
+  # where custom_list_id can be used for option order.
+  def self.get_sfdc_opp_stages(organization: )
+    return [] if organization.nil?
+    stage_name_picklist = organization.custom_lists_metadatum.find_by(name: "Stage Name", cs_app_list: true) if organization.custom_lists_metadatum.present? 
+    stage_name_picklist.blank? || stage_name_picklist.custom_lists.blank? ? [] : stage_name_picklist.custom_lists.pluck(:option_value, :id)
+  end
+
+  # Returns the Opportunity Forecast Category Name picklist in an array form of:
+  #     [forecast_category_name, custom_list_id]
+  # where custom_list_id can be used for option order.
+  def self.get_sfdc_opp_forecast_categories(organization: )
+    return [] if organization.nil?
+    forecast_cat_name_picklist = organization.custom_lists_metadatum.find_by(name: "Forecast Category Name", cs_app_list: true) if organization.custom_lists_metadatum.present? 
+    forecast_cat_name_picklist.blank? || forecast_cat_name_picklist.custom_lists.blank? ? [] : forecast_cat_name_picklist.custom_lists.pluck(:option_value, :id)
+  end
 end

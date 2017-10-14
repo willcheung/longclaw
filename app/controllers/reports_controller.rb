@@ -383,7 +383,10 @@ class ReportsController < ApplicationController
     @forecast_chart_data = forecast_chart_result.map do |forecast_category_name, data|
       Hashie::Mash.new({ forecast_category_name: forecast_category_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
     end
-    stage_chart_result = @top_dashboard_data.map{|o| !o.is_closed ? [(o.stage_name.blank? ? '-Undefined-' : o.stage_name), o.amount] : [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]}.group_by{|n,a| n}.sort_by{|n,a| (['Closed Lost','Closed Won'].include? n) ? n : "           "+n }
+
+    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
+
+    stage_chart_result = @top_dashboard_data.map{|o| !o.is_closed ? [(o.stage_name.blank? ? '-Undefined-' : o.stage_name), o.amount] : [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]}.group_by{|n,a| n}.sort{|x,y| (stage_name_picklist.find{|s| s.first == x.first}.blank? ? '          '+x.first : stage_name_picklist.find{|s| s.first == x.first}.second.to_s) <=> (stage_name_picklist.find{|s| s.first == y.first}.blank? ? '          '+y.first : stage_name_picklist.find{|s| s.first == y.first}.second.to_s)} # unmatched stage names are sorted to the left of everything 
     @stage_chart_data = stage_chart_result.map do |stage_name, data|
       Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
     end
