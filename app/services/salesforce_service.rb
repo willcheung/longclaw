@@ -137,7 +137,7 @@ class SalesforceService
       when "opportunity"
         begin
           puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
-          update_result = client.update!('Opportunity', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name], CloseDate: params[:sObject_fields][:close_date].present? ? (params[:sObject_fields][:close_date].strftime("%Y-%m-%d")) : nil, Probability: params[:sObject_fields][:probability], Amount: params[:sObject_fields][:amount])
+          update_result = client.update!('Opportunity', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name], CloseDate: params[:sObject_fields][:close_date].present? ? (params[:sObject_fields][:close_date].strftime("%Y-%m-%d")) : nil, Probability: params[:sObject_fields][:probability], Amount: params[:sObject_fields][:amount], StageName: params[:sObject_fields][:stage_name], ForecastCategoryName: params[:sObject_fields][:forecast_category_name])
           # params[:sObject_fields] = { name: ... , stage_name: ... , close_date: ... , probability: ... , amount: ... , forecast_category_name: ...  }
 
           result = { status: "SUCCESS", result: update_result, detail: "" }

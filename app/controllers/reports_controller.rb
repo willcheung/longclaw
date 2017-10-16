@@ -157,7 +157,7 @@ class ReportsController < ApplicationController
   def td_sort_data
     # NOTE: `sort` and `sort_by` are keywords for Hash, would have used these as keys for @dashboard_data but can't due to this conflict!
     @dashboard_data = Hashie::Mash.new(sorted_by: { type: params[:sort] }, metric: { type: params[:metric] })
-    users = current_user.organization.users
+    users = current_user.organization.users.registered.onboarded.non_alias
 
     # Incrementally apply filters
     if params[:team].present?
@@ -379,13 +379,37 @@ class ReportsController < ApplicationController
   end
 
   def get_remaining_top_dashboard_data
-    forecast_chart_result = @top_dashboard_data.reject{|o| o.forecast_category_name == 'Omitted' || (o.is_closed == true && o.is_won == false)}.map{|o| o.is_closed == false ? [o.forecast_category_name, o.amount] : ['Closed Won', o.amount]}.sort_by{|n,a| n == 'Closed Won' ? "zzzzz" : n}.group_by{|n,a| n}
+    forecast_chart_result = @top_dashboard_data.reject do |o| 
+      o.forecast_category_name == 'Omitted' || (o.is_closed && !o.is_won)
+    end.map do |o| 
+      if o.is_closed 
+        ['Closed Won', o.amount]
+      else
+        [(o.forecast_category_name.blank? ? '-Undefined-' : o.forecast_category_name), o.amount] 
+      end
+    end.group_by{|n,a| n}.sort_by{|n,a| n == 'Closed Won' ? n : '           '+n}
     @forecast_chart_data = forecast_chart_result.map do |forecast_category_name, data|
       Hashie::Mash.new({ forecast_category_name: forecast_category_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
     end
-    stage_chart_result = @top_dashboard_data.map{|o| !o.is_closed ? [o.stage_name, o.amount] : [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]}.sort_by{|n,a| n == 'Closed Lost' ? "zzzzzz" : n == 'Closed Won' ? "zzzzzy" : n}.group_by{|n,a| n}
+
+    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
+
+    stage_chart_result = @top_dashboard_data.map do |o|
+      if o.is_closed
+        [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]
+      else
+        [(o.stage_name.blank? ? '-Undefined-' : o.stage_name), o.amount]
+      end
+    end.group_by{|n,a| n}.sort do |x,y|
+      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
+      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
+      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
+      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
+      stage_name_x <=> stage_name_y
+    end # unmatched stage names are sorted to the left of everything 
     @stage_chart_data = stage_chart_result.map do |stage_name, data|
       Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
     end
   end
+
 end

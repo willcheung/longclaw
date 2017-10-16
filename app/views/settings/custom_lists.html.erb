@@ -39,7 +39,7 @@
                     <% if @custom_lists.empty? %>
                         <tr><th class="text-mute-gray" style="font-weight:normal;">No custom lists yet!&nbsp;&nbsp;Click the '+' below to add one.</th></tr>
                     <% else %>
-                        <% @custom_lists.order(:created_at).each do |l|  %>
+                        <% @custom_lists.order(cs_app_list: :desc, name: :asc).each do |l|  %>
                             <tr>
                                 <td id="customlist-<%= l.id %>-name-activator">
                                     <% if l.cs_app_list %>

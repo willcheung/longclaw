@@ -54,6 +54,8 @@ class Account < ActiveRecord::Base
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
     MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "website" => "Website", "phone" => "Phone", "address" => "Address" }  # "notes" => "Notes", "revenue_potential" => "Revenue Potential"
 
+    # roll up subdomains on Account creation
+    # ex: external members have these domains: x.domain.com, y.domain.com, domain.com, other.com -> Accounts created for these domains: domain.com (contains Contacts from x.domain.com, y.domain.com, domain.com), other.com
     def self.create_from_clusters(external_members, owner_id, organization_id)
         domain_grouped_external_members = external_members.group_by { |x| get_domain(x.address) }
         domain_grouped_external_members.keep_if do |domain, person_array|
