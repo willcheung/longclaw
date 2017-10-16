@@ -4,6 +4,8 @@ class ProjectsController < ApplicationController
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_current_org_users, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_current_org_opportunity_stages, only: [:show]
+  before_action :get_current_org_opportunity_forecast_categories, only: [:show]
   before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
   before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
@@ -383,23 +385,7 @@ class ProjectsController < ApplicationController
   end
   # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
   def check_params_for_valid_dates
-    params["project"][:close_date] = parse_valid_date(params["project"][:close_date]) if params["project"][:close_date].present?
-    params["project"][:renewal_date] = parse_valid_date(params["project"][:renewal_date]) if params["project"][:renewal_date].present?
+    params["project"][:close_date] = parse_date(params["project"][:close_date]) if params["project"][:close_date].present?
+    params["project"][:renewal_date] = parse_date(params["project"][:renewal_date]) if params["project"][:renewal_date].present?
   end
-
-  # Attempt to parse a Date from datestr using recognized formats %Y-%m-%d or %m/%d/%Y, then return the parsed Date. Otherwise, return nil.
-  def parse_valid_date(datestr)
-    return nil if datestr.nil?
-
-    parsed_date = nil
-    begin
-      parsed_date = Date.strptime(datestr, '%Y-%m-%d')
-    rescue ArgumentError => e
-      parsed_date = Date.strptime(datestr, '%m/%d/%Y')
-    rescue => e
-      # Do nothing
-    end
-    parsed_date
-  end
-
 end
