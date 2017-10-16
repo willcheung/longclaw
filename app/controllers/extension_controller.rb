@@ -140,8 +140,8 @@ class ExtensionController < ApplicationController
   def salesforce
     @salesforce_account = @account.salesforce_accounts.first if @account.present?
     @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
-    @opp_stages = current_user.organization.custom_lists_metadatum.find_by(name: "Stage Name", cs_app_list: true).custom_lists.map {|cl| cl.option_value}
-    @opp_forecast_cats = current_user.organization.custom_lists_metadatum.find_by(name: "Forecast Category Name", cs_app_list: true).custom_lists.map {|cl| cl.option_value}
+    @opp_stages = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization).map{|s| s.first}
+    @opp_forecast_cats = SalesforceOpportunity.get_sfdc_opp_forecast_categories(organization: current_user.organization).map{|s| s.first}
   end
 
   # def alerts_tasks

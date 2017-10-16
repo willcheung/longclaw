@@ -112,7 +112,7 @@ class SalesforceController < ApplicationController
       EntityFieldsMetadatum.create_default_for(current_user.organization) if current_org_entity_fields_metadatum.first.blank? 
       EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
       
-      SalesforceOpportunity.refresh_picklists(client: sfdc_client, organization: current_user.organization) # create/recreate forecast category and stage picklists
+      SalesforceOpportunity.refresh_picklists(client: sfdc_client, organization: current_user.organization, force_refresh: false)  # create initial forecast category and stage picklists; don't refresh if values exist
 
       # Load SFDC Accounts and new SFDC Opportunities
       SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
