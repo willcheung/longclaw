@@ -4,8 +4,8 @@ class ProjectsController < ApplicationController
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_current_org_users, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
-  before_action :get_current_org_opportunity_stages, only: [:show]
-  before_action :get_current_org_opportunity_forecast_categories, only: [:show]
+  before_action :get_current_org_opportunity_stages, only: [:show, :tasks_tab, :arg_tab]
+  before_action :get_current_org_opportunity_forecast_categories, only: [:show, :tasks_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
   before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
