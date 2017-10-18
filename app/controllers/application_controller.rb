@@ -113,9 +113,19 @@ class ApplicationController < ActionController::Base
     yield
   end
 
-  # returns the users of an organization who are registered with CS
+  # returns array of users (user=[user id, user's full name]) of an organization who are registered with CS
   def get_current_org_users
     @users_reverse = current_user.organization.users.registered.order(:first_name).map { |u| [u.id, get_full_name(u)] }.to_h
+  end
+
+  # returns array of opportunity stages of an organization registered with CS
+  def get_current_org_opportunity_stages
+    @opportunity_stages = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization).map{|s| s.first}
+  end
+
+  # returns array of opportunity forecast categories of an organization registered with CS
+  def get_current_org_opportunity_forecast_categories
+    @opportunity_forecast_categories = SalesforceOpportunity.get_sfdc_opp_forecast_categories(organization: current_user.organization).map{|s| s.first}
   end
 
   def get_close_date_range(range_description)
