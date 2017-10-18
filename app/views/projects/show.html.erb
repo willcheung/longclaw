@@ -13,7 +13,7 @@
         <% else %>
             <!-- < %= link_to "<i class=\"fa fa-bell-o\"></i> Follow weekly".html_safe, project_project_subscribers_path(project_id: @project.id, user_id: current_user.id)+"&type=weekly", remote: true, method: :post, id: "project-show-follow-weekly-#{@project.id}", class: "btn btn-primary btn-sm btn-outline m-t-n-sm", title: "Follow weekly" %> -->
         <% end %>
-        <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) or current_user.admin? %>
+        <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) || current_user.admin? %>
             <a href="#edit_project_modal" data-toggle="modal" class="btn btn-primary btn-outline btn-sm m-t-n-sm">Edit</a>
             <%= link_to "<i class=\"fa fa-refresh\"></i> Refresh".html_safe, project_path(@project) + "/refresh", method: :post, class: "btn btn-sm btn-primary btn-outline m-t-n-sm", id: "btn-refresh" %>
             <i class="fa fa-question-circle m-t-n-sm text-primary" style="vertical-align:text-top;" data-toggle="tooltip" data-placement="top" data-original-title="Retrieve latest e-mails and meetings from members."></i>
@@ -170,39 +170,61 @@
                     <li class="list-group-item m-b-sm">
                         <strong>Owner:</strong>
                         <span class="pull-right">
-                            <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) or current_user.admin? %>
+                            <% if (@project.owner_id.nil? || @project.owner_id == current_user.id) || current_user.admin? %>
                                 <%=best_in_place @project, :owner_id, :as => :select, :collection => @users_reverse, :place_holder => '(none)', :activator => "#project-owner-activator" %>
-                                <i id="project-owner-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                                <i id="project-owner-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
                             <% else %>
                                 <%= get_full_name(@project.project_owner) %>
                             <% end %>
                         </span>
                     </li>
-                   <li class="list-group-item m-b-sm">
+                    <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["stage"] %>:</strong>
+                        <span class="pull-right">
+                            <% if @opportunity_stages.present? %>
+                                <%=best_in_place @project, :stage, :as => :select, :collection => @opportunity_stages.map {|s| [s,s]}, :place_holder => '(none)', :activator => "#project-stage-activator" %>
+                                <i id="project-stage-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
+                            <% else %>
+                                <%= @project.stage %><i style="color:#3d8dc5" class="fa fa-exclamation-triangle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="No stages available! Please contact your administrator to set up."></i>
+                            <% end %>
+                        </span>
+                    </li>
+                    <li class="list-group-item m-b-sm">
+                        <strong><%= Project::MAPPABLE_FIELDS_META["amount"] %>:</strong>
+                        <span class="pull-right">
+                            <%=best_in_place @project, :amount, :as => :input, :place_holder => '-', :activator => "#project-amount-activator" %>
+                                <i id="project-amount-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
+                        </span>
+                    </li>
+                    <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["expected_revenue"] %>:</strong>
                         <span class="pull-right">
                             <%=best_in_place @project, :expected_revenue, :as => :input, :place_holder => '-', :activator => "#project-expected-revenue-activator" %>
-                                <i id="project-expected-revenue-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                                <i id="project-expected-revenue-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
                         </span>
                     </li>
                     <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["probability"] %>:</strong>
                         <span class="pull-right">
                             <%=best_in_place @project, :probability, :as => :input, :place_holder => '-', :activator => "#project-probability-activator" %>
-                                <i id="project-probability-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                                <i id="project-probability-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
                         </span>
                     </li>
                     <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["forecast"] %>:</strong>
                         <span class="pull-right">
-                            <%=best_in_place @project, :forecast, :as => :input, :place_holder => '-', :activator => "#project-forecast-activator" %>
-                                <i id="project-forecast-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                            <% if @opportunity_forecast_categories.present? %>
+                                <%=best_in_place @project, :forecast, :as => :select, :collection => @opportunity_forecast_categories.map {|s| [s,s]}, :place_holder => '(none)', :activator => "#project-forecast-activator" %>
+                                <i id="project-forecast-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
+                            <% else %>
+                                <%= @project.forecast %><i style="color:#3d8dc5" class="fa fa-exclamation-triangle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="No forecast categories available! Please contact your administrator to set up."></i>
+                            <% end %>
                         </span>
                     </li>
                     <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["close_date"] %>:</strong>
                         <span class="pull-right">
-                            <%=best_in_place @project, :close_date, :as => :date, :place_holder => '-', :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-close-date-activator" %>
+                            <%=best_in_place @project, :close_date, :as => :date, :place_holder => "(none)", :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-close-date-activator" %>
                             <% unless @project.close_date.nil? %>
                                 <!-- TODO: Use jQuery to dynamically update these warnings -->
                                 <% if @project_close_date < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d') %>
@@ -213,13 +235,13 @@
                                     <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:orange" data-toggle="tooltip" data-placement="bottom" data-original-title="Due within the next 10 days"></i>
                                 <% end %>
                             <% end %>
-                            <i id="project-close-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                            <i id="project-close-date-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
                         </span>
                     </li>                    
                     <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["renewal_date"] %>:</strong>
                         <span class="pull-right">
-                            <%=best_in_place @project, :renewal_date, :as => :date, :place_holder => '-', :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-renewal-date-activator" %>
+                            <%=best_in_place @project, :renewal_date, :as => :date, :place_holder => "(none)", :display_with => Proc.new{ |p| p.nil? ? nil : p.strftime('%b %d, %Y') }, :activator => "#project-renewal-date-activator" %>
                             <% unless @project_renewal_date.nil? %>
                                 <!-- TODO: Use jQuery to dynamically update these warnings -->
                                 <% if @project_renewal_date < Time.zone.at(Time.now.utc).strftime('%Y-%m-%d') %>
@@ -230,7 +252,7 @@
                                     <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:orange" data-toggle="tooltip" data-placement="bottom" data-original-title="Due within the next 10 days"></i>
                                 <% end %>
                             <% end %>
-                            <i id="project-renewal-date-activator" class="fa fa-caret-down bip_activator text-mute-gray"></i>
+                            <i id="project-renewal-date-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
                         </span>
                     </li>      
                     <!-- End: Opportunity-level standard fields -->
@@ -241,7 +263,7 @@
                             <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and not cf.custom_fields_metadatum.custom_lists_metadatum.nil? and not cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty? %>
                                 <span class="pull-right md-m-0"><%= best_in_place cf, :value, :as => :select, :place_holder => '(none)', :collection => @custom_lists[cf.custom_fields_metadatum.custom_lists_metadatum.name], :class => 'btn btn-default btn-sm fa-caret-down', :style => "color:#DDD;" %></span>
                             <% else %>
-                                <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and (cf.custom_fields_metadatum.custom_lists_metadatum.nil? or cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty?) %>
+                                <% if cf.custom_fields_metadatum.data_type == CustomFieldsMetadatum::DATA_TYPE[:List] and (cf.custom_fields_metadatum.custom_lists_metadatum.nil? || cf.custom_fields_metadatum.custom_lists_metadatum.custom_lists.empty?) %>
                                     <i style="color:#3d8dc5" class="fa fa-exclamation-triangle m-l-xs pull-right" data-toggle="tooltip" data-placement="top" data-original-title="This field's data type='List', but no list is assigned or the list assigned has no options."></i>
                                 <% end %>
                                 <i id="proj-customfield<%=i%>-activator" class="fa fa-pencil pull-right bip_activator text-mute-gray"></i>
@@ -267,7 +289,7 @@
                                 <li class="list-group-item m-b-sm">
                                     <div>
                                     <strong><%= cf.custom_fields_metadatum.name %>:</strong>
-                                    <span class="pull-right m-r-xs"><%= cf.value %><% if cf.value.nil? or cf.value.empty? %>(none)<%end%></span>
+                                    <span class="pull-right m-r-xs"><%= cf.value %><% if cf.value.nil? || cf.value.empty? %>(none)<%end%></span>
                                     </div>
                                 </li>
                             <% end %>

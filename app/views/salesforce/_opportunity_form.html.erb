@@ -12,10 +12,10 @@
         <tr><td><input type="text" id="name" value="<%= @salesforce_opportunity.name %>" onkeyup="changedValue('opportunity')"></td></tr>
         <tr><td><label for="stage_name">Stage</label></td></tr>
         <tr><td><select data-placeholder="Select a stage" id="stage_name" onchange="changedValue('opportunity')">
-          <% if @opp_stages.blank?  %>
+          <% if @opportunity_stages.blank?  %>
             <option value="nil" disabled>--No stages available--</option>
           <% else %>
-            <% @opp_stages.each do |a| %>
+            <% @opportunity_stages.each do |a| %>
               <option value="<%= a %>" <%= "selected" if a == @salesforce_opportunity.stage_name %>><%= a %></option>
             <% end %>
           <% end %>
@@ -30,10 +30,10 @@
         <tr><td><input type="text" id="amount" value="<%= @salesforce_opportunity.amount %>" onkeyup="changedValue('opportunity')"></td></tr>
         <tr><td><label for="forecast_category_name">Forecast category</label></td></tr>
         <tr><td><select data-placeholder="Select a forecast category" id="forecast_category_name" onchange="changedValue('opportunity')">
-          <% if @opp_forecast_cats.blank?  %>
+          <% if @opportunity_forecast_categories.blank?  %>
             <option value="nil" disabled>--No forecast categories available--</option>
           <% else %>
-            <% @opp_forecast_cats.each do |a| %>
+            <% @opportunity_forecast_categories.each do |a| %>
               <option value="<%= a %>" <%= "selected" if a == @salesforce_opportunity.forecast_category_name %>><%= a %></option>
             <% end %>
           <% end %>
