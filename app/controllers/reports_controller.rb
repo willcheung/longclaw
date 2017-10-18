@@ -200,7 +200,8 @@ class ReportsController < ApplicationController
 
     @open_alerts_and_tasks = @user.notifications.open.count  #tasks and alerts
     @accounts_managed = @user.projects_owner_of.count
-    @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
+    # @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
+    @closed_won_this_qtr = SalesforceOpportunity.joins(:project).where(is_closed: true, is_won: true, close_date: get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), projects: { id: @user.projects_owner_of.ids }).sum(:amount)
 
     @activities_by_category_date = @user.daily_activities_by_category(current_user.time_zone).group_by { |a| a.category }
 
@@ -379,7 +380,7 @@ class ReportsController < ApplicationController
   end
 
   def get_remaining_top_dashboard_data
-    forecast_chart_result = @top_dashboard_data.reject{|o| o.forecast_category_name == 'Omitted' || (o.is_closed && !o.is_won)}.map{|o| !o.is_closed ? [o.forecast_category_name, o.amount] : ['Closed Won', o.amount]}.group_by{|n,a| n}.sort_by{|n,a| n == 'Closed Won' ? n : "           "+n}
+     forecast_chart_result = @top_dashboard_data.reject{|o| o.forecast_category_name == 'Omitted' || (o.is_closed && !o.is_won)}.map{|o| !o.is_closed ? [o.forecast_category_name, o.amount] : ['Closed Won', o.amount]}.group_by{|n,a| n}.sort_by{|n,a| n == 'Closed Won' ? n : "           "+n}
     @forecast_chart_data = forecast_chart_result.map do |forecast_category_name, data|
       Hashie::Mash.new({ forecast_category_name: forecast_category_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
     end
