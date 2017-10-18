@@ -150,8 +150,11 @@ class ProjectsController < ApplicationController
                                                 ))
     # Add current_user to project member
     @project.project_members.new(user: current_user)
+    # TODO: Uncomment below to undo #1011
     # Subscribe current_user as weekly / daily follower because s/he created the project
-    @project.subscribers.new(user: current_user)
+    # @project.subscribers.new(user: current_user)
+    # Subscribe current_user as daily follower only temporarily (per #1011)
+    @project.subscribers.new(user: current_user, weekly: false)
 
       respond_to do |format|
         if params[:commit] == 'Create with account contacts' 
