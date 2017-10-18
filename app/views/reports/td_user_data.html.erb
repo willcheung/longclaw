@@ -13,10 +13,10 @@
             <div class="col-md-3 text-center">
                 <div class="metric">
                     <div class="metric-title">
-                        <h4>Expected Revenue</h4>
+                        <h4>Closed Won<br>(This Quarter)</h4>
                     </div>
                     <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px;"><% if @sum_expected_revenue.nil? %> - <% else %>$<%= number_to_human(@sum_expected_revenue) %><% end %></h2>
+                        <h2 style="font-weight:600;font-size:46px;"><% if @closed_won_this_qtr.nil? %> - <% else %>$<%= number_to_human(@closed_won_this_qtr) %><% end %></h2>
                     </div>
                 </div>
             </div>

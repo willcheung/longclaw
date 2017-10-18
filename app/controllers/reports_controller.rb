@@ -200,7 +200,8 @@ class ReportsController < ApplicationController
 
     @open_alerts_and_tasks = @user.notifications.open.count  #tasks and alerts
     @accounts_managed = @user.projects_owner_of.count
-    @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
+    # @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
+    @closed_won_this_qtr = SalesforceOpportunity.joins(:project).where(is_closed: true, is_won: true, close_date: get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), projects: { id: @user.projects_owner_of.ids }).sum(:amount)
 
     @activities_by_category_date = @user.daily_activities_by_category(current_user.time_zone).group_by { |a| a.category }
 
@@ -379,13 +380,13 @@ class ReportsController < ApplicationController
   end
 
   def get_remaining_top_dashboard_data
-    forecast_chart_result = @top_dashboard_data.reject do |o| 
+    forecast_chart_result = @top_dashboard_data.reject do |o|
       o.forecast_category_name == 'Omitted' || (o.is_closed && !o.is_won)
-    end.map do |o| 
-      if o.is_closed 
+    end.map do |o|
+      if o.is_closed
         ['Closed Won', o.amount]
       else
-        [(o.forecast_category_name.blank? ? '-Undefined-' : o.forecast_category_name), o.amount] 
+        [(o.forecast_category_name.blank? ? '-Undefined-' : o.forecast_category_name), o.amount]
       end
     end.group_by{|n,a| n}.sort_by{|n,a| n == 'Closed Won' ? n : '           '+n}
     @forecast_chart_data = forecast_chart_result.map do |forecast_category_name, data|
@@ -406,7 +407,7 @@ class ReportsController < ApplicationController
       stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
       stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
       stage_name_x <=> stage_name_y
-    end # unmatched stage names are sorted to the left of everything 
+    end # unmatched stage names are sorted to the left of everything
     @stage_chart_data = stage_chart_result.map do |stage_name, data|
       Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
     end
