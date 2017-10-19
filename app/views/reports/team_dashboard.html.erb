@@ -155,9 +155,9 @@
                 crosshair: true,
                 labels: {
                     style: {
-                        fontSize: '9px'
-                    },
-                    rotation: 0
+                        fontSize: '9px',
+                        textOverflow: 'none'
+                    }
                 }
             },
             yAxis: {
@@ -171,7 +171,7 @@
                stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        return "$"+large_number_to_human(this.total);
+                        return "$"+large_number_to_human_signif_digits(this.total);
                     },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
@@ -181,7 +181,7 @@
             tooltip: {
                 enabled: true,
                 formatter: function () {
-                    return '$' + large_number_to_human(this.total) + ' in ' + this.x + '<br>$' + large_number_to_human(this.y) + ' ' + this.series.name;
+                    return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
                 }
             },
             legend: {
@@ -228,9 +228,9 @@
                 crosshair: true,
                 labels: {
                     style: {
-                        fontSize: '9px'
-                    },
-                    rotation: 0
+                        fontSize: '9px',
+                        textOverflow: 'none'
+                    }
                 }
             },
             yAxis: {
@@ -245,7 +245,7 @@
                     enabled: true,
                     formatter: function () {
                         //return Highcharts.numberFormat(this.total, 0, null, "");
-                        return "$"+large_number_to_human(this.total);
+                        return "$"+large_number_to_human_signif_digits(this.total);
                     },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
@@ -255,7 +255,7 @@
             tooltip: {
                 enabled: true,
                 formatter: function () {
-                    return '$' + large_number_to_human(this.total) + ' in ' + this.x + '<br>$' + large_number_to_human(this.y) + ' ' + this.series.name;
+                    return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
                 }
             },
             legend: {
