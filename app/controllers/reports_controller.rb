@@ -39,8 +39,7 @@ class ReportsController < ApplicationController
     @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
     # Dashboard top charts
-    @top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.pluck(:id))
-    get_remaining_top_dashboard_data
+    set_top_dashboard_data(project_ids: projects.pluck(:id)) 
 
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
@@ -186,8 +185,11 @@ class ReportsController < ApplicationController
     return if projects.blank? # quit early if all projects are filtered out
 
     # Dashboard top charts
-    @top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id INNER JOIN users on projects.owner_id = users.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND users.id IN (?)", current_user.organization_id, projects.pluck(:id), users.pluck(:id))
-    get_remaining_top_dashboard_data
+    if (params[:team].present? || params[:title].present?)
+      set_top_dashboard_data(project_ids: projects.pluck(:id), user_ids: users.pluck(:id)) # if any user filter is specified, then filter by users
+    else
+      set_top_dashboard_data(project_ids: projects.pluck(:id)) # if no user filter is present, don't filter by users at all
+    end
 
     @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
     @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
@@ -379,7 +381,16 @@ class ReportsController < ApplicationController
     [data, categories]
   end
 
-  def get_remaining_top_dashboard_data
+  # Sets the necessary data to be used in the top forecast category and stage reports.
+  # Parameters:   project_ids (required) - list of CS opportunity id's to filter on.
+  #               user_ids (optional) - list of CS user id's to filter on.
+  def set_top_dashboard_data(project_ids: , user_ids: nil)
+    if user_ids.present?
+      @top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id INNER JOIN users on projects.owner_id = users.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND users.id IN (?)", current_user.organization_id, project_ids, user_ids)
+    else
+      @top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, project_ids)
+    end
+
     forecast_chart_result = @top_dashboard_data.reject do |o|
       o.forecast_category_name == 'Omitted' || (o.is_closed && !o.is_won)
     end.map do |o|
