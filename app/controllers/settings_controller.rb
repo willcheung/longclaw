@@ -19,7 +19,7 @@ class SettingsController < ApplicationController
 	end
 
 	def users
-		@users = current_user.organization.users
+		@users = current_user.organization.users.non_alias
 	end
 
 	def alerts
@@ -152,20 +152,21 @@ class SettingsController < ApplicationController
         @cs_opportunity_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
       end
 
-      # We don't save SFDC custom fields (i.e., in our backend), so we query SFDC every time! :(
+      # We don't save SFDC custom fields (i.e., in our backend), so we query SFDC to get field metadata every time! :(
+      client = SalesforceService.connect_salesforce(current_user.organization)
 			if (params[:sfdc_custom_fields_only] == "true")
-        @sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id, custom_fields_only: true)
+        @sfdc_fields = SalesforceController.get_salesforce_fields(client: client, custom_fields_only: true)
 			else
-        @sfdc_fields = SalesforceController.get_salesforce_fields(organization_id: current_user.organization_id)
+        @sfdc_fields = SalesforceController.get_salesforce_fields(client: client)
 			end
 
 			if @sfdc_fields.empty?  # SFDC connection error
 				@salesforce_connection_error = true
 			else
 				# add ("nil") options to remove mapping 
-				@sfdc_fields[:sfdc_account_fields] << ["","(Unmapped)"] 
-				@sfdc_fields[:sfdc_opportunity_fields] << ["","(Unmapped)"] 
-				@sfdc_fields[:sfdc_contact_fields] << ["","(Unmapped)"] 
+				@sfdc_fields[:sfdc_account_fields] << ["","--Unmapped--"] 
+				@sfdc_fields[:sfdc_opportunity_fields] << ["","--Unmapped--"] 
+				@sfdc_fields[:sfdc_contact_fields] << ["","--Unmapped--"] 
 				#puts "******** @sfdc_fields *** #{@sfdc_fields} *******"
 			end
 		end
@@ -198,9 +199,10 @@ class SettingsController < ApplicationController
 	end
 
 	def super_user
-		@users = User.all.includes(:organization).order(:onboarding_step).group_by { |u| u.organization }
+		# Note: *gmail.com organizations are filtered out!
+		@users = User.all.includes(:organization).where("LOWER(organizations.name) NOT LIKE '%gmail.com'").references(:organization).order(:onboarding_step).group_by { |u| u.organization }
 		@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
-		@toggle_org = Organization.is_active
+		@toggle_org = Organization.is_active.where("LOWER(name) NOT LIKE '%gmail.com'") 
 	end
 
 	def organization_jump

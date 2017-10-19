@@ -80,6 +80,7 @@ class User < ActiveRecord::Base
   scope :onboarded, -> { where onboarding_step: Utils::ONBOARDING[:onboarded] }
   scope :exchange_auth, -> { where oauth_provider: AUTH_TYPE[:Exchange] }
   scope :ordered_by_first_name, -> { order('LOWER(first_name) ASC') }
+  scope :non_alias, -> { where ALIAS_REGEXES.map { |r| "email !~* '#{r}'" }.join(' AND ') }
 
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
          :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :microsoft_v2_auth, :salesforce, :salesforce_sandbox]
@@ -94,7 +95,8 @@ class User < ActiveRecord::Base
            Basic: 'Basic', Pro: 'Professional', Biz: 'Business', Unregistered: 'Unregistered' }.freeze
   OTHER_ROLE = { Trial: 'Trial', Chromeuser: 'Chrome user' }.freeze # TODO: remove "Chrome user"
   AUTH_TYPE = { GmailBasic: 'google_oauth2_basic', Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }.freeze 
-  FREE_EMAIL_PROVIDERS = ENV['FREE_EMAIL_PROVIDERS'] || %w[yahoo.com gmail.com zoho.com outlook.com aol.com verizon.net comcast.net earthlink.net]
+  FREE_EMAIL_PROVIDERS = ENV['FREE_EMAIL_PROVIDERS'] || %w[yahoo.com gmail.com zoho.com outlook.com aol.com verizon.net comcast.net earthlink.net].freeze
+  ALIAS_REGEXES = %w[reply\+.*@.* .*\W?noreply\W.* (everyone|job|jobs|support|help|info|product|sales|notifications|admin|hello|mailer-daemon|mailer-demon|reply)@.*].freeze
 
   WORDS_PER_SEC = { Read: 2.0, Write: 0.42 }.freeze # Reading=120WPM(<200)  Typing=~25WPM(<40)
   # WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }

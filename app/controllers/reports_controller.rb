@@ -34,7 +34,13 @@ class ReportsController < ApplicationController
       end
     end 
 
+    @this_qtr_range = get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
+
     @data = [] and return if projects.blank?  #quit early if all projects are filtered out
+
+    # Dashboard top charts
+    @top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.pluck(:id))
+    get_remaining_top_dashboard_data
 
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
@@ -151,7 +157,7 @@ class ReportsController < ApplicationController
   def td_sort_data
     # NOTE: `sort` and `sort_by` are keywords for Hash, would have used these as keys for @dashboard_data but can't due to this conflict!
     @dashboard_data = Hashie::Mash.new(sorted_by: { type: params[:sort] }, metric: { type: params[:metric] })
-    users = current_user.organization.users
+    users = current_user.organization.users.registered.onboarded.non_alias
 
     # Incrementally apply filters
     if params[:team].present?
@@ -170,10 +176,18 @@ class ReportsController < ApplicationController
       end
     end
 
-    return if users.blank?  # quit early if all users are filtered out
+    @this_qtr_range = get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
+
+    return if users.blank? # quit early if all users are filtered out
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
     projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
+
+    return if projects.blank? # quit early if all projects are filtered out
+
+    # Dashboard top charts
+    @top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id INNER JOIN users on projects.owner_id = users.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND users.id IN (?)", current_user.organization_id, projects.pluck(:id), users.pluck(:id))
+    get_remaining_top_dashboard_data
 
     @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
     @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
@@ -186,7 +200,8 @@ class ReportsController < ApplicationController
 
     @open_alerts_and_tasks = @user.notifications.open.count  #tasks and alerts
     @accounts_managed = @user.projects_owner_of.count
-    @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
+    # @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
+    @closed_won_this_qtr = SalesforceOpportunity.joins(:project).where(is_closed: true, is_won: true, close_date: get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), projects: { id: @user.projects_owner_of.ids }).sum(:amount)
 
     @activities_by_category_date = @user.daily_activities_by_category(current_user.time_zone).group_by { |a| a.category }
 
@@ -362,6 +377,40 @@ class ReportsController < ApplicationController
     # puts categories
 
     [data, categories]
+  end
+
+  def get_remaining_top_dashboard_data
+    forecast_chart_result = @top_dashboard_data.reject do |o|
+      o.forecast_category_name == 'Omitted' || (o.is_closed && !o.is_won)
+    end.map do |o|
+      if o.is_closed
+        ['Closed Won', o.amount]
+      else
+        [(o.forecast_category_name.blank? ? '-Undefined-' : o.forecast_category_name), o.amount]
+      end
+    end.group_by{|n,a| n}.sort_by{|n,a| n == 'Closed Won' ? n : '           '+n}
+    @forecast_chart_data = forecast_chart_result.map do |forecast_category_name, data|
+      Hashie::Mash.new({ forecast_category_name: forecast_category_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
+    end
+
+    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
+
+    stage_chart_result = @top_dashboard_data.map do |o|
+      if o.is_closed
+        [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]
+      else
+        [(o.stage_name.blank? ? '-Undefined-' : o.stage_name), o.amount]
+      end
+    end.group_by{|n,a| n}.sort do |x,y|
+      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
+      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
+      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
+      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
+      stage_name_x <=> stage_name_y
+    end # unmatched stage names are sorted to the left of everything
+    @stage_chart_data = stage_chart_result.map do |stage_name, data|
+      Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
+    end
   end
 
 end

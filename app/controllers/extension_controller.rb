@@ -5,6 +5,8 @@ class ExtensionController < ApplicationController
 
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce]
+  before_action :get_current_org_opportunity_stages, only: [:salesforce]
+  before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
   before_action :get_account_types, only: :no_account
   # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
   # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
@@ -93,14 +95,14 @@ class ExtensionController < ApplicationController
     people_emails = external_emails | internal_emails - [current_user.email.downcase]
     account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]  # filter by/remove users already in e-mail thread, then truncate list
 
-    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e), name_from_params: ((params[:external].values.find{|p| p.second.downcase == e} if params[:external].present?) || (params[:internal].values.find{|p| p.second.downcase == e}  if params[:internal].present?) || [nil]).first } }
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, user: current_user.organization.users.find_by_email(e), contact: current_user.organization.contacts.find_by_email(e), profile: Profile.find_or_create_by_email(e), name_from_params: ((params[:external].values.find{|p| p.second.downcase == e} if params[:external].present?) || (params[:internal].values.find{|p| p.second.downcase == e} if params[:internal].present?) || [nil]).first } }
     @account_contacts_with_profile = account_contacts_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e) } }
 
     people_emails += @account_contacts_with_profile.map{|p| p[:email]}
 
     # people_emails = ['joe@plugandplaytechcenter.com']
     # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
-    tracking_requests_this_pastmonth = current_user.tracking_requests.has_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at DESC")
+    tracking_requests_this_pastmonth = current_user.tracking_requests.find_by_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at DESC") #TODO: This line and the subsequent code is related to issue #1258.
     
     @last_emails_sent_per_person = {}
     @emails_sent_per_person = {}
@@ -503,7 +505,7 @@ class ExtensionController < ApplicationController
     new_users = []
     #puts "internal_members_a: #{internal_members_a}"
     internal_members_a.each do |u|
-      next if User.find_by_email(u[:email]).present?
+      next if User.find_by_email(u[:email]).present? || u[:email].nil?
 
       name = u[:full_name].split(" ")
       first_name = name[0].nil? ? '' : name[0]

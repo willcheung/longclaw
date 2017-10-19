@@ -248,4 +248,67 @@ class SalesforceOpportunity < ActiveRecord::Base
 
     return { status: "SUCCESS", result: "Refresh completed." }
   end
+
+  # Create/refresh local custom lists copies of the available SFDC opportunity picklists (i.e., for Stage and Forecast Category) for an organization.
+  # Parameters:   client - a valid SFDC connection client
+  #               organization - the organization to search for the picklists
+  #               refresh - true, to clear existing values in picklist and then re-insert values; false, to do nothing if there are existing values in the picklist   
+  def self.refresh_picklists(client: , organization: , force_refresh: true )
+    # puts "\n\n\n*** Running refresh_picklists(force_refresh: #{force_refresh})... @#{Time.current}\n\n\n"
+    stages_clm = organization.custom_lists_metadatum.find_by(name: "Stage Name", cs_app_list: true) || organization.custom_lists_metadatum.create(name: "Stage Name", cs_app_list: true)
+    forecast_cats_clm = organization.custom_lists_metadatum.find_by(name: "Forecast Category Name", cs_app_list: true) || organization.custom_lists_metadatum.create(name: "Forecast Category Name", cs_app_list: true)
+
+    if force_refresh || stages_clm.custom_lists.blank? || forecast_cats_clm.custom_lists.blank?
+      puts "Refreshing custom lists of the available SFDC opportunity picklists (force_refresh=#{force_refresh})..."
+
+      query_statement = "SELECT Id, ApiName, ForecastCategoryName, IsClosed, IsWon, Description, DefaultProbability, IsActive FROM OpportunityStage ORDER BY SortOrder"  
+      query_result = SalesforceService.query_salesforce(client, query_statement)
+      # puts "*** query: \"#{query_statement}\" ***"
+      # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
+
+      if query_result[:status] == "SUCCESS" && query_result[:result].present?
+        stages = Set.new
+        forecast_cats = Set.new ["Omitted", "Pipeline", "Best Case", "Commit", "Closed"]
+        query_result[:result].each do |stg|
+          stages.add(stg.ApiName)
+          forecast_cats.add(stg.ForecastCategoryName)
+        end
+
+        if force_refresh || stages_clm.custom_lists.blank?
+          stages_clm.custom_lists.destroy_all
+          stages.each {|s| stages_clm.custom_lists.create(option_value: s) }
+        end
+
+        if force_refresh || forecast_cats_clm.custom_lists.blank?
+          forecast_cats_clm.custom_lists.destroy_all
+          forecast_cats.sort.each {|fc| forecast_cats_clm.custom_lists.create(option_value: fc) }
+        end
+      elsif query_result[:status] == "ERROR"
+        puts "****SFDC**** Error querying SFDC while refreshing opportunity stages and forecast categories picklist. SOQL statement=\"#{query_statement}\" result: #{query_result[:result]} detail: #{query_result[:detail]}"
+      elsif query_result[:result].blank?
+        puts "****SFDC**** Warning: Did not refresh CS copy of SFDC picklists, because no stages or forecast categories were found. SOQL statement=\"#{query_statement}\" detail: #{query_result[:detail]}"
+      end
+    else
+      puts "****SFDC**** Warning: Did not refresh CS copy of SFDC picklists, because force_refresh is #{force_refresh ? "on" : "off"}#{' and/or Stage picklist has values' if stages_clm.custom_lists.present?}#{' and/or Forecast category picklist has values' if forecast_cats_clm.custom_lists.present?}"
+    end
+    puts "Refresh opp picklists successful!"
+  end
+
+  # Returns the Opportunity Stage Name picklist in an array form of:
+  #     [stage_name, custom_list_id]
+  # where custom_list_id can be used for option order.
+  def self.get_sfdc_opp_stages(organization: )
+    return [] if organization.nil?
+    stage_name_picklist = organization.custom_lists_metadatum.find_by(name: "Stage Name", cs_app_list: true) if organization.custom_lists_metadatum.present? 
+    stage_name_picklist.blank? || stage_name_picklist.custom_lists.blank? ? [] : stage_name_picklist.custom_lists.pluck(:option_value, :id)
+  end
+
+  # Returns the Opportunity Forecast Category Name picklist in an array form of:
+  #     [forecast_category_name, custom_list_id]
+  # where custom_list_id can be used for option order.
+  def self.get_sfdc_opp_forecast_categories(organization: )
+    return [] if organization.nil?
+    forecast_cat_name_picklist = organization.custom_lists_metadatum.find_by(name: "Forecast Category Name", cs_app_list: true) if organization.custom_lists_metadatum.present? 
+    forecast_cat_name_picklist.blank? || forecast_cat_name_picklist.custom_lists.blank? ? [] : forecast_cat_name_picklist.custom_lists.pluck(:option_value, :id)
+  end
 end
