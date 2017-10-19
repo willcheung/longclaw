@@ -42,20 +42,25 @@
     <div class="row border-bottom ">
       <div class="col-lg-3">
           <div class="ibox float-e-margins">
-              <div id="closedwon-box">
-              </div>
+              <div id="closedwon-box"></div>
           </div>
       </div>
 
       <div class="col-lg-3">
           <div class="ibox float-e-margins">
-              <div id="forecast-chart" class="ibox-content forecast-chart" style="height:210px;padding-bottom:0"></div>
+              <div class='ibox-title'>
+                  <h5>Deals by Forecast</h5>
+              </div>
+              <div id="forecast-chart" class="ibox-content forecast-chart" style="height:220px;padding-bottom:0"></div>
           </div>
       </div>
 
       <div class="col-lg-6">
           <div class="ibox float-e-margins">
-              <div id="stage-chart" class="ibox-content stage-chart" style="height:210px;padding-bottom:0"></div>
+              <div class='ibox-title'>
+                  <h5>Deals by Stage</h5>
+              </div>
+              <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
           </div>
       </div>
     </div>
@@ -140,14 +145,17 @@
                 type: 'column'
             },
             title: {
-                text: 'Deals by Forecast',
-                style: {
-                    color: '#676a6c',
-                    fontSize: '14px',
-                    fontFamily: 'Roboto'
-                },
-                align: 'left'
+                text: ''
             },
+//            title: {
+//                text: 'Deals by Forecast',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+//            },
             credits: {
                 enabled: false
             },
@@ -155,8 +163,7 @@
                 crosshair: true,
                 labels: {
                     style: {
-                        fontSize: '9px',
-                        textOverflow: 'none'
+                        fontSize: '9px'
                     }
                 }
             },
@@ -213,14 +220,17 @@
                 type: 'column'
             },
             title: {
-                text: 'Deals by Stage',
-                style: {
-                    color: '#676a6c',
-                    fontSize: '14px',
-                    fontFamily: 'Roboto'
-                },
-                align: 'left'
+                text: ''
             },
+//            title: {
+//                text: 'Deals by Stage',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+//            },
             credits: {
                 enabled: false
             },
@@ -228,8 +238,7 @@
                 crosshair: true,
                 labels: {
                     style: {
-                        fontSize: '9px',
-                        textOverflow: 'none'
+                        fontSize: '9px'
                     }
                 }
             },
