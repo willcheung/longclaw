@@ -82,7 +82,7 @@ class User < ActiveRecord::Base
   scope :ordered_by_first_name, -> { order('LOWER(first_name) ASC') }
 
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
-         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :salesforce, :salesforce_sandbox]
+         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :microsoft_v2_auth, :salesforce, :salesforce_sandbox]
 
   validates :email, uniqueness: true
 
@@ -186,8 +186,8 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.find_for_google_oauth2(auth, time_zone='UTC', params)
-    info = auth.info
+  def self.find_for_oauth2(auth, time_zone='UTC', info=auth.info)
+
     credentials = auth.credentials
 
     oauth_attributes = {
@@ -1002,8 +1002,32 @@ class User < ActiveRecord::Base
     Net::HTTP.post_form(url, self.to_params)
   end
 
+  def request_token_from_azure
+    url = URI("https://login.microsoftonline.com/#{ENV['AAD_TENANT']}/oauth2/token")
+    Net::HTTP.post_form(url, 'refresh_token' => oauth_refresh_token,
+                              'client_id' => ENV['AAD_CLIENT_ID'],
+                              'client_secret' => ENV['AAD_SECRET'],
+                              'grant_type' => 'refresh_token')
+  end
+
+  def request_token_from_ms
+    # https://login.microsoftonline.com/common/oauth2/v2.0/token
+    url = URI("https://login.microsoftonline.com/common/oauth2/v2.0/token")
+    Net::HTTP.post_form(url, 'refresh_token' => oauth_refresh_token,
+                        'client_id' => ENV['AZURE_APPLICATION_CLIENT_ID'],
+                        'client_secret' => ENV['AZURE_APPLICATION_CLIENT_SECRET'],
+                        #'scope' => 'offline_access',
+                        'grant_type' => 'refresh_token')
+  end
+
   def refresh_token!
-    response = request_token_from_google
+    response = case oauth_provider
+                 when 'microsoft_v2_auth'
+                   request_token_from_ms
+                 else
+                   request_token_from_google
+               end
+    # response =
     data = JSON.parse(response.body)
 
     if data['access_token'].nil?
