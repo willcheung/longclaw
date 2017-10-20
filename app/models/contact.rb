@@ -67,6 +67,41 @@ class Contact < ActiveRecord::Base
     return false
   end
 
+  # Create a copy of the Contact object without an account. (needs to be .save-ed)
+  def clone
+    Contact.new(
+      # account:
+      first_name: self.first_name,
+      last_name: self.last_name,
+      email: self.email,
+      phone: self.phone,
+      title: self.title,
+      source: self.source,
+      mobile: self.mobile,
+      background_info: self.background_info,
+      department: self.department,
+      external_source_id: self.external_source_id,
+      # buyer_role: self.buyer_role,
+    )
+  end
+
+  # Merge fields from source Contact into this Contact. Only overwrite a field if it is missing (nil or empty) in the current contact.
+  def merge(s_contact)
+    self.update(
+      first_name: (self.first_name.blank? ? nil : self.first_name) || s_contact.first_name,
+      last_name: (self.last_name.blank? ? nil : self.last_name) || s_contact.last_name,
+      email: (self.email.blank? ? nil : self.email) || s_contact.email,
+      phone: (self.phone.blank? ? nil : self.phone) || s_contact.phone,
+      title: (self.title.blank? ? nil : self.title) || s_contact.title,
+      source: (self.source.blank? ? nil : self.source) || s_contact.source,
+      mobile: (self.mobile.blank? ? nil : self.mobile) || s_contact.mobile,
+      background_info: (self.background_info.blank? ? nil : self.background_info) || s_contact.background_info,
+      department: (self.department.blank? ? nil : self.department) || s_contact.department,
+      external_source_id: (self.external_source_id.blank? ? nil : self.external_source_id) || s_contact.external_source_id,
+      # buyer_role: self.buyer_role,
+    )
+  end
+
   # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Opportunity as suggested members.  
   def self.load(data, project, save_in_db=true)
     contacts = []
