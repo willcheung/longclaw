@@ -128,27 +128,4 @@ class ApplicationController < ActionController::Base
     @opportunity_forecast_categories = SalesforceOpportunity.get_sfdc_opp_forecast_categories(organization: current_user.organization).map{|s| s.first}
   end
 
-  def get_close_date_range(range_description)
-    case range_description
-      when Project::CLOSE_DATE_RANGE[:ThisQuarter]
-        date = Time.current
-        (date.beginning_of_quarter...date.end_of_quarter)
-      when Project::CLOSE_DATE_RANGE[:NextQuarter]
-        date = Time.current.next_quarter
-        (date.beginning_of_quarter...date.end_of_quarter)
-      when Project::CLOSE_DATE_RANGE[:LastQuarter]
-        date = Time.current.prev_quarter
-        (date.beginning_of_quarter...date.end_of_quarter)
-      when Project::CLOSE_DATE_RANGE[:QTD]
-        (Time.current.beginning_of_quarter...Time.current)
-      when Project::CLOSE_DATE_RANGE[:YTD]
-        (Time.current.beginning_of_year...Time.current)
-      when Project::CLOSE_DATE_RANGE[:Closed]
-        (Time.at(0)...Time.current)
-      else # use 'This Quarter' by default
-        date = Time.current
-        (date.beginning_of_quarter...date.end_of_quarter)
-    end
-  end
-
 end

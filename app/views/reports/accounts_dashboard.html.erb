@@ -37,7 +37,8 @@
           <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >Unassigned</option>
       </select>
       <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
-          <option value=""></option> <!-- no filter -->
+          <option value="Any"></option> <!-- no filter -->
+          <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
           <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
           <optgroup label="Quarter">
               <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
@@ -56,20 +57,19 @@
   <div class="row border-bottom ">
       <div class="col-lg-3">
           <div class="ibox float-e-margins">
-              <div id="closedwon-box">
-              </div>
+              <div id="closedwon-box"></div>
           </div>
       </div>
 
       <div class="col-lg-3">
           <div class="ibox float-e-margins">
-              <div id="forecast-chart" class="ibox-content forecast-chart" style="height:210px;padding-bottom:0"></div>
+              <div id="forecast-chart" class="ibox-content forecast-chart" style="height:260px;padding-bottom:0"></div>
           </div>
       </div>
 
       <div class="col-lg-6">
           <div class="ibox float-e-margins">
-              <div id="stage-chart" class="ibox-content stage-chart" style="height:210px;padding-bottom:0"></div>
+              <div id="stage-chart" class="ibox-content stage-chart" style="height:260px;padding-bottom:0"></div>
           </div>
       </div>
   </div>
@@ -143,8 +143,7 @@
                 crosshair: true,
                 labels: {
                     style: {
-                        fontSize: '9px',
-                        textOverflow: 'none'
+                        fontSize: '9px'
                     }
                 }
             },
@@ -216,8 +215,7 @@
                 crosshair: true,
                 labels: {
                     style: {
-                        fontSize: '9px',
-                        textOverflow: 'none'
+                        fontSize: '9px'
                     }
                 }
             },

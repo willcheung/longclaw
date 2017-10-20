@@ -12,13 +12,13 @@ $("#closedwon-box").html(
   "<div class='ibox-title'>" +
   "    <h5>Closed Won</h5>" +
   "</div>" +
-  "<div class='ibox-content'>" +
+  "<div class='ibox-content' style='height:220px;padding-bottom:0;padding-top:20px;'>" +
   "    <h1><strong>" + closed_won_amount + "</strong></h1>" +
-  "    <h4><strong>0%</strong> of &mdash; target</h4>" +
+  "    <h4 style='margin-top:30px;'><strong>0%</strong> of &mdash; target</h4>" +
   "    <div class='progress progress-mini'>" +
   "        <div style='width: 0%;' class='progress-bar'></div>" +
   "    </div>" +
-  "    <h4 style='margin-top:20px'><strong><%= days_remaining_in_qtr.to_s + ' ' + 'day'.pluralize(days_remaining_in_qtr) %></strong> left in this quarter</h4>" +
+  "    <h4 style='margin-top:30px'><strong><%= days_remaining_in_qtr.to_s + ' ' + 'day'.pluralize(days_remaining_in_qtr) %></strong> left in this quarter</h4>" +
   "    <div class='progress progress-mini'>" +
   "        <div style='width: <%= progress_pct %>%;' class='progress-bar progress-bar-success'></div>" +
   "    </div>" +

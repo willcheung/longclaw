@@ -23,7 +23,8 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters
-    projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date]
+    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     if params[:owner].present? && params[:owner] != "0"
       if params[:owner] == "none"
         projects = projects.where(owner_id: nil)

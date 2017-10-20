@@ -21,8 +21,8 @@ module ContextSmithParser
     d = data.map { |hash| Hashie::Mash.new(hash) }
     project = d.find { |proj| proj.topExternalMemberDomain == project_domain }
 
-    external_members = project.externalMembers if project.present? || []
-    internal_members = project.internalMembers if project.present? || []
+    external_members = (project.externalMembers if project.present?) || []
+    internal_members = (project.internalMembers if project.present?) || []
 
 		return external_members, internal_members
   end
