@@ -153,13 +153,13 @@ class ContextsmithService
 
   def self.user_auth_params(user)
     case user.oauth_provider
-    when User::AUTH_TYPE[:Gmail]
-      success = user.token_expires_soon? ? user.refresh_token! : true
-      unless success
-        puts "Warning: Gmail token refresh failed for: #{ user.first_name } #{ user.last_name } #{ user.email } (Organization=#{ user.organization.name }, Role=#{ user.role.nil? ? "nil" : user.role }, Onboarding Step=#{ user.onboarding_step.nil? ? "nil" : user.onboarding_step }, Last sign-in=#{ user.last_sign_in_at.nil? ? "none" : user.last_sign_in_at })."
-        return nil
-      end
-      { token: user.oauth_access_token, email: user.email, kind: 'gmail'}
+      when User::AUTH_TYPE[:Gmail]
+        success = user.token_expires_soon? ? user.refresh_token! : true
+        unless success
+          puts "Warning: Gmail token refresh failed for: #{ user.first_name } #{ user.last_name } #{ user.email } (Organization=#{ user.organization.name }, Role=#{ user.role.nil? ? "nil" : user.role }, Onboarding Step=#{ user.onboarding_step.nil? ? "nil" : user.onboarding_step }, Last sign-in=#{ user.last_sign_in_at.nil? ? "none" : user.last_sign_in_at })."
+          return nil
+        end
+        { token: user.oauth_access_token, email: user.email, kind: 'gmail'}
       when User::AUTH_TYPE[:Office365]
         success = user.token_expires_soon? ? user.refresh_token! : true
         unless success
@@ -168,7 +168,7 @@ class ContextsmithService
         end
         { token: user.oauth_access_token, email: user.email, kind: 'office365'}
       when User::AUTH_TYPE[:Exchange]
-      { password: user.password, email: user.email, kind: 'exchange', url: user.oauth_provider_uid }
+        { password: user.password, email: user.email, kind: 'exchange', url: user.oauth_provider_uid }
       else
         throw "ERROR: Uknown oauth provider #{user.oauth_provider}"
     end

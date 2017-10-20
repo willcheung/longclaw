@@ -1004,14 +1004,6 @@ class User < ActiveRecord::Base
     Net::HTTP.post_form(url, self.to_params)
   end
 
-  def request_token_from_azure
-    url = URI("https://login.microsoftonline.com/#{ENV['AAD_TENANT']}/oauth2/token")
-    Net::HTTP.post_form(url, 'refresh_token' => oauth_refresh_token,
-                              'client_id' => ENV['AAD_CLIENT_ID'],
-                              'client_secret' => ENV['AAD_SECRET'],
-                              'grant_type' => 'refresh_token')
-  end
-
   def request_token_from_ms
     # https://login.microsoftonline.com/common/oauth2/v2.0/token
     url = URI("https://login.microsoftonline.com/common/oauth2/v2.0/token")
