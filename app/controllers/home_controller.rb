@@ -8,7 +8,8 @@ class HomeController < ApplicationController
 
     # Load all projects/opportunities visible to user, belongs to user, and to which user is subscribed
     visible_projects = Project.visible_to(current_user.organization_id, current_user.id)
-    visible_projects = visible_projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
+    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
+    visible_projects = visible_projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
     subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
 
@@ -54,7 +55,7 @@ class HomeController < ApplicationController
       # end
     end
 
-    # Load notifications for "My Alerts & Tasks"  
+    # Load notifications for "My Alerts & Tasks"
     unless @current_user_projects.blank?
       project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
       @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
