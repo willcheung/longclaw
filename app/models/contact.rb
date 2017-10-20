@@ -86,18 +86,18 @@ class Contact < ActiveRecord::Base
   end
 
   # Merge fields from source Contact into this Contact. Only overwrite a field if it is missing (nil or empty) in the current contact.
-  def merge(s_contact)
+  def merge(con)
     self.update(
-      first_name: (self.first_name.blank? ? nil : self.first_name) || s_contact.first_name,
-      last_name: (self.last_name.blank? ? nil : self.last_name) || s_contact.last_name,
-      email: (self.email.blank? ? nil : self.email) || s_contact.email,
-      phone: (self.phone.blank? ? nil : self.phone) || s_contact.phone,
-      title: (self.title.blank? ? nil : self.title) || s_contact.title,
-      source: (self.source.blank? ? nil : self.source) || s_contact.source,
-      mobile: (self.mobile.blank? ? nil : self.mobile) || s_contact.mobile,
-      background_info: (self.background_info.blank? ? nil : self.background_info) || s_contact.background_info,
-      department: (self.department.blank? ? nil : self.department) || s_contact.department,
-      external_source_id: (self.external_source_id.blank? ? nil : self.external_source_id) || s_contact.external_source_id,
+      first_name: (self.first_name.blank? ? nil : self.first_name) || con.first_name,
+      last_name: (self.last_name.blank? ? nil : self.last_name) || con.last_name,
+      email: (self.email.blank? ? nil : self.email) || con.email,
+      phone: (self.phone.blank? ? nil : self.phone) || con.phone,
+      title: (self.title.blank? ? nil : self.title) || con.title,
+      source: (self.source.blank? ? nil : self.source) || con.source,
+      mobile: (self.mobile.blank? ? nil : self.mobile) || con.mobile,
+      background_info: (self.background_info.blank? ? nil : self.background_info) || con.background_info,
+      department: (self.department.blank? ? nil : self.department) || con.department,
+      external_source_id: (self.external_source_id.blank? ? nil : self.external_source_id) || con.external_source_id,
       # buyer_role: self.buyer_role,
     )
   end
