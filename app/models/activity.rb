@@ -278,8 +278,8 @@ class Activity < ActiveRecord::Base
           result = { status: "SUCCESS", result: "No rows inserted into Activities.", detail: "Warning: No SFDC activity to import!" }
         end
       else
-        puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned!  Detail: query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"  # Temporary diagnostic console message to determine a SFDC (permission?) issue 
-        result = { status: "ERROR", result: "No rows inserted into Activities.", detail: "Warning: SFDC query returned successfully, but an invalid result was returned from Salesforce! It is possible you may not have the proper Salesforce access permissions.  Verify with your Salesforce administrator that you have access to Account and Opportunity tables, and the ActivityHistory/Task relation." }
+        puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned! Check for invalid SFDC entity Ids in Salesforce_opportunity and Salesforce_account tables, or user's access level.  Detail: query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"  # Temporary diagnostic console message to determine a SFDC (permission?) issue 
+        result = { status: "ERROR", result: "No rows inserted into Activities.", detail: "Warning: SFDC query returned successfully, but an invalid result was returned from Salesforce!  This can occur when Salesforce cannot find the SFDC sObject Id specified by ContextSmith; please verify that a valid SFDC account/opportunity is linked to this opportunity.  It may also be possible your SFDC user may not have the proper access permissions; please verify with your Salesforce Administrator that you have access such as to the ActivityHistory/Task relation." }
       end
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
