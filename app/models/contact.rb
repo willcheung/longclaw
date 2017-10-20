@@ -67,24 +67,6 @@ class Contact < ActiveRecord::Base
     return false
   end
 
-  # Create a copy of the Contact object without an account. (needs to be .save-ed)
-  def clone
-    Contact.new(
-      # account:
-      first_name: self.first_name,
-      last_name: self.last_name,
-      email: self.email,
-      phone: self.phone,
-      title: self.title,
-      source: self.source,
-      mobile: self.mobile,
-      background_info: self.background_info,
-      department: self.department,
-      external_source_id: self.external_source_id,
-      # buyer_role: self.buyer_role,
-    )
-  end
-
   # Merge fields from source Contact into this Contact. Only overwrite a field if it is missing (nil or empty) in the current contact.
   def merge(con)
     self.update(
