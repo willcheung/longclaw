@@ -270,6 +270,7 @@ class Contact < ActiveRecord::Base
   #             sfdc_account_id - id of SFDC account to which this exports/update the contact 
   #             contact - the contact to export to SFDC
   # def self.update_all_salesforce(client: , sfdc_account_id: , contact: , fields: , current_user: )
+  # TODO: Maybe make this a Contact instance method.
   def self.update_all_salesforce(client: , sfdc_account_id: , contact: )
     contact.export_cs_contact(client, sfdc_account_id)
   end

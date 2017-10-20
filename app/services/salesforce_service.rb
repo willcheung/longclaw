@@ -41,12 +41,12 @@ class SalesforceService
         puts "SalesforceService.connect_salesforce(): Refreshing access token. Client established using Restforce gem.  Accessing user_info... #{ client.user_info }"
       rescue => e
         puts "*** SalesforceService error: Salesforce connection error!  Details: #{ e.to_s } ***"
-        client = nil
+        return nil
       end
       begin
         puts "SalesforceService.connect_salesforce(): Daily SFDC API Requests Max/Limit=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
       rescue => e
-        puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established!"
+        puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established!" if client.present?
       end
     end
 

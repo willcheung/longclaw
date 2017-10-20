@@ -284,10 +284,10 @@ class SalesforceController < ApplicationController
 
       unless @client.nil?  # unless connection error
         @opportunities.each do |p|
-          load_result = Activity.load_salesforce_activities(@client, p, filter_predicate_str)
+          load_result = p.load_salesforce_activities(@client, filter_predicate_str)
 
           if load_result[:status] == "ERROR"
-            failure_method_location = "Activity.load_salesforce_activities()"
+            failure_method_location = "load_salesforce_activities()"
             render_internal_server_error(method_name, failure_method_location, load_result[:detail])
             return
           end
@@ -569,10 +569,10 @@ class SalesforceController < ApplicationController
             if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 # Import activities from SFDC Account level to ContextSmith Opportunity
-                load_result = Activity.load_salesforce_activities_from(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
+                load_result = Activity.load_salesforce_activities(@client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
 
                 if load_result[:status] == "ERROR"
-                  failure_method_location = "Activity.load_salesforce_activities_from()"
+                  failure_method_location = "Activity.load_salesforce_activities()"
                   puts "****SFDC**** Error at #{failure_method_location} while attempting to import activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
                   sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: load_result[:result] + " " + load_result[:detail] }
                   error_occurred = true
@@ -595,10 +595,10 @@ class SalesforceController < ApplicationController
             end
           else # CS Opportunity linked to SFDC Opportunity
             # Import activities from SFDC to ContextSmith, both at Opportunity level
-            load_result = Activity.load_salesforce_activities_from(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
+            load_result = Activity.load_salesforce_activities(@client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
 
             if load_result[:status] == "ERROR"
-              failure_method_location = "Activity.load_salesforce_activities_from()"
+              failure_method_location = "Activity.load_salesforce_activities()"
               puts "****SFDC**** Error at #{failure_method_location} while attempting to import activity from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
               sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, failure_method_location: failure_method_location, detail: load_result[:result] + " " + load_result[:detail] }
               error_occurred = true
