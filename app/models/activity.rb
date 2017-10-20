@@ -201,18 +201,58 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Copies/imports Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS opportunity.  Does not import previously-exported CS data residing on SFDC.
-  # Parameters:   client - SFDC connection
+  # Determines the SFDC entity level to which the specified CS opportunity (project) is linked ("Account" or "Opportunity"), then import Salesforce activities (ActivityHistory) from this SFDC entity into the CS opportunity.  Does not import previously-exported CS data residing on SFDC.  
+  # Note: Does nothing if project is not linked (status = SUCCESS, result = contains warning message). This process aborts upon encountering any error.
+  # Additional Note:  This may called from ProjectsController#refresh !!
+  # Parameters:   client - a valid SFDC connection
   #               project - the CS opportunity into which to load the SFDC activity
-  #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
-  #               type - to specify loading from an SFDC "Account" or "Opportunity"
   #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   #               limit (optional) - the max number of activity records to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
   #             detail - Contains any error or informational/warning messages.
-  def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
+  def self.load_salesforce_activities(client, project, filter_predicates=nil, limit=200)
+    load_result = nil
+
+    if project.salesforce_opportunity.blank? # CS Opportunity not linked to SFDC Opportunity
+      if project.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
+        project.account.salesforce_accounts.each do |sfa|
+          load_result = Activity.load_salesforce_activities_from(client, project, sfa.salesforce_account_id, type="Account", filter_predicates)
+
+          if load_result[:status] == "ERROR"
+            error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{project.name}\" (opportunity_id='#{project.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+            return { status: "ERROR", result: load_result[:result], detail: error_detail }  # abort upon any error!
+          end
+        end
+      else # CS Opportunity unlinked to any SFDC Account/Opportunity
+        return { status: "SUCCESS", result: "CS Opportunity was not updated.", detail: "Warning: No SFDC entity linked to Opportunity!" }
+      end
+    else # CS Opportunity linked to SFDC Opportunity
+      # Save at the Opportunity level
+      load_result = Activity.load_salesforce_activities_from(client, project, project.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicates)
+
+      if load_result[:status] == "ERROR"
+        error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{project.salesforce_opportunity.name}\" (sfdc_id='#{project.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{project.name}\" (opportunity_id='#{project.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+        return { status: "ERROR", result: load_result[:result], detail: error_detail }  # abort upon any error!
+      end
+    end
+
+    return { status: "SUCCESS", result: load_result[:result], detail: nil }
+  end
+
+  # Copies/imports Salesforce activities (ActivityHistory) in the specified SFDC Account or Opportunity into the specified CS opportunity (project).  Does not import previously-exported CS data residing on SFDC.
+  # Parameters:   client - a valid SFDC connection
+  #               project - the CS opportunity into which to load the SFDC activity
+  #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
+  #               type - the SFDC entity level ("Account" or "Opportunity") from which to load activities
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               limit (optional) - the max number of activity records to process
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if successful, or "ERROR" otherwise
+  #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
+  #             detail - Contains any error or informational/warning messages.
+  def self.load_salesforce_activities_from(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
     val = []
     result = nil
 
@@ -275,11 +315,11 @@ class Activity < ActiveRecord::Base
         if val.count > 0
           result = { status: "SUCCESS", result: "No. of rows UPSERTed into Activities = #{val.count}", detail: "#{ query_result[:detail] }" }
         else
-          result = { status: "SUCCESS", result: "Warning: no rows inserted.", detail: "No SFDC activity to import!" }
+          result = { status: "SUCCESS", result: "No rows inserted into Activities.", detail: "Warning: No SFDC activity to import!" }
         end
       else
         puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned!  Detail: query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"  # Temporary diagnostic console message to determine a SFDC (permission?) issue 
-        result = { status: "ERROR", result: "SFDC query returned successfully, but an invalid result was returned from Salesforce! You may not have the proper Salesforce access permissions.  Verify with your Salesforce administrator that you have access to Account and Opportunity tables, and ActivityHistory/Task relation.", detail: "Invalid result was returned from Salesforce!" }
+        result = { status: "ERROR", result: "No rows inserted into Activities.", detail: "Warning: SFDC query returned successfully, but an invalid result was returned from Salesforce! It is possible you may not have the proper Salesforce access permissions.  Verify with your Salesforce administrator that you have access to Account and Opportunity tables, and the ActivityHistory/Task relation." }
       end
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }

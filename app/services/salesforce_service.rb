@@ -336,15 +336,6 @@ class SalesforceService
     result
   end
 
-  # Call this from ProjectsController#refresh !!
-  # Parameters: project - the CS Opportunity that we will attempt to refresh from SFDC
-  #             query?
-  def self.load_activity_from_salesforce(project, query=nil, save_in_db=true, after=nil, is_time=true, request=true, is_test=false)
-    client = self.connect_salesforce(current_user.organization_id)
-    # Find the SFDC opportunities/accounts mapped to project
-    # Then call Activity.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil
-  end
-
   # Changes value 'val' to a valid value to be used in a SFDC field. e.g., escapes single quotes
   def self.return_escaped_SFDC_field_val(val)
     if val.present?
