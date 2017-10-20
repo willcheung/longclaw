@@ -262,9 +262,6 @@ Devise.setup do |config|
     include_granted_scopes: true
   }
 
-  ms_options = {
-  }
-
   # Devise.setup do |config|
   config.omniauth :google_oauth2_basic, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_basic_options
   config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
