@@ -201,11 +201,11 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Copies/imports Salesforce activities (ActivityHistory) in a SFDC account (type="Account") or into a SFDC Opportunity (type="Opportunity") into the specified CS opportunity.  Does not import previously-exported CS data residing on SFDC.
-  # Parameters:   client - SFDC connection
+  # Copies/imports Salesforce activities (ActivityHistory) in the specified SFDC Account or Opportunity into the specified CS opportunity (project).  Does not import previously-exported CS data residing on SFDC.
+  # Parameters:   client - a valid SFDC connection
   #               project - the CS opportunity into which to load the SFDC activity
   #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
-  #               type - to specify loading from an SFDC "Account" or "Opportunity"
+  #               type - the SFDC entity level ("Account" or "Opportunity") from which to load activities
   #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   #               limit (optional) - the max number of activity records to process
   # Returns:   A hash that represents the execution status/result. Consists of:
@@ -275,11 +275,11 @@ class Activity < ActiveRecord::Base
         if val.count > 0
           result = { status: "SUCCESS", result: "No. of rows UPSERTed into Activities = #{val.count}", detail: "#{ query_result[:detail] }" }
         else
-          result = { status: "SUCCESS", result: "Warning: no rows inserted.", detail: "No SFDC activity to import!" }
+          result = { status: "SUCCESS", result: "No rows inserted into Activities.", detail: "Warning: No SFDC activity to import!" }
         end
       else
-        puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned!  Detail: query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"  # Temporary diagnostic console message to determine a SFDC (permission?) issue 
-        result = { status: "ERROR", result: "SFDC query returned successfully, but an invalid result was returned from Salesforce! You may not have the proper Salesforce access permissions.  Verify with your Salesforce administrator that you have access to Account and Opportunity tables, and ActivityHistory/Task relation.", detail: "Invalid result was returned from Salesforce!" }
+        puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned! Check for invalid SFDC entity Ids in Salesforce_opportunity and Salesforce_account tables, or user's access level.  Detail: query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"  # Temporary diagnostic console message to determine a SFDC (permission?) issue 
+        result = { status: "ERROR", result: "No rows inserted into Activities.", detail: "Warning: SFDC query returned successfully, but an invalid result was returned from Salesforce!  This can occur when Salesforce cannot find the SFDC sObject Id specified by ContextSmith; please verify that a valid SFDC account/opportunity is linked to this opportunity.  It may also be possible your SFDC user may not have the proper access permissions; please verify with your Salesforce Administrator that you have access such as to the ActivityHistory/Task relation." }
       end
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }

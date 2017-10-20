@@ -201,7 +201,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     return { status: "SUCCESS", result: "Update completed." }
   end
 
-  # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to a field of a CS opportunity. This is for all projects visible to current_user. Process aborts immediately if there is an update/SFDC error.
+  # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to a field of a CS opportunity. This is for all active and confirmed opportunities visible to current_user. Process aborts immediately if there is an update/SFDC error.
   def self.refresh_fields(current_user)
     # opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
     opportunities = Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")

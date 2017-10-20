@@ -44,6 +44,7 @@ class Account < ActiveRecord::Base
     validates :name, presence: true, uniqueness: { scope: :organization, message: "There's already an account with the same name." }
 
     # TODO: Create a general visible_to scope for a general "role" checker
+    # Should accounts visible to user include inactive accounts?
     scope :visible_to, -> (user) {
         select('DISTINCT(accounts.*)')
             .where(organization_id: user.organization_id)
