@@ -94,7 +94,7 @@ class User < ActiveRecord::Base
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer',
            Basic: 'Basic', Pro: 'Professional', Biz: 'Business', Unregistered: 'Unregistered' }.freeze
   OTHER_ROLE = { Trial: 'Trial', Chromeuser: 'Chrome user' }.freeze # TODO: remove "Chrome user"
-  AUTH_TYPE = { GmailBasic: 'google_oauth2_basic', Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }.freeze 
+  AUTH_TYPE = { GmailBasic: 'google_oauth2_basic', Gmail: 'google_oauth2', Exchange: 'exchange_pwd', Office365: 'microsoft_v2_auth' }.freeze
   FREE_EMAIL_PROVIDERS = ENV['FREE_EMAIL_PROVIDERS'] || %w[yahoo.com gmail.com zoho.com outlook.com aol.com verizon.net comcast.net earthlink.net].freeze
   ALIAS_REGEXES = %w[reply\+.*@.* .*\W?noreply\W.* (everyone|job|jobs|support|help|info|product|sales|notifications|admin|hello|mailer-daemon|mailer-demon|reply)@.*].freeze
 
@@ -1029,23 +1029,48 @@ class User < ActiveRecord::Base
                  else
                    request_token_from_google
                end
-    # response =
-    data = JSON.parse(response.body)
+    case response
+      when Net::HTTPSuccess
+        data = JSON.parse(response.body)
 
-    if data['access_token'].nil?
-      puts "Access_token nil while refreshing token for user #{email}"
-      update_attributes(oauth_access_token: "invalid")
-      return false
-    else
-      update_attributes(
-        oauth_access_token: data['access_token'],
-        oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
-      return true
+        if data['access_token'].nil?
+          puts "Warning: Access_token nil while refreshing token for user #{email}. Disabling user."
+          disable
+          return false
+        else
+          update_attributes(
+              oauth_access_token: data['access_token'],
+              oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
+          return true
+        end
+      when Net::HTTPUnauthorized
+        puts "Warning: not authorized to refresh token for #{email}. Disabling user."
+        disable
+        return false
+      when Net::HTTPServerError
+        puts "Warning: Token service unavailable. Will try again later."
+        return false
+      else
+        puts "Warning: Unable to refresh token for #{email}. Status: #{response.code} #{response.message}. Disabling user."
+        disable
+        return false
     end
+
+  end
+
+  def disable
+    update_attributes(is_disabled: true,
+                      oauth_access_token: 'invalid',
+                      oauth_refresh_token: nil,
+                      encrypted_password: nil)
   end
 
   def token_expired?
     oauth_expires_at < Time.now
+  end
+
+  def token_expires_soon?
+    oauth_expires_at + 10.minutes < Time.now
   end
 
   def fresh_token

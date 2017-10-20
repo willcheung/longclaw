@@ -1015,14 +1015,19 @@ class Project < ActiveRecord::Base
                            account: p_account,
                            is_public: true,
                            is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
-                          )
+                          ) unless p_account.nil?
 
-      if project.save
+      if project && project.save
         # Project members
         # assuming contacts and users have already been inserted, we just need to link them
         external_members, internal_members = get_project_members(data, p)
         contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
         users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
+
+        if Rails.env.development?
+          onboarding_user = User.find(user_id)
+          project.project_members.create(user: onboarding_user)
+        end
 
         contacts.each do |c|
           project.project_members.create(contact: c)
@@ -1037,7 +1042,12 @@ class Project < ActiveRecord::Base
 
         # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
+      else
+        if project.nil?
+          puts "No project created because no account was found for  #{get_domain_from_subdomain(p)}"
+        end
       end
+
     end
   end  #End: self.create_from_clusters()
 

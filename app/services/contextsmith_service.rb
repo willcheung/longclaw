@@ -60,9 +60,15 @@ class ContextsmithService
       sources = [user_auth_params(user)]
       in_domain = (user.email == 'indifferenzetester@gmail.com' ? "&in_domain=comprehend.com" : "")
     else # Dev environment
-      u = User.find_by_email('indifferenzetester@gmail.com')
-      sources = [{ token: u.fresh_token, email: u.email, kind: 'gmail' }]
-      in_domain = "&in_domain=comprehend.com"
+      if ENV['IGNORE_COMPREHEND_USER'] == 'true'
+         sources = [user_auth_params(user)]
+         sources[0][:email] = 'indifferenzetester@gmail.com'
+         in_domain = "&in_domain=comprehend.com"  # still necessary as the test data is based on comprehend.com
+      else
+        u = User.find_by_email('indifferenzetester@gmail.com')
+        sources = [{ token: u.fresh_token, email: u.email, kind: 'gmail' }]
+        in_domain = "&in_domain=comprehend.com" # to simulate that users with this email domain are internal users
+      end
     end
     final_url = base_url + "?preview=true&time=true&neg_sentiment=0&cluster_method=BY_EMAIL_DOMAIN&max=" + max.to_s + "&callback=" + callback_url + in_domain
     r = request_id(user.nil? ? '' : user.email)
@@ -85,7 +91,7 @@ class ContextsmithService
   private
 
   def self.load_for_project_from_backend(project, url)
-    if Rails.env.development?
+    if Rails.env.development? && ENV['IGNORE_COMPREHEND_USER'] != 'true'
       sources = [{ token: "test", email: "indifferenzetester@gmail.com", kind: "gmail" }]
     else
       sources = project.users.registered.not_disabled.allow_refresh_inbox.map { |u| user_auth_params(u) }
@@ -148,14 +154,23 @@ class ContextsmithService
   def self.user_auth_params(user)
     case user.oauth_provider
     when User::AUTH_TYPE[:Gmail]
-      success = user.token_expired? ? user.refresh_token! : true
+      success = user.token_expires_soon? ? user.refresh_token! : true
       unless success
         puts "Warning: Gmail token refresh failed for: #{ user.first_name } #{ user.last_name } #{ user.email } (Organization=#{ user.organization.name }, Role=#{ user.role.nil? ? "nil" : user.role }, Onboarding Step=#{ user.onboarding_step.nil? ? "nil" : user.onboarding_step }, Last sign-in=#{ user.last_sign_in_at.nil? ? "none" : user.last_sign_in_at })."
         return nil
       end
-      { token: user.oauth_access_token, email: user.email, kind: "gmail" }
-    when User::AUTH_TYPE[:Exchange]
-      { password: user.password, email: user.email, kind: "exchange", url: user.oauth_provider_uid }
+      { token: user.oauth_access_token, email: user.email, kind: 'gmail'}
+      when User::AUTH_TYPE[:Office365]
+        success = user.token_expires_soon? ? user.refresh_token! : true
+        unless success
+          puts "Warning: Office365 token refresh failed for: #{ user.first_name } #{ user.last_name } #{ user.email } (Organization=#{ user.organization.name }, Role=#{ user.role.nil? ? "nil" : user.role }, Onboarding Step=#{ user.onboarding_step.nil? ? "nil" : user.onboarding_step }, Last sign-in=#{ user.last_sign_in_at.nil? ? "none" : user.last_sign_in_at })."
+          return nil
+        end
+        { token: user.oauth_access_token, email: user.email, kind: 'office365'}
+      when User::AUTH_TYPE[:Exchange]
+      { password: user.password, email: user.email, kind: 'exchange', url: user.oauth_provider_uid }
+      else
+        throw "ERROR: Uknown oauth provider #{user.oauth_provider}"
     end
   end
 end
