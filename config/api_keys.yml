@@ -4,7 +4,8 @@ development:
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
   csback_base_url: http://104.198.4.24:8888
-  #csback_base_url: http://localhost:8888 to use when running oathkeeper locally
+  #csback_base_url: http://localhost:8888 # to use when running oathkeeper locally
+  #csback_script_base_url: http://localhost:8888
   csback_script_base_url: http://104.198.4.24:8888
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
   mailchimp_email_list_id: 0b8529ba9c
@@ -22,6 +23,8 @@ development:
   max_emails: 500
   encryption_key: ;?\x8E\xF4\xEC\xCB\xB7B\x17%\t\x9A\x8F\x01\x16y\xB4^\xBENo\x872\x03\xC3\xCCW\xE6\xB7\xCCDO
   fullcontact_api_key: f0b46d476a4d8c60
+  AZURE_APPLICATION_CLIENT_ID: 35bed7bd-6fd6-4dc1-aaa6-579849355012
+  AZURE_APPLICATION_CLIENT_SECRET: jEkMUAj8dxP9bMnxQMbxkko
   super_admins: wcheung@contextsmith.com will@context-smith.com beders@contextsmith.com klu@contextsmith.com vluong@contextsmith.com syong@contextsmith.com chobbs@contextsmith.com craig@context-smith.com churst@contextsmith.com
 
 test:
