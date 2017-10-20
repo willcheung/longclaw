@@ -67,6 +67,23 @@ class Contact < ActiveRecord::Base
     return false
   end
 
+  # Merge fields from source Contact into this Contact. Only overwrite a field if it is missing (nil or empty) in the current contact.
+  def merge(con)
+    self.update(
+      first_name: (self.first_name if self.first_name.present?) || con.first_name,
+      last_name: (self.last_name if self.last_name.present?) || con.last_name,
+      email: (self.email if self.email.present?) || con.email,
+      phone: (self.phone if self.phone.present?) || con.phone,
+      title: (self.title if self.title.present?) || con.title,
+      source: (self.source if self.source.present?) || con.source,
+      mobile: (self.mobile if self.mobile.present?) || con.mobile,
+      background_info: (self.background_info if self.background_info.present?) || con.background_info,
+      department: (self.department if self.department.present?) || con.department,
+      external_source_id: (self.external_source_id if self.external_source_id.present?) || con.external_source_id,
+      # buyer_role: self.buyer_role,
+    )
+  end
+
   # Takes the External members found then finds or creates an Account associated with the domains (of their e-mail addresses), finds or creates a Contact for the external members, then adds them to the Opportunity as suggested members.  
   def self.load(data, project, save_in_db=true)
     contacts = []
