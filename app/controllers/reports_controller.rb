@@ -19,10 +19,8 @@ class ReportsController < ApplicationController
     @metric = params[:sort]
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
-    projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
-    # projects = projects.where(category: params[:category]) if params[:category].present?
-    # projects = projects.joins(:account).where(accounts: { category: params[:account] }) if params[:account].present?
-
+    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     users_emails = current_user.organization.users.pluck(:email)
 
     # Incrementally apply any filters
@@ -34,7 +32,7 @@ class ReportsController < ApplicationController
       end
     end 
 
-    @this_qtr_range = get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
+    @this_qtr_range = Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
 
     @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
@@ -176,12 +174,13 @@ class ReportsController < ApplicationController
       end
     end
 
-    @this_qtr_range = get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
+    @this_qtr_range = Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
 
     return if users.blank? # quit early if all users are filtered out
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
-    projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date].present?
+    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
 
     return if projects.blank? # quit early if all projects are filtered out
 
@@ -201,7 +200,7 @@ class ReportsController < ApplicationController
     @open_alerts_and_tasks = @user.notifications.open.count  #tasks and alerts
     @accounts_managed = @user.projects_owner_of.count
     # @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
-    @closed_won_this_qtr = SalesforceOpportunity.joins(:project).where(is_closed: true, is_won: true, close_date: get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), projects: { id: @user.projects_owner_of.ids }).sum(:amount)
+    @closed_won_this_qtr = SalesforceOpportunity.joins(:project).where(is_closed: true, is_won: true, close_date: Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), projects: { id: @user.projects_owner_of.ids }).sum(:amount)
 
     @activities_by_category_date = @user.daily_activities_by_category(current_user.time_zone).group_by { |a| a.category }
 

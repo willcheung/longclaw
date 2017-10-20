@@ -24,7 +24,8 @@
             <option value="none">(No Title)</option>
         </select>
         <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
-            <option value=""></option> <!-- no filter -->
+            <option value="Any"></option> <!-- no filter -->
+            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
             <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
             <optgroup label="Quarter">
                 <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>

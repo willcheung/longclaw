@@ -124,7 +124,7 @@ class Project < ActiveRecord::Base
     joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
     .where("project_subscribers.user_id = ? AND project_subscribers.weekly IS TRUE", user_id)
   }
-  
+  scope :close_date_within, -> (range_description) { where(close_date: get_close_date_range(range_description)) }
   scope :is_active, -> { where status: 'Active' }
   scope :is_confirmed, -> { where is_confirmed: true }
 
@@ -134,7 +134,7 @@ class Project < ActiveRecord::Base
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
   MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
-  CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'All Closed' }
+  CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'All Closed', Open: 'All Open' }
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
@@ -1217,6 +1217,31 @@ class Project < ActiveRecord::Base
     end
 
     result
+  end
+
+  def self.get_close_date_range(range_description)
+    case range_description
+      when CLOSE_DATE_RANGE[:ThisQuarter]
+        date = Time.current
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when CLOSE_DATE_RANGE[:NextQuarter]
+        date = Time.current.next_quarter
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when CLOSE_DATE_RANGE[:LastQuarter]
+        date = Time.current.prev_quarter
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when CLOSE_DATE_RANGE[:QTD]
+        (Time.current.beginning_of_quarter...Time.current)
+      when CLOSE_DATE_RANGE[:YTD]
+        (Time.current.beginning_of_year...Time.current)
+      when CLOSE_DATE_RANGE[:Closed]
+        (Time.at(0)...Time.current)
+      when CLOSE_DATE_RANGE[:Open]
+        (Time.current...100.years.from_now)
+      else # use 'This Quarter' by default
+        date = Time.current
+        (date.beginning_of_quarter...date.end_of_quarter)
+    end
   end
 
   private
