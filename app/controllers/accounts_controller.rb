@@ -38,9 +38,10 @@ class AccountsController < ApplicationController
   # GET /accounts/1.json
   def show
     @active_projects = @account.projects.visible_to(current_user.organization_id, current_user.id)
+    @projects = Project.visible_to(current_user.organization_id, current_user.id).select("projects.close_date AS close_date, projects.stage, projects.amount, projects.close_date - current_date AS days_to_close").map{|p| [p.id,p]}.to_h
     @project_last_email_date = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.category = 'Conversation'").maximum("activities.last_sent_date")
-    @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.last_sent_date > (current_date - interval '7 days')").references(:activities).count(:activities)
-    @project_pinned = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
+    # @project_activities_count_last_7d = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.last_sent_date > (current_date - interval '7 days')").references(:activities).count(:activities)
+    # @project_pinned = Project.visible_to(current_user.organization_id, current_user.id).includes(:activities).where("activities.is_pinned = true").count(:activities)
     @account_contacts = @account.contacts
     @clearbit_domain = @account.domain? ? @account.domain : (@account_contacts.present? ? @account_contacts.first.email.split("@").last : "")
     @project = Project.new(account: @account)
