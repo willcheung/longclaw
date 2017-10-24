@@ -189,7 +189,6 @@ class ExtensionController < ApplicationController
   # Filter params[:external] and params[:internal] passed from the Chrome extension by converting to lowercase, validating email addresses, and removing duplicates; params[:bcc_email] and params[:email] are validated and converted to lowercase.
   # Returns a filtered list in @params.
   def filter_params 
-    puts "params #{params}\t" #VPL
     @params = {}
     external = []
     if params[:external].present?
@@ -207,7 +206,6 @@ class ExtensionController < ApplicationController
     end
     @params[:bcc_email] = params[:bcc_email].downcase if params[:bcc_email].present? && valid_email?(params[:bcc_email])
     @params[:email] = params[:email].downcase if params[:email].present? && valid_email?(params[:email])
-    puts "@params #{@params}\t" #VPL
   end 
 
   def set_salesforce_user
@@ -355,10 +353,7 @@ class ExtensionController < ApplicationController
       return if ex_emails.blank?  # quit if no "valid" e-mails remain
 
       # Sanitize domains before injecting
-      domains = ex_emails.map do |email| 
-        domain = Contact.sanitize(get_domain(email))
-        domain[1, domain.size-2]  # remove leading and trailing apostrophe
-      end
+      domains = ex_emails.map { |email| Contact.sanitize(get_domain(email))[1...-1] } # remove leading and trailing apostrophe
 
       where_domain_matches = domains.map { |domain| "email LIKE '%#{domain}'"}.join(" OR ")
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
