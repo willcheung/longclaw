@@ -302,7 +302,7 @@ class ExtensionController < ApplicationController
     return if params[:external].blank?
 
     external = params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } }
-    ex_emails = external.map(&:second)
+    ex_emails = external.map(&:second).select{|e| valid_email?(e)}.uniq
 
     # ex_emails = ["nat.ferrante@451research.com","pauloshan@yahoo.com","sheila.gladhill@browz.com", "romeo.henry@mondo.com", "lzion@liveintent.com","invalid'o@gmail.com"]
     # group by ex_emails by domain frequency, order by most frequent domain
@@ -312,6 +312,7 @@ class ExtensionController < ApplicationController
     contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id }).order(order_emails_by_domain_freq) 
 
     if contacts.present?
+      # Match by account contacts
       # get all opportunities that these contacts are members of
       projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
 
@@ -322,11 +323,17 @@ class ExtensionController < ApplicationController
         @account = @project.account
       end
     else
+      # Match by account domains
       ex_emails = ex_emails.reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) } # remove e-mails with domains that are too general
 
       return if ex_emails.blank?  # quit if no "valid" e-mails remain
 
-      domains = ex_emails.map { |email| get_domain(email) }.uniq
+      # Sanitize domains before injecting
+      domains = ex_emails.map do |email| 
+        domain = Contact.sanitize(get_domain(email))
+        domain[1, domain.size-2]  # remove leading and trailing apostrophe
+      end
+
       where_domain_matches = domains.map { |domain| "email LIKE '%#{domain}'"}.join(" OR ")
       order_domain_frequency = domains.map { |domain| "email LIKE '%#{domain}' DESC"}.join(',')
       # find all contacts within current_user org that have a similar email domain to external emails, in the order of domain frequency
