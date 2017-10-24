@@ -4,6 +4,8 @@ class ProjectsController < ApplicationController
   before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_current_org_users, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
+  before_action :get_current_org_opportunity_stages, only: [:show, :tasks_tab, :arg_tab]
+  before_action :get_current_org_opportunity_forecast_categories, only: [:show, :tasks_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
   before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
@@ -21,7 +23,8 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters
-    projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date]
+    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     if params[:owner].present? && params[:owner] != "0"
       if params[:owner] == "none"
         projects = projects.where(owner_id: nil)
@@ -148,8 +151,11 @@ class ProjectsController < ApplicationController
                                                 ))
     # Add current_user to project member
     @project.project_members.new(user: current_user)
+    # TODO: Uncomment below to undo #1011
     # Subscribe current_user as weekly / daily follower because s/he created the project
-    @project.subscribers.new(user: current_user)
+    # @project.subscribers.new(user: current_user)
+    # Subscribe current_user as daily follower only temporarily (per #1011)
+    @project.subscribers.new(user: current_user, weekly: false)
 
       respond_to do |format|
         if params[:commit] == 'Create with account contacts' 
@@ -383,23 +389,7 @@ class ProjectsController < ApplicationController
   end
   # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
   def check_params_for_valid_dates
-    params["project"][:close_date] = parse_valid_date(params["project"][:close_date]) if params["project"][:close_date].present?
-    params["project"][:renewal_date] = parse_valid_date(params["project"][:renewal_date]) if params["project"][:renewal_date].present?
+    params["project"][:close_date] = parse_date(params["project"][:close_date]) if params["project"][:close_date].present?
+    params["project"][:renewal_date] = parse_date(params["project"][:renewal_date]) if params["project"][:renewal_date].present?
   end
-
-  # Attempt to parse a Date from datestr using recognized formats %Y-%m-%d or %m/%d/%Y, then return the parsed Date. Otherwise, return nil.
-  def parse_valid_date(datestr)
-    return nil if datestr.nil?
-
-    parsed_date = nil
-    begin
-      parsed_date = Date.strptime(datestr, '%Y-%m-%d')
-    rescue ArgumentError => e
-      parsed_date = Date.strptime(datestr, '%m/%d/%Y')
-    rescue => e
-      # Do nothing
-    end
-    parsed_date
-  end
-
 end

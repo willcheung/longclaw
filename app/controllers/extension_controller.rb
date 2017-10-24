@@ -5,6 +5,8 @@ class ExtensionController < ApplicationController
 
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce]
+  before_action :get_current_org_opportunity_stages, only: [:salesforce]
+  before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
   before_action :get_account_types, only: :no_account
   # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
   # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
@@ -503,7 +505,7 @@ class ExtensionController < ApplicationController
     new_users = []
     #puts "internal_members_a: #{internal_members_a}"
     internal_members_a.each do |u|
-      next if User.find_by_email(u[:email]).present?
+      next if User.find_by_email(u[:email]).present? || u[:email].nil?
 
       name = u[:full_name].split(" ")
       first_name = name[0].nil? ? '' : name[0]

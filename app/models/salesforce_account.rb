@@ -183,6 +183,7 @@ class SalesforceAccount < ActiveRecord::Base
   # TODO: Refactor so that we only go through active accounts that have salesforce accounts (owned by this user) linked to it, for performance.
   def self.refresh_fields(current_user)
     accounts = current_user.organization.accounts.where(status: "Active")
+    # accounts = Account.visible_to(current_user)
     account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
     account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
     # puts "any accounts mapped?=#{accounts.find{|a| a.salesforce_accounts.present?}.present?}"

@@ -24,7 +24,8 @@
             <option value="none">(No Title)</option>
         </select>
         <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
-            <option value=""></option> <!-- no filter -->
+            <option value="Any"></option> <!-- no filter -->
+            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
             <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
             <optgroup label="Quarter">
                 <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
@@ -37,7 +38,34 @@
             </optgroup>
         </select>
     </div>
-    
+
+    <!-- Top Dashboard Panel: (3) Salesforce-linked Forecast and Stage reports -->
+    <div class="row border-bottom ">
+      <div class="col-lg-3">
+          <div class="ibox float-e-margins">
+              <div id="closedwon-box"></div>
+          </div>
+      </div>
+
+      <div class="col-lg-3">
+          <div class="ibox float-e-margins">
+              <div class='ibox-title'>
+                  <h5>Deals by Forecast</h5>
+              </div>
+              <div id="forecast-chart" class="ibox-content forecast-chart" style="height:220px;padding-bottom:0"></div>
+          </div>
+      </div>
+
+      <div class="col-lg-6">
+          <div class="ibox float-e-margins">
+              <div class='ibox-title'>
+                  <h5>Deals by Stage</h5>
+              </div>
+              <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
+          </div>
+      </div>
+    </div>
+
     <div class="row border-bottom white-bg dashboard-header">
         <!-- LEFT (metric sort) -->
         <div class="col-md-6">
@@ -94,7 +122,6 @@
 <script type="text/javascript">
 
     $(function () {
-
         $('#sort-type, #metric-type, #team-filter, #title-filter, #close-date-filter').change( function () {
             // Clear Opportunity data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the rep.</h3></div>");
@@ -112,6 +139,156 @@
             }
             var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "/" + encodeURIComponent($('#metric-type').val()) + "?" + $.param(params);
             $.getScript(url)
+        });
+
+        $('#forecast-chart').highcharts({
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: ''
+            },
+//            title: {
+//                text: 'Deals by Forecast',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+//            },
+            credits: {
+                enabled: false
+            },
+            xAxis: {
+                crosshair: true,
+                labels: {
+                    style: {
+                        fontSize: '9px'
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                labels: {
+                   enabled: false
+               },
+               stackLabels: {
+                    enabled: true,
+                    formatter: function () {
+                        return "$"+large_number_to_human_signif_digits(this.total);
+                    },
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                }
+            },
+            tooltip: {
+                enabled: true,
+                formatter: function () {
+                    return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'normal',
+                    pointPadding: 0.2,
+                    borderWidth: 0,
+                    dataLabels: {
+                        enabled: false,
+                        format: '${y}',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                        }
+                    }
+                },
+                 series: {
+                    pointPadding: 0.1,
+                    groupPadding: 0,
+                    borderWidth: 0
+                }
+            }
+        });
+
+        $('#stage-chart').highcharts({
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: ''
+            },
+//            title: {
+//                text: 'Deals by Stage',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+//            },
+            credits: {
+                enabled: false
+            },
+            xAxis: {
+                crosshair: true,
+                labels: {
+                    style: {
+                        fontSize: '9px'
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                labels: {
+                   enabled: false
+                },
+                stackLabels: {
+                    enabled: true,
+                    formatter: function () {
+                        //return Highcharts.numberFormat(this.total, 0, null, "");
+                        return "$"+large_number_to_human_signif_digits(this.total);
+                    },
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                }
+            },
+            tooltip: {
+                enabled: true,
+                formatter: function () {
+                    return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'normal',
+                    pointPadding: 0.2,
+                    borderWidth: 0,
+                    dataLabels: {
+                        format: '${y}',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                        }
+                    }
+                },
+                 series: {
+                    pointPadding: 0.1,
+                    groupPadding: 0.1,
+                    borderWidth: 0
+                }
+            }
         });
 
         $('#left-chart').highcharts({
@@ -212,6 +389,7 @@
         //     }
         // });
 
+        <%= render partial: "reports/accounts_dashboard_top.js" %>
         <%= render partial: "reports/team_dashboard.js" %>
     });
 </script>

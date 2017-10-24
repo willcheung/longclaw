@@ -126,4 +126,19 @@ module Utils
     return subdomain if wl_regex_patterns.any? { |p| Regexp.new(p, Regexp::IGNORECASE).match(subdomain) }
     subdomain.split('.').last(2).join('.')  # obtain simple domain from subdomain
   end
+
+  # Attempt to parse a Date from datestr using recognized formats %Y-%m-%d or %m/%d/%Y, then return the valid Date. Otherwise, return nil.
+  def parse_date(datestr)
+    return nil if datestr.nil?
+
+    parsed_date = nil
+    begin
+      parsed_date = Date.strptime(datestr, '%Y-%m-%d')
+    rescue ArgumentError => e
+      parsed_date = Date.strptime(datestr, '%m/%d/%Y')
+    rescue => e
+      # Do nothing
+    end
+    parsed_date
+  end
 end

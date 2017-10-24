@@ -24,7 +24,7 @@ class ApplicationController < ActionController::Base
       location = stored_location[1..9] if stored_location.present?
 
       # quick hack to allow Biz sign-ups from this URL
-      if request_origin.end_with? ('/users/sign_up')
+      if request_origin && request_origin.end_with?('/users/sign_up')
         resource.upgrade(:Biz)
         resource.save
       end
@@ -113,32 +113,19 @@ class ApplicationController < ActionController::Base
     yield
   end
 
-  # returns the users of an organization who are registered with CS
+  # returns array of users (user=[user id, user's full name]) of an organization who are registered with CS
   def get_current_org_users
     @users_reverse = current_user.organization.users.registered.order(:first_name).map { |u| [u.id, get_full_name(u)] }.to_h
   end
 
-  def get_close_date_range(range_description)
-    case range_description
-      when Project::CLOSE_DATE_RANGE[:ThisQuarter]
-        date = Time.current
-        (date.beginning_of_quarter...date.end_of_quarter)
-      when Project::CLOSE_DATE_RANGE[:NextQuarter]
-        date = Time.current.next_quarter
-        (date.beginning_of_quarter...date.end_of_quarter)
-      when Project::CLOSE_DATE_RANGE[:LastQuarter]
-        date = Time.current.prev_quarter
-        (date.beginning_of_quarter...date.end_of_quarter)
-      when Project::CLOSE_DATE_RANGE[:QTD]
-        (Time.current.beginning_of_quarter...Time.current)
-      when Project::CLOSE_DATE_RANGE[:YTD]
-        (Time.current.beginning_of_year...Time.current)
-      when Project::CLOSE_DATE_RANGE[:Closed]
-        (Time.at(0)...Time.current)
-      else # use 'This Quarter' by default
-        date = Time.current
-        (date.beginning_of_quarter...date.end_of_quarter)
-    end
+  # returns array of opportunity stages of an organization registered with CS
+  def get_current_org_opportunity_stages
+    @opportunity_stages = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization).map{|s| s.first}
+  end
+
+  # returns array of opportunity forecast categories of an organization registered with CS
+  def get_current_org_opportunity_forecast_categories
+    @opportunity_forecast_categories = SalesforceOpportunity.get_sfdc_opp_forecast_categories(organization: current_user.organization).map{|s| s.first}
   end
 
 end

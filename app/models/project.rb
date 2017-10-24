@@ -124,7 +124,7 @@ class Project < ActiveRecord::Base
     joins("INNER JOIN project_subscribers ON project_subscribers.project_id = projects.id")
     .where("project_subscribers.user_id = ? AND project_subscribers.weekly IS TRUE", user_id)
   }
-  
+  scope :close_date_within, -> (range_description) { where(close_date: get_close_date_range(range_description)) }
   scope :is_active, -> { where status: 'Active' }
   scope :is_confirmed, -> { where is_confirmed: true }
 
@@ -134,7 +134,7 @@ class Project < ActiveRecord::Base
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
   MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
-  CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'All Closed' }
+  CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'All Closed', Open: 'All Open' }
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
@@ -996,36 +996,45 @@ class Project < ActiveRecord::Base
   end
 
   # This method should be called *after* all accounts, contacts, and users are processed & inserted.
+  # each cluster within data creates a Project, even if multiple Projects map to same Account due to subdomain rollup!
+  # avoid trying to load Activities from multiple clusters into same Project, since there may be common conversations between them
   def self.create_from_clusters(data, user_id, organization_id)
-    project_domains = get_project_top_domain(data)
+    project_subdomains = get_project_top_domain(data)
+    project_domains = project_subdomains.map { |subdomain| get_domain_from_subdomain(subdomain) }.uniq
     accounts = Account.where(domain: project_domains, organization_id: organization_id)
 
-    project_domains.each do |p|
-      p_account = accounts.find { |a| a.domain == p }
-      project = Project.new(name: p_account.name,
+    project_subdomains.each do |p|
+      # find which Account this Project should belong to after getting domain from subdomain, Account for subdomain shouldn't exist
+      p_account = accounts.find { |a| a.domain == get_domain_from_subdomain(p) }
+      project = Project.new(name: p,
                            status: "Active",
                            category: "New Business",
                            created_by: user_id,
                            updated_by: user_id,
                            owner_id: user_id,
-                           account_id: p_account.id,
+                           account: p_account,
                            is_public: true,
                            is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
-                          )
+                          ) unless p_account.nil?
 
-      if project.save
+      if project && project.save
         # Project members
         # assuming contacts and users have already been inserted, we just need to link them
         external_members, internal_members = get_project_members(data, p)
         contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
         users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
 
-        external_members.each do |m|
-          project.project_members.create(contact_id: (contacts.find {|c| c.email == m.address}).id)
+        if Rails.env.development?
+          onboarding_user = User.find(user_id)
+          project.project_members.create(user: onboarding_user)
         end
 
-        internal_members.each do |m|
-          project.project_members.create(user_id: (users.find {|c| c.email == m.address}).id)
+        contacts.each do |c|
+          project.project_members.create(contact: c)
+        end
+
+        users.each do |u|
+          project.project_members.create(user: u)
         end
 
         # Upsert project conversations.
@@ -1033,7 +1042,12 @@ class Project < ActiveRecord::Base
 
         # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
+      else
+        if project.nil?
+          puts "No project created because no account was found for  #{get_domain_from_subdomain(p)}"
+        end
       end
+
     end
   end  #End: self.create_from_clusters()
 
@@ -1174,7 +1188,7 @@ class Project < ActiveRecord::Base
   #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
-  # TODO: Might want to move to SalesforceOpportunity.rb
+  # TODO: Maybe make this a Project instance method.
   def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
     result = nil
 
@@ -1213,6 +1227,70 @@ class Project < ActiveRecord::Base
     end
 
     result
+  end
+
+  # Determines the SFDC entity level to which this opportunity (project) is linked ("Account" or "Opportunity"), then import Salesforce activities (ActivityHistory) from this SFDC entity into this opportunity.  Does not import previously-exported CS data residing on SFDC.  
+  # Note: Does nothing if opportunity is not linked (status = SUCCESS, result = contains warning message). This process aborts upon encountering any error.
+  # Additional Note:  This may called from ProjectsController#refresh !!
+  # Parameters:   client - a valid SFDC connection
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               limit (optional) - the max number of activity records to process
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if successful, or "ERROR" otherwise
+  #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
+  #             detail - Contains any error or informational/warning messages.
+  def load_salesforce_activities(client, filter_predicates=nil, limit=200)
+    load_result = nil
+
+    if salesforce_opportunity.blank? # CS Opportunity not linked to SFDC Opportunity
+      if account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
+        account.salesforce_accounts.each do |sfa|
+          load_result = Activity.load_salesforce_activities(client, self, sfa.salesforce_account_id, type="Account", filter_predicates)
+
+          if load_result[:status] == "ERROR"
+            error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{name}\" (opportunity_id='#{id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+            return { status: "ERROR", result: load_result[:result], detail: error_detail }  # abort upon any error!
+          end
+        end
+      else # CS Opportunity unlinked to any SFDC Account/Opportunity
+        return { status: "SUCCESS", result: "CS Opportunity was not updated.", detail: "Warning: No SFDC entity linked to Opportunity!" }
+      end
+    else # CS Opportunity linked to SFDC Opportunity
+      # Save at the Opportunity level
+      load_result = Activity.load_salesforce_activities(client, self, salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicates)
+
+      if load_result[:status] == "ERROR"
+        error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{salesforce_opportunity.name}\" (sfdc_id='#{salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{name}\" (opportunity_id='#{id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+        return { status: "ERROR", result: load_result[:result], detail: error_detail }  # abort upon any error!
+      end
+    end
+
+    return { status: "SUCCESS", result: load_result[:result], detail: nil }
+  end
+
+  def self.get_close_date_range(range_description)
+    case range_description
+      when CLOSE_DATE_RANGE[:ThisQuarter]
+        date = Time.current
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when CLOSE_DATE_RANGE[:NextQuarter]
+        date = Time.current.next_quarter
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when CLOSE_DATE_RANGE[:LastQuarter]
+        date = Time.current.prev_quarter
+        (date.beginning_of_quarter...date.end_of_quarter)
+      when CLOSE_DATE_RANGE[:QTD]
+        (Time.current.beginning_of_quarter...Time.current)
+      when CLOSE_DATE_RANGE[:YTD]
+        (Time.current.beginning_of_year...Time.current)
+      when CLOSE_DATE_RANGE[:Closed]
+        (Time.at(0)...Time.current)
+      when CLOSE_DATE_RANGE[:Open]
+        (Time.current...100.years.from_now)
+      else # use 'This Quarter' by default
+        date = Time.current
+        (date.beginning_of_quarter...date.end_of_quarter)
+    end
   end
 
   private

@@ -80,9 +80,10 @@ class User < ActiveRecord::Base
   scope :onboarded, -> { where onboarding_step: Utils::ONBOARDING[:onboarded] }
   scope :exchange_auth, -> { where oauth_provider: AUTH_TYPE[:Exchange] }
   scope :ordered_by_first_name, -> { order('LOWER(first_name) ASC') }
+  scope :non_alias, -> { where ALIAS_REGEXES.map { |r| "email !~* '#{r}'" }.join(' AND ') }
 
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
-         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :salesforce, :salesforce_sandbox]
+         :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :microsoft_v2_auth, :salesforce, :salesforce_sandbox]
 
   validates :email, uniqueness: true
 
@@ -93,8 +94,9 @@ class User < ActiveRecord::Base
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer',
            Basic: 'Basic', Pro: 'Professional', Biz: 'Business', Unregistered: 'Unregistered' }.freeze
   OTHER_ROLE = { Trial: 'Trial', Chromeuser: 'Chrome user' }.freeze # TODO: remove "Chrome user"
-  AUTH_TYPE = { GmailBasic: 'google_oauth2_basic', Gmail: 'google_oauth2', Exchange: 'exchange_pwd' }.freeze 
-  FREE_EMAIL_PROVIDERS = ENV['FREE_EMAIL_PROVIDERS'] || %w[yahoo.com gmail.com zoho.com outlook.com aol.com verizon.net comcast.net earthlink.net]
+  AUTH_TYPE = { GmailBasic: 'google_oauth2_basic', Gmail: 'google_oauth2', Exchange: 'exchange_pwd', Office365: 'microsoft_v2_auth' }.freeze
+  FREE_EMAIL_PROVIDERS = ENV['FREE_EMAIL_PROVIDERS'] || %w[yahoo.com gmail.com zoho.com outlook.com aol.com verizon.net comcast.net earthlink.net].freeze
+  ALIAS_REGEXES = %w[reply\+.*@.* .*\W?noreply\W.* (everyone|job|jobs|support|help|info|product|sales|notifications|admin|hello|mailer-daemon|mailer-demon|reply)@.*].freeze
 
   WORDS_PER_SEC = { Read: 2.0, Write: 0.42 }.freeze # Reading=120WPM(<200)  Typing=~25WPM(<40)
   # WORDS_PER_HOUR = { Read: 4000.0, Write: 900.0 }
@@ -186,8 +188,8 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.find_for_google_oauth2(auth, time_zone='UTC', params)
-    info = auth.info
+  def self.find_for_oauth2(auth, time_zone='UTC', info=auth.info)
+
     credentials = auth.credentials
 
     oauth_attributes = {
@@ -1002,24 +1004,65 @@ class User < ActiveRecord::Base
     Net::HTTP.post_form(url, self.to_params)
   end
 
-  def refresh_token!
-    response = request_token_from_google
-    data = JSON.parse(response.body)
+  def request_token_from_ms
+    # https://login.microsoftonline.com/common/oauth2/v2.0/token
+    url = URI("https://login.microsoftonline.com/common/oauth2/v2.0/token")
+    Net::HTTP.post_form(url, 'refresh_token' => oauth_refresh_token,
+                        'client_id' => ENV['AZURE_APPLICATION_CLIENT_ID'],
+                        'client_secret' => ENV['AZURE_APPLICATION_CLIENT_SECRET'],
+                        #'scope' => 'offline_access',
+                        'grant_type' => 'refresh_token')
+  end
 
-    if data['access_token'].nil?
-      puts "Access_token nil while refreshing token for user #{email}"
-      update_attributes(oauth_access_token: "invalid")
-      return false
-    else
-      update_attributes(
-        oauth_access_token: data['access_token'],
-        oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
-      return true
+  def refresh_token!
+    response = case oauth_provider
+                 when 'microsoft_v2_auth'
+                   request_token_from_ms
+                 else
+                   request_token_from_google
+               end
+    case response
+      when Net::HTTPSuccess
+        data = JSON.parse(response.body)
+
+        if data['access_token'].nil?
+          puts "Warning: Access_token nil while refreshing token for user #{email}. Disabling user."
+          disable
+          return false
+        else
+          update_attributes(
+              oauth_access_token: data['access_token'],
+              oauth_expires_at: Time.now + (data['expires_in'].to_i).seconds)
+          return true
+        end
+      when Net::HTTPUnauthorized
+        puts "Warning: not authorized to refresh token for #{email}. Disabling user."
+        disable
+        return false
+      when Net::HTTPServerError
+        puts "Warning: Token service unavailable. Will try again later."
+        return false
+      else
+        puts "Warning: Unable to refresh token for #{email}. Status: #{response.code} #{response.message}. Disabling user."
+        disable
+        return false
     end
+
+  end
+
+  def disable
+    update_attributes(is_disabled: true,
+                      oauth_access_token: 'invalid',
+                      oauth_refresh_token: nil,
+                      encrypted_password: nil)
   end
 
   def token_expired?
     oauth_expires_at < Time.now
+  end
+
+  def token_expires_soon?
+    oauth_expires_at + 10.minutes < Time.now
   end
 
   def fresh_token

@@ -19,11 +19,36 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 	def google_oauth2
     auth = request.env["omniauth.auth"]
     request_params = request.env['omniauth.params']
-    @user = User.find_for_google_oauth2(auth, (cookies[:timezone] || 'UTC'), request_params)
+    @user = User.find_for_oauth2(auth, (cookies[:timezone] || 'UTC'))
 
     if @user.persisted?
     	session["devise.google_data"] = auth
       puts "Google devise.omniauth_callbacks.success for user " + @user.email
+      flash[:notice] = "Welcome, #{@user.first_name}!"
+
+      sign_in_and_redirect @user, :event => :authentication
+    else
+      reset_session
+  		puts "Can't persist user!"
+      ahoy.track("Error logging in", message: "Can't persist user!")
+  		redirect_to new_user_registration_path
+    end
+  end
+
+  def microsoft_v2_auth
+    auth = request.env["omniauth.auth"]
+    request_params = request.env['omniauth.params']
+    raw = auth.extra.raw_info
+    @user = User.find_for_oauth2(auth, (cookies[:timezone] || 'UTC'),  Hashie::Mash.new(
+        first_name: raw.givenName,
+        last_name: raw.surname,
+        email: raw.mail,
+        image: ''
+    ))
+
+    if @user.persisted?
+    	# session["devise.google_data"] = auth
+      puts " devise.omniauth_callbacks.success for user " + @user.email
       flash[:notice] = "Welcome, #{@user.first_name}!"
 
       sign_in_and_redirect @user, :event => :authentication
