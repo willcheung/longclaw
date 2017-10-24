@@ -109,3 +109,9 @@ function get_category_uuid (catname) {
     }
   <% end %>
 }
+
+<% if @data.length == 25 %>
+$('#left-chart-trunc-message').show();
+<% else %>
+$('#left-chart-trunc-message').hide();
+<% end %>

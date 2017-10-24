@@ -70,7 +70,7 @@
 <div id="account-charts">
     <div class="ibox-content">
         <div class="row m-t-md">
-            <h3><i class="fa fa-bell-o" aria-hidden="true"></i>&nbsp;&nbsp;Alerts & Tasks</h3>
+            <h3><i class="fa fa-bell-o" aria-hidden="true"></i>&nbsp;&nbsp;Alerts & Tasks <% if @alerts_tasks.length == 8 %>(Most Recent 8)<% end %></h3>
             <% if @alerts_tasks.present? %>
             <ul class="todo-list m-t">
                 <% @alerts_tasks.each do |n| %>
