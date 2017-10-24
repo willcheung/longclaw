@@ -1,8 +1,10 @@
 class ExtensionController < ApplicationController
   NUM_ACCOUNT_CONTACT_SHOW_LIMIT = 10  # How many Account Contacts to show
+  NUM_PARAM_LIST_LIMIT = 128  # Number of external and internal contacts to limit 
   
   layout "extension", except: [:test, :new]
 
+  before_action :filter_params
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce]
   before_action :get_current_org_opportunity_stages, only: [:salesforce]
@@ -31,10 +33,10 @@ class ExtensionController < ApplicationController
   def save_settings
     ts = get_tracking_setting
 
-    if params[:bcc_email].blank?
+    if @params[:bcc_email].blank?
       ts.bcc_email = ''
     else
-      ts.bcc_email = params[:bcc_email]
+      ts.bcc_email = @params[:bcc_email]
     end
     ts.save
     render layout: 'empty'
@@ -42,7 +44,7 @@ class ExtensionController < ApplicationController
 
   def index
     # gmail extension provided an email address of the currently logged in user
-    @gmail_user = params[:email] ? params[:email] : nil
+    @gmail_user = @params[:email].present? ? @params[:email] : nil
     render layout: 'empty'
   end
 
@@ -53,6 +55,7 @@ class ExtensionController < ApplicationController
     render layout: 'empty'
   end
 
+  # Note: params[:domain] is unfiltered!
   def no_account
     @domain = URI.unescape(params[:domain], '%2E')
     @account = Account.new
@@ -65,16 +68,14 @@ class ExtensionController < ApplicationController
     @users = []
     new_internal_users = []
 
-    params[:internal].each do |key, u|
-      full_name = u[0]
-      email = u[1] 
+    @params[:internal].each do |full_name, email|
       user = User.find_by_email(email)
       if user.present?
         @users << user
       else
         new_internal_users << {full_name: full_name, email: email}
       end
-    end if params[:internal].present?
+    end if @params[:internal].present?
 
     # Create previously unidentified internal members as new Users
     @users.concat create_and_return_internal_users(new_internal_users)
@@ -88,14 +89,14 @@ class ExtensionController < ApplicationController
 
     @accounts = Account.eager_load(:projects, :user).where(organization_id: current_user.organization_id).order("upper(accounts.name)") # for account picklist
 
-    external_emails = params[:external].present? ? params[:external].values.map{|p| p.second.downcase} : []
-    internal_emails = params[:internal].present? ? params[:internal].values.map{|p| p.second.downcase} : []
+    external_emails = @params[:external].present? ? @params[:external].map{|p| p.second} : []
+    internal_emails = @params[:internal].present? ? @params[:internal].map{|p| p.second} : []
     account_contacts_emails = (@account.present? && @account.contacts.present?) ? @account.contacts.map{|c| c.email.downcase}.sort : []
 
     people_emails = external_emails | internal_emails - [current_user.email.downcase]
     account_contacts_emails = (account_contacts_emails - people_emails)[0...NUM_ACCOUNT_CONTACT_SHOW_LIMIT]  # filter by/remove users already in e-mail thread, then truncate list
 
-    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, user: current_user.organization.users.find_by_email(e), contact: current_user.organization.contacts.find_by_email(e), profile: Profile.find_or_create_by_email(e), name_from_params: ((params[:external].values.find{|p| p.second.downcase == e} if params[:external].present?) || (params[:internal].values.find{|p| p.second.downcase == e} if params[:internal].present?) || [nil]).first } }
+    @people_with_profile = people_emails.each_with_object([]) { |e, memo| memo << { email: e, user: current_user.organization.users.find_by_email(e), contact: current_user.organization.contacts.find_by_email(e), profile: Profile.find_or_create_by_email(e), name_from_params: ((@params[:external].find{|p| p.second == e} if @params[:external].present?) || (@params[:internal].find{|p| p.second == e} if @params[:internal].present?) || [nil]).first } }
     @account_contacts_with_profile = account_contacts_emails.each_with_object([]) { |e, memo| memo << {email: e, profile: Profile.find_or_create_by_email(e), contact: current_user.organization.contacts.find_by_email(e) } }
 
     people_emails += @account_contacts_with_profile.map{|p| p[:email]}
@@ -156,6 +157,7 @@ class ExtensionController < ApplicationController
   # def metrics
   # end
 
+  # Note: params[:external] and params[:internal] is forwarded to extension_account_path unfiltered
   def create_account
     @account = Account.new(account_params.merge(
       owner_id: current_user.id, 
@@ -184,6 +186,30 @@ class ExtensionController < ApplicationController
 
   private
 
+  # Filter params[:external] and params[:internal] passed from the Chrome extension by converting to lowercase, validating email addresses, and removing duplicates; params[:bcc_email] and params[:email] are validated and converted to lowercase.
+  # Returns a filtered list in @params.
+  def filter_params 
+    puts "params #{params}\t" #VPL
+    @params = {}
+    external = []
+    if params[:external].present?
+      params[:external].values.each do |n, e|
+        external << [n, e.downcase] if (e.present? && valid_email?(e))
+      end 
+      @params[:external] = external.uniq[0...NUM_PARAM_LIST_LIMIT]
+    end
+    internal = []
+    if params[:internal].present?
+      params[:internal].values.each do |n, e|
+        internal << [n, e.downcase] if (e.present? && valid_email?(e))
+      end 
+      @params[:internal] = internal.uniq[0...NUM_PARAM_LIST_LIMIT]
+    end
+    @params[:bcc_email] = params[:bcc_email].downcase if params[:bcc_email].present? && valid_email?(params[:bcc_email])
+    @params[:email] = params[:email].downcase if params[:email].present? && valid_email?(params[:email])
+    puts "@params #{@params}\t" #VPL
+  end 
+
   def set_salesforce_user
     return if @salesforce_user.present? || current_user.nil?
 
@@ -192,7 +218,7 @@ class ExtensionController < ApplicationController
     @salesforce_user = SalesforceController.get_sfdc_oauthuser(current_user) if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?)
   end
 
-  # Old before_action helper
+  # Old before_action helper -- FOR REFERENCE ONLY!
   def set_account_and_project_old
     # p "*** set account and project ***"
     # p params
@@ -299,10 +325,10 @@ class ExtensionController < ApplicationController
   # (New) before_action helper to determine a matching account+opportunity from the set of recipients (the external contacts in params). i.e., if no external contacts exist, no account or opportunity is returned.
   # Note: E-mail domains that are typically "invalid" such as "gmail.com", "yahoo.com", "hotmail.com" may be used to identify a "matching" account if we can find the Contact with the e-mail.  Otherwise, we stop and do not attempt to identify a matching account using "invalid" domains, because these domains are too general and can easily match the wrong account.
   def set_account_and_project
-    return if params[:external].blank?
+    return if @params[:external].blank?
 
-    external = params[:external].values.map { |person| [person.first,person.second.downcase].map { |info| URI.unescape(info, '%2E') } }
-    ex_emails = external.map(&:second).select{|e| valid_email?(e)}.uniq
+    external = @params[:external].map { |person| person.map { |info| URI.unescape(info, '%2E') } }
+    ex_emails = external.map(&:second)
 
     # ex_emails = ["nat.ferrante@451research.com","pauloshan@yahoo.com","sheila.gladhill@browz.com", "romeo.henry@mondo.com", "lzion@liveintent.com","invalid'o@gmail.com"]
     # group by ex_emails by domain frequency, order by most frequent domain
@@ -483,8 +509,8 @@ class ExtensionController < ApplicationController
   # Helper method for creating people, used in set_account_and_project_old & create_project (@project should already be set before calling this)
   # By default, all internal people are added to @project as confirmed members, all external people are added to @project as suggested members
   def create_people(status=ProjectMember::STATUS[:Pending])
-    if params[:internal].present?
-      internal = params[:internal].values.map { |person| person.map { |info| URI.unescape(info, '%2E') } } 
+    if @params[:internal].present?
+      internal = @params[:internal].map { |person| person.map { |info| URI.unescape(info, '%2E') } } 
       # p "*** creating new internal members for project #{@project.name} ***"
       internal.select { |person| get_domain(person[1]) == current_user.organization.domain }.each do |person|
         unless person[0] == 'me' || person[1] == current_user.email
@@ -500,7 +526,7 @@ class ExtensionController < ApplicationController
       end 
     end
 
-    external = params[:external].present? ? params[:external].values.map { |person| [person.first, person.second.downcase].map { |info| URI.unescape(info, '%2E') } } : []
+    external = @params[:external].present? ? @params[:external].map { |person| person.map { |info| URI.unescape(info, '%2E') } } : []
     # p "*** creating new external members for project #{@project.name} ***"
     external.reject { |person| get_domain(person[1]) == current_user.organization.domain || !valid_domain?(get_domain(person[1])) }.each do |person|
       Contact.find_or_create_from_email_info(person[1], person[0], @project, status, "Chrome")
