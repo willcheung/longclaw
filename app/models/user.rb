@@ -1054,7 +1054,7 @@ class User < ActiveRecord::Base
     update_attributes(is_disabled: true,
                       oauth_access_token: 'invalid',
                       oauth_refresh_token: nil,
-                      encrypted_password: nil)
+                      encrypted_password: '')
   end
 
   def token_expired?
@@ -1062,7 +1062,7 @@ class User < ActiveRecord::Base
   end
 
   def token_expires_soon?
-    oauth_expires_at + 10.minutes < Time.now
+    oauth_expires_at - 10.minutes < Time.now
   end
 
   def fresh_token
