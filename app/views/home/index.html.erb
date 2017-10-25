@@ -4,7 +4,8 @@
         <!-- Empty div here to push close date filter to right side -->
         <div class="col-sm-9"></div>
         <select id="close-date-filter" class="col-sm-3" data-placeholder="Filter by Close Date">
-            <option value=""></option> <!-- no filter -->
+            <option value="Any"></option> <!-- no filter -->
+            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
             <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
             <optgroup label="Quarter">
                 <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>

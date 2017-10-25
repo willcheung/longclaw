@@ -24,7 +24,8 @@
             <option value="none">(No Title)</option>
         </select>
         <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
-            <option value=""></option> <!-- no filter -->
+            <option value="Any"></option> <!-- no filter -->
+            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
             <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
             <optgroup label="Quarter">
                 <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
@@ -42,20 +43,25 @@
     <div class="row border-bottom ">
       <div class="col-lg-3">
           <div class="ibox float-e-margins">
-              <div id="closedwon-box">
-              </div>
+              <div id="closedwon-box"></div>
           </div>
       </div>
 
       <div class="col-lg-3">
           <div class="ibox float-e-margins">
-              <div id="forecast-chart" class="ibox-content forecast-chart" style="height:210px;padding-bottom:0"></div>
+              <div class='ibox-title'>
+                  <h5>Deals by Forecast</h5>
+              </div>
+              <div id="forecast-chart" class="ibox-content forecast-chart" style="height:220px;padding-bottom:0"></div>
           </div>
       </div>
 
       <div class="col-lg-6">
           <div class="ibox float-e-margins">
-              <div id="stage-chart" class="ibox-content stage-chart" style="height:210px;padding-bottom:0"></div>
+              <div class='ibox-title'>
+                  <h5>Deals by Stage</h5>
+              </div>
+              <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
           </div>
       </div>
     </div>
@@ -140,14 +146,17 @@
                 type: 'column'
             },
             title: {
-                text: 'Deals by Forecast',
-                style: {
-                    color: '#676a6c',
-                    fontSize: '14px',
-                    fontFamily: 'Roboto'
-                },
-                align: 'left'
+                text: ''
             },
+//            title: {
+//                text: 'Deals by Forecast',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+//            },
             credits: {
                 enabled: false
             },
@@ -156,8 +165,7 @@
                 labels: {
                     style: {
                         fontSize: '9px'
-                    },
-                    rotation: 0
+                    }
                 }
             },
             yAxis: {
@@ -171,7 +179,7 @@
                stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        return "$"+large_number_to_human(this.total);
+                        return "$"+large_number_to_human_signif_digits(this.total);
                     },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
@@ -181,7 +189,7 @@
             tooltip: {
                 enabled: true,
                 formatter: function () {
-                    return '$' + large_number_to_human(this.total) + ' in ' + this.x + '<br>$' + large_number_to_human(this.y) + ' ' + this.series.name;
+                    return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
                 }
             },
             legend: {
@@ -213,14 +221,17 @@
                 type: 'column'
             },
             title: {
-                text: 'Deals by Stage',
-                style: {
-                    color: '#676a6c',
-                    fontSize: '14px',
-                    fontFamily: 'Roboto'
-                },
-                align: 'left'
+                text: ''
             },
+//            title: {
+//                text: 'Deals by Stage',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+//            },
             credits: {
                 enabled: false
             },
@@ -229,8 +240,7 @@
                 labels: {
                     style: {
                         fontSize: '9px'
-                    },
-                    rotation: 0
+                    }
                 }
             },
             yAxis: {
@@ -245,7 +255,7 @@
                     enabled: true,
                     formatter: function () {
                         //return Highcharts.numberFormat(this.total, 0, null, "");
-                        return "$"+large_number_to_human(this.total);
+                        return "$"+large_number_to_human_signif_digits(this.total);
                     },
                     style: {
                         color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
@@ -255,7 +265,7 @@
             tooltip: {
                 enabled: true,
                 formatter: function () {
-                    return '$' + large_number_to_human(this.total) + ' in ' + this.x + '<br>$' + large_number_to_human(this.y) + ' ' + this.series.name;
+                    return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
                 }
             },
             legend: {

@@ -4,7 +4,7 @@ var barColors = {
   default: "#7CB5EC",   // "CS" light blue
 };
 
-var closed_won_amount = "$<%= number_to_human(@top_dashboard_data.present? ? @top_dashboard_data.where(is_closed: true, is_won: true).map(&:amount).compact.sum : 0) %>";
+var closed_won_amount = large_number_to_human_signif_digits(<%= @top_dashboard_data.present? ? @top_dashboard_data.where(is_closed: true, is_won: true).map(&:amount).compact.sum : 0 %>);
 <% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
 <% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
 // var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";
@@ -12,13 +12,13 @@ $("#closedwon-box").html(
   "<div class='ibox-title'>" +
   "    <h5>Closed Won</h5>" +
   "</div>" +
-  "<div class='ibox-content'>" +
-  "    <h1><strong>" + closed_won_amount + "</strong></h1>" +
-  "    <h4><strong>0%</strong> of &mdash; target</h4>" +
+  "<div class='ibox-content' style='height:220px;padding-bottom:0;padding-top:20px;'>" +
+  "    <h1><strong>$" + closed_won_amount + "</strong></h1>" +
+  "    <h4 style='margin-top:30px;'><strong>0%</strong> of &mdash; target</h4>" +
   "    <div class='progress progress-mini'>" +
   "        <div style='width: 0%;' class='progress-bar'></div>" +
   "    </div>" +
-  "    <h4 style='margin-top:20px'><strong><%= days_remaining_in_qtr.to_s + ' ' + 'day'.pluralize(days_remaining_in_qtr) %></strong> left in this quarter</h4>" +
+  "    <h4 style='margin-top:30px'><strong><%= days_remaining_in_qtr.to_s + ' ' + 'day'.pluralize(days_remaining_in_qtr) %></strong> left in this quarter</h4>" +
   "    <div class='progress progress-mini'>" +
   "        <div style='width: <%= progress_pct %>%;' class='progress-bar progress-bar-success'></div>" +
   "    </div>" +

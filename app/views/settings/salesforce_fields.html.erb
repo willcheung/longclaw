@@ -44,10 +44,12 @@
                 </span>
               </div>
 
-              <% if @salesforce_connection_error %> 
-                <div style="border:1px solid red;border-radius:10px;line-height:3;margin:2px 0;padding:6px 18px">
-                  <i class="fa fa-exclamation-circle fa-2x" style="color:red"></i> — Salesforce connection error occurred.  Try <a href="<%= settings_salesforce_fields_path(:standard) %>">disconnecting and reconnecting to Salesforce</a>.
+              <% if @salesforce_connection_error %>
+                </div> <!-- end previous div -->
+                <div class="fa-2x" style="color:white; background-color: #F66; font-size: 14px; border:1px solid black; border-radius:10px; line-height:3; margin:2em 0; padding:6px 18px">
+                  <i class="fa fa-exclamation-circle"></i> — Salesforce connection error occurred.  Try <strong>disconnecting and reconnecting</strong> to Salesforce.
                 </div>
+                <div>  <!-- start new div -->
               <% else %>
                 <div class="row">
                   <div class="col-lg-9">

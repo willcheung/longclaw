@@ -23,7 +23,8 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters
-    projects = projects.where(close_date: get_close_date_range(params[:close_date])) if params[:close_date]
+    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     if params[:owner].present? && params[:owner] != "0"
       if params[:owner] == "none"
         projects = projects.where(owner_id: nil)
@@ -150,8 +151,11 @@ class ProjectsController < ApplicationController
                                                 ))
     # Add current_user to project member
     @project.project_members.new(user: current_user)
+    # TODO: Uncomment below to undo #1011
     # Subscribe current_user as weekly / daily follower because s/he created the project
-    @project.subscribers.new(user: current_user)
+    # @project.subscribers.new(user: current_user)
+    # Subscribe current_user as daily follower only temporarily (per #1011)
+    @project.subscribers.new(user: current_user, weekly: false)
 
       respond_to do |format|
         if params[:commit] == 'Create with account contacts' 

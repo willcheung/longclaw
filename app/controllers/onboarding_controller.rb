@@ -56,10 +56,8 @@ class OnboardingController < ApplicationController
 	#########################################################################
 
 	def create_clusters
-    Thread.new do
-      CreateClustersJob.perform_later(params)
-      ActiveRecord::Base.connection.close
-    end
+    CreateClustersJob.perform_later(params)
+
     # puts 'Responding to Oathkeeper...'
     respond_to do |format|
       format.json { render json: 'Create clusters kicked off for ' + params[:user_id], status: :accepted }
