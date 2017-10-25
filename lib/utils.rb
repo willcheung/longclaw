@@ -45,6 +45,12 @@ module Utils
 	  bool ? 'Yes' : 'No'
 	end
 
+	# The first three of the following example "emails" are valid, but the rest are invalid: "will-cheung@contextsmith.com", "chicago.o'hare@us-airports.com", "unusual@subdomain.domain.com", "", "invalid@@bad.com", "invalid@also'bad.com", "invalid"
+	def valid_email?(email)
+		(email =~ /\A[\w+\-.']+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i) == 0
+	end
+
+	# Also returns any subdomains
 	def get_domain(email)
 		email.split("@").last
 	end
