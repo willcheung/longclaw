@@ -170,7 +170,8 @@ class ContextsmithService
       when User::AUTH_TYPE[:Exchange]
         { password: user.password, email: user.email, kind: 'exchange', url: user.oauth_provider_uid }
       else
-        throw "ERROR: Uknown oauth provider #{user.oauth_provider}"
+        puts "Warning: Unknown oauth provider #{user.oauth_provider}"
+        nil
     end
   end
 end
