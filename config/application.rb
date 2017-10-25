@@ -59,6 +59,9 @@ module Longclaw
     # Set ActionMailer default return url here, set config var on Heroku per domain
     config.action_mailer.default_url_options = { :host => ENV['BASE_URL'] }
 
+    # Use Sucker Punch to manage an async queue for jobs in memory
+    config.active_job.queue_adapter = :sucker_punch
+
     FullContact.configure do |config|
       config.api_key = ENV['fullcontact_api_key']
       config.auth_type = :header

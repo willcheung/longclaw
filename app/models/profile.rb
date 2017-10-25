@@ -85,7 +85,7 @@ class Profile < ActiveRecord::Base
 
   def social_url(socialtype)
     socialtype = get_FullContact_social_profile_type(socialtype)
-    sp = data.social_profiles.find{ |sp| sp.type.downcase == socialtype } if socialtype.present? && data_is_valid? && data.social_profiles.present?
+    sp = data.social_profiles.find{ |sp| sp.type_id.downcase == socialtype } if socialtype.present? && data_is_valid? && data.social_profiles.present?
     URI.encode(sp.url) if sp.present? && sp.url.present?
   end
 

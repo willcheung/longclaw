@@ -1015,14 +1015,19 @@ class Project < ActiveRecord::Base
                            account: p_account,
                            is_public: true,
                            is_confirmed: false # This needs to be false during onboarding so it doesn't get read as real projects
-                          )
+                          ) unless p_account.nil?
 
-      if project.save
+      if project && project.save
         # Project members
         # assuming contacts and users have already been inserted, we just need to link them
         external_members, internal_members = get_project_members(data, p)
         contacts = Contact.where(email: external_members.map(&:address)).joins(:account).where("accounts.organization_id = ?", organization_id)
         users = User.where(email: internal_members.map(&:address), organization_id: organization_id)
+
+        if Rails.env.development?
+          onboarding_user = User.find(user_id)
+          project.project_members.create(user: onboarding_user)
+        end
 
         contacts.each do |c|
           project.project_members.create(contact: c)
@@ -1037,7 +1042,12 @@ class Project < ActiveRecord::Base
 
         # Upsert project meetings.
         ContextsmithService.load_calendar_from_backend(project, 1000)
+      else
+        if project.nil?
+          puts "No project created because no account was found for  #{get_domain_from_subdomain(p)}"
+        end
       end
+
     end
   end  #End: self.create_from_clusters()
 
@@ -1178,7 +1188,7 @@ class Project < ActiveRecord::Base
   #             status - "SUCCESS" if load was successful; otherwise, "ERROR" 
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
-  # TODO: Might want to move to SalesforceOpportunity.rb
+  # TODO: Maybe make this a Project instance method.
   def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
     result = nil
 
@@ -1217,6 +1227,45 @@ class Project < ActiveRecord::Base
     end
 
     result
+  end
+
+  # Determines the SFDC entity level to which this opportunity (project) is linked ("Account" or "Opportunity"), then import Salesforce activities (ActivityHistory) from this SFDC entity into this opportunity.  Does not import previously-exported CS data residing on SFDC.  
+  # Note: Does nothing if opportunity is not linked (status = SUCCESS, result = contains warning message). This process aborts upon encountering any error.
+  # Additional Note:  This may called from ProjectsController#refresh !!
+  # Parameters:   client - a valid SFDC connection
+  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               limit (optional) - the max number of activity records to process
+  # Returns:   A hash that represents the execution status/result. Consists of:
+  #             status - string "SUCCESS" if successful, or "ERROR" otherwise
+  #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
+  #             detail - Contains any error or informational/warning messages.
+  def load_salesforce_activities(client, filter_predicates=nil, limit=200)
+    load_result = nil
+
+    if salesforce_opportunity.blank? # CS Opportunity not linked to SFDC Opportunity
+      if account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
+        account.salesforce_accounts.each do |sfa|
+          load_result = Activity.load_salesforce_activities(client, self, sfa.salesforce_account_id, type="Account", filter_predicates)
+
+          if load_result[:status] == "ERROR"
+            error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{name}\" (opportunity_id='#{id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+            return { status: "ERROR", result: load_result[:result], detail: error_detail }  # abort upon any error!
+          end
+        end
+      else # CS Opportunity unlinked to any SFDC Account/Opportunity
+        return { status: "SUCCESS", result: "CS Opportunity was not updated.", detail: "Warning: No SFDC entity linked to Opportunity!" }
+      end
+    else # CS Opportunity linked to SFDC Opportunity
+      # Save at the Opportunity level
+      load_result = Activity.load_salesforce_activities(client, self, salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicates)
+
+      if load_result[:status] == "ERROR"
+        error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{salesforce_opportunity.name}\" (sfdc_id='#{salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{name}\" (opportunity_id='#{id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+        return { status: "ERROR", result: load_result[:result], detail: error_detail }  # abort upon any error!
+      end
+    end
+
+    return { status: "SUCCESS", result: load_result[:result], detail: nil }
   end
 
   def self.get_close_date_range(range_description)

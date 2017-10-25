@@ -44,6 +44,7 @@ class Account < ActiveRecord::Base
     validates :name, presence: true, uniqueness: { scope: :organization, message: "There's already an account with the same name." }
 
     # TODO: Create a general visible_to scope for a general "role" checker
+    # Should accounts visible to user include inactive accounts?
     scope :visible_to, -> (user) {
         select('DISTINCT(accounts.*)')
             .where(organization_id: user.organization_id)
@@ -53,6 +54,23 @@ class Account < ActiveRecord::Base
     STATUS = %w(Active Inactive Dead)
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
     MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "website" => "Website", "phone" => "Phone", "address" => "Address" }  # "notes" => "Notes", "revenue_potential" => "Revenue Potential"
+
+    # Copy all contacts from source account into this account.  If contact exists, attempt a merge of the two contacts. 
+    # Parameters:   acct - source account to merge from
+    def merge(acct)
+        acct.contacts.each do |c|
+            # Copy contacts from source account
+            contact_c = c.dup
+            unless contact_c.update(account: self)
+                e = contact_c.errors.messages
+                error_messages = e.keys.select{|k| e[k].present? }.map{ |k| "#{k} #{e[k][1]}: #{e[k][0]}"}.join(', ')
+                puts = "Cannot copy Contact. Errors: #{error_messages}. Attempting to merge "
+                self.contacts.find_by_email(contact_c.email).merge(contact_c) # attempt to merge
+            else
+                contact_c.save
+            end
+        end
+    end
 
     # roll up subdomains on Account creation
     # ex: external members have these domains: x.domain.com, y.domain.com, domain.com, other.com -> Accounts created for these domains: domain.com (contains Contacts from x.domain.com, y.domain.com, domain.com), other.com

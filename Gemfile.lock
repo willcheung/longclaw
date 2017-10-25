@@ -23,6 +23,12 @@ GIT
       omniauth (>= 1.1.1)
       omniauth-oauth2 (>= 1.3.1)
 
+PATH
+  remote: omniauth-microsoft_v2_auth
+  specs:
+    omniauth-microsoft_v2_auth (0.1.0)
+      omniauth-oauth2
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -265,6 +271,8 @@ GEM
       actionpack (>= 4.0)
       activesupport (>= 4.0)
       sprockets (>= 3.0.0)
+    sucker_punch (2.0.4)
+      concurrent-ruby (~> 1.0.0)
     thin (1.7.0)
       daemons (~> 1.0, >= 1.0.9)
       eventmachine (~> 1.0, >= 1.0.4)
@@ -314,6 +322,7 @@ DEPENDENCIES
   mini_mime
   oauth2 (~> 1.0)
   omniauth-google-oauth2!
+  omniauth-microsoft_v2_auth!
   omniauth-oauth2 (~> 1.4)
   omniauth-salesforce
   pg
@@ -329,6 +338,7 @@ DEPENDENCIES
   simple_form (~> 3.1.0)
   slack-notifier
   stripe!
+  sucker_punch (~> 2.0)
   thin
   tzinfo-data
   uglifier (>= 1.3.0)
