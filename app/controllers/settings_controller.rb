@@ -240,7 +240,7 @@ class SettingsController < ApplicationController
 	# Gets SFDC connection for Organization (a single, shared SFDC admin login for all admins)
 	def get_salesforce_admin_user
 		@salesforce_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization) if current_user.admin? # only allow admins to access SFDC Admin panels
-  end
+	end
 
   def get_basecamp2_user
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)

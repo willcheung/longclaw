@@ -98,7 +98,7 @@ class SalesforceController < ApplicationController
   # Load SFDC Accounts and new SFDC Opportunities, including updating values in mapped (standard and custom) fields. For linked CS accts, import and upsert SFDC contacts.
   # For individual (non-admin, e.g., "Pro") users: create CS opportunities and corresponding accts for open and unlinked SFDC opps owned by user, link the CS Acct and Opps to the corresponding SFDC entity, and create account Contacts.
   # Parameters:     client - a valid SFDC connection
-  #                 user - the user making the request (either individual non-admin or admin)
+  #                 user - the user making the request, admin or individual (non-admin)
   def self.import_and_create_contextsmith(client: , user: )
     # Upsert SFDC Accounts and SFDC Opportunities
     SalesforceAccount.load_accounts(client, user.organization_id) 
@@ -258,7 +258,7 @@ class SalesforceController < ApplicationController
   def import_salesforce
     sfdc_client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-    unless sfdc_client.nil?  # unless connection error
+    unless sfdc_client.nil?  # unless SFDC connection error
       case params[:entity_type]
       when "account"
         import_result = SalesforceAccount.load_accounts(sfdc_client, current_user.organization_id)
@@ -324,6 +324,7 @@ class SalesforceController < ApplicationController
       end
       sfdc_client = nil
     else # SFDC connection error
+      puts "****SFDC**** Error: In SalesforceController.import_salesforce, an attempt to connect to Salesforce using SalesforceService.connect_salesforce failed!"
       render_service_unavailable_error(method_name)
       return
     end

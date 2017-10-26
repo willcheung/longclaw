@@ -100,6 +100,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
   private
+
   def set_auto_salesforce_refresh_custom_config(current_user)
     if current_user.admin?
       # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)

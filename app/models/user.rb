@@ -143,7 +143,7 @@ class User < ActiveRecord::Base
 
   # Note: For 'salesforce' and 'salesforcesandbox' omniauth types.
   def self.from_sfdc_omniauth(auth, current_user)
-    where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
+    where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user| # "user" is not "current_user"!
       if !current_user.admin?
         oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: current_user.organization_id, user_id: current_user.id)
       else
