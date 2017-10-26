@@ -11,6 +11,7 @@ class UserMailer < ApplicationMailer
   end
 
   def daily_summary_email(user)
+    return unless user.pro?
     @user = user
     @subs = user.valid_streams_subscriptions.daily
     @upcoming_meetings = user.upcoming_meetings  # backend call-back
@@ -42,6 +43,7 @@ class UserMailer < ApplicationMailer
   end
 
   def weekly_summary_email(user)
+    return unless user.pro?
     open_or_recently_closed = "notifications.id IS NULL OR notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
     
     @subs = user.valid_streams_subscriptions.weekly
