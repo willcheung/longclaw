@@ -213,7 +213,7 @@ class ExtensionController < ApplicationController
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
 
-    @salesforce_user = SalesforceController.get_sfdc_oauthuser(current_user) if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?)
+    @salesforce_user = SalesforceController.get_sfdc_oauthuser(user: current_user) if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?)
   end
 
   # Old before_action helper -- FOR REFERENCE ONLY!

@@ -19,4 +19,6 @@
 class CustomConfiguration < ActiveRecord::Base
 	belongs_to  :organization
 	belongs_to  :user
+
+	CONFIG_TYPE = { Settings_salesforce_activities_activity_entity_predicate: '/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea', Settings_salesforce_activities_activityhistory_predicate: '/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea', Salesforce_refresh: 'salesforce_refresh' }
 end

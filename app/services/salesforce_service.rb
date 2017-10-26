@@ -1,6 +1,6 @@
 class SalesforceService
 
-  # TODO: Change to self.connect_salesforce(current_user) and check if current_user.admin? to determine which OauthUser connection to use!!!
+  # TODO: Change to take OauthUser as a parameter then use that to determine connection!
   def self.connect_salesforce(organization_id, user_id=nil)
     #return nil  # simulates a Salesforce connection error
 
@@ -53,6 +53,9 @@ class SalesforceService
     client
   end
 
+  # Returns the SFDC User (sObject) id of the SFDC connection belonging to a user+organization.
+  # Parameters:   organization_id - uuid of the (CS) organization
+  #               user_id - (optional) uuid of the (CS) user; if unspecified, this will return for the organization admin 
   def self.get_salesforce_user_uuid(organization_id, user_id=nil)
     # Try to get salesforce production
     salesforce_user = user_id ? OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id) : OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
@@ -65,6 +68,9 @@ class SalesforceService
     salesforce_user.oauth_provider_uid[salesforce_user.oauth_provider_uid.rindex(/\//)+1...salesforce_user.oauth_provider_uid.length] if salesforce_user.present?
   end
 
+  # Returns the SFDC Organization (sObject) id of the SFDC connection belonging to an organization.
+  # Parameters:   organization_id - uuid of the (CS) organization
+  #               user_id - (optional) uuid of the (CS) user; if unspecified, this will return for the organization admin 
   def self.get_salesforce_organization_uuid(organization_id, user_id=nil)
     # Try to get salesforce production
     salesforce_user = user_id ? OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id) : OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id)

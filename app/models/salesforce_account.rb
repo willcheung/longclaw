@@ -55,20 +55,15 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   ################################################################################################## 
   # This class method finds SFDC accounts and creates a local model
-  # Params:    query_range: The limit for SFDC query results
+  # Params:    client - a valid SFDC connection
+  #            organization_id - the organization to upsert the SFDC accounts
+  #            query_range - the limit for SFDC query results
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of accounts added/updated; if an error occurred, contains the title of the error.
   #             detail - details of any errors.
   # Note: This will not recover (will abort) if an error occurs while running query SFDC during the process -- if it will happen, likely will happen on first run not in middle of subsequent runs.
-  def self.load_accounts(current_user, query_range=500)
-    organization_id = current_user.organization_id
-    client = SalesforceService.connect_salesforce(organization_id)
-    if client.nil?
-      puts "** SalesforceService error: During loading SFDC accounts, an attempt to connect to Salesforce using SalesforceService.connect_salesforce in SalesforceAccount.load_accounts failed!"
-      return { status: "ERROR", result: "SalesforceService Connection error", detail: "During loading SFDC accounts, an attempt to connect to Salesforce failed." } 
-    end
-
+  def self.load_accounts(client, organization_id, query_range=500)
     firstQuery = true   
     last_Created_Id = nil
     total_accounts = 0

@@ -80,29 +80,30 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Depending on the user passed, will return the appropriate SFDC OauthUser object.  i.e., if the role of this user is admin, then use the login belonging to the "organization".  Otherwise, use individual logins.  This object is suitable to be used to create a SFDC connection.
-  def self.get_sfdc_oauthuser(user)
-    if user.admin?
-      # Try to get salesforce production. if not connect, check if it is connected to Salesforce sandbox
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: user.organization_id)
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: user.organization_id) if salesforce_user.nil?
-    else
-      # Basic role user OR individual power user or trial/Chrome user
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: user.organization_id, user_id: user.id)
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: user.organization_id, user_id: user.id) if salesforce_user.nil?
+  # Returns a Salesforce OauthUser object for either a user or an organization suitable to be used to create a SFDC connection.  If a user is specified and the user is not an Admin, this will return the SFDC OauthUser object for an individual login.  If an organization is specified, or if a user with Admin role is passed, then use the login belonging to the "organization".  
+  # Note: If neither user nor organization was provided, or if OauthUser object cannot be found, returns nil.
+  def self.get_sfdc_oauthuser(user: nil, organization: nil)
+    if (user.present? && user.admin?) || (organization.present?)
+      # Admin user
+      # Try to find SFDC production, then try SFDC sandbox.
+      sfdc_oauthuser = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: (user.organization_id if user.present?) || organization.id, user_id: nil) || sfdc_oauthuser = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: (user.organization_id if user.present?) || organization.id, user_id: nil)
+    elsif user.present?
+      # Individual power user
+      sfdc_oauthuser = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: user.organization_id, user_id: user.id) || OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: user.organization_id, user_id: user.id)
     end
-    salesforce_user
+
+    sfdc_oauthuser
   end
 
   # Automatic actions to take when user establishes a SFDC connection.
   #  e.g., 
   #    - Create a default mapping between CS and SFDC fields, if none exist for current user's org
   #    - Load SFDC Accounts and new SFDC Opportunities, including updating values in mapped (standard and custom) fields
-  #    - Special action for single users: creating CS opportunities and corresponding accounts for loaded SFDC entities, and updating Contacts.
+  #    - Special action for single users: creating CS opportunities and corresponding accounts for open and unlinked SFDC opps, and creating account Contacts.
   def self.initial_SFDC_login(current_user)
     puts "\nInitial SFDC login for user=#{get_full_name(current_user)} (email=#{current_user.email}) ..."
 
-    sfdc_oauth_user = get_sfdc_oauthuser(current_user)
+    sfdc_oauth_user = get_sfdc_oauthuser(user: current_user)
     sfdc_client = SalesforceService.connect_salesforce(current_user.organization_id) if sfdc_oauth_user.present?
 
     if sfdc_oauth_user.present? && sfdc_client.present?
@@ -114,19 +115,23 @@ class SalesforceController < ApplicationController
       SalesforceOpportunity.refresh_picklists(client: sfdc_client, organization: current_user.organization, force_refresh: false)  # create initial forecast category and stage picklists; don't refresh if values exist
 
       # Load SFDC Accounts and new SFDC Opportunities
-      SalesforceAccount.load_accounts(current_user) #if current_user.organization.salesforce_accounts.limit(1).blank?
-      SalesforceOpportunity.load_opportunities(current_user)
+      SalesforceAccount.load_accounts(sfdc_client, current_user.organization_id) #if current_user.organization.salesforce_accounts.limit(1).blank?
+      if current_user.admin?
+        SalesforceOpportunity.load_opportunities(client: sfdc_client, organization: current_user.organization)
+      else
+        SalesforceOpportunity.load_opportunities(client: sfdc_client, user: current_user)
+      end
 
       # Create CS Accounts and Opportunities for SFDC Opportunities for non-Admin (e.g., Pro) users and map them
       if !current_user.admin?
-        sfdc_userid = SalesforceService.get_salesforce_user_uuid(current_user.organization_id, current_user)
+        sfdc_userid = SalesforceService.get_salesforce_user_uuid(current_user.organization_id, current_user.id)
         open_sfdc_opps = SalesforceOpportunity.is_open.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
 
         open_sfdc_opps_acct_ids = open_sfdc_opps.map(&:salesforce_account_id).uniq
         open_sfdc_opps_acct_ids.each do |acct_id|
           # Find the linked CS account, or create a corresponding CS account, for each SFDC account that is the parent of an open SFDC opportunity; if a new CS account was created, link the CS and SFDC accounts
           sfa = current_user.organization.salesforce_accounts.find_by_salesforce_account_id(acct_id)
-          if sfa.contextsmith_account_id.present? # SFDC account is linked
+          if sfa.present? && sfa.contextsmith_account_id.present? # SFDC account is linked
             account = current_user.organization.accounts.find(sfa.contextsmith_account_id) 
           else # SFDC account is not linked
             account = Account.new(domain: '', # like a custom account
@@ -179,6 +184,7 @@ class SalesforceController < ApplicationController
       # Refresh/update the standard and custom field values of mapped accts and opps
       SalesforceAccount.refresh_fields(current_user)
       SalesforceOpportunity.refresh_fields(current_user)
+      # TODO: Should we load contacts from linked accounts too, to pick up new contacts??
     # end: if Salesforce user present and SFDC connection OK
     elsif sfdc_oauth_user.present? && sfdc_client.nil?
       puts "****SFDC**** Error attempting to connect to SFDC during initial_SFDC_login. user_id='#{current_user.id}' of organization_id=#{current_user.organization_id}"
@@ -241,66 +247,73 @@ class SalesforceController < ApplicationController
   # For Accounts/Opportunities -- This will also refreshes/updates the standard and custom field values of mapped accounts or opportunities.
   # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account.  For all active and confirmed opportunities visible to admin.
   def import_salesforce
-    case params[:entity_type]
-    when "account"
-      import_result = SalesforceAccount.load_accounts(current_user)
-      if import_result[:status] == "ERROR"
-        error_detail = "Error while attempting to import Salesforce accounts.  Result: #{ import_result[:result] } Details: #{ import_result[:detail] }"
-        render_internal_server_error("import_salesforce#account()", "SalesforceAccount.load_accounts()", error_detail)
-        return
-      end
-      refresh_fields(params[:entity_type]) # refresh/update the standard and custom field values of mapped accts
-      return
-    when "project"
-      import_result = SalesforceOpportunity.load_opportunities(current_user)
-      if import_result[:status] == "ERROR"
-        error_detail = "Error while attempting to import Salesforce opportunities.  Result: #{ import_result[:result] } Details: #{ import_result[:detail] }"
-        render_internal_server_error("import_salesforce#project()", "SalesforceOpportunity.load_opportunities()", error_detail)
-        return
-      end
-      refresh_fields(params[:entity_type]) # refresh/update the standard and custom field values of mapped opps
-      return
-    when "activity"
-      # Ignores exported CS data residing on SFDC.
-      # TODO: Issue #829 Need to allow SFDC import of activities to continue even after encountering an error.  Use new sync_salesforce code as guide.
-      method_name = "import_salesforce#activity()"
-      filter_predicate_str = {}
-      filter_predicate_str["entity"] = params[:entity_pred].strip
-      filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
+    sfdc_client = SalesforceService.connect_salesforce(current_user.organization_id)
 
-      #puts "******************** #{ method_name } ... filter_predicate_str= #{ filter_predicate_str }", 
-      @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
-      # @opportunities = Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.includes(:salesforce_opportunity)
-      no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
-
-      # Nothing to do if no opportunities or linked SFDC entities
-      if @opportunities.blank? || no_linked_sfdc
-        @client = nil
-        render plain: '' 
-        return 
-      end
-
-      @client = SalesforceService.connect_salesforce(current_user.organization_id)
-
-      unless @client.nil?  # unless connection error
-        @opportunities.each do |p|
-          load_result = p.load_salesforce_activities(@client, filter_predicate_str)
-
-          if load_result[:status] == "ERROR"
-            failure_method_location = "load_salesforce_activities()"
-            render_internal_server_error(method_name, failure_method_location, load_result[:detail])
-            return
-          end
+    unless sfdc_client.nil?  # unless connection error
+      case params[:entity_type]
+      when "account"
+        import_result = SalesforceAccount.load_accounts(sfdc_client, current_user.organization_id)
+        if import_result[:status] == "ERROR"
+          error_detail = "Error while attempting to import Salesforce accounts.  Result: #{ import_result[:result] } Details: #{ import_result[:detail] }"
+          render_internal_server_error("import_salesforce#account()", "SalesforceAccount.load_accounts()", error_detail)
+          return
         end
+        refresh_fields(params[:entity_type]) # refresh/update the standard and custom field values of mapped accts
+        return
+      when "project"
+        if current_user.admin?
+          import_result = SalesforceOpportunity.load_opportunities(client: sfdc_client, organization: current_user.organization)
+        else
+          import_result = SalesforceOpportunity.load_opportunities(client: sfdc_client, user: current_user)
+        end
+
+        if import_result[:status] == "ERROR"
+          error_detail = "Error while attempting to import Salesforce opportunities.  Result: #{ import_result[:result] } Details: #{ import_result[:detail] }"
+          render_internal_server_error("import_salesforce#project()", "SalesforceOpportunity.load_opportunities()", error_detail)
+          return
+        end
+        refresh_fields(params[:entity_type]) # refresh/update the standard and custom field values of mapped opps
+        return
+      when "activity"
+        # Ignores exported CS data residing on SFDC.
+        # TODO: Issue #829 Need to allow SFDC import of activities to continue even after encountering an error.  Use new sync_salesforce code as guide.
+        method_name = "import_salesforce#activity()"
+        filter_predicate_str = {}
+        filter_predicate_str["entity"] = params[:entity_pred].strip
+        filter_predicate_str["activityhistory"] = params[:activityhistory_pred].strip
+
+        #puts "******************** #{ method_name } ... filter_predicate_str= #{ filter_predicate_str }", 
+        @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
+        # @opportunities = Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.includes(:salesforce_opportunity)
+        no_linked_sfdc = @opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+
+        # Nothing to do if no opportunities or linked SFDC entities
+        if @opportunities.blank? || no_linked_sfdc
+          sfdc_client = nil
+          render plain: '' 
+          return 
+        end
+
+          @opportunities.each do |p|
+            load_result = p.load_salesforce_activities(sfdc_client, filter_predicate_str)
+
+            if load_result[:status] == "ERROR"
+              failure_method_location = "load_salesforce_activities()"
+              render_internal_server_error(method_name, failure_method_location, load_result[:detail])
+              return
+            end
+          end
+
+      # end when params[:entity_type] = "activity"
       else
-        render_service_unavailable_error(method_name)
+        error_detail = "Invalid entity_type parameter passed to import_salesforce(). entity_type=#{params[:entity_type]}"
+        puts error_detail
+        render_internal_server_error(method_name, method_name, error_detail)
         return
       end
-    # end when params[:entity_type] = "activity"
-    else
-      error_detail = "Invalid entity_type parameter passed to import_salesforce(). entity_type=#{params[:entity_type]}"
-      puts error_detail
-      render_internal_server_error(method_name, method_name, error_detail)
+      sfdc_client = nil
+    else # SFDC connection error
+      render_service_unavailable_error(method_name)
       return
     end
 
@@ -771,8 +784,14 @@ class SalesforceController < ApplicationController
   def disconnect
     # delete salesforce oauth_user
     salesforce_user = OauthUser.find_by(id: params[:id])
-
     salesforce_user.destroy if salesforce_user.present?
+
+    if current_user.admin?
+      salesforce_refresh_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil)
+    else
+      salesforce_refresh_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id)
+    end
+    salesforce_refresh_config.destroy if salesforce_refresh_config.present? # forget refresh setting!
 
     respond_to do |format|
       format.html { redirect_to(request.referer || settings_path) }

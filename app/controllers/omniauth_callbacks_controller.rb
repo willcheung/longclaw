@@ -1,13 +1,29 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
-    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
     #puts "****** session return_to_path: #{ session[:return_to_path] }"
+    User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
+    if current_user.admin?
+      # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
+      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil).blank?
+    else
+      # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
+      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id).blank?
+    end
     SalesforceController.initial_SFDC_login(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
   def salesforcesandbox
-    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
+    # Copied from salesforce method above!!
+    User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
+    if current_user.admin?
+      # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
+      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil).blank?
+    else
+      # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
+      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id).blank?
+    end
+    SalesforceController.initial_SFDC_login(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
