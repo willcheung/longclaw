@@ -95,11 +95,91 @@ class SalesforceController < ApplicationController
     sfdc_oauthuser
   end
 
+  # Load SFDC Accounts and new SFDC Opportunities, including updating values in mapped (standard and custom) fields. For linked CS accts, import and upsert SFDC contacts.
+  # For individual (non-admin, e.g., "Pro") users: create CS opportunities and corresponding accts for open and unlinked SFDC opps owned by user, link the CS Acct and Opps to the corresponding SFDC entity, and create account Contacts.
+  # Parameters:     client - a valid SFDC connection
+  #                 user - the user making the request (either individual non-admin or admin)
+  def self.import_and_create_contextsmith(client: , user: )
+    # Upsert SFDC Accounts and SFDC Opportunities
+    SalesforceAccount.load_accounts(client, user.organization_id) 
+    if user.admin?
+      SalesforceOpportunity.load_opportunities(client: client, organization: user.organization)
+    else
+      SalesforceOpportunity.load_opportunities(client: client, user: user)
+    end
+
+    # For non-Admin users, create CS Accounts and Opportunities and link them
+    if !user.admin?
+      sfdc_userid = SalesforceService.get_salesforce_user_uuid(user.organization_id, user.id)
+      open_sfdc_opps = SalesforceOpportunity.is_open.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
+
+      open_sfdc_opps_acct_ids = open_sfdc_opps.map(&:salesforce_account_id).uniq
+      open_sfdc_opps_acct_ids.each do |acct_id|
+        # Find the linked CS account, or create a corresponding CS account, for each SFDC account that is the parent of an open SFDC opportunity; if a new CS account was created, link the CS and SFDC accounts
+        sfa = user.organization.salesforce_accounts.find_by_salesforce_account_id(acct_id)
+        if sfa.present? && sfa.contextsmith_account_id.present? # SFDC account is linked
+          account = user.organization.accounts.find(sfa.contextsmith_account_id) 
+        else # SFDC account is not linked
+          account = Account.new(domain: '', # like a custom account
+                      name: sfa.salesforce_account_name.strip, 
+                      owner_id: user.id, 
+                      organization_id: user.organization_id,
+                      description: "Automatically imported from Salesforce by ContextSmith",
+                      created_by: user.id,
+                      updated_by: user.id
+                      )
+          if account.save(validate: false)
+            sfa.contextsmith_account_id = account.id
+            sfa.save
+          else
+            puts "Error creating CS Account '#{sfa.salesforce_account_name}'!"
+          end
+        end
+        # Find each unlinked SFDC opportunity, create a new CS opportunity under the appropriate CS account; if a new CS opportunity was created, link the CS and SFDC opportunities
+        open_sfdc_opps.where(salesforce_account_id: sfa.salesforce_account_id).each do |sfo|
+          if sfo.contextsmith_project_id.blank?  # SFDC opportunity is not linked
+            project = user.organization.projects.new(name: sfo.name,
+                        status: "Active",
+                        owner_id: user.id,
+                        account_id: account.id,
+                        # is_public: true,
+                        # is_confirmed: false 
+                        created_by: user.id,
+                        updated_by: user.id
+                        )
+            if project.save
+              sfo.contextsmith_project_id = project.id
+              sfo.save
+            else
+              puts "Error creating CS Opportunity '#{sfo.name}'!"
+            end
+          end
+        end
+      end # end: open_sfdc_opps_acct_ids.each do |acct_id|
+    end # end: if !user.admin?
+
+    # Refresh/update the standard and custom field values of mapped accts and opps
+    SalesforceAccount.refresh_fields(user)
+    SalesforceOpportunity.refresh_fields(user)
+
+    # Import/upsert Contacts into all linked accts (from SFDC into ContextSmith)
+    user.organization.salesforce_accounts.is_linked.each do |sfa|
+      account = sfa.account
+      import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id)
+      failure_method_location = "Contact.load_salesforce_contacts()"
+
+      if import_result[:status] == "ERROR"
+        puts "****SFDC**** Error at #{failure_method_location} during import of contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{account.id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
+      else # import_result[:status] == SUCCESS
+        # puts "****SFDC**** Succesful automatic import of SFDC contacts for user_id=#{user.id} of organization_id=#{user.organization_id}"
+      end
+    end
+  end
+
   # Automatic actions to take when user establishes a SFDC connection.
   #  e.g., 
-  #    - Create a default mapping between CS and SFDC fields, if none exist for current user's org
-  #    - Load SFDC Accounts and new SFDC Opportunities, including updating values in mapped (standard and custom) fields
-  #    - Special action for single users: creating CS opportunities and corresponding accounts for open and unlinked SFDC opps, and creating account Contacts.
+  #    - Create a default mapping between CS and SFDC fields, if none exists for current user's org
+  #    - Runs actions in SalesforceController.import_and_create_contextsmith() for current_user (see doc of method for details)
   def self.initial_SFDC_login(current_user)
     puts "\nInitial SFDC login for user=#{get_full_name(current_user)} (email=#{current_user.email}) ..."
 
@@ -113,79 +193,7 @@ class SalesforceController < ApplicationController
       EntityFieldsMetadatum.set_default_sfdc_fields_mapping_for(organization: current_user.organization) if current_org_entity_fields_metadatum.none?{ |efm| efm.salesforce_field.present? }
       
       SalesforceOpportunity.refresh_picklists(client: sfdc_client, organization: current_user.organization, force_refresh: false)  # create initial forecast category and stage picklists; don't refresh if values exist
-
-      # Load SFDC Accounts and new SFDC Opportunities
-      SalesforceAccount.load_accounts(sfdc_client, current_user.organization_id) #if current_user.organization.salesforce_accounts.limit(1).blank?
-      if current_user.admin?
-        SalesforceOpportunity.load_opportunities(client: sfdc_client, organization: current_user.organization)
-      else
-        SalesforceOpportunity.load_opportunities(client: sfdc_client, user: current_user)
-      end
-
-      # Create CS Accounts and Opportunities for SFDC Opportunities for non-Admin (e.g., Pro) users and map them
-      if !current_user.admin?
-        sfdc_userid = SalesforceService.get_salesforce_user_uuid(current_user.organization_id, current_user.id)
-        open_sfdc_opps = SalesforceOpportunity.is_open.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
-
-        open_sfdc_opps_acct_ids = open_sfdc_opps.map(&:salesforce_account_id).uniq
-        open_sfdc_opps_acct_ids.each do |acct_id|
-          # Find the linked CS account, or create a corresponding CS account, for each SFDC account that is the parent of an open SFDC opportunity; if a new CS account was created, link the CS and SFDC accounts
-          sfa = current_user.organization.salesforce_accounts.find_by_salesforce_account_id(acct_id)
-          if sfa.present? && sfa.contextsmith_account_id.present? # SFDC account is linked
-            account = current_user.organization.accounts.find(sfa.contextsmith_account_id) 
-          else # SFDC account is not linked
-            account = Account.new(domain: '', # like a custom account
-                        name: sfa.salesforce_account_name.strip, 
-                        owner_id: current_user.id, 
-                        organization_id: current_user.organization_id,
-                        description: "Automatically imported from Salesforce by ContextSmith",
-                        created_by: current_user.id,
-                        updated_by: current_user.id
-                        )
-            if account.save(validate: false)
-              sfa.contextsmith_account_id = account.id
-              sfa.save
-            else
-              puts "Error creating CS Account '#{sfa.salesforce_account_name}'!"
-            end
-          end
-          # Find each unlinked SFDC opportunity, create a new CS opportunity under the appropriate CS account; if a new CS opportunity was created, link the CS and SFDC opportunities
-          open_sfdc_opps.where(salesforce_account_id: sfa.salesforce_account_id).each do |sfo|
-            if sfo.contextsmith_project_id.blank?  # SFDC opportunity is not linked
-              project = current_user.organization.projects.new(name: sfo.name,
-                          status: "Active",
-                          owner_id: current_user.id,
-                          account_id: account.id,
-                          # is_public: true,
-                          # is_confirmed: false 
-                          created_by: current_user.id,
-                          updated_by: current_user.id
-                          )
-              if project.save
-                sfo.contextsmith_project_id = project.id
-                sfo.save
-              else
-                puts "Error creating CS Opportunity '#{sfo.name}'!"
-              end
-            end
-          end
-          # Import Contacts from SFDC to ContextSmith
-          import_result = Contact.load_salesforce_contacts(sfdc_client, account.id, sfa.salesforce_account_id)
-          failure_method_location = "Contact.load_salesforce_contacts()"
-
-          if import_result[:status] == "ERROR"
-            puts "****SFDC**** Error at #{failure_method_location} during automatic import of contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{account.id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
-          else # import_result[:status] == SUCCESS
-            # puts "****SFDC**** Succesful automatic import of SFDC contacts for user_id=#{current_user.id} of organization_id=#{current_user.organization_id}"
-          end
-        end # end: open_sfdc_opps_acct_ids.each do |acct_id|
-      end # end: if !current_user.admin?
-
-      # Refresh/update the standard and custom field values of mapped accts and opps
-      SalesforceAccount.refresh_fields(current_user)
-      SalesforceOpportunity.refresh_fields(current_user)
-      # TODO: Should we load contacts from linked accounts too, to pick up new contacts??
-    # end: if Salesforce user present and SFDC connection OK
+      SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: current_user) # Load SFDC Accounts and new SFDC Opportunities, update mapped fields, and sync contacts
     elsif sfdc_oauth_user.present? && sfdc_client.nil?
       puts "****SFDC**** Error attempting to connect to SFDC during initial_SFDC_login. user_id='#{current_user.id}' of organization_id=#{current_user.organization_id}"
     end
@@ -243,9 +251,10 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Import/load a list of SFDC Accounts or SFDC Opportunities (that are of mapped SFDC Accounts)  into local CS models, or import SFDC Activities into CS Opportunities.
+  # Import/load a list of SFDC Accounts or SFDC Opportunities (that are of mapped SFDC Accounts) into local CS models, or import SFDC Activities into CS Opportunities.
   # For Accounts/Opportunities -- This will also refreshes/updates the standard and custom field values of mapped accounts or opportunities.
   # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account.  For all active and confirmed opportunities visible to admin.
+  # For Contacts -- TODO: need to reimplement!
   def import_salesforce
     sfdc_client = SalesforceService.connect_salesforce(current_user.organization_id)
 
@@ -305,6 +314,8 @@ class SalesforceController < ApplicationController
           end
 
       # end when params[:entity_type] = "activity"
+      when "contacts"
+        ### TODO: need to reimplement!
       else
         error_detail = "Invalid entity_type parameter passed to import_salesforce(). entity_type=#{params[:entity_type]}"
         puts error_detail

@@ -34,7 +34,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
   def self.create_default_for(organization)
     return if organization.nil?
 
-    organization.entity_fields_metadatum.destroy_all  #discard all old meta fields
+    organization.entity_fields_metadatum.destroy_all  #discard any existing meta fields
     ENTITY_TYPE.values.each do |etype|
       case etype
       when ENTITY_TYPE[:Account]
@@ -64,7 +64,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       sfdc_contact_fields = sfdc_fields[:sfdc_contact_fields].map{|f| f[0]}
 
       # Map the CS Account field to the SFDC Account field. The following lines may need to change if Account::MAPPABLE_FIELDS_META changes
-      #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "name").update(salesforce_field: "Name") if sfdc_account_fields.include? "Name"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "name").update(salesforce_field: "Name") if sfdc_account_fields.include? "Name"
       #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "revenue_potential").update(salesforce_field: "AnnualRevenue") if sfdc_account_fields.include? "AnnualRevenue"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "address").update(salesforce_field: "BillingAddress") if sfdc_account_fields.include? "BillingAddress"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "description").update(salesforce_field: "Description") if sfdc_account_fields.include? "Description"
@@ -72,7 +72,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "website").update(salesforce_field: "Website") if sfdc_account_fields.include? "Website"
 
       # Map the CS Opportunity field to the SFDC Opportunity field. The following lines may need to change if Project::MAPPABLE_FIELDS_META changes
-      #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "name").update(salesforce_field: "Name") if sfdc_opportunity_fields.include? "Name"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "name").update(salesforce_field: "Name") if sfdc_opportunity_fields.include? "Name"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "amount").update(salesforce_field: "Amount") if sfdc_opportunity_fields.include? "Amount"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "close_date").update(salesforce_field: "CloseDate") if sfdc_opportunity_fields.include? "CloseDate"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Project], name: "description").update(salesforce_field: "Description") if sfdc_opportunity_fields.include? "Description"

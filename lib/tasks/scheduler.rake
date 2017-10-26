@@ -228,17 +228,18 @@ namespace :scheduler do
                 sfdc_oauth_user = SalesforceController.get_sfdc_oauthuser(organization: organization) 
             end
 
-            sfdc_client = (SalesforceService.connect_salesforce(c.organization_id) if sfdc_oauth_user.present?) # need to modify to use oauth user's connection! Issue #1131
+            sfdc_client = SalesforceService.connect_salesforce(c.organization_id) if sfdc_oauth_user.present? # need to modify to use oauth user's connection! Issue #1131
 
             if sfdc_client.blank?
                 puts "\nCannot connect client to Salesforce Oauth for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'."
             else
                 puts "\nRefreshing Salesforce for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'."
-                SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
+                # SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
                 if user.present?
-                    SalesforceOpportunity.load_opportunities(client: sfdc_client, user: user)
+                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user)
                 else # organization.present?
-                    SalesforceOpportunity.load_opportunities(client: sfdc_client, organization: organization)
+                    admin_user = organization.users.find{|u| u.admin?} # select any to use
+                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: admin_user) if admin_user.present?
                 end
             end
         end
