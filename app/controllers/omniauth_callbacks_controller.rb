@@ -2,13 +2,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
     #puts "****** session return_to_path: #{ session[:return_to_path] }"
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
-    if current_user.admin?
-      # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
-      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil).blank?
-    else
-      # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
-      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id).blank?
-    end
+    set_auto_salesforce_refresh_custom_config(current_user)
     SalesforceController.initial_SFDC_login(current_user) # TODO: Issue #1332 offload to Sucker Punch
     redirect_to (session.delete(:return_to_path) || root_path)
   end
@@ -16,13 +10,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   # Copied from salesforce method above!!
   def salesforcesandbox
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
-    if current_user.admin?
-      # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
-      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil).blank?
-    else
-      # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
-      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id).blank?
-    end
+    set_auto_salesforce_refresh_custom_config(current_user)
     SalesforceController.initial_SFDC_login(current_user) # TODO: Issue #1332 offload to Sucker Punch
     redirect_to (session.delete(:return_to_path) || root_path)
   end
@@ -109,5 +97,16 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     session[:return_to_path] = params[:source] == "chrome" ? extension_path(login: true) : URI.escape(request.referer, ".")
     # puts "session[:return_to_path]=#{session[:return_to_path]}"
     redirect_to user_omniauth_authorize_path(params[:provider])
+  end
+
+  private
+  def set_auto_salesforce_refresh_custom_config(current_user)
+    if current_user.admin?
+      # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
+      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil).blank?
+    else
+      # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
+      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id).blank?
+    end
   end
 end
