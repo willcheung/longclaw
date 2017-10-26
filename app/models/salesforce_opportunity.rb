@@ -36,7 +36,8 @@ class SalesforceOpportunity < ActiveRecord::Base
   validates :name, :close_date, presence: true
 
   # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.
-  # For Admin users, speicfy organization, this will get all SFDC opportunities belonging to linked CS/SFDC accounts, and is Open or was Closed within the last year.  For all other users, this will get all SFDC opportunities belonging to the current_user's SFDC User, and is Open or was Closed within the last year.
+  # -> For Admin users, speicfy organization, this will get all SFDC opportunities belonging to linked CS/SFDC accounts, and is Open or was Closed within the last year.  
+  # -> For individual users, this will get all SFDC opportunities belonging to the current_user's SFDC User, and is Open or was Closed within the last year.
   # Params:    client - a valid SFDC connection
   #            user - (required, if individual SFDC user) the user of the organization into which to upsert the SFDC accounts
   #            organization - (required, if admin SFDC user) the organization into which to upsert the SFDC accounts
