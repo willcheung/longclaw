@@ -30,14 +30,17 @@ class ReportsController < ApplicationController
       elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
         projects = projects.where(owner_id: params[:owner]);
       end
-    end 
+    end
+
+    top_dash_projects = projects
+    projects = projects.where(stage: params[:stage]) if params[:stage].present?
 
     @this_qtr_range = Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
 
     @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
     # Dashboard top charts
-    set_top_dashboard_data(project_ids: projects.pluck(:id)) 
+    set_top_dashboard_data(project_ids: top_dash_projects.pluck(:id))
 
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]

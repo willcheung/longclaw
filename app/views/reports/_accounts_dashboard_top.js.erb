@@ -53,6 +53,7 @@ while(chart_stage.series.length > 0) {
   <% end unless forecast_chart_data_cats.blank? %>
 
   <% stage_chart_data_stages = @stage_chart_data.map {|d| d.stage_name} %>
+  <% selected_index = stage_chart_data_stages.index(params[:stage]) %>
   chart_stage.xAxis[0].setCategories(<%= stage_chart_data_stages.to_json.html_safe %>, false);
   <% stage_chart_data_stages.each_with_index do |s, i| %>
     chart_stage.addSeries({
@@ -60,7 +61,10 @@ while(chart_stage.series.length > 0) {
       color: (barColors["<%= s %>"] ? barColors["<%= s %>"] : barColors["default"]),
       data: [ 
       <% @stage_chart_data.each do |d| %>
-        <%= d.stage_name == s ? d.total_amount : 0 %>,
+        {
+          <%= 'selected: true,' if selected_index && selected_index == i %>
+          y: <%= d.stage_name == s ? d.total_amount : 0 %>
+        },
       <% end if @stage_chart_data.present? %>
       ]
     }, true);
