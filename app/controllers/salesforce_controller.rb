@@ -159,8 +159,8 @@ class SalesforceController < ApplicationController
     end # end: if !user.admin?
 
     # Refresh/update the standard and custom field values of mapped accts and opps
-    SalesforceAccount.refresh_fields(user)
-    SalesforceOpportunity.refresh_fields(user)
+    SalesforceAccount.refresh_fields(client, user)
+    SalesforceOpportunity.refresh_fields(client, user)
 
     # Import/upsert Contacts into all linked accts (from SFDC into ContextSmith)
     user.organization.salesforce_accounts.is_linked.each do |sfa|
@@ -181,7 +181,7 @@ class SalesforceController < ApplicationController
   #    - Create a default mapping between CS and SFDC fields, if none exists for current user's org
   #    - Runs actions in SalesforceController.import_and_create_contextsmith() for current_user (see doc of method for details)
   def self.initial_SFDC_login(current_user)
-    puts "\nInitial SFDC login for user=#{get_full_name(current_user)} (email=#{current_user.email}) ..."
+    puts "\nInitial SFDC login for user=\"#{get_full_name(current_user)}\" (email='#{current_user.email}') organization=\"#{current_user.organization.name}\" role=\"#{current_user.role}\".\n"
 
     sfdc_client = SalesforceService.connect_salesforce(user: current_user)
 
@@ -740,24 +740,24 @@ class SalesforceController < ApplicationController
   # Note: While it is typical to have a 1:1 mapping between CS and SFDC entities, it is possible to have a 1:N mapping.  If multiple SFDC accounts are mapped to the same CS account, the first mapping found will be used for the update. If multiple SFDC opportunities are mapped to the same CS Opportunity, an update will be carried out for each mapping.
   def refresh_fields(entity_type)
     method_name = "refresh_fields()"
+
+    sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+
+    if sfdc_client.nil?
+      render_service_unavailable_error(method_name)
+      return
+    end
+
     if entity_type == "account"
-      refresh_result = SalesforceAccount.refresh_fields(current_user)
+      refresh_result = SalesforceAccount.refresh_fields(sfdc_client, current_user)
       if refresh_result[:status] == "ERROR"
-        if refresh_result[:result] == ERRORS[:SalesforceConnectionError]
-          render_service_unavailable_error(method_name) 
-        else
-          render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])
-        end
+        render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])
         return
       end
     elsif entity_type == "project"
-      refresh_result = SalesforceOpportunity.refresh_fields(current_user)
+      refresh_result = SalesforceOpportunity.refresh_fields(sfdc_client, current_user)
       if refresh_result[:status] == "ERROR"
-        if refresh_result[:result] == ERRORS[:SalesforceConnectionError]
-          render_service_unavailable_error(method_name) 
-        else
-          render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])
-        end
+        render_internal_server_error(method_name, refresh_result[:detail][:failure_method_location], refresh_result[:detail][:detail])
         return
       end
     else
