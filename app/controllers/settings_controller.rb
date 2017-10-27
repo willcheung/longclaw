@@ -151,12 +151,18 @@ class SettingsController < ApplicationController
         @cs_opportunity_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
       end
 
-      # We don't save SFDC custom fields (i.e., in our backend), so we query SFDC to get field metadata every time! :(
-      client = SalesforceService.connect_salesforce(current_user.organization)
+      # TODO: save SFDC custom fields (as a CS custom list), so we don't need to query SFDC to get field metadata every time! :(
+      sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+
+			if sfdc_client.blank?
+				@salesforce_connection_error = true
+				return
+			end
+
 			if (params[:sfdc_custom_fields_only] == "true")
-        @sfdc_fields = SalesforceController.get_salesforce_fields(client: client, custom_fields_only: true)
+				@sfdc_fields = SalesforceController.get_salesforce_fields(client: sfdc_client, custom_fields_only: true)
 			else
-        @sfdc_fields = SalesforceController.get_salesforce_fields(client: client)
+				@sfdc_fields = SalesforceController.get_salesforce_fields(client: sfdc_client)
 			end
 
 			if @sfdc_fields.empty?  # SFDC connection error

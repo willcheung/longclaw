@@ -263,9 +263,9 @@ class ExtensionController < ApplicationController
           
           redirect_to no_account_path and return if !current_user.power_or_trial_only? || @salesforce_user.nil?  # abort if user isn't Power or Trial/Chrome user, or if not connected to SFDC
           
-          client = SalesforceService.connect_salesforce(current_user.organization_id)
+          sfdc_client = SalesforceService.connect_salesforce(user: current_user)
 
-          sfdc_account_id = find_matching_sfdc_account(client, ex_emails)
+          sfdc_account_id = find_matching_sfdc_account(sfdc_client, ex_emails)
           redirect_to no_account_path and return if sfdc_account_id.nil?  # abort if SFDC connection was invalid or SFDC Account link candidate cannot be determined
 
           # Create a new CS Account and link to the identified SFDC Account
@@ -294,7 +294,7 @@ class ExtensionController < ApplicationController
               puts "Auto-linking SFDC Account '#{sfa.salesforce_account_name}' to new Account '#{domain}'." 
               sfa.account = @account
 
-              SalesforceController.import_sfdc_contacts_and_add_as_members(client: client, account: @account, sfdc_account: sfa) if sfa.save
+              SalesforceController.import_sfdc_contacts_and_add_as_members(client: sfdc_client, account: @account, sfdc_account: sfa) if sfa.save
             end
           end
         else
@@ -380,7 +380,6 @@ class ExtensionController < ApplicationController
 
     return nil if client.nil? || emails.blank?  # abort if connection invalid or no emails passed
 
-    # client = SalesforceService.connect_salesforce(current_user.organization_id) # not necessary to reconnect!!
     query_statement = "SELECT AccountId, Email FROM Contact WHERE not(Email = null OR AccountId = null) GROUP BY AccountId, Email ORDER BY AccountId, Email" # Use GROUP BY as a workaround to get Salesforce to SELECT distinct AccountID's and Email's
     sfdc_contacts_results = SalesforceService.query_salesforce(client, query_statement)
 

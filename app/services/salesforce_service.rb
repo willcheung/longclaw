@@ -1,53 +1,41 @@
 class SalesforceService
 
-  # TODO: Change to take OauthUser as a parameter then use that to determine connection!
-  def self.connect_salesforce(organization_id, user_id=nil)
+  # Returns a Salesforce connection client to be used to make Salesforce queries.
+  # Parameter:  user - if obtaining an individual SFDC connection, specify the user requesting the connection; if the user is an admin, connection will be defaulted to the organization (admin) connection
+  #             organization - to obtain the admin SFDC connection of an organization, specify the organization
+  #             sfdc_oauthuser - (optional) the OauthUser record to use to attempt to connect to SFDC
+  def self.connect_salesforce(user: nil, organization: nil, sfdc_oauthuser: nil)
     #return nil  # simulates a Salesforce connection error
 
-    salesforce_client_id = ENV['salesforce_client_id']
-    salesforce_client_secret = ENV['salesforce_client_secret']
-    hostURL = 'login.salesforce.com'
     # Try to get salesforce production. If not connected, check if it is connected to SFDC sandbox
-    if user_id
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id, user_id: user_id)
-    else
-      salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: organization_id)
-    end
+    sfdc_oauthuser = sfdc_oauthuser || SalesforceController.get_sfdc_oauthuser(user: (user if user.present?), organization: (organization if organization.present?))
 
-    if (salesforce_user.nil?)
-      if user_id
-        salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id, user_id: user_id)
-      else
-        salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
-      end
+    return nil if sfdc_oauthuser.blank?
 
-      salesforce_client_id = ENV['salesforce_sandbox_client_id']
-      salesforce_client_secret = ENV['salesforce_sandbox_client_secret']
-      hostURL = 'test.salesforce.com' 
-    end
+    salesforce_client_id = (ENV['salesforce_client_id'] if sfdc_oauthuser.oauth_provider == 'salesforce') || ENV['salesforce_sandbox_client_id']
+    salesforce_client_secret = (ENV['salesforce_client_secret'] if sfdc_oauthuser.oauth_provider == 'salesforce') || ENV['salesforce_sandbox_client_secret']
+    hostURL = ('login.salesforce.com' if sfdc_oauthuser.oauth_provider == 'salesforce') || 'test.salesforce.com'
 
     client = nil
-    if(salesforce_user.present?)  
-      # Restforce gem automatically refresh access token if expired       
-      client = Restforce.new(host: hostURL,
-                             client_id: salesforce_client_id,
-                             client_secret: salesforce_client_secret,
-                             oauth_token: salesforce_user.oauth_access_token,
-                             refresh_token: salesforce_user.oauth_refresh_token,
-                             authentication_callback: Proc.new { |x| puts x.to_s },
-                             instance_url: salesforce_user.oauth_instance_url,
-                             api_version: '38.0')
-      begin
-        puts "SalesforceService.connect_salesforce(): Refreshing access token. Client established using Restforce gem.  Accessing user_info... #{ client.user_info }"
-      rescue => e
-        puts "*** SalesforceService error: Salesforce connection error!  Details: #{ e.to_s } ***"
-        return nil
-      end
-      begin
-        puts "SalesforceService.connect_salesforce(): Daily SFDC API Requests Max/Limit=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
-      rescue => e
-        puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established!" if client.present?
-      end
+    # Restforce gem automatically refresh access token if expired       
+    client = Restforce.new(host: hostURL,
+                           client_id: salesforce_client_id,
+                           client_secret: salesforce_client_secret,
+                           oauth_token: sfdc_oauthuser.oauth_access_token,
+                           refresh_token: sfdc_oauthuser.oauth_refresh_token,
+                           authentication_callback: Proc.new { |x| puts x.to_s },
+                           instance_url: sfdc_oauthuser.oauth_instance_url,
+                           api_version: '38.0')
+    begin
+      puts "SalesforceService.connect_salesforce(): Refreshing access token. Client established using Restforce gem.  Accessing user_info... #{ client.user_info }"
+    rescue => e
+      puts "*** SalesforceService error: Salesforce connection error!  Details: #{ e.to_s } ***"
+      return nil
+    end
+    begin
+      puts "SalesforceService.connect_salesforce(): Daily SFDC API Requests Max/Limit=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
+    rescue => e
+      puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established!" if client.present?
     end
 
     client

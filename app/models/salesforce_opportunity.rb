@@ -190,7 +190,7 @@ class SalesforceOpportunity < ActiveRecord::Base
       if update_result[:status] == "SUCCESS"
         puts "-> SFDC opportunity was updated from a ContextSmith salesforce_opportunity. SFDC Opportunity Id='#{ salesforce_opportunity.salesforce_opportunity_id }'."
       else  # Salesforce update failure
-        puts "****SFDC****: Salesforce error in SalesforceOpportunity.update_all_salesforce().  #{update_result[:result]}  Details: #{ update_result[:detail] }."
+        puts "****SFDC**** Salesforce error in SalesforceOpportunity.update_all_salesforce().  #{update_result[:result]}  Details: #{ update_result[:detail] }."
         return { status: "ERROR", result: update_result[:result], detail: update_result[:detail] + " sObject_fields=#{ sObject_fields }" } 
       end
     else # End: if salesforce_opportunity.salesforce_account.organization == current_user.organization
@@ -210,12 +210,12 @@ class SalesforceOpportunity < ActiveRecord::Base
     # puts "\n\nopportunity_standard_fields: #{opportunity_standard_fields}\nopportunity_custom_fields: #{opportunity_custom_fields}\n"
 
     unless opportunities.first.blank? || (opportunity_standard_fields.blank? && opportunity_custom_fields.blank?) # nothing to do if no active+confirmed opportunities or no opportunity field mappings are found
-      @client = SalesforceService.connect_salesforce(current_user.organization_id)
-      #@client=nil # simulates a Salesforce connection error
+      sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+      #sfdc_client=nil # simulates a Salesforce connection error
 
-      unless @client.nil?  # unless SFDC connection error
+      unless sfdc_client.nil?  # unless SFDC connection error
         # standard fields
-        update_result = Project.update_fields_from_sfdc(client: @client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
+        update_result = Project.update_fields_from_sfdc(client: sfdc_client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
         if update_result[:status] == "ERROR"
           detail = {}
           detail[:failure_method_location] = "Project.update_fields_from_sfdc()"
@@ -227,7 +227,7 @@ class SalesforceOpportunity < ActiveRecord::Base
         opportunities.each do |s|
           unless s.salesforce_opportunity.nil?
             # puts "**** SFDC opportunity:\"#{s.salesforce_opportunity.name}\" --> CS opportunity:\"#{s.name}\" ****\n"
-            load_result = Project.load_salesforce_fields(client: @client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
+            load_result = Project.load_salesforce_fields(client: sfdc_client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
 
             if load_result[:status] == "ERROR"
               detail = {}
@@ -238,7 +238,7 @@ class SalesforceOpportunity < ActiveRecord::Base
           end
         end # End: opportunities.each do |s|
       else
-        puts "****SFDC****: Salesforce error in SalesforceOpportunity.refresh_fields: Cannot establish a connection!"
+        puts "****SFDC**** Salesforce error in SalesforceOpportunity.refresh_fields: Cannot establish a Salesforce connection!"
         return { status: "ERROR", result: SalesforceController::ERRORS[:SalesforceConnectionError], detail: "Unable to connect to Salesforce." }
       end
     else # no active+confirmed opportunities and no opportunity field mappings found

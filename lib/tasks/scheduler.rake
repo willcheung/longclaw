@@ -214,6 +214,7 @@ namespace :scheduler do
         puts "\n\n=====Task (refresh_sfdc_data) started at #{Time.now}====="
         sfdc_refresh_configs = CustomConfiguration.where("config_type = ? AND config_value = ?", CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], true)
         sfdc_refresh_configs.each do |c|
+            sfdc_client = nil
             if c.user_id.present?
                 begin
                     user = User.find(c.user_id)
@@ -221,18 +222,14 @@ namespace :scheduler do
                     puts "\nCannot refresh Salesforce data for user '#{c.user_id}', because this User cannot be found!"
                     next
                 else
-                    sfdc_oauth_user = SalesforceController.get_sfdc_oauthuser(user: user)
+                    sfdc_client = SalesforceService.connect_salesforce(user: user) 
                 end
             else
                 organization = Organization.find(c.organization_id)
-                sfdc_oauth_user = SalesforceController.get_sfdc_oauthuser(organization: organization) 
+                sfdc_client = SalesforceService.connect_salesforce(organization: organization) 
             end
 
-            sfdc_client = SalesforceService.connect_salesforce(c.organization_id) if sfdc_oauth_user.present? # need to modify to use oauth user's connection! Issue #1131
-
-            if sfdc_client.blank?
-                puts "\nCannot connect client to Salesforce Oauth for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'."
-            else
+            if sfdc_client.present?
                 puts "\nRefreshing Salesforce for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'."
                 # SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
                 if user.present?
@@ -241,6 +238,8 @@ namespace :scheduler do
                     admin_user = organization.users.find{|u| u.admin?} # select any to use
                     SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: admin_user) if admin_user.present?
                 end
+            else
+                puts "\n****SFDC**** Cannot establish a Salesforce connection for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'!"
             end
         end
     end

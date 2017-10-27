@@ -164,7 +164,7 @@ class SalesforceAccount < ActiveRecord::Base
       if update_result[:status] == "SUCCESS"
         puts "-> SFDC account was updated from a ContextSmith salesforce_account. SFDC Account Id='#{ salesforce_account.salesforce_account_id }'."
       else  # Salesforce update failure
-        puts "****SFDC****: Salesforce error in SalesforceAccount.update_all_salesforce().  #{update_result[:result]}  Details: #{ update_result[:detail] }."
+        puts "****SFDC**** Salesforce error in SalesforceAccount.update_all_salesforce().  #{update_result[:result]}  Details: #{ update_result[:detail] }."
         return { status: "ERROR", result: update_result[:result], detail: update_result[:detail] + " sObject_fields=#{ sObject_fields }" } 
       end
     else # End: if salesforce_account.organization == current_user.organization
@@ -185,12 +185,12 @@ class SalesforceAccount < ActiveRecord::Base
     # puts "\n\naccount_standard_fields: #{account_standard_fields}\naccount_custom_fields: #{account_custom_fields}\n"
 
     unless accounts.blank? || current_user.organization.salesforce_accounts.where.not(contextsmith_account_id: nil).first.blank? || (account_standard_fields.blank? && account_custom_fields.blank?) # nothing to do if no active CS accounts, no SFDC accounts mapped, or no account field mappings are found
-      @client = SalesforceService.connect_salesforce(current_user.organization_id)
-      #@client=nil # simulates a Salesforce connection error
+      sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+      #sfdc_client=nil # simulates a Salesforce connection error
 
-      unless @client.nil?  # unless SFDC connection error
+      unless sfdc_client.nil?  # unless SFDC connection error
         # standard fields
-        update_result = Account.update_fields_from_sfdc(client: @client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
+        update_result = Account.update_fields_from_sfdc(client: sfdc_client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
         if update_result[:status] == "ERROR"
           detail = {}
           detail[:failure_method_location] = "Account.update_fields_from_sfdc()"
@@ -202,7 +202,7 @@ class SalesforceAccount < ActiveRecord::Base
         accounts.each do |a|
           unless a.salesforce_accounts.first.nil? 
             # puts "**** SFDC account:\"#{a.salesforce_accounts.first.salesforce_account_name}\" --> CS account:\"#{a.name}\" ****\n"
-            load_result = Account.load_salesforce_fields(client: @client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
+            load_result = Account.load_salesforce_fields(client: sfdc_client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
 
             if load_result[:status] == "ERROR"
               detail = {}
@@ -213,7 +213,7 @@ class SalesforceAccount < ActiveRecord::Base
           end
         end # End: accounts.each do |s|
       else
-        puts "****SFDC****: Salesforce error in SalesforceAccount.refresh_fields: Cannot establish a connection!"
+        puts "****SFDC**** Salesforce error in SalesforceAccount.refresh_fields: Cannot establish a Salesforce connection!"
         return { status: "ERROR", result: SalesforceController::ERRORS[:SalesforceConnectionError], detail: "Unable to connect to Salesforce." }
       end
     else # no active CS accounts, no SFDC accounts mapped, and no account field mappings found
