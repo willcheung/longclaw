@@ -209,7 +209,7 @@ namespace :scheduler do
     end
 
     desc 'Refresh Salesforce data for each Salesforce user'
-    # Refreshes list of accounts and opportunities appropriate for each SFDC user. 
+    # Refreshes list of accounts and opportunities appropriate for each SFDC user.  This will also create opps/accts for new opportunities, update values in mapped (standard and custom) fields, and import/upsert SFDC contacts for linked CS accts.
     task refresh_sfdc_data: :environment do
         puts "\n\n=====Task (refresh_sfdc_data) started at #{Time.now}====="
         sfdc_refresh_configs = CustomConfiguration.where("config_type = ? AND config_value = ?", CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], true)
