@@ -73,7 +73,7 @@
       <div class="col-lg-6">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
-                  <h5>Deals by Stage</h5>
+                  <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
               </div>
               <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
           </div>
@@ -268,31 +268,31 @@
                         }
                     }
                 },
-                 series: {
+                series: {
                     pointPadding: 0.1,
                     groupPadding: 0.1,
                     borderWidth: 0,
-                     point: {
-                         events: {
-                             click: function () {
-                                 $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
+                    point: {
+                       events: {
+                           click: function () {
+                               $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
 
-                                 this.select();
-                                 let params = {};
-                                 if (this.selected) {
-                                   params.stage = this.category;
-                                 }
-                                 if ($('#owner-filter').val()) {
-                                   params.owner = $('#owner-filter').val();
-                                 }
-                                 if ($('#close-date-filter').val()) {
-                                   params.close_date = $('#close-date-filter').val();
-                                 }
-                                 var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
-                                 $.getScript(url);
-                             }
-                        }
-                     }
+                               this.select();
+                               let params = {};
+                               if (this.selected) {
+                                 params.stage = this.category;
+                               }
+                               if ($('#owner-filter').val()) {
+                                 params.owner = $('#owner-filter').val();
+                               }
+                               if ($('#close-date-filter').val()) {
+                                 params.close_date = $('#close-date-filter').val();
+                               }
+                               var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
+                               $.getScript(url);
+                           }
+                       }
+                    }
                 }
             }
         });
