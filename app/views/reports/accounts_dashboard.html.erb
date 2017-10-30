@@ -329,7 +329,7 @@
                     enabled: true,
                     formatter: function () {
                         //return Highcharts.numberFormat(this.total, 0, null, "");
-                        return large_number_to_human(this.total);
+                        return large_number_to_human_signif_digits(this.total);
                     }
                 }
             },
