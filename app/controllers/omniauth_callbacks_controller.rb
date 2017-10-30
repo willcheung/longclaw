@@ -3,15 +3,14 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     #puts "****** session return_to_path: #{ session[:return_to_path] }"
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
     set_auto_salesforce_refresh_custom_config(current_user)
-    SalesforceController.initial_SFDC_login(current_user) # TODO: Issue #1332 offload to Sucker Punch
+    InitialSalesforceLoginsJob.perform_later(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
-  # Copied from salesforce method above!!
   def salesforcesandbox
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
     set_auto_salesforce_refresh_custom_config(current_user)
-    SalesforceController.initial_SFDC_login(current_user) # TODO: Issue #1332 offload to Sucker Punch
+    InitialSalesforceLoginsJob.perform_later(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
