@@ -6,7 +6,7 @@ class FullContactService
   def self.find(email, profile_id)
     res = FullContact.person(email: email)
     # not found in FullContact cache, register a webhoook to send the info back to us when it is available
-    FullContact.person(email: email, webhookUrl: ENV['BASE_URL'] + '/hooks/fullcontact', webhookBody: 'json', webhookId: { email: email, id: profile_id }.to_json) if res.status == 202
+    FullContact.person(email: email, webhookUrl: ENV['BASE_URL'] + '/hooks/fullcontact', webhookBody: 'json', webhookId: { email: email, id: profile_id }.to_json) if res.blank? || res.status == 202
     res
   rescue => e
     puts "Request to FullContact API FAILED: #{e.inspect}"
