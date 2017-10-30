@@ -60,10 +60,7 @@ while(chart.series.length > 0) {
 
 <% end %> // if @data.present? 
 
-// chart.xAxis[0].update({min: undefined, max: undefined}, false);
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.present? ? @data.size : 0 %> * 90));
-
-// <% @data.each do |d| %>console.log("<%= d.name.html_safe %>: <%= d %>");<% end %>
 
 // handle clicking on opportunity label
 $('.highcharts-xaxis-labels text').click(function() {
