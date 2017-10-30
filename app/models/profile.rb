@@ -35,8 +35,8 @@ class Profile < ActiveRecord::Base
     # No existing profile found, create a new one
     profile = Profile.create(emails: [email]) if profile.blank?
     if profile.data.blank?
-        profile.data = FullContactService.find(email, profile.id) 
-        profile.save
+      profile.data = FullContactService.find(email, profile.id) 
+      profile.save
     end
     profile
   end
