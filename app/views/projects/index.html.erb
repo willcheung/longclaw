@@ -20,6 +20,7 @@
 <div class="wrapper wrapper-content animated fadeInUp">
     <div class="row">
         <div class="col-lg-6 filter-group">
+
           <div class="font-bold m-b-xs">Filter:</div>
           <!--<select class="category_filter col-sm-3" data-placeholder="Select Type">-->
             <!--<option value="0"></option>-->
@@ -85,6 +86,15 @@
             </select>
         </div>
         <% end %>
+
+        <div class="col-lg-12">
+          <div class="ibox float-e-margins m-b-none m-t">
+            <div class='ibox-title'>
+              <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
+            </div>
+            <div id="stage-chart" class="ibox-content stage-chart" style="height:150px;padding-bottom:0"></div>
+          </div>
+        </div>
 
     </div>
 
@@ -181,3 +191,103 @@
     </div>
 </div>
 <%= render 'projects/modal', modal_id: 'new_project_modal', remote: true %>
+
+<script type="text/javascript" charset="utf-8">
+$(function () {
+  $('#stage-chart').highcharts({
+    chart: {
+      type: 'column'
+    },
+    title: {
+      text: ''
+//                text: 'Deals by Stage',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+    },
+    credits: {
+      enabled: false
+    },
+    xAxis: {
+      crosshair: true,
+      labels: {
+        style: {
+          fontSize: '9px'
+        }
+      }
+    },
+    yAxis: {
+      min: 0,
+      title: {
+        text: ''
+      },
+      labels: {
+        enabled: false
+      },
+      stackLabels: {
+        enabled: true,
+        formatter: function () {
+          //return Highcharts.numberFormat(this.total, 0, null, "");
+          return "$"+large_number_to_human_signif_digits(this.total);
+        },
+        style: {
+          color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+        }
+      }
+    },
+    tooltip: {
+      enabled: true,
+      formatter: function () {
+        return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
+      }
+    },
+    legend: {
+      enabled: false
+    },
+    series: [{
+
+    }],
+    plotOptions: {
+      column: {
+        stacking: 'normal',
+        pointPadding: 0.2,
+        borderWidth: 0,
+        dataLabels: {
+          format: '${y}',
+          style: {
+            color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+          }
+        }
+      },
+      series: {
+        pointPadding: 0.1,
+        groupPadding: 0.1,
+        borderWidth: 0,
+        point: {
+          events: {
+            click: function () {
+              this.select();
+              let params = {};
+              if (this.selected) {
+                params.stage = this.category;
+              }
+              if ($('#owner-filter').val()) {
+                params.owner = $('#owner-filter').val();
+              }
+              if ($('#close-date-filter').val()) {
+                params.close_date = $('#close-date-filter').val();
+              }
+              window.location.search = $.param(params);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  <%= render partial: 'reports/stage_chart.js' %>
+})
+</script>

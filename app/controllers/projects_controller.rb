@@ -35,7 +35,28 @@ class ProjectsController < ApplicationController
     # if params[:type].present? && params[:type] != "none"
     #   projects = projects.where(category: params[:type])
     # end
-    
+    # Stage Chart/filter
+    top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.ids)
+    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
+    stage_chart_result = top_dashboard_data.map do |o|
+      if o.is_closed
+        [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]
+      else
+        [(o.stage_name.blank? ? '-Undefined-' : o.stage_name), o.amount]
+      end
+    end.group_by{|n,a| n}.sort do |x,y|
+      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
+      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
+      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
+      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
+      stage_name_x <=> stage_name_y
+    end # unmatched stage names are sorted to the left of everything
+    @stage_chart_data = stage_chart_result.map do |stage_name, data|
+      Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
+    end
+
+    projects = projects.where(stage: params[:stage]) if params[:stage].present?
+
     # all projects and their accounts, sorted by account name alphabetically
     @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
 
@@ -51,7 +72,7 @@ class ProjectsController < ApplicationController
     end
 
     # new project modal
-    @project = Project.new 
+    @project = Project.new
   end
 
   # GET /projects/1

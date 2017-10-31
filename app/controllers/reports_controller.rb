@@ -30,14 +30,17 @@ class ReportsController < ApplicationController
       elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
         projects = projects.where(owner_id: params[:owner]);
       end
-    end 
+    end
+
+    top_dash_projects = projects
+    projects = projects.where(stage: params[:stage]) if params[:stage].present?
 
     @this_qtr_range = Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
 
     @data = [] and return if projects.blank?  #quit early if all projects are filtered out
 
     # Dashboard top charts
-    set_top_dashboard_data(project_ids: projects.pluck(:id)) 
+    set_top_dashboard_data(project_ids: top_dash_projects.pluck(:id))
 
     case @metric
     when ACCOUNT_DASHBOARD_METRIC[:activities_last14d]
@@ -181,13 +184,16 @@ class ReportsController < ApplicationController
     params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
 
+    top_dash_projects = projects
+    projects = projects.where(stage: params[:stage]) if params[:stage].present?
+
     return if projects.blank? # quit early if all projects are filtered out
 
     # Dashboard top charts
     if (params[:team].present? || params[:title].present?)
-      set_top_dashboard_data(project_ids: projects.pluck(:id), user_ids: users.pluck(:id)) # if any user filter is specified, then filter by users
+      set_top_dashboard_data(project_ids: top_dash_projects.pluck(:id), user_ids: users.pluck(:id)) # if any user filter is specified, then filter by users
     else
-      set_top_dashboard_data(project_ids: projects.pluck(:id)) # if no user filter is present, don't filter by users at all
+      set_top_dashboard_data(project_ids: top_dash_projects.pluck(:id)) # if no user filter is present, don't filter by users at all
     end
 
     @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
