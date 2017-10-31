@@ -103,10 +103,14 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def set_auto_salesforce_refresh_custom_config(current_user)
     if current_user.admin?
       # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
-      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil).blank?
+      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil) do |config|
+        config.config_value = true
+      end
     else
       # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
-      current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id, config_value: true) if current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id).blank?
+      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id) do |config|
+        config.config_value = true
+      end
     end
   end
 end

@@ -86,7 +86,7 @@ class SalesforceController < ApplicationController
     if (user.present? && user.admin?) || (organization.present?)
       # Admin connection
       # Try to find SFDC production, then try SFDC sandbox.
-      sfdc_oauthuser = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: (user.organization_id if user.present?) || organization.id, user_id: nil) || sfdc_oauthuser = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: (user.organization_id if user.present?) || organization.id, user_id: nil)
+      sfdc_oauthuser = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: (user.organization_id if user.present?) || organization.id, user_id: nil) || OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: (user.organization_id if user.present?) || organization.id, user_id: nil)
     elsif user.present?
       # Individual (e.g., power user) connection
       sfdc_oauthuser = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: user.organization_id, user_id: user.id) || OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: user.organization_id, user_id: user.id)
