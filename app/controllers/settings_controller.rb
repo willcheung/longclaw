@@ -10,8 +10,7 @@ class SettingsController < ApplicationController
 
 		if (@salesforce_user.nil? && # could not connect via organization/admin login
 				current_user.power_or_trial_only?)  # AND is an individual (power user or trial/Chrome user)
-			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id)
-			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id) if @individual_salesforce_user.nil?
+			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id) || OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id)
 		end
 
 		@current_user_projects = current_user.projects.where('projects.is_confirmed = true AND projects.status = \'Active\'')
@@ -96,7 +95,7 @@ class SettingsController < ApplicationController
 
 	# Map CS Accounts with Salesforce accounts: "One CS Account can link to many Salesforce Accounts"
 	def salesforce_accounts
-		if current_user.role == User::ROLE[:Admin]
+		if current_user.admin?
 			@accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order("upper(accounts.name)")
 
 			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where(contextsmith_organization_id: current_user.organization_id).is_linked.order("upper(accounts.name)")
@@ -106,29 +105,29 @@ class SettingsController < ApplicationController
 
 	# Map CS Opportunity with Salesforce Opportunities: "One CS Opportunity can link to many Salesforce Opportunities"
 	def salesforce_opportunities
-		if current_user.role == User::ROLE[:Admin]
+		if current_user.admin?
 			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active opportunities because "admin" role can see everything
 			@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
 		end
 	end
 
 	def salesforce_activities
-		if current_user.role == User::ROLE[:Admin]
+		if current_user.admin?
 			@CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = Activity::CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX
 			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active opportunities because "admin" role can see everything
 
 			# Load previous queries if it was saved
 			custom_config = current_user.organization.custom_configurations.where("organization_id = '#{current_user.organization_id}' AND config_type LIKE '/settings/salesforce_activities#%'")
 
-			@entity_predicate = custom_config.where(config_type: "/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea")
+			@entity_predicate = custom_config.where(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activity_entity_predicate])
 			if @entity_predicate.empty?
-				@entity_predicate = current_user.organization.custom_configurations.create(config_type: "/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea", config_value: "") 
+				@entity_predicate = current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activity_entity_predicate], config_value: "") 
 			else
 				@entity_predicate = @entity_predicate.first
 			end
-			@activityhistory_predicate = custom_config.where(config_type: "/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea")
+			@activityhistory_predicate = custom_config.where(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activityhistory_predicate])
 			if @activityhistory_predicate.empty?
-				@activityhistory_predicate = current_user.organization.custom_configurations.create(config_type: "/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea", config_value: "") 
+				@activityhistory_predicate = current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activityhistory_predicate], config_value: "") 
 			else
 				@activityhistory_predicate = @activityhistory_predicate.first
 			end
@@ -137,7 +136,7 @@ class SettingsController < ApplicationController
 
 	# Map SFDC entity fields to standard (params[:type] == "standard") Account, Opportunity, or Contact fields or custom (params[:type] == "custom") Account or Opportunity ContextSmith fields
 	def salesforce_fields
-		if current_user.role == User::ROLE[:Admin]
+		if current_user.admin?
       @user_roles = User::ROLE.map { |r| [r[1],r[1]] }
 
       if params[:type] == "standard"
@@ -152,12 +151,18 @@ class SettingsController < ApplicationController
         @cs_opportunity_custom_fields = cs_custom_fields.where(entity_type: CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
       end
 
-      # We don't save SFDC custom fields (i.e., in our backend), so we query SFDC to get field metadata every time! :(
-      client = SalesforceService.connect_salesforce(current_user.organization)
+      # TODO: save SFDC custom fields (as a CS custom list), so we don't need to query SFDC to get field metadata every time! :(
+      sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+
+			if sfdc_client.blank?
+				@salesforce_connection_error = true
+				return
+			end
+
 			if (params[:sfdc_custom_fields_only] == "true")
-        @sfdc_fields = SalesforceController.get_salesforce_fields(client: client, custom_fields_only: true)
+				@sfdc_fields = SalesforceController.get_salesforce_fields(client: sfdc_client, custom_fields_only: true)
 			else
-        @sfdc_fields = SalesforceController.get_salesforce_fields(client: client)
+				@sfdc_fields = SalesforceController.get_salesforce_fields(client: sfdc_client)
 			end
 
 			if @sfdc_fields.empty?  # SFDC connection error
@@ -238,10 +243,10 @@ class SettingsController < ApplicationController
 
 	private
 
-	# Gets SFDC connection for Organization (a single SFDC admin login only)
+	# Gets SFDC connection for Organization (a single, shared SFDC admin login for all admins)
 	def get_salesforce_admin_user
-		@salesforce_user = SalesforceController.get_sfdc_oauthuser(current_user) if current_user.admin?
-  end
+		@salesforce_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization) if current_user.admin? # only allow admins to access SFDC Admin panels
+	end
 
   def get_basecamp2_user
 		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)

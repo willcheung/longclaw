@@ -85,6 +85,7 @@ class User < ActiveRecord::Base
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
          :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :microsoft_v2_auth, :salesforce, :salesforce_sandbox]
 
+  # TODO: Add e-mail pattern validation
   validates :email, uniqueness: true
 
   # attr_encrypted :oauth_access_token
@@ -140,29 +141,30 @@ class User < ActiveRecord::Base
     calendar_meetings
   end
 
-  def self.from_omniauth(auth, organization_id, user_id=nil)
-    where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user|
-      if user_id
-        oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id, user_id: user_id)
+  # Note: For 'salesforce' and 'salesforcesandbox' omniauth types.
+  def self.from_sfdc_omniauth(auth, current_user)
+    where(auth.slice(:provider, :uid).permit!).first_or_initialize.tap do |user| # "user" is not "current_user"!
+      if !current_user.admin?
+        oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: current_user.organization_id, user_id: current_user.id)
       else
-        oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: organization_id)
+        oauth_user = OauthUser.find_by(oauth_instance_url: auth.credentials.instance_url, oauth_user_name: auth.extra.username, oauth_provider: auth.provider, organization_id: current_user.organization_id, user_id: nil)
       end
 
       if oauth_user
-        if user_id
+        if !current_user.admin?
           oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
                                        oauth_refresh_token: auth.credentials.refresh_token,
                                        oauth_instance_url: auth.credentials.instance_url,
-                                       organization_id: organization_id,
-                                       user_id: user_id )
+                                       organization_id: current_user.organization_id,
+                                       user_id: current_user.id )
         else
           oauth_user.update_attributes(oauth_access_token: auth.credentials.token,
                                        oauth_refresh_token: auth.credentials.refresh_token,
                                        oauth_instance_url: auth.credentials.instance_url,
-                                       organization_id: organization_id)
+                                       organization_id: current_user.organization_id)
         end
       else
-        if user_id
+        if !current_user.admin?
           oauth_user = OauthUser.create(
             oauth_provider: auth.provider,
             oauth_provider_uid: auth.uid,
@@ -170,8 +172,9 @@ class User < ActiveRecord::Base
             oauth_refresh_token: auth.credentials.refresh_token,
             oauth_instance_url: auth.credentials.instance_url,
             oauth_user_name: auth.extra.username,
-            organization_id: organization_id,
-            user_id: user_id)
+            oauth_issued_date: Time.now,
+            organization_id: current_user.organization_id,
+            user_id: current_user.id)
         else
           oauth_user = OauthUser.create(
             oauth_provider: auth.provider,
@@ -180,7 +183,8 @@ class User < ActiveRecord::Base
             oauth_refresh_token: auth.credentials.refresh_token,
             oauth_instance_url: auth.credentials.instance_url,
             oauth_user_name: auth.extra.username,
-            organization_id: organization_id)
+            oauth_issued_date: Time.now,
+            organization_id: current_user.organization_id)
         end
 
         oauth_user.save
@@ -937,9 +941,12 @@ class User < ActiveRecord::Base
   ######### Basic ACL ##########
   # Roles have cascading effect, e.g. if you're an "admin", then you also have access to what other roles have.  
   # Note: The member helpers below is used to determine if the user has access to the appropriate features of that role level ("has_rolelevel_access?".  e.g., "admin?" means user has access to the appropriate features of the Admin role level ("has_admin_access?"); similarly, "power_user?" = user has access to features that a power user may access ("has_power_user_access?"), which implies admin also can access this too.
+  def superadmin?
+    ENV['super_admins'].split(' ').include?(self.email)
+  end
 
   def admin?
-    self.role == ROLE[:Admin]
+    self.role == ROLE[:Admin] || self.superadmin?
   end
 
   def power_user?
@@ -973,10 +980,6 @@ class User < ActiveRecord::Base
   # Trial user = Chrome User (TODO: remove "Chrome user")
   def power_or_trial_only?
     [ROLE[:Poweruser], OTHER_ROLE[:Chromeuser], OTHER_ROLE[:Trial]].include? (self.role) 
-  end
-
-  def superadmin?
-    ENV['super_admins'].split(' ').include?(self.email)
   end
 
   ######### End Basic ACL ##########

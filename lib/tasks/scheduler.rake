@@ -207,4 +207,40 @@ namespace :scheduler do
             end
         end
     end
+
+    desc 'Refresh Salesforce data for each Salesforce user'
+    # Refreshes list of accounts and opportunities appropriate for each SFDC user.  This will also create opps/accts for new opportunities, update values in mapped (standard and custom) fields, and import/upsert SFDC contacts for linked CS accts.
+    task refresh_sfdc_data: :environment do
+        puts "\n\n=====Task (refresh_sfdc_data) started at #{Time.now}====="
+        sfdc_refresh_configs = CustomConfiguration.where(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], config_value: true)
+        sfdc_refresh_configs.each do |c|
+            sfdc_client = nil
+            if c.user_id.present?
+                begin
+                    user = User.find(c.user_id)
+                rescue ActiveRecord::RecordNotFound
+                    puts "\nCannot refresh Salesforce data for user '#{c.user_id}', because this User cannot be found!"
+                    next
+                else
+                    sfdc_client = SalesforceService.connect_salesforce(user: user) 
+                end
+            else
+                organization = Organization.find(c.organization_id)
+                sfdc_client = SalesforceService.connect_salesforce(organization: organization) 
+            end
+
+            if sfdc_client.present?
+                puts "\nRefreshing Salesforce for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'."
+                # SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
+                if user.present?
+                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user)
+                else # organization.present?
+                    admin_user = organization.users.find{|u| u.admin?} # select any to use
+                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: admin_user) if admin_user.present?
+                end
+            else
+                puts "\n****SFDC**** Cannot establish a Salesforce connection for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'!"
+            end
+        end
+    end
 end

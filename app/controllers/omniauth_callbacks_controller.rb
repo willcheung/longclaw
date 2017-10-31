@@ -1,13 +1,16 @@
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
-    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
     #puts "****** session return_to_path: #{ session[:return_to_path] }"
-    SalesforceController.initial_SFDC_login(current_user)
+    User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
+    set_auto_salesforce_refresh_custom_config(current_user)
+    InitialSalesforceLoginsJob.perform_later(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
   def salesforcesandbox
-    User.from_omniauth(request.env["omniauth.auth"], current_user.organization_id, current_user.id)
+    User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
+    set_auto_salesforce_refresh_custom_config(current_user)
+    InitialSalesforceLoginsJob.perform_later(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
@@ -93,5 +96,21 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     session[:return_to_path] = params[:source] == "chrome" ? extension_path(login: true) : URI.escape(request.referer, ".")
     # puts "session[:return_to_path]=#{session[:return_to_path]}"
     redirect_to user_omniauth_authorize_path(params[:provider])
+  end
+
+  private
+
+  def set_auto_salesforce_refresh_custom_config(current_user)
+    if current_user.admin?
+      # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
+      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil) do |config|
+        config.config_value = true
+      end
+    else
+      # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
+      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id) do |config|
+        config.config_value = true
+      end
+    end
   end
 end

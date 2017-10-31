@@ -53,7 +53,7 @@ class Account < ActiveRecord::Base
 
     STATUS = %w(Active Inactive Dead)
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
-    MAPPABLE_FIELDS_META = { "category" => "Type", "description" => "Description", "website" => "Website", "phone" => "Phone", "address" => "Address" }  # "notes" => "Notes", "revenue_potential" => "Revenue Potential"
+    MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "website" => "Website", "phone" => "Phone", "address" => "Address" }  # "notes" => "Notes", "revenue_potential" => "Revenue Potential"
 
     # Copy all contacts from source account into this account.  If contact exists, attempt a merge of the two contacts. 
     # Parameters:   acct - source account to merge from
