@@ -168,13 +168,16 @@ function large_number_to_human_signif_digits(number, significant_digits) {
 function truncPrecision(number, significant_digits) {
   var number_str = number + "";
   var decimal_pos = number_str.search("\\.");
+  if (decimal_pos == -1) {
+    decimal_pos = number_str.length;
+  }
   var number_str_transform = number_str.replace(".","");  // remove the decimal pt
   number_str_transform = number_str_transform.substring(0, significant_digits);  // truncate to significant_digits digits
 
   if (decimal_pos >= 0 && decimal_pos <= 3) {
     return Number(number_str_transform.substring(0,decimal_pos) + "." + number_str_transform.substring(decimal_pos,number_str_transform.length));
   } else {
-    var factor_adjust = (decimal_pos >= 0 ? decimal_pos : number_str.length) - significant_digits;
+    var factor_adjust = (decimal_pos >= 3 ? decimal_pos : number_str.length) - significant_digits;
     return number_str_transform * Math.pow(10, factor_adjust);
   }
 }
