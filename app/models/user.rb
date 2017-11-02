@@ -925,7 +925,7 @@ class User < ActiveRecord::Base
 
   # check if user needs to be upgraded based on org plan and if so, do it
   def maybe_upgrade
-    if organization.plan_id.present? && organization.plan_id.start_with?('enterprise')
+    if organization.plan_id.present? && organization.plan_id.start_with?('enterprise') && !biz?
       upgrade(:Biz)
     end
   end

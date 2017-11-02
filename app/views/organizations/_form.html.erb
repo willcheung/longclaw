@@ -1,10 +1,21 @@
-<%= simple_form_for(@organization) do |f| %>
-  <%= f.error_notification %>
+<% remote ||= false %>
+<% url = @organization ? organization_path : organizations_path %>
 
-  <div class="form-inputs">
-  </div>
 
-  <div class="form-actions">
-    <%= f.button :submit %>
-  </div>
+    <%= simple_form_for @organization, remote: remote, html: {role: :form, 'data-model' => 'organization'}, url: url do |f| %>
+    <%= f.error_notification %>
+
+  <span class="help-block" style="color:red"></span>
+        <%# Added Bootstrap classes, and help-block container for error messages %>
+        <%= f.input :name, wrapper_html: { class: 'col-md-8'} %>
+
+        <%= f.input :domain, label: 'Domain', wrapper_html: { class: 'col-md-4'} %>
+
+
+    <%= f.input :name, label: 'Name', wrapper_html: { class: 'col-md-12'} %>
+    <%= f.input :domain, as: :hidden, input_html: { value: @domain } %>
+
+  <%# Added Bootstrap classes %>
+    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
+
 <% end %>
