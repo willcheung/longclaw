@@ -7,7 +7,7 @@ class OrganizationsController < ApplicationController
   # GET /organizations
   # GET /organizations.json
   def index
-    @organizations = Organization.includes(:projects, :accounts).all
+    @organizations = Organization.includes(:projects, :accounts).all.order(:name, :domain)
   end
 
   # GET /organizations/1
