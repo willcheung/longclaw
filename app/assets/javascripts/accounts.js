@@ -11,11 +11,11 @@ $(document).ready(function(){
   $('.owner_filter').chosen({ disable_search: true, allow_single_deselect: true});
 
   //DataTables
-  $('#accounts-table').DataTable( {
+  $('#accounts-table').DataTable({
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,4,5]},
-      { orderable: false, targets: [0,4] }
+      { searchable: false, targets: [0,3,4,5,6]},
+      { orderable: false, targets: [0,3,4,5,6] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -23,8 +23,18 @@ $(document).ready(function(){
     "language": {
       search: "_INPUT_",
       searchPlaceholder: "Start typing to filter list..."
-    }
-  } );
+    },
+    bServerSide: true,
+    fnServerParams: function (aoData) {
+      if ($('.category_filter').val()) {
+        aoData.push({ name: 'account_type', value: $('.category_filter').val() });
+      }
+      if ($('.owner-filter').val()) {
+        aoData.push({ name: 'owner', value: $('.owner-filter').val() });
+      }
+    },
+    sAjaxSource: $('#accounts-table').data('source')
+  });
 
   $('input[type=search]').attr('size', '50');
 

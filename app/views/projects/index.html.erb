@@ -100,14 +100,10 @@
 
     <div class="row">
         <div class="col-sm-12 m-t-md">
-            <% if @projects.empty? %>
-                <div class="text-center m-t-lg">
-                    <h3>No streams found. Did you filter them out?</h3>
-                </div>
-            <% else %>
+          <!-- no projects snippet -->
                 <div class="ibox float-e-margins">
                     <div class="ibox-content">
-                        <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
+                        <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%" data-source="<%= projects_path(format: :json) %>">
                             <thead>
                                 <tr>
                                     <th></th>
@@ -126,60 +122,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <% @projects.each do |p| %>
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="bulk-project" value="<%= p.id %>" <% unless current_user.admin? %> hidden <% end %> />
-                                        </td>
-                                        <td>
-                                            <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
-                                            <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
-                                        </td>
-                                        <td style="width: 80px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
-                                        <td style="width: 60px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
-                                        <td style="width: 80px"><%= (p.forecast.nil?) ? "-" : p.forecast %></td>
-                                        <td>
-                                            <div><%= get_full_name(p.project_owner) %></div>
-                                        </td>
-                                        <td style="width: 40px"><span
-                                        <% all_members = p.users + p.contacts %>
-                                        <% members = all_members.first(@MEMBERS_LIST_LIMIT) %>
-                                        <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe unless all_members.size == 0 %>
-                                        ><i class="fa fa-users" style="color:#888"></i> <%= all_members.size %></span></td>
-                                        <!-- <td style="text-align: center;" class="< %= risk_color(@risk_scores[p.id]) %>">< %= @risk_scores[p.id] %></td> -->
-                                        <td style="text-align:center;" class=""><%= @days_to_close[p.id].nil? ? "-" : @days_to_close[p.id].to_s %></td>
-                                        <td style="text-align:center;" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                        <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
-
-                                        <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
-                                        <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%l:%M%p on %B %-d') %>
-                                        <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].to_i %>
-
-                                        <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
-                                        <td style="width: 120px">
-                                            <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to daily updates and alerts." data-delay='{"show":"300"}'>
-                                            <% if p.daily %>
-                                                <%= link_to "<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{p.id}", class: "block m-b-xs", title: "Following daily" %>
-                                            <% else %>
-                                                <%= link_to "<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{p.id}", class: "block m-b-xs", title: "Follow daily" %>
-                                            <% end %>
-                                            </span>
-                                            <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to weekly updates and alerts." data-delay='{"show":"300"}'>
-                                            <!-- TODO: Uncomment below to undo #1011 -->
-                                            <% if p.weekly %>
-                                                <!-- < %= link_to "<i class=\"fa fa-check\"></i> Weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-index-unfollow-weekly-#{p.id}", class: "block m-b-xs", title: "Following weekly" %> -->
-                                            <% else %>
-                                                <!-- < %= link_to "<i class=\"fa fa-bell-o\"></i> Weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{p.id}", class: "block m-b-xs", title: "Follow weekly" %> -->
-                                            <% end %>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                <% end %>
+                            <!-- projects loop -->
                             </tbody>
                         </table>
                     </div>
                 </div>
-            <% end %>
+<!-- end projects snippet -->
         </div>
     </div>
 </div>

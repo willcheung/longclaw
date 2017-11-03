@@ -8,67 +8,17 @@ class ProjectsController < ApplicationController
   before_action :get_current_org_opportunity_forecast_categories, only: [:show, :tasks_tab, :arg_tab]
   before_action :get_show_data, only: [:show, :tasks_tab, :arg_tab]
   before_action :load_timeline, only: [:show, :filter_timeline, :more_timeline]
-  before_action :get_custom_fields_and_lists, only: [:index, :show, :tasks_tab, :arg_tab]
+  before_action :get_custom_fields_and_lists, only: [:show, :tasks_tab, :arg_tab]
   before_action :project_filter_state, only: [:index]
   
 
   # GET /projects
   # GET /projects.json
   def index
-    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
-    @title = "Opportunities"
-    # for filter and bulk owner assignment - use only registered users
-    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
-    # Get an initial list of visible projects
-    projects = Project.visible_to(current_user.organization_id, current_user.id)
-
-    # Incrementally apply filters
-    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
-    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
-    if params[:owner].present? && params[:owner] != "0"
-      if params[:owner] == "none"
-        projects = projects.where(owner_id: nil)
-      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-          projects = projects.where(owner_id: params[:owner])
-      end
+    respond_to do |format|
+      format.html { index_html }
+      format.json { render json: index_json }
     end
-    # if params[:type].present? && params[:type] != "none"
-    #   projects = projects.where(category: params[:type])
-    # end
-
-    # Stage Chart/filter
-    lost_won_totals = SalesforceOpportunity.select("salesforce_opportunities.is_won").joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND salesforce_opportunities.is_closed", current_user.organization_id, projects.ids).group("salesforce_opportunities.is_won").sum("salesforce_opportunities.amount").map{|is_won, sum| [(is_won ? 'Closed Won' : 'Closed Lost'), sum]}
-    stage_chart_result = SalesforceOpportunity.select("COALESCE(salesforce_opportunities.stage_name, '-Undefined-')").joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND NOT salesforce_opportunities.is_closed", current_user.organization_id, projects.ids).group("COALESCE(salesforce_opportunities.stage_name, '-Undefined-')").sum("salesforce_opportunities.amount").sort
-    stage_chart_result += lost_won_totals.to_a
-    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
-    @stage_chart_data = stage_chart_result.sort do |x,y|
-      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
-      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
-      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
-      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
-      stage_name_x <=> stage_name_y  # unmatched stage names are sorted to the left of everything
-    end.map do |s, a|
-      Hashie::Mash.new({ stage_name: s, total_amount: a })
-    end
-
-    projects = projects.where(stage: params[:stage]) if params[:stage].present?
-
-    # all projects and their accounts, sorted by account name alphabetically
-    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
-
-    unless projects.empty?
-      @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
-      @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
-      @sparkline = Project.count_activities_by_day_sparkline(projects.ids, current_user.time_zone)
-      @days_to_close = Project.days_to_close(projects.ids)
-      @open_risk_count = Project.open_risk_count(projects.ids)
-      #@risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
-      @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: projects.ids).group("project_id")
-      @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
-    end
-
-    # new project modal
-    @project = Project.new
   end
 
   # GET /projects/1
@@ -256,6 +206,123 @@ class ProjectsController < ApplicationController
   end
 
   private
+  def index_html
+    get_custom_fields_and_lists
+    @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
+    @project = Project.new
+    projects = Project.visible_to(current_user.organization_id, current_user.id)
+
+    # Incrementally apply filters
+    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
+    if params[:owner].present? && params[:owner] != "0"
+      if params[:owner] == "none"
+        projects = projects.where(owner_id: nil)
+      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+        projects = projects.where(owner_id: params[:owner])
+      end
+    end
+    # Stage Chart/filter
+    top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.ids)
+    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
+    stage_chart_result = top_dashboard_data.map do |o|
+      if o.is_closed
+        [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]
+      else
+        [(o.stage_name.blank? ? '-Undefined-' : o.stage_name), o.amount]
+      end
+    end.group_by{|n,a| n}.sort do |x,y|
+      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
+      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
+      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
+      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
+      stage_name_x <=> stage_name_y
+    end # unmatched stage names are sorted to the left of everything
+    @stage_chart_data = stage_chart_result.map do |stage_name, data|
+      Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
+    end
+  end
+
+  def index_json
+    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
+    # Get an initial list of visible projects
+    projects = Project.visible_to(current_user.organization_id, current_user.id)
+
+    total_records = projects.ids.size
+
+    # params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
+
+    if params[:owner].present? && params[:owner] != "0"
+      if params[:owner] == "none"
+        projects = projects.where(owner_id: nil)
+      # else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+      elsif current_user.organization.users.registered.find_by(id: params[:owner])
+        projects = projects.where(owner_id: params[:owner])
+      end
+    end
+
+    projects = projects.where(stage: params[:stage]) if params[:stage].present?
+
+    # searching
+    if params[:sSearch].present?
+      projects = projects.where('projects.name LIKE :search OR projects.stage LIKE :search OR projects.forecast LIKE :search', search: "%#{params[:sSearch]}%")
+    end
+
+    # ordering
+    columns = [nil, 'name', 'stage', 'amount', 'forecast']
+    sort_by = columns[params[:iSortCol_0].to_i]
+    projects = projects.select("LOWER(projects.#{sort_by})").order("LOWER(projects.#{sort_by}) #{params[:sSortDir_0]}")
+
+    # PAGINATE HERE
+    total_display_records = projects.ids.size
+    per_page = params[:iDisplayLength].to_i > 0 ? params[:iDisplayLength].to_i : 10
+    page = params[:iDisplayStart].to_i/per_page
+    projects = projects.limit(per_page).offset(per_page * page)
+
+    unless projects.empty?
+      @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
+      @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
+      @sparkline = Project.count_activities_by_day_sparkline(projects.ids, current_user.time_zone)
+      @days_to_close = Project.days_to_close(projects.ids)
+      @open_risk_count = Project.open_risk_count(projects.ids)
+      #@risk_scores = Project.new_risk_score(projects.ids, current_user.time_zone)
+      @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: projects.ids).group("project_id")
+      @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
+    end
+
+    # all projects and their accounts, sorted by account name alphabetically
+    @projects = projects.preload([:users,:contacts,:subscribers,:account]).select("project_subscribers.daily, project_subscribers.weekly").joins("LEFT OUTER JOIN project_subscribers ON project_subscribers.project_id = projects.id AND project_subscribers.user_id = '#{current_user.id}'").group("project_subscribers.id") #.group_by{|e| e.account}.sort_by{|account| account[0].name}
+
+    vc = view_context
+
+    {
+      sEcho: params[:sEcho].to_i,
+      iTotalRecords: total_records,
+      iTotalDisplayRecords: total_display_records,
+      aaData: @projects.map do |project|
+        all_members = project.users + project.contacts
+        members = all_members.first(@MEMBERS_LIST_LIMIT)
+        tooltip = all_members.size == 0 ? '' : " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe
+        members_html = "<span" + tooltip + "><i class=\"fa fa-users\" style=\"color:#888\"></i> #{all_members.size}</span>"
+        [
+          ("<input type=\"checkbox\" class=\"bulk-project\" value=\"#{project.id}\">" if current_user.admin?),
+          vc.link_to(project.name, project),
+          (project.stage.nil? or project.stage.empty?) ? "-" : project.stage,
+          (project.amount.nil?) ? "-" : "$"+vc.number_to_human(project.amount),
+          (project.forecast.nil?) ? "-" : project.forecast,
+          get_full_name(project.project_owner),
+          members_html,
+          @days_to_close[project.id].nil? ? "-" : @days_to_close[project.id].to_s,
+          "<span class='#{@open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
+          "<div data-sparkline=\"#{@sparkline[project.id].join(', ')}; column\"></div>",
+          @project_days_inactive[project.id].nil? ? "-" : @project_days_inactive[project.id],
+          @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].strftime('%l:%M%p on %B %-d'),
+          project.daily ? vc.link_to("<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{project.id}", class: "block m-b-xs", title: "Following daily") : vc.link_to("<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{project.id}", class: "block m-b-xs", title: "Follow daily")
+        ]
+      end
+    }
+  end
 
   def get_show_data
 
@@ -382,8 +449,6 @@ class ProjectsController < ApplicationController
   end
 
   def get_custom_fields_and_lists
-    custom_lists = current_user.organization.get_custom_lists_with_options
-    @opportunity_types = !custom_lists.blank? ? custom_lists["Opportunity Type"] : {}
     @custom_lists = current_user.organization.get_custom_lists_with_options
     @opportunity_types = !@custom_lists.blank? ? @custom_lists["Opportunity Type"] : {}
   end
@@ -396,13 +461,13 @@ class ProjectsController < ApplicationController
         params[:owner] = cookies[:project_owner]
       end
     end
-    if params[:type] 
-      cookies[:project_type] = {value: params[:type]}
-    else
-      if cookies[:project_type]
-        params[:type] = cookies[:project_type]
-      end
-    end
+    # if params[:close_date]
+    #   cookies[:project_close_date] = {value: params[:close_date]}
+    # else
+    #   if cookies[:project_close_date]
+    #     params[:close_date] = cookies[:project_close_date]
+    #   end
+    # end
   end
   # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
   def check_params_for_valid_dates

@@ -33,8 +33,8 @@ $(document).ready(function($) {
   $('#projects-table').DataTable({
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,6,7,8,9,10,11,12] },
-      { orderable: false, targets: [0,6,9,12,13] }
+      { searchable: false, targets: [0,5,6,7,8,9,10,11,12] },
+      { orderable: false, targets: [0,5,6,7,8,9,10,11,12] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -42,6 +42,26 @@ $(document).ready(function($) {
     "language": {
       search: "_INPUT_",
       searchPlaceholder: "Start typing to filter list..."
+    },
+    bServerSide: true,
+    fnServerParams: function (aoData) {
+      if ($('#owner-filter').val()) {
+        aoData.push({ name: 'owner', value: $('#owner-filter').val() });
+      }
+      if ($('#close-date-filter').val()) {
+        aoData.push({ name: 'close_date', value: $('#close-date-filter').val() });
+      }
+      var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+      if (stageSelection.length !== 0) {
+        aoData.push({ name: 'stage', value: stageSelection[0].category })
+      }
+    },
+    sAjaxSource: $('#projects-table').data('source'),
+    fnDrawCallback: function (oSettings, json) {
+      // console.log('fnDrawCallback')
+      // console.log(oSettings)
+      // console.log(json)
+      initSparklines();
     }
   });
 
@@ -208,6 +228,63 @@ function toggleSection(toggleSectionParentDOMObj) {
         toggleSectionParentDOMObj.next().next().toggle(400);
     }
 };
+
+function initSparklines() {
+  // highcharts('SparkLine') options declared in highcharts-sparkline.js
+  // original of initSparklines from highcharts-sparkline.js as well
+  var start = +new Date(),
+    $tds = $('div[data-sparkline]'),
+    fullLen = $tds.length,
+    n = 0;
+
+// Creating 153 sparkline charts is quite fast in modern browsers, but IE8 and mobile
+// can take some seconds, so we split the input into chunks and apply them in timeouts
+// in order avoid locking up the browser process and allow interaction.
+  function doChunk() {
+    var time = +new Date(),
+      i,
+      len = $tds.length,
+      $td,
+      stringdata,
+      arr,
+      data,
+      chart;
+
+    for (i = 0; i < len; i += 1) {
+      $td = $($tds[i]);
+      stringdata = $td.data('sparkline');
+      arr = stringdata.split('; ');
+      data = $.map(arr[0].split(', '), parseFloat);
+      chart = {};
+
+      if (arr[1]) {
+        chart.type = arr[1];
+      }
+      $td.highcharts('SparkLine', {
+        series: [{
+          data: data,
+          pointStart: 1
+        }],
+        tooltip: {
+          headerFormat: null,
+          pointFormat: "<b>{point.y}</b>"
+        },
+        chart: chart
+      });
+
+      n += 1;
+
+      // If the process takes too much time, run a timeout to allow interaction with the browser
+      if (new Date() - time > 500) {
+        $tds.splice(0, i + 1);
+        setTimeout(doChunk, 0);
+        break;
+      }
+    }
+  }
+  doChunk();
+
+}
 
 // Copied from notifications.js for displaying notifications per project
 
