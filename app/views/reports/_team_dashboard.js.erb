@@ -187,7 +187,7 @@ function get_category_uuid (catname) {
   <% end %>
 }
 
-<% if @dashboard_data.sorted_by.data.length == 25 %>
+<% if @dashboard_data.sorted_by.data.present? && @dashboard_data.sorted_by.data.length == 25 %>
 $('#left-chart-trunc-message').show();
 <% else %>
 $('#left-chart-trunc-message').hide();
