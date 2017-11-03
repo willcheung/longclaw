@@ -56,7 +56,13 @@ $(document).ready(function($) {
         aoData.push({ name: 'stage', value: stageSelection[0].category })
       }
     },
-    sAjaxSource: $('#projects-table').data('source')
+    sAjaxSource: $('#projects-table').data('source'),
+    fnDrawCallback: function (oSettings, json) {
+      // console.log('fnDrawCallback')
+      // console.log(oSettings)
+      // console.log(json)
+      initSparklines();
+    }
   });
 
   $('input[type=search]').attr('size', '50');
@@ -222,6 +228,63 @@ function toggleSection(toggleSectionParentDOMObj) {
         toggleSectionParentDOMObj.next().next().toggle(400);
     }
 };
+
+function initSparklines() {
+  // highcharts('SparkLine') options declared in highcharts-sparkline.js
+  // original of initSparklines from highcharts-sparkline.js as well
+  var start = +new Date(),
+    $tds = $('div[data-sparkline]'),
+    fullLen = $tds.length,
+    n = 0;
+
+// Creating 153 sparkline charts is quite fast in modern browsers, but IE8 and mobile
+// can take some seconds, so we split the input into chunks and apply them in timeouts
+// in order avoid locking up the browser process and allow interaction.
+  function doChunk() {
+    var time = +new Date(),
+      i,
+      len = $tds.length,
+      $td,
+      stringdata,
+      arr,
+      data,
+      chart;
+
+    for (i = 0; i < len; i += 1) {
+      $td = $($tds[i]);
+      stringdata = $td.data('sparkline');
+      arr = stringdata.split('; ');
+      data = $.map(arr[0].split(', '), parseFloat);
+      chart = {};
+
+      if (arr[1]) {
+        chart.type = arr[1];
+      }
+      $td.highcharts('SparkLine', {
+        series: [{
+          data: data,
+          pointStart: 1
+        }],
+        tooltip: {
+          headerFormat: null,
+          pointFormat: "<b>{point.y}</b>"
+        },
+        chart: chart
+      });
+
+      n += 1;
+
+      // If the process takes too much time, run a timeout to allow interaction with the browser
+      if (new Date() - time > 500) {
+        $tds.splice(0, i + 1);
+        setTimeout(doChunk, 0);
+        break;
+      }
+    }
+  }
+  doChunk();
+
+}
 
 // Copied from notifications.js for displaying notifications per project
 
