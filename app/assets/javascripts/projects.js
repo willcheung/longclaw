@@ -33,8 +33,8 @@ $(document).ready(function($) {
   $('#projects-table').DataTable({
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,6,7,8,9,10,11,12] },
-      { orderable: false, targets: [0,6,9,12,13] }
+      { searchable: false, targets: [0,5,6,7,8,9,10,11,12] },
+      { orderable: false, targets: [0,5,6,7,8,9,10,11,12] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -42,7 +42,21 @@ $(document).ready(function($) {
     "language": {
       search: "_INPUT_",
       searchPlaceholder: "Start typing to filter list..."
-    }
+    },
+    bServerSide: true,
+    fnServerParams: function (aoData) {
+      if ($('#owner-filter').val()) {
+        aoData.push({ name: 'owner', value: $('#owner-filter').val() });
+      }
+      if ($('#close-date-filter').val()) {
+        aoData.push({ name: 'close_date', value: $('#close-date-filter').val() });
+      }
+      var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+      if (stageSelection.length !== 0) {
+        aoData.push({ name: 'stage', value: stageSelection[0].category })
+      }
+    },
+    sAjaxSource: $('#projects-table').data('source')
   });
 
   $('input[type=search]').attr('size', '50');

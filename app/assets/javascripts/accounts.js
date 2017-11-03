@@ -25,6 +25,14 @@ $(document).ready(function(){
       searchPlaceholder: "Start typing to filter list..."
     },
     bServerSide: true,
+    fnServerParams: function (aoData) {
+      if ($('.category_filter').val()) {
+        aoData.push({ name: 'account_type', value: $('.category_filter').val() });
+      }
+      if ($('.owner-filter').val()) {
+        aoData.push({ name: 'owner', value: $('.owner-filter').val() });
+      }
+    },
     sAjaxSource: $('#accounts-table').data('source')
   });
 

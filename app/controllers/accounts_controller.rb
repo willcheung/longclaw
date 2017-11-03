@@ -137,7 +137,6 @@ class AccountsController < ApplicationController
   end
 
   def index_json
-    puts "jajaja", params, "nananana"
     @CONTACTS_LIST_LIMIT = 8 # Max number of Contacts to show in mouse-over tooltip
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     @accounts = Account.includes(:projects, :user, :contacts).where(organization_id: current_user.organization_id)
@@ -171,34 +170,30 @@ class AccountsController < ApplicationController
     per_page = params[:iDisplayLength].to_i > 0 ? params[:iDisplayLength].to_i : 10
     page = params[:iDisplayStart].to_i/per_page + 1
     @accounts = @accounts.limit(per_page).offset(per_page * (page - 1))
-    # page_size = 10
-    # @page = params[:page].blank? ? 1 : params[:page].to_i
-    # @last_page = activities.count <= (page_size * @page) # check whether there is another page to load
-    # activities = activities.limit(page_size).offset(page_size * (@page - 1))
 
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)) AND projects.status = 'Active' AND activities.category not in ('Alert','Note') AND activities.last_sent_date <= ?", current_user.organization_id, current_user.id, Time.current).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
 
     vc = view_context
 
     {
-        sEcho: params[:sEcho].to_i,
-        iTotalRecords: total_records,
-        iTotalDisplayRecords: total_display_records,
-        aaData: @accounts.map do |account|
-          contacts = account.contacts.first(@CONTACTS_LIST_LIMIT)
-          tooltip = account.contacts.size == 0 ? '' : " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>Contacts:</strong><br/> #{ (contacts.collect{|c| get_full_name(c)}).sort_by{|c| c.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (account.contacts.size - @CONTACTS_LIST_LIMIT).to_s + " more...</span>") if account.contacts.size > @CONTACTS_LIST_LIMIT } \"".html_safe
-          contacts_html = "<span" + tooltip + "><i class=\"fa fa-users\" style=\"color:#888\"></i> #{account.contacts.size}</span>"
-          [
-              ("<input type=\"checkbox\" class=\"bulk-account\" value=\"#{account.id}\">" if current_user.admin?),
-              vc.link_to(account.name, account),
-              account.category,
-              get_full_name(account.user),
-              contacts_html,
-              account.projects.visible_to(current_user.organization_id, current_user.id).count(:id).size,
-              @account_last_activity[account.id].nil? ? '' : ((Time.current - @account_last_activity[account.id])/86400).to_i,
-              account.website
-          ]
-        end
+      sEcho: params[:sEcho].to_i,
+      iTotalRecords: total_records,
+      iTotalDisplayRecords: total_display_records,
+      aaData: @accounts.map do |account|
+        contacts = account.contacts.first(@CONTACTS_LIST_LIMIT)
+        tooltip = account.contacts.size == 0 ? '' : " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>Contacts:</strong><br/> #{ (contacts.collect{|c| get_full_name(c)}).sort_by{|c| c.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (account.contacts.size - @CONTACTS_LIST_LIMIT).to_s + " more...</span>") if account.contacts.size > @CONTACTS_LIST_LIMIT } \"".html_safe
+        contacts_html = "<span" + tooltip + "><i class=\"fa fa-users\" style=\"color:#888\"></i> #{account.contacts.size}</span>"
+        [
+          ("<input type=\"checkbox\" class=\"bulk-account\" value=\"#{account.id}\">" if current_user.admin?),
+          vc.link_to(account.name, account),
+          account.category,
+          get_full_name(account.user),
+          contacts_html,
+          account.projects.visible_to(current_user.organization_id, current_user.id).ids.size,
+          @account_last_activity[account.id].nil? ? '' : ((Time.current - @account_last_activity[account.id])/86400).to_i,
+          account.website
+        ]
+      end
     }
   end
 
