@@ -1,31 +1,10 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: [:show, :edit, :update, :destroy, :set_salesforce_account] 
-  before_action :get_custom_fields_and_lists, only: [:index, :show]
+  before_action :get_custom_fields_and_lists, only: [:show]
   before_action :manage_filter_state, only: [:index]
 
   # GET /accounts
   # GET /accounts.json
-  # def index
-  #   @CONTACTS_LIST_LIMIT = 8 # Max number of Contacts to show in mouse-over tooltip
-  #   @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
-  #   @accounts = Account.includes(:projects, :user, :contacts).where(organization_id: current_user.organization_id).order("upper(accounts.name)")
-  #
-  #   # Incrementally apply filters
-  #   if params[:owner].present? && params[:owner] != "0"
-  #     if params[:owner] == "none"
-  #       @accounts = @accounts.where(owner_id: nil)
-  #     else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-  #       @accounts = @accounts.where(owner_id: params[:owner])
-  #     end
-  #   end
-  #   if params[:account_type].present? && params[:account_type] != "none"
-  #     @accounts = @accounts.where(category: params[:account_type])
-  #   end
-  #
-  #   @account_last_activity = Account.eager_load(:activities).where("organization_id = ? AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)) AND projects.status = 'Active' AND activities.category not in ('Alert','Note') AND activities.last_sent_date <= ?", current_user.organization_id, current_user.id, Time.current).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
-  #   @account = Account.new
-  # end
-
   def index
     respond_to do |format|
       format.html { index_html }
@@ -132,6 +111,7 @@ class AccountsController < ApplicationController
   private
 
   def index_html
+    get_custom_fields_and_lists
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     @account = Account.new
   end
@@ -162,14 +142,14 @@ class AccountsController < ApplicationController
     # ordering
     columns = [nil, 'name', 'category', nil, nil, nil, nil, 'website']
     sort_by = columns[params[:iSortCol_0].to_i]
-    @accounts = @accounts.order("#{sort_by} #{params[:sSortDir_0]}")
+    @accounts = @accounts.order("LOWER(#{sort_by}) #{params[:sSortDir_0]}")
 
 
     # PAGINATE HERE
     total_display_records = @accounts.count
     per_page = params[:iDisplayLength].to_i > 0 ? params[:iDisplayLength].to_i : 10
-    page = params[:iDisplayStart].to_i/per_page + 1
-    @accounts = @accounts.limit(per_page).offset(per_page * (page - 1))
+    page = params[:iDisplayStart].to_i/per_page
+    @accounts = @accounts.limit(per_page).offset(per_page * page)
 
     @account_last_activity = Account.eager_load(:activities).where("organization_id = ? AND (projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?)) AND projects.status = 'Active' AND activities.category not in ('Alert','Note') AND activities.last_sent_date <= ?", current_user.organization_id, current_user.id, Time.current).order('accounts.name').group("accounts.id").maximum("activities.last_sent_date")
 
