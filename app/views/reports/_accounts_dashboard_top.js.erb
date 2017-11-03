@@ -4,7 +4,7 @@ var barColors = {
   default: "#7CB5EC",   // "CS" light blue
 };
 
-var closed_won_amount = large_number_to_human_signif_digits(<%= @top_dashboard_data.present? ? @top_dashboard_data.where(is_closed: true, is_won: true).map(&:amount).compact.sum : 0 %>);
+var closed_won_amount = large_number_to_human_signif_digits(<%= @lost_won_totals.find{|k,v| k == "Closed Won"}.present? ? @lost_won_totals.find{|k,v| k == "Closed Won"}.second.to_i : 0 %>);
 <% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
 <% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
 // var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";
@@ -37,7 +37,7 @@ while(chart_stage.series.length > 0) {
   chart_stage.series[0].remove();
 }
 
-<% if @top_dashboard_data.present? %>
+<% if @forecast_chart_data.present? || @stage_chart_data.present? %>
   <% forecast_chart_data_cats = @forecast_chart_data.map {|d| d.forecast_category_name} %>
   chart_forecast.xAxis[0].setCategories(<%= forecast_chart_data_cats.to_json.html_safe %>, false);
   <% forecast_chart_data_cats.each_with_index do |c, i| %>
@@ -69,4 +69,4 @@ while(chart_stage.series.length > 0) {
       ]
     }, true);
   <% end unless stage_chart_data_stages.blank? %>
-<% end %> // if @top_dashboard_data.present?
+<% end %> // if @forecast_chart_data.present? || @stage_chart_data.present?
