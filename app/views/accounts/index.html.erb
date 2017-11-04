@@ -20,14 +20,14 @@
         <div class="col-lg-6 filter-group">
           <div class="font-bold m-b-xs">Filter:</div>
           <select class="category_filter col-sm-3" data-placeholder="Select Type">
-            <option ></option>
+            <option></option>
             <% @account_types.each do |k,v| %>
             <option value="<%= v %>" <% if params[:account_type] == v %> selected <% end %> ><%= v %></option>
              <% end %>
           </select>    
 
           <select class="owner_filter col-sm-3" data-placeholder="Select Owner">
-            <option ></option>
+            <option></option>
             <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >
               Owner: Me
             </option>
@@ -67,14 +67,10 @@
 
     <div class="row">
         <div class="col-sm-12 m-t-md">
-            <% if @accounts.empty? %>
-                <div class="text-center">
-                    <h3>No accounts found.  Did you filter them out?</h3>
-                </div>
-            <% else %>
+<!-- no accounts snippet -->
                 <div class="ibox float-e-margins">
                     <div class="ibox-content">
-                        <table class="table table-hover responsive no-wrap" id="accounts-table" cellspacing="0" width="100%">
+                        <table class="table table-hover responsive no-wrap" id="accounts-table" cellspacing="0" width="100%" data-source="<%= accounts_path(format: :json) %>">
                             <thead>
                                 <tr>
                                     <th></th>
@@ -88,28 +84,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <% @accounts.each do |a| %>
-                                <tr style="height:45px;">
-                                    <td>
-                                        <input type="checkbox" class="bulk-account" value="<%= a.id %>" <% unless current_user.admin? %>hidden<% end %> />
-                                    </td>
-                                    <td><a href="<%= account_path(a.id) %>"><%= a.name %></a><a class="pull-right edit" href="<%= edit_account_path(a) %>" style="display: none;"><i class="fa fa-pencil"></i></a></td>
-                                    <td style="width:65px"><%= a.category %></td>
-                                    <td><%= get_full_name(a.user) %></td>
-                                    <td style="width: 40px"><span
-                                    <% contacts = a.contacts.first(@CONTACTS_LIST_LIMIT) %>
-                                    <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>Contacts:</strong><br/> #{ (contacts.collect{|c| get_full_name(c)}).sort_by{|c| c.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (a.contacts.size - @CONTACTS_LIST_LIMIT).to_s + " more...</span>") if a.contacts.size > @CONTACTS_LIST_LIMIT } \"".html_safe unless a.contacts.size == 0 %>
-                                        ><i class="fa fa-users" style="color:#888"></i> <%= (a.contacts.size) %></span></td>
-                                    <td style="text-align:center"><%= a.projects.visible_to(current_user.organization_id, current_user.id).count(:id).size %></td>
-                                    <td style="text-align:center"><%= @account_last_activity[a.id].nil? ? "" : ((Time.current - @account_last_activity[a.id])/86400).to_i %></td>
-                                    <td><%= a.website %></td>
-                                </tr>
-                                <% end %>
+<!-- accounts loop-->
                             </tbody>
                         </table>
                     </div>
                 </div>
-            <% end %>
+<!-- end no accounts snippet -->
         </div>
     </div>
 </div>

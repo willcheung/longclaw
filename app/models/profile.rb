@@ -32,9 +32,9 @@ class Profile < ActiveRecord::Base
   # #<Profile id: 15, emails: ["test5@contextsmith.com"], expires_at: nil, data: {"status"=>202, "message"=>"Queued for search. Please retry your query within about 2 minutes. Prefer not to re-submit queries? Try using our webhook option, documented at: http://www.fullcontact.com/developer/docs/person/#webhook-email", "request_id"=>"df105112-0cb7-4fa7-872b-f4687224f32c"}, created_at: "2017-08-31 19:27:54", updated_at: "2017-08-31 19:27:55">
   def self.find_or_create_by_email(email)
     profile = find_by_email(email)
-    if profile.blank?
-      # No existing profile found, create a new one
-      profile = Profile.create(emails: [email])
+    # No existing profile found, create a new one
+    profile = Profile.create(emails: [email]) if profile.blank?
+    if profile.data.blank?
       profile.data = FullContactService.find(email, profile.id)
       profile.save
     end
@@ -50,7 +50,7 @@ class Profile < ActiveRecord::Base
   end
 
   def data_is_valid?
-    data.status == 200
+    data.present? && data.status == 200
   end
 
   # "First name"

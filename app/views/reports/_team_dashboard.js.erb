@@ -91,7 +91,6 @@ while(chart.series.length > 0) {
     <% end %>
 
       var axis = chart.yAxis[<%= key == 'metric' ? 1 : 0 %>]
-      //console.log('<%= value.type %>')
       // Set/reset the axis labels and subtitles on chart
       <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:time_spent_last14d] %>
         axis.update({
@@ -142,16 +141,7 @@ while(chart.series.length > 0) {
   reset_subtitles_on_chart(chart);
 <% end %>
 
-//console.log("datamax=" + chart.yAxis[0].dataMax);
-chart.setSize(undefined, 70 + Math.min(1150, <%= @dashboard_data.sorted_by.data? ? @dashboard_data.sorted_by.data.size : 0 %> * 110)); //set graph height
-
-<!--<% @dashboard_data.each do |k,v| %>-->
-//  console.log("<%= k %>");
-//  console.log('<%= v.type %>')
-////  < % v.data.each do |d| %>
-////    console.log("< %= d.name.html_safe %>: < %= d %>");
-////  < % end %>
-<!--<% end %>-->
+chart.setSize(undefined, 50 + Math.min(1150, <%= @dashboard_data.sorted_by.data? ? @dashboard_data.sorted_by.data.size : 0 %> * 90)); //set graph height
 
 // handle clicking on user label
 $('.highcharts-xaxis-labels text tspan').click(function() {
@@ -196,3 +186,9 @@ function get_category_uuid (catname) {
     }
   <% end %>
 }
+
+<% if @dashboard_data.sorted_by.data.present? && @dashboard_data.sorted_by.data.length == 25 %>
+$('#left-chart-trunc-message').show();
+<% else %>
+$('#left-chart-trunc-message').hide();
+<% end %>

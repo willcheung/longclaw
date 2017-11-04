@@ -20,7 +20,9 @@
                 <ul class="list-group clear-list">
                     <li class="list-group-item first-item"><strong>My Title:</strong> <%= best_in_place current_user, :title, :as => 'input', :place_holder => '(none)', :activator => "#title-activator" %><i id="title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
                     <li class="list-group-item"><strong>My Department:</strong> <%= best_in_place current_user, :department, :as => 'input', :place_holder => '(none)', :activator => "#dept-activator" %><i id="dept-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
-                    <li class="list-group-item"><strong>My User Role:</strong> <%= current_user.role %>  <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Only Admin can change this."></i></li>
+                    <li class="list-group-item"><strong>My User Role:</strong> <%= current_user.role %>  <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Only Admin can change this."></i>
+                        <% if current_user.superadmin? %><i style="color: gold" class="fa fa-star" data-toggle="tooltip" data-placement="top" data-original-title="Superadmin!"></i><% end %>
+                    </li>
                     <li class="list-group-item"><strong>Email and calendar refresh:</strong> <%= current_user.refresh_inbox %> <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Whether inbox and calendar are connected. Only Admin can change this."></i></li>
                 </ul>
             </div>

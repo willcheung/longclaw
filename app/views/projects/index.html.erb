@@ -20,6 +20,7 @@
 <div class="wrapper wrapper-content animated fadeInUp">
     <div class="row">
         <div class="col-lg-6 filter-group">
+
           <div class="font-bold m-b-xs">Filter:</div>
           <!--<select class="category_filter col-sm-3" data-placeholder="Select Type">-->
             <!--<option value="0"></option>-->
@@ -86,18 +87,23 @@
         </div>
         <% end %>
 
+        <div class="col-lg-12">
+          <div class="ibox float-e-margins m-b-none m-t">
+            <div class='ibox-title'>
+              <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
+            </div>
+            <div id="stage-chart" class="ibox-content stage-chart" style="height:150px;padding-bottom:0"></div>
+          </div>
+        </div>
+
     </div>
 
     <div class="row">
         <div class="col-sm-12 m-t-md">
-            <% if @projects.empty? %>
-                <div class="text-center m-t-lg">
-                    <h3>No streams found. Did you filter them out?</h3>
-                </div>
-            <% else %>
+          <!-- no projects snippet -->
                 <div class="ibox float-e-margins">
                     <div class="ibox-content">
-                        <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
+                        <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%" data-source="<%= projects_path(format: :json) %>">
                             <thead>
                                 <tr>
                                     <th></th>
@@ -113,71 +119,116 @@
                                     <th>Days Inactive</th>
                                     <th>Next Meeting</th>
                                     <th></th>
-                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <% @projects.each do |p| %>
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="bulk-project" value="<%= p.id %>" <% unless current_user.admin? %> hidden <% end %> />
-                                        </td>
-                                        <td>
-                                            <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
-                                            <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
-                                        </td>
-                                        <td style="width: 80px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
-                                        <td style="width: 60px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
-                                        <td style="width: 80px"><%= (p.forecast.nil?) ? "-" : p.forecast %></td>
-                                        <td>
-                                            <div><%= get_full_name(p.project_owner) %></div>
-                                        </td>
-                                        <td style="width: 40px"><span
-                                        <% all_members = p.users + p.contacts %>
-                                        <% members = all_members.first(@MEMBERS_LIST_LIMIT) %>
-                                        <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe unless all_members.size == 0 %>
-                                        ><i class="fa fa-users" style="color:#888"></i> <%= all_members.size %></span></td>
-                                        <!-- <td style="text-align: center;" class="< %= risk_color(@risk_scores[p.id]) %>">< %= @risk_scores[p.id] %></td> -->
-                                        <td style="text-align:center;" class=""><%= @days_to_close[p.id].nil? ? "-" : @days_to_close[p.id].to_s %></td>
-                                        <td style="text-align:center;" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
-                                        <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
-
-                                        <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
-                                        <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%l:%M%p on %B %-d') %>
-                                        <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].to_i %>
-
-                                        <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
-                                        <td><% if p.is_public %>
-                                                <span class="label label-default pull-right">Public</span>
-                                            <% else %>
-                                                <span class="label label-warning pull-right">Private</span>
-                                            <% end %>
-                                        </td>
-                                        <td style="width: 120px"> 
-                                            <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to daily updates and alerts." data-delay='{"show":"300"}'>
-                                            <% if p.daily %>
-                                                <%= link_to "<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{p.id}", class: "block m-b-xs", title: "Following daily" %>
-                                            <% else %>
-                                                <%= link_to "<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{p.id}", class: "block m-b-xs", title: "Follow daily" %>
-                                            <% end %>
-                                            </span>
-                                            <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to weekly updates and alerts." data-delay='{"show":"300"}'>
-                                            <!-- TODO: Uncomment below to undo #1011 -->
-                                            <% if p.weekly %>
-                                                <!-- < %= link_to "<i class=\"fa fa-check\"></i> Weekly".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=weekly", remote: true, method: :delete, id: "project-index-unfollow-weekly-#{p.id}", class: "block m-b-xs", title: "Following weekly" %> -->
-                                            <% else %>
-                                                <!-- < %= link_to "<i class=\"fa fa-bell-o\"></i> Weekly".html_safe, project_project_subscribers_path(project_id: p.id, user_id: current_user.id) + "&type=weekly", remote: true, method: :post, id: "project-index-follow-weekly-#{p.id}", class: "block m-b-xs", title: "Follow weekly" %> -->
-                                            <% end %>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                <% end %>
+                            <!-- projects loop -->
                             </tbody>
                         </table>
                     </div>
                 </div>
-            <% end %>
+<!-- end projects snippet -->
         </div>
     </div>
 </div>
 <%= render 'projects/modal', modal_id: 'new_project_modal', remote: true %>
+
+<script type="text/javascript" charset="utf-8">
+$(function () {
+  $('#stage-chart').highcharts({
+    chart: {
+      type: 'column'
+    },
+    title: {
+      text: ''
+//                text: 'Deals by Stage',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+    },
+    credits: {
+      enabled: false
+    },
+    xAxis: {
+      crosshair: true,
+      labels: {
+        style: {
+          fontSize: '9px'
+        }
+      }
+    },
+    yAxis: {
+      min: 0,
+      title: {
+        text: ''
+      },
+      labels: {
+        enabled: false
+      },
+      stackLabels: {
+        enabled: true,
+        formatter: function () {
+          //return Highcharts.numberFormat(this.total, 0, null, "");
+          return "$"+large_number_to_human_signif_digits(this.total);
+        },
+        style: {
+          color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+        }
+      }
+    },
+    tooltip: {
+      enabled: true,
+      formatter: function () {
+        return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
+      }
+    },
+    legend: {
+      enabled: false
+    },
+    series: [{
+
+    }],
+    plotOptions: {
+      column: {
+        stacking: 'normal',
+        pointPadding: 0.2,
+        borderWidth: 0,
+        dataLabels: {
+          format: '${y}',
+          style: {
+            color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+          }
+        }
+      },
+      series: {
+        pointPadding: 0.1,
+        groupPadding: 0.1,
+        borderWidth: 0,
+        point: {
+          events: {
+            click: function () {
+              this.select();
+              let params = {};
+              if (this.selected) {
+                params.stage = this.category;
+              }
+              if ($('#owner-filter').val()) {
+                params.owner = $('#owner-filter').val();
+              }
+              if ($('#close-date-filter').val()) {
+                params.close_date = $('#close-date-filter').val();
+              }
+              window.location.search = $.param(params);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  <%= render partial: 'reports/stage_chart.js' %>
+})
+</script>
