@@ -271,8 +271,10 @@ class ProjectsController < ApplicationController
 
     # ordering
     columns = [nil, 'name', 'stage', 'amount', 'forecast']
+    column_is_text = [false, true, true, false, true]
     sort_by = columns[params[:iSortCol_0].to_i]
-    projects = projects.select("LOWER(projects.#{sort_by})").order("LOWER(projects.#{sort_by}) #{params[:sSortDir_0]}")
+    sql_fn = column_is_text[params[:iSortCol_0].to_i] ? "LOWER" : ""
+    projects = projects.select("#{sql_fn}(projects.#{sort_by})").order("#{sql_fn}(projects.#{sort_by}) #{params[:sSortDir_0]}")
 
     # PAGINATE HERE
     total_display_records = projects.ids.size
@@ -308,14 +310,14 @@ class ProjectsController < ApplicationController
         [
           ("<input type=\"checkbox\" class=\"bulk-project\" value=\"#{project.id}\">" if current_user.admin?),
           vc.link_to(project.name, project),
-          (project.stage.nil? or project.stage.empty?) ? "-" : project.stage,
+          (project.stage.blank?) ? "-" : project.stage,
           (project.amount.nil?) ? "-" : "$"+vc.number_to_human(project.amount),
           (project.forecast.nil?) ? "-" : project.forecast,
           get_full_name(project.project_owner),
           members_html,
           @days_to_close[project.id].nil? ? "-" : @days_to_close[project.id].to_s,
-          "<span class='#{@open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
-          "<div data-sparkline=\"#{@sparkline[project.id].join(', ')}; column\"></div>",
+          "<span class='#{@open_risk_count[project.id].present? && @open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
+          "<div data-sparkline=\"#{@sparkline[project.id].join(', ') if @sparkline[project.id].present?}; column\"></div>",
           @project_days_inactive[project.id].nil? ? "-" : @project_days_inactive[project.id],
           @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].strftime('%l:%M%p on %B %-d'),
           project.daily ? vc.link_to("<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{project.id}", class: "block m-b-xs", title: "Following daily") : vc.link_to("<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{project.id}", class: "block m-b-xs", title: "Follow daily")
