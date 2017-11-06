@@ -18,9 +18,9 @@ chart_stage.addSeries({
   name: "<%= s %>",
   color: (barColors["<%= s %>"] ? barColors["<%= s %>"] : barColors["default"]),
   data: [
-    <% @stage_chart_data.each do |d| %>
+    <% @stage_chart_data.each_with_index do |d, j| %>
     {
-      <%= 'selected: true,' if selected_index && selected_index == i %>
+      <%= 'selected: true,' if (selected_index && selected_index == i && i == j) %>
       y: <%= d.stage_name == s ? d.total_amount : 0 %>
     },
     <% end if @stage_chart_data.present? %>
