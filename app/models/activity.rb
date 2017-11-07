@@ -501,6 +501,10 @@ class Activity < ActiveRecord::Base
     project.is_visible_to(user) && ( is_public || email_addresses.include?(user.email) )
   end
 
+  def note_for_display
+    simple_format(CGI.escape_html(note))
+  end
+
   ### methods to batch change jsonb columns
   # convenience method to make input easier compared to time_shift
   def time_jump(date)
