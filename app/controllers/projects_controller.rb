@@ -265,9 +265,7 @@ class ProjectsController < ApplicationController
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
 
     # searching
-    if params[:sSearch].present?
-      projects = projects.where('projects.name LIKE :search OR projects.stage LIKE :search OR projects.forecast LIKE :search', search: "%#{params[:sSearch]}%")
-    end
+    projects = projects.where('LOWER(projects.name) LIKE LOWER(:search) OR LOWER(projects.stage) LIKE LOWER(:search) OR LOWER(projects.forecast) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
 
     # ordering
     columns = [nil, 'name', 'stage', 'amount', 'forecast']
