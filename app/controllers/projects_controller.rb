@@ -206,6 +206,7 @@ class ProjectsController < ApplicationController
   end
 
   private
+
   def index_html
     get_custom_fields_and_lists
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
@@ -222,24 +223,18 @@ class ProjectsController < ApplicationController
         projects = projects.where(owner_id: params[:owner])
       end
     end
-    # Stage Chart/filter
-    top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.ids)
+    # Stage chart/filter
+    stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", projects.ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
+
     stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
-    stage_chart_result = top_dashboard_data.map do |o|
-      if o.is_closed
-        [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]
-      else
-        [(o.stage_name.blank? ? '-Undefined-' : o.stage_name), o.amount]
-      end
-    end.group_by{|n,a| n}.sort do |x,y|
+    @stage_chart_data = stage_chart_result.sort do |x,y|
       stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
       stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
       stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
       stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
-      stage_name_x <=> stage_name_y
-    end # unmatched stage names are sorted to the left of everything
-    @stage_chart_data = stage_chart_result.map do |stage_name, data|
-      Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
+      stage_name_x <=> stage_name_y  # unmatched stage names are sorted to the left of everything
+    end.map do |s, a|
+      Hashie::Mash.new({ stage_name: s, total_amount: a })
     end
   end
 
@@ -272,7 +267,7 @@ class ProjectsController < ApplicationController
     column_is_text = [false, true, true, false, true]
     sort_by = columns[params[:iSortCol_0].to_i]
     sql_fn = column_is_text[params[:iSortCol_0].to_i] ? "LOWER" : ""
-    projects = projects.select("#{sql_fn}(projects.#{sort_by})").order("#{sql_fn}(projects.#{sort_by}) #{params[:sSortDir_0]}")
+    projects = projects.select("#{sql_fn}(projects.#{sort_by})").order("#{sql_fn}(projects.#{sort_by}) #{params[:sSortDir_0]} NULLS LAST")
 
     # PAGINATE HERE
     total_display_records = projects.ids.size
