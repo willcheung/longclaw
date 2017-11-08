@@ -59,11 +59,10 @@ class ReportsController < ApplicationController
         memo
       end  # get (and show in legend) only categories that have data
     when ACCOUNT_DASHBOARD_METRIC[:days_inactive]
-      last_sent_dates = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
+      last_sent_dates = projects.order("days_inactive DESC").joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).group("projects.id").select("date_part('day', CURRENT_TIMESTAMP AT TIME ZONE '#{current_user.time_zone}' - MAX(activities.last_sent_date AT TIME ZONE '#{current_user.time_zone}')) AS days_inactive")
+
       @data = last_sent_dates.map do |d|
-        proj = projects.find { |p| p.id == d[0] }
-        y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
-        Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: y, color: 'default' })
+        Hashie::Mash.new({ id: d.id, name: d.name, deal_size: d.amount, close_date: d.close_date, y: d.days_inactive, color: 'default' })
       end
     when ACCOUNT_DASHBOARD_METRIC[:open_alerts_and_tasks]
       open_task_counts = Project.count_tasks_per_project(projects.pluck(:id))

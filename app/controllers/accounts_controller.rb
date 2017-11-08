@@ -135,9 +135,7 @@ class AccountsController < ApplicationController
     end
 
     # searching
-    if params[:sSearch].present?
-      @accounts = @accounts.where('name LIKE :search OR category LIKE :search OR website LIKE :search', search: "%#{params[:sSearch]}%")
-    end
+    @accounts = @accounts.where('LOWER(name) LIKE LOWER(:search) OR LOWER(category) LIKE LOWER(:search) OR LOWER(website) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
 
     # ordering
     columns = [nil, 'name', 'category', nil, nil, nil, nil, 'website']
