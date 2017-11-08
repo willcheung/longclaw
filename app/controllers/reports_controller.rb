@@ -327,16 +327,22 @@ class ReportsController < ApplicationController
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.project_count })
         end
       when TEAM_DASHBOARD_METRIC[:closed_won]
-        closed_won = users.select("users.*, COALESCE(SUM(salesforce_opportunities.amount), 0) AS closed_won_amount")
-                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') LEFT JOIN salesforce_opportunities ON salesforce_opportunities.contextsmith_project_id = projects.id AND salesforce_opportunities.is_won IS TRUE")
+        closed_won = users.select("users.*, COALESCE(SUM(projects.amount), 0) AS closed_won_amount")
+                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') AND projects.stage = 'Closed Won'") # TODO: use new projects.is_won IS TRUE instead of stage
                         .group('users.id').order("closed_won_amount DESC")
         data = closed_won.map do |u|
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.closed_won_amount.round(2) })
         end
       when TEAM_DASHBOARD_METRIC[:win_rate]
-        win_rates = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count, COUNT(DISTINCT salesforce_opportunities.id) AS win_count, COUNT(DISTINCT salesforce_opportunities.id)/GREATEST(COUNT(DISTINCT projects.id)::float, 1) * 100 AS win_rate")
-                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') LEFT JOIN salesforce_opportunities ON salesforce_opportunities.contextsmith_project_id = projects.id AND salesforce_opportunities.is_won IS TRUE")
-                        .group('users.id').order("win_rate DESC")
+        win_rates = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count, COUNT(DISTINCT 
+                CASE WHEN projects.stage = 'Closed Won' THEN projects.id 
+                     ELSE null
+                END ) AS win_count, COUNT(DISTINCT 
+                CASE WHEN projects.stage = 'Closed Won' THEN projects.id 
+                     ELSE null
+                END)/GREATEST(COUNT(DISTINCT projects.id)::float, 1) * 100 AS win_rate")
+                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}')")
+                        .group('users.id').order("win_rate DESC")  # TODO: use new projects.is_won IS TRUE instead of stage
         data = win_rates.map do |u|
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.win_rate.round(2) })
         end
