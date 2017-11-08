@@ -140,7 +140,7 @@ class AccountsController < ApplicationController
     # ordering
     columns = [nil, 'name', 'category', nil, nil, nil, nil, 'website']
     sort_by = columns[params[:iSortCol_0].to_i]
-    @accounts = @accounts.order("LOWER(#{sort_by}) #{params[:sSortDir_0]}")
+    @accounts = @accounts.order("LOWER(#{sort_by}) #{params[:sSortDir_0]} NULLS LAST")
 
 
     # PAGINATE HERE
