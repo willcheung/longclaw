@@ -207,7 +207,7 @@ class ReportsController < ApplicationController
     @open_alerts_and_tasks = @user.notifications.open.count  #tasks and alerts
     @accounts_managed = @user.projects_owner_of.count
     # @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
-    @closed_won_this_qtr = SalesforceOpportunity.joins(:project).where(is_closed: true, is_won: true, close_date: Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), projects: { id: @user.projects_owner_of.ids }).sum(:amount)
+    @closed_won_this_qtr = Project.where(stage: 'Closed Won', close_date: Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), id: @user.projects_owner_of.ids).sum(:amount) # TODO: To take into account custom "Closed Won"/"Closed Lost" stages, use native is_closed and is_won flags
 
     @activities_by_category_date = @user.daily_activities_by_category(current_user.time_zone).group_by { |a| a.category }
 
