@@ -124,7 +124,7 @@
                   <i id="note-<%= a.id %>-activator" class="fa fa-pencil bip_activator text-mute-gray m-r-xs pull-right delete-note"></i>
               <% end %>
 
-              <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => rag_note(a['rag_score']), :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
+              <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => rag_note(a['rag_score']), :display_as => :note_for_display, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
                 <div class="action-links">
                     <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                      &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
