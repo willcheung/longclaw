@@ -944,7 +944,8 @@ class Project < ActiveRecord::Base
         SELECT projects.id, projects.name, '#{Notification::CATEGORY[:Attachment]}' AS category, COUNT(*) AS num_activities
         FROM notifications
         JOIN projects ON projects.id = notifications.project_id
-        WHERE notifications.category = '#{Notification::CATEGORY[:Attachment]}'
+        WHERE project_id IN ('#{array_of_project_ids.join("','")}')
+        AND notifications.category = '#{Notification::CATEGORY[:Attachment]}'
         AND (EXTRACT(EPOCH FROM sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i})
         AND notifications.description::jsonb->'from'->0->>'address' IN (#{array_of_user_emails.map{|u| User.sanitize(u)}.join(',')})
         GROUP BY projects.id, projects.name, notifications.category
