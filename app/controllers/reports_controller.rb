@@ -59,11 +59,10 @@ class ReportsController < ApplicationController
         memo
       end  # get (and show in legend) only categories that have data
     when ACCOUNT_DASHBOARD_METRIC[:days_inactive]
-      last_sent_dates = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).maximum("activities.last_sent_date").sort_by { |pid, date| date.nil? ? Time.current : date }
+      last_sent_dates = projects.order("days_inactive DESC").joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).group("projects.id").select("date_part('day', CURRENT_TIMESTAMP AT TIME ZONE '#{current_user.time_zone}' - MAX(activities.last_sent_date AT TIME ZONE '#{current_user.time_zone}')) AS days_inactive")
+
       @data = last_sent_dates.map do |d|
-        proj = projects.find { |p| p.id == d[0] }
-        y = d[1].nil? ? 0 : Date.current.mjd - d[1].in_time_zone.to_date.mjd
-        Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: y, color: 'default' })
+        Hashie::Mash.new({ id: d.id, name: d.name, deal_size: d.amount, close_date: d.close_date, y: d.days_inactive, color: 'default' })
       end
     when ACCOUNT_DASHBOARD_METRIC[:open_alerts_and_tasks]
       open_task_counts = Project.count_tasks_per_project(projects.pluck(:id))
@@ -208,7 +207,7 @@ class ReportsController < ApplicationController
     @open_alerts_and_tasks = @user.notifications.open.count  #tasks and alerts
     @accounts_managed = @user.projects_owner_of.count
     # @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
-    @closed_won_this_qtr = SalesforceOpportunity.joins(:project).where(is_closed: true, is_won: true, close_date: Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), projects: { id: @user.projects_owner_of.ids }).sum(:amount)
+    @closed_won_this_qtr = Project.where(stage: 'Closed Won', close_date: Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), id: @user.projects_owner_of.ids).sum(:amount) # TODO: To take into account custom "Closed Won"/"Closed Lost" stages, use native is_closed and is_won flags
 
     @activities_by_category_date = @user.daily_activities_by_category(current_user.time_zone).group_by { |a| a.category }
 
@@ -328,16 +327,22 @@ class ReportsController < ApplicationController
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.project_count })
         end
       when TEAM_DASHBOARD_METRIC[:closed_won]
-        closed_won = users.select("users.*, COALESCE(SUM(salesforce_opportunities.amount), 0) AS closed_won_amount")
-                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') LEFT JOIN salesforce_opportunities ON salesforce_opportunities.contextsmith_project_id = projects.id AND salesforce_opportunities.is_won IS TRUE")
+        closed_won = users.select("users.*, COALESCE(SUM(projects.amount), 0) AS closed_won_amount")
+                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') AND projects.stage = 'Closed Won'") # TODO: use new projects.is_won IS TRUE instead of stage
                         .group('users.id').order("closed_won_amount DESC")
         data = closed_won.map do |u|
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.closed_won_amount.round(2) })
         end
       when TEAM_DASHBOARD_METRIC[:win_rate]
-        win_rates = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count, COUNT(DISTINCT salesforce_opportunities.id) AS win_count, COUNT(DISTINCT salesforce_opportunities.id)/GREATEST(COUNT(DISTINCT projects.id)::float, 1) * 100 AS win_rate")
-                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') LEFT JOIN salesforce_opportunities ON salesforce_opportunities.contextsmith_project_id = projects.id AND salesforce_opportunities.is_won IS TRUE")
-                        .group('users.id').order("win_rate DESC")
+        win_rates = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count, COUNT(DISTINCT 
+                CASE WHEN projects.stage = 'Closed Won' THEN projects.id 
+                     ELSE null
+                END ) AS win_count, COUNT(DISTINCT 
+                CASE WHEN projects.stage = 'Closed Won' THEN projects.id 
+                     ELSE null
+                END)/GREATEST(COUNT(DISTINCT projects.id)::float, 1) * 100 AS win_rate")
+                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}')")
+                        .group('users.id').order("win_rate DESC")  # TODO: use new projects.is_won IS TRUE instead of stage
         data = win_rates.map do |u|
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.win_rate.round(2) })
         end
@@ -391,26 +396,14 @@ class ReportsController < ApplicationController
   #               user_ids (optional) - list of CS user id's on which to filter project owners.
   def set_top_dashboard_data(project_ids: , user_ids: nil)
     if user_ids.present?
-      @lost_won_totals = SalesforceOpportunity.select("salesforce_opportunities.is_won").joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND projects.owner_id IN (?) AND salesforce_opportunities.is_closed", current_user.organization_id, project_ids, user_ids).group("salesforce_opportunities.is_won").sum("salesforce_opportunities.amount").map{|is_won, sum| [(is_won ? 'Closed Won' : 'Closed Lost'), sum]}
-      forecast_chart_result = SalesforceOpportunity.select("COALESCE(salesforce_opportunities.forecast_category_name, '-Undefined-')").joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND projects.owner_id IN (?) AND NOT salesforce_opportunities.is_closed", current_user.organization_id, project_ids, user_ids).group("COALESCE(salesforce_opportunities.forecast_category_name, '-Undefined-')").sum("salesforce_opportunities.amount").sort
-      # forecast_chart_result = Project.select("COALESCE(projects.forecast, '-Undefined-')").where("projects.id IN (?) AND projects.owner_id IN (?) AND projects.stage != 'Closed Won' AND projects.stage != 'Closed Lost'", project_ids, user_ids).group("COALESCE(projects.forecast, '-Undefined-')").sum("projects.amount").sort
-      # forecast_chart_result << ["Closed Won", Project.where("projects.id IN (?) AND projects.owner_id IN (?) AND projects.stage = 'Closed Won'", project_ids, user_ids).sum("projects.amount")]
-
-      stage_chart_result = SalesforceOpportunity.select("COALESCE(salesforce_opportunities.stage_name, '-Undefined-')").joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND projects.owner_id IN (?) AND NOT salesforce_opportunities.is_closed", current_user.organization_id, project_ids, user_ids).group("COALESCE(salesforce_opportunities.stage_name, '-Undefined-')").sum("salesforce_opportunities.amount").sort
-      # stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?) AND projects.owner_id IN (?) AND NOT is_closed", project_ids, user_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
+      forecast_chart_result = Project.select("COALESCE(projects.forecast, '-Undefined-')").where("projects.id IN (?) AND projects.owner_id IN (?)", project_ids, user_ids).group("COALESCE(projects.forecast, '-Undefined-')").sum("projects.amount").sort
+      stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?) AND projects.owner_id IN (?)", project_ids, user_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("COALESCE(projects.amount,0)").sort
     else
-      @lost_won_totals = SalesforceOpportunity.select("salesforce_opportunities.is_won").joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND salesforce_opportunities.is_closed", current_user.organization_id, project_ids).group("salesforce_opportunities.is_won").sum("salesforce_opportunities.amount").map{|is_won, sum| [(is_won ? 'Closed Won' : 'Closed Lost'), sum]}
-      forecast_chart_result = SalesforceOpportunity.select("COALESCE(salesforce_opportunities.forecast_category_name, '-Undefined-')").joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND NOT salesforce_opportunities.is_closed", current_user.organization_id, project_ids).group("COALESCE(salesforce_opportunities.forecast_category_name, '-Undefined-')").sum("salesforce_opportunities.amount").sort
-      # forecast_chart_result = Project.select("COALESCE(projects.forecast, '-Undefined-')").where("projects.id IN (?) AND projects.stage != 'Closed Won' AND projects.stage != 'Closed Lost'", project_ids).group("COALESCE(projects.forecast, '-Undefined-')").sum("projects.amount").sort
-      # forecast_chart_result << ["Closed Won", Project.where("projects.id IN (?) AND projects.stage = 'Closed Won'", project_ids).sum("projects.amount")]
-
-      stage_chart_result = SalesforceOpportunity.select("COALESCE(salesforce_opportunities.stage_name, '-Undefined-')").joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?) AND NOT salesforce_opportunities.is_closed", current_user.organization_id, project_ids).group("COALESCE(salesforce_opportunities.stage_name, '-Undefined-')").sum("salesforce_opportunities.amount").sort
-      # stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?) AND NOT is_closed", project_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
+      forecast_chart_result = Project.select("COALESCE(projects.forecast, '-Undefined-')").where("projects.id IN (?)", project_ids).group("COALESCE(projects.forecast, '-Undefined-')").sum("projects.amount").sort
+      stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", project_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
     end
 
-    forecast_chart_result << @lost_won_totals.find{|k,v| k == "Closed Won"}.to_a if @lost_won_totals.find{|k,v| k == "Closed Won"}.present?
-
-    stage_chart_result += @lost_won_totals.to_a
+    @lost_won_totals = stage_chart_result.select{|s,t| ['Closed Won','Closed Lost'].include? s} # TODO: To take into account custom "Closed Won"/"Closed Lost" stages, use is_closed and is_won flags
 
     stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
     @forecast_chart_data = forecast_chart_result.map do |f, a|

@@ -4,7 +4,7 @@ var barColors = {
   default: "#7CB5EC",   // "CS" light blue
 };
 
-var closed_won_amount = large_number_to_human_signif_digits(<%= @lost_won_totals.find{|k,v| k == "Closed Won"}.present? ? @lost_won_totals.find{|k,v| k == "Closed Won"}.second.to_i : 0 %>);
+var closed_won_amount = large_number_to_human_signif_digits(<%= @lost_won_totals.present? && @lost_won_totals.find{|k,v| k == "Closed Won"}.present? ? @lost_won_totals.find{|k,v| k == "Closed Won"}.second.to_i : 0 %>);
 <% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
 <% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
 // var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";

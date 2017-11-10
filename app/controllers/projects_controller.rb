@@ -209,6 +209,7 @@ class ProjectsController < ApplicationController
   end
 
   private
+
   def index_html
     get_custom_fields_and_lists
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
@@ -225,24 +226,18 @@ class ProjectsController < ApplicationController
         projects = projects.where(owner_id: params[:owner])
       end
     end
-    # Stage Chart/filter
-    top_dashboard_data = SalesforceOpportunity.select('salesforce_opportunities.*, projects.*, salesforce_accounts.salesforce_account_name').joins('INNER JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id INNER JOIN projects on salesforce_opportunities.contextsmith_project_id = projects.id').where("salesforce_accounts.contextsmith_organization_id = ? AND projects.id IN (?)", current_user.organization_id, projects.ids)
+    # Stage chart/filter
+    stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", projects.ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
+
     stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
-    stage_chart_result = top_dashboard_data.map do |o|
-      if o.is_closed
-        [(o.is_won ? 'Closed Won' : 'Closed Lost'), o.amount]
-      else
-        [(o.stage_name.blank? ? '-Undefined-' : o.stage_name), o.amount]
-      end
-    end.group_by{|n,a| n}.sort do |x,y|
+    @stage_chart_data = stage_chart_result.sort do |x,y|
       stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
       stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
       stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
       stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
-      stage_name_x <=> stage_name_y
-    end # unmatched stage names are sorted to the left of everything
-    @stage_chart_data = stage_chart_result.map do |stage_name, data|
-      Hashie::Mash.new({ stage_name: stage_name, total_amount: data.inject(0){|sum, d| sum += (d.second.present? ? d.second : 0)} })
+      stage_name_x <=> stage_name_y  # unmatched stage names are sorted to the left of everything
+    end.map do |s, a|
+      Hashie::Mash.new({ stage_name: s, total_amount: a })
     end
   end
 
@@ -268,14 +263,14 @@ class ProjectsController < ApplicationController
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
 
     # searching
-    if params[:sSearch].present?
-      projects = projects.where('projects.name LIKE :search OR projects.stage LIKE :search OR projects.forecast LIKE :search', search: "%#{params[:sSearch]}%")
-    end
+    projects = projects.where('LOWER(projects.name) LIKE LOWER(:search) OR LOWER(projects.stage) LIKE LOWER(:search) OR LOWER(projects.forecast) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
 
     # ordering
     columns = [nil, 'name', 'stage', 'amount', 'forecast']
+    column_is_text = [false, true, true, false, true]
     sort_by = columns[params[:iSortCol_0].to_i]
-    projects = projects.select("LOWER(projects.#{sort_by})").order("LOWER(projects.#{sort_by}) #{params[:sSortDir_0]}")
+    sql_fn = column_is_text[params[:iSortCol_0].to_i] ? "LOWER" : ""
+    projects = projects.select("#{sql_fn}(projects.#{sort_by})").order("#{sql_fn}(projects.#{sort_by}) #{params[:sSortDir_0]} NULLS LAST")
 
     # PAGINATE HERE
     total_display_records = projects.ids.size
@@ -311,14 +306,14 @@ class ProjectsController < ApplicationController
         [
           ("<input type=\"checkbox\" class=\"bulk-project\" value=\"#{project.id}\">" if current_user.admin?),
           vc.link_to(project.name, project),
-          (project.stage.nil? or project.stage.empty?) ? "-" : project.stage,
+          (project.stage.blank?) ? "-" : project.stage,
           (project.amount.nil?) ? "-" : "$"+vc.number_to_human(project.amount),
           (project.forecast.nil?) ? "-" : project.forecast,
           get_full_name(project.project_owner),
           members_html,
           @days_to_close[project.id].nil? ? "-" : @days_to_close[project.id].to_s,
-          "<span class='#{@open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
-          "<div data-sparkline=\"#{@sparkline[project.id].join(', ')}; column\"></div>",
+          "<span class='#{@open_risk_count[project.id].present? && @open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
+          "<div data-sparkline=\"#{@sparkline[project.id].join(', ') if @sparkline[project.id].present?}; column\"></div>",
           @project_days_inactive[project.id].nil? ? "-" : @project_days_inactive[project.id],
           @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].strftime('%l:%M%p on %B %-d'),
           project.daily ? vc.link_to("<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{project.id}", class: "block m-b-xs", title: "Following daily") : vc.link_to("<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{project.id}", class: "block m-b-xs", title: "Follow daily")
