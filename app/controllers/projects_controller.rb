@@ -419,11 +419,12 @@ class ProjectsController < ApplicationController
     redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
 
+  # Should we re-use Project.visible_to scope?
   def set_editable_project
     @project = Project.joins(:account)
                       .where('accounts.organization_id = ?
                               AND (projects.is_public=true
-                                    OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
+                                    OR (projects.is_public=false AND projects.owner_id = ?) OR ?)', current_user.organization_id, current_user.id, current_user.admin?)
                       .find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to root_url, :flash => { :error => "Project not found or is private." }
