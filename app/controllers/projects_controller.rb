@@ -165,6 +165,11 @@ class ProjectsController < ApplicationController
         format.html { redirect_to @project, notice: 'Project was successfully updated.' }
         format.js
         format.json { respond_with_bip(@project) }
+
+        if @project.salesforce_opportunity.present?
+          update_result = SalesforceOpportunity.update_all_salesforce(client: @sfdc_client, salesforce_opportunity: @project.salesforce_opportunity, fields: project_params, current_user: current_user) 
+          puts "*** SFDC error: Update SFDC opportunity error! Detail: #{update_result[:detail]} ***" if update_result[:status] == "ERROR" # TODO: Warn user SFDC opp was not updated!
+        end
       else
         format.html { render action: 'edit' }
         format.js { render json: @project.errors, status: :unprocessable_entity }
@@ -426,6 +431,7 @@ class ProjectsController < ApplicationController
                               AND (projects.is_public=true
                                     OR (projects.is_public=false AND projects.owner_id = ?) OR ?)', current_user.organization_id, current_user.id, current_user.admin?)
                       .find(params[:id])
+    @sfdc_client = SalesforceService.connect_salesforce(user: current_user) if (@project.present? && @project.salesforce_opportunity.present?)
   rescue ActiveRecord::RecordNotFound
     redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end

@@ -140,17 +140,22 @@ class SalesforceAccount < ActiveRecord::Base
   # For salesforce_account, updates the local copy and pushes change to Salesforce
   def self.update_all_salesforce(client: , salesforce_account: , fields: , current_user: )
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
-    return { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." } if client.nil?
+    if client.nil?  
+      puts "*** Salesforce error: SFDC account not updated because no valid SFDC connection was provided to SalesforceAccount.update_all_salesforce()! ***"  # TODO: must update SFDC at a later time to keep in sync!
+      return { status: "ERROR", result: "Salesforce Error", detail: "SFDC account not updated because SFDC connection was not established!" } 
+    end
 
     return { status: "ERROR", result: "Salesforce account update error", detail: "Salesforce account does not exist or this user does not exist." } if salesforce_account.blank? || current_user.blank?
 
     if salesforce_account.organization == current_user.organization
       # puts "\n\nUpdating #{salesforce_account.salesforce_account_name}.... "
+      # puts "\n\n\nfields: #{fields}....\n\n\n"
 
       #TODO: Make update of CS and SFDC a single Unit of work (2 phase commit?)
       # Update Contextsmith model
       begin
-        salesforce_account.update(salesforce_account_name: fields[:salesforce_account_name])
+        salesforce_account.update(salesforce_account_name: fields[:name]) if fields[:name].present?
+        salesforce_account.update(salesforce_account_name: fields[:salesforce_account_name]) if fields[:salesforce_account_name].present? # TODO: remove later?
       rescue => e
         return { status: "ERROR", result: "Salesforce account update error", detail: e.to_s }
       end
@@ -158,7 +163,13 @@ class SalesforceAccount < ActiveRecord::Base
       # Update Salesforce
       # Put the fields and values to be updated into a hash object.
       sObject_meta = { id: salesforce_account.salesforce_account_id, type: "Account" }
-      sObject_fields = { name: fields[:salesforce_account_name] }
+
+      account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
+
+      sObject_fields = {}
+      account_standard_fields.each {|sfdc_field, cs_field| sObject_fields[sfdc_field] = fields[cs_field] if fields[cs_field].present?}
+      sObject_fields["Name"] = fields[:salesforce_account_name] if fields[:salesforce_account_name].present?  #TODO: remove later?
+
       update_result = SalesforceService.update_salesforce(client: client, update_type: "account", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
       if update_result[:status] == "SUCCESS"
@@ -177,8 +188,9 @@ class SalesforceAccount < ActiveRecord::Base
   # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC account to a field of a CS account, for all active accounts in current_user's organization. Process aborts immediately if there is an update/SFDC error.
   # TODO: Refactor so that we only go through active accounts that have salesforce accounts (owned by this user) linked to it, for performance.
   # Parameters:   client - a valid SFDC connection client
-  def self.refresh_fields(client, current_user)
-    accounts = current_user.organization.accounts.where(status: "Active")
+  #               accounts - an array of CS accounts to be imported
+  def self.refresh_fields(client, current_user, accounts=nil)
+    accounts ||= current_user.organization.accounts.where(status: "Active")
     # accounts = Account.visible_to(current_user)
     account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
     account_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Account], true))
