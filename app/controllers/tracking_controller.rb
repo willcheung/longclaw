@@ -18,14 +18,7 @@ class TrackingController < ApplicationController
         'camera' => 'fa-camera'
     }
     # TODO: use a time window for this
-    from = params[:from].present? ? params[:from].to_i : 30
-    to = params[:to].present? ? params[:to].to_i : 0
-
-    @trackings = TrackingRequest.includes(:tracking_events)
-                     .where(user_id: current_user.id)
-                     .where('tracking_events.date > ?', Date.today - from.days)
-                     .where('tracking_events.date <= ?', Date.today - to.days)
-                     .order('tracking_events.date DESC')
+    @trackings = TrackingRequest.includes(:tracking_events).where(user_id: current_user.id).order('tracking_events.date DESC')
     @opened, @unopened = @trackings.partition {|t| t.tracking_events.size > 0}
     @tracking_setting = get_tracking_setting
 
