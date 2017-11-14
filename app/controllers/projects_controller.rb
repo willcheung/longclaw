@@ -13,7 +13,7 @@ class ProjectsController < ApplicationController
   
 
   # GET /projects
-  # GET /projects.json
+  # GET /projects.jsonP
   def index
     respond_to do |format|
       format.html { index_html }
