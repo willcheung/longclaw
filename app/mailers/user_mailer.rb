@@ -12,33 +12,35 @@ class UserMailer < ApplicationMailer
 
   def daily_summary_email(user)
     return unless user.pro?
-    @user = user
-    @subs = user.valid_streams_subscriptions.daily
-    @upcoming_meetings = user.upcoming_meetings  # backend call-back
-    @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
- 
-    puts "Checking daily subscription for #{user.email}"
-    # Currently, will not send a daily summary e-mail unless user is subscribed to at least one project/opportunity.  TODO: Create a setting for subscribing to daily e-mail for calendar events.
-    unless @subs.blank? #&& @upcoming_meetings.blank?
-      @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email, :account_with_contacts_for_daily_email)
-      @updates_today = @updates_today.map do |proj|
-        # create a copy of each project to avoid deleting records when filtering relations
-        temp = proj.dup
-        # temp = Project.new     # another option
-        # assign relations before id
-        temp.activities = (proj.conversations_for_daily_email.visible_to(user.email) + proj.other_activities_for_daily_email.visible_to(user.email)).sort_by {|a| a.last_sent_date }.reverse
-        temp.notifications = proj.notifications_for_daily_email
-        temp.contacts = proj.account_with_contacts_for_daily_email.blank? ? [] : proj.account_with_contacts_for_daily_email.contacts
-        # CAUTION: if id is assigned before the relations, assigned relation will be overwritten in actual record
-        temp.id = proj.id
-        temp
+    Time.use_zone(user.time_zone) do
+      @user = user
+      @subs = user.valid_streams_subscriptions.daily
+      @upcoming_meetings = user.upcoming_meetings  # backend call-back
+      @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
+
+      puts "Checking daily subscription for #{user.email}"
+      # Currently, will not send a daily summary e-mail unless user is subscribed to at least one project/opportunity.  TODO: Create a setting for subscribing to daily e-mail for calendar events.
+      unless @subs.blank? #&& @upcoming_meetings.blank?
+        @updates_today = Project.visible_to(user.organization_id, user.id).following_daily(user.id).preload(:conversations_for_daily_email, :other_activities_for_daily_email, :notifications_for_daily_email, :account_with_contacts_for_daily_email)
+        @updates_today = @updates_today.map do |proj|
+          # create a copy of each project to avoid deleting records when filtering relations
+          temp = proj.dup
+          # temp = Project.new     # another option
+          # assign relations before id
+          temp.activities = (proj.conversations_for_daily_email.visible_to(user.email) + proj.other_activities_for_daily_email.visible_to(user.email)).sort_by {|a| a.last_sent_date }.reverse
+          temp.notifications = proj.notifications_for_daily_email
+          temp.contacts = proj.account_with_contacts_for_daily_email.blank? ? [] : proj.account_with_contacts_for_daily_email.contacts
+          # CAUTION: if id is assigned before the relations, assigned relation will be overwritten in actual record
+          temp.id = proj.id
+          temp
+        end
+
+        @updates_today = @updates_today.reject { |proj| proj.activities.blank? && proj.notifications.blank? && proj.contacts.blank? }.sort_by { |proj| proj.activities.size + proj.notifications.size + proj.contacts.size }.reverse
+
+        track user: user # ahoy_email tracker
+        puts "Emailing daily summary to #{user.email}"
+        mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
       end
-
-      @updates_today = @updates_today.reject { |proj| proj.activities.blank? && proj.notifications.blank? && proj.contacts.blank? }.sort_by { |proj| proj.activities.size + proj.notifications.size + proj.contacts.size }.reverse
-
-      track user: user # ahoy_email tracker
-      puts "Emailing daily summary to #{user.email}"
-      mail(to: user.email, subject: "Daily Summary for #{Time.current.yesterday.strftime('%A, %B %d')}")
     end
   end
 
