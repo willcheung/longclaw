@@ -267,6 +267,7 @@ Devise.setup do |config|
   config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
   config.omniauth :microsoft_v2_auth, ENV['AZURE_APPLICATION_CLIENT_ID'], ENV['AZURE_APPLICATION_CLIENT_SECRET'],
                   :scope => "offline_access openid email profile User.Read Calendars.Read Contacts.Read Mail.Read"
+                  #:scope => "offline_access openid email profile User.Read Calendars.Read Contacts.Read Mail.Read"
 
   config.omniauth :salesforce, ENV['salesforce_client_id'], ENV['salesforce_client_secret']
   config.omniauth :salesforce_sandbox, ENV['salesforce_sandbox_client_id'], ENV['salesforce_sandbox_client_secret']
