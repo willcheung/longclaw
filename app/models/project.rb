@@ -99,8 +99,8 @@ class Project < ActiveRecord::Base
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
         .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
-        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public = true OR projects.owner_id = ? OR (project_members.status = ? AND project_members.user_id = ?))',
-            organization_id, user_id, ProjectMember::STATUS[:Confirmed], user_id)
+        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public = true OR projects.owner_id = ? OR (project_members.status = ? AND project_members.user_id = ?) OR ?)',
+            organization_id, user_id, ProjectMember::STATUS[:Confirmed], user_id, User.find(user_id).admin?)
         .group('projects.id')
   }
   scope :visible_to_admin, -> (organization_id) {

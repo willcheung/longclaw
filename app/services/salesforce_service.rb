@@ -29,13 +29,17 @@ class SalesforceService
     begin
       puts "SalesforceService.connect_salesforce(): Refreshing access token. Client established using Restforce gem.  Accessing user_info... #{ client.user_info }"
     rescue => e
-      puts "*** SalesforceService error: Salesforce connection error!  Details: #{ e.to_s } ***"
+      if e.to_s == "invalid_grant: expired access/refresh token"
+        puts "*** Informational message: SalesforceService cannot establish SFDC connection because access/refresh token for #{(user.email if user.present?) || organization.name} has expired! ***"
+      else
+        puts "*** SalesforceService error: Salesforce connection error has been detected.  Details: #{ e.to_s } ***"
+      end
       return nil
     end
     begin
       puts "SalesforceService.connect_salesforce(): Daily SFDC API Requests Max/Limit=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
     rescue => e
-      puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established!" if client.present?
+      puts "*** Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established! ***" if client.present?
     end
 
     client
@@ -112,17 +116,33 @@ class SalesforceService
   def self.update_salesforce(params)
     client = params[:client]
     result = nil
-
     # return { status: "ERROR", result: "Salesforce error", detail: "Just a simulated Salesforce error in SalesforceService.update_salesforce()" } # simulates a Salesforce query error
 
+    # puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
     if (!client.nil?)
       case (params[:update_type])
       when "account"
         begin
-          # puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
-          update_result = client.update!('Account', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name])
+          acct_id = params[:sObject_meta][:id]
+          update_result = nil
+          params[:sObject_fields].each do |sfdc_field, new_val| 
+            # TODO: Temporary hack until figure out how to convert string into parameter
+            case (sfdc_field)
+            when "Name"
+              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Name: new_val)
+            # TODO: Fix 'JSON_PARSER_ERROR: Cannot deserialize instance of BillingAddress from VALUE_STRING value' error on export!
+            #when "BillingAddress"
+              #update_result = client.update!('Account', Id: params[:sObject_meta][:id], BillingAddress: new_val)
+            when "Description"
+              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Description: new_val)
+            when "Phone"
+              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Phone: new_val)
+            when "Website"
+              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Website: new_val)
+            end
 
-          result = { status: "SUCCESS", result: update_result, detail: "" }
+            result = { status: "SUCCESS", result: update_result, detail: "" }
+          end
         rescue => e
           detail = "Update Salesforce Account error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
           puts "*** SalesforceService error: #{ detail }"
@@ -130,9 +150,27 @@ class SalesforceService
         end
       when "opportunity"
         begin
-          puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
-          update_result = client.update!('Opportunity', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name], CloseDate: params[:sObject_fields][:close_date].present? ? (params[:sObject_fields][:close_date].strftime("%Y-%m-%d")) : nil, Probability: params[:sObject_fields][:probability], Amount: params[:sObject_fields][:amount], StageName: params[:sObject_fields][:stage_name], ForecastCategoryName: params[:sObject_fields][:forecast_category_name])
-          # params[:sObject_fields] = { name: ... , stage_name: ... , close_date: ... , probability: ... , amount: ... , forecast_category_name: ...  }
+          opp_id = params[:sObject_meta][:id]
+          update_result = nil
+          params[:sObject_fields].each do |sfdc_field, new_val|
+            # TODO: Temporary hack until figure out how to convert string into parameter
+            case (sfdc_field)
+            when "Name"
+              update_result = client.update!('Opportunity', Id: opp_id, Name: new_val)
+            when "CloseDate"
+              update_result = client.update!('Opportunity', Id: opp_id, CloseDate: new_val.strftime("%Y-%m-%d"))
+            when "Probability"
+              update_result = client.update!('Opportunity', Id: opp_id, Probability: new_val)
+            when "Amount"
+              update_result = client.update!('Opportunity', Id: opp_id, Amount: new_val) 
+            when "StageName"
+              update_result = client.update!('Opportunity', Id: opp_id, StageName: new_val) 
+            when "ForecastCategoryName"  
+              update_result = client.update!('Opportunity', Id: opp_id, ForecastCategoryName: new_val) 
+            end
+          end
+
+          # params[:sObject_fields] = { name: ... , stage_name: ... , close_date: ... , probability: ... , amount: ... , forecast_category_name: ...  } ????
 
           result = { status: "SUCCESS", result: update_result, detail: "" }
         rescue => e

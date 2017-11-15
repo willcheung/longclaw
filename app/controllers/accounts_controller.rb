@@ -66,6 +66,11 @@ class AccountsController < ApplicationController
         format.html { redirect_to @account, notice: 'Account was successfully updated.' }
         format.json { respond_with_bip(@account) }
         format.js { render action: 'show', status: :created, location: @account }
+
+        if @account.salesforce_accounts.first.present?
+          update_result = SalesforceAccount.update_all_salesforce(client: @sfdc_client, salesforce_account: @account.salesforce_accounts.first, fields: account_params, current_user: current_user) 
+          puts "*** SFDC error: Update SFDC account error! Detail: #{update_result[:detail]} ***" if update_result[:status] == "ERROR" # TODO: Warn user SFDC acct was not updated!
+        end
       else
         format.html { render action: 'edit' }
         format.json { render json: @account.errors, status: :unprocessable_entity }
@@ -179,6 +184,7 @@ class AccountsController < ApplicationController
     def set_account
       begin
         @account = Account.visible_to(current_user).find(params[:id])
+        @sfdc_client = SalesforceService.connect_salesforce(user: current_user) if (@account.present? && @account.salesforce_accounts.first.present?)
       rescue ActiveRecord::RecordNotFound
         redirect_to root_url, :flash => { :error => "Account not found or is private." }
       end

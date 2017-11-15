@@ -38,89 +38,97 @@
                   </div>
               </nav>
 
-              <div>
-                <span style="font-size:15px;font-weight:bold;padding-right:1em">Salesforce Activities Inclusion Query</span>
-                <span>
-                  <table class="table table-striped table-bordered table-hover responsive no-wrap">
-                    <thead>
-                      <tr>
-                        <th>Salesforce Entity</th>
-                        <th style="width:85%">Condition Predicate&nbsp;<i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="SOQL directly injected into the Salesforce query when retrieving Activities."></i></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><label style="font-weight:normal" for="salesforce-activity-entity-predicate-textarea">Account / Opportunity</label></td>
-                        <td>
-                          <div>
-                            <input id="salesforce-activity-entity-predicate-customconfig-id" type="hidden" value="<%= @entity_predicate.id %>">
-                            <textarea id="salesforce-activity-entity-predicate-textarea" rows="2" cols="80" placeholder="e.g., Id = '0099900000A0aAwAAA'" /><%= @entity_predicate.config_value %></textarea>
-                            <span>
-                              <button id="salesforce-activity-save-entity-predicate-btn" class="btn btn-primary btn-outline" style="vertical-align: top;" disabled> <i class="fa fa-floppy-o"></i></button>
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td><label style="font-weight:normal" for="salesforce-activity-activityhistory-predicate-textarea">ActivityHistory</label></td>
-                        <td>
-                          <div>
-                            <input id="salesforce-activity-activityhistory-predicate-customconfig-id" type="hidden" value="<%= @activityhistory_predicate.id %>">
-                            <textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., NOT(ActivitySubtype = 'Email' OR Subject like '%email%')" /><%= @activityhistory_predicate.config_value %></textarea>
-                            <span>
-                              <button id="salesforce-activity-save-activityhistory-predicate-btn" class="btn btn-primary btn-outline" style="vertical-align: top" disabled> <i class="fa fa-floppy-o"></i></button>
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td>Query Preview</td>
-                        <td><span class="well" id="salesforce-activity-query-preview" style="line-height: 1.5; display:inline-block; margin-bottom: 0">-</span></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </span>
-              </div>
-              <div style="width:97.5%;margin:0 auto">
-                <p style="border-bottom:2px dotted #CCC"></p>
-              </div>
-              <div>
-                <span style="font-size:15px;font-weight:bold;padding-right:1em">Opportunity and Salesforce Entity Mapping</span>
-                <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
-                    <thead>
+              <% if @salesforce_connection_error %>
+                  <div class="fa-2x" style="color:white; background-color: #F66; font-size: 14px; border:1px solid black; border-radius:10px; line-height:3; margin:3em 0; padding:6px 18px">
+                    <i class="fa fa-exclamation-circle"></i> — Salesforce connection error occurred.  Try <strong>disconnecting and reconnecting</strong> to Salesforce.
+                  </div>
+                </div> <!-- end previous div -->
+                <div>  <!-- start new div -->
+              <% else %>
+                <div>
+                  <span style="font-size:15px;font-weight:bold;padding-right:1em">Salesforce Activities Inclusion Query</span>
+                  <span>
+                    <table class="table table-striped table-bordered table-hover responsive no-wrap">
+                      <thead>
                         <tr>
-                            <th style="vertical-align: bottom">ContextSmith Opportunity</th>
-                            <th>
-                              <span style="vertical-align: bottom; margin-right:5px">Salesforce Entity</span>
-                              <span style="display: inline-block;">
-                                <div>
-                                  <button id="salesforce-activities-sync" class="btn btn-sm btn-primary btn-outline" btnLabel="Sync Activities with Salesforce" style="width:18em;"><i class="fa fa-refresh"></i> Sync Activities with Salesforce</button>
-                                  <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Import and export Activities in ContextSmith and Salesforce."></i>
-                                </div>
+                          <th>Salesforce Entity</th>
+                          <th style="width:85%">Condition Predicate&nbsp;<i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="SOQL directly injected into the Salesforce query when retrieving Activities."></i></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><label style="font-weight:normal" for="salesforce-activity-entity-predicate-textarea">Account / Opportunity</label></td>
+                          <td>
+                            <div>
+                              <input id="salesforce-activity-entity-predicate-customconfig-id" type="hidden" value="<%= @entity_predicate.id %>">
+                              <textarea id="salesforce-activity-entity-predicate-textarea" rows="2" cols="80" placeholder="e.g., Id = '0099900000A0aAwAAA'" /><%= @entity_predicate.config_value %></textarea>
+                              <span>
+                                <button id="salesforce-activity-save-entity-predicate-btn" class="btn btn-primary btn-outline" style="vertical-align: top;" disabled> <i class="fa fa-floppy-o"></i></button>
                               </span>
-                            </th>
+                            </div>
+                          </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                      <% @opportunities.each do |s| %>
                         <tr>
-                          <td class="col-lg-5"><a href="<%= project_path(s) %>"><%= s.name %></a></td>
-                          <% if s.salesforce_opportunity.nil? %>
-                            <% if s.account.salesforce_accounts.empty? %>
-                              <td class="col-lg-7">Not linked</td>  
-                            <% else %>
-                              <td class="col-lg-7">Linked to SFDC Account: <%= s.account.salesforce_accounts.map{|n| n.salesforce_account_name}.join(', ') %></td>
-                            <% end %>
-                          <% else %>
-                            <td class="col-lg-7">Linked to SFDC Opportunity: <%= s.salesforce_opportunity.name %></td>
-                          <% end %>
+                          <td><label style="font-weight:normal" for="salesforce-activity-activityhistory-predicate-textarea">ActivityHistory</label></td>
+                          <td>
+                            <div>
+                              <input id="salesforce-activity-activityhistory-predicate-customconfig-id" type="hidden" value="<%= @activityhistory_predicate.id %>">
+                              <textarea id="salesforce-activity-activityhistory-predicate-textarea" rows="2" cols="80" placeholder="e.g., NOT(ActivitySubtype = 'Email' OR Subject like '%email%')" /><%= @activityhistory_predicate.config_value %></textarea>
+                              <span>
+                                <button id="salesforce-activity-save-activityhistory-predicate-btn" class="btn btn-primary btn-outline" style="vertical-align: top" disabled> <i class="fa fa-floppy-o"></i></button>
+                              </span>
+                            </div>
+                          </td>
                         </tr>
-                      <% end %>
-                    </tbody>
-                </table>
-              </div>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td>Query Preview</td>
+                          <td><span class="well" id="salesforce-activity-query-preview" style="line-height: 1.5; display:inline-block; margin-bottom: 0">-</span></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </span>
+                </div>
+                <div style="width:97.5%;margin:0 auto">
+                  <p style="border-bottom:2px dotted #CCC"></p>
+                </div>
+                <div>
+                  <span style="font-size:15px;font-weight:bold;padding-right:1em">Opportunity and Salesforce Entity Mapping</span>
+                  <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
+                      <thead>
+                          <tr>
+                              <th style="vertical-align: bottom">ContextSmith Opportunity</th>
+                              <th>
+                                <span style="vertical-align: bottom; margin-right:5px">Salesforce Entity</span>
+                                <span style="display: inline-block;">
+                                  <div>
+                                    <button id="salesforce-activities-sync" class="btn btn-sm btn-primary btn-outline" btnLabel="Sync Activities with Salesforce" style="width:18em;"><i class="fa fa-refresh"></i> Sync Activities with Salesforce</button>
+                                    <i class="fa fa-question-circle text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Import and export Activities in ContextSmith and Salesforce."></i>
+                                  </div>
+                                </span>
+                              </th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                        <% @opportunities.each do |s| %>
+                          <tr>
+                            <td class="col-lg-5"><a href="<%= project_path(s) %>"><%= s.name %></a></td>
+                            <% if s.salesforce_opportunity.nil? %>
+                              <% if s.account.salesforce_accounts.empty? %>
+                                <td class="col-lg-7">Not linked</td>  
+                              <% else %>
+                                <td class="col-lg-7">Linked to SFDC Account: <%= s.account.salesforce_accounts.map{|n| n.salesforce_account_name}.join(', ') %></td>
+                              <% end %>
+                            <% else %>
+                              <td class="col-lg-7">Linked to SFDC Opportunity: <%= s.salesforce_opportunity.name %></td>
+                            <% end %>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                  </table>
+                </div>
+              <%end%> <!-- End: if !@salesforce_connection_error -->
             <%end%>
         </div>
     </div>
