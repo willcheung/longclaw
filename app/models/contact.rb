@@ -16,7 +16,6 @@
 #  background_info    :text
 #  department         :string
 #  external_source_id :string
-#  buyer_role         :string
 #
 # Indexes
 #
@@ -57,7 +56,7 @@ class Contact < ActiveRecord::Base
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
   ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', DecisionMaker: 'Decision Maker', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "mobile" => "Mobile Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department", "buyer_role" => "Buyer Role" }
+  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "mobile" => "Mobile Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department" }
 
   def is_source_from_salesforce?
     return self.source == "Salesforce"
@@ -79,8 +78,7 @@ class Contact < ActiveRecord::Base
       mobile: (self.mobile if self.mobile.present?) || con.mobile,
       background_info: (self.background_info if self.background_info.present?) || con.background_info,
       department: (self.department if self.department.present?) || con.department,
-      external_source_id: (self.external_source_id if self.external_source_id.present?) || con.external_source_id,
-      # buyer_role: self.buyer_role,
+      external_source_id: (self.external_source_id if self.external_source_id.present?) || con.external_source_id
     )
   end
 

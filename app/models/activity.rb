@@ -1,3 +1,37 @@
+# == Schema Information
+#
+# Table name: activities
+#
+#  id                   :integer          not null, primary key
+#  category             :string           not null
+#  title                :string           not null
+#  note                 :text             default(""), not null
+#  is_public            :boolean          default(TRUE), not null
+#  backend_id           :string
+#  last_sent_date       :datetime
+#  last_sent_date_epoch :string
+#  from                 :jsonb            default([]), not null
+#  to                   :jsonb            default([]), not null
+#  cc                   :jsonb            default([]), not null
+#  email_messages       :jsonb            default([]), not null
+#  project_id           :uuid             not null
+#  posted_by            :uuid             not null
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
+#  is_pinned            :boolean          default(FALSE)
+#  pinned_by            :uuid
+#  pinned_at            :datetime
+#  rag_score            :integer
+#
+# Indexes
+#
+#  index_activities_on_category_and_backend_id_and_project_id  (category,backend_id,project_id) UNIQUE
+#  index_activities_on_category_and_project_id_and_backend_id  (category,project_id,backend_id) UNIQUE
+#  index_activities_on_email_messages                          (email_messages)
+#  index_activities_on_last_sent_date                          (last_sent_date)
+#  index_activities_on_project_id_and_category_and_backend_id  (project_id,category,backend_id) UNIQUE
+#
+
  # == Schema Information
 #
 # Table name: activities
@@ -248,7 +282,10 @@ class Activity < ActiveRecord::Base
             if !a.second.nil? # if any ActivityHistory
               a.second.each do |c|
                 owner = { "address": Activity.sanitize(c.Owner.Email)[1, c.Owner.Email.length], "personal": Activity.sanitize(c.Owner.Name)[1, c.Owner.Name.length] }
-                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                # val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', 
+                         to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD'), 
+                         EXTRACT(EPOCH FROM to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD')),
                          '[#{owner.to_json}]',
                          '[]',
                          '[]',

@@ -69,6 +69,27 @@
                 </li>
               </ul></div>
             </div>
+
+            <% if @project %>
+            <div class="nav" style="padding: 1em 0">
+                <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="https://logo.clearbit.com/<%= @clearbit_domain %>"/>
+                <div>
+                    <h3 style="margin-bottom: 9px" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="
+                    <strong><%= Project::MAPPABLE_FIELDS_META["forecast"] %></strong>: <%= @project.forecast.nil? ? "-" : @project.forecast %></br> 
+                    <strong><%= Project::MAPPABLE_FIELDS_META["stage"] %></strong>: <%= @project.stage.nil? ? "-" : @project.stage %></br> 
+                    <strong><%= Project::MAPPABLE_FIELDS_META["amount"] %></strong>: <%= (@project.amount.nil?) ? "-" : "$"+number_to_human(@project.amount) %></br>
+                    <%= "<strong>People</strong>: #{@project.project_members.size}<br/>".html_safe  %>
+                    "><a href="<%= project_path(@project) %>" target="_blank"><%= @project.name %></a></h3>
+
+                    <div class="text-mute-gray" style="font-size: 10px">
+                        <span style="display:block"><strong>Owner:</strong>&nbsp;&nbsp;<%= @project.project_owner.present? ? get_full_name(@project.project_owner) : "(None)" %></span>
+                        <span><strong>Linked to Salesforce:</strong>&nbsp;&nbsp;<%= (@project.salesforce_opportunity.nil? && @project.account.salesforce_accounts.empty?) ? "Not Linked" : "Linked" %></span>
+                    </div>
+
+                </div>
+            </div>
+            <% end %>
+
             <div>
                 <ul class="nav nav-tabs">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">People</a></li>

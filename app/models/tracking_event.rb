@@ -14,6 +14,7 @@
 #
 # Indexes
 #
+#  index_tracking_events_on_date         (date)
 #  index_tracking_events_on_tracking_id  (tracking_id)
 #
 
