@@ -156,27 +156,38 @@ class SalesforceOpportunity < ActiveRecord::Base
   # For salesforce_opportunity, updates the local copy and pushes change to Salesforce
   def self.update_all_salesforce(client: , salesforce_opportunity: , fields: , current_user: )
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
-    return { status: "ERROR", result: "ContextSmith Error", detail: "Parameter passed to an internal function is invalid." } if client.nil?
+    if client.nil?  
+      puts "*** Salesforce error: SFDC opportunity not updated because no valid SFDC connection was provided to SalesforceOpportunity.update_all_salesforce()! ***" # TODO: must update SFDC at a later time to keep in sync!
+      return { status: "ERROR", result: "Salesforce Error", detail: "SFDC opportunity not updated because SFDC connection was not established!" } 
+    end
     return { status: "ERROR", result: "Salesforce opportunity update error", detail: "Salesforce opportunity does not exist or this user does not exist." } if salesforce_opportunity.blank? || current_user.blank?
 
     if salesforce_opportunity.salesforce_account.organization == current_user.organization
       # puts "\n\nUpdating #{salesforce_opportunity.name}.... "
+      # puts "\n\n\nfields: #{fields}....\n\n\n"
 
       begin
+        # puts "\t\t\t\t\tfields[:close_date]: #{fields[:close_date]}"
         fields[:close_date].strip!
-        close_date = fields[:close_date].blank? ? nil : Date.strptime(fields[:close_date], "%m-%d-%Y")
+        fields[:close_date] = fields[:close_date].blank? ? nil : Date.strptime(fields[:close_date], "%m-%d-%Y")
       rescue ArgumentError => e
         begin
-          close_date = Date.strptime(fields[:close_date], "%m/%d/%Y")
+          fields[:close_date] = Date.strptime(fields[:close_date], "%m/%d/%Y")
         rescue ArgumentError => e
           return { status: "ERROR", result: "Salesforce opportunity update error", detail: e.to_s + ". Cannot parse close_date '#{fields[:close_date]}'" }
         end
-      end
+      end if (fields[:close_date].present? && (fields[:close_date].is_a? String))
 
       #TODO: Make update of CS and SFDC a single Unit of work (2 phase commit?)
       # Update Contextsmith model
       begin
-        salesforce_opportunity.update(name: fields[:name], stage_name: fields[:stage_name], close_date: close_date, probability: fields[:probability], amount: fields[:amount], forecast_category_name: fields[:forecast_category_name]) # omitted: expected_revenue: fields[:expected_revenue]
+        salesforce_opportunity.update(name: fields[:name]) if fields[:name].present?
+        salesforce_opportunity.update(stage_name: fields[:stage_name]) if fields[:stage_name].present?
+        salesforce_opportunity.update(close_date: fields[:close_date]) if fields[:close_date].present?
+        salesforce_opportunity.update(probability: fields[:probability]) if fields[:probability].present?
+        salesforce_opportunity.update(amount: fields[:amount]) if fields[:amount].present?
+        salesforce_opportunity.update(forecast_category_name: fields[:forecast_category_name]) if fields[:forecast_category_name].present?
+        # omitted: expected_revenue: fields[:expected_revenue]
       rescue => e
         return { status: "ERROR", result: "Salesforce opportunity update error", detail: e.to_s }
       end
@@ -184,7 +195,16 @@ class SalesforceOpportunity < ActiveRecord::Base
       # Update Salesforce
       # Put the fields and values to be updated into a hash object.
       sObject_meta = { id: salesforce_opportunity.salesforce_opportunity_id, type: "Opportunity" }
-      sObject_fields = { name: fields[:name], stage_name: fields[:stage_name], close_date: close_date, probability: fields[:probability], amount: fields[:amount], forecast_category_name: fields[:forecast_category_name] }
+      
+      opportunity_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
+      # opportunity_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
+
+      sObject_fields = {}
+      opportunity_standard_fields.each {|sfdc_field, cs_field| sObject_fields[sfdc_field] = fields[cs_field] if fields[cs_field].present?}
+      sObject_fields["Name"] = fields[:name] if fields[:name].present?
+      sObject_fields["StageName"] = fields[:stage_name] if fields[:stage_name].present?  #TODO: remove later?
+      sObject_fields["ForecastCategoryName"] = fields[:forecast_category_name] if fields[:forecast_category_name].present?  #TODO: remove later?
+
       update_result = SalesforceService.update_salesforce(client: client, update_type: "opportunity", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
       if update_result[:status] == "SUCCESS"
@@ -202,8 +222,9 @@ class SalesforceOpportunity < ActiveRecord::Base
 
   # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to a field of a CS opportunity. This is for all active and confirmed opportunities visible to current_user. Process aborts immediately if there is an update/SFDC error.
   # Parameters:   client - a valid SFDC connection client
-  def self.refresh_fields(client, current_user)
-    opportunities = Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
+  #               opportunities - an array of CS opportunities to be imported
+  def self.refresh_fields(client, current_user, opportunities=nil)
+    opportunities ||= Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
     # opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
     opportunity_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
     opportunity_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
