@@ -22,6 +22,8 @@
 #
 # Indexes
 #
+#  index_salesforce_opportunities_on_contextsmith_project_id    (contextsmith_project_id)
+#  index_salesforce_opportunities_on_salesforce_account_id      (salesforce_account_id)
 #  index_salesforce_opportunities_on_salesforce_opportunity_id  (salesforce_opportunity_id) UNIQUE
 #
 

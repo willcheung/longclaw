@@ -32,8 +32,12 @@
 #
 # Indexes
 #
-#  index_projects_on_account_id  (account_id)
-#  index_projects_on_deleted_at  (deleted_at)
+#  index_projects_on_account_id    (account_id)
+#  index_projects_on_deleted_at    (deleted_at)
+#  index_projects_on_is_confirmed  (is_confirmed)
+#  index_projects_on_is_public     (is_public)
+#  index_projects_on_owner_id      (owner_id)
+#  index_projects_on_status        (status)
 #
 
 include Utils

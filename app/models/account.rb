@@ -23,7 +23,9 @@
 #
 # Indexes
 #
-#  index_accounts_on_deleted_at  (deleted_at)
+#  index_accounts_on_deleted_at       (deleted_at)
+#  index_accounts_on_organization_id  (organization_id)
+#  index_accounts_on_owner_id         (owner_id)
 #
 
 include Utils
