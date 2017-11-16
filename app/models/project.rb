@@ -355,7 +355,6 @@ class Project < ActiveRecord::Base
   def contact_relationship_metrics
   #   name
   #   title
-  #   buyer role
   #   last sent by
   #   last sent
   #   last reply

@@ -282,7 +282,10 @@ class Activity < ActiveRecord::Base
             if !a.second.nil? # if any ActivityHistory
               a.second.each do |c|
                 owner = { "address": Activity.sanitize(c.Owner.Email)[1, c.Owner.Email.length], "personal": Activity.sanitize(c.Owner.Name)[1, c.Owner.Name.length] }
-                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                # val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', 
+                         to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD'), 
+                         EXTRACT(EPOCH FROM to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD')),
                          '[#{owner.to_json}]',
                          '[]',
                          '[]',

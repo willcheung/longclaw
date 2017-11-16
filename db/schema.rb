@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171115194310) do
+ActiveRecord::Schema.define(version: 20171116015315) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -39,6 +39,8 @@ ActiveRecord::Schema.define(version: 20171115194310) do
   end
 
   add_index "accounts", ["deleted_at"], name: "index_accounts_on_deleted_at", using: :btree
+  add_index "accounts", ["organization_id"], name: "index_accounts_on_organization_id", using: :btree
+  add_index "accounts", ["owner_id"], name: "index_accounts_on_owner_id", using: :btree
 
   create_table "activities", force: :cascade do |t|
     t.string   "category",                             null: false
@@ -63,8 +65,10 @@ ActiveRecord::Schema.define(version: 20171115194310) do
   end
 
   add_index "activities", ["category", "backend_id", "project_id"], name: "index_activities_on_category_and_backend_id_and_project_id", unique: true, using: :btree
+  add_index "activities", ["category", "project_id", "backend_id"], name: "index_activities_on_category_and_project_id_and_backend_id", unique: true, using: :btree
   add_index "activities", ["email_messages"], name: "index_activities_on_email_messages", using: :gin
-  add_index "activities", ["project_id"], name: "index_activities_on_project_id", using: :btree
+  add_index "activities", ["last_sent_date"], name: "index_activities_on_last_sent_date", using: :btree
+  add_index "activities", ["project_id", "category", "backend_id"], name: "index_activities_on_project_id_and_category_and_backend_id", unique: true, using: :btree
 
   create_table "ahoy_events", id: :uuid, default: nil, force: :cascade do |t|
     t.uuid     "visit_id"
@@ -330,6 +334,10 @@ ActiveRecord::Schema.define(version: 20171115194310) do
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
   add_index "projects", ["deleted_at"], name: "index_projects_on_deleted_at", using: :btree
+  add_index "projects", ["is_confirmed"], name: "index_projects_on_is_confirmed", using: :btree
+  add_index "projects", ["is_public"], name: "index_projects_on_is_public", using: :btree
+  add_index "projects", ["owner_id"], name: "index_projects_on_owner_id", using: :btree
+  add_index "projects", ["status"], name: "index_projects_on_status", using: :btree
 
   create_table "risk_settings", force: :cascade do |t|
     t.float    "medium_threshold"
@@ -358,6 +366,7 @@ ActiveRecord::Schema.define(version: 20171115194310) do
     t.datetime "updated_at",                                null: false
   end
 
+  add_index "salesforce_accounts", ["contextsmith_organization_id"], name: "index_salesforce_accounts_on_contextsmith_organization_id", using: :btree
   add_index "salesforce_accounts", ["salesforce_account_id"], name: "index_salesforce_accounts_on_salesforce_account_id", unique: true, using: :btree
 
   create_table "salesforce_opportunities", force: :cascade do |t|
@@ -379,6 +388,8 @@ ActiveRecord::Schema.define(version: 20171115194310) do
     t.string   "owner_id"
   end
 
+  add_index "salesforce_opportunities", ["contextsmith_project_id"], name: "index_salesforce_opportunities_on_contextsmith_project_id", using: :btree
+  add_index "salesforce_opportunities", ["salesforce_account_id"], name: "index_salesforce_opportunities_on_salesforce_account_id", using: :btree
   add_index "salesforce_opportunities", ["salesforce_opportunity_id"], name: "index_salesforce_opportunities_on_salesforce_opportunity_id", unique: true, using: :btree
 
   create_table "tracking_events", force: :cascade do |t|
@@ -392,6 +403,7 @@ ActiveRecord::Schema.define(version: 20171115194310) do
     t.string   "domain"
   end
 
+  add_index "tracking_events", ["date"], name: "index_tracking_events_on_date", order: {"date"=>:desc}, using: :btree
   add_index "tracking_events", ["tracking_id"], name: "index_tracking_events_on_tracking_id", using: :btree
 
   create_table "tracking_requests", force: :cascade do |t|
@@ -408,6 +420,7 @@ ActiveRecord::Schema.define(version: 20171115194310) do
   end
 
   add_index "tracking_requests", ["tracking_id"], name: "index_tracking_requests_on_tracking_id", using: :btree
+  add_index "tracking_requests", ["user_id"], name: "index_tracking_requests_on_user_id", using: :btree
 
   create_table "tracking_settings", force: :cascade do |t|
     t.uuid     "user_id"
