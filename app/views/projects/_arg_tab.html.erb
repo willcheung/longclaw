@@ -12,7 +12,6 @@
             <th>Last Sent</th>
             <th>Last Meeting</th>
             <th>Next Meeting</th>
-            <th>Buyer role</th>
           </tr>
           </thead>
           <tbody>
@@ -53,7 +52,6 @@
               </td>
               <td title="<%= Time.zone.at(contact.last_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_meeting_date.present? %>" data-order="<%= contact.last_meeting_date.to_i %>"><%= Time.zone.at(contact.last_meeting_date).strftime('%b %e') if contact.last_meeting_date.present? %></td>
               <td title="<%= Time.zone.at(contact.next_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.next_meeting_date.present? %>" data-order="<%= contact.next_meeting_date.to_i %>"><%= Time.zone.at(contact.next_meeting_date).strftime('%b %e') if contact.next_meeting_date.present? %></td>
-              <td><%= contact.buyer_role %></td>
             </tr>
           <% end %>
           </tbody>
