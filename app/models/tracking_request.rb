@@ -4,19 +4,20 @@
 #
 #  id          :integer          not null, primary key
 #  user_id     :uuid
-#  message_id  :string
+#  tracking_id :string
+#  message_id  :string(255)
+#  subject     :string
 #  recipients  :text             default([]), is an Array
 #  status      :string
 #  sent_at     :datetime
+#  email_id    :string
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
-#  tracking_id :string
-#  subject     :string
-#  email_id    :string
 #
 # Indexes
 #
 #  index_tracking_requests_on_tracking_id  (tracking_id)
+#  index_tracking_requests_on_user_id      (user_id)
 #
 
 class TrackingRequest < ActiveRecord::Base
