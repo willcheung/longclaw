@@ -158,7 +158,7 @@ class SalesforceOpportunity < ActiveRecord::Base
   # For salesforce_opportunity, updates the local copy and pushes change to Salesforce
   def self.update_all_salesforce(client: , salesforce_opportunity: , fields: , current_user: )
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
-    if client.nil?  
+    if client.nil?
       puts "*** Salesforce error: SFDC opportunity not updated because no valid SFDC connection was provided to SalesforceOpportunity.update_all_salesforce()! ***" # TODO: must update SFDC at a later time to keep in sync!
       return { status: "ERROR", result: "Salesforce Error", detail: "SFDC opportunity not updated because SFDC connection was not established!" } 
     end

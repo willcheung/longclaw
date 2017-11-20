@@ -327,12 +327,14 @@ class Activity < ActiveRecord::Base
 
   # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory).
   # Parameters:   client - SFDC connection
-  #               type - SFDC entity type: 'Account' or 'Opportunity'
+  #               sObjectId (optional) - the SFDC Id that identifies the entity 'Account' or 'Opportunity'
+  #               type (optional) - the SFDC entity type: 'Account' or 'Opportunity'
   #               from_date (optional) - the start date of a date range (e.g., "2018-01-01")
   #               to_date (optional) - the end date of a date range (e.g., "2018-01-01")
   # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
-  def self.delete_cs_activities(client, type="Account", from_date=nil, to_date=nil)
+  def self.delete_cs_activities(client, sObjectId=nil, type=nil, from_date=nil, to_date=nil)
     delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
+    delete_tasks_query_stmt += " AND WhatId = '#{sObjectId}'" if sObjectId.present?
     delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
     delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
     puts "Deleting all existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce.  SFDC query=\'#{delete_tasks_query_stmt}\'...."

@@ -95,11 +95,13 @@ class SalesforceController < ApplicationController
     sfdc_oauthuser
   end
 
-  # Load SFDC Accounts and new SFDC Opportunities, including updating values in mapped (standard and custom) fields. For linked CS accts, import and upsert SFDC contacts.
+  # Load SFDC Accounts and new SFDC Opportunities and update values in mapped (standard and custom) fields. For linked CS accts, import/upsert SFDC contacts into CS.
   # For individual (non-admin, e.g., "Pro") users: create CS opportunities and corresponding accts for open and unlinked SFDC opps owned by user, link the CS Acct and Opps to the corresponding SFDC entity, and create account Contacts.
+  # For daily task (for_daily_task=true): only import SFDC contacts that were updated from the previous day
   # Parameters:     client - a valid SFDC connection
   #                 user - the user making the request, admin or individual (non-admin)
-  def self.import_and_create_contextsmith(client: , user: )
+  #                 for_daily_task - true, if this is daily job; false, default 
+  def self.import_and_create_contextsmith(client: , user: , for_daily_task: false)
     # Upsert SFDC Accounts and SFDC Opportunities
     SalesforceAccount.load_accounts(client, user.organization_id) 
     if user.admin?
@@ -165,7 +167,12 @@ class SalesforceController < ApplicationController
     # Import/upsert Contacts into all linked accts (from SFDC into ContextSmith)
     user.organization.salesforce_accounts.is_linked.each do |sfa|
       account = sfa.account
-      import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id)
+      if for_daily_task
+        import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id, 1.days.ago.at_midnight.utc)
+      else
+        import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id)
+      end
+
       failure_method_location = "Contact.load_salesforce_contacts()"
 
       if import_result[:status] == "ERROR"
@@ -318,7 +325,7 @@ class SalesforceController < ApplicationController
     render plain: ''
   end
 
-  # Export CS Activity or Contacts into the mapped SFDC Account (or Opportunity)
+  # Export CS Activity into the mapped SFDC Account (or Opportunity)
   # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account.  For all active and confirmed opportunities visible to admin.
   def export_salesforce
     case params[:entity_type]
@@ -338,13 +345,12 @@ class SalesforceController < ApplicationController
       sfdc_client = SalesforceService.connect_salesforce(user: current_user)
 
       unless sfdc_client.nil?  # unless connection error
-        Activity.delete_cs_activities(sfdc_client) #clear all existing CS Activities in SFDC (accounts)
-
         @opportunities.each do |s|
           # TODO: Issue #829 Need to allow SFDC export of activities to continue even after encountering an error.  Use new sync_salesforce code as guide.
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
             if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
+                Activity.delete_cs_activities(sfdc_client, sfa.salesforce_account_id, "Account")
                 export_result = Activity.export_cs_activities(sfdc_client, s, sfa.salesforce_account_id, "Account")
 
                 if export_result[:status] == "ERROR"
@@ -357,6 +363,7 @@ class SalesforceController < ApplicationController
             end
           else # CS Opportunity linked to SFDC Opportunity
             # Save at the Opportunity level
+            Activity.delete_cs_activities(sfdc_client, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
             export_result = Activity.export_cs_activities(sfdc_client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
             if export_result[:status] == "ERROR"
@@ -652,9 +659,9 @@ class SalesforceController < ApplicationController
     when "contacts"
       method_name = "sync_salesforce#contacts()"
       account_mapping = []
-      accounts = Account.visible_to(current_user)
+      accounts = Account.visible_to(current_user).select{|a| a.salesforce_accounts.present?}
       accounts.each do |a|
-        account_mapping << [a, a.salesforce_accounts.first] if a.salesforce_accounts.present?
+        account_mapping << [a, a.salesforce_accounts.first]
       end
 
       unless account_mapping.empty?  # no visible or mapped accounts
