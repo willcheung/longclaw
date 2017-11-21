@@ -150,8 +150,10 @@ Longclaw::Application.routes.draw do
     scope "tracking", controller: :tracking, as: 'tracking' do
       post 'create'
       get '/' => 'tracking#index'
+      get 'list' => 'tracking#list'
       post 'toggle'
       get 'new_events'
+      get 'new_event_objects' => 'tracking#new_event_objects'
       post 'seen'
     end
 

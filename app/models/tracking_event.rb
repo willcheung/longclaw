@@ -27,4 +27,9 @@ class TrackingEvent < ActiveRecord::Base
   def device
     DeviceDetector.new(self.user_agent)
   end
+
+  def client
+    dd = DeviceDetector.new(self.user_agent)
+    { device_name: dd.device_name , device_type: dd.device_type, name: dd.name, os_name: dd.os_name }
+  end
 end
