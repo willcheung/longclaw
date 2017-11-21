@@ -116,7 +116,7 @@ class TrackingController < ApplicationController
     ts = TrackingSetting.where(user: current_user).first_or_create
 
     ts.last_seen = DateTime.now
-    # ts.save - TODO REMOVE AGAIN
+    ts.save
     result = {status: 'ok'}
     render json: result
   end
