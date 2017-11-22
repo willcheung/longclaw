@@ -1214,7 +1214,7 @@ class Project < ActiveRecord::Base
             new_value = sfdc_val.join(", ")
           end
           CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value) # Make update to project custom field with value obtained in SFDC query
-        end
+        end if sObj.present?
         result = { status: "SUCCESS" }
       else
         result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " opportunity_custom_field_names=" + opportunity_custom_field_names.to_s }
