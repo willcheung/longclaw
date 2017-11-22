@@ -112,7 +112,7 @@ class OauthUser < ActiveRecord::Base
   end
 
   # Returns the Salesforce Instance (URL) of the organization to be used as a base URL 
-  # TODO: Might belong in SalesforceService Controller?
+  # TODO: Might belong in SalesforceService Controller or Organization Controller
   def self.get_salesforce_instance_url(organization_id)
     salesforce_user = self.find_by(oauth_provider: 'salesforce', organization_id: organization_id) || self.find_by(oauth_provider: 'salesforcesandbox', organization_id: organization_id)
     if salesforce_user.present?

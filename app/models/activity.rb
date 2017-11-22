@@ -235,7 +235,7 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Copies/imports Salesforce activities (ActivityHistory) in the specified SFDC Account or Opportunity into the specified CS opportunity (project).  Does not import previously-exported CS data residing on SFDC.
+  # Copies/imports Salesforce activities (ActivityHistory) in the specified SFDC Account or Opportunity into the specified CS opportunity (project).  Does not import previously-exported CS data residing on SFDC. If a SFDC activity has no ActivityDate, we use LastModifiedDate for the CS Activity last_sent_date instead.
   # Parameters:   client - a valid SFDC connection
   #               project - the CS opportunity into which to load the SFDC activity
   #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
@@ -284,8 +284,8 @@ class Activity < ActiveRecord::Base
                 owner = { "address": Activity.sanitize(c.Owner.Email)[1, c.Owner.Email.length], "personal": Activity.sanitize(c.Owner.Name)[1, c.Owner.Name.length] }
                 # val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
                 val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', 
-                         to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD'), 
-                         EXTRACT(EPOCH FROM to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD')),
+                         COALESCE(to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD'), '#{c.LastModifiedDate}'), 
+                         COALESCE(EXTRACT(EPOCH FROM to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD')), '#{DateTime.parse(c.LastModifiedDate).to_i}'),
                          '[#{owner.to_json}]',
                          '[]',
                          '[]',
@@ -327,12 +327,14 @@ class Activity < ActiveRecord::Base
 
   # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory).
   # Parameters:   client - SFDC connection
-  #               type - SFDC entity type: 'Account' or 'Opportunity'
+  #               sObjectId (optional) - the SFDC Id that identifies the entity 'Account' or 'Opportunity'
+  #               type (optional) - the SFDC entity type: 'Account' or 'Opportunity'
   #               from_date (optional) - the start date of a date range (e.g., "2018-01-01")
   #               to_date (optional) - the end date of a date range (e.g., "2018-01-01")
   # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
-  def self.delete_cs_activities(client, type="Account", from_date=nil, to_date=nil)
+  def self.delete_cs_activities(client, sObjectId=nil, type=nil, from_date=nil, to_date=nil)
     delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
+    delete_tasks_query_stmt += " AND WhatId = '#{sObjectId}'" if sObjectId.present?
     delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
     delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
     puts "Deleting all existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce.  SFDC query=\'#{delete_tasks_query_stmt}\'...."
