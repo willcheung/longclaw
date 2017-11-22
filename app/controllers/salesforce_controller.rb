@@ -789,12 +789,12 @@ class SalesforceController < ApplicationController
     salesforce_user = OauthUser.find_by(id: params[:id])
     salesforce_user.destroy if salesforce_user.present?
 
-    if current_user.admin?
-      salesforce_refresh_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil)
-    else
-      salesforce_refresh_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id)
-    end
-    salesforce_refresh_config.destroy if salesforce_refresh_config.present? # forget refresh setting!
+    # if current_user.admin?
+    #   salesforce_refresh_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil)
+    # else
+    #   salesforce_refresh_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id)
+    # end
+    # salesforce_refresh_config.destroy if salesforce_refresh_config.present?
 
     respond_to do |format|
       format.html { redirect_to(request.referer || settings_path) }

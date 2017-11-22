@@ -109,12 +109,17 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     if current_user.admin?
       # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
       current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil) do |config|
-        config.config_value = true
+        config.config_value['auto_refresh'] = {"daily":Time.now}
+        config.config_value['activities'] = {"import":Time.now, "export":Time.now}
+        config.config_value['contacts'] = {"import":Time.now, "export":Time.now}
+        # config.config_value = {'auto_refresh':{'daily':Time.now}, 'activities':{'import':Time.now, 'export':Time.now}}.to_json
       end
     else
       # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
       current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id) do |config|
-        config.config_value = true
+        config.config_value['auto_refresh'] = {"daily":Time.now}
+        config.config_value['activities'] = {"import":Time.now, "export":Time.now}
+        config.config_value['contacts'] = {"import":Time.now, "export":Time.now}
       end
     end
   end
