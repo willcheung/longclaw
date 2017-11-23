@@ -225,6 +225,8 @@ class User < ActiveRecord::Base
         user.password = Devise.friendly_token[0, 20] if user.password.blank? # for legacy users
       end
     else
+      puts "Creating user #{user}"
+      puts basic_attributes
       user = new_user(oauth_attributes.merge(basic_attributes))
     end
 
