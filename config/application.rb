@@ -36,7 +36,7 @@ module Longclaw
 
     config.middleware.insert_before 0, 'Rack::Cors' do
       allow do
-        origins 'https://mail.google.com'
+        origins 'https://mail.google.com', 'http://localhost:8080', /chrome-extension:.*/
         resource '*', credentials: true, headers: :any, methods: [:get, :post, :options]
       end
     end

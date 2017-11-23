@@ -119,7 +119,7 @@ class SettingsController < ApplicationController
 			end
 
 			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active opportunities because "admin" role can see everything
-			@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
+			@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}").order("upper(salesforce_opportunities.name)")
 		end
 	end
 

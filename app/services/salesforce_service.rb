@@ -126,7 +126,7 @@ class SalesforceService
           acct_id = params[:sObject_meta][:id]
           update_result = nil
           params[:sObject_fields].each do |sfdc_field, new_val| 
-            # TODO: Temporary hack until figure out how to convert string into parameter
+            # TODO: Temporary hack until figure out how to convert string into parameter; which means, currently, we cannot export to any custom SFDC fields!
             case (sfdc_field)
             when "Name"
               update_result = client.update!('Account', Id: params[:sObject_meta][:id], Name: new_val)
@@ -139,6 +139,8 @@ class SalesforceService
               update_result = client.update!('Account', Id: params[:sObject_meta][:id], Phone: new_val)
             when "Website"
               update_result = client.update!('Account', Id: params[:sObject_meta][:id], Website: new_val)
+            else
+              puts "Cannot update field #{sfdc_field} -- No support for custom fields yet! :("
             end
 
             result = { status: "SUCCESS", result: update_result, detail: "" }
@@ -153,7 +155,7 @@ class SalesforceService
           opp_id = params[:sObject_meta][:id]
           update_result = nil
           params[:sObject_fields].each do |sfdc_field, new_val|
-            # TODO: Temporary hack until figure out how to convert string into parameter
+            # TODO: Temporary hack until figure out how to convert string into parameter; which means, currently, we cannot export to any custom SFDC fields!
             case (sfdc_field)
             when "Name"
               update_result = client.update!('Opportunity', Id: opp_id, Name: new_val)
@@ -167,6 +169,8 @@ class SalesforceService
               update_result = client.update!('Opportunity', Id: opp_id, StageName: new_val) 
             when "ForecastCategoryName"  
               update_result = client.update!('Opportunity', Id: opp_id, ForecastCategoryName: new_val) 
+            else
+              puts "Cannot update field #{sfdc_field} -- No support for custom fields yet! :("
             end
           end
 
@@ -264,8 +268,8 @@ class SalesforceService
     if query_result[:result].size == 0 && (contact[:FirstName].strip.present? || contact[:LastName].strip.present?)
       puts "*> Cannot match Contact by E-mail, trying to match by First/Last name instead!"
       contact_name_predicate = []
-      contact_name_predicate << "FirstName = '#{contact[:FirstName].strip}'" if contact[:FirstName].strip.present?
-      contact_name_predicate << "LastName = '#{contact[:LastName].strip}'" if contact[:LastName].strip.present?
+      contact_name_predicate << "FirstName='#{ return_escaped_SFDC_field_val(contact[:FirstName].strip) }'" if contact[:FirstName].strip.present?
+      contact_name_predicate << "LastName='#{ return_escaped_SFDC_field_val(contact[:LastName].strip) }'" if contact[:LastName].strip.present?
 
       query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND (#{ contact_name_predicate.join(" AND ") }) ORDER BY LastName, FirstName"  # Unused: Description    
       # puts "query_statement: #{ query_statement }"
@@ -368,7 +372,7 @@ class SalesforceService
     result
   end
 
-  # Changes value 'val' to a valid value to be used in a SFDC field. e.g., escapes single quotes
+  # Changes 'val' to a valid value to be used in a SFDC SOQL query. e.g., escapes single quotes
   def self.return_escaped_SFDC_field_val(val)
     if val.present?
       val.gsub("'", "\\\\'") 

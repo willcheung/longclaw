@@ -24,6 +24,18 @@ class TrackingController < ApplicationController
 
   end
 
+  def list
+    page = params[:page].present? ? params[:page] : 1
+
+    @trackings = TrackingRequest.includes(:tracking_events)
+                     .where(user_id: current_user.id)
+                     .page(page)
+                     .order('tracking_events.date DESC')
+    json = {requests: @trackings.as_json(include: { tracking_events: { methods: :client }}),
+            settings: get_tracking_setting }
+    render json: json
+  end
+
   def create
     data = Hashie::Mash.new(JSON.parse(request.body.read))
     if current_user.email == data.user_email
@@ -92,6 +104,12 @@ class TrackingController < ApplicationController
     ts = get_tracking_setting
     event_count = {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
     render json: event_count
+  end
+
+  def new_event_objects
+    ts = get_tracking_setting
+    tes = TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id})
+    render json: tes.to_json({ methods: :client })
   end
 
   def seen
