@@ -109,7 +109,11 @@ class TrackingController < ApplicationController
   def new_event_objects
     ts = get_tracking_setting
     tes = TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id})
-    render json: tes.to_json({ methods: :client })
+    new_trs = TrackingRequest.where(sent_at: ts.last_seen..Time.now).order("sent_at ASC")
+    render json: { new_events: tes.as_json({ methods: :client }),
+                   new_requests: new_trs.as_json,
+                   settings: get_tracking_setting
+    }
   end
 
   def seen
