@@ -208,7 +208,7 @@ class User < ActiveRecord::Base
     basic_attributes = {
       first_name: info.first_name || '',
       last_name: info.last_name || '',
-      email: info.email,
+      email: info.email.downcase,
       image_url: info.image,
       is_disabled: false,
       refresh_inbox: false,
@@ -216,7 +216,7 @@ class User < ActiveRecord::Base
       onboarding_step: Utils::ONBOARDING[:fill_in_info]
     }
 
-    user = User.find_by_email(info.email)
+    user = User.find_by_email(info.email.downcase)
     if user
       oauth_attributes.delete(:oauth_provider) if user.oauth_provider == AUTH_TYPE[:Gmail] # don't overwrite oauth_provider if we already signed in with the larger scope
       user.assign_attributes(oauth_attributes)
@@ -225,11 +225,13 @@ class User < ActiveRecord::Base
         user.password = Devise.friendly_token[0, 20] if user.password.blank? # for legacy users
       end
     else
+      puts "Creating user #{user}"
+      puts basic_attributes
       user = new_user(oauth_attributes.merge(basic_attributes))
     end
 
     user.maybe_upgrade # do we have to upgrade the user as the organization plan is available
-    user.save
+    user.save!
     user
   end
 
