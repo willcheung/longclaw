@@ -228,7 +228,7 @@ class Contact < ActiveRecord::Base
   # Parameters: client - connection to Salesforce
   #             account_id - the CS account from which this exports contacts
   #             sfdc_account_id - id of SFDC account to which this exports contacts 
-  #             from_updatedat (optional) - the minimum updated_at date to begin export of Contacts
+  #             from_updatedat (optional) - the minimum updated_at date to begin export of Contacts; default: export all contacts
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
@@ -236,10 +236,11 @@ class Contact < ActiveRecord::Base
   def self.export_cs_contacts(client, account_id, sfdc_account_id, from_updatedat=nil)
     result = { status: "SUCCESS", result: [], detail: [] }
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
-    contacts = Account.find(account_id).contacts
-    contacts = contacts.where("updated_at >= ?", from_updatedat) if from_updatedat.present?
 
-    contacts.each do |c|
+    account_contacts = Account.find(account_id).contacts
+    account_contacts = account_contacts.where("updated_at >= ?", from_updatedat) if from_updatedat.present?
+
+    account_contacts.each do |c|
       update_result = c.export_cs_contact(client, sfdc_account_id)
 
       if update_result[:status] == "SUCCESS"

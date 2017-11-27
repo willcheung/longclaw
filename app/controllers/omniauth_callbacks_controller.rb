@@ -2,14 +2,14 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
     #puts "****** session return_to_path: #{ session[:return_to_path] }"
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
-    set_auto_salesforce_refresh_custom_config(current_user)
+    set_salesforce_auto_sync_custom_configuration(current_user)
     InitialSalesforceLoginsJob.perform_later(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
   def salesforcesandbox
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
-    set_auto_salesforce_refresh_custom_config(current_user)
+    set_salesforce_auto_sync_custom_configuration(current_user)
     InitialSalesforceLoginsJob.perform_later(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
@@ -105,21 +105,21 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   private
 
-  def set_auto_salesforce_refresh_custom_config(current_user)
+  def set_salesforce_auto_sync_custom_configuration(current_user)
     if current_user.admin?
       # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
-      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil) do |config|
-        config.config_value['auto_refresh'] = {"daily":Time.now}
-        config.config_value['activities'] = {"import":Time.now, "export":Time.now}
-        config.config_value['contacts'] = {"import":Time.now, "export":Time.now}
-        # config.config_value = {'auto_refresh':{'daily':Time.now}, 'activities':{'import':Time.now, 'export':Time.now}}.to_json
+      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: nil) do |config|
+        config.config_value['auto_sync'] = {"daily":"Time.now"}
+        config.config_value['activities'] = {"import":"Time.now", "export":"Time.now"}
+        config.config_value['contacts'] = {"import":"Time.now", "export":"Time.now"}
+        # config.config_value = {'auto_sync':{'daily':"Time.now"}, 'activities':{'import':"Time.now", 'export':"Time.now"}}.to_json
       end
     else
       # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
-      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id) do |config|
-        config.config_value['auto_refresh'] = {"daily":Time.now}
-        config.config_value['activities'] = {"import":Time.now, "export":Time.now}
-        config.config_value['contacts'] = {"import":Time.now, "export":Time.now}
+      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: current_user.id) do |config|
+        config.config_value['auto_sync'] = {"daily":"Time.now"}
+        config.config_value['activities'] = {"import":"Time.now", "export":"Time.now"}
+        config.config_value['contacts'] = {"import":"Time.now", "export":"Time.now"}
       end
     end
   end

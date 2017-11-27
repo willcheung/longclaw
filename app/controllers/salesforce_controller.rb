@@ -95,13 +95,13 @@ class SalesforceController < ApplicationController
     sfdc_oauthuser
   end
 
-  # Load SFDC Accounts and new SFDC Opportunities and update values in mapped (standard and custom) fields. For linked CS accts, import/upsert SFDC contacts into CS.
+  # Load SFDC Accounts and new SFDC Opportunities and update values in mapped (standard and custom) fields. For linked CS accts, if import contacts is enabled, then import/upsert SFDC contacts into CS.
   # For individual (non-admin, e.g., "Pro") users: create CS opportunities and corresponding accts for open and unlinked SFDC opps owned by user, link the CS Acct and Opps to the corresponding SFDC entity, and create account Contacts.
-  # For daily task (for_daily_task=true): only import SFDC contacts that were updated from the previous day
   # Parameters:     client - a valid SFDC connection
   #                 user - the user making the request, admin or individual (non-admin)
-  #                 for_daily_task - true, if this is daily job; false, default 
-  def self.import_and_create_contextsmith(client: , user: , for_daily_task: false)
+  #                 for_periodic_refresh - true, imports contacts that were updated since the last contacts update (stored in CustomConfiguration); otherwise, false (default) and imports all contacts
+  # TODO: Add activities sync?
+  def self.import_and_create_contextsmith(client: , user: , for_periodic_refresh: false)
     # Upsert SFDC Accounts and SFDC Opportunities
     SalesforceAccount.load_accounts(client, user.organization_id) 
     if user.admin?
@@ -164,23 +164,44 @@ class SalesforceController < ApplicationController
     SalesforceAccount.refresh_fields(client, user)
     SalesforceOpportunity.refresh_fields(client, user)
 
-    # Import/upsert Contacts into all linked accts (from SFDC into ContextSmith)
-    user.organization.salesforce_accounts.is_linked.each do |sfa|
-      account = sfa.account
-      if for_daily_task
-        import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id, 1.days.ago.at_midnight.utc)
-      else
-        import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id)
-      end
-
-      failure_method_location = "Contact.load_salesforce_contacts()"
-
-      if import_result[:status] == "ERROR"
-        puts "****SFDC**** Error at #{failure_method_location} during import of contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{account.id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
-      else # import_result[:status] == SUCCESS
-        # puts "****SFDC**** Succesful automatic import of SFDC contacts for user_id=#{user.id} of organization_id=#{user.organization_id}"
-      end
+    # Import/upsert Contacts into all linked accts (from SFDC into ContextSmith) if Contacts import is enabled
+    sfdc_oauthuser = SalesforceController.get_sfdc_oauthuser(user: user)
+    if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
+      # organization
+      import_contacts_sfdc_refresh_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'contacts')::jsonb ?| array[:keys] AND user_id IS NULL", keys: ['import']).find_by(organization_id: user.organization_id)
+    else
+      # individual
+      import_contacts_sfdc_refresh_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'contacts')::jsonb ?| array[:keys]", keys: ['import']).find_by(organization_id: user.organization_id, user_id: user.id)
     end
+
+    if import_contacts_sfdc_refresh_config.present?
+      new_import_ts = Time.now
+      # if available, use CustomConfiguration last contacts refresh timestamp
+      import_contacts_ts = DateTime.parse(import_contacts_sfdc_refresh_config.config_value['contacts']['import']).at_midnight if import_contacts_sfdc_refresh_config.config_value['contacts']['import'].present?
+      error_occurred = false
+
+      user.organization.salesforce_accounts.is_linked.each do |sfa|
+        account = sfa.account
+        if for_periodic_refresh && import_contacts_ts.present?
+          import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id, import_contacts_ts)
+        else
+          import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id)
+        end
+
+        failure_method_location = "Contact.load_salesforce_contacts()"
+
+        if import_result[:status] == "ERROR"
+          puts "****SFDC**** Error at #{failure_method_location} during import of contacts from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Account \"#{account.name}\" (account_id='#{account.id}').  #{ import_result[:result] } Details: #{ import_result[:detail] }"
+          error_occurred = true
+        end
+      end if user.organization.salesforce_accounts.present? # End: user.organization.salesforce_accounts.is_linked.each do |sfa|
+
+      unless error_occurred
+        # puts "****SFDC**** Automatic import of SFDC contacts for user_id=#{user.id} of organization_id=#{user.organization_id} was successful."
+        import_contacts_sfdc_refresh_config.config_value['contacts']['import'] = new_import_ts
+        import_contacts_sfdc_refresh_config.save
+      end
+    end # End: if import_contacts_sfdc_refresh_config.present?
   end
 
   # Links a CS account to a Salesforce account.  If a Power User or trial/Chrome User links a SFDC account, then automatically import the SFDC contacts.
@@ -250,7 +271,16 @@ class SalesforceController < ApplicationController
   # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account.  For all active and confirmed opportunities visible to admin.
   # For Contacts -- TODO: need to reimplement!
   def import_salesforce
-    sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+    sfdc_oauthuser = SalesforceController.get_sfdc_oauthuser(user: current_user)
+    if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
+      # organization
+      sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys] AND user_id IS NULL", keys: ['import']).find_by(organization_id: current_user.organization_id)
+    else
+      # individual
+      sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys]", keys: ['import']).find_by(organization_id: current_user.organization_id, user_id: current_user.id)
+    end
+
+    sfdc_client = SalesforceService.connect_salesforce(sfdc_oauthuser: sfdc_oauthuser)
 
     unless sfdc_client.nil?  # unless SFDC connection error
       case params[:entity_type]
@@ -297,15 +327,21 @@ class SalesforceController < ApplicationController
           return 
         end
 
-          @opportunities.each do |p|
-            load_result = p.load_salesforce_activities(sfdc_client, filter_predicate_str)
+        @opportunities.each do |p|
+          new_import_ts = Time.now
+          load_result = p.load_salesforce_activities(client: sfdc_client, filter_predicates: filter_predicate_str)
 
-            if load_result[:status] == "ERROR"
-              failure_method_location = "load_salesforce_activities()"
-              render_internal_server_error(method_name, failure_method_location, load_result[:detail])
-              return
+          if load_result[:status] == "ERROR"
+            failure_method_location = "load_salesforce_activities()"
+            render_internal_server_error(method_name, failure_method_location, load_result[:detail])
+            return
+          else
+            if sync_sfdc_act_config.present? && sync_sfdc_act_config.config_value['activities'].present?
+              sync_sfdc_act_config.config_value['activities']['import'] = new_import_ts
+              sync_sfdc_act_config.save
             end
           end
+        end
 
       # end when params[:entity_type] = "activity"
       when "contacts"
@@ -331,6 +367,16 @@ class SalesforceController < ApplicationController
     case params[:entity_type]
     when "activity"
       # Activities in CS (excluding imported SFDC activity) are exported into the remote SFDC Account (or Opportunity).
+
+      sfdc_oauthuser = SalesforceController.get_sfdc_oauthuser(user: current_user)
+      if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
+        # organization
+        sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys] AND user_id IS NULL", keys: ['export']).find_by(organization_id: current_user.organization_id)
+      else
+        # individual
+        sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys]", keys: ['export']).find_by(organization_id: current_user.organization_id, user_id: current_user.id)
+      end
+
       method_name = "export_salesforce#activity()"
       @opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
       # @opportunities = Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.includes(:salesforce_opportunity)
@@ -342,7 +388,7 @@ class SalesforceController < ApplicationController
         return 
       end
 
-      sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+      sfdc_client = SalesforceService.connect_salesforce(sfdc_oauthuser: sfdc_oauthuser)
 
       unless sfdc_client.nil?  # unless connection error
         @opportunities.each do |s|
@@ -351,6 +397,8 @@ class SalesforceController < ApplicationController
             if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 Activity.delete_cs_activities(sfdc_client, sfa.salesforce_account_id, "Account")
+
+                new_export_ts = Time.now
                 export_result = Activity.export_cs_activities(sfdc_client, s, sfa.salesforce_account_id, "Account")
 
                 if export_result[:status] == "ERROR"
@@ -358,12 +406,19 @@ class SalesforceController < ApplicationController
                   error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{ export_result[:detail] }"
                   render_internal_server_error(method_name, method_location, error_detail)
                   return
+                else
+                  if sync_sfdc_act_config.present? && sync_sfdc_act_config.config_value['activities'].present?
+                    sync_sfdc_act_config.config_value['activities']['export'] = new_export_ts
+                    sync_sfdc_act_config.save
+                  end
                 end
               end
             end
           else # CS Opportunity linked to SFDC Opportunity
             # Save at the Opportunity level
             Activity.delete_cs_activities(sfdc_client, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
+
+            new_export_ts = Time.now
             export_result = Activity.export_cs_activities(sfdc_client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
             if export_result[:status] == "ERROR"
@@ -371,6 +426,11 @@ class SalesforceController < ApplicationController
               error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{ export_result[:detail] }"
               render_internal_server_error(method_name, method_location, error_detail)
               return
+            else
+              if sync_sfdc_act_config.present? && sync_sfdc_act_config.config_value['activities'].present?
+                sync_sfdc_act_config.config_value['activities']['export'] = new_export_ts
+                sync_sfdc_act_config.save
+              end
             end
           end
         end
@@ -558,6 +618,16 @@ class SalesforceController < ApplicationController
     method_name = "sync_salesforce()"
     case params[:entity_type]
     when "activity"
+      ### TODO: If sync activities is turned on, then import/export
+      sfdc_oauthuser = SalesforceController.get_sfdc_oauthuser(user: current_user)
+      if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
+        # organization
+        sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys] AND user_id IS NULL", keys: ['import','export']).find_by(organization_id: current_user.organization_id)
+      else
+        # individual
+        sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys]", keys: ['import','export']).find_by(organization_id: current_user.organization_id, user_id: current_user.id)
+      end
+
       method_name = "sync_salesforce#activity()"
       filter_predicate_str = {}
       filter_predicate_str["entity"] = params[:entity_pred].strip
@@ -579,14 +649,14 @@ class SalesforceController < ApplicationController
       unless sfdc_client.nil?  # unless connection error
         sync_result_messages = []
         error_occurred = false
-        Activity.delete_cs_activities(sfdc_client) # clear all existing CS Activities in SFDC (accounts)
 
         @opportunities.each do |s|
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
             if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
               s.account.salesforce_accounts.each do |sfa|
                 # Import activities from SFDC Account level to ContextSmith Opportunity
-                load_result = Activity.load_salesforce_activities(sfdc_client, s, sfa.salesforce_account_id, type="Account", filter_predicate_str)
+                new_import_ts = Time.now
+                load_result = Activity.load_salesforce_activities(client: sfdc_client, project: s, sfdc_id: sfa.salesforce_account_id, type: "Account", filter_predicates: filter_predicate_str)
 
                 if load_result[:status] == "ERROR"
                   failure_method_location = "Activity.load_salesforce_activities()"
@@ -594,10 +664,17 @@ class SalesforceController < ApplicationController
                   sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: load_result[:result] + " " + load_result[:detail] }
                   error_occurred = true
                 else # load_result[:status] == SUCCESS
+                  if sync_sfdc_act_config.present? && sync_sfdc_act_config.config_value['activities'].present?
+                    sync_sfdc_act_config.config_value['activities']['import'] = new_import_ts
+                    sync_sfdc_act_config.save
+                  end
                   sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: load_result[:result] + " " + load_result[:detail] } 
                 end
 
                 # Export activities from ContextSmith Opportunity to SFDC Account level
+                Activity.delete_cs_activities(sfdc_client, sfa.salesforce_account_id, "Account")
+
+                new_export_ts = Time.now
                 export_result = Activity.export_cs_activities(sfdc_client, s, sfa.salesforce_account_id, "Account")
 
                 if export_result[:status] == "ERROR"
@@ -606,13 +683,18 @@ class SalesforceController < ApplicationController
                   sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: export_result[:result].to_s + " " + export_result[:detail].to_s }
                   error_occurred = true
                 else # export_result[:status] == SUCCESS
+                  if sync_sfdc_act_config.present? && sync_sfdc_act_config.config_value['activities'].present?
+                    sync_sfdc_act_config.config_value['activities']['export'] = new_export_ts
+                    sync_sfdc_act_config.save
+                  end
                   sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: export_result[:result].to_s + " " + export_result[:detail].to_s } 
                 end
               end # end: s.account.salesforce_accounts.each do |sfa|
             end
           else # CS Opportunity linked to SFDC Opportunity
             # Import activities from SFDC to ContextSmith, both at Opportunity level
-            load_result = Activity.load_salesforce_activities(sfdc_client, s, s.salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicate_str)
+            new_import_ts = Time.now
+            load_result = Activity.load_salesforce_activities(client: sfdc_client, project: s, sfdc_id: s.salesforce_opportunity.salesforce_opportunity_id, type: "Opportunity", filter_predicates: filter_predicate_str)
 
             if load_result[:status] == "ERROR"
               failure_method_location = "Activity.load_salesforce_activities()"
@@ -620,9 +702,17 @@ class SalesforceController < ApplicationController
               sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, failure_method_location: failure_method_location, detail: load_result[:result] + " " + load_result[:detail] }
               error_occurred = true
             else # load_result[:status] == SUCCESS
+              if sync_sfdc_act_config.present? && sync_sfdc_act_config.config_value['activities'].present?
+                sync_sfdc_act_config.config_value['activities']['import'] = new_import_ts
+                sync_sfdc_act_config.save
+              end
               sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, detail: load_result[:result] + " " + load_result[:detail] } 
             end
+
             # Export activities from ContextSmith to SFDC, both at Opportunity level
+            Activity.delete_cs_activities(sfdc_client, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
+
+            new_export_ts = Time.now
             export_result = Activity.export_cs_activities(sfdc_client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
             if export_result[:status] == "ERROR"
@@ -631,6 +721,10 @@ class SalesforceController < ApplicationController
               sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, failure_method_location: failure_method_location, detail: export_result[:result].to_s + " " + export_result[:detail].to_s }
               error_occurred = true
             else # export_result[:status] == SUCCESS
+              if sync_sfdc_act_config.present? && sync_sfdc_act_config.config_value['activities'].present?
+                sync_sfdc_act_config.config_value['activities']['export'] = new_export_ts
+                sync_sfdc_act_config.save
+              end
               sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, detail: export_result[:result].to_s + " " + export_result[:detail].to_s } 
             end
           end
@@ -790,11 +884,11 @@ class SalesforceController < ApplicationController
     salesforce_user.destroy if salesforce_user.present?
 
     # if current_user.admin?
-    #   salesforce_refresh_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: nil)
+    #   salesforce_sync_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: nil)
     # else
-    #   salesforce_refresh_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], user_id: current_user.id)
+    #   salesforce_sync_config = current_user.organization.custom_configurations.find_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: current_user.id)
     # end
-    # salesforce_refresh_config.destroy if salesforce_refresh_config.present?
+    # salesforce_sync_config.destroy if salesforce_sync_config.present?
 
     respond_to do |format|
       format.html { redirect_to(request.referer || settings_path) }

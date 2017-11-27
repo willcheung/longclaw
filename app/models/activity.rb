@@ -235,40 +235,37 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Copies/imports Salesforce activities (ActivityHistory) in the specified SFDC Account or Opportunity into the specified CS opportunity (project).  Does not import previously-exported CS data residing on SFDC. If a SFDC activity has no ActivityDate, we use LastModifiedDate for the CS Activity last_sent_date instead.
+  # Imports Salesforce activities (ActivityHistory) in the specified SFDC Account or Opportunity into the specified CS opportunity (project).  Does not import previously-exported CS data residing on SFDC. If a SFDC activity has no ActivityDate, we use LastModifiedDate for the CS Activity last_sent_date instead.
   # Parameters:   client - a valid SFDC connection
   #               project - the CS opportunity into which to load the SFDC activity
   #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
   #               type - the SFDC entity level ("Account" or "Opportunity") from which to load activities
+  #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of SFDC Activities; default: import all activity
   #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   #               limit (optional) - the max number of activity records to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
   #             detail - Contains any error or informational/warning messages.
-  def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
+  def self.load_salesforce_activities(client: , project: , sfdc_id: , type: , from_lastmodifieddate: nil, filter_predicates: nil, limit: nil)
     val = []
     result = nil
 
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
-    if filter_predicates["entity"] == ""
+    if filter_predicates.blank? || filter_predicates["entity"] == ""
       entity_predicate = ""
     else
       entity_predicate = "AND (" + filter_predicates["entity"] + ")"
     end
-    if filter_predicates["activityhistory"] == ""
+    if filter_predicates.blank? || filter_predicates["activityhistory"] == ""
       activityhistory_predicate = ""
     else
       activityhistory_predicate = "AND (" + filter_predicates["activityhistory"] + ")"
     end
 
     # Note: we avoid importing exported CS data residing on SFDC
-    if type == "Account"
-      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{activityhistory_predicate} limit #{limit}) FROM Account WHERE Id='#{sfdc_id}' #{entity_predicate}"  
-    elsif type == "Opportunity"
-      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{activityhistory_predicate} limit #{limit}) FROM Opportunity WHERE Id='#{sfdc_id}' #{entity_predicate}"
-    end
+    query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{ 'AND LastModifiedDate >= ' + from_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') if from_lastmodifieddate.present? } #{activityhistory_predicate} #{ 'LIMIT ' + limit.to_s if limit.present? }) FROM #{type} WHERE Id='#{sfdc_id}' #{entity_predicate}"  
     
     #puts "query_statement: #{ query_statement }"
     query_result = SalesforceService.query_salesforce(client, query_statement)
@@ -329,15 +326,13 @@ class Activity < ActiveRecord::Base
   # Parameters:   client - SFDC connection
   #               sObjectId (optional) - the SFDC Id that identifies the entity 'Account' or 'Opportunity'
   #               type (optional) - the SFDC entity type: 'Account' or 'Opportunity'
-  #               from_date (optional) - the start date of a date range (e.g., "2018-01-01")
-  #               to_date (optional) - the end date of a date range (e.g., "2018-01-01")
+  #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin deletion of SFDC Activities
   # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
-  def self.delete_cs_activities(client, sObjectId=nil, type=nil, from_date=nil, to_date=nil)
+  def self.delete_cs_activities(client, sObjectId=nil, type=nil, from_lastmodifieddate=nil)
     delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
     delete_tasks_query_stmt += " AND WhatId = '#{sObjectId}'" if sObjectId.present?
-    delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
-    delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
-    puts "Deleting all existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce.  SFDC query=\'#{delete_tasks_query_stmt}\'...."
+    delete_tasks_query_stmt += " AND LastModifiedDate >= #{from_lastmodifieddate}" if from_lastmodifieddate.present?
+    puts "Deleting existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce (entity type=#{type}) using this SFDC query=\'#{delete_tasks_query_stmt}\'...."
     query_result = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
     #tasks = client.query(delete_tasks_query_stmt)
 
@@ -353,17 +348,20 @@ class Activity < ActiveRecord::Base
   # Parameters:   client - SFDC connection
   #               project - the CS opportunity from which to export
   #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
-  #               type - to specify exporting into an SFDC "Account" or "Opportunity"
-  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               type (optional) - to specify exporting into an SFDC "Account" or "Opportunity"; default: 'Account'
+  #               from_updatedat (optional) - the minimum updated_at date to begin export of Activities; default: export all activity
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if operation is successful with no errors (activities exported or no activities to export); ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
   #             detail - a list of errors or informational/warning messages.
-  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil)
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_updatedat=nil)
     result = { status: "SUCCESS", result: [], detail: [] }
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
-    project.activities.each do |a|
+    project_activities = project.activities
+    project_activities = project_activities.where("updated_at >= ?", from_updatedat) if from_updatedat.present? 
+
+    project_activities.each do |a|
       # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.
       subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " " + a.category + ": "+ a.title
       description = a.category + " activity (imported from ContextSmith) ——\n"
@@ -743,7 +741,7 @@ class Activity < ActiveRecord::Base
   def self.get_CS_export_prefix_SOQL_predicate_string
     soql_predicate = []
     CATEGORY.each do |k, v|
-      v = "E-mail" if v == CATEGORY[:Conversation]
+      v = "email" if v == CATEGORY[:Conversation]
       soql_predicate << "Subject like '#{CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX} #{v}:%'"
     end
     soql_predicate.join(" OR ")
