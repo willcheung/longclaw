@@ -247,7 +247,7 @@ class SalesforceService
   # Returns:    A hash that represents the execution status/result of the upsert. Consists of:
   #               status - "SUCCESS" if successful, or "ERROR" otherwise
   #               result - if status == "SUCCESS", contains the sObject Id of Contact created; otherwise, contains the title of the error
-  #               detail - if status == "ERROR", contains the details of the error; if a duplicate contact was detected during create SFDC Contact, a warning is here warning user that Contacts may not be properly copied because a "Contact Duplicate Rule" in SFDC settings might be preventing us from creating new SFDC Contacts. This will contain a message stating if the retry was successful or failed.
+  #               detail - if status == "ERROR", contains the details of the error; if a duplicate contact was detected during create SFDC Contact, a warning is here warning user that Contacts may not be properly copied because a "Contact Duplicate Rule" in SFDC settings might be preventing us from creating new SFDC Contacts. This will contain a message stating if the retry was successful or failed, and if we retried the upsert (i.e., using only the Contact's Email field.)
 
   # TODO: Use SFDC duplicates warning to tell user "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , contact: , params: )
@@ -293,16 +293,16 @@ class SalesforceService
       end
     else
       begin
-        puts "-> Contact #{ contact[:Email] } in SFDC Account '#{ sfdc_account_id }'' not found. Creating a new Contact..."
+        puts "-> Contact #{ contact[:Email] } in SFDC Account '#{ sfdc_account_id }' not found. Creating a new Contact..."
         upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : '(unknown)', Email: contact[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
         # upsert_result is the Contact's SFDC sObject Id
         result = { status: "SUCCESS", result: upsert_result, detail: "" }
       rescue => e
         if (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
-          detail = "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only minimal Contact fields (e.g., FirstName, LastName, and Email) ... "
+          detail = "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only the minimal fields: Email ... "
           begin
             # Attempt to create Contact with only minimal Contact fields
-            upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : '(unknown)', Email: contact[:Email]) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
+            upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: '(omitted)', LastName: '(omitted)', Email: contact[:Email]) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
             detail += "Contact successfully created."
             puts "*** SalesforceService warning: #{ detail }"
             result = { status: "SUCCESS", result: upsert_result, detail: detail }

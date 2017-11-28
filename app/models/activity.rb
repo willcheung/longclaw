@@ -359,7 +359,7 @@ class Activity < ActiveRecord::Base
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     project_activities = project.activities
-    project_activities = project_activities.where("updated_at >= ?", from_updatedat) if from_updatedat.present? 
+    project_activities = project_activities.where("category != ? AND updated_at >= ?", Activity::CATEGORY[:Salesforce], from_updatedat) if from_updatedat.present?
 
     project_activities.each do |a|
       # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.

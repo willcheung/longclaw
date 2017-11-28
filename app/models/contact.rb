@@ -250,10 +250,10 @@ class Contact < ActiveRecord::Base
         result[:result] << update_result[:result]
         result[:detail] << update_result[:detail]  # may contain messages, even with SUCCESS
       else  # Salesforce query failure
-        # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
+        # puts "**** SFDC error **** #{ update_result[:result] } Details: #{ update_result[:detail] }."
         result[:status] = "ERROR"
         result[:result] << update_result[:result]
-        result[:detail] << update_result[:detail] + " sObject_fields=#{ sObject_fields }"
+        result[:detail] << update_result[:detail]
       end
     end # End: Account.find(account_id).contacts.each do
 
@@ -279,11 +279,11 @@ class Contact < ActiveRecord::Base
     sObject_fields[:external_sfdc_id] = self.external_source_id if self.is_source_from_salesforce?
     result = SalesforceService.update_salesforce(client: client, update_type: "contact", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
-    if result[:status] == "SUCCESS"
-      puts "-> a SFDC Contact (#{self.last_name}, #{self.first_name}, #{self.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ result[:result] }'."
-    else  # Salesforce query failure
-      # puts "** #{ result[:result] } Details: #{ result[:detail] }."
-    end
+    # if result[:status] == "SUCCESS"
+    #   puts "-> a SFDC Contact (#{self.last_name}, #{self.first_name}, #{self.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ result[:result] }'."
+    # else  # Salesforce query failure
+    #   puts "** #{ result[:result] } Details: #{ result[:detail] }."
+    # end
 
     result
   end

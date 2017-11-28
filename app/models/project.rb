@@ -1116,7 +1116,7 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all (standard) CS Opportunity fields from all mapped SFDC Opportunity fields for explicitly mapped CS and SFDC Opportunities.
+  # Updates all standard CS Opportunity fields from all mapped SFDC Opportunity fields for explicitly mapped CS and SFDC Opportunities.
   # Parameters:   client - connection to Salesforce
   #               opportunities - collection of CS Projects/Opportunities to process
   #               sfdc_fields_mapping - A list of [Mapped SFDC Opportunity field name, CS Opportunity field name] pairs
