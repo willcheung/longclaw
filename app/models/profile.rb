@@ -114,7 +114,7 @@ class Profile < ActiveRecord::Base
 
   def social_bio(socialtype)
     socialtype = get_FullContact_social_profile_type(socialtype)
-    sp = p.data.social_profiles.find{ |sp| sp.type_id.present? ? sp.type_id.downcase == socialtype : (sp.type.downcase == socialtype if sp.type.present?) } if socialtype.present? && data_is_valid? && data.social_profiles.present?
+    sp = data.social_profiles.find{ |sp| sp.type_id.present? ? sp.type_id.downcase == socialtype : (sp.type.downcase == socialtype if sp.type.present?) } if socialtype.present? && data_is_valid? && data.social_profiles.present?
     sp.bio if sp.present?
   end
 
