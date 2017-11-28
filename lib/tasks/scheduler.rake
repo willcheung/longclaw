@@ -210,38 +210,50 @@ namespace :scheduler do
 
     desc 'Refresh Salesforce data for each Salesforce user'
     # Refreshes list of accounts and opportunities appropriate for each SFDC user.  This will also create opps/accts for new opportunities, update values in mapped (standard and custom) fields, and import/upsert SFDC contacts for linked CS accts.
-    # Usage: rake scheduler:refresh_sfdc_data
-    task refresh_sfdc_data: :environment do
-        puts "\n\n=====Task (refresh_sfdc_data) started at #{Time.now}====="
-        sfdc_refresh_configs = CustomConfiguration.where(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], config_value: true)
-        sfdc_refresh_configs.each do |c|
+    # Usage: rake scheduler:refresh_salesforce
+    task refresh_salesforce: :environment do
+        puts "\n\n=====Task (refresh_salesforce) started at #{Time.now}====="
+        sfdc_refresh_configs = CustomConfiguration.where("config_type = :config_type AND ((config_value::jsonb)->>'auto_sync')::jsonb ?| array[:keys]", config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], keys: ['daily','weekly'])
+        sfdc_refresh_configs.each do |cf|
+            refresh_level = "weekly" if cf.config_value['auto_sync']['weekly'].present? && DateTime.parse(cf.config_value['auto_sync']['weekly']) + 1.week <= Time.now
+            refresh_level = "daily" if cf.config_value['auto_sync']['daily'].present? && DateTime.parse(cf.config_value['auto_sync']['daily']) + 1.day <= Time.now  
+
+            next if refresh_level.blank?
+
+            auto_sync_timestamp = Time.now
+
             sfdc_client = nil
-            if c.user_id.present?
+            if cf.user_id.present?
                 begin
-                    user = User.find(c.user_id)
+                    user = User.find(cf.user_id)
                 rescue ActiveRecord::RecordNotFound
-                    puts "\nCannot refresh Salesforce data for user '#{c.user_id}', because this User cannot be found!"
+                    puts "\n**** scheduler:refresh_salesforce SFDC error **** Cannot refresh Salesforce data for user '#{cf.user_id}', because this User cannot be found!"
                     next
                 else
                     sfdc_client = SalesforceService.connect_salesforce(user: user) 
                 end
             else
-                organization = Organization.find(c.organization_id)
+                organization = Organization.find(cf.organization_id)
                 sfdc_client = SalesforceService.connect_salesforce(organization: organization) 
             end
 
             if sfdc_client.present?
-                puts "\nRefreshing Salesforce for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'."
+                puts "\n[ scheduler:refresh_salesforce ] - Refreshing Salesforce for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"} (frequency=#{refresh_level}, last run=#{DateTime.parse(cf.config_value['auto_sync'][refresh_level])})."
                 # SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
                 if user.present?
-                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user)
+                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user, for_periodic_refresh: true)
                 else # organization.present?
                     admin_user = organization.users.find{|u| u.admin?} # select any to use
-                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: admin_user) if admin_user.present?
+                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: admin_user, for_periodic_refresh: true) if admin_user.present?
                 end
+
+                # update auto_sync timestamp upon successful completion
+                cf.config_value['auto_sync'][refresh_level] = auto_sync_timestamp
+                cf.save
             else
-                puts "\n****SFDC**** Cannot establish a Salesforce connection for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'!"
+                puts "\n**** scheduler:refresh_salesforce SFDC error **** Cannot establish a Salesforce connection for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"}!"
             end
         end
+        puts "\n\n=====Task (refresh_salesforce) completed at #{Time.now}====="
     end
 end

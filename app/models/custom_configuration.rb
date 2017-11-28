@@ -6,7 +6,7 @@
 #  organization_id :uuid             not null
 #  user_id         :uuid
 #  config_type     :string           not null
-#  config_value    :string           default(""), not null
+#  config_value    :string           default({}), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #
@@ -17,8 +17,12 @@
 
 # This is for saving configurations that are not directly accessible in the User's Settings page
 class CustomConfiguration < ActiveRecord::Base
+	store :config_value, coder: JSON
+
 	belongs_to  :organization
 	belongs_to  :user
 
-	CONFIG_TYPE = { Settings_salesforce_activities_activity_entity_predicate: '/settings/salesforce_activities#salesforce-activity-entity-predicate-textarea', Settings_salesforce_activities_activityhistory_predicate: '/settings/salesforce_activities#salesforce-activity-activityhistory-predicate-textarea', Salesforce_refresh: 'salesforce_refresh' }
+	CONFIG_TYPE = { Settings_salesforce_activities: '/settings/salesforce_activities', Salesforce_sync: 'salesforce_sync' }
+
+	scope :salesforce_sync, -> { where config_type: CONFIG_TYPE[:Salesforce_sync] }
 end
