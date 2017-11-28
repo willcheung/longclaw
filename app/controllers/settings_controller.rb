@@ -135,20 +135,12 @@ class SettingsController < ApplicationController
 			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active opportunities because "admin" role can see everything
 
 			# Load previous queries if it was saved
-			custom_config = current_user.organization.custom_configurations.where("organization_id = '#{current_user.organization_id}' AND config_type LIKE '/settings/salesforce_activities#%'")
+			custom_config = current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities], user_id: nil) do |config|
+				config.config_value = {"entity_predicate": "", "activityhistory_predicate": "" }
+			end
 
-			@entity_predicate = custom_config.where(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activity_entity_predicate])
-			if @entity_predicate.empty?
-				@entity_predicate = current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activity_entity_predicate], config_value: "") 
-			else
-				@entity_predicate = @entity_predicate.first
-			end
-			@activityhistory_predicate = custom_config.where(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activityhistory_predicate])
-			if @activityhistory_predicate.empty?
-				@activityhistory_predicate = current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activityhistory_predicate], config_value: "") 
-			else
-				@activityhistory_predicate = @activityhistory_predicate.first
-			end
+			@entity_predicate = Hashie::Mash.new({"id"=>custom_config.id, "config_value"=>custom_config.config_value['entity_predicate']})
+			@activityhistory_predicate = Hashie::Mash.new({"id"=>custom_config.id, "config_value"=>custom_config.config_value['activityhistory_predicate']})
 		end
 	end
 

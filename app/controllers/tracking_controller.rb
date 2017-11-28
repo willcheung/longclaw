@@ -79,7 +79,7 @@ class TrackingController < ApplicationController
           place_name: location,
           domain: domain,
           event_type: 'email-view',
-          date: event_date
+          date: DateTime.current # changing this to a newer timestamp as this might be 30 seconds later than event_date and in the meantime users could have changed their 'last seen' timestamp
       )
     end
     expires_now
@@ -109,7 +109,7 @@ class TrackingController < ApplicationController
   def new_event_objects
     ts = get_tracking_setting
     tes = TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id})
-    new_trs = TrackingRequest.where(sent_at: ts.last_seen..Time.now).order("sent_at ASC")
+    new_trs = TrackingRequest.where(sent_at: ts.last_seen..Time.now, user_id: current_user.id).order("sent_at ASC")
     render json: { new_events: tes.as_json({ methods: :client }),
                    new_requests: new_trs.as_json,
                    settings: get_tracking_setting
