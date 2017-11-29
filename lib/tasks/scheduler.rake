@@ -215,8 +215,8 @@ namespace :scheduler do
         puts "\n\n=====Task (refresh_salesforce) started at #{Time.now}====="
         sfdc_refresh_configs = CustomConfiguration.where("config_type = :config_type AND ((config_value::jsonb)->>'auto_sync')::jsonb ?| array[:keys]", config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], keys: ['daily','weekly'])
         sfdc_refresh_configs.each do |cf|
-            refresh_level = "weekly" if cf.config_value['auto_sync']['weekly'].present? && DateTime.parse(cf.config_value['auto_sync']['weekly']) + 1.week <= Time.now
-            refresh_level = "daily" if cf.config_value['auto_sync']['daily'].present? && DateTime.parse(cf.config_value['auto_sync']['daily']) + 1.day <= Time.now  
+            refresh_level = "weekly" if (!cf.config_value['auto_sync']['weekly'].nil? && (cf.config_value['auto_sync']['weekly'].blank? || DateTime.parse(cf.config_value['auto_sync']['weekly']) + 1.week <= Time.now))
+            refresh_level = "daily" if (!cf.config_value['auto_sync']['daily'].nil? && (cf.config_value['auto_sync']['daily'].blank? || DateTime.parse(cf.config_value['auto_sync']['daily']) + 1.day <= Time.now))
 
             next if refresh_level.blank?
 
@@ -238,7 +238,7 @@ namespace :scheduler do
             end
 
             if sfdc_client.present?
-                puts "\n[ scheduler:refresh_salesforce ] - Refreshing Salesforce for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"} (frequency=#{refresh_level}, last run=#{DateTime.parse(cf.config_value['auto_sync'][refresh_level])})."
+                puts "\n[ scheduler:refresh_salesforce ] - Refreshing Salesforce for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"} (frequency=#{refresh_level}, last run=#{cf.config_value['auto_sync'][refresh_level].present? ? DateTime.parse(cf.config_value['auto_sync'][refresh_level]) : "never" })."
                 # SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
                 if user.present?
                     SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user, for_periodic_refresh: true)

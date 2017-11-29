@@ -344,7 +344,7 @@ class Activity < ActiveRecord::Base
     end
   end
 
-  # Bulk export CS Activities to a SFDC Account or Opportunity (as completed Tasks in ActivityHistory). Ignores imported SFDC activity residing locally in CS.
+  # Bulk export CS Activities to a SFDC Account or Opportunity (as completed Tasks in ActivityHistory). Ignores imported SFDC activity residing locally in CS and notes.
   # Parameters:   client - SFDC connection
   #               project - the CS opportunity from which to export
   #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
@@ -358,8 +358,8 @@ class Activity < ActiveRecord::Base
     result = { status: "SUCCESS", result: [], detail: [] }
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
-    project_activities = project.activities
-    project_activities = project_activities.where("category != ? AND updated_at >= ?", Activity::CATEGORY[:Salesforce], from_updatedat) if from_updatedat.present?
+    project_activities = project.activities.where.not(category: [Activity::CATEGORY[:Salesforce], Activity::CATEGORY[:Note]])
+    project_activities = project_activities.where("updated_at >= :from_updatedat", from_updatedat: from_updatedat) if from_updatedat.present?
 
     project_activities.each do |a|
       # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.
@@ -378,9 +378,6 @@ class Activity < ActiveRecord::Base
             description += "Date: " + Time.zone.at(m.sentDate).strftime("%b %d") +"\n"
             description += "Content: " + strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
           end
-      elsif a.category == Activity::CATEGORY[:Note]
-          description += "Description:  #{ self.get_full_name(a.user) } wrote:\n"
-          description += a.note.present? ? a.note : self.rag_note(a.rag_score.to_i)
       elsif a.category == Activity::CATEGORY[:Meeting] 
           description += "Description:  #{ a.title }"
           description += !a.is_public ? "  (private)\n" : "\n"
@@ -418,6 +415,9 @@ class Activity < ActiveRecord::Base
       elsif a.category == Activity::CATEGORY[:Alert]
           description += "Description:  #{ a.title }\n"
           description += a.note + "\n"
+      # elsif a.category == Activity::CATEGORY[:Note]
+      #     description += "Description:  #{ self.get_full_name(a.user) } wrote:\n"
+      #     description += a.note.present? ? a.note : self.rag_note(a.rag_score.to_i)
       else
           next # if any other Activity type (e.g., Salesforce), skip to the next Activity!
       end

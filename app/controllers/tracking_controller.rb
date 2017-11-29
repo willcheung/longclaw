@@ -79,7 +79,7 @@ class TrackingController < ApplicationController
           place_name: location,
           domain: domain,
           event_type: 'email-view',
-          date: event_date
+          date: DateTime.current # changing this to a newer timestamp as this might be 30 seconds later than event_date and in the meantime users could have changed their 'last seen' timestamp
       )
     end
     expires_now
