@@ -174,7 +174,7 @@ class SalesforceController < ApplicationController
       import_contacts_sfdc_refresh_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'contacts')::jsonb ?| array[:keys]", keys: ['import']).find_by(organization_id: user.organization_id, user_id: user.id)
     end
 
-    if import_contacts_sfdc_refresh_config.present?  # if import SFDC contacts is enabled
+    if import_contacts_sfdc_refresh_config.present?  # import SFDC contacts is enabled
       # if available, use CustomConfiguration last contacts refresh timestamp
       import_contacts_ts = DateTime.parse(import_contacts_sfdc_refresh_config.config_value['contacts']['import']) if import_contacts_sfdc_refresh_config.config_value['contacts']['import'].present?
       error_occurred = false
@@ -328,23 +328,23 @@ class SalesforceController < ApplicationController
           return 
         end
 
+        new_import_ts = Time.now
+
         @opportunities.each do |p|
-          new_import_ts = Time.now
           load_result = p.load_salesforce_activities(client: sfdc_client, filter_predicates: filter_predicate_str)
 
           if load_result[:status] == "ERROR"
             failure_method_location = "load_salesforce_activities()"
             render_internal_server_error(method_name, failure_method_location, load_result[:detail])
             return
-          else
-            # if import SFDC activities is enabled in CustomConfiguration, save the timestamp 
-            if import_sfdc_act_config.present? #&& import_sfdc_act_config.config_value['activities'].present?
-              import_sfdc_act_config.config_value['activities']['import'] = new_import_ts
-              import_sfdc_act_config.save
-            end
           end
         end
 
+        # if import SFDC activities is enabled in CustomConfiguration, save the timestamp 
+        if import_sfdc_act_config.present? #&& import_sfdc_act_config.config_value['activities'].present?
+          import_sfdc_act_config.config_value['activities']['import'] = new_import_ts
+          import_sfdc_act_config.save
+        end
       # end when params[:entity_type] = "activity"
       when "contacts"
         if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
@@ -401,6 +401,8 @@ class SalesforceController < ApplicationController
       sfdc_client = SalesforceService.connect_salesforce(sfdc_oauthuser: sfdc_oauthuser)
 
       unless sfdc_client.nil?  # unless connection error
+        new_export_ts = Time.now
+
         @opportunities.each do |s|
           # TODO: Issue #829 Need to allow SFDC export of activities to continue even after encountering an error.  Use new sync_salesforce code as guide.
           if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
@@ -410,7 +412,6 @@ class SalesforceController < ApplicationController
                 # Save at the Account level
                 Activity.delete_cs_activities(sfdc_client, sfa.salesforce_account_id, "Account")
 
-                new_export_ts = Time.now
                 export_result = Activity.export_cs_activities(sfdc_client, s, sfa.salesforce_account_id, "Account")
 
                 if export_result[:status] == "ERROR"
@@ -418,11 +419,6 @@ class SalesforceController < ApplicationController
                   error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}').  Details: #{ export_result[:detail] }"
                   render_internal_server_error(method_name, method_location, error_detail)
                   return
-                else
-                  if export_sfdc_act_config.present? #&& export_sfdc_act_config.config_value['activities'].present?
-                    export_sfdc_act_config.config_value['activities']['export'] = new_export_ts
-                    export_sfdc_act_config.save
-                  end
                 end
               end
             end
@@ -431,7 +427,6 @@ class SalesforceController < ApplicationController
             # Save at the Opportunity level
             Activity.delete_cs_activities(sfdc_client, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
-            new_export_ts = Time.now
             export_result = Activity.export_cs_activities(sfdc_client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
             if export_result[:status] == "ERROR"
@@ -439,13 +434,14 @@ class SalesforceController < ApplicationController
               error_detail = "Error while attempting to export CS activity from CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}') to Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}').  Details: #{ export_result[:detail] }"
               render_internal_server_error(method_name, method_location, error_detail)
               return
-            else
-              if export_sfdc_act_config.present? #&& export_sfdc_act_config.config_value['activities'].present?
-                export_sfdc_act_config.config_value['activities']['export'] = new_export_ts
-                export_sfdc_act_config.save
-              end
             end
           end
+        end # End: @opportunities.each do |s|
+
+        # if export activities is enabled
+        if export_sfdc_act_config.present? #&& export_sfdc_act_config.config_value['activities'].present?
+          export_sfdc_act_config.config_value['activities']['export'] = new_export_ts
+          export_sfdc_act_config.save
         end
       else
         render_service_unavailable_error(method_name)
@@ -463,6 +459,7 @@ class SalesforceController < ApplicationController
         # individual
         export_sfdc_contacts_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'contacts')::jsonb ?| array[:keys]", keys: ['export']).find_by(organization_id: current_user.organization_id, user_id: current_user.id)
       end
+      # ...
     else
       error_detail = "Invalid entity_type parameter passed to export_salesforce(). entity_type=#{params[:entity_type]}"
       puts error_detail
@@ -675,13 +672,16 @@ class SalesforceController < ApplicationController
           sync_result_messages = []
           error_occurred = false
 
+          prev_import_timestamp = DateTime.parse(sync_sfdc_act_config.config_value['activities']['import']) if sync_sfdc_act_config.config_value['activities']['import'].present?
+          prev_export_timestamp = DateTime.parse(sync_sfdc_act_config.config_value['activities']['export']) if sync_sfdc_act_config.config_value['activities']['export'].present?
+          new_sync_timestamp = Time.now
+
           @opportunities.each do |s|
             if s.salesforce_opportunity.nil? # CS Opportunity not linked to SFDC Opportunity
               if s.account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
                 s.account.salesforce_accounts.each do |sfa|
-                  if !sync_sfdc_act_config.config_value['activities']['import'].nil? # if import SFDC activities is enabled
+                  if !sync_sfdc_act_config.config_value['activities']['import'].nil? # import SFDC activities is enabled
                     # Import activities from SFDC Account level to ContextSmith Opportunity
-                    new_import_ts = Time.now
                     load_result = Activity.load_salesforce_activities(client: sfdc_client, project: s, sfdc_id: sfa.salesforce_account_id, type: "Account", filter_predicates: filter_predicate_str)
 
                     if load_result[:status] == "ERROR"
@@ -690,18 +690,15 @@ class SalesforceController < ApplicationController
                       sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: load_result[:result] + " " + load_result[:detail] }
                       error_occurred = true
                     else # load_result[:status] == SUCCESS
-                      sync_sfdc_act_config.config_value['activities']['import'] = new_import_ts
-                      sync_sfdc_act_config.save
                       sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: load_result[:result] + " " + load_result[:detail] } 
                     end
                   end
 
-                  if !sync_sfdc_act_config.config_value['activities']['export'].nil? # if export SFDC activities is enabled
+                  if !sync_sfdc_act_config.config_value['activities']['export'].nil? # export SFDC activities is enabled
                     # TODO: Determine if there are any new activities in opportunity 's' to export, and don't export if none.
                     # Export activities from ContextSmith Opportunity to SFDC Account level
                     Activity.delete_cs_activities(sfdc_client, sfa.salesforce_account_id, "Account")
 
-                    new_export_ts = Time.now
                     export_result = Activity.export_cs_activities(sfdc_client, s, sfa.salesforce_account_id, "Account")
 
                     if export_result[:status] == "ERROR"
@@ -710,17 +707,14 @@ class SalesforceController < ApplicationController
                       sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: export_result[:result].to_s + " " + export_result[:detail].to_s }
                       error_occurred = true
                     else # export_result[:status] == SUCCESS
-                      sync_sfdc_act_config.config_value['activities']['export'] = new_export_ts
-                      sync_sfdc_act_config.save
                       sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: export_result[:result].to_s + " " + export_result[:detail].to_s } 
                     end
                   end
                 end # end: s.account.salesforce_accounts.each do |sfa|
               end
             else # CS Opportunity linked to SFDC Opportunity
-              if !sync_sfdc_act_config.config_value['activities']['import'].nil? # if import SFDC activities is enabled
+              if !sync_sfdc_act_config.config_value['activities']['import'].nil? # import SFDC activities is enabled
                 # Import activities from SFDC to ContextSmith, both at Opportunity level
-                new_import_ts = Time.now
                 load_result = Activity.load_salesforce_activities(client: sfdc_client, project: s, sfdc_id: s.salesforce_opportunity.salesforce_opportunity_id, type: "Opportunity", filter_predicates: filter_predicate_str)
 
                 if load_result[:status] == "ERROR"
@@ -729,18 +723,15 @@ class SalesforceController < ApplicationController
                   sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, failure_method_location: failure_method_location, detail: load_result[:result] + " " + load_result[:detail] }
                   error_occurred = true
                 else # load_result[:status] == SUCCESS
-                  sync_sfdc_act_config.config_value['activities']['import'] = new_import_ts
-                  sync_sfdc_act_config.save
                   sync_result_messages << { status: load_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, detail: load_result[:result] + " " + load_result[:detail] } 
                 end
               end
 
-              if !sync_sfdc_act_config.config_value['activities']['export'].nil? # if export SFDC activities is enabled
+              if !sync_sfdc_act_config.config_value['activities']['export'].nil? # export SFDC activities is enabled
                 # TODO: Determine if there are any new activities in opportunity 's' to export, and don't export if none.
                 # Export activities from ContextSmith to SFDC, both at Opportunity level
                 Activity.delete_cs_activities(sfdc_client, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
-                new_export_ts = Time.now
                 export_result = Activity.export_cs_activities(sfdc_client, s, s.salesforce_opportunity.salesforce_opportunity_id, "Opportunity")
 
                 if export_result[:status] == "ERROR"
@@ -749,8 +740,6 @@ class SalesforceController < ApplicationController
                   sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, failure_method_location: failure_method_location, detail: export_result[:result].to_s + " " + export_result[:detail].to_s }
                   error_occurred = true
                 else # export_result[:status] == SUCCESS
-                  sync_sfdc_act_config.config_value['activities']['export'] = new_export_ts
-                  sync_sfdc_act_config.save
                   sync_result_messages << { status: export_result[:status], opportunity: { name: s.name, id: s.id }, sfdc_opportunity: { name: s.salesforce_opportunity.name, id: s.salesforce_opportunity.salesforce_opportunity_id }, detail: export_result[:result].to_s + " " + export_result[:detail].to_s } 
                 end
               end
@@ -771,6 +760,15 @@ class SalesforceController < ApplicationController
             end.join("\n\n")  
             )
             return
+          else
+            if !sync_sfdc_act_config.config_value['activities']['import'].nil? # import SFDC activities is enabled
+              sync_sfdc_act_config.config_value['activities']['import'] = new_sync_timestamp
+              sync_sfdc_act_config.save
+            end
+            if !sync_sfdc_act_config.config_value['activities']['export'].nil? # export SFDC activities is enabled
+              sync_sfdc_act_config.config_value['activities']['export'] = new_sync_timestamp
+              sync_sfdc_act_config.save
+            end
           end
         else
           render_service_unavailable_error(method_name)
@@ -803,13 +801,17 @@ class SalesforceController < ApplicationController
           unless sfdc_client.nil?  # unless SFDC connection error
             sync_result_messages = []
             error_occurred = false
+
+            prev_import_timestamp = DateTime.parse(sync_sfdc_contacts_config.config_value['contacts']['import']) if sync_sfdc_contacts_config.config_value['contacts']['import'].present?
+            prev_export_timestamp = DateTime.parse(sync_sfdc_contacts_config.config_value['contacts']['export']) if sync_sfdc_contacts_config.config_value['contacts']['export'].present?
+            new_sync_timestamp = Time.now
+
             account_mapping.each do |m|
               a = m[0]
               sfa = m[1]
 
-              if !sync_sfdc_contacts_config.config_value['contacts']['import'].nil? # if import SFDC contacts is enabled
+              if !sync_sfdc_contacts_config.config_value['contacts']['import'].nil? # import SFDC contacts is enabled
                 # Import Contacts from SFDC to ContextSmith 
-                new_import_ts = Time.now
                 import_result = Contact.load_salesforce_contacts(sfdc_client, a.id, sfa.salesforce_account_id)
                 failure_method_location = "Contact.load_salesforce_contacts()"
 
@@ -818,15 +820,12 @@ class SalesforceController < ApplicationController
                   sync_result_messages << { status: import_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: import_result[:result] + " " + import_result[:detail] }
                   error_occurred = true
                 else # import_result[:status] == SUCCESS
-                  sync_sfdc_contacts_config.config_value['contacts']['import'] = new_import_ts
-                  sync_sfdc_contacts_config.save
                   sync_result_messages << { status: import_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: import_result[:result] + " " + import_result[:detail] } 
                 end
               end
 
-              if !sync_sfdc_contacts_config.config_value['contacts']['export'].nil? # if export SFDC contacts is enabled
+              if !sync_sfdc_contacts_config.config_value['contacts']['export'].nil? # export SFDC contacts is enabled
                 # Export ContextSmith Contacts out to SFDC
-                new_export_ts = Time.now
                 export_result = Contact.export_cs_contacts(sfdc_client, a.id, sfa.salesforce_account_id)
                 failure_method_location = "Contact.export_cs_contacts()"
 
@@ -835,8 +834,6 @@ class SalesforceController < ApplicationController
                   sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: export_result[:detail] }
                   error_occurred = true
                 else # export_result[:status] == SUCCESS
-                  sync_sfdc_contacts_config.config_value['contacts']['export'] = new_export_ts
-                  sync_sfdc_contacts_config.save
                   sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id } } 
                 end
               end
@@ -846,6 +843,15 @@ class SalesforceController < ApplicationController
             if error_occurred
               render_internal_server_error(method_name, "(see listing)", sync_result_messages.map{ |m| (m[:status] == "ERROR" ? "x Failure:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:account][:name]}'(account id=#{m[:account][:id]}) <-> (SFDC)'#{m[:sfdc_account][:name]}'(account sObject Id=#{m[:sfdc_account][:id]})  detail: #{m[:detail]}" }.join("\n\n"))
               return
+            else
+              if !sync_sfdc_contacts_config.config_value['contacts']['import'].nil? # import SFDC contacts is enabled
+                sync_sfdc_contacts_config.config_value['contacts']['import'] = new_sync_timestamp
+                sync_sfdc_contacts_config.save
+              end
+              if !sync_sfdc_contacts_config.config_value['contacts']['export'].nil? # export SFDC contacts is enabled
+                sync_sfdc_contacts_config.config_value['contacts']['export'] = new_sync_timestamp
+                sync_sfdc_contacts_config.save
+              end
             end
           else
             render_service_unavailable_error(method_name)
