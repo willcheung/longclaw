@@ -149,7 +149,7 @@ class Contact < ActiveRecord::Base
     query_statement += " AND LastModifiedDate <= #{to_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ')}" if to_lastmodifieddate.present?
     query_statement += " ORDER BY Email, LastName, FirstName"  # Unused: Description, LeadSource
     query_statement += " LIMIT #{contact_limit}" if contact_limit.present?
-    puts "query_statement: #{query_statement}"
+    # puts "query_statement: #{query_statement}"
 
     query_result = SalesforceService.query_salesforce(client, query_statement)
 

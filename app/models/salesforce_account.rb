@@ -58,7 +58,7 @@ class SalesforceAccount < ActiveRecord::Base
   # This class method finds all SFDC accounts accessible through client (connection) and creates a local model.
   # Params:    client - a valid SFDC connection
   #            organization_id - the organization to upsert the SFDC accounts
-  #            query_range - the limit for SFDC query results
+  #            query_range - the number of rows to "chunk" while processing SFDC query request.
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of accounts added/updated; if an error occurred, contains the title of the error.
@@ -75,10 +75,10 @@ class SalesforceAccount < ActiveRecord::Base
     while true
       # Query salesforce
       if firstQuery
-        query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT #{query_range.to_s}"
+        query_statement = "select Id, Name, OwnerId, LastModifiedDate from Account ORDER BY Id LIMIT #{query_range.to_s}"
         firstQuery = false
       else
-        query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT #{query_range.to_s}"
+        query_statement = "select Id, Name, OwnerId, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT #{query_range.to_s}"
       end
       
       query_result = SalesforceService.query_salesforce(client, query_statement)

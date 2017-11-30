@@ -43,13 +43,13 @@ class SalesforceOpportunity < ActiveRecord::Base
   # Params:    client - a valid SFDC connection
   #            user - (required, if individual SFDC user) the user of the organization into which to upsert the SFDC accounts
   #            organization - (required, if admin SFDC user) the organization into which to upsert the SFDC accounts
-  #            query_range - (optional) the limit for SFDC query results
+  #            query_range - (optional, unused) the number of rows to "chunk" while processing SFDC query request.
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of opportunities added/updated; if an error occurred, contains the title of the error.
   #             detail - contains the details of an error.
   # TODO: This recovers if an error occurs while running a SFDC query during the process, but need to add code to save error messages.
-  def self.load_opportunities(client: , user: nil , organization: nil, query_range: 500)
+  def self.load_opportunities(client: , user: nil , organization: nil, query_range: nil)
     val = []
 
     total_opportunities = 0
@@ -58,7 +58,7 @@ class SalesforceOpportunity < ActiveRecord::Base
       sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: organization.id).is_linked
 
       sfdc_accounts.each do |a|
-        query_statement = "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"
+        query_statement = "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')}))"
 
         query_result = SalesforceService.query_salesforce(client, query_statement)
         # puts "query_statement: #{ query_statement }" 
@@ -102,7 +102,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     elsif user.present?  # single SFDC user
       sfdc_userid = SalesforceService.get_salesforce_user_uuid(user.organization_id, user.id)
       query_statements = []
-      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"  # "Closed within the last year & all Open Opps"
+      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')}))"  # "Closed within the last year & all Open Opps"
       # query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = FALSE ORDER BY CloseDate DESC LIMIT 10" # "recent 10 Open Opps"
 
       query_statements.each do |query_statement|
