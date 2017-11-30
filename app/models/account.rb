@@ -141,7 +141,7 @@ class Account < ActiveRecord::Base
     #             result - if status == "ERROR", contains the title of the error
     #             detail - if status == "ERROR", contains the details of the error
     # TODO: Might want to move to SalesforceAccount.rb
-    def self.update_fields_from_sfdc(client: , accounts: , sfdc_fields_mapping: )
+    def self.update_standard_fields_from_sfdc(client: , accounts: , sfdc_fields_mapping: )
         result = nil
 
         unless (client.nil? || accounts.nil? || sfdc_fields_mapping.blank?)
@@ -187,10 +187,10 @@ class Account < ActiveRecord::Base
             end
         else
             if client.nil?
-                puts "** ContextSmith error: Parameter 'client' passed to Account.update_fields_from_sfdc is invalid!"
+                puts "** ContextSmith error: Parameter 'client' passed to Account.update_standard_fields_from_sfdc is invalid!"
                 result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
             else
-                # Ignores if other parameters were not passed properly to update_fields_from_sfdc
+                # Ignores if other parameters were not passed properly to update_standard_fields_from_sfdc
                 result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
             end
         end
@@ -208,7 +208,7 @@ class Account < ActiveRecord::Base
     #             result - if status == "ERROR", contains the title of the error
     #             detail - if status == "ERROR", contains the details of the error
     # TODO: Might want to move to SalesforceAccount.rb
-    def self.load_salesforce_fields(client: , account_id: , sfdc_account_id: , account_custom_fields: )
+    def self.update_custom_fields_from_sfdc(client: , account_id: , sfdc_account_id: , account_custom_fields: )
         result = nil
 
         unless (client.nil? || account_id.nil? || sfdc_account_id.nil? || account_custom_fields.blank?)
@@ -237,10 +237,10 @@ class Account < ActiveRecord::Base
             end
         else
             if client.nil?
-                puts "** ContextSmith error: Parameter 'client' passed to Account.load_salesforce_fields is invalid!"
+                puts "** ContextSmith error: Parameter 'client' passed to Account.update_custom_fields_from_sfdc is invalid!"
                 result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
             else
-                # Ignores if other parameters were not passed properly to load_salesforce_fields
+                # Ignores if other parameters were not passed properly to update_custom_fields_from_sfdc
                 result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
             end
         end
