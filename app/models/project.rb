@@ -29,6 +29,8 @@
 #  expected_revenue    :decimal(14, 2)
 #  probability         :decimal(5, 2)
 #  forecast            :string
+#  next_steps          :string
+#  competition         :string
 #
 # Indexes
 #
