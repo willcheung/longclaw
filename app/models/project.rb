@@ -138,7 +138,7 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
+  MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast", "next_steps" => "Next Steps" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
   CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'All Closed', Open: 'All Open' }
 
