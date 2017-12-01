@@ -43,13 +43,13 @@ class SalesforceOpportunity < ActiveRecord::Base
   # Params:    client - a valid SFDC connection
   #            user - (required, if individual SFDC user) the user of the organization into which to upsert the SFDC accounts
   #            organization - (required, if admin SFDC user) the organization into which to upsert the SFDC accounts
-  #            query_range - (optional) the limit for SFDC query results
+  #            query_limit - (optional, unused) the number of rows to "splice" while processing SFDC query request.
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of opportunities added/updated; if an error occurred, contains the title of the error.
   #             detail - contains the details of an error.
   # TODO: This recovers if an error occurs while running a SFDC query during the process, but need to add code to save error messages.
-  def self.load_opportunities(client: , user: nil , organization: nil, query_range: 500)
+  def self.load_opportunities(client: , user: nil , organization: nil, query_limit: nil)
     val = []
 
     total_opportunities = 0
@@ -58,7 +58,7 @@ class SalesforceOpportunity < ActiveRecord::Base
       sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: organization.id).is_linked
 
       sfdc_accounts.each do |a|
-        query_statement = "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"
+        query_statement = "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')}))"
 
         query_result = SalesforceService.query_salesforce(client, query_statement)
         # puts "query_statement: #{ query_statement }" 
@@ -102,7 +102,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     elsif user.present?  # single SFDC user
       sfdc_userid = SalesforceService.get_salesforce_user_uuid(user.organization_id, user.id)
       query_statements = []
-      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')})) LIMIT #{query_range}"  # "Closed within the last year & all Open Opps"
+      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')}))"  # "Closed within the last year & all Open Opps"
       # query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = FALSE ORDER BY CloseDate DESC LIMIT 10" # "recent 10 Open Opps"
 
       query_statements.each do |query_statement|
@@ -224,8 +224,10 @@ class SalesforceOpportunity < ActiveRecord::Base
 
   # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC opportunity to a field of a CS opportunity. This is for all active and confirmed opportunities visible to current_user. Process aborts immediately if there is an update/SFDC error.
   # Parameters:   client - a valid SFDC connection client
+  #               current_user - the user requesting this refresh
   #               opportunities - (optional) an array of CS opportunities to be imported; if unspecified, will process all opportunities visible to current user.
-  def self.refresh_fields(client, current_user, opportunities=nil)
+  #               opps_list_slice_size - (optional) the number of opportunities to "splice" the opportunities array each time while processing SFDC query request; Default is 400
+  def self.refresh_fields(client, current_user, opportunities=nil, opps_list_slice_size=400)
     opportunities ||= Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
     # opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
     opportunity_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Project])
@@ -234,29 +236,31 @@ class SalesforceOpportunity < ActiveRecord::Base
     # puts "\n\nopportunity_standard_fields: #{opportunity_standard_fields}\nopportunity_custom_fields: #{opportunity_custom_fields}\n"
 
     unless opportunities.first.blank? || (opportunity_standard_fields.blank? && opportunity_custom_fields.blank?) # nothing to do if no active+confirmed opportunities or no opportunity field mappings are found
-      # standard fields
-      update_result = Project.update_fields_from_sfdc(client: client, opportunities: opportunities, sfdc_fields_mapping: opportunity_standard_fields)
-      if update_result[:status] == "ERROR"
-        detail = {}
-        detail[:failure_method_location] = "Project.update_fields_from_sfdc()"
-        detail[:error_detail] = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
-        return { status: "ERROR", result: "Update error", detail: detail }
-      end
-
-      # custom fields
-      opportunities.each do |s|
-        unless s.salesforce_opportunity.nil?
-          # puts "**** SFDC opportunity:\"#{s.salesforce_opportunity.name}\" --> CS opportunity:\"#{s.name}\" ****\n"
-          load_result = Project.load_salesforce_fields(client: client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
-
-          if load_result[:status] == "ERROR"
-            detail = {}
-            detail[:failure_method_location] = "Project.load_salesforce_fields()"
-            detail[:error_detail] = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-            return { status: "ERROR", result: "Update error", detail: detail }
-          end
+      opportunities.each_slice(opps_list_slice_size) do |opps_slice|
+        # standard fields
+        update_result = Project.update_standard_fields_from_sfdc(client: client, opportunities: opps_slice, sfdc_fields_mapping: opportunity_standard_fields)
+        if update_result[:status] == "ERROR"
+          detail = {}
+          detail[:failure_method_location] = "Project.update_standard_fields_from_sfdc()"
+          detail[:error_detail] = "Error while attempting to load standard fields from Salesforce Opportunities.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+          return { status: "ERROR", result: "Update error", detail: detail }
         end
-      end # End: opportunities.each do |s|
+
+        # custom fields
+        opps_slice.each do |s|
+          unless s.salesforce_opportunity.nil?
+            # puts "**** SFDC opportunity:\"#{s.salesforce_opportunity.name}\" --> CS opportunity:\"#{s.name}\" ****\n"
+            load_result = Project.update_custom_fields_from_sfdc(client: client, project_id: s.id, sfdc_opportunity_id: s.salesforce_opportunity.salesforce_opportunity_id, opportunity_custom_fields: opportunity_custom_fields)
+
+            if load_result[:status] == "ERROR"
+              detail = {}
+              detail[:failure_method_location] = "Project.update_custom_fields_from_sfdc()"
+              detail[:error_detail] = "Error while attempting to load fields from Salesforce Opportunity \"#{s.salesforce_opportunity.name}\" (sfdc_id='#{s.salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{s.name}\" (opportunity_id='#{s.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+              return { status: "ERROR", result: "Update error", detail: detail }
+            end
+          end
+        end # End: opps_slice.each do |s|
+      end # End: opportunities.each_slice(opps_list_slice_size) do |opps_slice|
     else # no active+confirmed opportunities and no opportunity field mappings found
       return { status: "SUCCESS", result: "Warning: no opportunities updated." }
     end
