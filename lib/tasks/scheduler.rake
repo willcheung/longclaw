@@ -215,6 +215,7 @@ namespace :scheduler do
         puts "\n\n=====Task (refresh_salesforce) started at #{Time.now}====="
         sfdc_refresh_configs = CustomConfiguration.where("config_type = :config_type AND ((config_value::jsonb)->>'auto_sync')::jsonb ?| array[:keys]", config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], keys: ['daily','weekly'])
         sfdc_refresh_configs.each do |cf|
+            # skip if the refresh_level is not found in the auto_sync hash; otherwise, run if refresh_level exists, but it is an empty string (never been run and awaiting update upon the first run).
             refresh_level = "weekly" if (!cf.config_value['auto_sync']['weekly'].nil? && (cf.config_value['auto_sync']['weekly'].blank? || DateTime.parse(cf.config_value['auto_sync']['weekly']) + 1.week <= Time.now))
             refresh_level = "daily" if (!cf.config_value['auto_sync']['daily'].nil? && (cf.config_value['auto_sync']['daily'].blank? || DateTime.parse(cf.config_value['auto_sync']['daily']) + 1.day <= Time.now))
 
