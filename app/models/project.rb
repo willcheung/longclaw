@@ -848,8 +848,8 @@ class Project < ActiveRecord::Base
   # Parameters:   array_of_project_ids - ids of opportunities
   #               domain - domain of the organization (not used)
   #               array_of_user_emails (required) - e-mails of users to be used to determine if an e-mail is outbound/sent or inbound/received (e.g., if from perspective of a single user, this contains only this user's e-mail address; if want to use all users for the current user's organization, specify them).)  
-  #               start_day - the starting time (timestamp) of the reporting period (default is midnight 14 days ago in current user's timezone)
-  #               end_day - the starting time (timestamp) of the reporting period (default is midnight current day in current user's timezone)
+  #               start_day - the starting time (timestamp) of the reporting period; Default is midnight 14 days ago in current user's timezone
+  #               end_day - the starting time (timestamp) of the reporting period; Default is midnight current day in current user's timezone
   # Note: this query will not report anything without a non-empty array in array_of_user_emails!
   def self.count_activities_by_category(array_of_project_ids, domain, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     return [] if array_of_user_emails.blank?

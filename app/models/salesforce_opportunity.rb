@@ -226,7 +226,7 @@ class SalesforceOpportunity < ActiveRecord::Base
   # Parameters:   client - a valid SFDC connection client
   #               current_user - the user requesting this refresh
   #               opportunities - (optional) an array of CS opportunities to be imported; if unspecified, will process all opportunities visible to current user.
-  #               opps_list_slice_size - (optional) the number of opportunities to "splice" the opportunities array each time while processing SFDC query request; 400 (default)
+  #               opps_list_slice_size - (optional) the number of opportunities to "splice" the opportunities array each time while processing SFDC query request; Default is 400
   def self.refresh_fields(client, current_user, opportunities=nil, opps_list_slice_size=400)
     opportunities ||= Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")
     # opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.joins(:salesforce_opportunity).where("salesforce_opportunities.contextsmith_project_id IS NOT NULL")

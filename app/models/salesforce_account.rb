@@ -191,7 +191,7 @@ class SalesforceAccount < ActiveRecord::Base
   # Parameters:   client - a valid SFDC connection client
   #               current_user - the user requesting this refresh
   #               accounts - an array of CS accounts to be imported
-  #               acct_list_slice_size - (optional) the number of accounts to "splice" the accounts array each time while processing SFDC query request; 400 (default)
+  #               acct_list_slice_size - (optional) the number of accounts to "splice" the accounts array each time while processing SFDC query request; Default is 400
   def self.refresh_fields(client, current_user, accounts=nil, acct_list_slice_size=400)
     accounts ||= current_user.organization.accounts.where(status: "Active")
     # accounts = Account.visible_to(current_user)
