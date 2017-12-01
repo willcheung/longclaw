@@ -3,10 +3,10 @@ development:
   google_client_secret: 59VJa6QBgrJrIxmLwGLI1_l8
   mandrill_user_name: wcheung@contextsmith.com
   mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
-  #csback_base_url: http://104.198.4.24:8888
-  csback_base_url: http://localhost:8888 # to use when running oathkeeper locally
-  csback_script_base_url: http://localhost:8888
-  #csback_script_base_url: http://104.198.4.24:8888
+  csback_base_url: http://104.198.4.24:8888
+#  csback_base_url: http://localhost:8888 # to use when running oathkeeper locally
+#  csback_script_base_url: http://localhost:8888
+  csback_script_base_url: http://104.198.4.24:8888
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
   mailchimp_email_list_id: 0b8529ba9c
   salesforce_client_id: 3MVG9uudbyLbNPZN.LgCpo4h3qzBoUMWd0Rs_BnZBTRoBOie1OX3vELXocUZXdBq3mCaLY0TZNm2VhyQ7h7f0
