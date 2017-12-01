@@ -36,7 +36,7 @@ module Ahoy
 	    find_by_sql(query)
 	  end
 
-	  # DAU last 14 days (chart, using date asc)
+	  # DAU last 30 days (chart, using date asc)
 	  def self.daily_active_users
 	    query = <<-SQL
 	    	select date, count(*) as dau from (
@@ -44,7 +44,7 @@ module Ahoy
 								users.email, 
 								count(ahoy_events.properties->'page') as count 
 					from ahoy_events join users on users.id=ahoy_events.user_id 
-					where not properties @> '{"page":"/settings/user_analytics"}' and time >= current_date - interval '14' day and email not like '%contextsmith.com' 
+					where not properties @> '{"page":"/settings/user_analytics"}' and time >= current_date - interval '30' day and email not like '%contextsmith.com' 
 					group by to_char("time", 'MM/DD'), users.email
 					order by "date" asc
 				) t 
@@ -53,7 +53,7 @@ module Ahoy
 	    find_by_sql(query)
 	  end
 
-	  # Get last 14 days of aggregate actions and pages per user (excluding contextsmith.com)
+	  # Get last 7 days of aggregate actions and pages per user (excluding contextsmith.com)
 	  def self.last_14d_actions_by_page_by_user
 	    query = <<-SQL
 				select to_char("time", 'MM/DD') as "date", 
@@ -62,7 +62,7 @@ module Ahoy
 							ahoy_events.properties->'page' as page, 
 							count(ahoy_events.properties->'page') as count 
 				from ahoy_events join users on users.id=ahoy_events.user_id 
-				where not properties @> '{"page":"/settings/user_analytics"}' and time >= current_date - interval '14' day and email not like '%contextsmith.com' 
+				where not properties @> '{"page":"/settings/user_analytics"}' and time >= current_date - interval '7' day and email not like '%contextsmith.com' 
 				group by to_char("time", 'MM/DD'), users.email, action, page 
 				order by "date" desc;
       SQL
@@ -92,7 +92,7 @@ module Ahoy
 							users.email, 
 							count(ahoy_events.properties->'page') as count 
 					from ahoy_events join users on users.id=ahoy_events.user_id 
-					where not properties @> '{"page":"/settings/user_analytics"}' and time >= current_date - interval '14' day and SUBSTRING(email from '@(.*)$') != 'gmail.com' 
+					where not properties @> '{"page":"/settings/user_analytics"}' and time >= current_date - interval '14' day and SUBSTRING(email from '@(.*)$') != 'gmail.com' and email not like '%contextsmith.com'
 					group by users.email
 				) t
 				GROUP BY domain ORDER BY users_count DESC, domain;
