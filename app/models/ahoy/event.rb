@@ -24,12 +24,12 @@ module Ahoy
     belongs_to :user
 
 
-    # Get all activities last 14 days (excluding contextsmith.com) (chart, using date asc)
+    # Get all activities last 30 days (excluding contextsmith.com) (chart, using date asc)
 	  def self.all_ahoy_events
 	    query = <<-SQL
 		    select to_char(time, 'MM/DD') as "date", cast(count(ahoy_events.*) as integer) as events
 		    from ahoy_events join users on users.id=ahoy_events.user_id 
-		    where time >= current_date - interval '14' day and not properties @> '{"page":"/settings/user_analytics"}' and email not like '%contextsmith.com'
+		    where time >= current_date - interval '30' day and not properties @> '{"page":"/settings/user_analytics"}' and email not like '%contextsmith.com'
 		    group by to_char(time, 'MM/DD')
 		    order by "date" asc;
 	    SQL
