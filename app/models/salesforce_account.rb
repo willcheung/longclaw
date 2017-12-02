@@ -33,11 +33,11 @@ class SalesforceAccount < ActiveRecord::Base
   # meaning we can get only 50,000 at most in 1 query
   # 
   # 
-  # Heroku statics     | memory per transaction|
-  # query_range: 1000   | 36.1M                 |
-  # query_range: 500    | 12.4M                 |
+  # Heroku statics            | memory per transaction|
+  # query_range_limit: 1000   | 36.1M                 |
+  # query_range_limit: 500    | 12.4M                 |
   # 
-  # query_range higher than 1000 may cause Error R14 (Memory quota exceeded) on heroku
+  # query_range_limit higher than 1000 may cause Error R14 (Memory quota exceeded) on heroku
   # 
   # 
   # for 26,394 records of salesforce data, the processing time is about 28.2 s
@@ -58,13 +58,13 @@ class SalesforceAccount < ActiveRecord::Base
   # This class method finds all SFDC accounts accessible through client (connection) and creates a local model.
   # Params:    client - a valid SFDC connection
   #            organization_id - the organization to upsert the SFDC accounts
-  #            query_range - the limit for SFDC query results
+  #            query_range_limit - the number of rows to "splice" while processing SFDC query request.
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if load successful; otherwise, "ERROR".
   #             result - if successful, contains the # of accounts added/updated; if an error occurred, contains the title of the error.
   #             detail - details of any errors.
   # Note: This will not recover (will abort) if an error occurs while running query SFDC during the process -- if it will happen, likely will happen on first run not in middle of subsequent runs.
-  def self.load_accounts(client, organization_id, query_range=500)
+  def self.load_accounts(client, organization_id, query_range_limit=500)
     firstQuery = true   
     last_Created_Id = nil
     total_accounts = 0
@@ -75,10 +75,10 @@ class SalesforceAccount < ActiveRecord::Base
     while true
       # Query salesforce
       if firstQuery
-        query_statement = "select Id, Name, LastModifiedDate from Account ORDER BY Id LIMIT #{query_range.to_s}"
+        query_statement = "select Id, Name, OwnerId, LastModifiedDate from Account ORDER BY Id LIMIT #{query_range_limit.to_s}"
         firstQuery = false
       else
-        query_statement = "select Id, Name, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT #{query_range.to_s}"
+        query_statement = "select Id, Name, OwnerId, LastModifiedDate from Account WHERE Id > '#{last_Created_Id}' ORDER BY Id LIMIT #{query_range_limit.to_s}"
       end
       
       query_result = SalesforceService.query_salesforce(client, query_statement)
@@ -189,8 +189,10 @@ class SalesforceAccount < ActiveRecord::Base
   # Native and custom CS fields are updated according to the explicit mapping of a field of a SFDC account to a field of a CS account, for all active accounts in current_user's organization. Process aborts immediately if there is an update/SFDC error.
   # TODO: Refactor so that we only go through active accounts that have salesforce accounts (owned by this user) linked to it, for performance.
   # Parameters:   client - a valid SFDC connection client
+  #               current_user - the user requesting this refresh
   #               accounts - an array of CS accounts to be imported
-  def self.refresh_fields(client, current_user, accounts=nil)
+  #               acct_list_slice_size - (optional) the number of accounts to "splice" the accounts array each time while processing SFDC query request; Default is 400
+  def self.refresh_fields(client, current_user, accounts=nil, acct_list_slice_size=400)
     accounts ||= current_user.organization.accounts.where(status: "Active")
     # accounts = Account.visible_to(current_user)
     account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
@@ -199,29 +201,31 @@ class SalesforceAccount < ActiveRecord::Base
     # puts "\n\naccount_standard_fields: #{account_standard_fields}\naccount_custom_fields: #{account_custom_fields}\n"
 
     unless accounts.blank? || current_user.organization.salesforce_accounts.where.not(contextsmith_account_id: nil).first.blank? || (account_standard_fields.blank? && account_custom_fields.blank?) # nothing to do if no active CS accounts, no SFDC accounts mapped, or no account field mappings are found
-      # standard fields
-      update_result = Account.update_fields_from_sfdc(client: client, accounts: accounts, sfdc_fields_mapping: account_standard_fields)
-      if update_result[:status] == "ERROR"
-        detail = {}
-        detail[:failure_method_location] = "Account.update_fields_from_sfdc()"
-        detail[:error_detail] = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
-        return { status: "ERROR", result: "Update error", detail: detail }
-      end
-
-      # custom fields
-      accounts.each do |a|
-        unless a.salesforce_accounts.first.nil? 
-          # puts "**** SFDC account:\"#{a.salesforce_accounts.first.salesforce_account_name}\" --> CS account:\"#{a.name}\" ****\n"
-          load_result = Account.load_salesforce_fields(client: client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
-
-          if load_result[:status] == "ERROR"
-            detail = {}
-            detail[:failure_method_location] = "Account.load_salesforce_fields()"
-            detail[:error_detail] = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
-            return { status: "ERROR", result: "Update error", detail: detail }
-          end
+      accounts.each_slice(acct_list_slice_size) do |accts_slice|
+        # standard fields
+        update_result = Account.update_standard_fields_from_sfdc(client: client, accounts: accts_slice, sfdc_fields_mapping: account_standard_fields)
+        if update_result[:status] == "ERROR"
+          detail = {}
+          detail[:failure_method_location] = "Account.update_standard_fields_from_sfdc()"
+          detail[:error_detail] = "Error while attempting to load standard fields from Salesforce Accounts.  #{ update_result[:result] } Details: #{ update_result[:detail] }"
+          return { status: "ERROR", result: "Update error", detail: detail }
         end
-      end # End: accounts.each do |s|
+
+        # custom fields
+        accts_slice.each do |a|
+          unless a.salesforce_accounts.first.nil? 
+            # puts "**** SFDC account:\"#{a.salesforce_accounts.first.salesforce_account_name}\" --> CS account:\"#{a.name}\" ****\n"
+            load_result = Account.update_custom_fields_from_sfdc(client: client, account_id: a.id, sfdc_account_id: a.salesforce_accounts.first.salesforce_account_id, account_custom_fields: account_custom_fields)
+
+            if load_result[:status] == "ERROR"
+              detail = {}
+              detail[:failure_method_location] = "Account.update_custom_fields_from_sfdc()"
+              detail[:error_detail] = "Error while attempting to load fields from Salesforce Account \"#{a.salesforce_accounts.first.salesforce_account_name}\" (sfdc_id='#{a.salesforce_accounts.first.salesforce_account_id}') to CS Account \"#{a.name}\" (account_id='#{a.id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
+              return { status: "ERROR", result: "Update error", detail: detail }
+            end
+          end
+        end # End: accts_slice.each do |s|
+      end # End: accounts.each_slice(acct_list_slice_size) do |accts_slice|
     else # no active CS accounts, no SFDC accounts mapped, and no account field mappings found
       return { status: "SUCCESS", result: "Warning: no accounts updated." }
     end

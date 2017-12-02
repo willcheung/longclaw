@@ -29,6 +29,8 @@
 #  expected_revenue    :decimal(14, 2)
 #  probability         :decimal(5, 2)
 #  forecast            :string
+#  next_steps          :string
+#  competition         :string
 #
 # Indexes
 #
@@ -136,7 +138,7 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
+  MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast", "next_steps" => "Next Steps" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
   CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'All Closed', Open: 'All Open' }
 
@@ -848,8 +850,8 @@ class Project < ActiveRecord::Base
   # Parameters:   array_of_project_ids - ids of opportunities
   #               domain - domain of the organization (not used)
   #               array_of_user_emails (required) - e-mails of users to be used to determine if an e-mail is outbound/sent or inbound/received (e.g., if from perspective of a single user, this contains only this user's e-mail address; if want to use all users for the current user's organization, specify them).)  
-  #               start_day - the starting time (timestamp) of the reporting period (default is midnight 14 days ago in current user's timezone)
-  #               end_day - the starting time (timestamp) of the reporting period (default is midnight current day in current user's timezone)
+  #               start_day - the starting time (timestamp) of the reporting period; Default is midnight 14 days ago in current user's timezone
+  #               end_day - the starting time (timestamp) of the reporting period; Default is midnight current day in current user's timezone
   # Note: this query will not report anything without a non-empty array in array_of_user_emails!
   def self.count_activities_by_category(array_of_project_ids, domain, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     return [] if array_of_user_emails.blank?
@@ -1125,7 +1127,7 @@ class Project < ActiveRecord::Base
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
     # TODO: Might want to move to SalesforceOpportunity.rb
-  def self.update_fields_from_sfdc(client: , opportunities: , sfdc_fields_mapping: )
+  def self.update_standard_fields_from_sfdc(client: , opportunities: , sfdc_fields_mapping: )
     result = nil
 
     unless (client.nil? || opportunities.nil? || sfdc_fields_mapping.blank?)
@@ -1171,10 +1173,10 @@ class Project < ActiveRecord::Base
       end
     else
       if client.nil?
-        puts "** ContextSmith error: Parameter 'client' passed to Project.update_fields_from_sfdc is invalid!"
+        puts "** ContextSmith error: Parameter 'client' passed to Project.update_standard_fields_from_sfdc is invalid!"
         result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
       else
-        # Ignores if other parameters were not passed properly to update_fields_from_sfdc
+        # Ignores if other parameters were not passed properly to update_standard_fields_from_sfdc
         result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
       end
     end
@@ -1192,7 +1194,7 @@ class Project < ActiveRecord::Base
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
   # TODO: Maybe make this a Project instance method.
-  def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
+  def self.update_custom_fields_from_sfdc(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
     result = nil
 
     unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || opportunity_custom_fields.blank?)
@@ -1221,10 +1223,10 @@ class Project < ActiveRecord::Base
       end
     else
       if client.nil?
-        puts "** ContextSmith error: Parameter 'client' passed to Project.load_salesforce_fields is invalid!"
+        puts "** ContextSmith error: Parameter 'client' passed to Project.update_custom_fields_from_sfdc is invalid!"
         result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
       else
-        # Ignores if other parameters were not passed properly to load_salesforce_fields
+        # Ignores if other parameters were not passed properly to update_custom_fields_from_sfdc
         result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
       end
     end

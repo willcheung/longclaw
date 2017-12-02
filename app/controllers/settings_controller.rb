@@ -134,7 +134,7 @@ class SettingsController < ApplicationController
 			@CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = Activity::CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX
 			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active opportunities because "admin" role can see everything
 
-			# Load previous queries if it was saved
+			# Load previous queries if it was saved or create a new empty configuration record
 			custom_config = current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities], user_id: nil) do |config|
 				config.config_value = {"entity_predicate": "", "activityhistory_predicate": "" }
 			end

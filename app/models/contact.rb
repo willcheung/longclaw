@@ -132,22 +132,24 @@ class Contact < ActiveRecord::Base
   # Parameters:  client - connection to Salesforce
   #              account_id - the CS account to which to import Contacts
   #              sfdc_account_id - id of SFDC account from which to import Contacts 
-  #              from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of (new) Contacts
+  #              from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of Contacts, timestamp exclusive
+  #              to_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of Contacts, timestamp inclusive
   #              contact_limit (optional) - the maximum number of Contacts to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
   #             detail - Contains any error or informational/warning messages.
-  def self.load_salesforce_contacts(client, account_id, sfdc_account_id, from_lastmodifieddate=nil, contact_limit=nil)
+  def self.load_salesforce_contacts(client, account_id, sfdc_account_id, from_lastmodifieddate=nil, to_lastmodifieddate=nil, contact_limit=nil)
     val = []
     result = nil
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, LastModifiedDate FROM Contact WHERE AccountId='#{sfdc_account_id}'"
-    query_statement += " AND LastModifiedDate >= #{from_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ')}" if from_lastmodifieddate.present?
+    query_statement += " AND LastModifiedDate > #{from_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ')}" if from_lastmodifieddate.present?
+    query_statement += " AND LastModifiedDate <= #{to_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ')}" if to_lastmodifieddate.present?
     query_statement += " ORDER BY Email, LastName, FirstName"  # Unused: Description, LeadSource
     query_statement += " LIMIT #{contact_limit}" if contact_limit.present?
-    puts "query_statement: #{query_statement}"
+    # puts "query_statement: #{query_statement}"
 
     query_result = SalesforceService.query_salesforce(client, query_statement)
 
@@ -228,17 +230,19 @@ class Contact < ActiveRecord::Base
   # Parameters: client - connection to Salesforce
   #             account_id - the CS account from which this exports contacts
   #             sfdc_account_id - id of SFDC account to which this exports contacts 
-  #             from_updatedat (optional) - the minimum updated_at date to begin export of Contacts; default: export all contacts
+  #             from_updatedat (optional) - the minimum updated_at date to begin export of Contacts, timestamp exclusive; default, export without no mimimum updated_at
+  #             to_updatedat (optional) - the maximum updated_at date to begin export of Contacts, timestamp inclusive; default, export without no maximum updated_at
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
   #             detail - a list of all errors, or an empty list if no errors occurred. 
-  def self.export_cs_contacts(client, account_id, sfdc_account_id, from_updatedat=nil)
+  def self.export_cs_contacts(client, account_id, sfdc_account_id, from_updatedat=nil, to_updatedat=nil)
     result = { status: "SUCCESS", result: [], detail: [] }
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     account_contacts = Account.find(account_id).contacts
-    account_contacts = account_contacts.where("updated_at >= ?", from_updatedat) if from_updatedat.present?
+    account_contacts = account_contacts.where("updated_at > ?", from_updatedat) if from_updatedat.present?
+    account_contacts = account_contacts.where("updated_at <= ?", to_updatedat) if to_updatedat.present?
 
     account_contacts.each do |c|
       update_result = c.export_cs_contact(client, sfdc_account_id)
