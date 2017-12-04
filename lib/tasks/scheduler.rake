@@ -38,8 +38,8 @@ namespace :scheduler do
 
     desc 'Retrieve latest e-mails since yesterday for all active and confirmed projects in all organizations'
     task load_emails_since_yesterday: :environment do
-        # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
-        if ( ((Time.now.saturday? || Time.now.sunday?) && [0,6,12,18].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [0,1,7,13,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour)) )
+        # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every 2 hours. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
+        if ( ((Time.now.saturday? || Time.now.sunday?) && [0,6,12,18].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [1,7,13,15,17,19,21,23].include?(Time.now.hour)) )
             puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 
             Organization.is_active.each do |org|
@@ -71,8 +71,8 @@ namespace :scheduler do
 
     desc 'Retrieve latest calendar events since yesterday for all active and confirmed projects in all organizations'
     task load_events_since_yesterday: :environment do
-        # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
-        if ( ((Time.now.saturday? || Time.now.sunday?) && [3,9,15,21].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [0,1,7,13,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour)) )  
+        # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every 2 hours. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
+        if ( ((Time.now.saturday? || Time.now.sunday?) && [3,9,15,21].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [1,7,13,15,17,19,21,23].include?(Time.now.hour)) )
             puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 
             Organization.is_active.each do |org|
