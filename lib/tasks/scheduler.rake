@@ -67,7 +67,7 @@ namespace :scheduler do
         if ( ((Time.now.saturday? || Time.now.sunday?) && [3,9,15,21].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [1,7,13,15,17,19,21,23].include?(Time.now.hour)) )
             puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 
-
+            LoadEventsSinceYesterdayJob.perform_later
         end
     end
 
