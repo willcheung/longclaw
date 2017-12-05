@@ -6,7 +6,7 @@ class LoadEmailsSinceYesterdayJob < ActiveJob::Base
 
       Organization.is_active.each do |org|
         org.accounts.each do |acc|
-          acc.projects.is_active.each do |proj|
+          acc.projects.is_active.where("stage IS NULL OR stage NOT LIKE '%Closed%'").each do |proj|
             puts "Org: " + org.name + ", Account: " + acc.name + ", Project/Stream: " + proj.name
             ContextsmithService.load_emails_from_backend(proj)
             sleep(1)
