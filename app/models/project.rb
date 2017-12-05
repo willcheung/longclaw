@@ -1238,20 +1238,21 @@ class Project < ActiveRecord::Base
   # Note: Does nothing if opportunity is not linked (status = SUCCESS, result = contains warning message). This process aborts upon encountering any error.
   # Additional Note:  This may called from ProjectsController#refresh !!
   # Parameters:   client - a valid SFDC connection
-  #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of SFDC Activities; default: import all activity
+  #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of SFDC Activities, timestamp exclusive; default, import with no minimum LastModifiedDate
+  #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end import of SFDC Activities, timestamp inclusive; default, import with no maximum LastModifiedDate
   #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   #               limit (optional) - the max number of activity records to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
   #             detail - Contains any error or informational/warning messages.
-  def load_salesforce_activities(client:, from_lastmodifieddate: nil, filter_predicates: nil, limit: nil)
+  def load_salesforce_activities(client:, from_lastmodifieddate: nil, to_lastmodifieddate: nil, filter_predicates: nil, limit: nil)
     load_result = nil
 
     if salesforce_opportunity.blank? # CS Opportunity not linked to SFDC Opportunity
       if account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
         account.salesforce_accounts.each do |sfa|
-          load_result = Activity.load_salesforce_activities(client: client, project: self, sfdc_id: sfa.salesforce_account_id, type: "Account", from_lastmodifieddate: from_lastmodifieddate, filter_predicates: filter_predicates, limit: limit)
+          load_result = Activity.load_salesforce_activities(client: client, project: self, sfdc_id: sfa.salesforce_account_id, type: "Account", from_lastmodifieddate: from_lastmodifieddate, to_lastmodifieddate: to_lastmodifieddate, filter_predicates: filter_predicates, limit: limit)
 
           if load_result[:status] == "ERROR"
             error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{name}\" (opportunity_id='#{id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
@@ -1263,7 +1264,7 @@ class Project < ActiveRecord::Base
       end
     else # CS Opportunity linked to SFDC Opportunity
       # Save at the Opportunity level
-      load_result = Activity.load_salesforce_activities(client: client, project: self, sfdc_id: salesforce_opportunity.salesforce_opportunity_id, type: "Opportunity", from_lastmodifieddate: from_lastmodifieddate, filter_predicates: filter_predicates, limit: limit)
+      load_result = Activity.load_salesforce_activities(client: client, project: self, sfdc_id: salesforce_opportunity.salesforce_opportunity_id, type: "Opportunity", from_lastmodifieddate: from_lastmodifieddate, to_lastmodifieddate: to_lastmodifieddate, filter_predicates: filter_predicates, limit: limit)
 
       if load_result[:status] == "ERROR"
         error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{salesforce_opportunity.name}\" (sfdc_id='#{salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{name}\" (opportunity_id='#{id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
