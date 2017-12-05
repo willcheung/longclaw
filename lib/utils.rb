@@ -14,7 +14,7 @@ module Utils
   def get_full_name(user)
     return "" if user.nil?
 
-    if user.first_name.blank? && user.last_name.blank?
+    if user.first_name.blank? && (user.last_name.blank? || user.last_name == '(unknown)')
       user.email
     else
       [ActionView::Base.full_sanitizer.sanitize(user.first_name), ActionView::Base.full_sanitizer.sanitize(user.last_name)].join(" ").strip
