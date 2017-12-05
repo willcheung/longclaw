@@ -42,9 +42,10 @@ namespace :scheduler do
         if ( ((Time.now.saturday? || Time.now.sunday?) && [0,6,12,18].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [1,7,13,15,17,19,21,23].include?(Time.now.hour)) )
             puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 
+            # LoadEmailsSinceYesterdayJob.perform_later
             Organization.is_active.each do |org|
-                org.accounts.each do |acc| 
-                    acc.projects.is_active.each do |proj|
+                org.accounts.each do |acc|
+                    acc.projects.is_active.where("stage IS NULL OR stage NOT LIKE '%Closed%'").each do |proj|
                         puts "Org: " + org.name + ", Account: " + acc.name + ", Project/Stream: " + proj.name
                         ContextsmithService.load_emails_from_backend(proj)
                         sleep(1)
@@ -75,9 +76,10 @@ namespace :scheduler do
         if ( ((Time.now.saturday? || Time.now.sunday?) && [3,9,15,21].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [1,7,13,15,17,19,21,23].include?(Time.now.hour)) )
             puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 
+            # LoadEventsSinceYesterdayJob.perform_later
             Organization.is_active.each do |org|
-                org.accounts.each do |acc| 
-                    acc.projects.is_active.each do |proj|
+                org.accounts.each do |acc|
+                    acc.projects.is_active.where("stage IS NULL OR stage LIKE '%Closed%'").each do |proj|
                         puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
                         ContextsmithService.load_calendar_from_backend(proj, 100, 1.day.ago.to_i)
                         sleep(1)
