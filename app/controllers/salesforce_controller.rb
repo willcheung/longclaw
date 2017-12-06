@@ -95,11 +95,11 @@ class SalesforceController < ApplicationController
     sfdc_oauthuser
   end
 
-  # Load SFDC Accounts and new SFDC Opportunities and update values in mapped (standard and custom) fields.  For linked CS accts, if import SFDC contacts is enabled, then import/upsert SFDC contacts into CS.  For linked CS opps, if import/export SFDC activities is enabled, then import/export SFDC activities into/from CS.
+  # Load SFDC Accounts and new SFDC Opportunities and update values in mapped (standard and custom) fields.  For linked CS accts, if import SFDC contacts is enabled, then import SFDC contacts into CS.  For linked CS opps, if import/export SFDC activities is enabled and this is running for a periodic refresh task (e.g., "daily refresh"), then sychronize (import/export) SFDC and CS activities.
   # For individual (non-admin, e.g., "Pro") users: create CS opportunities and corresponding accts for open and unlinked SFDC opps owned by user, link the CS Acct and Opps to the corresponding SFDC entity, and create account Contacts.
   # Parameters:     client - a valid SFDC connection
   #                 user - the user making the request, admin or individual (non-admin)
-  #                 for_periodic_refresh - true, imports contacts and imports/exports activities that were updated since the last contacts or activities import/export (by timestamp found in CustomConfiguration, respectively); otherwise, false (default), and this imports all contacts but NO activities
+  #                 for_periodic_refresh - true, import contacts and import/export activities that were updated since the last contacts or activities import/export (by timestamps found in CustomConfiguration, respectively); otherwise, false (default), import all contacts but syncs NO activities
   def self.import_and_create_contextsmith(client: , user: , for_periodic_refresh: false)
     method_name = "SalesforceController.import_and_create_contextsmith"
     # Upsert SFDC Accounts and SFDC Opportunities
@@ -182,7 +182,7 @@ class SalesforceController < ApplicationController
 
       user.organization.salesforce_accounts.is_linked.each do |sfa|
         account = sfa.account
-        if for_periodic_refresh && prev_import_ts.present?
+        if for_periodic_refresh && prev_import_ts.present? # run during a periodic refresh + prev import contacts timestamp present
           import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id, prev_import_ts, new_import_ts)
         else
           import_result = Contact.load_salesforce_contacts(client, account.id, sfa.salesforce_account_id, nil, new_import_ts)
@@ -210,10 +210,8 @@ class SalesforceController < ApplicationController
       sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys]", keys: ['import','export']).find_by(organization_id: user.organization_id, user_id: user.id)
     end
 
-    puts "\n\t\t\tfor_periodic_refresh: #{for_periodic_refresh}"
-    puts "\t\t\tsync_sfdc_act_config.present?: #{sync_sfdc_act_config.present?}\n\n\n"
-    if for_periodic_refresh && sync_sfdc_act_config.present?  # periodic refresh + import OR export SFDC activities is enabled
-      sync_result = sync_sfdc_activities(client: client, user: user)  
+    if for_periodic_refresh && sync_sfdc_act_config.present?  # run during a periodic refresh + import OR export SFDC activities is enabled
+      sync_result = sync_sfdc_activities(client: client, user: user)  # sync and update import/export timestamps
       if sync_result[:status] == "ERROR"
         sync_error_detail = sync_result[:detail].map do |m| 
           if m[:sfdc_account].present?
@@ -678,17 +676,18 @@ class SalesforceController < ApplicationController
       # sfdc_client = nil  # Simulate connection error
 
       unless sfdc_client.nil?  # unless SFDC connection error
-        sync_result = SalesforceController.sync_sfdc_activities(client: sfdc_client, user: current_user, filter_predicates_h: filter_predicates_h)
+        sync_result = SalesforceController.sync_sfdc_activities(client: sfdc_client, user: current_user, filter_predicates_h: filter_predicates_h)  # sync and update import/export timestamps
+        # sync_result = { status: "ERROR", result: nil, detail: [{opportunity: {name: "fake CS opp", id: "xxxxxxxx-made-upup-csid-xxxxxxxx"}, sfdc_account: {name: "fake SFDC acct", id: "00xxxxxxxxxxxxfake"}, status: "ERROR", failure_method_location: "some fictional location"}] }  # Simulate sync error
         if sync_result[:status] == "ERROR"
           render_internal_server_error(method_name, "(see listing)", sync_result[:detail].map do |m| 
-            if m[:sfdc_account].present?
-              sfdc_entity_detail = "'#{m[:sfdc_account][:name]}'(account sObject Id=#{m[:sfdc_account][:id]})"
-            else
-              sfdc_entity_detail = "'#{m[:sfdc_opportunity][:name]}'(opportunity sObject Id=#{m[:sfdc_opportunity][:id]})"
-            end
+              if m[:sfdc_account].present?
+                sfdc_entity_detail = "'#{m[:sfdc_account][:name]}'(account sObject Id=#{m[:sfdc_account][:id]})"
+              else
+                sfdc_entity_detail = "'#{m[:sfdc_opportunity][:name]}'(opportunity sObject Id=#{m[:sfdc_opportunity][:id]})"
+              end
 
-            (m[:status] == "ERROR" ? "x Failure:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:opportunity][:name]}'(opportunity id=#{m[:opportunity][:id]}) <-> (SFDC)#{sfdc_entity_detail}  detail: #{m[:detail]}"
-          end.join("\n\n"))
+              (m[:status] == "ERROR" ? "x Failure:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:opportunity][:name]}'(opportunity id=#{m[:opportunity][:id]}) <-> (SFDC)#{sfdc_entity_detail}  detail: #{m[:detail]}"
+            end.join("\n\n"))
           return
         end
         # if no errors, proceed normally
@@ -1044,7 +1043,7 @@ class SalesforceController < ApplicationController
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
   end
 
-  # Synchronize (import and export) CS and SFDC activities using previous import/export timestamps, if available.
+  # Synchronize (import and export) CS and SFDC activities using previous import/export timestamps, if available. If the import and/or export operations were successful, update the respective timestamps.
   # Note: Called from scheduled (periodic) SFDC sync and the SFDC Admin panel in Settings.
   # Parameters:   client - a valid SFDC connection
   #               user - the user making the request, admin or individual (non-admin)
