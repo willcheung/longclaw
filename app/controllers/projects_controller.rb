@@ -231,6 +231,9 @@ class ProjectsController < ApplicationController
         projects = projects.where(owner_id: params[:owner])
       end
     end
+    if params[:type].present? && params[:type] != "0"
+      projects = projects.where(category: params[:type])
+    end
     # Stage chart/filter
     stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", projects.ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
 
@@ -263,6 +266,9 @@ class ProjectsController < ApplicationController
       elsif current_user.organization.users.registered.find_by(id: params[:owner])
         projects = projects.where(owner_id: params[:owner])
       end
+    end
+    if params[:type].present? && params[:type] != "0"
+      projects = projects.where(category: params[:type])
     end
 
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
@@ -465,7 +471,14 @@ class ProjectsController < ApplicationController
   end
 
   def project_filter_state
-    if params[:owner] 
+    if params[:type]
+      cookies[:project_type] = {value: params[:type]}
+    else
+      if cookies[:project_type]
+        params[:type] = cookies[:project_type]
+      end
+    end
+    if params[:owner]
       cookies[:project_owner] = {value: params[:owner]}
     else
       if cookies[:project_owner]
