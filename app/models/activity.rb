@@ -242,7 +242,7 @@ class Activity < ActiveRecord::Base
   #               type - the SFDC entity level ("Account" or "Opportunity") from which to load activities
   #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of SFDC Activities, timestamp exclusive; default, import with no mimimum LastModifiedDate
   #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end import of SFDC Activities, timestamp inclusive; default, import with no maximum LastModifiedDate
-  #               filter_predicates_h (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               filter_predicates_h (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   #               limit (optional) - the max number of activity records to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
@@ -355,7 +355,7 @@ class Activity < ActiveRecord::Base
   #               from_updatedat (optional) - the minimum updated_at date to begin export of Activities, timestamp exclusive; default, export with no minimum updated_at
   #               to_updatedat (optional) - the maximum updated_at date to end export of Activities, timestamp inclusive; default, export with no maximum updated_at
   # Returns:   A hash that represents the execution status/result. Consists of:
-  #             status - "SUCCESS" if operation is successful with no errors (activities exported or no activities to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             status - "SUCCESS" if operation is successful with no errors (activities exported or no activities to export); "ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
   #             detail - a list of errors or informational/warning messages.
   def self.export_cs_activities(client, project, sfdc_id, type="Account", from_updatedat=nil, to_updatedat=nil)
