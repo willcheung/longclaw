@@ -187,8 +187,11 @@ $(document).ready(function($) {
     bulkOperation(op, params.selected);
   });
 
-  $('#owner-filter, #close-date-filter').change( function () {
+  $('#type-filter, #owner-filter, #close-date-filter').change( function () {
     var params = {};
+    if ($('#type-filter').val()) {
+      params.type = $('#type-filter').val();
+    }
     if ($('#owner-filter').val()) {
       params.owner = $('#owner-filter').val();
     }

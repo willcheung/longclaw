@@ -268,7 +268,7 @@ class Activity < ActiveRecord::Base
     # Note: we avoid importing exported CS data residing on SFDC
     query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{ 'AND LastModifiedDate > ' + from_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') if from_lastmodifieddate.present? } #{ 'AND LastModifiedDate <= ' + to_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') if to_lastmodifieddate.present? } #{activityhistory_predicate} #{ 'LIMIT ' + limit.to_s if limit.present? }) FROM #{type} WHERE Id='#{sfdc_id}' #{entity_predicate}"  
     
-    #puts "query_statement: #{ query_statement }"
+    # puts "\n\t\t load_salesforce_activities: query_statement: #{ query_statement }"
     query_result = SalesforceService.query_salesforce(client, query_statement)
 
     # puts "\t\t ***** query_result= #{query_result} nil?=#{query_result.nil?}"
@@ -323,9 +323,9 @@ class Activity < ActiveRecord::Base
     result
   end
 
-  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory).
+  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory on Salesfroce).
   # Parameters:   client - SFDC connection
-  #               sObjectId (optional) - the SFDC Id that identifies the entity 'Account' or 'Opportunity'
+  #               sObjectId (optional) - the SFDC Id that identifies the entity 'Account' or 'Opportunity' on SFDC
   #               type (optional) - the SFDC entity type: 'Account' or 'Opportunity'
   #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin deletion of SFDC Activities, timestamp exclusive
   #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end deletion of SFDC Activities, timestamp inclusive
