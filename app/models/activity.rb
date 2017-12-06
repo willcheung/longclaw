@@ -242,27 +242,27 @@ class Activity < ActiveRecord::Base
   #               type - the SFDC entity level ("Account" or "Opportunity") from which to load activities
   #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of SFDC Activities, timestamp exclusive; default, import with no mimimum LastModifiedDate
   #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end import of SFDC Activities, timestamp inclusive; default, import with no maximum LastModifiedDate
-  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               filter_predicates_h (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   #               limit (optional) - the max number of activity records to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
   #             detail - Contains any error or informational/warning messages.
-  def self.load_salesforce_activities(client: , project: , sfdc_id: , type: , from_lastmodifieddate: nil, to_lastmodifieddate: nil, filter_predicates: nil, limit: nil)
+  def self.load_salesforce_activities(client: , project: , sfdc_id: , type: , from_lastmodifieddate: nil, to_lastmodifieddate: nil, filter_predicates_h: nil, limit: nil)
     val = []
     result = nil
 
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
-    if filter_predicates.blank? || filter_predicates["entity"] == ""
+    if filter_predicates_h.blank? || filter_predicates_h["entity"] == ""
       entity_predicate = ""
     else
-      entity_predicate = "AND (" + filter_predicates["entity"] + ")"
+      entity_predicate = "AND (" + filter_predicates_h["entity"] + ")"
     end
-    if filter_predicates.blank? || filter_predicates["activityhistory"] == ""
+    if filter_predicates_h.blank? || filter_predicates_h["activityhistory"] == ""
       activityhistory_predicate = ""
     else
-      activityhistory_predicate = "AND (" + filter_predicates["activityhistory"] + ")"
+      activityhistory_predicate = "AND (" + filter_predicates_h["activityhistory"] + ")"
     end
 
     # Note: we avoid importing exported CS data residing on SFDC
@@ -375,13 +375,15 @@ class Activity < ActiveRecord::Base
           subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " E-mail: "+ a.title
           description = "E-mail activity #{CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX}\n"
           #activity_date = Time.zone.at(m.sentDate).strftime("%b %d")
-          description += "Description:  \"#{ a.title }:\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }"
+          description += "Subject:  \"#{ a.title }:\" between #{ get_conversation_member_names(a.from, a.to, a.cc) }"
           description += !a.is_public ? "  (private)\n" : "\n"
           a.email_messages.each do |m|
-            description += "—————————————————————————\n"
-            description += "Sender/Recipients: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
-            description += "Date: " + Time.zone.at(m.sentDate).strftime("%b %d") +"\n"
-            description += "Content: " + strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
+            if (from_updatedat.blank? || Time.zone.at(m.sentDate) > from_updatedat) && (to_updatedat.blank? || Time.zone.at(m.sentDate) <= to_updatedat) # if a min or max date is specified, limit output to messages in the thread that fall within that range
+              description += "—————————————————————————\n"
+              description += "Sender/Recipients: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
+              description += "Sent: " + Time.zone.at(m.sentDate).strftime("%b %d, %l:%M%P") +"\n"
+              description += strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
+            end
           end
       elsif a.category == Activity::CATEGORY[:Meeting] 
           description += "Description:  #{ a.title }"

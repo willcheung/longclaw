@@ -238,7 +238,7 @@ class SalesforceService
 
   private
 
-  # Finds a Contact in SFDC Account that matches an e-mail address, or FirstName/LastName if no e-mail is specified or cannot be found.  If found, performs an update on the SFDC Contact.  If multiple Contacts are found, picks only one (first one alphabetically by LastName, then FirstName). If not found, a new SFDC Contact is created/inserted.  Returns nil if there is an error, or the Contact's SFDC/sObject id if successful.
+  # Finds a Contact in SFDC Account that matches an e-mail address, or FirstName/LastName if no e-mail is specified or cannot be found.  If found, performs an update on the SFDC Contact.  If multiple Contacts are found, picks only one (first one alphabetically by LastName, then FirstName). If not found, a new SFDC Contact is created/inserted.  While exporting a non-existing (new) CS contact to SFDC, if last name doesn't exist for the contact, we will set the contact's e-mail address as the last name.  Returns nil if there is an error, or the Contact's SFDC/sObject id if successful.
   # Parameters:   client - connection to Salesforce
   #              sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
   #               contact  - a hash that contains Contact :Email, :FirstName, and :LastName (all strings) which is used to determine the contact to upsert
@@ -249,6 +249,7 @@ class SalesforceService
   #               detail - if status == "ERROR", contains the details of the error; if a duplicate contact was detected during create SFDC Contact, a warning is here warning user that Contacts may not be properly copied because a "Contact Duplicate Rule" in SFDC settings might be preventing us from creating new SFDC Contacts. This will contain a message stating if the retry was successful or failed, and if we retried the upsert (i.e., using only the Contact's Email field.)
 
   # TODO: Use SFDC duplicates warning to tell user "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
+  # TODO: Possible optimization is retain a temporary list of all contacts in an account, per request and to be discarded after the request, for use of determining if a contact currently exists (and what the LastModifiedDate date is for this contact) to avoid individual querying to determine the same. 
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , contact: , params: )
     result = nil
 
@@ -283,7 +284,7 @@ class SalesforceService
 
     unless query_result[:result].size == 0   
       c = query_result[:result].first  # pick one matched Contact, in case of multiple matches
-      # puts "--> Matched the following SFDC contact:  Email=#{c[:Email]} FirstName=#{c[:FirstName]} LastName=#{c[:LastName]}"
+      # puts "==> Matched the following SFDC contact:  Email=#{c[:Email]} FirstName=#{c[:FirstName]} LastName=#{c[:LastName]}"
       upsert_result = update_sfdc_contact(client: client, sfdc_contact_id: c[:Id], sfdc_account_id: sfdc_account_id, params: params)
       if upsert_result[:status] == "SUCCESS"
         result = { status: "SUCCESS", result: upsert_result[:result], detail: "" }
@@ -292,7 +293,7 @@ class SalesforceService
       end
     else
       begin
-        puts "-> Contact #{ contact[:Email] } in SFDC Account '#{ sfdc_account_id }' not found. Creating a new Contact..."
+        puts "--> Contact #{ contact[:Email] } in SFDC Account '#{ sfdc_account_id }' not found. Creating a new Contact..."
         upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : '(unknown)', Email: contact[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
         # upsert_result is the Contact's SFDC sObject Id
         result = { status: "SUCCESS", result: upsert_result, detail: "" }
@@ -344,6 +345,7 @@ class SalesforceService
       # update_result = client.update!('Contact', Id: sfdc_contact_id, xxxxxx: params[:xxxxxx]) if params[:xxxxxx].present?
       result = { status: "SUCCESS", result: sfdc_contact_id, detail: "" }
     rescue => e
+      # puts "\n\n\n\t\t<><> We're now in the 'error recovery' update_sfdc_contact path: re-try using upsert_sfdc_contact! <><>\n\n\n"
       detail = ""
       if (e.to_s[0...9]) == "NOT_FOUND" || (e.to_s[0...17]) == "ENTITY_IS_DELETED" || (e.to_s[0...27]) == "INVALID_CROSS_REFERENCE_KEY" # SFDC Contact was deleted on Salesforce (invalidating the Id saved in app) or the external SFDC Id of Contact is corrupted/invalid
       #(e.to_s[0...25]) == "FIELD_INTEGRITY_EXCEPTION"   # Is this obsolete??
