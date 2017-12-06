@@ -142,9 +142,8 @@ class SalesforceService
             else
               puts "Cannot update field #{sfdc_field} -- No support for custom fields yet! :("
             end
-
-            result = { status: "SUCCESS", result: update_result, detail: "" }
           end
+          result = { status: "SUCCESS", result: update_result, detail: "" }
         rescue => e
           detail = "Update Salesforce Account error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
           puts "*** SalesforceService error: #{ detail }"
