@@ -22,14 +22,14 @@
         <div class="col-lg-6 filter-group">
 
           <div class="font-bold m-b-xs">Filter:</div>
-          <!--<select class="category_filter col-sm-3" data-placeholder="Select Type">-->
-            <!--<option value="0"></option>-->
-            <!--< % @opportunity_types.each do |k,v| %>-->
-            <!--<option value="< %= v %>" < % if params[:type] == v %>selected< % end %> >-->
-              <!--< %= v %>-->
-            <!--</option>-->
-            <!--< % end %>-->
-          <!--</select>-->
+          <select id="type-filter" class="category_filter col-sm-3" data-placeholder="Select Type">
+            <option value="0"></option>
+            <% @opportunity_types.each do |k,v| %>
+            <option value="<%= v %>" <% if params[:type] == v %>selected<% end %> >
+              <%= v %>
+            </option>
+            <% end %>
+          </select>
           <select id="owner-filter" class="category_filter col-sm-3" data-placeholder="Select Owner">
             <option value="0"></option>
             <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >
@@ -214,6 +214,9 @@ $(function () {
               let params = {};
               if (this.selected) {
                 params.stage = this.category;
+              }
+              if ($('#type-filter').val()) {
+                params.type = $('#type-filter').val();
               }
               if ($('#owner-filter').val()) {
                 params.owner = $('#owner-filter').val();
