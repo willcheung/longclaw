@@ -294,7 +294,7 @@ class SalesforceService
     else
       begin
         puts "--> Contact #{ contact[:Email] } in SFDC Account '#{ sfdc_account_id }' not found. Creating a new Contact..."
-        upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : '(unknown)', Email: contact[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
+        upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : contact[:Email], Email: contact[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
         # upsert_result is the Contact's SFDC sObject Id
         result = { status: "SUCCESS", result: upsert_result, detail: "" }
       rescue => e
@@ -302,7 +302,7 @@ class SalesforceService
           detail = "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only the minimal fields: Email ... "
           begin
             # Attempt to create Contact with only minimal Contact fields
-            upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: '(omitted)', LastName: '(omitted)', Email: contact[:Email]) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
+            upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: '', LastName: contact[:Email], Email: contact[:Email]) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
             detail += "Contact successfully created."
             puts "*** SalesforceService warning: #{ detail }"
             result = { status: "SUCCESS", result: upsert_result, detail: detail }
