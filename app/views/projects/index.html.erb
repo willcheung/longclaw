@@ -22,31 +22,34 @@
         <div class="col-lg-6 filter-group">
 
           <div class="font-bold m-b-xs">Filter:</div>
-          <select id="type-filter" class="category_filter col-sm-3" data-placeholder="Select Type">
-            <option value="0"></option>
-            <% @opportunity_types.each do |k,v| %>
-            <option value="<%= v %>" <% if params[:type] == v %>selected<% end %> >
-              <%= v %>
-            </option>
-            <% end %>
-          </select>
-          <select id="owner-filter" class="category_filter col-sm-3" data-placeholder="Select Owner">
-            <option value="0"></option>
-            <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >
-              Owner: Me
-            </option>
-            <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
-              <% if u.id != current_user.id %>
-                <option value="<%= u.id %>" <% if params[:owner]==u.id %> selected <% end %> >
-                  <%= get_full_name(u) %>
-                </option>
+          <form method='get' id='multiselect-filter-form'>
+            <select id="type-filter" class="category_filter col-sm-3" multiple data-placeholder="Select Type" title="Type">
+              <option value="0"></option> <!-- no filter -->
+              <% @opportunity_types.each do |k,v| %>
+              <option value="<%= v %>" <% if params[:type].include? v %>selected<% end %> >
+                <%= v %>
+              </option>
               <% end %>
-            <% end %>
-            <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >
-              Unassigned
-            </option>
-          </select>
-          <select id="close-date-filter" class="category_filter col-sm-3" data-placeholder="Select Close Date">
+            </select>
+            <button style="border-radius: 5px" title="Apply filters"><i class="fa fa-filter" aria-hidden="true"></i></button>
+            <select id="owner-filter" class="category_filter col-sm-3" multiple data-placeholder="Select Owner" title="Owner">
+              <option value="0"></option> <!-- no filter -->
+              <option value="<%= current_user.id %>" <% if params[:owner].include? current_user.id %> selected <% end %> >
+                Owner: Me (<%= get_full_name(current_user) %>)
+              </option>
+              <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
+                <% if u.id != current_user.id %>
+                  <option value="<%= u.id %>" <% if params[:owner].include? u.id %> selected <% end %> >
+                    <%= get_full_name(u) %>
+                  </option>
+                <% end %>
+              <% end %>
+              <option value="None" <% if params[:owner].include? "None" %> selected  <% end %> >
+                Unassigned
+              </option>
+            </select>
+          </form>
+          <select id="close-date-filter" class="category_filter col-sm-3" data-placeholder="Select Close Date" title="Close Date">
             <option value="Any"></option> <!-- no filter -->
             <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
             <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>

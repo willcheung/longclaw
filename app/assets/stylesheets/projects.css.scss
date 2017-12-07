@@ -88,6 +88,12 @@
     display: none;
   }
 }
+
+// "Showing x to y of z entries (filtered from t total entries)" indicator in projects#index table footer
+#projects-table_info {
+  white-space: inherit
+}
+
 //*------- Used to display Rag Status --------*//
 .large-circle{
   width: 40px;

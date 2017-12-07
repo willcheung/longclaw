@@ -11,7 +11,7 @@ $(document).ready(function($) {
   $('#bulk-category').chosen({ disable_search: true, allow_single_deselect: true});
   $('#bulk-owner').chosen({ allow_single_deselect: true});
   $('#bulk-status').chosen({ disable_search: true, allow_single_deselect: true});
-  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true, width: "90%", search_contains: true });
 
 	$('.switch').on('click', function(e) {
 	    var trigger = $(this);
@@ -187,18 +187,13 @@ $(document).ready(function($) {
     bulkOperation(op, params.selected);
   });
 
-  $('#type-filter, #owner-filter, #close-date-filter').change( function () {
-    var params = {};
-    if ($('#type-filter').val()) {
-      params.type = $('#type-filter').val();
-    }
-    if ($('#owner-filter').val()) {
-      params.owner = $('#owner-filter').val();
-    }
-    if ($('#close-date-filter').val()) {
-      params.close_date = $('#close-date-filter').val();
-    }
-    window.location.search = $.param(params);
+  $('#close-date-filter').change( function () {
+    setFilterParamsAndReloadPage();
+  });
+
+  $('#multiselect-filter-form').on("submit", function() {
+    setFilterParamsAndReloadPage();
+    return false;
   });
 
   $('.filter-group, .bulk-group').hover(function(){
@@ -287,6 +282,19 @@ function initSparklines() {
   }
   doChunk();
 
+}
+
+function setFilterParamsAndReloadPage() {
+  var params = {};
+  params.type = $('#type-filter').val() ? $('#type-filter').val() : "";
+  params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
+  params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
+  var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+  params.stage = stageSelection.length !== 0 ? stageSelection[0].category : "";
+  // if (!$.isEmptyObject(params))
+  //   console.log( "$.param(params)=" + $.param(params));
+
+  window.location.search = $.param(params);
 }
 
 // Copied from notifications.js for displaying notifications per project

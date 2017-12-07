@@ -216,24 +216,34 @@ class ProjectsController < ApplicationController
   private
 
   def index_html
+    # puts "\n\n\t************ index_html *************\n\n"
+    # puts "\tparams[:type]: #{params[:type]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\tparams[:close_date]: #{params[:close_date]}"
+    # puts "\tparams[:stage]: #{params[:stage]}"
+    # puts "\n\n" 
+
     get_custom_fields_and_lists
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     @project = Project.new
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
-    # Incrementally apply filters
+    # Incrementally apply filters to determine the projects to be used in the Stage filter
     params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
-    if params[:owner].present? && params[:owner] != "0"
-      if params[:owner] == "none"
-        projects = projects.where(owner_id: nil)
-      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+
+    if params[:owner].present? && (!params[:owner].include? "0")
+      if (!params[:owner].include? "None")
         projects = projects.where(owner_id: params[:owner])
+      else
+        projects = projects.where("\"projects\".owner_id IS NULL OR \"projects\".owner_id IN (?)", params[:owner].select{|o| o != "None"})
       end
     end
-    if params[:type].present? && params[:type] != "0"
+
+    if params[:type].present? && (!params[:type].include? "0")
       projects = projects.where(category: params[:type])
     end
+
     # Stage chart/filter
     stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", projects.ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
 
@@ -250,6 +260,14 @@ class ProjectsController < ApplicationController
   end
 
   def index_json
+    # params[:type] = params[:type].split("&") if params[:type].present?
+    # puts "\n\n\t************ index_json *************\n\n"
+    # puts "\tparams[:type]: #{params[:type]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\tparams[:close_date]: #{params[:close_date]}"
+    # puts "\tparams[:stage]: #{params[:stage]}"
+    # puts "\n\n"
+
     @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
@@ -259,15 +277,15 @@ class ProjectsController < ApplicationController
     # params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
 
-    if params[:owner].present? && params[:owner] != "0"
-      if params[:owner] == "none"
-        projects = projects.where(owner_id: nil)
-      # else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-      elsif current_user.organization.users.registered.find_by(id: params[:owner])
+    if params[:owner].present? && (!params[:owner].include? "0")
+      if (!params[:owner].include? "None")
         projects = projects.where(owner_id: params[:owner])
+      else
+        projects = projects.where("\"projects\".owner_id IS NULL OR \"projects\".owner_id IN (?)", params[:owner].select{|o| o != "None"})
       end
     end
-    if params[:type].present? && params[:type] != "0"
+
+    if params[:type].present? && (!params[:type].include? "0")
       projects = projects.where(category: params[:type])
     end
 
