@@ -233,7 +233,7 @@ class Contact < ActiveRecord::Base
   #             from_updatedat (optional) - the minimum updated_at date to begin export of Contacts, timestamp exclusive; default, export without no mimimum updated_at
   #             to_updatedat (optional) - the maximum updated_at date to begin export of Contacts, timestamp inclusive; default, export without no maximum updated_at
   # Returns:   A hash that represents the execution status/result. Consists of:
-  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); "ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
   #             detail - a list of all errors, or an empty list if no errors occurred. 
   def self.export_cs_contacts(client, account_id, sfdc_account_id, from_updatedat=nil, to_updatedat=nil)
@@ -268,7 +268,7 @@ class Contact < ActiveRecord::Base
   # Parameters: client - connection to Salesforce
   #             sfdc_account_id - id of SFDC account to which this exports/update the contact 
   # Returns:   A hash that represents the execution status/result. Consists of:
-  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contact to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contact to export); "ERROR" if any error occurred during the operation (including partial successes)
   #             result - the sObject SFDC id's that were successfully created in SFDC, or nil if none were created.
   #             detail - a list of all errors, or an empty list if no errors occurred. 
   def export_cs_contact(client, sfdc_account_id)
