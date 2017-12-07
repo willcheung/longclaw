@@ -211,7 +211,7 @@ namespace :scheduler do
     end
 
     desc 'Refresh Salesforce data for each Salesforce user'
-    # Refreshes list of accounts and opportunities appropriate for each SFDC user.  This will also create opps/accts for new opportunities, update values in mapped (standard and custom) fields, and import/upsert SFDC contacts for linked CS accts.
+    # Refreshes list of accounts and opportunities appropriate for each SFDC user.  This will also create opps/accts for new opportunities, update values in mapped (standard and custom) fields, sync SFDC activities for linked CS opps, and import/upsert SFDC contacts for linked CS accts.
     # Usage: rake scheduler:refresh_salesforce
     task refresh_salesforce: :environment do
         puts "\n\n=====Task (refresh_salesforce) started at #{Time.now}====="
