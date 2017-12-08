@@ -68,7 +68,7 @@ $(function () {
 
   // Category Filter & Person Filter
   $('.comment_category, .user_filter')
-    .chosen({ width: '100%'})
+    .chosen({ width: '100%', search_contains: true })
     .change( function () {
       var params = {};
       var timeAxis = $('#time-filter-highcharts').highcharts().xAxis[0];
