@@ -193,6 +193,8 @@ Longclaw::Application.routes.draw do
     post "jira"
     post "zendesk"
     post 'fullcontact'
+    post 'load_emails_since_yesterday'
+    post 'load_events_since_yesterday'
   end
 
   #scope 'tracking', controller: :tracking, as: 'tracking' do
