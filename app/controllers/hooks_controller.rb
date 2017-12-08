@@ -72,4 +72,16 @@ class HooksController < ApplicationController
     render nothing: true
   end
 
+  def load_emails_since_yesterday
+    LoadEmailsSinceYesterdayJob.perform_later
+
+    render nothing: true
+  end
+
+  def load_events_since_yesterday
+    LoadEventsSinceYesterdayJob.perform_later
+
+    render nothing: true
+  end
+
 end
