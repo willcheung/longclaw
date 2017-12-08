@@ -89,6 +89,13 @@
   }
 }
 
+// Selected opportunities in Opportunity Stage filter
+.highcharts-point-select {
+  fill: #FF0;
+  stroke: #73FAFA;
+  stroke-width: 2;
+}
+
 // "Showing x to y of z entries (filtered from t total entries)" indicator in projects#index table footer
 #projects-table_info {
   white-space: inherit

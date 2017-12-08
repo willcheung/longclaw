@@ -11,7 +11,7 @@ $(document).ready(function($) {
   $('#bulk-category').chosen({ disable_search: true, allow_single_deselect: true});
   $('#bulk-owner').chosen({ allow_single_deselect: true});
   $('#bulk-status').chosen({ disable_search: true, allow_single_deselect: true});
-  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true, width: "90%", search_contains: true });
+  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true, width: "100%", search_contains: true });
 
 	$('.switch').on('click', function(e) {
 	    var trigger = $(this);
@@ -53,7 +53,7 @@ $(document).ready(function($) {
       }
       var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
       if (stageSelection.length !== 0) {
-        aoData.push({ name: 'stage', value: stageSelection[0].category })
+        aoData.push({ name: 'stage', value: getStagesSelected() })
       }
     },
     sAjaxSource: $('#projects-table').data('source'),
@@ -285,18 +285,35 @@ function initSparklines() {
 }
 
 function setFilterParamsAndReloadPage() {
-  var params = {};
+  let params = {};
   params.type = $('#type-filter').val() ? $('#type-filter').val() : "";
   params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
   params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
-  var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
-  params.stage = stageSelection.length !== 0 ? stageSelection[0].category : "";
+  params.stage = getStagesSelected();
   // if (!$.isEmptyObject(params))
   //   console.log( "$.param(params)=" + $.param(params));
 
   window.location.search = $.param(params);
-}
+};
 
+function clearStageFilters() {
+  let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+  for (var i=0; i < stageSelection.length; i++) {
+    stageSelection[i].select(false); // de-select
+  }
+};
+
+function getStagesSelected() {
+  let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+  let stages_arr = [];
+  for (var i=0; i < stageSelection.length; i++) {
+    stages_arr.push(stageSelection[i].category)
+  }
+  if (stages_arr.length == 0)
+    return ['(Any)'];
+  else
+    return stages_arr;
+}
 // Copied from notifications.js for displaying notifications per project
 
 $(document).ready(function() {

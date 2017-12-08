@@ -11,7 +11,7 @@ while(chart_stage.series.length > 0) {
 }
 
 <% stage_chart_data_stages = @stage_chart_data.map {|d| d.stage_name} %>
-<% selected_index = stage_chart_data_stages.index(params[:stage]) %>
+<% selected_indexes = stage_chart_data_stages.map{|s| params[:stage].include? s} %>
 chart_stage.xAxis[0].setCategories(<%= stage_chart_data_stages.to_json.html_safe %>, false);
 <% stage_chart_data_stages.each_with_index do |s, i| %>
 chart_stage.addSeries({
@@ -20,7 +20,7 @@ chart_stage.addSeries({
   data: [
     <% @stage_chart_data.each_with_index do |d, j| %>
     {
-      <%= 'selected: true,' if (selected_index && selected_index == i && i == j) %>
+      <%= 'selected: true,' if (i == j && selected_indexes[j]) %> // i == j to select only ONCE!
       y: <%= d.stage_name == s ? d.total_amount : 0 %>
     },
     <% end if @stage_chart_data.present? %>

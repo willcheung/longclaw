@@ -216,7 +216,7 @@ class ProjectsController < ApplicationController
   private
 
   def index_html
-    # puts "\n\n\t************ index_html *************\n\n"
+    # puts "\n\n\t************ index_html *************\n"
     # puts "\tparams[:type]: #{params[:type]}"
     # puts "\tparams[:owner]: #{params[:owner]}"
     # puts "\tparams[:close_date]: #{params[:close_date]}"
@@ -260,15 +260,15 @@ class ProjectsController < ApplicationController
   end
 
   def index_json
-    # params[:type] = params[:type].split("&") if params[:type].present?
-    # puts "\n\n\t************ index_json *************\n\n"
+    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
+
+    # puts "\n\n\t************ index_json *************\n"
     # puts "\tparams[:type]: #{params[:type]}"
     # puts "\tparams[:owner]: #{params[:owner]}"
     # puts "\tparams[:close_date]: #{params[:close_date]}"
     # puts "\tparams[:stage]: #{params[:stage]}"
     # puts "\n\n"
 
-    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
@@ -289,7 +289,7 @@ class ProjectsController < ApplicationController
       projects = projects.where(category: params[:type])
     end
 
-    projects = projects.where(stage: params[:stage]) if params[:stage].present?
+    projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "(Any)")
 
     # searching
     projects = projects.where('LOWER(projects.name) LIKE LOWER(:search) OR LOWER(projects.stage) LIKE LOWER(:search) OR LOWER(projects.forecast) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
@@ -493,16 +493,24 @@ class ProjectsController < ApplicationController
       cookies[:project_type] = {value: params[:type]}
     else
       if cookies[:project_type]
-        params[:type] = cookies[:project_type]
+        params[:type] = cookies[:project_type].split("&")
       end
     end
     if params[:owner]
       cookies[:project_owner] = {value: params[:owner]}
     else
       if cookies[:project_owner]
-        params[:owner] = cookies[:project_owner]
+        params[:owner] = cookies[:project_owner].split("&")
       end
     end
+    if params[:stage]
+      cookies[:project_stage] = {value: params[:stage]}
+    else
+      if cookies[:project_stage]
+        params[:stage] = cookies[:project_stage].split("&")
+      end
+    end
+    # Default is always "This Quarter"
     # if params[:close_date]
     #   cookies[:project_close_date] = {value: params[:close_date]}
     # else
