@@ -11,7 +11,7 @@ $(document).ready(function($) {
   $('#bulk-category').chosen({ disable_search: true, allow_single_deselect: true});
   $('#bulk-owner').chosen({ allow_single_deselect: true});
   $('#bulk-status').chosen({ disable_search: true, allow_single_deselect: true});
-  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true, width: "100%", search_contains: true });
+  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true, search_contains: true });
 
 	$('.switch').on('click', function(e) {
 	    var trigger = $(this);

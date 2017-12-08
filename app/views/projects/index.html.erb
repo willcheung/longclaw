@@ -19,61 +19,67 @@
 
 <div class="wrapper wrapper-content animated fadeInUp">
     <div class="row">
-        <div class="col-lg-6 filter-group">
-
+        <div class="col-lg-12 filter-group">
           <div class="font-bold m-b-xs">Filter:</div>
-          <form method='get' id='multiselect-filter-form' style='margin: 7px 0'>
-            <table>
-              <body>
-                <tr><td>
-                  <select id="type-filter" class="category_filter col-sm-3" multiple data-placeholder="  Select Type" title="Type">
-                  <option value="0"></option> <!-- no filter -->
-                  <% @opportunity_types.each do |k,v| %>
+            <form class="col-lg-6" method='get' id='multiselect-filter-form' style='margin: 0 -20px 0 -15px'>
+              <select id="type-filter" class="category_filter" style="width: 49%" multiple data-placeholder="  Select Type" title="Type">
+                <option value="0"></option> <!-- no filter -->
+                <% @opportunity_types.each do |k,v| %>
                   <option value="<%= v %>" <% if params[:type].include? v %>selected<% end %> >
                     <%= v %>
                   </option>
+                <% end %>
+              </select>
+              <select id="owner-filter" class="category_filter" style="width: 49%" multiple data-placeholder="  Select Owner" title="Owner">
+                <option value="0"></option> <!-- no filter -->
+                <option value="<%= current_user.id %>" <% if params[:owner].include? current_user.id %> selected <% end %> >
+                  Owner: Me (<%= get_full_name(current_user) %>)
+                </option>
+                <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
+                  <% if u.id != current_user.id %>
+                    <option value="<%= u.id %>" <% if params[:owner].include? u.id %> selected <% end %> >
+                      <%= get_full_name(u) %>
+                    </option>
                   <% end %>
-                  </select>
-                  <select id="owner-filter" class="category_filter col-sm-3" multiple data-placeholder="  Select Owner" title="Owner">
-                    <option value="0"></option> <!-- no filter -->
-                    <option value="<%= current_user.id %>" <% if params[:owner].include? current_user.id %> selected <% end %> >
-                      Owner: Me (<%= get_full_name(current_user) %>)
-                    </option>
-                    <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
-                      <% if u.id != current_user.id %>
-                        <option value="<%= u.id %>" <% if params[:owner].include? u.id %> selected <% end %> >
-                          <%= get_full_name(u) %>
-                        </option>
-                      <% end %>
-                    <% end %>
-                    <option value="None" <% if params[:owner].include? "None" %> selected  <% end %> >
-                      Unassigned
-                    </option>
-                  </select>
-                </td>
-                <td style="width: 1%"><button style="border-radius: 5px; margin-left: 3px" title="Apply filters"><i class="fa fa-filter" aria-hidden="true"></i></button></td></tr>
-              </body>
-            </table>
-          </form>
-
-          <select id="close-date-filter" class="category_filter col-sm-3" data-placeholder="Select Close Date" title="Close Date">
-            <option value="Any"></option> <!-- no filter -->
-            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
-            <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
-            <optgroup label="Quarter">
-              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
-              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
-              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:NextQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:NextQuarter] %></option>
-            </optgroup>
-            <optgroup label="x-To-Date">
-              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:QTD] %> ><%= Project::CLOSE_DATE_RANGE[:QTD] %></option>
-              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
-            </optgroup>
-          </select>
+                <% end %>
+                <option value="None" <% if params[:owner].include? "None" %> selected <% end %> >
+                  Unassigned
+                </option>
+              </select>
+              <input type="submit" class="hidden"></input>
+            </form>
+            <select id="close-date-filter" class="category_filter col-sm-3" data-placeholder="Select Close Date" title="Close Date">
+              <option value="Any"></option> <!-- no filter -->
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
+              <optgroup label="Quarter">
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:NextQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:NextQuarter] %></option>
+              </optgroup>
+              <optgroup label="x-To-Date">
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:QTD] %> ><%= Project::CLOSE_DATE_RANGE[:QTD] %></option>
+                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
+              </optgroup>
+            </select>
+            <button style="border-radius: 5px; margin-left: 1em" title="Apply filters" onclick="setFilterParamsAndReloadPage();">Apply All&nbsp;<i class="fa fa-filter" aria-hidden="true"></i></button>
         </div>
+        <div class="col-lg-12">
+          <div class="ibox float-e-margins m-b-none m-t">
+            <div class='ibox-title'>
+              <h5>
+                Deals by Stage&nbsp;&nbsp;&nbsp;&nbsp;
+                <button style="border-radius: 5px;" title="Reset filters" onclick="clearStageFilters();">Reset&nbsp;&nbsp;<i class="fa fa-eraser" aria-hidden="true"></i></button>
+              </h5>
+            </div>
+            <div id="stage-chart" class="ibox-content stage-chart" style="height:150px;padding-bottom:0"></div>
+          </div>
+        </div>
+    </div>
 
-        <% if current_user.admin? %>
-        <div class="col-lg-6 bulk-group">
+    <% if current_user.admin? %>
+    <div class="row" style="margin-top: 1em">
+        <div class="col-lg-12 bulk-group">
             <div class="font-bold m-b-xs">Bulk Operation:</div>
             <button type="button" class="btn btn-sm btn-white bulk-action" id="bulk-delete" disabled> Delete </button>
             <select class="bulk-action col-sm-3" data-placeholder="Change Category" id="bulk-category" disabled>
@@ -95,22 +101,8 @@
                <% end %>
             </select>
         </div>
-        <% end %>
-
-        <div class="col-lg-12">
-          <div class="ibox float-e-margins m-b-none m-t">
-            <div class='ibox-title'>
-              <h5>
-                Deals by Stage&nbsp;&nbsp;&nbsp;&nbsp;
-                <button style="border-radius: 5px;" title="Apply filters" onclick="setFilterParamsAndReloadPage();">Apply&nbsp;<i class="fa fa-filter" aria-hidden="true"></i></button>&nbsp;
-                <button style="border-radius: 5px;" title="Reset filters" onclick="clearStageFilters();">Reset&nbsp;&nbsp;<i class="fa fa-eraser" aria-hidden="true"></i></button>
-              </h5>
-            </div>
-            <div id="stage-chart" class="ibox-content stage-chart" style="height:150px;padding-bottom:0"></div>
-          </div>
-        </div>
-
     </div>
+    <% end %>
 
     <div class="row">
         <div class="col-sm-12 m-t-md">
