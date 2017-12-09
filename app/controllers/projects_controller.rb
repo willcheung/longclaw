@@ -285,10 +285,7 @@ class ProjectsController < ApplicationController
       end
     end
 
-    if params[:type].present? && (!params[:type].include? "0")
-      projects = projects.where(category: params[:type])
-    end
-
+    projects = projects.where(category: params[:type]) if params[:type].present? && (!params[:type].include? "0")
     projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "(Any)")
 
     # searching
