@@ -116,28 +116,37 @@ class AccountsController < ApplicationController
   private
 
   def index_html
+    # puts "\n\n\t************ index_html *************\n"
+    # puts "\tparams[:account_type]: #{params[:account_type]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\n\n" 
+
     get_custom_fields_and_lists
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     @account = Account.new
   end
 
   def index_json
+    # puts "\n\n\t************ index_json *************\n"
+    # puts "\tparams[:account_type]: #{params[:account_type]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\n\n" 
+
     @CONTACTS_LIST_LIMIT = 8 # Max number of Contacts to show in mouse-over tooltip
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     @accounts = Account.includes(:projects, :user, :contacts).where(organization_id: current_user.organization_id)
     total_records = @accounts.count
 
     # Incrementally apply filters
-    if params[:owner].present? && params[:owner] != "0"
-      if params[:owner] == "none"
-        @accounts = @accounts.where(owner_id: nil)
-      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-        @accounts = @accounts.where(owner_id: params[:owner])
+    if params[:owner].present?
+      if (!params[:owner].include? "None")
+        @accounts = @accounts.where(owner_id: params[:owner])  if @owners.any? { |o| params[:owner].include? o.id }  #check for a valid user_id before using it
+      else
+        @accounts = @accounts.where("\"accounts\".owner_id IS NULL OR \"accounts\".owner_id IN (?)", params[:owner].select{|o| o != "None"})
       end
     end
-    if params[:account_type].present? && params[:account_type] != "none"
-      @accounts = @accounts.where(category: params[:account_type])
-    end
+
+    @accounts = @accounts.where(category: params[:account_type]) if params[:account_type].present?
 
     # searching
     @accounts = @accounts.where('LOWER(name) LIKE LOWER(:search) OR LOWER(category) LIKE LOWER(:search) OR LOWER(website) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
@@ -210,16 +219,12 @@ class AccountsController < ApplicationController
       if params[:owner] 
         cookies[:account_owner] = {value: params[:owner]}
       else
-        if cookies[:account_owner]
-          params[:owner] = cookies[:account_owner]
-        end
+        params[:owner] = cookies[:account_owner].present? ? cookies[:account_owner].split("&") : []
       end
       if params[:account_type] 
         cookies[:account_type] = {value: params[:account_type]}
       else
-        if cookies[:account_type]
-          params[:account_type] = cookies[:account_type]
-        end
+        params[:account_type] = cookies[:account_type].present? ? cookies[:account_type].split("&") : []
       end
     end
 end
