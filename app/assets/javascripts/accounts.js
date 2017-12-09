@@ -7,8 +7,8 @@ $(document).ready(function(){
   $('#bulk-category').chosen({ disable_search: true, allow_single_deselect: true});
   $('#bulk-owner').chosen({ allow_single_deselect: true});
   
-  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
-  $('.owner_filter').chosen({ disable_search: true, allow_single_deselect: true});
+  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true, search_contains: true});
+  $('.owner_filter').chosen({ disable_search: true, allow_single_deselect: true, search_contains: true});
 
   //DataTables
   $('#accounts-table').DataTable({
@@ -72,47 +72,35 @@ $(document).ready(function(){
     bulkOperation(op, params.selected);
   });
 
-  /*$('.category_filter').on('change',function(evt,params){
-    var taskType="";
-    if(params){
-        window.location.replace("/accounts?account_type="+params["selected"]);    
-    }
-    else if(typeof(params) == 'undefined') {
-      taskType = "none";
-      window.location.replace("/accounts?account_type="+taskType);  
-    }
-    else{
-      window.location.replace("/accounts");
-    }
-  });*/
+  // $('.category_filter').on('change',function(evt, params){
+  //   var taskType = "";
 
-  $('.category_filter').on('change',function(evt, params){
-    var taskType = "";
+  //   if (params) {
+  //       taskType = "account_type=" + params["selected"];
+  //   }
+  //    if (typeof(params) == 'undefined') {
+  //     taskType = "account_type=" + "none";
+  //   }
 
-    if (params) {
-        taskType = "account_type=" + params["selected"];
-    }
-     if (typeof(params) == 'undefined') {
-      taskType = "account_type=" + "none";
-    }
+  //   newURL(window.location.search, "account_type", taskType);
+  // });
 
-    newURL(window.location.search, "account_type", taskType);
+  // $('.owner_filter').on('change',function(evt, params){
+  //   var taskType = "";
+
+  //   if (params) {
+  //       taskType = "owner=" + params["selected"];
+  //   }
+  //   if (typeof(params) == 'undefined') {
+  //     taskType = "owner=" + 0;
+  //   }
+
+  //   newURL(window.location.search, "owner", taskType);
+  // });
+  $('#multiselect-filter-form').on("submit", function() {
+    setFilterParamsAndReloadPage();
+    return false;
   });
-
-  $('.owner_filter').on('change',function(evt, params){
-    var taskType = "";
-
-    if (params) {
-        taskType = "owner=" + params["selected"];
-    }
-    if (typeof(params) == 'undefined') {
-      taskType = "owner=" + 0;
-    }
-
-
-    newURL(window.location.search, "owner", taskType);
-  });
-
 });
 
 
@@ -186,3 +174,13 @@ function bulkOperation (operation, value) {
       console.log("bulk error");
     });
 }
+
+function setFilterParamsAndReloadPage() {
+  let params = {};
+  params.account_type = $('.category_filter').val() ? $('.category_filter').val() : "";
+  params.owner = $('.owner_filter').val() ? $('.owner_filter').val() : "";
+  // if (!$.isEmptyObject(params))
+  //   console.log( "$.param(params)=" + $.param(params));
+
+  window.location.search = $.param(params);
+};

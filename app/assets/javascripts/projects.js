@@ -11,7 +11,7 @@ $(document).ready(function($) {
   $('#bulk-category').chosen({ disable_search: true, allow_single_deselect: true});
   $('#bulk-owner').chosen({ allow_single_deselect: true});
   $('#bulk-status').chosen({ disable_search: true, allow_single_deselect: true});
-  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+  $('.category_filter').chosen({ disable_search: true, allow_single_deselect: true, search_contains: true });
 
 	$('.switch').on('click', function(e) {
 	    var trigger = $(this);
@@ -53,7 +53,7 @@ $(document).ready(function($) {
       }
       var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
       if (stageSelection.length !== 0) {
-        aoData.push({ name: 'stage', value: stageSelection[0].category })
+        aoData.push({ name: 'stage', value: getStagesSelected() })
       }
     },
     sAjaxSource: $('#projects-table').data('source'),
@@ -187,18 +187,13 @@ $(document).ready(function($) {
     bulkOperation(op, params.selected);
   });
 
-  $('#type-filter, #owner-filter, #close-date-filter').change( function () {
-    var params = {};
-    if ($('#type-filter').val()) {
-      params.type = $('#type-filter').val();
-    }
-    if ($('#owner-filter').val()) {
-      params.owner = $('#owner-filter').val();
-    }
-    if ($('#close-date-filter').val()) {
-      params.close_date = $('#close-date-filter').val();
-    }
-    window.location.search = $.param(params);
+  $('#close-date-filter').change( function () {
+    setFilterParamsAndReloadPage();
+  });
+
+  $('#multiselect-filter-form').on("submit", function() {
+    setFilterParamsAndReloadPage();
+    return false;
   });
 
   $('.filter-group, .bulk-group').hover(function(){
@@ -289,6 +284,36 @@ function initSparklines() {
 
 }
 
+function setFilterParamsAndReloadPage() {
+  let params = {};
+  params.type = $('#type-filter').val() ? $('#type-filter').val() : "";
+  params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
+  params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
+  params.stage = getStagesSelected();
+  // if (!$.isEmptyObject(params))
+  //   console.log( "$.param(params)=" + $.param(params));
+
+  window.location.search = $.param(params);
+};
+
+function clearStageFilters() {
+  let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+  for (var i=0; i < stageSelection.length; i++) {
+    stageSelection[i].select(false); // de-select
+  }
+};
+
+function getStagesSelected() {
+  let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+  let stages_arr = [];
+  for (var i=0; i < stageSelection.length; i++) {
+    stages_arr.push(stageSelection[i].category)
+  }
+  if (stages_arr.length == 0)
+    return ['(Any)'];
+  else
+    return stages_arr;
+}
 // Copied from notifications.js for displaying notifications per project
 
 $(document).ready(function() {
