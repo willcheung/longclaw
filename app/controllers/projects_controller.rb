@@ -421,7 +421,7 @@ class ProjectsController < ApplicationController
     if params[:emails].present?
       @filter_email = params[:emails].split(',')
       # filter for Meetings/Conversations where all people participated
-      where_email_clause = @filter_email.map { |e| "\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{e}\"}]'::jsonb" }.join(' AND ')
+      where_email_clause = @filter_email.map { |e| "\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{e}\"}]'::jsonb" }.join(' OR ')
       # filter for Notes written by any people included
       users = User.where(email: @filter_email).pluck(:id)
       where_email_clause += " OR posted_by IN ('#{users.join("','")}')" if users.present?
