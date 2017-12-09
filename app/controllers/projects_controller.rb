@@ -489,23 +489,17 @@ class ProjectsController < ApplicationController
     if params[:type]
       cookies[:project_type] = {value: params[:type]}
     else
-      if cookies[:project_type]
-        params[:type] = cookies[:project_type].split("&")
-      end
+      params[:type] = cookies[:project_type].present? ? cookies[:project_type].split("&") : []
     end
     if params[:owner]
       cookies[:project_owner] = {value: params[:owner]}
     else
-      if cookies[:project_owner]
-        params[:owner] = cookies[:project_owner].split("&")
-      end
+      params[:owner] = cookies[:project_owner].present? ? cookies[:project_owner].split("&") : []
     end
     if params[:stage]
       cookies[:project_stage] = {value: params[:stage]}
     else
-      if cookies[:project_stage]
-        params[:stage] = cookies[:project_stage].split("&")
-      end
+      params[:stage] = cookies[:project_stage].present? ? cookies[:project_stage].split("&") : []
     end
     # Default is always "This Quarter"
     # if params[:close_date]

@@ -219,16 +219,12 @@ class AccountsController < ApplicationController
       if params[:owner] 
         cookies[:account_owner] = {value: params[:owner]}
       else
-        if cookies[:account_owner]
-          params[:owner] = cookies[:account_owner].split("&")
-        end
+        params[:owner] = cookies[:account_owner].present? ? cookies[:account_owner].split("&") : []
       end
       if params[:account_type] 
         cookies[:account_type] = {value: params[:account_type]}
       else
-        if cookies[:account_type]
-          params[:account_type] = cookies[:account_type].split("&")
-        end
+        params[:account_type] = cookies[:account_type].present? ? cookies[:account_type].split("&") : []
       end
     end
 end

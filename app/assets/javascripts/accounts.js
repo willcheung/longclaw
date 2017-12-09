@@ -72,20 +72,6 @@ $(document).ready(function(){
     bulkOperation(op, params.selected);
   });
 
-  /*$('.category_filter').on('change',function(evt,params){
-    var taskType="";
-    if(params){
-        window.location.replace("/accounts?account_type="+params["selected"]);    
-    }
-    else if(typeof(params) == 'undefined') {
-      taskType = "none";
-      window.location.replace("/accounts?account_type="+taskType);  
-    }
-    else{
-      window.location.replace("/accounts");
-    }
-  });*/
-
   // $('.category_filter').on('change',function(evt, params){
   //   var taskType = "";
 
