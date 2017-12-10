@@ -26,7 +26,7 @@
       <!-- Owner -->
       <select id="owner-filter" class="category_filter col-md-3" data-placeholder="Select Owner">
           <option value=""></option> <!-- no filter -->
-          <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >Owner: Me</option>
+          <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >Me (<%= get_full_name(current_user) %>)</option>
           <% @owners.each do |u| %>
               <% if u.id != current_user.id %>
                   <option value="<%= u.id %>" <% if params[:owner]==u.id %> selected <% end %> >

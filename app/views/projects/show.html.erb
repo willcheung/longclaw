@@ -125,7 +125,7 @@
                 <div class="m-t-md">
                     <strong>Linked to SFDC:</strong>
                     <span class="pull-right">
-                        <% if @project.salesforce_opportunity.nil? && @project.account.salesforce_accounts.empty? %>
+                        <% if !@project.is_linked_to_SFDC? %>
                             Not linked
                         <% else %>
                             <% if @project.salesforce_opportunity.nil? %>

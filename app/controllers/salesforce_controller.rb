@@ -249,7 +249,7 @@ class SalesforceController < ApplicationController
         # For Power Users and trial/Chrome Users: Automatically import SFDC contacts, then add all SFDC contacts as pending members ('Suggested People') in all opportunities in the linked CS account 
         if current_user.power_or_trial_only?
           puts "User #{current_user.email} (id='#{current_user.id}', role='#{current_user.role})' has linked Account '#{salesforce_account.account.name}' to SFDC Account '#{salesforce_account.salesforce_account_name}'!"
-          import_sfdc_contacts_and_add_as_members(client: sfdc_client, account: salesforce_account.account, sfdc_account: salesforce_account) 
+          SalesforceController.import_sfdc_contacts_and_add_as_members(client: sfdc_client, account: salesforce_account.account, sfdc_account: salesforce_account) 
         end
       else
         puts "****SFDC**** Salesforce error in SalesforceController.link_salesforce_account: Cannot establish a Salesforce connection!"
@@ -342,7 +342,7 @@ class SalesforceController < ApplicationController
         #puts "******************** #{ method_name } ... filter_predicates_h= #{ filter_predicates_h }", 
         opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
         # opportunities = Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.includes(:salesforce_opportunity)
-        no_linked_sfdc = opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+        no_linked_sfdc = opportunities.none?{ |o| o.is_linked_to_SFDC? }
 
         # Nothing to do if no opportunities or linked SFDC entities
         if opportunities.blank? || no_linked_sfdc
@@ -414,7 +414,7 @@ class SalesforceController < ApplicationController
       method_name = "export_salesforce#activity()"
       opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all mappings for this user's organization
       # opportunities = Project.visible_to(current_user.organization_id, current_user.id).is_active.is_confirmed.includes(:salesforce_opportunity)
-      no_linked_sfdc = opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+      no_linked_sfdc = opportunities.none?{ |o| o.is_linked_to_SFDC? }
 
       # Nothing to do if no opportunities or linked SFDC entities
       if opportunities.blank? || no_linked_sfdc
@@ -1064,7 +1064,7 @@ class SalesforceController < ApplicationController
 
     if sync_sfdc_act_config.present? # if import OR export SFDC activities is enabled
       opportunities = Project.visible_to_admin(user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity) # all active opportunities because "admin" role can see everything
-      no_linked_sfdc = opportunities.none?{ |o| o.salesforce_opportunity.present? || o.account.salesforce_accounts.present? }
+      no_linked_sfdc = opportunities.none?{ |o| o.is_linked_to_SFDC? }
 
       # Nothing to do if no opportunities or linked SFDC entities
       return { status: "SUCCESS", result: nil, detail: [] } if opportunities.blank? || no_linked_sfdc
