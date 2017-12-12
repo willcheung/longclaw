@@ -23,19 +23,21 @@
             <!--<option < % if params[:category] == v %> selected < % end %> >< %= v %></option>-->
           <!--< % end %>-->
       <!--</select>-->
-      <!-- Owner -->
-      <select id="owner-filter" class="category_filter col-md-3" data-placeholder="Select Owner">
-          <option value=""></option> <!-- no filter -->
-          <option value="<%= current_user.id %>" <% if params[:owner]==current_user.id %> selected <% end %> >Me (<%= get_full_name(current_user) %>)</option>
-          <% @owners.each do |u| %>
-              <% if u.id != current_user.id %>
-                  <option value="<%= u.id %>" <% if params[:owner]==u.id %> selected <% end %> >
-                      <%= get_full_name(u) %>
-                  </option>
-              <% end %>
-          <% end %>
-          <option value="none" <% if params[:owner]=="none" %> selected  <% end %> >Unassigned</option>
-      </select>
+      <form class="col-md-3" method='get' id='multiselect-filter-form'>
+        <!-- Owner -->
+        <select id="owner-filter" class="category_filter" multiple data-placeholder="Select Owner" style="width: 100%">
+            <option value=""></option> <!-- no filter -->
+            <option value="<%= current_user.id %>" <% if params[:owner].present? && (params[:owner].include? current_user.id) %> selected <% end %> >Me (<%= get_full_name(current_user) %>)</option>
+            <% @owners.each do |u| %>
+                <% if u.id != current_user.id %>
+                    <option value="<%= u.id %>" <% if params[:owner].present? && (params[:owner].include? u.id) %> selected <% end %> >
+                        <%= get_full_name(u) %>
+                    </option>
+                <% end %>
+            <% end %>
+            <option value="None" <% if params[:owner]=="None" %> selected  <% end %> >Unassigned</option>
+        </select>
+      </form>
       <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
           <option value="Any"></option> <!-- no filter -->
           <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
@@ -51,6 +53,8 @@
           </optgroup>
       </select>
       <!-- <div class="col-md-3"></div> -->
+      <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Apply filters" onclick="setFilterParamsAndRefreshData();"><strong>Apply All&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
+
   </div>
 
   <!-- Top Dashboard Panel: (3) Salesforce-linked Forecast and Stage reports -->
@@ -73,7 +77,10 @@
       <div class="col-lg-6">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
-                  <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
+                  <h5>
+                      <span>Deals by Stage</span>
+                      <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset filters" onclick="reset_stages_filter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
+                  </h5>
               </div>
               <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
           </div>
@@ -109,20 +116,17 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        $('#sort-type, #owner-filter, #close-date-filter').change( function () {
+        $('#sort-type, #close-date-filter').change( function () {
             // Clear Opportunity data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
 
-            // Build URL for AJAX call for filtered data
-            let params = {};
-            if ($('#owner-filter').val()) {
-              params.owner = $('#owner-filter').val();
-            }
-            if ($('#close-date-filter').val()) {
-              params.close_date = $('#close-date-filter').val();
-            }
-            var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
-            $.getScript(url);
+            setFilterParamsAndRefreshData();
+        });
+
+        // #owner-filter
+        $('#multiselect-filter-form').on("submit", function() {
+            setFilterParamsAndRefreshData();
+            return false;
         });
 
         $('.filter-group').hover( function () {
@@ -277,19 +281,19 @@
                            click: function () {
                                $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
 
-                               this.select();
-                               let params = {};
-                               if (this.selected) {
-                                 params.stage = this.category;
-                               }
-                               if ($('#owner-filter').val()) {
-                                 params.owner = $('#owner-filter').val();
-                               }
-                               if ($('#close-date-filter').val()) {
-                                 params.close_date = $('#close-date-filter').val();
-                               }
-                               var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
-                               $.getScript(url);
+                               this.select(!this.selected, true);
+                               // let params = {};
+                               // if (this.selected) {
+                               //   params.stage = get_selected_stages();
+                               // }
+                               // if ($('#owner-filter').val()) {
+                               //   params.owner = $('#owner-filter').val();
+                               // }
+                               // if ($('#close-date-filter').val()) {
+                               //   params.close_date = $('#close-date-filter').val();
+                               // }
+                               // var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
+                               // $.getScript(url);
                            }
                        }
                     }
@@ -380,4 +384,14 @@
         <%= render partial: "reports/accounts_dashboard.js" %>
     });
 
+    // Build URL for AJAX call for filtered data
+    function setFilterParamsAndRefreshData() {
+        let params = {};
+        params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
+        params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
+        params.stage = get_selected_stages();
+
+        var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
+        $.getScript(url);
+    };
 </script>

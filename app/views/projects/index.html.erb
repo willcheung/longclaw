@@ -69,7 +69,7 @@
             <div class='ibox-title'>
               <h5>
                 <span>Deals by Stage</span>
-                <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset filters" onclick="clearStageFilters();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
+                <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset filters" onclick="reset_stages_filter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
               </h5>
             </div>
             <div id="stage-chart" class="ibox-content stage-chart" style="height:150px;padding-bottom:0"></div>
@@ -217,20 +217,20 @@ $(function () {
           events: {
             click: function () {
               this.select(!this.selected, true);
-              let params = {};
-              if (this.selected) {
-                // params.stage = this.category;
-                params.stage = getStagesSelected();
-              }
-              if ($('#type-filter').val()) {
-                params.type = $('#type-filter').val();
-              }
-              if ($('#owner-filter').val()) {
-                params.owner = $('#owner-filter').val();
-              }
-              if ($('#close-date-filter').val()) {
-                params.close_date = $('#close-date-filter').val();
-              }
+              // let params = {};
+              // if (this.selected) {
+              //   // params.stage = this.category;
+              //   params.stage = get_selected_stages();
+              // }
+              // if ($('#type-filter').val()) {
+              //   params.type = $('#type-filter').val();
+              // }
+              // if ($('#owner-filter').val()) {
+              //   params.owner = $('#owner-filter').val();
+              // }
+              // if ($('#close-date-filter').val()) {
+              //   params.close_date = $('#close-date-filter').val();
+              // }
               // window.location.search = $.param(params);
             }
           }
