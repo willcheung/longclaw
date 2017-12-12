@@ -83,7 +83,13 @@
 
                     <div class="text-mute-gray" style="font-size: 10px">
                         <span style="display:block"><strong>Owner:</strong>&nbsp;&nbsp;<%= @project.project_owner.present? ? get_full_name(@project.project_owner) : "(None)" %></span>
-                        <span><strong>Linked to Salesforce:</strong>&nbsp;&nbsp;<%= (@project.salesforce_opportunity.nil? && @project.account.salesforce_accounts.empty?) ? "Not Linked" : "Linked" %></span>
+                        <span><strong>Linked to Salesforce:</strong>&nbsp;&nbsp;
+                        <% if @project.is_linked_to_SFDC? %>
+                            <i class="fa fa-link" aria-hidden="true"></i> Linked
+                        <% else %>
+                            <i class="fa fa-unlink" aria-hidden="true"></i> Not Linked
+                        <% end %>
+                        </span>
                     </div>
 
                 </div>

@@ -174,7 +174,7 @@
                 error: function(data) {
                     var res = JSON.parse(data.responseText);
                     self.addClass('btn-danger');
-                    self.html("<strong>X</strong>&nbsp;Error&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
+                    self.html("<strong>&times;</strong>&nbsp;Error&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>");
                     console.log("Update Salesforce" + entity_type + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
                     alert("There was an update Salesforce " + entity_type + " error, but it has been logged and our team will get right on it shortly to resolve it!");
                 },

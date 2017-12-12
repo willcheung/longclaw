@@ -33,7 +33,7 @@
             <select id="owner-filter" class="category_filter" style="width: 49%" multiple data-placeholder="  Select Owner" title="Owner">
               <option value="0"></option> <!-- no filter -->
               <option value="<%= current_user.id %>" <% if params[:owner].include? current_user.id %> selected <% end %> >
-                Owner: Me (<%= get_full_name(current_user) %>)
+                Me (<%= get_full_name(current_user) %>)
               </option>
               <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
                 <% if u.id != current_user.id %>

@@ -455,7 +455,7 @@ class ProjectsController < ApplicationController
                               AND (projects.is_public=true
                                     OR (projects.is_public=false AND projects.owner_id = ?) OR ?)', current_user.organization_id, current_user.id, current_user.admin?)
                       .find(params[:id])
-    if (@project.present? && @project.salesforce_opportunity.present?)
+    if (@project.present? && @project.is_linked_to_SFDC?)
       if SalesforceController.get_sfdc_oauthuser(user: current_user).present? # "connected" to SFDC
         @sfdc_client = SalesforceService.connect_salesforce(user: current_user)
       else
