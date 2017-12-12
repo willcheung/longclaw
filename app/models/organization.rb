@@ -58,7 +58,7 @@ class Organization < ActiveRecord::Base
   #               key - (optional) "auto_sync", "activities", or "contacts". If this and "setDefault" parameter are both unspecified, do nothing.
   #               newValue - (optional) non-string hash value to which to set the key, e.g., {"import":"", "export":""}
   #               setDefault - (optional) if true, sets the default config. False (default).
-  # Example uses (where org1 is an instance of an Organization, user1 is an instance of a User of org1):
+  # Examples (where org1 is an instance of an Organization, user1 is an instance of a User in org1):
   #   - org1.setCustomConfiguration(setDefault: true)  # => sets default configuration for this organization (org1)
   #   - org1.setCustomConfiguration(user: user1, key: "auto_sync", newValue: {"daily"=>""})  # => enables daily refresh for user1 and org1
   def setCustomConfiguration(user: nil, key: nil, newValue: nil, setDefault: false)
