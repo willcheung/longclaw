@@ -107,6 +107,6 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   def set_salesforce_auto_sync_custom_configuration(current_user)
     # If no custom configuration was previously set for this organization, this will create and set the default configuration.
-    current_user.organization.setCustomConfiguration(user: current_user)
+    current_user.organization.set_customconfiguration(user: current_user)
   end
 end

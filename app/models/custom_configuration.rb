@@ -33,8 +33,8 @@ class CustomConfiguration < ActiveRecord::Base
   #               key - (optional) "auto_sync", "activities", or "contacts". If this and "setDefault" parameter are both unspecified, do nothing.
   #               newValue - (optional) non-string hash value to which to set the key, e.g., {"import":"", "export":""}
   #               setDefault - (optional) if true, sets the default config. False (default).
-  # Example (where user1 is an instance of a User):  CustomConfiguration.setCustomConfiguration(user: user1, key: "auto_sync", newValue: {"daily"=>""})
-  def self.setCustomConfiguration(user: nil, organization: nil, key: nil, newValue: nil, setDefault: false)
+  # Example (where user1 is an instance of a User):  CustomConfiguration.set_customconfiguration(user: user1, key: "auto_sync", newValue: {"daily"=>""})
+  def self.set_customconfiguration(user: nil, organization: nil, key: nil, newValue: nil, setDefault: false)
     return if (organization.blank? && user.blank?) || (user.present? && user.organization != organization)
 
     default_vals = { "auto_sync" => {"daily":""}, "activities"=> {"import":""}, "contacts"=> {"import":""} }  # by default, we do not auto-export activities or contacts

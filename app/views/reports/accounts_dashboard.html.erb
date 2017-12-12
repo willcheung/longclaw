@@ -53,7 +53,7 @@
           </optgroup>
       </select>
       <!-- <div class="col-md-3"></div> -->
-      <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Apply filters" onclick="set_filterParams_and_refresh_data();"><strong>Apply All&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
+      <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Apply filters" onclick="setFilterParamsAndRefreshData();"><strong>Apply All&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
 
   </div>
 
@@ -120,12 +120,12 @@
             // Clear Opportunity data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
 
-            set_filterParams_and_refresh_data();
+            setFilterParamsAndRefreshData();
         });
 
         // #owner-filter
         $('#multiselect-filter-form').on("submit", function() {
-            set_filterParams_and_refresh_data();
+            setFilterParamsAndRefreshData();
             return false;
         });
 
@@ -385,7 +385,7 @@
     });
 
     // Build URL for AJAX call for filtered data
-    function set_filterParams_and_refresh_data() {
+    function setFilterParamsAndRefreshData() {
         let params = {};
         params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
         params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";

@@ -188,11 +188,11 @@ $(document).ready(function($) {
   });
 
   $('#close-date-filter').change( function () {
-    set_filterParams_and_reload_page();
+    setFilterParamsAndReloadPage();
   });
 
   $('#multiselect-filter-form').on("submit", function() {
-    set_filterParams_and_reload_page();
+    setFilterParamsAndReloadPage();
     return false;
   });
 
@@ -284,7 +284,7 @@ function initSparklines() {
 
 }
 
-function set_filterParams_and_reload_page() {
+function setFilterParamsAndReloadPage() {
   let params = {};
   params.type = $('#type-filter').val() ? $('#type-filter').val() : "";
   params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
