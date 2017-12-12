@@ -53,7 +53,7 @@ $(document).ready(function($) {
       }
       var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
       if (stageSelection.length !== 0) {
-        aoData.push({ name: 'stage', value: getStagesSelected() })
+        aoData.push({ name: 'stage', value: get_selected_stages() })
       }
     },
     sAjaxSource: $('#projects-table').data('source'),
@@ -188,11 +188,11 @@ $(document).ready(function($) {
   });
 
   $('#close-date-filter').change( function () {
-    setFilterParamsAndReloadPage();
+    set_filterParams_and_reload_page();
   });
 
   $('#multiselect-filter-form').on("submit", function() {
-    setFilterParamsAndReloadPage();
+    set_filterParams_and_reload_page();
     return false;
   });
 
@@ -284,26 +284,19 @@ function initSparklines() {
 
 }
 
-function setFilterParamsAndReloadPage() {
+function set_filterParams_and_reload_page() {
   let params = {};
   params.type = $('#type-filter').val() ? $('#type-filter').val() : "";
   params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
   params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
-  params.stage = getStagesSelected();
+  params.stage = get_selected_stages();
   // if (!$.isEmptyObject(params))
   //   console.log( "$.param(params)=" + $.param(params));
 
   window.location.search = $.param(params);
 };
 
-function clearStageFilters() {
-  let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
-  for (var i=0; i < stageSelection.length; i++) {
-    stageSelection[i].select(false); // de-select
-  }
-};
-
-function getStagesSelected() {
+function get_selected_stages() {
   let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
   let stages_arr = [];
   for (var i=0; i < stageSelection.length; i++) {
@@ -314,8 +307,15 @@ function getStagesSelected() {
   else
     return stages_arr;
 }
-// Copied from notifications.js for displaying notifications per project
 
+function reset_stages_filter() {
+  let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+  for (var i=0; i < stageSelection.length; i++) {
+    stageSelection[i].select(false); // de-select
+  }
+};
+
+// Copied from notifications.js for displaying notifications per project
 $(document).ready(function() {
     $('#notifications-table').DataTable({
       scrollX: true,

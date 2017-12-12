@@ -98,7 +98,7 @@ $(document).ready(function(){
   //   newURL(window.location.search, "owner", taskType);
   // });
   $('#multiselect-filter-form').on("submit", function() {
-    setFilterParamsAndReloadPage();
+    set_filterParams_and_reload_page();
     return false;
   });
 });
@@ -175,7 +175,7 @@ function bulkOperation (operation, value) {
     });
 }
 
-function setFilterParamsAndReloadPage() {
+function set_filterParams_and_reload_page() {
   let params = {};
   params.account_type = $('.category_filter').val() ? $('.category_filter').val() : "";
   params.owner = $('.owner_filter').val() ? $('.owner_filter').val() : "";
