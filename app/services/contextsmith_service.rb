@@ -111,13 +111,11 @@ class ContextsmithService
     r = request_id
     puts 'Calling backend service: ' + final_url + ' X-Request-ID:' + r
 
-    p sources
-
     begin
       uri = URI(final_url)
       req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'X-Request-ID' => r)
       req.body = { sources: sources, external_clusters: ex_clusters }.to_json
-      res = Net::HTTP.start(uri.host, uri.port
+      res = Net::HTTP.start(uri.host, uri.port, read_timeout: 120
         #, use_ssl: uri.scheme == "https"
         ) { |http| http.request(req) }
       case res
@@ -130,7 +128,7 @@ class ContextsmithService
           data = nil
       end
     rescue => e
-      puts "ERROR: Something went wrong: " + e.message
+      puts "ERROR: Something went wrong: " + e.message + '; X-Request-ID: ' + r
       puts e.backtrace.join("\n")
     end
 
