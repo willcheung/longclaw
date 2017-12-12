@@ -35,11 +35,10 @@ class CustomConfiguration < ActiveRecord::Base
   #               setDefault - (optional) if true, sets the default config. False (default).
   # Example use (where user1 is an instance of a User):  CustomConfiguration.setCustomConfiguration(user: user1, key: "auto_sync", newValue: {"daily"=>""})
   def self.setCustomConfiguration(user: nil, organization: nil, key: nil, newValue: nil, setDefault: false)
-  # def self.setCustomConfiguration(user: nil, organization: nil, key: nil, newValue: nil, setDefault: false)
+    return if (organization.blank? && user.blank?) || (user.present? && user.organization != organization)
+
     default_vals = { "auto_sync" => {"daily":""}, "activities"=> {"import":""}, "contacts"=> {"import":""} }  # by default, we do not auto-export activities or contacts
     # default_vals = { "auto_sync" => {"daily":""}, "activities"=> {"import":"","export":""}, "contacts"=> {"import":"","export":""} }
-
-    return if (organization.blank? && user.blank?) || (user.present? && user.organization != organization)
 
     if user.blank? || user.admin?
       cc = organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: nil) do |config|

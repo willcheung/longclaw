@@ -237,7 +237,7 @@ namespace :scheduler do
                 end
 
                 # update auto_sync timestamp upon successful completion
-                cf = CustomConfiguration.find(cf.id)  # get updated copy to avoid overwriting timestamps updated during refresh!
+                cf = CustomConfiguration.find(cf.id)  # get updated copy to avoid overwriting timestamps set during refresh!
                 cf.config_value['auto_sync'][refresh_level] = auto_sync_timestamp
                 cf.save
             else
