@@ -106,21 +106,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   private
 
   def set_salesforce_auto_sync_custom_configuration(current_user)
-    if current_user.admin?
-      # oauth_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)
-      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: nil) do |config|
-        config.config_value['auto_sync'] = {"daily":""}
-        config.config_value['activities'] = {"import":"", "export":""}
-        config.config_value['contacts'] = {"import":""} # by default, we do not auto-export contacts
-        # config.config_value = {'auto_sync':{'daily':""}, 'activities':{'import':"", 'export':""}}.to_json
-      end
-    else
-      # oauth_user = SalesforceController.get_sfdc_oauthuser(user: current_user)
-      current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: current_user.id) do |config|
-        config.config_value['auto_sync'] = {"daily":""}
-        config.config_value['activities'] = {"import":"", "export":""}
-        config.config_value['contacts'] = {"import":""} # by default, we do not auto-export contacts
-      end
-    end
+    # If no custom configuration was previously set for this organization, this will create and set the default configuration.
+    current_user.organization.setCustomConfiguration(user: current_user)
   end
 end

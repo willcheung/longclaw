@@ -51,6 +51,26 @@ class Organization < ActiveRecord::Base
     end
   end
 
+
+  # Sets the custom configuration for the user or this organization.  If no custom configuration was previously set for this organization, this will create and set the default configuration.  
+  # Note: If user is unspecified, we will attempt to set this organization's config. 
+  # Parameters:   user - (optional) if specified and user is non-admin, this will set the config for this user; if specified but user is an admin, this will set the config for this user's organization instead. If unspecified, this will set config for this organization.
+  #               key - (optional) "auto_sync", "activities", or "contacts". If this and "setDefault" parameter are both unspecified, do nothing.
+  #               newValue - (optional) non-string hash value to which to set the key, e.g., {"import":"", "export":""}
+  #               setDefault - (optional) if true, sets the default config. False (default).
+  # Example uses (where org1 is an instance of an Organization, user1 is an instance of a User of org1):
+  #   - org1.setCustomConfiguration(setDefault: true)  # => sets default configuration for this organization (org1)
+  #   - org1.setCustomConfiguration(user: user1, key: "auto_sync", newValue: {"daily"=>""})  # => enables daily refresh for user1 and org1
+  def setCustomConfiguration(user: nil, key: nil, newValue: nil, setDefault: false)
+    return if user.organization != self
+
+    if user.blank? || user.admin?
+      CustomConfiguration.setCustomConfiguration(organization: self, key: key, newValue: newValue, setDefault: setDefault)
+    else
+      CustomConfiguration.setCustomConfiguration(user: user, key: key, newValue: newValue, setDefault: setDefault)
+    end
+  end
+
   # Gets a hash of names of Custom Lists for this organization mapped to all options corresponding to each list, to be used in a Custom Lists options dropdown.  e.g., { "list1_name"=>{ "list1option1"=>"list1option1", "list1option2"=>"list1option2", ... }, "list2"=>{ "list2option1"=>"list2option1", "list2option2"=>"list2option2", ... } }
   def get_custom_lists_with_options
     customlists_w_options = {}
