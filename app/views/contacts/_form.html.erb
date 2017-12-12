@@ -39,7 +39,7 @@
 
   <div class="clearfix">&nbsp;</div>
   <% if ['extension_new_contact_modal','extension_edit_contact_modal'].include? modal_type  # from Chrome extension %>
-    <% if @salesforce_user.present? && @account.salesforce_accounts.present? %>
+    <% if @salesforce_user.present? && @account.present? && @account.salesforce_accounts.present? %>
       <% button_text = (modal_type == 'extension_new_contact_modal') ? "Create" : "Update" %>
       <button modal_id="<%= modal_id %>" button_text="<%= button_text %>" class="btn btn-primary pull-right form-group update_salesforce" style="width: 100%"><%= button_text %>&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/></button>
     <% else %>
