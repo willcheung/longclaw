@@ -66,7 +66,7 @@ function reset_subtitles_on_chart(chart) {
     });
 };
 
-function get_selected_stages() {
+function getSelectedStages() {
     let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
     let stages_arr = [];
     for (var i=0; i < stageSelection.length; i++) {
@@ -75,7 +75,7 @@ function get_selected_stages() {
     return stages_arr;
 }
 
-function reset_stages_filter() {
+function resetStagesFilter() {
     let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
     for (var i=0; i < stageSelection.length; i++) {
         stageSelection[i].select(false); // de-select

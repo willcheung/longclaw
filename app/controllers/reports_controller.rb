@@ -162,6 +162,14 @@ class ReportsController < ApplicationController
 
   # for loading metrics data (left panel) on Team Dashboard
   def td_sort_data
+    # puts "\n\n\t************ td_sort_data *************\n"
+    # puts "\tparams[:sort]: #{params[:sort]}"
+    # puts "\tparams[:metric]: #{params[:metric]}"
+    # puts "\tparams[:team]: #{params[:team]}"
+    # puts "\tparams[:title]: #{params[:title]}"
+    # puts "\tparams[:close_date]: #{params[:close_date]}"
+    # puts "\tparams[:stage]: #{params[:stage]}"
+    # puts "\n\n"
 
     # NOTE: `sort` and `sort_by` are keywords for Hash, would have used these as keys for @dashboard_data but can't due to this conflict!
     @dashboard_data = Hashie::Mash.new(sorted_by: { type: params[:sort] }, metric: { type: params[:metric] })
@@ -169,18 +177,18 @@ class ReportsController < ApplicationController
 
     # Incrementally apply filters
     if params[:team].present?
-      if params[:team] == "none"
-        users = users.where(department: nil)
-      else
+      if (!params[:team].include? "(None)")
         users = users.where(department: params[:team])
+      else
+        users = users.where("\"users\".department IS NULL OR \"users\".department IN (?)", params[:team].select{|o| o != "(None)"})
       end
     end
 
     if params[:title].present?
-      if params[:title] == "none"
-        users = users.where(title: nil)
-      else
+      if (!params[:title].include? "(None)")
         users = users.where(title: params[:title])
+      else
+        users = users.where("\"users\".title IS NULL OR \"users\".title IN (?)", params[:title].select{|o| o != "(None)"})
       end
     end
 
@@ -190,7 +198,7 @@ class ReportsController < ApplicationController
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
     params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
-    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == '(Any)'
 
     top_dash_projects = projects
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
