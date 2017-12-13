@@ -303,7 +303,7 @@ function getSelectedStages() {
     stages_arr.push(stageSelection[i].category)
   }
   if (stages_arr.length == 0)
-    return ['(Any)'];
+    return ['Any'];
   else
     return stages_arr;
 }

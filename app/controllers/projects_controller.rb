@@ -286,7 +286,7 @@ class ProjectsController < ApplicationController
     end
 
     projects = projects.where(category: params[:type]) if params[:type].present? && (!params[:type].include? "0")
-    projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "(Any)")
+    projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "Any")
 
     # searching
     projects = projects.where('LOWER(projects.name) LIKE LOWER(:search) OR LOWER(projects.stage) LIKE LOWER(:search) OR LOWER(projects.forecast) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?

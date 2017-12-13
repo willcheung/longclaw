@@ -198,7 +198,7 @@ class ReportsController < ApplicationController
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
     params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
-    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == '(Any)'
+    projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
 
     top_dash_projects = projects
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
