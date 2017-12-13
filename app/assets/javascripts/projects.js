@@ -62,6 +62,7 @@ $(document).ready(function($) {
       // console.log(oSettings)
       // console.log(json)
       initSparklines();
+      $('[data-toggle="tooltip"]').tooltip();
     }
   });
 
