@@ -62,14 +62,14 @@
               <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
             </optgroup>
           </select>
-          <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Apply filters" onclick="setFilterParamsAndReloadPage();"><strong>Apply All&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
+          <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" onclick="setFilterParamsAndReloadPage();"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
         </div>
         <div class="col-lg-12">
           <div class="ibox float-e-margins m-b-none m-t">
             <div class='ibox-title'>
               <h5>
-                <span>Deals by Stage</span>
-                <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset filters" onclick="reset_stages_filter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
+                Deals by Stage <small>(Click bar to filter)</small>
+                <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset stages filter" onclick="resetStagesFilter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
               </h5>
             </div>
             <div id="stage-chart" class="ibox-content stage-chart" style="height:150px;padding-bottom:0"></div>
@@ -220,7 +220,7 @@ $(function () {
               // let params = {};
               // if (this.selected) {
               //   // params.stage = this.category;
-              //   params.stage = get_selected_stages();
+              //   params.stage = getSelectedStages();
               // }
               // if ($('#type-filter').val()) {
               //   params.type = $('#type-filter').val();
