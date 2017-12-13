@@ -802,7 +802,7 @@ class User < ActiveRecord::Base
         AND project_id IN ('#{array_of_project_ids.join("','")}')
         AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
       )
-      SELECT projects.id, projects.name, projects.amount, projects.close_date, SUM(outbound_wc)::float AS outbound, SUM(inbound_wc)::float AS inbound, COALESCE(SUM(outbound_wc),0) + COALESCE(SUM(inbound_wc),0) AS total
+      SELECT projects.id, projects.name, projects.amount, projects.close_date, COALESCE(SUM(outbound_wc)::float,0) AS outbound, COALESCE(SUM(inbound_wc)::float,0) AS inbound, COALESCE(SUM(outbound_wc),0) + COALESCE(SUM(inbound_wc),0) AS total
       FROM (
         SELECT outbound_emails.project_id, SUM(outbound_emails.word_count) AS outbound_wc, 0 AS inbound_wc
         FROM (
