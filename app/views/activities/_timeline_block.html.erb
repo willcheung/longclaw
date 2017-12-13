@@ -90,8 +90,10 @@
                 <% end %>
 
                 <div class="action-links">
+                  <% if current_user.oauth_provider == User::AUTH_TYPE[:Gmail] %>
                     <strong><a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= last_msg_recipients(a) %>&su=<%= last_msg_subject(a) %>&body=<%= last_msg_body(a) %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"><i class="fa fa-reply-all" aria-hidden="true"></i> Reply Email</a></strong>
                     &sdot;
+                  <% end %>
                     <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                     &sdot;
                     <%= best_in_place a, :is_public, :as => 'checkbox', :data => {:activity => a}, :class => 'toggle-private', collection: {
