@@ -22,7 +22,7 @@ $('[data-toggle="tooltip"]').tooltip();
 
 /* Chosen */
 $('.metric_filter').chosen({ disable_search: true, allow_single_deselect: true}); 
-$('.category_filter').chosen({ disable_search: true, allow_single_deselect: true});
+$('.category_filter').chosen({ disable_search: true, allow_single_deselect: true, search_contains: true });
 
 $('input[name="daterange"]').daterangepicker({
     "alwaysShowCalendars": true,
@@ -64,6 +64,22 @@ function reset_subtitles_on_chart(chart) {
     chart.subtitle.update({
         text: ' ' 
     });
+};
+
+function getSelectedStages() {
+    let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+    let stages_arr = [];
+    for (var i=0; i < stageSelection.length; i++) {
+        stages_arr.push(stageSelection[i].category)
+    }
+    return stages_arr;
+}
+
+function resetStagesFilter() {
+    let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+    for (var i=0; i < stageSelection.length; i++) {
+        stageSelection[i].select(false); // de-select
+    }
 };
 
 /*

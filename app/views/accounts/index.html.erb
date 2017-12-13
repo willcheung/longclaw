@@ -29,7 +29,7 @@
             <select class="owner_filter col-sm-3" multiple data-placeholder="  Select Owner">
               <option></option> <!-- no filter -->
               <option value="<%= current_user.id %>" <% if params[:owner].include? current_user.id %> selected <% end %> >
-                Owner: Me (<%= get_full_name(current_user) %>)
+                Me (<%= get_full_name(current_user) %>)
               </option>
               <% @owners.each do |u| %> <!-- diff between @owners vs users_reverse -->
                 <% if u.id != current_user.id %>
@@ -42,7 +42,7 @@
                 Unassigned
               </option>
             </select>
-            <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Apply filters"><strong>Apply All&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
+            <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
           </form>
         </div>
     </div>

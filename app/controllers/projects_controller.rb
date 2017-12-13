@@ -286,7 +286,7 @@ class ProjectsController < ApplicationController
     end
 
     projects = projects.where(category: params[:type]) if params[:type].present? && (!params[:type].include? "0")
-    projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "(Any)")
+    projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "Any")
 
     # searching
     projects = projects.where('LOWER(projects.name) LIKE LOWER(:search) OR LOWER(projects.stage) LIKE LOWER(:search) OR LOWER(projects.forecast) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
@@ -454,7 +454,7 @@ class ProjectsController < ApplicationController
                               AND (projects.is_public=true
                                     OR (projects.is_public=false AND projects.owner_id = ?) OR ?)', current_user.organization_id, current_user.id, current_user.admin?)
                       .find(params[:id])
-    if (@project.present? && @project.salesforce_opportunity.present?)
+    if (@project.present? && @project.is_linked_to_SFDC?)
       if SalesforceController.get_sfdc_oauthuser(user: current_user).present? # "connected" to SFDC
         @sfdc_client = SalesforceService.connect_salesforce(user: current_user)
       else

@@ -149,6 +149,10 @@ class Project < ActiveRecord::Base
     account.organization == user.organization && is_confirmed && status == 'Active' && ( is_public || project_owner == user || users.include?(user) )
   end
 
+  def is_linked_to_SFDC?
+    self.salesforce_opportunity.present? || self.account.salesforce_accounts.present?
+  end
+
   def self.count_tasks_per_project(array_of_project_ids)
     query = <<-SQL
         SELECT projects.id AS id,

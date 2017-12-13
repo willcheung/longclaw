@@ -14,3 +14,12 @@
 .row.filter-space, .row .filter-space {
   margin-bottom: 1em;
 }
+
+// Selected opportunities in Opportunity Stage filter
+.highcharts-point-select {
+  fill: #FFEF4A;
+}
+
+#multiselect-filter-form .chosen-container {
+  vertical-align: top
+}
