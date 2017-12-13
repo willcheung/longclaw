@@ -325,16 +325,15 @@ class ProjectsController < ApplicationController
       iTotalRecords: total_records,
       iTotalDisplayRecords: total_display_records,
       aaData: @projects.map do |project|
-        all_members = project.users + project.contacts
-        members = all_members.first(@MEMBERS_LIST_LIMIT)
-        tooltip = all_members.size == 0 ? '' : " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe
-        members_html = "<span" + tooltip + "><i class=\"fa fa-users\" style=\"color:#888\"></i> #{all_members.size}</span>"
+        all_members = project.users.count + project.contacts.count
+        # members = all_members.first(@MEMBERS_LIST_LIMIT)
+        # tooltip = all_members.size == 0 ? '' : " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe
+        members_html = "<span><i class=\"fa fa-users\" style=\"color:#888\"></i> #{all_members}</span>"
         [
           ("<input type=\"checkbox\" class=\"bulk-project\" value=\"#{project.id}\">" if current_user.admin?),
-          vc.link_to(project.name, project),
-          (project.stage.blank?) ? "-" : project.stage,
+          vc.link_to(project.name, project) + '<br><span style="font-size: 11px;">'.html_safe + vc.link_to(project.account.name, project.account) + '</span>'.html_safe,
+          (project.stage.blank? ? "-" : project.stage) + '<br><span style="font-size: 11px;">'.html_safe + (project.forecast.blank? ? '-' : project.forecast) + '</span>'.html_safe,
           (project.amount.nil?) ? "-" : "$"+vc.number_to_human(project.amount),
-          (project.forecast.nil?) ? "-" : project.forecast,
           get_full_name(project.project_owner),
           members_html,
           @days_to_close[project.id].nil? ? "-" : @days_to_close[project.id].to_s,
