@@ -34,7 +34,7 @@ class Profile < ActiveRecord::Base
     profile = find_by_email(email)
     # No existing profile found, create a new one
     profile = Profile.create(emails: [email]) if profile.blank?
-    if profile.data.blank?
+    if profile.data.blank? || [200, 202, 404].exclude?(profile.data.status) # retry if profile has no data or status isn't one of 200, 202 or 404
       profile.data = FullContactService.find(email, profile.id)
       profile.save
     end
@@ -114,7 +114,7 @@ class Profile < ActiveRecord::Base
 
   def social_bio(socialtype)
     socialtype = get_FullContact_social_profile_type(socialtype)
-    sp = data.social_profiles.find{ |sp| sp.type.downcase == socialtype } if socialtype.present? && data_is_valid? && data.social_profiles.present?
+    sp = data.social_profiles.find{ |sp| sp.type_id.present? ? sp.type_id.downcase == socialtype : (sp.type.downcase == socialtype if sp.type.present?) } if socialtype.present? && data_is_valid? && data.social_profiles.present?
     sp.bio if sp.present?
   end
 

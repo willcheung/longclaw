@@ -13,7 +13,7 @@ class ProjectsController < ApplicationController
   
 
   # GET /projects
-  # GET /projects.json
+  # GET /projects.jsonP
   def index
     respond_to do |format|
       format.html { index_html }
@@ -168,6 +168,11 @@ class ProjectsController < ApplicationController
         format.html { redirect_to @project, notice: 'Project was successfully updated.' }
         format.js
         format.json { respond_with_bip(@project) }
+
+        if @sfdc_client
+          update_result = SalesforceOpportunity.update_all_salesforce(client: @sfdc_client, salesforce_opportunity: @project.salesforce_opportunity, fields: project_params, current_user: current_user) 
+          puts "*** SFDC error: Error in ProjectsController.update during update of linked SFDC opportunity. Detail: #{update_result[:detail]} ***" if update_result[:status] == "ERROR" # TODO: Warn the user SFDC opp was not updated!
+        end
       else
         format.html { render action: 'edit' }
         format.js { render json: @project.errors, status: :unprocessable_entity }
@@ -211,21 +216,34 @@ class ProjectsController < ApplicationController
   private
 
   def index_html
+    # puts "\n\n\t************ index_html *************\n"
+    # puts "\tparams[:type]: #{params[:type]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\tparams[:close_date]: #{params[:close_date]}"
+    # puts "\tparams[:stage]: #{params[:stage]}"
+    # puts "\n\n" 
+
     get_custom_fields_and_lists
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     @project = Project.new
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
-    # Incrementally apply filters
+    # Incrementally apply filters to determine the projects to be used in the Stage filter
     params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
-    if params[:owner].present? && params[:owner] != "0"
-      if params[:owner] == "none"
-        projects = projects.where(owner_id: nil)
-      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
+
+    if params[:owner].present? && (!params[:owner].include? "0")
+      if (!params[:owner].include? "None")
         projects = projects.where(owner_id: params[:owner])
+      else
+        projects = projects.where("\"projects\".owner_id IS NULL OR \"projects\".owner_id IN (?)", params[:owner].select{|o| o != "None"})
       end
     end
+
+    if params[:type].present? && (!params[:type].include? "0")
+      projects = projects.where(category: params[:type])
+    end
+
     # Stage chart/filter
     stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", projects.ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
 
@@ -243,6 +261,14 @@ class ProjectsController < ApplicationController
 
   def index_json
     @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
+
+    # puts "\n\n\t************ index_json *************\n"
+    # puts "\tparams[:type]: #{params[:type]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\tparams[:close_date]: #{params[:close_date]}"
+    # puts "\tparams[:stage]: #{params[:stage]}"
+    # puts "\n\n"
+
     # Get an initial list of visible projects
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
@@ -251,16 +277,16 @@ class ProjectsController < ApplicationController
     # params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
 
-    if params[:owner].present? && params[:owner] != "0"
-      if params[:owner] == "none"
-        projects = projects.where(owner_id: nil)
-      # else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-      elsif current_user.organization.users.registered.find_by(id: params[:owner])
+    if params[:owner].present? && (!params[:owner].include? "0")
+      if (!params[:owner].include? "None")
         projects = projects.where(owner_id: params[:owner])
+      else
+        projects = projects.where("\"projects\".owner_id IS NULL OR \"projects\".owner_id IN (?)", params[:owner].select{|o| o != "None"})
       end
     end
 
-    projects = projects.where(stage: params[:stage]) if params[:stage].present?
+    projects = projects.where(category: params[:type]) if params[:type].present? && (!params[:type].include? "0")
+    projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "Any")
 
     # searching
     projects = projects.where('LOWER(projects.name) LIKE LOWER(:search) OR LOWER(projects.stage) LIKE LOWER(:search) OR LOWER(projects.forecast) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
@@ -315,7 +341,7 @@ class ProjectsController < ApplicationController
           "<span class='#{@open_risk_count[project.id].present? && @open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
           "<div data-sparkline=\"#{@sparkline[project.id].join(', ') if @sparkline[project.id].present?}; column\"></div>",
           @project_days_inactive[project.id].nil? ? "-" : @project_days_inactive[project.id],
-          @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].strftime('%l:%M%p on %B %-d'),
+          @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].in_time_zone(current_user.time_zone).strftime('%l:%M%p on %B %-d'),
           project.daily ? vc.link_to("<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{project.id}", class: "block m-b-xs", title: "Following daily") : vc.link_to("<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{project.id}", class: "block m-b-xs", title: "Follow daily")
         ]
       end
@@ -392,7 +418,7 @@ class ProjectsController < ApplicationController
     if params[:emails].present?
       @filter_email = params[:emails].split(',')
       # filter for Meetings/Conversations where all people participated
-      where_email_clause = @filter_email.map { |e| "\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{e}\"}]'::jsonb" }.join(' AND ')
+      where_email_clause = @filter_email.map { |e| "\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{e}\"}]'::jsonb" }.join(' OR ')
       # filter for Notes written by any people included
       users = User.where(email: @filter_email).pluck(:id)
       where_email_clause += " OR posted_by IN ('#{users.join("','")}')" if users.present?
@@ -422,12 +448,20 @@ class ProjectsController < ApplicationController
     redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
 
+  # Should we re-use Project.visible_to scope?
   def set_editable_project
     @project = Project.joins(:account)
                       .where('accounts.organization_id = ?
                               AND (projects.is_public=true
-                                    OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id)
+                                    OR (projects.is_public=false AND projects.owner_id = ?) OR ?)', current_user.organization_id, current_user.id, current_user.admin?)
                       .find(params[:id])
+    if (@project.present? && @project.is_linked_to_SFDC?)
+      if SalesforceController.get_sfdc_oauthuser(user: current_user).present? # "connected" to SFDC
+        @sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+      else
+        puts "No SFDC connection. Linked Salesforce opportunity won't be updated!" # TODO: Warn the user SFDC opp was not updated!
+      end
+    end
   rescue ActiveRecord::RecordNotFound
     redirect_to root_url, :flash => { :error => "Project not found or is private." }
   end
@@ -452,13 +486,22 @@ class ProjectsController < ApplicationController
   end
 
   def project_filter_state
-    if params[:owner] 
+    if params[:type]
+      cookies[:project_type] = {value: params[:type]}
+    else
+      params[:type] = cookies[:project_type].present? ? cookies[:project_type].split("&") : []
+    end
+    if params[:owner]
       cookies[:project_owner] = {value: params[:owner]}
     else
-      if cookies[:project_owner]
-        params[:owner] = cookies[:project_owner]
-      end
+      params[:owner] = cookies[:project_owner].present? ? cookies[:project_owner].split("&") : []
     end
+    if params[:stage]
+      cookies[:project_stage] = {value: params[:stage]}
+    else
+      params[:stage] = cookies[:project_stage].present? ? cookies[:project_stage].split("&") : []
+    end
+    # Default is always "This Quarter"
     # if params[:close_date]
     #   cookies[:project_close_date] = {value: params[:close_date]}
     # else

@@ -29,11 +29,17 @@
 #  expected_revenue    :decimal(14, 2)
 #  probability         :decimal(5, 2)
 #  forecast            :string
+#  next_steps          :string
+#  competition         :string
 #
 # Indexes
 #
-#  index_projects_on_account_id  (account_id)
-#  index_projects_on_deleted_at  (deleted_at)
+#  index_projects_on_account_id    (account_id)
+#  index_projects_on_deleted_at    (deleted_at)
+#  index_projects_on_is_confirmed  (is_confirmed)
+#  index_projects_on_is_public     (is_public)
+#  index_projects_on_owner_id      (owner_id)
+#  index_projects_on_status        (status)
 #
 
 include Utils
@@ -99,8 +105,8 @@ class Project < ActiveRecord::Base
   scope :visible_to, -> (organization_id, user_id) {
     select('DISTINCT(projects.*)')
         .joins([:account, 'LEFT OUTER JOIN project_members ON project_members.project_id = projects.id'])
-        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public = true OR projects.owner_id = ? OR (project_members.status = ? AND project_members.user_id = ?))',
-            organization_id, user_id, ProjectMember::STATUS[:Confirmed], user_id)
+        .where('accounts.organization_id = ? AND projects.is_confirmed = true AND projects.status = \'Active\' AND (projects.is_public = true OR projects.owner_id = ? OR (project_members.status = ? AND project_members.user_id = ?) OR ?)',
+            organization_id, user_id, ProjectMember::STATUS[:Confirmed], user_id, User.find(user_id).admin?)
         .group('projects.id')
   }
   scope :visible_to_admin, -> (organization_id) {
@@ -132,7 +138,7 @@ class Project < ActiveRecord::Base
 
   STATUS = ["Active", "Completed", "On Hold", "Cancelled", "Archived"]
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
+  MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast", "next_steps" => "Next Steps" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
   CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'All Closed', Open: 'All Open' }
 
@@ -141,6 +147,10 @@ class Project < ActiveRecord::Base
   # implementation of visible scope for individual projects
   def is_visible_to(user)
     account.organization == user.organization && is_confirmed && status == 'Active' && ( is_public || project_owner == user || users.include?(user) )
+  end
+
+  def is_linked_to_SFDC?
+    self.salesforce_opportunity.present? || self.account.salesforce_accounts.present?
   end
 
   def self.count_tasks_per_project(array_of_project_ids)
@@ -351,7 +361,6 @@ class Project < ActiveRecord::Base
   def contact_relationship_metrics
   #   name
   #   title
-  #   buyer role
   #   last sent by
   #   last sent
   #   last reply
@@ -388,7 +397,6 @@ class Project < ActiveRecord::Base
              contacts.first_name,
              contacts.last_name,
              contacts.title,
-             contacts.buyer_role,
              project_members.status,
              received_emails.from_address AS last_sent_by_address,
              received_emails.from_personal AS last_sent_by_personal,
@@ -438,7 +446,7 @@ class Project < ActiveRecord::Base
       ) AS received_emails
       ON contacts.email = received_emails.recipient
       WHERE projects.id = '#{self.id}'
-      GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+      GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
       ORDER BY last_sent_date DESC
     SQL
 
@@ -846,8 +854,8 @@ class Project < ActiveRecord::Base
   # Parameters:   array_of_project_ids - ids of opportunities
   #               domain - domain of the organization (not used)
   #               array_of_user_emails (required) - e-mails of users to be used to determine if an e-mail is outbound/sent or inbound/received (e.g., if from perspective of a single user, this contains only this user's e-mail address; if want to use all users for the current user's organization, specify them).)  
-  #               start_day - the starting time (timestamp) of the reporting period (default is midnight 14 days ago in current user's timezone)
-  #               end_day - the starting time (timestamp) of the reporting period (default is midnight current day in current user's timezone)
+  #               start_day - the starting time (timestamp) of the reporting period; Default is midnight 14 days ago in current user's timezone
+  #               end_day - the starting time (timestamp) of the reporting period; Default is midnight current day in current user's timezone
   # Note: this query will not report anything without a non-empty array in array_of_user_emails!
   def self.count_activities_by_category(array_of_project_ids, domain, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     return [] if array_of_user_emails.blank?
@@ -1114,7 +1122,7 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all (standard) CS Opportunity fields from all mapped SFDC Opportunity fields for explicitly mapped CS and SFDC Opportunities.
+  # Updates all standard CS Opportunity fields from all mapped SFDC Opportunity fields for explicitly mapped CS and SFDC Opportunities.
   # Parameters:   client - connection to Salesforce
   #               opportunities - collection of CS Projects/Opportunities to process
   #               sfdc_fields_mapping - A list of [Mapped SFDC Opportunity field name, CS Opportunity field name] pairs
@@ -1123,7 +1131,7 @@ class Project < ActiveRecord::Base
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
     # TODO: Might want to move to SalesforceOpportunity.rb
-  def self.update_fields_from_sfdc(client: , opportunities: , sfdc_fields_mapping: )
+  def self.update_standard_fields_from_sfdc(client: , opportunities: , sfdc_fields_mapping: )
     result = nil
 
     unless (client.nil? || opportunities.nil? || sfdc_fields_mapping.blank?)
@@ -1169,10 +1177,10 @@ class Project < ActiveRecord::Base
       end
     else
       if client.nil?
-        puts "** ContextSmith error: Parameter 'client' passed to Project.update_fields_from_sfdc is invalid!"
+        puts "** ContextSmith error: Parameter 'client' passed to Project.update_standard_fields_from_sfdc is invalid!"
         result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
       else
-        # Ignores if other parameters were not passed properly to update_fields_from_sfdc
+        # Ignores if other parameters were not passed properly to update_standard_fields_from_sfdc
         result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
       end
     end
@@ -1190,7 +1198,7 @@ class Project < ActiveRecord::Base
   #             result - if status == "ERROR", contains the title of the error
   #             detail - if status == "ERROR", contains the details of the error
   # TODO: Maybe make this a Project instance method.
-  def self.load_salesforce_fields(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
+  def self.update_custom_fields_from_sfdc(client: , project_id: , sfdc_opportunity_id: , opportunity_custom_fields: )
     result = nil
 
     unless (client.nil? || project_id.nil? || sfdc_opportunity_id.nil? || opportunity_custom_fields.blank?)
@@ -1212,17 +1220,17 @@ class Project < ActiveRecord::Base
             new_value = sfdc_val.join(", ")
           end
           CustomField.find_by(custom_fields_metadata_id: cf.id, customizable_uuid: project_id).update(value: new_value) # Make update to project custom field with value obtained in SFDC query
-        end
+        end if sObj.present?
         result = { status: "SUCCESS" }
       else
         result = { status: "ERROR", result: query_result[:result], detail: query_result[:detail] + " opportunity_custom_field_names=" + opportunity_custom_field_names.to_s }
       end
     else
       if client.nil?
-        puts "** ContextSmith error: Parameter 'client' passed to Project.load_salesforce_fields is invalid!"
+        puts "** ContextSmith error: Parameter 'client' passed to Project.update_custom_fields_from_sfdc is invalid!"
         result = { status: "ERROR", result: "ContextSmith Error", detail: "A parameter passed to an internal function is invalid." }
       else
-        # Ignores if other parameters were not passed properly to load_salesforce_fields
+        # Ignores if other parameters were not passed properly to update_custom_fields_from_sfdc
         result = { status: "SUCCESS", result: "Warning: no fields updated.", detail: "No SFDC fields to import!" }
       end
     end
@@ -1234,19 +1242,21 @@ class Project < ActiveRecord::Base
   # Note: Does nothing if opportunity is not linked (status = SUCCESS, result = contains warning message). This process aborts upon encountering any error.
   # Additional Note:  This may called from ProjectsController#refresh !!
   # Parameters:   client - a valid SFDC connection
-  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of SFDC Activities, timestamp exclusive; default, import with no minimum LastModifiedDate
+  #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end import of SFDC Activities, timestamp inclusive; default, import with no maximum LastModifiedDate
+  #               filter_predicates_h (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   #               limit (optional) - the max number of activity records to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
   #             detail - Contains any error or informational/warning messages.
-  def load_salesforce_activities(client, filter_predicates=nil, limit=200)
+  def load_salesforce_activities(client:, from_lastmodifieddate: nil, to_lastmodifieddate: nil, filter_predicates_h: nil, limit: nil)
     load_result = nil
 
     if salesforce_opportunity.blank? # CS Opportunity not linked to SFDC Opportunity
       if account.salesforce_accounts.present? # CS Opportunity linked to SFDC Account
         account.salesforce_accounts.each do |sfa|
-          load_result = Activity.load_salesforce_activities(client, self, sfa.salesforce_account_id, type="Account", filter_predicates)
+          load_result = Activity.load_salesforce_activities(client: client, project: self, sfdc_id: sfa.salesforce_account_id, type: "Account", from_lastmodifieddate: from_lastmodifieddate, to_lastmodifieddate: to_lastmodifieddate, filter_predicates_h: filter_predicates_h, limit: limit)
 
           if load_result[:status] == "ERROR"
             error_detail = "Error while attempting to load activity from Salesforce Account \"#{sfa.salesforce_account_name}\" (sfdc_id='#{sfa.salesforce_account_id}') to CS Opportunity \"#{name}\" (opportunity_id='#{id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"
@@ -1258,7 +1268,7 @@ class Project < ActiveRecord::Base
       end
     else # CS Opportunity linked to SFDC Opportunity
       # Save at the Opportunity level
-      load_result = Activity.load_salesforce_activities(client, self, salesforce_opportunity.salesforce_opportunity_id, type="Opportunity", filter_predicates)
+      load_result = Activity.load_salesforce_activities(client: client, project: self, sfdc_id: salesforce_opportunity.salesforce_opportunity_id, type: "Opportunity", from_lastmodifieddate: from_lastmodifieddate, to_lastmodifieddate: to_lastmodifieddate, filter_predicates_h: filter_predicates_h, limit: limit)
 
       if load_result[:status] == "ERROR"
         error_detail = "Error while attempting to load activity from Salesforce Opportunity \"#{salesforce_opportunity.name}\" (sfdc_id='#{salesforce_opportunity.salesforce_opportunity_id}') to CS Opportunity \"#{name}\" (opportunity_id='#{id}').  #{ load_result[:result] } Details: #{ load_result[:detail] }"

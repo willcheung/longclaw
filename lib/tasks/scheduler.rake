@@ -38,19 +38,13 @@ namespace :scheduler do
 
     desc 'Retrieve latest e-mails since yesterday for all active and confirmed projects in all organizations'
     task load_emails_since_yesterday: :environment do
-        # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
-        if ( ((Time.now.saturday? || Time.now.sunday?) && [0,6,12,18].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [0,1,7,13,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour)) )
+        # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every 2 hours. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
+        if ( ((Time.now.saturday? || Time.now.sunday?) && [0,6,12,18].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [1,7,13,15,17,19,21,23].include?(Time.now.hour)) )
             puts "\n\n=====Task (load_emails_since_yesterday) started at #{Time.now}====="
 
-            Organization.is_active.each do |org|
-                org.accounts.each do |acc| 
-                    acc.projects.is_active.each do |proj|
-                        puts "Org: " + org.name + ", Account: " + acc.name + ", Project/Stream: " + proj.name
-                        ContextsmithService.load_emails_from_backend(proj)
-                        sleep(1)
-                    end
-                end
-            end
+            uri = URI(ENV['BASE_URL'] + '/hooks/load_emails_since_yesterday')
+            req = Net::HTTP::Post.new(uri)
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") { |http| http.request(req) }
         end
     end
 
@@ -71,19 +65,13 @@ namespace :scheduler do
 
     desc 'Retrieve latest calendar events since yesterday for all active and confirmed projects in all organizations'
     task load_events_since_yesterday: :environment do
-        # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every hour. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
-        if ( ((Time.now.saturday? || Time.now.sunday?) && [3,9,15,21].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [0,1,7,13,14,15,16,17,18,19,20,21,22,23].include?(Time.now.hour)) )  
+        # Runs once every ~6 hours, except during business hours on East Coast and West Coast, U.S. when it runs every 2 hours. (9AM EST -> 5PM PDT(daylight savings) = 13:00-01:00 UTC)
+        if ( ((Time.now.saturday? || Time.now.sunday?) && [3,9,15,21].include?(Time.now.hour)) || (!(Time.now.saturday? || Time.now.sunday?) && [1,7,13,15,17,19,21,23].include?(Time.now.hour)) )
             puts "\n\n=====Task (load_events_since_yesterday) started at #{Time.now}====="
 
-            Organization.is_active.each do |org|
-                org.accounts.each do |acc| 
-                    acc.projects.is_active.each do |proj|
-                        puts "Org: " + org.name + ", Account: " + acc.name + ", Project: " + proj.name
-                        ContextsmithService.load_calendar_from_backend(proj, 100, 1.day.ago.to_i)
-                        sleep(1)
-                    end
-                end
-            end
+            uri = URI(ENV['BASE_URL'] + '/hooks/load_events_since_yesterday')
+            req = Net::HTTP::Post.new(uri)
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") { |http| http.request(req) }
         end
     end
 
@@ -209,38 +197,53 @@ namespace :scheduler do
     end
 
     desc 'Refresh Salesforce data for each Salesforce user'
-    # Refreshes list of accounts and opportunities appropriate for each SFDC user.  This will also create opps/accts for new opportunities, update values in mapped (standard and custom) fields, and import/upsert SFDC contacts for linked CS accts.
-    task refresh_sfdc_data: :environment do
-        puts "\n\n=====Task (refresh_sfdc_data) started at #{Time.now}====="
-        sfdc_refresh_configs = CustomConfiguration.where(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_refresh], config_value: true)
-        sfdc_refresh_configs.each do |c|
+    # Refreshes list of accounts and opportunities appropriate for each SFDC user.  This will also create opps/accts for new opportunities, update values in mapped (standard and custom) fields, sync SFDC activities for linked CS opps, and import/upsert SFDC contacts for linked CS accts.
+    # Usage: rake scheduler:refresh_salesforce
+    task refresh_salesforce: :environment do
+        puts "\n\n=====Task (refresh_salesforce) started at #{Time.now}====="
+        sfdc_refresh_configs = CustomConfiguration.where("config_type = :config_type AND ((config_value::jsonb)->>'auto_sync')::jsonb ?| array[:keys]", config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], keys: ['daily','weekly'])
+        sfdc_refresh_configs.each do |cf|
+            # skip if the refresh_level is not found in the auto_sync hash (refresh is not enabled); otherwise, run if refresh_level exists, but it is an empty string (refresh is enabled but never been run, simply awaiting update upon the first run).
+            refresh_level = "weekly" if (!cf.config_value['auto_sync']['weekly'].nil? && (cf.config_value['auto_sync']['weekly'].blank? || DateTime.parse(cf.config_value['auto_sync']['weekly']) + 1.week <= Time.now))
+            refresh_level = "daily" if (!cf.config_value['auto_sync']['daily'].nil? && (cf.config_value['auto_sync']['daily'].blank? || DateTime.parse(cf.config_value['auto_sync']['daily']) + 1.day <= Time.now))
+
+            next if refresh_level.blank?
+
+            auto_sync_timestamp = Time.now
+
             sfdc_client = nil
-            if c.user_id.present?
+            if cf.user_id.present?
                 begin
-                    user = User.find(c.user_id)
+                    user = User.find(cf.user_id)
                 rescue ActiveRecord::RecordNotFound
-                    puts "\nCannot refresh Salesforce data for user '#{c.user_id}', because this User cannot be found!"
+                    puts "\n**** scheduler:refresh_salesforce SFDC error **** Cannot refresh Salesforce data for user '#{cf.user_id}', because this User cannot be found!"
                     next
                 else
                     sfdc_client = SalesforceService.connect_salesforce(user: user) 
                 end
             else
-                organization = Organization.find(c.organization_id)
+                organization = Organization.find(cf.organization_id)
                 sfdc_client = SalesforceService.connect_salesforce(organization: organization) 
             end
 
             if sfdc_client.present?
-                puts "\nRefreshing Salesforce for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'."
+                puts "\n[ scheduler:refresh_salesforce ] - Refreshing Salesforce for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"} (frequency=#{refresh_level}, last run=#{cf.config_value['auto_sync'][refresh_level].present? ? DateTime.parse(cf.config_value['auto_sync'][refresh_level]) : "never" })."
                 # SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
                 if user.present?
-                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user)
+                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user, for_periodic_refresh: true)
                 else # organization.present?
                     admin_user = organization.users.find{|u| u.admin?} # select any to use
-                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: admin_user) if admin_user.present?
+                    SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: admin_user, for_periodic_refresh: true) if admin_user.present?
                 end
+
+                # update auto_sync timestamp upon successful completion
+                cf = CustomConfiguration.find(cf.id)  # get updated copy to avoid overwriting timestamps set during refresh!
+                cf.config_value['auto_sync'][refresh_level] = auto_sync_timestamp
+                cf.save
             else
-                puts "\n****SFDC**** Cannot establish a Salesforce connection for Organization=#{c.organization.name} User='#{user.present? && !user.admin? ? user.email : "Admin"}'!"
+                puts "\n**** scheduler:refresh_salesforce SFDC error **** Cannot establish a Salesforce connection for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"}!"
             end
         end
+        puts "\n\n=====Task (refresh_salesforce) completed at #{Time.now}====="
     end
 end

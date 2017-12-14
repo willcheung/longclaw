@@ -16,7 +16,6 @@
 #  background_info    :text
 #  department         :string
 #  external_source_id :string
-#  buyer_role         :string
 #
 # Indexes
 #
@@ -57,7 +56,7 @@ class Contact < ActiveRecord::Base
   PHONE_LEN_MAX = 32
   MOBILE_LEN_MAX = 32
   ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', DecisionMaker: 'Decision Maker', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }
-  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "mobile" => "Mobile Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department", "buyer_role" => "Buyer Role" }
+  MAPPABLE_FIELDS_META = { "first_name" => "First Name", "last_name" => "Last Name", "email" => "E-mail", "phone" => "Phone", "mobile" => "Mobile Phone", "title" => "Title", "background_info" => "Notes / Background Info", "department" => "Department" }
 
   def is_source_from_salesforce?
     return self.source == "Salesforce"
@@ -79,8 +78,7 @@ class Contact < ActiveRecord::Base
       mobile: (self.mobile if self.mobile.present?) || con.mobile,
       background_info: (self.background_info if self.background_info.present?) || con.background_info,
       department: (self.department if self.department.present?) || con.department,
-      external_source_id: (self.external_source_id if self.external_source_id.present?) || con.external_source_id,
-      # buyer_role: self.buyer_role,
+      external_source_id: (self.external_source_id if self.external_source_id.present?) || con.external_source_id
     )
   end
 
@@ -130,21 +128,28 @@ class Contact < ActiveRecord::Base
     contact
   end
 
-  # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields for each "matched" Contact (same e-mail).  If there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only one. Note: Contact merge will only copy the value from the SFDC Contact field if there's no existing value in the matched CS Contact.
+  # Takes Contacts (with an e-mail address) in a SFDC account and imports them to a CS account, merging existing values in CS Contact fields for each "matched" Contact (same e-mail).  If there are multiple Salesforce Contacts with the same e-mail address in the source SFDC account, this loads only the first one alphabetically by LastName, then FirstName.  Note: Contact "merging" means we will only copy the value from the SFDC Contact field if there's no existing value in the matched CS Contact; one exception is if the existing CS contact is an imported SFDC contact (source="Salesforce"), in which case we will update the external_source_id with the SFDC sObject id.
   # Parameters:  client - connection to Salesforce
   #              account_id - the CS account to which to import Contacts
   #              sfdc_account_id - id of SFDC account from which to import Contacts 
-  #              limit (optional) - the max number of Contacts to process
+  #              from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of Contacts, timestamp exclusive
+  #              to_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of Contacts, timestamp inclusive
+  #              contact_limit (optional) - the maximum number of Contacts to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
   #             detail - Contains any error or informational/warning messages.
-  def self.load_salesforce_contacts(client, account_id, sfdc_account_id, limit=100)
+  def self.load_salesforce_contacts(client, account_id, sfdc_account_id, from_lastmodifieddate=nil, to_lastmodifieddate=nil, contact_limit=nil)
     val = []
     result = nil
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
-    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' ORDER BY Email, LastName, FirstName LIMIT #{limit}"  # Unused: Description, LeadSource
+    query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone, LastModifiedDate FROM Contact WHERE AccountId='#{sfdc_account_id}'"
+    query_statement += " AND LastModifiedDate > #{from_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ')}" if from_lastmodifieddate.present?
+    query_statement += " AND LastModifiedDate <= #{to_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ')}" if to_lastmodifieddate.present?
+    query_statement += " ORDER BY Email, LastName, FirstName"  # Unused: Description, LeadSource
+    query_statement += " LIMIT #{contact_limit}" if contact_limit.present?
+    # puts "\n\t\t load_salesforce_contacts: query_statement: #{ query_statement }"
 
     query_result = SalesforceService.query_salesforce(client, query_statement)
 
@@ -172,7 +177,7 @@ class Contact < ActiveRecord::Base
                     'Salesforce',
                     #{"'#{c[:Id]}'"},
                     '#{Time.now}',
-                    '#{Time.now}')"
+                    '#{c[:LastModifiedDate]}')"
           ####### Unused: 
                     #{c[:Description].blank? ? 'null' : Contact.sanitize(c[:Description])},
                     #{lead_source.blank? ? 'null' : Contact.sanitize(lead_source)},
@@ -182,7 +187,15 @@ class Contact < ActiveRecord::Base
       end
 
       insert = 'INSERT INTO "contacts" ("account_id", "first_name", "last_name", "email", "title", "department", "phone", "mobile", "source", "external_source_id", "created_at", "updated_at") VALUES'  # Unused: "background_info" 
-      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = CASE WHEN LENGTH(contacts.first_name::text) > 0 THEN contacts.first_name ELSE EXCLUDED.first_name END, last_name = CASE WHEN LENGTH(contacts.last_name::text) > 0 THEN contacts.last_name ELSE EXCLUDED.last_name END, title = CASE WHEN LENGTH(contacts.title::text) > 0 THEN contacts.title ELSE EXCLUDED.title END, department = CASE WHEN LENGTH(contacts.department::text) > 0 THEN contacts.department ELSE EXCLUDED.department END, phone = CASE WHEN LENGTH(contacts.phone::text) > 0 THEN contacts.phone ELSE EXCLUDED.phone END, mobile = CASE WHEN LENGTH(contacts.mobile::text) > 0 THEN contacts.mobile ELSE EXCLUDED.mobile END, external_source_id = CASE WHEN LENGTH(contacts.external_source_id::text) > 0 THEN contacts.external_source_id ELSE EXCLUDED.external_source_id END, updated_at = CASE WHEN LENGTH(contacts.updated_at::text) > 0 THEN contacts.updated_at ELSE EXCLUDED.updated_at END'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source 
+      on_conflict = 'ON CONFLICT (account_id, email) DO UPDATE SET first_name = CASE WHEN LENGTH(contacts.first_name::text) > 0 THEN contacts.first_name ELSE EXCLUDED.first_name END, last_name = CASE WHEN LENGTH(contacts.last_name::text) > 0 THEN contacts.last_name ELSE EXCLUDED.last_name END, title = CASE WHEN LENGTH(contacts.title::text) > 0 THEN contacts.title ELSE EXCLUDED.title END, department = CASE WHEN LENGTH(contacts.department::text) > 0 AND contacts.department IS NOT NULL THEN contacts.department ELSE EXCLUDED.department END, phone = CASE WHEN LENGTH(contacts.phone::text) > 0 THEN contacts.phone ELSE EXCLUDED.phone END, mobile = CASE WHEN LENGTH(contacts.mobile::text) > 0 AND contacts.mobile IS NOT NULL THEN contacts.mobile ELSE EXCLUDED.mobile END, external_source_id = CASE WHEN contacts.source IS NULL OR contacts.source <> \'Salesforce\' THEN contacts.external_source_id ELSE EXCLUDED.external_source_id END,
+        updated_at = CASE WHEN (LENGTH(contacts.first_name::text)=0 AND LENGTH(EXCLUDED.first_name::text) > 0)
+          OR (LENGTH(contacts.last_name::text)=0 AND LENGTH(EXCLUDED.last_name::text) > 0)
+          OR (LENGTH(contacts.title::text)=0 AND LENGTH(EXCLUDED.title::text) > 0)
+          OR ((LENGTH(contacts.department::text)=0 OR contacts.department IS NULL) AND LENGTH(EXCLUDED.department::text) > 0 AND EXCLUDED.department IS NOT NULL)
+          OR (LENGTH(contacts.phone::text)=0 AND LENGTH(EXCLUDED.phone::text) > 0)
+          OR ((LENGTH(contacts.mobile::text)=0 OR contacts.mobile IS NULL) AND LENGTH(EXCLUDED.mobile::text) > 0 AND EXCLUDED.mobile IS NOT NULL)
+          OR (contacts.source = \'Salesforce\') 
+        THEN EXCLUDED.updated_at ELSE contacts.updated_at END'  # Unused: background_info = EXCLUDED.background_info, source = EXCLUDED.source
       values = val.join(', ')
       # puts "And inserting values....  \"#{values}\""
 
@@ -217,35 +230,34 @@ class Contact < ActiveRecord::Base
   # Parameters: client - connection to Salesforce
   #             account_id - the CS account from which this exports contacts
   #             sfdc_account_id - id of SFDC account to which this exports contacts 
+  #             from_updatedat (optional) - the minimum updated_at date to begin export of Contacts, timestamp exclusive; default, export without no mimimum updated_at
+  #             to_updatedat (optional) - the maximum updated_at date to begin export of Contacts, timestamp inclusive; default, export without no maximum updated_at
   # Returns:   A hash that represents the execution status/result. Consists of:
-  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contacts to export); "ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
   #             detail - a list of all errors, or an empty list if no errors occurred. 
-  def self.export_cs_contacts(client, account_id, sfdc_account_id)
+  def self.export_cs_contacts(client, account_id, sfdc_account_id, from_updatedat=nil, to_updatedat=nil)
     result = { status: "SUCCESS", result: [], detail: [] }
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
-    Account.find(account_id).contacts.each do |c|
-      #puts "## Exporting CS contacts to sfdc_account_id = #{ sfdc_account_id } ..."
+    account_contacts = Account.find(account_id).contacts
+    account_contacts = account_contacts.where("updated_at > ?", from_updatedat) if from_updatedat.present?
+    account_contacts = account_contacts.where("updated_at <= ?", to_updatedat) if to_updatedat.present?
 
-      sObject_meta = { id: sfdc_account_id, type: "Account" }
-      sObject_fields = { FirstName: c.first_name, LastName: c.last_name, Email: c.email, Title: c.title, Department: c.department, Phone: c.phone, MobilePhone: c.mobile }
-      # Unused: LeadSource: c.source, Description: c.background_info
-      #puts "----> sObject_meta:\t #{sObject_meta}\n"
-      #puts "----> sObject_fields:\t #{sObject_fields}\n"
-      sObject_fields[:external_sfdc_id] = c.external_source_id if c.is_source_from_salesforce?
-      update_result = SalesforceService.update_salesforce(client: client, update_type: "contact", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+    account_contacts.each do |c|
+      update_result = c.export_cs_contact(client, sfdc_account_id)
 
       if update_result[:status] == "SUCCESS"
         puts "-> a SFDC Contact (#{c.last_name}, #{c.first_name}, #{c.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ update_result[:result] }'."
         # don't set result[:status] back to SUCCESS if export for another contact failed
+        c.update(external_source_id: update_result[:result]) if c.is_source_from_salesforce?
         result[:result] << update_result[:result]
         result[:detail] << update_result[:detail]  # may contain messages, even with SUCCESS
       else  # Salesforce query failure
-        # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
+        # puts "**** SFDC error **** #{ update_result[:result] } Details: #{ update_result[:detail] }."
         result[:status] = "ERROR"
         result[:result] << update_result[:result]
-        result[:detail] << update_result[:detail] + " sObject_fields=#{ sObject_fields }"
+        result[:detail] << update_result[:detail]
       end
     end # End: Account.find(account_id).contacts.each do
 
@@ -256,7 +268,7 @@ class Contact < ActiveRecord::Base
   # Parameters: client - connection to Salesforce
   #             sfdc_account_id - id of SFDC account to which this exports/update the contact 
   # Returns:   A hash that represents the execution status/result. Consists of:
-  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contact to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             status - "SUCCESS" if operation is successful with no errors (contact exported or no contact to export); "ERROR" if any error occurred during the operation (including partial successes)
   #             result - the sObject SFDC id's that were successfully created in SFDC, or nil if none were created.
   #             detail - a list of all errors, or an empty list if no errors occurred. 
   def export_cs_contact(client, sfdc_account_id)
@@ -269,15 +281,13 @@ class Contact < ActiveRecord::Base
     #puts "----> sObject_meta:\t #{sObject_meta}\n"
     #puts "----> sObject_fields:\t #{sObject_fields}\n"
     sObject_fields[:external_sfdc_id] = self.external_source_id if self.is_source_from_salesforce?
-    update_result = SalesforceService.update_salesforce(client: client, update_type: "contact", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
+    result = SalesforceService.update_salesforce(client: client, update_type: "contact", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
-    if update_result[:status] == "SUCCESS"
-      puts "-> a SFDC Contact (#{self.last_name}, #{self.first_name}, #{self.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ update_result[:result] }'."
-      result = { status: "SUCCESS", result: update_result[:result], detail: update_result[:detail] }
-    else  # Salesforce query failure
-      # puts "** #{ update_result[:result] } Details: #{ update_result[:detail] }."
-      result = { status: "ERROR", result: update_result[:result], detail: update_result[:detail] + " sObject_fields=#{ sObject_fields }" }
-    end
+    # if result[:status] == "SUCCESS"
+    #   puts "-> a SFDC Contact (#{self.last_name}, #{self.first_name}, #{self.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ result[:result] }'."
+    # else  # Salesforce query failure
+    #   puts "** #{ result[:result] } Details: #{ result[:detail] }."
+    # end
 
     result
   end

@@ -96,41 +96,51 @@ class SettingsController < ApplicationController
 	# Map CS Accounts with Salesforce accounts: "One CS Account can link to many Salesforce Accounts"
 	def salesforce_accounts
 		if current_user.admin?
+			sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+			if sfdc_client.blank?
+				@salesforce_connection_error = true
+				return
+			end
+
 			@accounts = Account.eager_load(:projects, :user).where("accounts.organization_id = ?", current_user.organization_id).order("upper(accounts.name)")
 
 			@salesforce_link_accounts = SalesforceAccount.eager_load(:account, :salesforce_opportunities).where(contextsmith_organization_id: current_user.organization_id).is_linked.order("upper(accounts.name)")
 		end
-		@linked_to_sfdc = @salesforce_link_accounts.present?
+		# @linked_to_sfdc = @salesforce_link_accounts.present?
 	end
 
 	# Map CS Opportunity with Salesforce Opportunities: "One CS Opportunity can link to many Salesforce Opportunities"
 	def salesforce_opportunities
 		if current_user.admin?
+			sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+			if sfdc_client.blank?
+				@salesforce_connection_error = true
+				return
+			end
+
 			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.sort_by { |s| s.name.upcase } # all active opportunities because "admin" role can see everything
-			@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}")
+			@salesforce_link_opps = SalesforceOpportunity.select('salesforce_opportunities.*, salesforce_accounts.salesforce_account_name').joins('JOIN salesforce_accounts on salesforce_accounts.salesforce_account_id = salesforce_opportunities.salesforce_account_id').where("salesforce_accounts.contextsmith_organization_id=? AND contextsmith_project_id IS NOT NULL", "#{current_user.organization_id}").order("upper(salesforce_opportunities.name)")
 		end
 	end
 
 	def salesforce_activities
 		if current_user.admin?
+			sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+			if sfdc_client.blank?
+				@salesforce_connection_error = true
+				return
+			end
+
 			@CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = Activity::CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX
 			@opportunities = Project.visible_to_admin(current_user.organization_id).is_active.is_confirmed.includes(:salesforce_opportunity, :account).group("salesforce_opportunities.id, accounts.id").sort_by { |s| s.name.upcase }  # all active opportunities because "admin" role can see everything
 
-			# Load previous queries if it was saved
-			custom_config = current_user.organization.custom_configurations.where("organization_id = '#{current_user.organization_id}' AND config_type LIKE '/settings/salesforce_activities#%'")
+			# Load previous queries if it was saved or create a new empty configuration record
+			custom_config = current_user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities], user_id: nil) do |config|
+				config.config_value = {"entity_predicate": "", "activityhistory_predicate": "" }
+			end
 
-			@entity_predicate = custom_config.where(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activity_entity_predicate])
-			if @entity_predicate.empty?
-				@entity_predicate = current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activity_entity_predicate], config_value: "") 
-			else
-				@entity_predicate = @entity_predicate.first
-			end
-			@activityhistory_predicate = custom_config.where(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activityhistory_predicate])
-			if @activityhistory_predicate.empty?
-				@activityhistory_predicate = current_user.organization.custom_configurations.create(config_type: CustomConfiguration::CONFIG_TYPE[:Settings_salesforce_activities_activityhistory_predicate], config_value: "") 
-			else
-				@activityhistory_predicate = @activityhistory_predicate.first
-			end
+			@entity_predicate = Hashie::Mash.new({"id"=>custom_config.id, "config_value"=>custom_config.config_value['entity_predicate']})
+			@activityhistory_predicate = Hashie::Mash.new({"id"=>custom_config.id, "config_value"=>custom_config.config_value['activityhistory_predicate']})
 		end
 	end
 

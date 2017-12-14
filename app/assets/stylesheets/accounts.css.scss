@@ -1,3 +1,12 @@
 // Place all the styles related to the Accounts controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+#multiselect-filter-form .chosen-container {
+  vertical-align: top
+}
+
+// "Showing x to y of z entries (filtered from t total entries)" indicator in accounts#index table footer
+#accounts-table_info {
+  white-space: inherit
+}

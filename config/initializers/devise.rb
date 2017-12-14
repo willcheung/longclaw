@@ -242,11 +242,14 @@ Devise.setup do |config|
   OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE if Rails.env.development?
   
   google_oauth2_options = {
-    access_type: "offline", 
-    prompt: "consent",
-    scope: ['https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/calendar.readonly',
-            'https://www.googleapis.com/auth/plus.me',
+    ### access_type is already "offline" by default
+    # access_type: "offline",
+    ### no value for prompt means that consent page is only shown to user the first time they authorize a given set of scopes
+    # prompt: "consent",
+    ### scopes starting with 'https://www.googleapis.com/auth/' do not need that prefix specified
+    scope: ['gmail.readonly',
+            'calendar.readonly',
+            'plus.me',
             'email',
             'profile'],
     skip_jwt: true,
@@ -254,8 +257,10 @@ Devise.setup do |config|
   }
 
   google_oauth2_basic_options = {
-    access_type: "offline",
-    prompt: "consent",
+    ### access_type is already "offline" by default
+    # access_type: "offline",
+    ### never need to show consent page for default scopes ('email' and 'profile' are default scopes)
+    # prompt: "consent",
     scope: ['profile',
             'email'],
     skip_jwt: true,
@@ -267,6 +272,7 @@ Devise.setup do |config|
   config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
   config.omniauth :microsoft_v2_auth, ENV['AZURE_APPLICATION_CLIENT_ID'], ENV['AZURE_APPLICATION_CLIENT_SECRET'],
                   :scope => "offline_access openid email profile User.Read Calendars.Read Contacts.Read Mail.Read"
+                  #:scope => "offline_access openid email profile User.Read Calendars.Read Contacts.Read Mail.Read"
 
   config.omniauth :salesforce, ENV['salesforce_client_id'], ENV['salesforce_client_secret']
   config.omniauth :salesforce_sandbox, ENV['salesforce_sandbox_client_id'], ENV['salesforce_sandbox_client_secret']

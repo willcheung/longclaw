@@ -66,6 +66,11 @@ class AccountsController < ApplicationController
         format.html { redirect_to @account, notice: 'Account was successfully updated.' }
         format.json { respond_with_bip(@account) }
         format.js { render action: 'show', status: :created, location: @account }
+
+        if @sfdc_client
+          update_result = SalesforceAccount.update_all_salesforce(client: @sfdc_client, salesforce_account: @account.salesforce_accounts.first, fields: account_params, current_user: current_user) 
+          puts "*** SFDC error: Error in AccountsController.update during update of linked SFDC account. Detail: #{update_result[:detail]} ***" if update_result[:status] == "ERROR" # TODO: Warn the user SFDC acct was not updated!
+        end
       else
         format.html { render action: 'edit' }
         format.json { render json: @account.errors, status: :unprocessable_entity }
@@ -111,28 +116,37 @@ class AccountsController < ApplicationController
   private
 
   def index_html
+    # puts "\n\n\t************ index_html *************\n"
+    # puts "\tparams[:account_type]: #{params[:account_type]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\n\n" 
+
     get_custom_fields_and_lists
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     @account = Account.new
   end
 
   def index_json
+    # puts "\n\n\t************ index_json *************\n"
+    # puts "\tparams[:account_type]: #{params[:account_type]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\n\n" 
+
     @CONTACTS_LIST_LIMIT = 8 # Max number of Contacts to show in mouse-over tooltip
     @owners = User.registered.where(organization_id: current_user.organization_id).ordered_by_first_name
     @accounts = Account.includes(:projects, :user, :contacts).where(organization_id: current_user.organization_id)
     total_records = @accounts.count
 
     # Incrementally apply filters
-    if params[:owner].present? && params[:owner] != "0"
-      if params[:owner] == "none"
-        @accounts = @accounts.where(owner_id: nil)
-      else @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-        @accounts = @accounts.where(owner_id: params[:owner])
+    if params[:owner].present?
+      if (!params[:owner].include? "None")
+        @accounts = @accounts.where(owner_id: params[:owner])  if @owners.any? { |o| params[:owner].include? o.id }  #check for a valid user_id before using it
+      else
+        @accounts = @accounts.where("\"accounts\".owner_id IS NULL OR \"accounts\".owner_id IN (?)", params[:owner].select{|o| o != "None"})
       end
     end
-    if params[:account_type].present? && params[:account_type] != "none"
-      @accounts = @accounts.where(category: params[:account_type])
-    end
+
+    @accounts = @accounts.where(category: params[:account_type]) if params[:account_type].present?
 
     # searching
     @accounts = @accounts.where('LOWER(name) LIKE LOWER(:search) OR LOWER(category) LIKE LOWER(:search) OR LOWER(website) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
@@ -179,6 +193,13 @@ class AccountsController < ApplicationController
     def set_account
       begin
         @account = Account.visible_to(current_user).find(params[:id])
+        if (@account.present? && @account.salesforce_accounts.first.present?)
+          if SalesforceController.get_sfdc_oauthuser(user: current_user).present? # "connected" to SFDC
+            @sfdc_client = SalesforceService.connect_salesforce(user: current_user)
+          else
+            # puts "No SFDC connection. Linked Salesforce account won't be updated!" # TODO: Warn the user SFDC acct was not updated!
+          end
+        end
       rescue ActiveRecord::RecordNotFound
         redirect_to root_url, :flash => { :error => "Account not found or is private." }
       end
@@ -198,16 +219,12 @@ class AccountsController < ApplicationController
       if params[:owner] 
         cookies[:account_owner] = {value: params[:owner]}
       else
-        if cookies[:account_owner]
-          params[:owner] = cookies[:account_owner]
-        end
+        params[:owner] = cookies[:account_owner].present? ? cookies[:account_owner].split("&") : []
       end
       if params[:account_type] 
         cookies[:account_type] = {value: params[:account_type]}
       else
-        if cookies[:account_type]
-          params[:account_type] = cookies[:account_type]
-        end
+        params[:account_type] = cookies[:account_type].present? ? cookies[:account_type].split("&") : []
       end
     end
 end

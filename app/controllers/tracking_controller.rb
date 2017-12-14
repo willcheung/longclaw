@@ -24,6 +24,18 @@ class TrackingController < ApplicationController
 
   end
 
+  def list
+    page = params[:page].present? ? params[:page] : 1
+
+    @trackings = TrackingRequest.includes(:tracking_events)
+                     .where(user_id: current_user.id)
+                     .page(page)
+                     .order('tracking_events.date DESC, sent_at DESC')
+    json = {requests: @trackings.as_json(include: { tracking_events: { methods: :client }}),
+            settings: get_tracking_setting }
+    render json: json
+  end
+
   def create
     data = Hashie::Mash.new(JSON.parse(request.body.read))
     if current_user.email == data.user_email
@@ -67,7 +79,7 @@ class TrackingController < ApplicationController
           place_name: location,
           domain: domain,
           event_type: 'email-view',
-          date: event_date
+          date: DateTime.current # changing this to a newer timestamp as this might be 30 seconds later than event_date and in the meantime users could have changed their 'last seen' timestamp
       )
     end
     expires_now
@@ -92,6 +104,16 @@ class TrackingController < ApplicationController
     ts = get_tracking_setting
     event_count = {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
     render json: event_count
+  end
+
+  def new_event_objects
+    ts = get_tracking_setting
+    tes = TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id})
+    new_trs = TrackingRequest.where(sent_at: ts.last_seen..Time.now, user_id: current_user.id).order("sent_at ASC")
+    render json: { new_events: tes.as_json({ methods: :client }),
+                   new_requests: new_trs.as_json,
+                   settings: get_tracking_setting
+    }
   end
 
   def seen

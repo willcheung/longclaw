@@ -29,13 +29,17 @@ class SalesforceService
     begin
       puts "SalesforceService.connect_salesforce(): Refreshing access token. Client established using Restforce gem.  Accessing user_info... #{ client.user_info }"
     rescue => e
-      puts "*** SalesforceService error: Salesforce connection error!  Details: #{ e.to_s } ***"
+      if e.to_s == "invalid_grant: expired access/refresh token"
+        puts "*** Informational message: SalesforceService cannot establish SFDC connection because access/refresh token for #{(user.email if user.present?) || organization.name} has expired! ***"
+      else
+        puts "*** SalesforceService error: Salesforce connection error has been detected.  Details: #{ e.to_s } ***"
+      end
       return nil
     end
     begin
       puts "SalesforceService.connect_salesforce(): Daily SFDC API Requests Max/Limit=#{ client.limits["DailyApiRequests"][:Max] },  Requests remaining=#{ client.limits["DailyApiRequests"][:Remaining] }"
     rescue => e
-      puts "Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established!" if client.present?
+      puts "*** Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established! ***" if client.present?
     end
 
     client
@@ -112,16 +116,33 @@ class SalesforceService
   def self.update_salesforce(params)
     client = params[:client]
     result = nil
-
     # return { status: "ERROR", result: "Salesforce error", detail: "Just a simulated Salesforce error in SalesforceService.update_salesforce()" } # simulates a Salesforce query error
 
+    # puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
     if (!client.nil?)
       case (params[:update_type])
       when "account"
         begin
-          # puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
-          update_result = client.update!('Account', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name])
-
+          acct_id = params[:sObject_meta][:id]
+          update_result = nil
+          params[:sObject_fields].each do |sfdc_field, new_val| 
+            # TODO: Temporary hack until figure out how to convert string into parameter; which means, currently, we cannot export to any custom SFDC fields!
+            case (sfdc_field)
+            when "Name"
+              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Name: new_val)
+            # TODO: Fix 'JSON_PARSER_ERROR: Cannot deserialize instance of BillingAddress from VALUE_STRING value' error on export!
+            #when "BillingAddress"
+              #update_result = client.update!('Account', Id: params[:sObject_meta][:id], BillingAddress: new_val)
+            when "Description"
+              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Description: new_val)
+            when "Phone"
+              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Phone: new_val)
+            when "Website"
+              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Website: new_val)
+            else
+              puts "Cannot update field #{sfdc_field} -- No support for custom fields yet! :("
+            end
+          end
           result = { status: "SUCCESS", result: update_result, detail: "" }
         rescue => e
           detail = "Update Salesforce Account error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
@@ -130,9 +151,29 @@ class SalesforceService
         end
       when "opportunity"
         begin
-          puts "\n\nparams[:sObject_fields]: #{params[:sObject_fields]}"
-          update_result = client.update!('Opportunity', Id: params[:sObject_meta][:id], Name: params[:sObject_fields][:name], CloseDate: params[:sObject_fields][:close_date].present? ? (params[:sObject_fields][:close_date].strftime("%Y-%m-%d")) : nil, Probability: params[:sObject_fields][:probability], Amount: params[:sObject_fields][:amount], StageName: params[:sObject_fields][:stage_name], ForecastCategoryName: params[:sObject_fields][:forecast_category_name])
-          # params[:sObject_fields] = { name: ... , stage_name: ... , close_date: ... , probability: ... , amount: ... , forecast_category_name: ...  }
+          opp_id = params[:sObject_meta][:id]
+          update_result = nil
+          params[:sObject_fields].each do |sfdc_field, new_val|
+            # TODO: Temporary hack until figure out how to convert string into parameter; which means, currently, we cannot export to any custom SFDC fields!
+            case (sfdc_field)
+            when "Name"
+              update_result = client.update!('Opportunity', Id: opp_id, Name: new_val)
+            when "CloseDate"
+              update_result = client.update!('Opportunity', Id: opp_id, CloseDate: new_val.strftime("%Y-%m-%d"))
+            when "Probability"
+              update_result = client.update!('Opportunity', Id: opp_id, Probability: new_val)
+            when "Amount"
+              update_result = client.update!('Opportunity', Id: opp_id, Amount: new_val) 
+            when "StageName"
+              update_result = client.update!('Opportunity', Id: opp_id, StageName: new_val) 
+            when "ForecastCategoryName"  
+              update_result = client.update!('Opportunity', Id: opp_id, ForecastCategoryName: new_val) 
+            else
+              puts "Cannot update field #{sfdc_field} -- No support for custom fields yet! :("
+            end
+          end
+
+          # params[:sObject_fields] = { name: ... , stage_name: ... , close_date: ... , probability: ... , amount: ... , forecast_category_name: ...  } ????
 
           result = { status: "SUCCESS", result: update_result, detail: "" }
         rescue => e
@@ -197,7 +238,7 @@ class SalesforceService
 
   private
 
-  # Finds a Contact in SFDC Account that matches an e-mail address, or FirstName/LastName if no e-mail is specified or cannot be found.  If found, performs an update on the SFDC Contact.  If multiple Contacts are found, picks only one (first one alphabetically by LastName, then FirstName). If not found, a new SFDC Contact is created/inserted.  Returns nil if there is an error, or the Contact's SFDC/sObject id if successful.
+  # Finds a Contact in SFDC Account that matches an e-mail address, or FirstName/LastName if no e-mail is specified or cannot be found.  If found, performs an update on the SFDC Contact.  If multiple Contacts are found, picks only one (first one alphabetically by LastName, then FirstName). If not found, a new SFDC Contact is created/inserted.  While exporting a non-existing (new) CS contact to SFDC, if last name doesn't exist for the contact, we will set the contact's e-mail address as the last name.  Returns nil if there is an error, or the Contact's SFDC/sObject id if successful.
   # Parameters:   client - connection to Salesforce
   #              sfdc_account_id - the SFDC/sObject id of the Salesforce Account to which to upsert the Contact
   #               contact  - a hash that contains Contact :Email, :FirstName, and :LastName (all strings) which is used to determine the contact to upsert
@@ -205,9 +246,10 @@ class SalesforceService
   # Returns:    A hash that represents the execution status/result of the upsert. Consists of:
   #               status - "SUCCESS" if successful, or "ERROR" otherwise
   #               result - if status == "SUCCESS", contains the sObject Id of Contact created; otherwise, contains the title of the error
-  #               detail - if status == "ERROR", contains the details of the error; if a duplicate contact was detected during create SFDC Contact, a warning is here warning user that Contacts may not be properly copied because a "Contact Duplicate Rule" in SFDC settings might be preventing us from creating new SFDC Contacts. This will contain a message stating if the retry was successful or failed.
+  #               detail - if status == "ERROR", contains the details of the error; if a duplicate contact was detected during create SFDC Contact, a warning is here warning user that Contacts may not be properly copied because a "Contact Duplicate Rule" in SFDC settings might be preventing us from creating new SFDC Contacts. This will contain a message stating if the retry was successful or failed, and if we retried the upsert (i.e., using only the Contact's Email field.)
 
   # TODO: Use SFDC duplicates warning to tell user "If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \”Contact Duplicate Rules\” in Salesforce Setup."
+  # TODO: Possible optimization is retain a temporary list of all contacts in an account, per request and to be discarded after the request, for use of determining if a contact currently exists (and what the LastModifiedDate date is for this contact) to avoid individual querying to determine the same. 
   def self.upsert_sfdc_contact(client: , sfdc_account_id: , contact: , params: )
     result = nil
 
@@ -226,8 +268,8 @@ class SalesforceService
     if query_result[:result].size == 0 && (contact[:FirstName].strip.present? || contact[:LastName].strip.present?)
       puts "*> Cannot match Contact by E-mail, trying to match by First/Last name instead!"
       contact_name_predicate = []
-      contact_name_predicate << "FirstName = '#{contact[:FirstName].strip}'" if contact[:FirstName].strip.present?
-      contact_name_predicate << "LastName = '#{contact[:LastName].strip}'" if contact[:LastName].strip.present?
+      contact_name_predicate << "FirstName='#{ return_escaped_SFDC_field_val(contact[:FirstName].strip) }'" if contact[:FirstName].strip.present?
+      contact_name_predicate << "LastName='#{ return_escaped_SFDC_field_val(contact[:LastName].strip) }'" if contact[:LastName].strip.present?
 
       query_statement = "SELECT Id, AccountId, FirstName, LastName, Email, Title, Department, Phone, MobilePhone FROM Contact WHERE AccountId='#{sfdc_account_id}' AND (#{ contact_name_predicate.join(" AND ") }) ORDER BY LastName, FirstName"  # Unused: Description    
       # puts "query_statement: #{ query_statement }"
@@ -242,7 +284,7 @@ class SalesforceService
 
     unless query_result[:result].size == 0   
       c = query_result[:result].first  # pick one matched Contact, in case of multiple matches
-      # puts "--> Matched the following SFDC contact:  Email=#{c[:Email]} FirstName=#{c[:FirstName]} LastName=#{c[:LastName]}"
+      # puts "==> Matched the following SFDC contact:  Email=#{c[:Email]} FirstName=#{c[:FirstName]} LastName=#{c[:LastName]}"
       upsert_result = update_sfdc_contact(client: client, sfdc_contact_id: c[:Id], sfdc_account_id: sfdc_account_id, params: params)
       if upsert_result[:status] == "SUCCESS"
         result = { status: "SUCCESS", result: upsert_result[:result], detail: "" }
@@ -251,16 +293,16 @@ class SalesforceService
       end
     else
       begin
-        puts "-> Contact #{ contact[:Email] } in SFDC Account '#{ sfdc_account_id }'' not found. Creating a new Contact..."
-        upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : '(unknown)', Email: contact[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
+        puts "--> Contact #{ contact[:Email] } in SFDC Account '#{ sfdc_account_id }' not found. Creating a new Contact..."
+        upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : contact[:Email], Email: contact[:Email], Title: params[:Title], Department: params[:Department], Phone: params[:Phone], MobilePhone: params[:MobilePhone])  # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource], Description: params[:Description]
         # upsert_result is the Contact's SFDC sObject Id
         result = { status: "SUCCESS", result: upsert_result, detail: "" }
       rescue => e
         if (e.to_s[0...19]) == "DUPLICATES_DETECTED" 
-          detail = "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only minimal Contact fields (e.g., FirstName, LastName, and Email) ... "
+          detail = "Export Contacts to Salesforce error -- DUPLICATE contact detected -- while creating SFDC Contact! If Contacts are incorrectly flagged as duplicates, you may need your Salesforce Administrator to modify/deactivate your \"Contact Duplicate Rules\" in Salesforce Setup.  Attempting to create Contact with only the minimal fields: Email ... "
           begin
             # Attempt to create Contact with only minimal Contact fields
-            upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: params[:FirstName], LastName: params[:LastName].present? ? params[:LastName] : '(unknown)', Email: contact[:Email]) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
+            upsert_result = client.create!('Contact', AccountId: sfdc_account_id, FirstName: '', LastName: contact[:Email], Email: contact[:Email]) # Unused: LeadSource: params[:LeadSource].blank? ? "ContextSmith" : params[:LeadSource]
             detail += "Contact successfully created."
             puts "*** SalesforceService warning: #{ detail }"
             result = { status: "SUCCESS", result: upsert_result, detail: detail }
@@ -303,6 +345,7 @@ class SalesforceService
       # update_result = client.update!('Contact', Id: sfdc_contact_id, xxxxxx: params[:xxxxxx]) if params[:xxxxxx].present?
       result = { status: "SUCCESS", result: sfdc_contact_id, detail: "" }
     rescue => e
+      # puts "\n\n\n\t\t<><> We're now in the 'error recovery' update_sfdc_contact path: re-try using upsert_sfdc_contact! <><>\n\n\n"
       detail = ""
       if (e.to_s[0...9]) == "NOT_FOUND" || (e.to_s[0...17]) == "ENTITY_IS_DELETED" || (e.to_s[0...27]) == "INVALID_CROSS_REFERENCE_KEY" # SFDC Contact was deleted on Salesforce (invalidating the Id saved in app) or the external SFDC Id of Contact is corrupted/invalid
       #(e.to_s[0...25]) == "FIELD_INTEGRITY_EXCEPTION"   # Is this obsolete??
@@ -330,7 +373,7 @@ class SalesforceService
     result
   end
 
-  # Changes value 'val' to a valid value to be used in a SFDC field. e.g., escapes single quotes
+  # Changes 'val' to a valid value to be used in a SFDC SOQL query. e.g., escapes single quotes
   def self.return_escaped_SFDC_field_val(val)
     if val.present?
       val.gsub("'", "\\\\'") 

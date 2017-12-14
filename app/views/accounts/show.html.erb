@@ -81,7 +81,6 @@
                                                             <th><%= Contact::MAPPABLE_FIELDS_META["last_name"] %></th>
                                                             <th><%= Contact::MAPPABLE_FIELDS_META["title"] %></th>
                                                             <th><%= Contact::MAPPABLE_FIELDS_META["department"] %></th>
-                                                            <th><%= Contact::MAPPABLE_FIELDS_META["buyer_role"] %></th>
                                                             <th></th>
                                                             <th><%= Contact::MAPPABLE_FIELDS_META["email"] %></th>
                                                             <th><%= Contact::MAPPABLE_FIELDS_META["phone"] %></th>
@@ -96,7 +95,6 @@
                                                             <td class="editable-field"><%= best_in_place contact, :last_name, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-last_name-activator" %><i id="contact-<%= contact.id %>-last_name-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
                                                             <td class="editable-field"><%= best_in_place contact, :title, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-title-activator" %><i id="contact-<%= contact.id %>-title-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
                                                             <td class="editable-field"><%= best_in_place contact, :department, :as => 'input', :place_holder => '(none)', :activator => "#contact-#{contact.id}-dept-activator" %><i id="contact-<%= contact.id %>-dept-activator" class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
-                                                            <td class="editable-field"><%= best_in_place contact, :buyer_role, :as => :select, :collection => Contact::ROLE, :class => 'btn btn-outline btn-xs fa-caret-down' %></td>
                                                             <td class="contact-type">
                                                             <% if contact.is_source_from_salesforce? %>
                                                                 <img id="sfdc-icon" style="width:15px" src="/assets/images/salesforce.png" style="width:0px;" title="Source: Salesforce"/>

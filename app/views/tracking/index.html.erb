@@ -120,6 +120,8 @@
     </div>
   </div>
   <script>
+      let searchParams = new URLSearchParams(location.search.slice(1));
+
       if (Notification.permission === 'default') {
           $('.tr-enable').toggleClass('hidden');
       }

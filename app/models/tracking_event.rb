@@ -14,6 +14,7 @@
 #
 # Indexes
 #
+#  index_tracking_events_on_date         (date)
 #  index_tracking_events_on_tracking_id  (tracking_id)
 #
 
@@ -26,5 +27,10 @@ class TrackingEvent < ActiveRecord::Base
 
   def device
     DeviceDetector.new(self.user_agent)
+  end
+
+  def client
+    dd = DeviceDetector.new(self.user_agent)
+    { device_name: dd.device_name , device_type: dd.device_type, name: dd.name, os_name: dd.os_name }
   end
 end

@@ -16,19 +16,27 @@ class ReportsController < ApplicationController
 
   # for loading metrics data (left panel) on Accounts Opportunities Dashboard
   def ad_sort_data
+    # puts "\n\n\t************ ad_sort_data *************\n"
+    # puts "\tparams[:sort]: #{params[:sort]}"
+    # puts "\tparams[:owner]: #{params[:owner]}"
+    # puts "\tparams[:close_date]: #{params[:close_date]}"
+    # puts "\tparams[:stage]: #{params[:stage]}"
+    # puts "\n\n"
+
     @metric = params[:sort]
 
     projects = Project.visible_to(current_user.organization_id, current_user.id)
+
+    # Incrementally apply any filters
     params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     users_emails = current_user.organization.users.pluck(:email)
 
-    # Incrementally apply any filters
     if params[:owner].present?
-      if params["owner"] == "none"
-        projects = projects.where(owner_id: nil)
-      elsif @owners.any? { |o| o.id == params[:owner] }  #check for a valid user_id before using it
-        projects = projects.where(owner_id: params[:owner]);
+      if (!params[:owner].include? "None")
+        projects = projects.where(owner_id: params[:owner])
+      else
+        projects = projects.where("\"projects\".owner_id IS NULL OR \"projects\".owner_id IN (?)", params[:owner].select{|o| o != "None"})
       end
     end
 
@@ -154,24 +162,33 @@ class ReportsController < ApplicationController
 
   # for loading metrics data (left panel) on Team Dashboard
   def td_sort_data
+    # puts "\n\n\t************ td_sort_data *************\n"
+    # puts "\tparams[:sort]: #{params[:sort]}"
+    # puts "\tparams[:metric]: #{params[:metric]}"
+    # puts "\tparams[:team]: #{params[:team]}"
+    # puts "\tparams[:title]: #{params[:title]}"
+    # puts "\tparams[:close_date]: #{params[:close_date]}"
+    # puts "\tparams[:stage]: #{params[:stage]}"
+    # puts "\n\n"
+
     # NOTE: `sort` and `sort_by` are keywords for Hash, would have used these as keys for @dashboard_data but can't due to this conflict!
     @dashboard_data = Hashie::Mash.new(sorted_by: { type: params[:sort] }, metric: { type: params[:metric] })
     users = current_user.organization.users.registered.onboarded.non_alias
 
     # Incrementally apply filters
     if params[:team].present?
-      if params[:team] == "none"
-        users = users.where(department: nil)
-      else
+      if (!params[:team].include? "(None)")
         users = users.where(department: params[:team])
+      else
+        users = users.where("\"users\".department IS NULL OR \"users\".department IN (?)", params[:team].select{|o| o != "(None)"})
       end
     end
 
     if params[:title].present?
-      if params[:title] == "none"
-        users = users.where(title: nil)
-      else
+      if (!params[:title].include? "(None)")
         users = users.where(title: params[:title])
+      else
+        users = users.where("\"users\".title IS NULL OR \"users\".title IN (?)", params[:title].select{|o| o != "(None)"})
       end
     end
 

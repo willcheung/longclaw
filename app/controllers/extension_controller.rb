@@ -373,6 +373,7 @@ class ExtensionController < ApplicationController
     end
     @account ||= contacts.first.account
     @project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
+    @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
   # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact emails; returns nil if one cannot be determined.

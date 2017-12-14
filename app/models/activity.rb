@@ -1,3 +1,37 @@
+# == Schema Information
+#
+# Table name: activities
+#
+#  id                   :integer          not null, primary key
+#  category             :string           not null
+#  title                :string           not null
+#  note                 :text             default(""), not null
+#  is_public            :boolean          default(TRUE), not null
+#  backend_id           :string
+#  last_sent_date       :datetime
+#  last_sent_date_epoch :string
+#  from                 :jsonb            default([]), not null
+#  to                   :jsonb            default([]), not null
+#  cc                   :jsonb            default([]), not null
+#  email_messages       :jsonb            default([]), not null
+#  project_id           :uuid             not null
+#  posted_by            :uuid             not null
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
+#  is_pinned            :boolean          default(FALSE)
+#  pinned_by            :uuid
+#  pinned_at            :datetime
+#  rag_score            :integer
+#
+# Indexes
+#
+#  index_activities_on_category_and_backend_id_and_project_id  (category,backend_id,project_id) UNIQUE
+#  index_activities_on_category_and_project_id_and_backend_id  (category,project_id,backend_id) UNIQUE
+#  index_activities_on_email_messages                          (email_messages)
+#  index_activities_on_last_sent_date                          (last_sent_date)
+#  index_activities_on_project_id_and_category_and_backend_id  (project_id,category,backend_id) UNIQUE
+#
+
  # == Schema Information
 #
 # Table name: activities
@@ -201,42 +235,40 @@ class Activity < ActiveRecord::Base
     return events
   end
 
-  # Copies/imports Salesforce activities (ActivityHistory) in the specified SFDC Account or Opportunity into the specified CS opportunity (project).  Does not import previously-exported CS data residing on SFDC.
+  # Imports Salesforce activities (ActivityHistory) in the specified SFDC Account or Opportunity into the specified CS opportunity (project).  Does not import previously-exported CS data residing on SFDC. If a SFDC activity has no ActivityDate, we use LastModifiedDate for the CS Activity last_sent_date instead.
   # Parameters:   client - a valid SFDC connection
   #               project - the CS opportunity into which to load the SFDC activity
   #               sfdc_id - the id of the SFDC Account/Opportunity from which to load the activity
   #               type - the SFDC entity level ("Account" or "Opportunity") from which to load activities
-  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin import of SFDC Activities, timestamp exclusive; default, import with no mimimum LastModifiedDate
+  #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end import of SFDC Activities, timestamp inclusive; default, import with no maximum LastModifiedDate
+  #               filter_predicates_h (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
   #               limit (optional) - the max number of activity records to process
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - string "SUCCESS" if successful, or "ERROR" otherwise
   #             result - if status == "SUCCESS", contains the result of the operation; otherwise, contains the title of the error
   #             detail - Contains any error or informational/warning messages.
-  def self.load_salesforce_activities(client, project, sfdc_id, type="Account", filter_predicates=nil, limit=200)
+  def self.load_salesforce_activities(client: , project: , sfdc_id: , type: , from_lastmodifieddate: nil, to_lastmodifieddate: nil, filter_predicates_h: nil, limit: nil)
     val = []
     result = nil
 
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
-    if filter_predicates["entity"] == ""
+    if filter_predicates_h.blank? || filter_predicates_h["entity"] == ""
       entity_predicate = ""
     else
-      entity_predicate = "AND (" + filter_predicates["entity"] + ")"
+      entity_predicate = "AND (" + filter_predicates_h["entity"] + ")"
     end
-    if filter_predicates["activityhistory"] == ""
+    if filter_predicates_h.blank? || filter_predicates_h["activityhistory"] == ""
       activityhistory_predicate = ""
     else
-      activityhistory_predicate = "AND (" + filter_predicates["activityhistory"] + ")"
+      activityhistory_predicate = "AND (" + filter_predicates_h["activityhistory"] + ")"
     end
 
     # Note: we avoid importing exported CS data residing on SFDC
-    if type == "Account"
-      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{activityhistory_predicate} limit #{limit}) FROM Account WHERE Id='#{sfdc_id}' #{entity_predicate}"  
-    elsif type == "Opportunity"
-      query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{activityhistory_predicate} limit #{limit}) FROM Opportunity WHERE Id='#{sfdc_id}' #{entity_predicate}"
-    end
+    query_statement = "SELECT Name, (SELECT Id, ActivityDate, ActivityType, ActivitySubtype, Owner.Name, Owner.Email, Subject, Description, Status, LastModifiedDate FROM ActivityHistories WHERE (NOT(ActivitySubType = 'Task' AND (#{ get_CS_export_prefix_SOQL_predicate_string }))) #{ 'AND LastModifiedDate > ' + from_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') if from_lastmodifieddate.present? } #{ 'AND LastModifiedDate <= ' + to_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') if to_lastmodifieddate.present? } #{activityhistory_predicate} #{ 'LIMIT ' + limit.to_s if limit.present? }) FROM #{type} WHERE Id='#{sfdc_id}' #{entity_predicate}"  
     
-    #puts "query_statement: #{ query_statement }"
+    # puts "\n\t\t load_salesforce_activities: query_statement: #{ query_statement }"
     query_result = SalesforceService.query_salesforce(client, query_statement)
 
     # puts "\t\t ***** query_result= #{query_result} nil?=#{query_result.nil?}"
@@ -248,7 +280,10 @@ class Activity < ActiveRecord::Base
             if !a.second.nil? # if any ActivityHistory
               a.second.each do |c|
                 owner = { "address": Activity.sanitize(c.Owner.Email)[1, c.Owner.Email.length], "personal": Activity.sanitize(c.Owner.Name)[1, c.Owner.Name.length] }
-                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                # val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', 
+                         COALESCE(to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD'), '#{c.LastModifiedDate}'), 
+                         COALESCE(EXTRACT(EPOCH FROM to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD')), '#{DateTime.parse(c.LastModifiedDate).to_i}'),
                          '[#{owner.to_json}]',
                          '[]',
                          '[]',
@@ -288,17 +323,19 @@ class Activity < ActiveRecord::Base
     result
   end
 
-  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory).
+  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory on Salesfroce).
   # Parameters:   client - SFDC connection
-  #               type - SFDC entity type: 'Account' or 'Opportunity'
-  #               from_date (optional) - the start date of a date range (e.g., "2018-01-01")
-  #               to_date (optional) - the end date of a date range (e.g., "2018-01-01")
+  #               sObjectId (optional) - the SFDC Id that identifies the entity 'Account' or 'Opportunity' on SFDC
+  #               type (optional) - the SFDC entity type: 'Account' or 'Opportunity'
+  #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin deletion of SFDC Activities, timestamp exclusive
+  #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end deletion of SFDC Activities, timestamp inclusive
   # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
-  def self.delete_cs_activities(client, type="Account", from_date=nil, to_date=nil)
+  def self.delete_cs_activities(client, sObjectId=nil, type=nil, from_lastmodifieddate=nil, to_lastmodifieddate=nil)
     delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
-    delete_tasks_query_stmt += " AND ActivityDate >= #{from_date}" if from_date.present?
-    delete_tasks_query_stmt += " AND ActivityDate <= #{to_date}" if to_date.present?
-    puts "Deleting all existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce.  SFDC query=\'#{delete_tasks_query_stmt}\'...."
+    delete_tasks_query_stmt += " AND WhatId = '#{sObjectId}'" if sObjectId.present?
+    delete_tasks_query_stmt += " AND LastModifiedDate > #{ from_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') }" if from_lastmodifieddate.present?
+    delete_tasks_query_stmt += " AND LastModifiedDate <= #{ to_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') }" if to_lastmodifieddate.present?
+    puts "Deleting existing, completed SFDC Tasks that were exported from ContextSmith on Salesforce (entity type=#{type}) using this SFDC query=\'#{delete_tasks_query_stmt}\'...."
     query_result = SalesforceService.query_salesforce(client, delete_tasks_query_stmt)
     #tasks = client.query(delete_tasks_query_stmt)
 
@@ -310,21 +347,26 @@ class Activity < ActiveRecord::Base
     end
   end
 
-  # Bulk export CS Activities to a SFDC Account or Opportunity (as completed Tasks in ActivityHistory). Ignores imported SFDC activity residing locally in CS.
+  # Bulk export CS Activities to a SFDC Account or Opportunity (as completed Tasks in ActivityHistory). Ignores imported SFDC activity residing locally in CS and notes.
   # Parameters:   client - SFDC connection
   #               project - the CS opportunity from which to export
   #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
-  #               type - to specify exporting into an SFDC "Account" or "Opportunity"
-  #               filter_predicates (optional) - a hash that contains keys "entity" and "activityhistory" that are predicates applied to the WHERE clause for SFDC Accounts/Opportunities, and the ActivityHistory SObject, respectively. They will be directly injected into the SOQL (SFDC) query.
+  #               type (optional) - to specify exporting into an SFDC "Account" or "Opportunity"; default: 'Account'
+  #               from_updatedat (optional) - the minimum updated_at date to begin export of Activities, timestamp exclusive; default, export with no minimum updated_at
+  #               to_updatedat (optional) - the maximum updated_at date to end export of Activities, timestamp inclusive; default, export with no maximum updated_at
   # Returns:   A hash that represents the execution status/result. Consists of:
-  #             status - "SUCCESS" if operation is successful with no errors (activities exported or no activities to export); ERROR" if any error occurred during the operation (including partial successes)
+  #             status - "SUCCESS" if operation is successful with no errors (activities exported or no activities to export); "ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
   #             detail - a list of errors or informational/warning messages.
-  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_date=nil, to_date=nil)
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_updatedat=nil, to_updatedat=nil)
     result = { status: "SUCCESS", result: [], detail: [] }
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
-    project.activities.each do |a|
+    project_activities = project.activities.where.not(category: [Activity::CATEGORY[:Salesforce], Activity::CATEGORY[:Note]])
+    project_activities = project_activities.where("updated_at > :from_updatedat", from_updatedat: from_updatedat) if from_updatedat.present?
+    project_activities = project_activities.where("updated_at <= :to_updatedat", to_updatedat: to_updatedat) if to_updatedat.present?
+
+    project_activities.each do |a|
       # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.
       subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " " + a.category + ": "+ a.title
       description = a.category + " activity (imported from ContextSmith) ——\n"
@@ -333,17 +375,16 @@ class Activity < ActiveRecord::Base
           subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " E-mail: "+ a.title
           description = "E-mail activity #{CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX}\n"
           #activity_date = Time.zone.at(m.sentDate).strftime("%b %d")
-          description += "Description:  \"#{ a.title }:\"  #{ get_conversation_member_names(a.from, a.to, a.cc) }"
+          description += "Subject:  \"#{ a.title }:\" between #{ get_conversation_member_names(a.from, a.to, a.cc) }"
           description += !a.is_public ? "  (private)\n" : "\n"
           a.email_messages.each do |m|
-            description += "—————————————————————————\n"
-            description += "Sender/Recipients: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
-            description += "Date: " + Time.zone.at(m.sentDate).strftime("%b %d") +"\n"
-            description += "Content: " + strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
+            if (from_updatedat.blank? || Time.zone.at(m.sentDate) > from_updatedat) && (to_updatedat.blank? || Time.zone.at(m.sentDate) <= to_updatedat) # if a min or max date is specified, limit output to messages in the thread that fall within that range
+              description += "—————————————————————————\n"
+              description += "Sender/Recipients: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
+              description += "Sent: " + Time.zone.at(m.sentDate).strftime("%b %d, %l:%M%P") +"\n"
+              description += strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
+            end
           end
-      elsif a.category == Activity::CATEGORY[:Note]
-          description += "Description:  #{ self.get_full_name(a.user) } wrote:\n"
-          description += a.note.present? ? a.note : self.rag_note(a.rag_score.to_i)
       elsif a.category == Activity::CATEGORY[:Meeting] 
           description += "Description:  #{ a.title }"
           description += !a.is_public ? "  (private)\n" : "\n"
@@ -381,6 +422,9 @@ class Activity < ActiveRecord::Base
       elsif a.category == Activity::CATEGORY[:Alert]
           description += "Description:  #{ a.title }\n"
           description += a.note + "\n"
+      # elsif a.category == Activity::CATEGORY[:Note]
+      #     description += "Description:  #{ self.get_full_name(a.user) } wrote:\n"
+      #     description += a.note.present? ? a.note : self.rag_note(a.rag_score.to_i)
       else
           next # if any other Activity type (e.g., Salesforce), skip to the next Activity!
       end
@@ -704,7 +748,7 @@ class Activity < ActiveRecord::Base
   def self.get_CS_export_prefix_SOQL_predicate_string
     soql_predicate = []
     CATEGORY.each do |k, v|
-      v = "E-mail" if v == CATEGORY[:Conversation]
+      v = "email" if v == CATEGORY[:Conversation]
       soql_predicate << "Subject like '#{CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX} #{v}:%'"
     end
     soql_predicate.join(" OR ")

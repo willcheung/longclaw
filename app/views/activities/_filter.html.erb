@@ -4,7 +4,7 @@
     <span><i class="fa fa-filter" style="font-size:16px;" aria-hidden="true"></i> FILTER TIMELINE <i class="fa fa-caret-down" style="font-size:16px;" aria-hidden="true"></i></span>
   </h4>
   
-  <div id="timeline-filters" class="m-l" style="display: none;">
+  <div id="timeline-filters" class="m-l" style="display: block;">
     <div class="row">
       <div class="col-sm-6">
         <div class="pull-left in-bl">
@@ -68,7 +68,7 @@ $(function () {
 
   // Category Filter & Person Filter
   $('.comment_category, .user_filter')
-    .chosen({ width: '100%'})
+    .chosen({ width: '100%', search_contains: true })
     .change( function () {
       var params = {};
       var timeAxis = $('#time-filter-highcharts').highcharts().xAxis[0];
@@ -137,7 +137,7 @@ $(function () {
         },
         relativeTo: 'chart'
       },
-      backgroundColor: '#f3f3f4'
+      backgroundColor: '#fff'
     },
     credits: {
       enabled: false

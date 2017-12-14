@@ -9,20 +9,25 @@
       <strong>Filter:</strong>
     </div>
     <div class="row filter-space filter-group">
-        <select id="team-filter" class="category_filter col-md-3" data-placeholder="Select Team">
-            <option></option> <!-- no filter -->
-            <% @departments.each do |d| %>
-            <option value="<%=d %>"  <% if params[:team] == d  %> selected   <% end %> ><%=d %></option>
-            <% end %>
-            <option value="none">(No Team)</option>
-        </select>
-        <select id="title-filter" class="category_filter col-md-3" data-placeholder="Select Title">
-            <option></option>
-            <% @titles.each do |t| %>
-            <option value="<%=t %>"  <% if params[:title] == t  %> selected   <% end %> ><%=t %></option>
-            <% end %>
-            <option value="none">(No Title)</option>
-        </select>
+        <form class="col-md-6" method='get' id='multiselect-filter-form' style="padding: 0 6px 0 0px">
+            <!-- Team -->
+            <select id="team-filter" class="category_filter" multiple data-placeholder="  Select Team" style="width: 49.5%">
+                <option></option> <!-- no filter -->
+                <% @departments.each do |d| %>
+                <option value="<%=d %>"  <% if params[:team] == d  %> selected   <% end %> ><%=d %></option>
+                <% end %>
+                <option value="(None)">(No Team)</option>
+            </select>
+            <!-- Title -->
+            <select id="title-filter" class="category_filter" multiple data-placeholder="  Select Title" style="width: 49.5%">
+                <option></option> <!-- no filter -->
+                <% @titles.each do |t| %>
+                <option value="<%=t %>"  <% if params[:title] == t  %> selected   <% end %> ><%=t %></option>
+                <% end %>
+                <option value="(None)">(No Title)</option>
+            </select>
+            <input type="submit" hidden onclick="setFilterParamsAndRefreshData()"></input>
+        </form>
         <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
             <option value="Any"></option> <!-- no filter -->
             <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
@@ -37,6 +42,7 @@
                 <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
             </optgroup>
         </select>
+      <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" onclick="setFilterParamsAndRefreshData();"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
     </div>
 
     <!-- Top Dashboard Panel: (3) Salesforce-linked Forecast and Stage reports -->
@@ -59,7 +65,10 @@
       <div class="col-lg-6">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
-                  <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
+                    <h5>
+                        Deals by Stage <small>(Click bar to filter)</small>
+                        <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset stages filter" onclick="resetStagesFilter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
+                    </h5>
               </div>
               <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
           </div>
@@ -123,23 +132,16 @@
 <script type="text/javascript">
 
     $(function () {
-        $('#sort-type, #metric-type, #team-filter, #title-filter, #close-date-filter').change( function () {
+        $('#sort-type, #metric-type, #close-date-filter').change( function () {
             // Clear Opportunity data ("right") chart
             $('#user-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar/label to see details about the rep.</h3></div>");
+            setFilterParamsAndRefreshData();
+        });
 
-            // Build URL for AJAX call for filtered data
-            let params = {};
-            if ($('#team-filter').val()) {
-              params.team = $('#team-filter').val();
-            }
-            if ($('#title-filter').val()) {
-              params.title = $('#title-filter').val();
-            }
-            if ($('#close-date-filter').val()) {
-              params.close_date = $('#close-date-filter').val();
-            }
-            var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "/" + encodeURIComponent($('#metric-type').val()) + "?" + $.param(params);
-            $.getScript(url)
+        // #team-filter, #title-filter
+        $('#multiselect-filter-form').on("submit", function() {
+            setFilterParamsAndRefreshData();
+            return false;
         });
 
         $('#forecast-chart').highcharts({
@@ -293,22 +295,8 @@
                         click: function () {
                           $('#user-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar/label to see details about the rep.</h3></div>");
 
-                          this.select();
-                          let params = {};
-                          if (this.selected) {
-                            params.stage = this.category;
-                          }
-                          if ($('#team-filter').val()) {
-                            params.team = $('#team-filter').val();
-                          }
-                          if ($('#title-filter').val()) {
-                            params.title = $('#title-filter').val();
-                          }
-                          if ($('#close-date-filter').val()) {
-                            params.close_date = $('#close-date-filter').val();
-                          }
-                          var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "/" + encodeURIComponent($('#metric-type').val()) + "?" + $.param(params);
-                          $.getScript(url);
+                          this.select(!this.selected, true);
+                          // setFilterParamsAndRefreshData();
                         }
                       }
                     }
@@ -417,5 +405,17 @@
         <%= render partial: "reports/accounts_dashboard_top.js" %>
         <%= render partial: "reports/team_dashboard.js" %>
     });
+
+    // Build URL for AJAX call for filtered data
+    function setFilterParamsAndRefreshData() {
+        let params = {};
+        params.team = $('#team-filter').val() ? $('#team-filter').val() : "";
+        params.title = $('#title-filter').val() ? $('#title-filter').val() : "";
+        params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
+        params.stage = getSelectedStages();
+
+        var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "/" + encodeURIComponent($('#metric-type').val()) + "?" + $.param(params);
+        $.getScript(url)
+    };
 </script>
 
