@@ -23,9 +23,9 @@
             <!--<option < % if params[:category] == v %> selected < % end %> >< %= v %></option>-->
           <!--< % end %>-->
       <!--</select>-->
-      <form class="col-md-3" method='get' id='multiselect-filter-form'>
+      <form class="col-md-3" method='get' id='multiselect-filter-form' style="padding: 0 5px 0 0px">
         <!-- Owner -->
-        <select id="owner-filter" class="category_filter" multiple data-placeholder="Select Owner" style="width: 100%">
+        <select id="owner-filter" class="category_filter" multiple data-placeholder="  Select Owner" style="width: 100%">
             <option value=""></option> <!-- no filter -->
             <option value="<%= current_user.id %>" <% if params[:owner].present? && (params[:owner].include? current_user.id) %> selected <% end %> >Me (<%= get_full_name(current_user) %>)</option>
             <% @owners.each do |u| %>
@@ -53,8 +53,7 @@
           </optgroup>
       </select>
       <!-- <div class="col-md-3"></div> -->
-      <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Apply filters" onclick="setFilterParamsAndRefreshData();"><strong>Apply All&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
-
+      <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" onclick="setFilterParamsAndRefreshData();"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
   </div>
 
   <!-- Top Dashboard Panel: (3) Salesforce-linked Forecast and Stage reports -->
@@ -78,8 +77,8 @@
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
                   <h5>
-                      <span>Deals by Stage</span>
-                      <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset filters" onclick="reset_stages_filter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
+                      Deals by Stage <small>(Click bar to filter)</small>
+                      <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset stages filter" onclick="resetStagesFilter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
                   </h5>
               </div>
               <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
@@ -119,7 +118,6 @@
         $('#sort-type, #close-date-filter').change( function () {
             // Clear Opportunity data ("right") chart
             $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
-
             setFilterParamsAndRefreshData();
         });
 
@@ -282,18 +280,7 @@
                                $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
 
                                this.select(!this.selected, true);
-                               // let params = {};
-                               // if (this.selected) {
-                               //   params.stage = get_selected_stages();
-                               // }
-                               // if ($('#owner-filter').val()) {
-                               //   params.owner = $('#owner-filter').val();
-                               // }
-                               // if ($('#close-date-filter').val()) {
-                               //   params.close_date = $('#close-date-filter').val();
-                               // }
-                               // var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
-                               // $.getScript(url);
+                               // setFilterParamsAndRefreshData();
                            }
                        }
                     }
@@ -389,7 +376,7 @@
         let params = {};
         params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
         params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
-        params.stage = get_selected_stages();
+        params.stage = getSelectedStages();
 
         var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
         $.getScript(url);

@@ -53,7 +53,7 @@ $(document).ready(function($) {
       }
       var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
       if (stageSelection.length !== 0) {
-        aoData.push({ name: 'stage', value: get_selected_stages() })
+        aoData.push({ name: 'stage', value: getSelectedStages() })
       }
     },
     sAjaxSource: $('#projects-table').data('source'),
@@ -289,26 +289,26 @@ function setFilterParamsAndReloadPage() {
   params.type = $('#type-filter').val() ? $('#type-filter').val() : "";
   params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
   params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
-  params.stage = get_selected_stages();
+  params.stage = getSelectedStages();
   // if (!$.isEmptyObject(params))
   //   console.log( "$.param(params)=" + $.param(params));
 
   window.location.search = $.param(params);
 };
 
-function get_selected_stages() {
+function getSelectedStages() {
   let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
   let stages_arr = [];
   for (var i=0; i < stageSelection.length; i++) {
     stages_arr.push(stageSelection[i].category)
   }
   if (stages_arr.length == 0)
-    return ['(Any)'];
+    return ['Any'];
   else
     return stages_arr;
 }
 
-function reset_stages_filter() {
+function resetStagesFilter() {
   let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
   for (var i=0; i < stageSelection.length; i++) {
     stageSelection[i].select(false); // de-select
