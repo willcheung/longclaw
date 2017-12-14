@@ -7,7 +7,8 @@ class OrganizationsController < ApplicationController
   # GET /organizations
   # GET /organizations.json
   def index
-    @organizations = Organization.includes(:projects, :accounts).all.order(:name, :domain)
+    # Note: *gmail.com organizations are filtered out!
+    @users = User.all.includes(:organization).where("LOWER(organizations.name) NOT LIKE '%gmail.com'").references(:organization).order(:onboarding_step).group_by { |u| u.organization }
   end
 
   # GET /organizations/1
