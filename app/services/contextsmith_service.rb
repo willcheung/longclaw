@@ -115,7 +115,7 @@ class ContextsmithService
       uri = URI(final_url)
       req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json', 'X-Request-ID' => r)
       req.body = { sources: sources, external_clusters: ex_clusters }.to_json
-      res = Net::HTTP.start(uri.host, uri.port, read_timeout: 120
+      res = Net::HTTP.start(uri.host, uri.port, read_timeout: ENV['read_timeout'].to_i
         #, use_ssl: uri.scheme == "https"
         ) { |http| http.request(req) }
       case res
