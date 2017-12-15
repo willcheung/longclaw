@@ -389,7 +389,7 @@ class Activity < ActiveRecord::Base
               description += strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
             end
           end
-          description = description.last(ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX) # for long e-mail threads, truncate length to only the newest part of the thread
+          description = description.last(ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX) # for long e-mail threads, truncate text to only the newest part of the thread (the end)
       elsif a.category == Activity::CATEGORY[:Meeting] 
           description += "Description:  #{ a.title }"
           description += !a.is_public ? "  (private)\n" : "\n"
