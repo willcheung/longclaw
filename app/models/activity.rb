@@ -102,6 +102,9 @@ class Activity < ActiveRecord::Base
 
   CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = "CS"
   CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX = "(imported from ContextSmith) ——"
+  EMAIL_STR = "Email"
+  ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX = 32000  # length limit of 'Description' field in SFDC activity during CS export to SFDC
+
   CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity' }
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
@@ -281,6 +284,7 @@ class Activity < ActiveRecord::Base
               a.second.each do |c|
                 owner = { "address": Activity.sanitize(c.Owner.Email)[1, c.Owner.Email.length], "personal": Activity.sanitize(c.Owner.Name)[1, c.Owner.Name.length] }
                 # val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
+                # Note: Might be able to use c.Subject as last chance to filter out exported CS activities!
                 val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', 
                          COALESCE(to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD'), '#{c.LastModifiedDate}'), 
                          COALESCE(EXTRACT(EPOCH FROM to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD')), '#{DateTime.parse(c.LastModifiedDate).to_i}'),
@@ -313,8 +317,8 @@ class Activity < ActiveRecord::Base
           result = { status: "SUCCESS", result: "No rows inserted into Activities.", detail: "Warning: No SFDC activity to import!" }
         end
       else
-        puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned! Check for invalid SFDC entity Ids in Salesforce_opportunity and Salesforce_account tables, or user's access level.  Detail: query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"  # Temporary diagnostic console message to determine a SFDC (permission?) issue 
-        result = { status: "ERROR", result: "No rows inserted into Activities.", detail: "Warning: SFDC query returned successfully, but an invalid result was returned from Salesforce!  This can occur when Salesforce cannot find the SFDC sObject Id specified by ContextSmith; please verify that a valid SFDC account/opportunity is linked to this opportunity.  It may also be possible your SFDC user may not have the proper access permissions; please verify with your Salesforce Administrator that you have access such as to the ActivityHistory/Task relation." }
+        puts "*** Salesforce error: SFDC query status=SUCCESS, but no valid result was returned! Check for invalid SFDC entity Ids in Salesforce_opportunity and Salesforce_account tables (most likely linked to an INVALID or deleted SFDC acct/opp, especially if we also observe a corresponding INVALID_CROSS_REFERENCE_KEY error), or user's access level cannot access ActivityHistory/Task (UNLIKELY, especially if import from other SFDC opportunities was successful)  Detail: query_statement=#{query_statement} \t query_result= #{query_result[:result]} \t query_result[:result].first= #{query_result[:result].first}"
+        result = { status: "SUCCESS", result: "No rows inserted into Activities.", detail: "Warning: The Salesforce query returned no errors, but an invalid result was returned from Salesforce!  This can occur when Salesforce cannot find the SFDC sObject Id specified by ContextSmith; please verify that a valid SFDC account/opportunity is linked to this opportunity (often the issue)." } #  Although unlikely, It may also be possible your SFDC login may not have the proper access permissions; please verify with your Salesforce Administrator that you have access to the ActivityHistory/Task relation.
       end
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
@@ -372,8 +376,8 @@ class Activity < ActiveRecord::Base
       description = a.category + " activity (imported from ContextSmith) ——\n"
       activity_date = Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d")
       if a.category == Activity::CATEGORY[:Conversation]
-          subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " E-mail: "+ a.title
-          description = "E-mail activity #{CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX}\n"
+          subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " " + EMAIL_STR + ": "+ a.title
+          description = EMAIL_STR + " activity #{CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX}\n"
           #activity_date = Time.zone.at(m.sentDate).strftime("%b %d")
           description += "Subject:  \"#{ a.title }:\" between #{ get_conversation_member_names(a.from, a.to, a.cc) }"
           description += !a.is_public ? "  (private)\n" : "\n"
@@ -385,6 +389,7 @@ class Activity < ActiveRecord::Base
               description += strip_tags(self.smart_email_body(m, @users_reverse.present?)) + "\n"
             end
           end
+          description = description.last(ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX) # for long e-mail threads, truncate text to only the newest part of the thread (the end)
       elsif a.category == Activity::CATEGORY[:Meeting] 
           description += "Description:  #{ a.title }"
           description += !a.is_public ? "  (private)\n" : "\n"
@@ -428,6 +433,8 @@ class Activity < ActiveRecord::Base
       else
           next # if any other Activity type (e.g., Salesforce), skip to the next Activity!
       end
+
+      description = description.first(ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX) # if description is too long, truncate the end of the description (note: long e-mail conversations/threads were already truncated above)
 
       # Second, put the fields into a hash object.
       sObject_meta = { id: sfdc_id, type: type }
@@ -748,7 +755,7 @@ class Activity < ActiveRecord::Base
   def self.get_CS_export_prefix_SOQL_predicate_string
     soql_predicate = []
     CATEGORY.each do |k, v|
-      v = "email" if v == CATEGORY[:Conversation]
+      v = EMAIL_STR if v == CATEGORY[:Conversation]
       soql_predicate << "Subject like '#{CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX} #{v}:%'"
     end
     soql_predicate.join(" OR ")
