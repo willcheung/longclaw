@@ -1,61 +1,90 @@
-<%= simple_form_for(Activity.new, remote: true, html: { class: 'row', style: 'display:flex;'} ) do |f| %>
-  <div class="col-lg-11">
-    <div class="input-group">
-      <span class="input-group-btn vtop" style="padding-top:25px;">
-        <button class="sticky-bg btn-icon" disabled="true">
-          <i class="fa fa-sticky-note"></i>
-        </button>
-      </span>
-      <%=f.collection_radio_buttons(:rag_score, [[1, "<div class='small-circle rag-border-color1'></div>"] ,[2, "<div class='small-circle rag-border-color2'></div>"],[3, "<div class='small-circle rag-border-color3'></div>"]], :first, :last) do |b| %>
-        <%=b.radio_button + b.text.html_safe %>
-      <%end%>
-
-      <%= f.input :note, label: false, as: 'text', input_html: { class: 'input-border', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: "1" }, placeholder: "Post a note or status..." %>
+<!--< %= simple_form_for(Activity.new, remote: true) do |f| %>-->
+  <div class="row">
+    <div class="col-xs-12 top-navigation">
+      <ul class="nav navbar-nav" role="tablist">
+        <li role="presentation" class="active"><a href="#next-steps-form" role="tab" data-toggle="tab"><i class="fa fa-step-forward"></i> Next Steps</a></li>
+        <li role="presentation"><a href="#notes-form" role="tab" data-toggle="tab"><i class="fa fa-sticky-note"></i> Notes</a></li>
+      </ul>
     </div>
   </div>
-  <input value="<%= project_id %>" class="hidden form-control" type="hidden" name="project_id" id="project_id">
-  <div class="col-lg-1" style="align-self:flex-end;">
-    <%= f.button :submit, "Post", class: "btn-note sticky-bg pull-right m-b font-bold", disabled: true %>
-  </div>
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active m-xs m-b-none" id="next-steps-form">
+      <%= simple_form_for(Activity.new, remote: true, html: { class: 'row', style: 'display: flex;' }) do |f| %>
+        <div class="col-lg-11">
+          <div class="input-group">
+            <span class="input-group-btn vtop" style="padding-top:25px;">
+              <button class="primary-bg btn-icon" disabled="true">
+                <i class="fa fa-step-forward"></i>
+              </button>
+            </span>
+            <h3 style="font-size: 23px;" class="m-l-sm"><strong>CURRENT:</strong> <%= project.next_steps.blank? ? '(none)' : project.next_steps %></h3>
 
-<% end %>
+            <%= f.input :note, label: false, input_html: { id: 'next-steps-input', class: 'input-border activity-input', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: '1' }, placeholder: "Updated next step..." %>
+          </div>
+        </div>
+        <%= f.input :project_id, as: 'hidden', input_html: { value: project.id } %>
+        <div class="col-lg-1" style="align-self:flex-end;">
+          <%= f.button :submit, "Update", class: "btn-note btn-primary pull-right m-b font-bold" %>
+        </div>
+      <% end %>
+    </div>
+    <div role="tabpanel" class="tab-pane m-xs m-b-none" id="notes-form">
+      <%= simple_form_for(Activity.new, remote: true, html: { class: 'row', style: 'display: flex;' }) do |f| %>
+      <div class="col-lg-11">
+        <div class="input-group">
+        <span class="input-group-btn vtop" style="padding-top:25px;">
+          <button class="sticky-bg btn-icon" disabled="true">
+            <i class="fa fa-sticky-note"></i>
+          </button>
+        </span>
+          <%=f.collection_radio_buttons(:rag_score, [[1, "<div class='small-circle rag-border-color1'></div>"] ,[2, "<div class='small-circle rag-border-color2'></div>"],[3, "<div class='small-circle rag-border-color3'></div>"]], :first, :last) do |b| %>
+              <%=b.radio_button + b.text.html_safe %>
+          <%end%>
+
+          <%= f.input :note, label: false, input_html: { id: 'note-input', class: 'input-border activity-input', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: "1" }, placeholder: "Post a note or status..." %>
+        </div>
+      </div>
+      <%= f.input :project_id, as: 'hidden', input_html: { value: project.id } %>
+      <div class="col-lg-1" style="align-self:flex-end;">
+        <%= f.button :submit, "Post", class: "btn-note sticky-bg pull-right m-b font-bold" %>
+      </div>
+      <% end %>
+    </div>
+  </div>
+  <!--<div class="row" style="display: flex;">-->
+    <!--<div class="col-lg-11">-->
+      <!--<div class="input-group">-->
+        <!--<span class="input-group-btn vtop" style="padding-top:25px;">-->
+          <!--<button class="sticky-bg btn-icon" disabled="true">-->
+            <!--<i class="fa fa-sticky-note"></i>-->
+          <!--</button>-->
+        <!--</span>-->
+        <!--< %=f.collection_radio_buttons(:rag_score, [[1, "<div class='small-circle rag-border-color1'></div>"] ,[2, "<div class='small-circle rag-border-color2'></div>"],[3, "<div class='small-circle rag-border-color3'></div>"]], :first, :last) do |b| %>-->
+          <!--< %=b.radio_button + b.text.html_safe %>-->
+        <!--< %end%>-->
+
+        <!--< %= f.input :note, label: false, as: 'text', input_html: { class: 'input-border', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: "1" }, placeholder: "Post a note or status..." %>-->
+      <!--</div>-->
+    <!--</div>-->
+    <!--<input value="< %= project_id %>" class="hidden form-control" type="hidden" name="project_id" id="project_id">-->
+    <!--<div class="col-lg-1" style="align-self:flex-end;">-->
+      <!--< %= f.button :submit, "Post", class: "btn-note sticky-bg pull-right m-b font-bold", disabled: true %>-->
+    <!--</div>-->
+
+  <!--</div>-->
+<!--< % end %>-->
 <script type="text/javascript">
   // Auto resize textarea with pop out for button
 
-  $("#activity_note,#activity_rag_score_1,#activity_rag_score_2, #activity_rag_score_3 ").on("focus keypress input", function () {
-    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 94));
-  }).keypress( function () {
-    if ($("#activity_note").val() ){
-      $(".btn-note").prop('disabled',false);
-    }
-    else {
-      $(".btn-note").prop('disabled', true);
-    }
-  }).change( function(){
-    if($('#activity_rag_score_1').val() || $('#activity_rag_score_2').val() || $('#activity_rag_score_3').val() ){
-      $(".btn-note").prop('disabled',false);
-    } else {
-      $(".btn-note").prop('disabled', true);
-    }
+  $(".activity-input").on("focus keypress input", function () {
+    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 93));
+  }).blur(function () {
+    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 33));
   });
 
-  var mousedownHappenend = false;
-
-  $(".btn-note").mousedown(function(){
-    mousedownHappenend = true;
-  })
-
-  $("#activity_note").blur ( function () {
-    if(mousedownHappenend)
-    {
-      mousedownHappenend = false;
-    }
-    else
-    {
-      $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 32));
-    }
+  $('[data-toggle="tab"]').click(function (e) {
+    e.preventDefault();
+    $(this).tab('show')
   });
-
-
 
 </script>
