@@ -31,6 +31,10 @@
         <div class="vertical-timeline-icon danger-bg" id="<%= a.id.to_s %>">
             <i class="fa fa-exclamation"></i>
         </div>
+    <% elsif a.category == Activity::CATEGORY[:NextSteps] %>
+        <div class="vertical-timeline-icon primary-bg" id="<%= a.id.to_s %>">
+            <i class="fa fa-chevron-right"></i>
+        </div>
     <% end %>
 
     <span class="vertical-date left">
@@ -361,7 +365,18 @@
                   &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                 </div>
             </div>
-            
+
+        <% elsif a.category == Activity::CATEGORY[:NextSteps] %>
+
+            <div class="chat-discussion">
+              <div><strong><%= get_full_name(a.user) %></strong> changed next steps from <strong><%= a.note %></strong> to <strong><%= a.title %></strong></div>
+
+                <div class="action-links">
+                  <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                </div>
+            </div>
+
         <% end %>
 
         <div class="content-footer footer-<%= a.id %>" style="display: none;">

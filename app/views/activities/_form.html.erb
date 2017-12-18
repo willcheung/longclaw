@@ -2,27 +2,26 @@
   <div class="row">
     <div class="col-xs-12 top-navigation">
       <ul class="nav navbar-nav" role="tablist">
-        <li role="presentation" class="active"><a href="#next-steps-form" role="tab" data-toggle="tab"><i class="fa fa-step-forward"></i> Next Steps</a></li>
+        <li role="presentation" class="active"><a href="#next-steps-form" role="tab" data-toggle="tab"><i class="fa fa-chevron-right"></i> Next Steps</a></li>
         <li role="presentation"><a href="#notes-form" role="tab" data-toggle="tab"><i class="fa fa-sticky-note"></i> Notes</a></li>
       </ul>
     </div>
   </div>
   <div class="tab-content">
     <div role="tabpanel" class="tab-pane active m-xs m-b-none" id="next-steps-form">
-      <%= simple_form_for(Activity.new, remote: true, html: { class: 'row', style: 'display: flex;' }) do |f| %>
+      <%= simple_form_for(project, remote: true, html: { class: 'row', style: 'display: flex;' }, url: update_next_steps_project_path(project)) do |f| %>
         <div class="col-lg-11">
           <div class="input-group">
             <span class="input-group-btn vtop" style="padding-top:25px;">
               <button class="primary-bg btn-icon" disabled="true">
-                <i class="fa fa-step-forward"></i>
+                <i class="fa fa-chevron-right"></i>
               </button>
             </span>
-            <h3 style="font-size: 23px;" class="m-l-sm"><strong>CURRENT:</strong> <%= project.next_steps.blank? ? '(none)' : project.next_steps %></h3>
+            <h4 style="/*font-size: 23px;*/height: 25px;" class="m-l-sm"><strong>Current next steps:</strong> <span id="current-next-steps"><%= project.next_steps.blank? ? '(none)' : project.next_steps %></span></h4>
 
-            <%= f.input :note, label: false, input_html: { id: 'next-steps-input', class: 'input-border activity-input', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: '1' }, placeholder: "Updated next step..." %>
+            <%= f.input :next_steps, label: false, as: 'text', input_html: { class: 'input-border activity-input', style: 'resize:none;overflow:hidden;margin-bottom:8px;', value: '', rows: 1 }, placeholder: "Updated next step..." %>
           </div>
         </div>
-        <%= f.input :project_id, as: 'hidden', input_html: { value: project.id } %>
         <div class="col-lg-1" style="align-self:flex-end;">
           <%= f.button :submit, "Update", class: "btn-note btn-primary pull-right m-b font-bold" %>
         </div>
@@ -41,7 +40,7 @@
               <%=b.radio_button + b.text.html_safe %>
           <%end%>
 
-          <%= f.input :note, label: false, input_html: { id: 'note-input', class: 'input-border activity-input', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: "1" }, placeholder: "Post a note or status..." %>
+          <%= f.input :note, label: false, input_html: { class: 'input-border activity-input', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: 1 }, placeholder: "Post a note or status..." %>
         </div>
       </div>
       <%= f.input :project_id, as: 'hidden', input_html: { value: project.id } %>

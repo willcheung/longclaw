@@ -102,7 +102,7 @@ class Activity < ActiveRecord::Base
 
   CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX = "CS"
   CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX = "(imported from ContextSmith) ——"
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity' }
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity', NextSteps: 'NextSteps' }.freeze
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
