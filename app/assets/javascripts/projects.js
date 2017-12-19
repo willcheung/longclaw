@@ -88,7 +88,7 @@ $(document).ready(function($) {
   // });
 
   function formatNextSteps (nextSteps) {
-    return $('<tr class="child-row"><td></td><td colspan="11"><strong>Next Steps:</strong> ' + nextSteps + '</td></tr>');
+    return $('<tr class="child-row"><td colspan="2"></td><td colspan="10"><strong>Next Steps:</strong> ' + nextSteps + '</td></tr>');
   }
 
   $('input[type=search]').attr('size', '50');
