@@ -105,7 +105,7 @@ class Activity < ActiveRecord::Base
   EMAIL_STR = "Email"
   ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX = 32000  # length limit of 'Description' field in SFDC activity during CS export to SFDC
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity' }
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity', NextSteps: 'NextSteps' }.freeze
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
@@ -285,7 +285,7 @@ class Activity < ActiveRecord::Base
                 owner = { "address": Activity.sanitize(c.Owner.Email)[1, c.Owner.Email.length], "personal": Activity.sanitize(c.Owner.Name)[1, c.Owner.Name.length] }
                 # val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', '#{c.LastModifiedDate}', '#{DateTime.parse(c.LastModifiedDate).to_i}',
                 # Note: Might be able to use c.Subject as last chance to filter out exported CS activities!
-                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}', 
+                val << "('00000000-0000-0000-0000-000000000000', '#{project.id}', '#{CATEGORY[:Salesforce]}', #{Activity.sanitize(c.Subject)}, true, '#{c.Id}',
                          COALESCE(to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD'), '#{c.LastModifiedDate}'), 
                          COALESCE(EXTRACT(EPOCH FROM to_timestamp(#{Activity.sanitize([c].to_json)}::jsonb->0->>'ActivityDate', 'YYYY-MM-DD')), '#{DateTime.parse(c.LastModifiedDate).to_i}'),
                          '[#{owner.to_json}]',
@@ -390,7 +390,7 @@ class Activity < ActiveRecord::Base
             end
           end
           description = description.last(ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX) # for long e-mail threads, truncate text to only the newest part of the thread (the end)
-      elsif a.category == Activity::CATEGORY[:Meeting] 
+      elsif a.category == Activity::CATEGORY[:Meeting]
           description += "Description:  #{ a.title }"
           description += !a.is_public ? "  (private)\n" : "\n"
           description += "Time: #{ self.get_calendar_interval(a) }\n"

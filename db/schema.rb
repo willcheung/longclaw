@@ -376,6 +376,7 @@ ActiveRecord::Schema.define(version: 20171201015348) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -385,7 +386,6 @@ ActiveRecord::Schema.define(version: 20171201015348) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
-    t.decimal  "amount",                    precision: 14, scale: 2
     t.string   "forecast_category_name"
     t.string   "owner_id"
   end
