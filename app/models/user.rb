@@ -786,7 +786,7 @@ class User < ActiveRecord::Base
       WITH user_emails AS (
         SELECT messages ->> 'messageId'::text AS message_id,
                project_id,
-               array_length(regexp_split_to_array((messages ->'content') ->> 'body', E'[^\\\\w:!.()?//\\\\,-]+'), 1) AS word_count,
+               LENGTH((messages -> 'content') ->> 'body') - LENGTH(REPLACE((messages -> 'content') ->> 'body', ' ', '')) + 1 AS word_count,
                jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
                CASE
                  WHEN messages -> 'to' IS NULL THEN NULL
@@ -802,24 +802,18 @@ class User < ActiveRecord::Base
         AND project_id IN ('#{array_of_project_ids.join("','")}')
         AND to_timestamp((messages ->> 'sentDate')::integer) BETWEEN TIMESTAMP '#{start_day}' AND TIMESTAMP '#{end_day}'
       )
-      SELECT projects.id, projects.name, projects.amount, projects.close_date, SUM(outbound_wc)::float AS outbound, SUM(inbound_wc)::float AS inbound, COALESCE(SUM(outbound_wc),0) + COALESCE(SUM(inbound_wc),0) AS total
+      SELECT projects.id, projects.name, projects.amount, projects.close_date, SUM(outbound_wc) AS outbound, SUM(inbound_wc) AS inbound, SUM(outbound_wc) + SUM(inbound_wc) AS total
       FROM (
-        SELECT outbound_emails.project_id, SUM(outbound_emails.word_count) AS outbound_wc, 0 AS inbound_wc
-        FROM (
-          SELECT DISTINCT message_id, project_id, word_count
+        SELECT DISTINCT message_id, project_id,
+          CASE
+            WHEN "from" = #{User.sanitize(self.email)} THEN word_count
+            ELSE 0
+          END AS outbound_wc,
+          CASE
+            WHEN #{User.sanitize(self.email)} IN ("to", "cc") AND #{User.sanitize(self.email)} NOT IN ("from") THEN word_count
+            ELSE 0
+          END AS inbound_wc
           FROM user_emails
-          WHERE "from" = #{User.sanitize(self.email)}
-        ) outbound_emails
-        GROUP BY project_id, message_id
-        UNION ALL
-        SELECT inbound_emails.project_id, 0 AS outbound_wc, SUM(inbound_emails.word_count) AS inbound_wc
-        FROM (
-          SELECT DISTINCT message_id, project_id, word_count
-          FROM user_emails
-          WHERE #{User.sanitize(self.email)} IN ("to", "cc")
-            AND #{User.sanitize(self.email)} NOT IN ("from")
-        ) inbound_emails
-        GROUP BY project_id, message_id
       ) AS wc_table
       INNER JOIN projects
       ON projects.id = wc_table.project_id
