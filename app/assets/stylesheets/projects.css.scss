@@ -103,6 +103,10 @@
   white-space: inherit
 }
 
+#projects-table tr.child-row td {
+  border-top: none !important;
+}
+
 //*------- Used to display Rag Status --------*//
 .large-circle{
   width: 40px;

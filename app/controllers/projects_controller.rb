@@ -360,8 +360,8 @@ class ProjectsController < ApplicationController
         members_html = "<span><i class=\"fa fa-users\" style=\"color:#888\"></i> #{all_members}</span>"
         [
           ("<input type=\"checkbox\" class=\"bulk-project\" value=\"#{project.id}\">" if current_user.admin?),
-          vc.link_to(project.name, project) + '<br><span style="font-size: 11px;">'.html_safe + vc.link_to(project.account.name, project.account) + '</span>'.html_safe,
-          (project.stage.blank? ? "-" : project.stage) + '<br><span style="font-size: 11px;">'.html_safe + (project.forecast.blank? ? '-' : project.forecast) + '</span>'.html_safe,
+          vc.link_to(project.name, project) + '<br><small>'.html_safe + vc.link_to(project.account.name, project.account, class: 'link-muted') + '</small>'.html_safe,
+          (project.stage.blank? ? "-" : project.stage) + '<br><small class="text-muted">'.html_safe + (project.forecast.blank? ? '-' : project.forecast.upcase) + '</small>'.html_safe,
           (project.amount.nil?) ? "-" : "$"+vc.number_to_human(project.amount),
           get_full_name(project.project_owner),
           members_html,
@@ -370,8 +370,10 @@ class ProjectsController < ApplicationController
           "<div data-sparkline=\"#{@sparkline[project.id].join(', ') if @sparkline[project.id].present?}; column\"></div>",
           @project_days_inactive[project.id].nil? ? "-" : @project_days_inactive[project.id],
           @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].in_time_zone(current_user.time_zone).strftime('%l:%M%p on %B %-d'),
-          '<i class="fa fa-step-forward" data-toggle="tooltip" data-original-title="Next Steps: ' + (project.next_steps.blank? ? '(none)' : project.next_steps) + '"></span>',
-          project.daily ? vc.link_to("<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{project.id}", class: "block m-b-xs", title: "Following daily") : vc.link_to("<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{project.id}", class: "block m-b-xs", title: "Follow daily")
+          # '<i class="fa fa-step-forward" data-toggle="tooltip" data-original-title="Next Steps: ' + (project.next_steps.blank? ? '(none)' : project.next_steps) + '"></span>',
+          # project.next_steps.blank? ? '(none)' : vc.truncate(project.next_steps, length: 20),
+          project.daily ? vc.link_to("<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{project.id}", class: "block m-b-xs", title: "Following daily") : vc.link_to("<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{project.id}", class: "block m-b-xs", title: "Follow daily"),
+          vc.simple_format(vc.truncate(vc.word_wrap(CGI.escape_html(project.next_steps.blank? ? '(none)' : project.next_steps), line_width: 160), length: 300, separator: '\n') ) # pass next steps to dataTables as hidden column, use word_wrap + truncate to ensure only 2 lines shown TODO: implement show more link
         ]
       end
     }

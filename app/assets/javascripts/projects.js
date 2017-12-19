@@ -30,11 +30,11 @@ $(document).ready(function($) {
 
 
   //DataTables
-  $('#projects-table').DataTable({
+  var projectsIndexTable = $('#projects-table').DataTable({
     responsive: true,
     columnDefs: [
-      { searchable: false, targets: [0,4,5,6,7,8,9,10,11,12] },
-      { orderable: false, targets: [0,4,5,6,7,8,9,10,11,12] }
+      { searchable: false, targets: [0,4,5,6,7,8,9,10,11/*,12*/] },
+      { orderable: false, targets: [0,4,5,6,7,8,9,10,11/*,12*/] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -58,13 +58,38 @@ $(document).ready(function($) {
     },
     sAjaxSource: $('#projects-table').data('source'),
     fnDrawCallback: function (oSettings, json) {
-      // console.log('fnDrawCallback')
-      // console.log(oSettings)
-      // console.log(json)
+      // re-initialize sparklines and tooltips for table rows retrieved by server-side pagination
       initSparklines();
-      $('[data-toggle="tooltip"]').tooltip();
+      // $('[data-toggle="tooltip"]').tooltip();
+    },
+    rowCallback: function (tr, data, index) {
+      // show all rows by default
+      var row = projectsIndexTable.row(tr);
+      row.child(formatNextSteps(row.data()[row.data().length - 1])).show();
+      // $(tr).addClass('child-row');
     }
   });
+
+  // code for opening and closing child rows -- currently unused
+  // $('#projects-table tbody').on('click', 'tr', function () {
+  //   // var tr = $(this).closest('tr');
+  //   var row = projectsIndexTable.row(this);
+  //
+  //   if ( row.child.isShown() ) {
+  //     // This row is already open - close it
+  //     row.child.hide();
+  //     $(this).removeClass('shown');
+  //   }
+  //   else {
+  //     // Open this row
+  //     row.child(formatNextSteps(row.data()[row.data().length - 1])).show();
+  //     $(this).addClass('shown');
+  //   }
+  // });
+
+  function formatNextSteps (nextSteps) {
+    return $('<tr class="child-row"><td></td><td colspan="11"><strong>Next Steps:</strong> ' + nextSteps + '</td></tr>');
+  }
 
   $('input[type=search]').attr('size', '50');
 
