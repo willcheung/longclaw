@@ -89,4 +89,9 @@ class Organization < ActiveRecord::Base
     self.custom_lists_metadatum.order(:name).index_by { |clm| customlists[clm.id] = clm.name + ": " + clm.get_list_options(options_list_strlen_limit) }
     return customlists
   end
+
+  # TODO: To consider custom "Closed Won"/"Closed Lost" stages, use native SFDC fields is_closed and is_won instead
+  def get_winning_stages()
+    ['Closed Won', 'Closed and Signed']  # hard-coded until we do it dynamically from SFDC data
+  end
 end
