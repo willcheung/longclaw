@@ -82,7 +82,7 @@
                 </table>
             </div>
             <div class="ibox-content">
-                <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%">
+                <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -91,11 +91,10 @@
                             <th>Owner</th>
                             <th></th>
                             <th>Days to Close</th>
-                            <th>Open Alerts & Tasks</th>
+                            <th>Alerts & Tasks</th>
                             <th>Last 7d Activity</th>
                             <th>Days Inactive</th>
                             <th>Next Meeting</th>
-                            <th></th>
                             <th></th>
                         </tr>
                     </thead>
@@ -106,7 +105,7 @@
                                     <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                     <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                 </td>
-                                <td style="width: 120px"><%= (p.stage.nil? or p.stage.empty?) ? "-" : p.stage %></td>
+                                <td style="width: 120px"><%= p.stage.blank? ? '-' : p.stage %><br><small class="text-muted"><%= p.forecast.blank? ? '-' : p.forecast.upcase %></small></td>
                                 <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
                                 <td><div><%= get_full_name(p.project_owner) %></div></td>
                                 <td style="width: 40px"><span
@@ -125,13 +124,7 @@
                                 <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].to_i %>
                                 <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
                                 
-                                <td><% if p.is_public %>
-                                        <span class="label label-default pull-right">Public</span>
-                                    <% else %>
-                                        <span class="label label-warning pull-right">Private</span>
-                                    <% end %>
-                                </td>
-                                <td style="width: 120px"> 
+                                <td style="width: 120px">
                                     <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to daily updates and alerts." data-delay='{"show":"300"}'>
                                     <% if p.daily %>
                                         <%= link_to "<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: p.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{p.id}", class: "block m-b-xs", title: "Following daily" %>

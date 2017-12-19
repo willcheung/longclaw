@@ -26,6 +26,7 @@ Longclaw::Application.routes.draw do
         get "network_map"
         get "lookup"
         post "refresh"
+        patch 'update_next_steps'
       end
       resources :project_subscribers, param: :user_id, only: [:destroy, :create]
       post "project_subscribers/create_all"

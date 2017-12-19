@@ -4,7 +4,7 @@
     <div class="col-xs-2">
         <%= get_profile_pic(get_full_name(m), m.email) %>
     </div>
-    <div class="col-xs-7 project-team-title">
+    <div class="col-xs-8 project-team-title">
         <span><% if m.first_name.blank? && m.last_name.blank? %>
                     <%= get_local_part(m.email) %>
                 <% else %>
@@ -26,24 +26,24 @@
                         <% end %>
                     <% end %>
                     <small><a href="https://www.linkedin.com/search/results/people/?company=<%= get_domain(m.email) %>&keywords=<%= m.first_name + '%20' + m.last_name %>" target="_blank" class="m-l-xs" title="Search contact in LinkedIn"><i class="fa fa-linkedin"></i></a></small>
+                    <% unless m.background_info.blank? %><small>&nbsp;<i class="fa fa-sticky-note-o" data-toggle="tooltip" data-placement="top" data-original-title="<%= m.background_info %>"></i>&nbsp;</small><% end %>
                 <% end %>
         </span><br>
+        <span class="text-muted"><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
         <% if !m.is_internal_user? %>
         <span><small>
-            <a href="https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&to=<%= m.email %>" target="GmailCompose" onclick="openGmailComposePopup(this.href, this.target); return false;"><%= m.email %></a>
             <% if m.phone.present? || m.mobile.present? %>
                 &nbsp;•&nbsp;&nbsp;<%= m.phone.present? ? m.phone : m.mobile %>
             <% end %>
-        </small></span><br>
+        </small></span>
         <% end %>
-        <span><small><%= m.title %> <%= get_short_name_account_path(m) %></small></span>
     </div>
     <% if pm.status == ProjectMember::STATUS[:Confirmed] %>
-    <div class="col-xs-3 m-t-xs delete-member">
-        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, style: "color:#bbb", title: "Remove", data: {confirm: "Are you sure you want to remove this person from the opportunity?"}, remote: true %>
+    <div class="col-xs-2 m-t-xs delete-member">
+        <%= link_to "<i class=\"fa fa-times\"></i>".html_safe, pm, method: :delete, title: "Remove", data: {confirm: "Are you sure you want to remove this person from the opportunity?"}, remote: true %>
     </div>
     <% else %>
-    <div class="col-xs-3 m-t-xs">
+    <div class="col-xs-2 m-t-xs">
         <%= link_to "<i class=\"fa fa-check-circle fa-lg\"></i>".html_safe, pm, method: :put, class: "text-primary", title: "Confirm", data: {confirm: "Confirm this suggested person?"}, remote: true %>
         <%= link_to "<i class=\"fa fa-times-circle fa-lg\"></i>".html_safe, pm, method: :delete, class: "text-muted", title: "Reject", data: {confirm: "Reject this suggested person?"}, remote: true %>
     </div>
