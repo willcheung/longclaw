@@ -222,9 +222,11 @@ class ReportsController < ApplicationController
     @error = "Oops, something went wrong. Try again." and return if @user.blank?
 
     @open_alerts_and_tasks = @user.notifications.open.count  #tasks and alerts
-    @accounts_managed = @user.projects_owner_of.count
+    @accounts_managed = @user.projects_owner_of.count  # Note: this is all opps. i.e., no stage/etc. filters are applied
     # @sum_expected_revenue = @user.projects_owner_of.sum(:expected_revenue)
-    @closed_won_this_qtr = Project.where(stage: 'Closed Won', close_date: Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), id: @user.projects_owner_of.ids).sum(:amount) # TODO: To take into account custom "Closed Won"/"Closed Lost" stages, use native is_closed and is_won flags
+    winning_opps = Project.where(stage: current_user.organization.get_winning_stages, close_date: Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter]), id: @user.projects_owner_of.ids)
+    @closed_won_this_qtr = winning_opps.sum(:amount)
+    @winning_stage_default_name = winning_opps.present? ? winning_opps.first.stage : 'Closed Won'
 
     @activities_by_category_date = @user.daily_activities_by_category(current_user.time_zone).group_by { |a| a.category }
 
@@ -345,17 +347,17 @@ class ReportsController < ApplicationController
         end
       when TEAM_DASHBOARD_METRIC[:closed_won]
         closed_won = users.select("users.*, COALESCE(SUM(projects.amount), 0) AS closed_won_amount")
-                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') AND projects.stage = 'Closed Won'") # TODO: use new projects.is_won IS TRUE instead of stage
+                        .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}') AND projects.stage IN ('#{current_user.organization.get_winning_stages.join("','")}')") # TODO: use new projects.is_won IS TRUE instead of stage
                         .group('users.id').order("closed_won_amount DESC")
         data = closed_won.map do |u|
           Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.closed_won_amount.round(2) })
         end
       when TEAM_DASHBOARD_METRIC[:win_rate]
         win_rates = users.select("users.*, COUNT(DISTINCT projects.id) AS project_count, COUNT(DISTINCT 
-                CASE WHEN projects.stage = 'Closed Won' THEN projects.id 
+                CASE WHEN projects.stage IN ('#{current_user.organization.get_winning_stages.join("','")}') THEN projects.id 
                      ELSE null
                 END ) AS win_count, COUNT(DISTINCT 
-                CASE WHEN projects.stage = 'Closed Won' THEN projects.id 
+                CASE WHEN projects.stage IN ('#{current_user.organization.get_winning_stages.join("','")}') THEN projects.id 
                      ELSE null
                 END)/GREATEST(COUNT(DISTINCT projects.id)::float, 1) * 100 AS win_rate")
                         .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}')")
@@ -420,7 +422,9 @@ class ReportsController < ApplicationController
       stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", project_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
     end
 
-    @lost_won_totals = stage_chart_result.select{|s,t| ['Closed Won','Closed Lost'].include? s} # TODO: To take into account custom "Closed Won"/"Closed Lost" stages, use is_closed and is_won flags
+    winning_stages = stage_chart_result.select{|s,t| current_user.organization.get_winning_stages.include? s}
+    @winning_stage_default_name = winning_stages.present? ? winning_stages.first[0] : 'Closed Won'  # if no winning stages are present after filter applied, set a default name for display
+    @lost_won_totals = [[@winning_stage_default_name, winning_stages.sum{|s,t| t}], stage_chart_result.select{|s,t| ['Closed Lost'].include? s}]
 
     stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
     @forecast_chart_data = forecast_chart_result.map do |f, a|
