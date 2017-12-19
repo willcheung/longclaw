@@ -292,7 +292,7 @@ span.best_in_place.btn {
   margin: -.8em -1em 0 -1em;
   padding: .8em 1em 0 1em;
 }
-.project-people .delete-member,
+.project-people .member .delete-member a,
 .timeline-note .delete-note,
 .social-comment .delete-comment,
 .task-name .edit-task,
@@ -306,7 +306,7 @@ span.best_in_place.btn {
 .task-name:hover .edit-task,
 .task-desc:hover .edit-task,
 .editable-field:hover .editable-field-activator,
-.project-people .member:hover .delete-member,
+.project-people .member:hover .delete-member a,
 .timeline-note:hover .delete-note,
 .social-comment:hover .delete-comment {
   color: #999;
@@ -317,6 +317,13 @@ span.best_in_place.btn {
 }
 #projects-table thead, #accounts-table thead {
   background:#f5f5f9;
+}
+.project-people .member {
+  padding: 4px 2px;
+}
+.project-people .member:hover {
+  box-shadow: 0 0 5px rgba(33,33,33,.25);
+  border-radius:6px;
 }
 
 /* Jquery UI Datepicker */
