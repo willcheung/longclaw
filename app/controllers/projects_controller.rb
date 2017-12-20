@@ -32,6 +32,8 @@ class ProjectsController < ApplicationController
     # get categories for category filter
     @categories = @activities_by_category_date.keys
     @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
+    @ns_activity = @project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
+    # @ns_updated_at = ns_activity.blank? ? '' : ns_activity.last_sent_date.in_time_zone(current_user.time_zone)
   end
 
   def filter_timeline
@@ -358,6 +360,8 @@ class ProjectsController < ApplicationController
         # members = all_members.first(@MEMBERS_LIST_LIMIT)
         # tooltip = all_members.size == 0 ? '' : " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe
         members_html = "<span><i class=\"fa fa-users\" style=\"color:#888\"></i> #{all_members}</span>"
+        ns_activity = project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
+        ns_updated_at = ns_activity.blank? ? '' : '<p class="m-b-none"><small class="text-muted">Updated '.html_safe + vc.time_ago_in_words(ns_activity.last_sent_date.in_time_zone(current_user.time_zone)) + ' ago</small></p>'.html_safe
         [
           ("<input type=\"checkbox\" class=\"bulk-project\" value=\"#{project.id}\">" if current_user.admin?),
           vc.link_to(project.name, project) + '<br><small>'.html_safe + vc.link_to(project.account.name, project.account, class: 'link-muted') + '</small>'.html_safe,
@@ -366,7 +370,7 @@ class ProjectsController < ApplicationController
           (project.forecast.blank? ? '-' : project.forecast),
           get_full_name(project.project_owner),
           members_html,
-          vc.simple_format(vc.truncate(vc.word_wrap(CGI.escape_html(project.next_steps.blank? ? '(none)' : project.next_steps), line_width: 160), length: 300, separator: '\n') ), # pass next steps to dataTables as hidden column, use word_wrap + truncate to ensure only 2 lines shown TODO: implement show more link
+          vc.simple_format(vc.truncate(vc.word_wrap(CGI.escape_html(project.next_steps.blank? ? '(none)' : project.next_steps)), length: 300, separator: '\n') ) + ns_updated_at, # pass next steps to dataTables as hidden column, use word_wrap + truncate to ensure only 2 lines shown TODO: implement show more link
           @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].in_time_zone(current_user.time_zone).strftime('%l:%M%p on %B %-d'),
           "<span class='#{@open_risk_count[project.id].present? && @open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
           "<div data-sparkline=\"#{@sparkline[project.id].join(', ') if @sparkline[project.id].present?}; column\"></div>",

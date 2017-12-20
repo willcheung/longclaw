@@ -596,6 +596,17 @@ class Project < ActiveRecord::Base
       )
       UNION ALL
       (
+      -- NextSteps
+      SELECT date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
+            '#{Activity::CATEGORY[:NextSteps]}' as category,
+            count(*) as activity_count
+      FROM activities
+      WHERE category = '#{Activity::CATEGORY[:NextSteps]}' and project_id = '#{self.id}'
+      GROUP BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}'), category
+      ORDER BY date(last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}')
+      )
+      UNION ALL
+      (
       -- Attachment
       SELECT date(sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') as last_sent_date,
             '#{Notification::CATEGORY[:Attachment]}' as category,
