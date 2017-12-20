@@ -78,7 +78,7 @@
             <strong style="font-size:13px;color:#AAA">CLOSE DATE: <span style="font-size:14px;color:grey"><%= p.close_date.blank? ? "&emsp;-&emsp;".html_safe : p.close_date.strftime('%b %d %Y') %></span></strong>
           </td>
         </tr>
-          <tr>
+        <tr>
           <td style="padding-bottom:7px;text-align:center;">
             <strong style="font-size:13px;color:#3D8DC5">NEXT STEPS: <span style="font-size:14px;color:darkblue"><%= p.next_steps.blank? ? "&emsp;-&emsp;".html_safe : p.next_steps %></span></strong>
           </td>
@@ -182,7 +182,7 @@
         <% elsif a.category == Activity::CATEGORY[:Note] %>
         <!-- Note -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/note_icon.png" alt="Note" title="Updated at <%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
+            <img src="<%= root_url %>/assets/images/icons/note_icon.png" alt="Note" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
           </td>
           <td style="min-width:400px;">
             <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
@@ -235,7 +235,7 @@
         <% elsif a.category == Activity::CATEGORY[:NextSteps] %>
         <!-- Next Steps -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/nextsteps_icon.png" alt="Next Steps" title="Updated at <%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
+            <img src="<%= root_url %>/assets/images/icons/nextsteps_icon.png" alt="Next Steps" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
           </td>
           <td style="min-width:400px;">
             <table border="0" cellspacing="0" cellpadding="0" bgcolor="#EEE" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
@@ -252,7 +252,7 @@
         <% elsif a.category == Activity::CATEGORY[:JIRA] %>
         <!-- JIRA -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/JIRA_icon.png" alt="JIRA" title="Updated at <%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
+            <img src="<%= root_url %>/assets/images/icons/JIRA_icon.png" alt="JIRA" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
           </td>
           <td style="min-width:400px;">
 
