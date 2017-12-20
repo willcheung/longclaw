@@ -316,4 +316,10 @@ module ApplicationHelper
   def truncate_with_ellipsis(string, maxlength)
     string[0...maxlength] + (string.length > maxlength ? "…" : "")
   end
+
+  # Returns date as string formatted as "Mmm dd" if it is less than a year into the future; otherwise, if it is more than year away from today or is in the past, returns date as "Mmm dd Yyyy" (used to shorten display of a date if space is limited)
+  def get_formatted_date(date)
+    (date - DateTime.now) <= 365 && date >= DateTime.now ? date.strftime('%b %d') : date.strftime('%b %d %Y')
+  end
+
 end
