@@ -28,10 +28,10 @@
         <select id="owner-filter" class="category_filter" multiple data-placeholder="  Select Owner" style="width: 100%">
             <option value=""></option> <!-- no filter -->
             <option value="<%= current_user.id %>" <% if params[:owner].present? && (params[:owner].include? current_user.id) %> selected <% end %> >Me (<%= get_full_name(current_user) %>)</option>
-            <% @owners.each do |u| %>
-                <% if u.id != current_user.id %>
-                    <option value="<%= u.id %>" <% if params[:owner].present? && (params[:owner].include? u.id) %> selected <% end %> >
-                        <%= get_full_name(u) %>
+            <% @users_reverse.each do |u| %>
+                <% if u[0] != current_user.id %>
+                    <option value="<%= u[0] %>" <% if params[:owner].present? && (params[:owner].include? u[0]) %> selected <% end %> >
+                        <%= u[1] %>
                     </option>
                 <% end %>
             <% end %>
