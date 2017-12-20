@@ -289,7 +289,7 @@ class ProjectsController < ApplicationController
   end
 
   def index_json
-    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
+    # @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
 
     # puts "\n\n\t************ index_json *************\n"
     # puts "\tparams[:type]: #{params[:type]}"

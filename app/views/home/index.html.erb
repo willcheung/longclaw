@@ -111,11 +111,11 @@
                                 <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
                                 <td><%= p.forecast.blank? ? '-' : p.forecast %></td>
                                 <td><div><%= get_full_name(p.project_owner) %></div></td>
-                                <td style="width: 40px"><span
+                                <td style="width: 40px">
                                 <% all_members = p.users + p.contacts %>
-                                <% members = all_members.first(@MEMBERS_LIST_LIMIT) %>
-                                <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe unless all_members.size == 0 %>
-                                ><i class="fa fa-users" style="color:#888"></i> <%= all_members.size %></span></td>
+                                <!-- < % members = all_members.first(@MEMBERS_LIST_LIMIT) %>
+                                < %= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe unless all_members.size == 0 %> -->
+                                <span><i class="fa fa-users" style="color:#888"></i> <%= all_members.size %></span></td>
                                 <!-- <td style="text-align: center;" class="< %= risk_color(@risk_scores[p.id]) %>">< %= @risk_scores[p.id] %></td> -->
                                 <td><%= simple_format(truncate(word_wrap(CGI.escape_html(p.next_steps.blank? ? '(none)' : p.next_steps), line_width: 160), length: 300, separator: '\n') ) %></td>
                                 <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%l:%M%p on %B %-d') %>

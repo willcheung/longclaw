@@ -4,7 +4,7 @@ class HomeController < ApplicationController
   before_action :get_current_org_users, only: :index
 
   def index
-    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
+    # @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
 
     # Load all projects/opportunities visible to user, belongs to user, and to which user is subscribed
     visible_projects = Project.visible_to(current_user.organization_id, current_user.id)
