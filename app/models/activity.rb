@@ -105,7 +105,7 @@ class Activity < ActiveRecord::Base
   EMAIL_STR = "Email"
   ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX = 32000  # length limit of 'Description' field in SFDC activity during CS export to SFDC
 
-  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity', NextSteps: 'NextSteps' }.freeze
+  CATEGORY = { Conversation: 'Conversation', Note: 'Note', Meeting: 'Meeting', JIRA: 'JIRA Issue', Salesforce: 'Salesforce Activity', Zendesk: 'Zendesk Ticket', Alert: 'Alert', Basecamp2: 'Basecamp2', Pinned: 'Key Activity', NextSteps: 'Next Steps' }.freeze
 
   def self.load(data, project, save_in_db=true, user_id='00000000-0000-0000-0000-000000000000')
     activities = []
