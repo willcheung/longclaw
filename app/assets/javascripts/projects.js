@@ -30,11 +30,14 @@ $(document).ready(function($) {
 
 
   //DataTables
-  var projectsIndexTable = $('#projects-table').DataTable({
-    responsive: true,
+  $('#projects-table').DataTable({
+    scrollX: true,
+    fixedColumns: {
+      leftColumns: 2
+    },
     columnDefs: [
-      { searchable: false, targets: [0,4,5,6,7,8,9,10,11/*,12*/] },
-      { orderable: false, targets: [0,4,5,6,7,8,9,10,11/*,12*/] }
+      { searchable: false, targets: [0,5,6,7,8,9,10,11,12,13] },
+      { orderable: false, targets: [0,5,6,7,8,9,10,11,12,13] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
@@ -64,8 +67,8 @@ $(document).ready(function($) {
     },
     rowCallback: function (tr, data, index) {
       // show all rows by default
-      var row = projectsIndexTable.row(tr);
-      row.child(formatNextSteps(row.data()[row.data().length - 1])).show();
+      // var row = projectsIndexTable.row(tr);
+      // row.child(formatNextSteps(row.data()[row.data().length - 1])).show();
       // $(tr).addClass('child-row');
     }
   });
@@ -87,9 +90,9 @@ $(document).ready(function($) {
   //   }
   // });
 
-  function formatNextSteps (nextSteps) {
-    return $('<tr class="child-row"><td colspan="2"></td><td colspan="10"><strong>Next Steps:</strong> ' + nextSteps + '</td></tr>');
-  }
+  // function formatNextSteps (nextSteps) {
+  //   return $('<tr class="child-row"><td colspan="2"></td><td colspan="10"><strong>Next Steps:</strong> ' + nextSteps + '</td></tr>');
+  // }
 
   $('input[type=search]').attr('size', '50');
 

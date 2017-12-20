@@ -32,6 +32,8 @@ class ProjectsController < ApplicationController
     # get categories for category filter
     @categories = @activities_by_category_date.keys
     @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
+    @ns_activity = @project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
+    # @ns_updated_at = ns_activity.blank? ? '' : ns_activity.last_sent_date.in_time_zone(current_user.time_zone)
   end
 
   def filter_timeline
@@ -358,22 +360,24 @@ class ProjectsController < ApplicationController
         # members = all_members.first(@MEMBERS_LIST_LIMIT)
         # tooltip = all_members.size == 0 ? '' : " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe
         members_html = "<span><i class=\"fa fa-users\" style=\"color:#888\"></i> #{all_members}</span>"
+        ns_activity = project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
+        ns_updated_at = ns_activity.blank? ? '' : '<p class="m-b-none"><small class="text-muted">Updated '.html_safe + vc.time_ago_in_words(ns_activity.last_sent_date.in_time_zone(current_user.time_zone)) + ' ago</small></p>'.html_safe
         [
           ("<input type=\"checkbox\" class=\"bulk-project\" value=\"#{project.id}\">" if current_user.admin?),
           vc.link_to(project.name, project) + '<br><small>'.html_safe + vc.link_to(project.account.name, project.account, class: 'link-muted') + '</small>'.html_safe,
-          (project.stage.blank? ? "-" : project.stage) + '<br><small class="text-muted">'.html_safe + (project.forecast.blank? ? '-' : project.forecast.upcase) + '</small>'.html_safe,
+          (project.stage.blank? ? "-" : project.stage),
           (project.amount.nil?) ? "-" : "$"+vc.number_to_human(project.amount),
+          (project.forecast.blank? ? '-' : project.forecast),
           get_full_name(project.project_owner),
           members_html,
-          @days_to_close[project.id].nil? ? "-" : @days_to_close[project.id].to_s,
+          vc.simple_format(vc.truncate(vc.word_wrap(CGI.escape_html(project.next_steps.blank? ? '(none)' : project.next_steps)), length: 300, separator: '\n') ) + ns_updated_at, # pass next steps to dataTables as hidden column, use word_wrap + truncate to ensure only 2 lines shown TODO: implement show more link
+          @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].in_time_zone(current_user.time_zone).strftime('%l:%M%p on %B %-d'),
           "<span class='#{@open_risk_count[project.id].present? && @open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
           "<div data-sparkline=\"#{@sparkline[project.id].join(', ') if @sparkline[project.id].present?}; column\"></div>",
           @project_days_inactive[project.id].nil? ? "-" : @project_days_inactive[project.id],
-          @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].in_time_zone(current_user.time_zone).strftime('%l:%M%p on %B %-d'),
-          # '<i class="fa fa-step-forward" data-toggle="tooltip" data-original-title="Next Steps: ' + (project.next_steps.blank? ? '(none)' : project.next_steps) + '"></span>',
-          # project.next_steps.blank? ? '(none)' : vc.truncate(project.next_steps, length: 20),
-          project.daily ? vc.link_to("<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{project.id}", class: "block m-b-xs", title: "Following daily") : vc.link_to("<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{project.id}", class: "block m-b-xs", title: "Follow daily"),
-          vc.simple_format(vc.truncate(vc.word_wrap(CGI.escape_html(project.next_steps.blank? ? '(none)' : project.next_steps), line_width: 160), length: 300, separator: '\n') ) # pass next steps to dataTables as hidden column, use word_wrap + truncate to ensure only 2 lines shown TODO: implement show more link
+          @days_to_close[project.id].nil? ? "-" : @days_to_close[project.id].to_s,
+          # "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?",
+          project.daily ? vc.link_to("<i class=\"fa fa-check\"></i> Daily".html_safe, project_project_subscriber_path(project_id: project.id, user_id: current_user.id) + "?type=daily", remote: true, method: :delete, id: "project-index-unfollow-daily-#{project.id}", class: "block m-b-xs", title: "Following daily") : vc.link_to("<i class=\"fa fa-bell-o\"></i> Daily".html_safe, project_project_subscribers_path(project_id: project.id, user_id: current_user.id) + "&type=daily", remote: true, method: :post, id: "project-index-follow-daily-#{project.id}", class: "block m-b-xs", title: "Follow daily")
         ]
       end
     }

@@ -109,22 +109,22 @@
           <!-- no projects snippet -->
                 <div class="ibox float-e-margins">
                     <div class="ibox-content">
-                        <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0" width="100%" data-source="<%= projects_path(format: :json) %>">
+                        <table class="table table-hover display nowrap" id="projects-table" cellspacing="0" width="100%" data-source="<%= projects_path(format: :json) %>">
                             <thead>
                                 <tr>
                                     <th></th>
                                     <th>Name</th>
                                     <th><%= Project::MAPPABLE_FIELDS_META["stage"] %></th>
                                     <th><%= Project::MAPPABLE_FIELDS_META["amount"] %></th>
-                                    <!--<th>< %= Project::MAPPABLE_FIELDS_META["forecast"] %></th>-->
+                                    <th><%= Project::MAPPABLE_FIELDS_META["forecast"] %></th>
                                     <th>Owner</th>
                                     <th></th>
-                                    <th>Days to Close</th>
+                                    <th>Next Steps</th>
+                                    <th>Next Meeting</th>
                                     <th>Alerts & Tasks</th>
                                     <th>Last 7d Activity</th>
                                     <th>Days Inactive</th>
-                                    <th>Next Meeting</th>
-                                    <!--<th>Next Steps</th>-->
+                                    <th>Days to Close</th>
                                     <th></th>
                                 </tr>
                             </thead>

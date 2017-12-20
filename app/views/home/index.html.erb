@@ -82,19 +82,21 @@
                 </table>
             </div>
             <div class="ibox-content">
-                <table class="table table-hover responsive no-wrap" id="projects-table" cellspacing="0">
+                <table class="table table-hover nowrap" id="projects-table" cellspacing="0" width="100%">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th><%= Project::MAPPABLE_FIELDS_META["stage"] %></th>
                             <th><%= Project::MAPPABLE_FIELDS_META["amount"] %></th>
+                            <th><%= Project::MAPPABLE_FIELDS_META["forecast"] %></th>
                             <th>Owner</th>
                             <th></th>
-                            <th>Days to Close</th>
+                            <th>Next Steps</th>
+                            <th>Next Meeting</th>
                             <th>Alerts & Tasks</th>
                             <th>Last 7d Activity</th>
                             <th>Days Inactive</th>
-                            <th>Next Meeting</th>
+                            <th>Days to Close</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -105,25 +107,27 @@
                                     <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                     <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                 </td>
-                                <td style="width: 120px"><%= p.stage.blank? ? '-' : p.stage %><br><small class="text-muted"><%= p.forecast.blank? ? '-' : p.forecast.upcase %></small></td>
+                                <td style="width: 120px"><%= p.stage.blank? ? '-' : p.stage %></td>
                                 <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
+                                <td><%= p.forecast.blank? ? '-' : p.forecast %></td>
                                 <td><div><%= get_full_name(p.project_owner) %></div></td>
                                 <td style="width: 40px"><span
                                 <% all_members = p.users + p.contacts %>
                                 <% members = all_members.first(@MEMBERS_LIST_LIMIT) %>
                                 <%= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe unless all_members.size == 0 %>
                                 ><i class="fa fa-users" style="color:#888"></i> <%= all_members.size %></span></td>
-                                <!-- <td style="text-align: center;" class="< %= risk_color(@risk_scores[p.id]) %>">< %= @risk_scores[p.id] %></td> -->
-                                <td style="text-align:center;" class=""><%= @days_to_close[p.id].nil? ? "-" : @days_to_close[p.id].to_s %></td>
+                                <% ns_activity = p.activities.where(category: Activity::CATEGORY[:NextSteps]).first %>
+                                <% ns_updated_at = ns_activity.blank? ? '' : '<p class="m-b-none"><small class="text-muted">Updated '.html_safe + time_ago_in_words(ns_activity.last_sent_date.in_time_zone(current_user.time_zone)) + ' ago</small></p>'.html_safe %>
+                                <td><%= simple_format(truncate(word_wrap(CGI.escape_html(p.next_steps.blank? ? '(none)' : p.next_steps)), length: 300, separator: '\n')) + ns_updated_at %></td>
+                                <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%l:%M%p on %B %-d') %>
+                                <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].to_i %>
+                                <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
                                 <td style="text-align:center;" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
                                 <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
 
                                 <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
+                                <td style="text-align:center;" class=""><%= @days_to_close[p.id].nil? ? "-" : @days_to_close[p.id].to_s %></td>
 
-                                <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%l:%M%p on %B %-d') %>
-                                <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].to_i %>
-                                <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
-                                
                                 <td style="width: 120px">
                                     <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to daily updates and alerts." data-delay='{"show":"300"}'>
                                     <% if p.daily %>
