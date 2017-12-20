@@ -152,8 +152,8 @@ class ReportsController < ApplicationController
 
   def team_dashboard
     users = current_user.organization.users
-    @departments = users.pluck(:department).compact.uniq
-    @titles = users.pluck(:title).compact.uniq
+    @departments = users.registered.pluck(:department).compact.uniq
+    @titles = users.registered.pluck(:title).compact.uniq
 
     params[:sort] = TEAM_DASHBOARD_METRIC[:win_rate]
     params[:metric] = TEAM_DASHBOARD_METRIC[:time_spent_last14d]
