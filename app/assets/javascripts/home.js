@@ -5,10 +5,12 @@ $('[data-toggle="tooltip"]').tooltip();
 jQuery(document).ready(function($) {  
   //DataTables
     $('#projects-table').DataTable( {
-      responsive: true,
+      // responsive: true,
       searching: false,
+      scrollX: true,
+      fixedColumn: true,
       columnDefs: [
-        { orderable: false, targets: [4,7,10] }
+        { orderable: false, targets: [5,9,12] }
       ],
       "order": [[ 0, "asc" ]],
       "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
