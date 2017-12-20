@@ -17,12 +17,12 @@
               </button>
             </span>
             <!--<h4 style="/*font-size: 23px;*/height: 25px;" class="m-l-sm"><strong>Current next steps:</strong> <span id="current-next-steps">< %= project.next_steps.blank? ? '(none)' : project.next_steps %></span></h4>-->
-
-            <%= f.input :next_steps, label: false, as: 'text', input_html: { id: 'next-steps-input', class: 'input-border activity-input', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: 3 }, placeholder: "Updated next step..." %>
+            <small class="text-muted m-l-sm"><%= @ns_activity.blank? ? '' : 'Updated ' + time_ago_in_words(@ns_activity.last_sent_date.in_time_zone(current_user.time_zone)) + ' ago' %></small>
+            <%= f.input :next_steps, label: false, as: 'text', input_html: { id: 'next-steps-input', class: 'no-border', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: 2 }, placeholder: "(none)" %>
           </div>
         </div>
         <div class="col-lg-1" style="align-self:flex-end;">
-          <%= f.button :submit, "Update", class: "btn-note btn-primary pull-right m-b font-bold" %>
+          <%= f.button :submit, "Update", class: "btn-note btn-primary pull-right m-b font-bold", id: 'update-next-steps-button', style: 'display:none;' %>
         </div>
       <% end %>
     </div>
@@ -39,7 +39,7 @@
               <%=b.radio_button + b.text.html_safe %>
           <%end%>
 
-          <%= f.input :note, label: false, input_html: { id: 'note-input', class: 'input-border activity-input', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: 1 }, placeholder: "Post a note or status..." %>
+          <%= f.input :note, label: false, input_html: { id: 'note-input', class: 'input-border', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: 1 }, placeholder: "Post a note or status..." %>
         </div>
       </div>
       <%= f.input :project_id, as: 'hidden', input_html: { value: project.id } %>
@@ -54,10 +54,13 @@
   // Auto resize textarea with pop out for button
 
   $("#next-steps-input").on("focus keypress input", function () {
-    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 73));
+    $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 72)).addClass('input-border').removeClass('no-border');
+    $('#update-next-steps-button').show();
   }).blur(function () {
-    $(this).css('height', 'auto').css('height', 73);
+    $(this).css('height', 'auto').css('height', 72).addClass('no-border').removeClass('input-border');
+    $('#update-next-steps-button').hide();
   });
+
   $("#note-input").on("focus keypress input", function () {
     $(this).css('height', 'auto').css('height', Math.max(this.scrollHeight, 33));
   });
@@ -65,7 +68,6 @@
   // fix button evades first mouse click when losing focus and never submits form
   $('.btn-note').mousedown( function () {
     $(this).closest('form').submit();
-    return false;
   }).click( function () {
     return false;
   });
