@@ -369,7 +369,8 @@
         <% elsif a.category == Activity::CATEGORY[:NextSteps] %>
 
             <div class="chat-discussion">
-              <div><strong><%= get_full_name(a.user) %></strong> changed next steps from <strong><%= a.note %></strong> to <strong><%= a.title %></strong></div>
+              <p class="note-author"><strong><%= get_full_name(a.user) %></strong> changed next steps to:</p>
+              <%= simple_format(CGI.escape_html(a.title)) %>
 
                 <div class="action-links">
                   <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>

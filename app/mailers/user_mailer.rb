@@ -15,8 +15,8 @@ class UserMailer < ApplicationMailer
     Time.use_zone(user.time_zone) do
       @user = user
       @subs = user.valid_streams_subscriptions.daily
-      # @upcoming_meetings = user.upcoming_meetings  # backend call-back
-      # @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
+      @upcoming_meetings = user.upcoming_meetings  # backend call-back
+      @project_days_inactive = Project.joins(:activities).where(id: @upcoming_meetings.map(&:project_id)).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).group("projects.id").maximum("activities.last_sent_date") # get last_sent_date
 
       puts "Checking daily subscription for #{user.email}"
       # Currently, will not send a daily summary e-mail unless user is subscribed to at least one project/opportunity.  TODO: Create a setting for subscribing to daily e-mail for calendar events.
