@@ -88,9 +88,9 @@
             <h3 class="m-t-md"><i class="fa fa-chevron-right"></i>  Next Steps:</h3>
             <% if @project.next_steps.present? %>
               <%= simple_format(CGI.escape_html(@project.next_steps)) %>
-            <p class="text-muted"><%= @ns_activity.blank? ? '' : 'Updated ' + time_ago_in_words(Time.zone.at(@ns_activity.last_sent_date).strftime('%b %d, %R%P')) + ' ago' %></p>
+              <p class="text-muted"><%= @ns_activity.blank? ? '' : 'Updated ' + time_ago_in_words(Time.zone.at(@ns_activity.last_sent_date).strftime('%b %d, %R%P')) + ' ago' %></p>
             <% else %>
-            <p class="text-danger">No next steps set yet.</p>
+              <p class="text-danger">No next steps set yet.</p>
             <% end %>
         </div>
 
