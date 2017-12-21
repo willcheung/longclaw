@@ -275,19 +275,8 @@ class ProjectsController < ApplicationController
       projects = projects.where(category: params[:type])
     end
 
-    # Stage chart/filter
-    stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", projects.ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
-
-    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
-    @stage_chart_data = stage_chart_result.sort do |x,y|
-      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
-      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
-      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
-      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
-      stage_name_x <=> stage_name_y  # unmatched stage names are sorted to the left of everything
-    end.map do |s, a|
-      Hashie::Mash.new({ stage_name: s, total_amount: a })
-    end
+    set_top_dashboard_data(project_ids: projects.ids)
+    @no_progress = true
   end
 
   def index_json

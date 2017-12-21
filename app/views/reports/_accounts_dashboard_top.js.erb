@@ -7,8 +7,10 @@ var barColors = {
 };
 
 var closed_won_amount = large_number_to_human_signif_digits(<%= @lost_won_totals.present? && @lost_won_totals.find{|k,v| k == @winning_stage_default_name}.present? ? @lost_won_totals.find{|k,v| k == @winning_stage_default_name}.second.to_i : 0 %>);
-<% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
-<% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
+<% unless @no_progress %>
+  <% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
+  <% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
+<% end %>
 // var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";
 $("#closedwon-box").html(
   "<div class='ibox-title'>" +

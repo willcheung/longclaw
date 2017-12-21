@@ -66,7 +66,17 @@
           </select>
           <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" onclick="setFilterParamsAndReloadPage();"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
         </div>
-        <div class="col-lg-12">
+
+        <div class="col-lg-4">
+          <div class="ibox float-e-margins m-b-none m-t">
+            <div class='ibox-title'>
+              <h5>Deals by Forecast</h5>
+            </div>
+            <div id="forecast-chart" class="ibox-content forecast-chart" style="height:150px;padding-bottom:0"></div>
+          </div>
+        </div>
+
+        <div class="col-lg-8">
           <div class="ibox float-e-margins m-b-none m-t">
             <div class='ibox-title'>
               <h5>
@@ -144,6 +154,79 @@
 
 <script type="text/javascript" charset="utf-8">
 $(function () {
+  $('#forecast-chart').highcharts({
+    chart: {
+      type: 'column'
+    },
+    title: {
+      text: ''
+//                text: 'Deals by Forecast',
+//                style: {
+//                    color: '#676a6c',
+//                    fontSize: '14px',
+//                    fontFamily: 'Roboto'
+//                },
+//                align: 'left'
+    },
+    credits: {
+      enabled: false
+    },
+    xAxis: {
+      crosshair: true,
+      labels: {
+        style: {
+          fontSize: '9px'
+        }
+      }
+    },
+    yAxis: {
+      min: 0,
+      title: {
+        text: ''
+      },
+      labels: {
+        enabled: false
+      },
+      stackLabels: {
+        enabled: true,
+        formatter: function () {
+          return "$"+large_number_to_human_signif_digits(this.total);
+        },
+        style: {
+          color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+        }
+      }
+    },
+    tooltip: {
+      enabled: true,
+      formatter: function () {
+        return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
+      }
+    },
+    legend: {
+      enabled: false
+    },
+    plotOptions: {
+      column: {
+        stacking: 'normal',
+        pointPadding: 0.2,
+        borderWidth: 0,
+        dataLabels: {
+          enabled: false,
+          format: '${y}',
+          style: {
+            color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+          }
+        }
+      },
+      series: {
+        pointPadding: 0.1,
+        groupPadding: 0,
+        borderWidth: 0
+      }
+    }
+  });
+
   $('#stage-chart').highcharts({
     chart: {
       type: 'column'
@@ -242,6 +325,8 @@ $(function () {
     }
   });
 
-  <%= render partial: 'reports/stage_chart.js' %>
+  // < %= render partial: 'reports/stage_chart.js' %>
+  <%= render partial: 'reports/accounts_dashboard_top.js' %>
+
 })
 </script>
