@@ -2,15 +2,15 @@
 
 $('[data-toggle="tooltip"]').tooltip();
 
-jQuery(document).ready(function($) {  
+$(document).ready(function($) {
   //DataTables
     $('#projects-table').DataTable( {
-      // responsive: true,
       searching: false,
       scrollX: true,
-      fixedColumn: true,
+      fixedColumns: true,
       columnDefs: [
-        { orderable: false, targets: [5,9,12] }
+        { orderable: false, targets: [5,9,12] },
+        { className: 'fixed-column-border', targets: [0] }
       ],
       "order": [[ 0, "asc" ]],
       "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
