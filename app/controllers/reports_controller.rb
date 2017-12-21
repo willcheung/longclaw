@@ -119,6 +119,8 @@ class ReportsController < ApplicationController
     @alerts_tasks = @project.notifications.order(:is_complete, :created_at).limit(8)
     # Next Meeting
     @next_meeting = @project.meetings.next_week.last
+    # Next Steps
+    @ns_activity = @project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
 
     # Engagement Volume Chart
     # @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
