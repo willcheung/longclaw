@@ -37,7 +37,8 @@ $(document).ready(function($) {
     },
     columnDefs: [
       { searchable: false, targets: [0,5,6,7,8,9,10,11,12,13] },
-      { orderable: false, targets: [0,5,6,7,8,9,10,11,12,13] }
+      { orderable: false, targets: [0,5,6,7,8,9,10,11,12,13] },
+      { className: 'fixed-column-border', targets: [1] }
     ],
     "order": [[ 1, "asc" ]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
