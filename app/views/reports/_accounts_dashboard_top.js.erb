@@ -12,7 +12,7 @@ var closed_won_amount = large_number_to_human_signif_digits(<%= @lost_won_totals
 // var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";
 $("#closedwon-box").html(
   "<div class='ibox-title'>" +
-  "    <h5><%= @winning_stage_default_name %></h5>" +
+  "    <h5><%= @winning_stage_default_name.present? ? @winning_stage_default_name : current_user.organization.get_winning_stages.first %></h5>" +
   "</div>" +
   "<div class='ibox-content' style='height:220px;padding-bottom:0;padding-top:20px;'>" +
   "    <h1><strong>$" + closed_won_amount + "</strong></h1>" +

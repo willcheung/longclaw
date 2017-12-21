@@ -160,7 +160,7 @@ class SalesforceController < ApplicationController
       end # end: open_sfdc_opps_acct_ids.each do |acct_id|
     end # end: if !user.admin?
 
-    # Refresh/update the standard and custom field values of mapped accts and opps
+    # Import/update the standard and custom field values of mapped accts and opps
     SalesforceAccount.refresh_fields(client, user)
     SalesforceOpportunity.refresh_fields(client, user)
 

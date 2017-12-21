@@ -140,7 +140,7 @@ class Project < ActiveRecord::Base
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
   MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast", "next_steps" => "Next Steps" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
-  CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'All Closed', Open: 'All Open' }
+  CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'Before Today', Open: 'Today and After' }
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
@@ -1133,7 +1133,7 @@ class Project < ActiveRecord::Base
     end
   end
 
-  # Updates all standard CS Opportunity fields from all mapped SFDC Opportunity fields for explicitly mapped CS and SFDC Opportunities.
+  # Imports/updates all standard CS Opportunity fields from all mapped SFDC Opportunity fields for explicitly mapped CS and SFDC Opportunities.
   # Parameters:   client - connection to Salesforce
   #               opportunities - collection of CS Projects/Opportunities to process
   #               sfdc_fields_mapping - A list of [Mapped SFDC Opportunity field name, CS Opportunity field name] pairs
@@ -1199,7 +1199,7 @@ class Project < ActiveRecord::Base
     result
   end
 
-  # Updates all custom CS Opportunity fields mapped to SFDC Opportunity fields for a single CS Opportunity/SFDC Opportunity pair.
+  # Imports/updates all custom CS Opportunity fields mapped to SFDC Opportunity fields for a single CS Opportunity/SFDC Opportunity pair.
   # Parameters:   client - connection to Salesforce
   #               project_id - CS project/opportunity id          
   #               sfdc_opportunity_id - SFDC opportunity sObjectId

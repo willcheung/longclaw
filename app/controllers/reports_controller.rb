@@ -1,5 +1,5 @@
 class ReportsController < ApplicationController
-  before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
+  before_action :get_current_org_users, only: [:accounts_dashboard, :ad_sort_data]
 
   ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :days_inactive => "Days Inactive", :open_alerts_and_tasks => "Open Alerts & Tasks", :overdue_tasks => "Total Overdue Tasks", :deal_size => "Deal Size", :days_to_close => "Days to Close"} # Removed: :risk_score => "Risk Score"
   TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :closed_won => "Closed Won", :win_rate => "Win Rate", :opportunities => "Opportunities", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks" } # Removed: :new_alerts_and_tasks_last_14d
@@ -152,8 +152,8 @@ class ReportsController < ApplicationController
 
   def team_dashboard
     users = current_user.organization.users
-    @departments = users.pluck(:department).compact.uniq
-    @titles = users.pluck(:title).compact.uniq
+    @departments = users.registered.pluck(:department).compact.uniq
+    @titles = users.registered.pluck(:title).compact.uniq
 
     params[:sort] = TEAM_DASHBOARD_METRIC[:win_rate]
     params[:metric] = TEAM_DASHBOARD_METRIC[:time_spent_last14d]
@@ -290,10 +290,6 @@ class ReportsController < ApplicationController
   #### Private helper functions ####
   private
 
-  def get_owners_in_org
-    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
-  end
-
   def get_leaderboard_data(metric, users, projects, ordered_by=nil)
     data = []
     categories = nil
@@ -423,7 +419,7 @@ class ReportsController < ApplicationController
     end
 
     winning_stages = stage_chart_result.select{|s,t| current_user.organization.get_winning_stages.include? s}
-    @winning_stage_default_name = winning_stages.present? ? winning_stages.first[0] : 'Closed Won'  # if no winning stages are present after filter applied, set a default name for display
+    @winning_stage_default_name = winning_stages.first[0] if winning_stages.present?
     @lost_won_totals = [[@winning_stage_default_name, winning_stages.sum{|s,t| t}], stage_chart_result.select{|s,t| ['Closed Lost'].include? s}]
 
     stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
