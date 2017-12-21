@@ -338,9 +338,9 @@
             </div>
             <div class="row member">
                 <div class="col-sm-2">
-                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
+                    <i class="" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
                 </div>
-                <div class="col-sm-9 project-team-title">
+                <div class="col-sm-10 project-team-title">
                     <%= form_tag("/project_members/", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
                          <input type="search" name="email" id="member-search" class="contacts z-3" placeholder="Add people...">
                         <%= hidden_field_tag 'project_id', @project.id %>
@@ -367,9 +367,9 @@
             </div>
             <div class="row">
                 <div class="col-sm-2">
-                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
+                    <i class="" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
                 </div>
-                <div class="col-sm-9 project-team-title">
+                <div class="col-sm-10 project-team-title">
                     <%= form_tag(project_project_subscribers_create_all_path(project_id: @project.id)+"?type=daily", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>
                         <input type="search" name="user_id" class="contacts search-daily-subs z-2" placeholder="Add followers...">
                         <%= submit_tag "Add subscriber", class: "hide-submit-button" %>
@@ -396,7 +396,7 @@
             </div>
             <div class="row">
                 <div class="col-sm-2">
-                    <i class="fa fa-plus-circle fa-2x" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
+                    <i class="" style="margin-top: 8px;margin-left:5px;color:#aaa"></i>
                 </div>
                 <div class="col-sm-9 project-team-title">
                     < %= form_tag(project_project_subscribers_create_all_path(project_id: @project.id)+"?type=weekly", :method => "post", id: "search-form", class: "fix-height", remote: true) do %>

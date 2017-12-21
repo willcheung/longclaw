@@ -23,6 +23,7 @@ class CustomConfiguration < ActiveRecord::Base
   belongs_to  :user
 
   CONFIG_TYPE = { Settings_salesforce_activities: '/settings/salesforce_activities', Salesforce_sync: 'salesforce_sync' }
+  PERIOD_TYPE = { "Weekly" => {name: "Weekly", time_value: 1.week}, "Daily" => {name: "Daily", time_value: 1.day}, "Hourly" => {name: "Hourly", time_value: 1.hour} }
 
   scope :salesforce_sync, -> { where config_type: CONFIG_TYPE[:Salesforce_sync] }
 
@@ -30,25 +31,26 @@ class CustomConfiguration < ActiveRecord::Base
   # Note: If both organization are user are unspecified, this will do nothing. 
   # Parameters:   user - (optional) if specified and user is non-admin, this will set the config for this user; if specified but user is an admin, this will set the config for this user's organization instead
   #               organization - (optional) if specified, this will set the config for this organization.
-  #               key - (optional) "auto_sync", "activities", or "contacts". If this and "setDefault" parameter are both unspecified, do nothing.
+  #               key - (optional) "scheduled_sync", "activities", or "contacts". If this and "setDefault" parameter are both unspecified, do nothing.
   #               newValue - (optional) non-string hash value to which to set the key, e.g., {"import":"", "export":""}
   #               setDefault - (optional) if true, sets the default config. False (default).
-  # Example (where user1 is an instance of a User):  CustomConfiguration.set_customconfiguration(user: user1, key: "auto_sync", newValue: {"daily"=>""})
+  # Example (where current_user is an instance of a User):  CustomConfiguration.set_customconfiguration(user: current_user, key: "scheduled_sync", newValue: {CustomConfiguration::PERIOD_TYPE["Daily"][:name] => {"last_successful_run":"", "next_run":""}})
   def self.set_customconfiguration(user: nil, organization: nil, key: nil, newValue: nil, setDefault: false)
-    return if (organization.blank? && user.blank?) || (user.present? && user.organization != organization)
+    return if (organization.blank? && user.blank?) || (user.present? && organization.present? && user.organization != organization)
 
-    default_vals = { "auto_sync" => {"daily":""}, "activities"=> {"import":""}, "contacts"=> {"import":""} }  # by default, we do not auto-export activities or contacts
-    # default_vals = { "auto_sync" => {"daily":""}, "activities"=> {"import":"","export":""}, "contacts"=> {"import":"","export":""} }
+    default_vals = { "scheduled_sync" => {PERIOD_TYPE["Daily"][:name] => {"last_successful_run":"", "next_run":""}}, "activities"=> {"import"=>""}, "contacts"=> {"import"=>""} }  # by default, we do not auto-export activities or contacts
+    # default_vals = { "scheduled_sync" => {PERIOD_TYPE["Daily"][:name] => {"last_successful_run":"", "next_run":""}}, "activities"=> {"import"=>"","export"=>""}, "contacts"=> {"import"=>"","export"=>""} }
 
     if user.blank? || user.admin?
+      organization ||= user.organization
       cc = organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: nil) do |config|
-        config.config_value["auto_sync"] = default_vals["auto_sync"]
+        config.config_value["scheduled_sync"] = default_vals["scheduled_sync"]
         config.config_value["activities"] = default_vals["activities"]
         config.config_value["contacts"] = default_vals["contacts"] 
       end
     else
       cc = user.organization.custom_configurations.find_or_create_by(config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], user_id: user.id) do |config|
-        config.config_value["auto_sync"] = default_vals["auto_sync"]
+        config.config_value["scheduled_sync"] = default_vals["scheduled_sync"]
         config.config_value["activities"] = default_vals["activities"]
         config.config_value["contacts"] = default_vals["contacts"]
       end

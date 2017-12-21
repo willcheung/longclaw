@@ -201,15 +201,14 @@ namespace :scheduler do
     # Usage: rake scheduler:refresh_salesforce
     task refresh_salesforce: :environment do
         puts "\n\n=====Task (refresh_salesforce) started at #{Time.now}====="
-        sfdc_refresh_configs = CustomConfiguration.where("config_type = :config_type AND ((config_value::jsonb)->>'auto_sync')::jsonb ?| array[:keys]", config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], keys: ['daily','weekly'])
+        sfdc_refresh_configs = CustomConfiguration.where("config_type = :config_type AND ((config_value::jsonb)->>'scheduled_sync')::jsonb ?| array[:keys]", config_type: CustomConfiguration::CONFIG_TYPE[:Salesforce_sync], keys: CustomConfiguration::PERIOD_TYPE.keys)
         sfdc_refresh_configs.each do |cf|
-            # skip if the refresh_level is not found in the auto_sync hash (refresh is not enabled); otherwise, run if refresh_level exists, but it is an empty string (refresh is enabled but never been run, simply awaiting update upon the first run).
-            refresh_level = "weekly" if (!cf.config_value['auto_sync']['weekly'].nil? && (cf.config_value['auto_sync']['weekly'].blank? || DateTime.parse(cf.config_value['auto_sync']['weekly']) + 1.week <= Time.now))
-            refresh_level = "daily" if (!cf.config_value['auto_sync']['daily'].nil? && (cf.config_value['auto_sync']['daily'].blank? || DateTime.parse(cf.config_value['auto_sync']['daily']) + 1.day <= Time.now))
+            refresh_period = nil
+            cf.config_value["scheduled_sync"].keys.each do |per|
+                refresh_period = per if (CustomConfiguration::PERIOD_TYPE.keys.include? per) && cf.config_value["scheduled_sync"][per]["next_run"].blank? || DateTime.parse(cf.config_value["scheduled_sync"][per]["next_run"]) <= Time.now  # if "next_run" is an empty string then refresh is enabled but never been run (simply awaiting update upon the first run).
+            end
 
-            next if refresh_level.blank?
-
-            auto_sync_timestamp = Time.now
+            next if refresh_period.blank? # could not find any scheduled refreshes that are due now
 
             sfdc_client = nil
             if cf.user_id.present?
@@ -227,7 +226,7 @@ namespace :scheduler do
             end
 
             if sfdc_client.present?
-                puts "\n[ scheduler:refresh_salesforce ] - Refreshing Salesforce for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"} (frequency=#{refresh_level}, last run=#{cf.config_value['auto_sync'][refresh_level].present? ? DateTime.parse(cf.config_value['auto_sync'][refresh_level]) : "never" })."
+                puts "\n[ scheduler:refresh_salesforce ] - Refreshing Salesforce for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"} (frequency=#{refresh_period}, last_successful_run=#{cf.config_value["scheduled_sync"][refresh_period]["last_successful_run"].present? ? cf.config_value["scheduled_sync"][refresh_period]["last_successful_run"] : "never" })."
                 # SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
                 if user.present?
                     SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user, for_periodic_refresh: true)
@@ -236,9 +235,11 @@ namespace :scheduler do
                     SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: admin_user, for_periodic_refresh: true) if admin_user.present?
                 end
 
-                # update auto_sync timestamp upon successful completion
+                # update scheduled_sync timestamp upon successful completion
                 cf = CustomConfiguration.find(cf.id)  # get updated copy to avoid overwriting timestamps set during refresh!
-                cf.config_value['auto_sync'][refresh_level] = auto_sync_timestamp
+                now_ts = Time.now
+                cf.config_value["scheduled_sync"][refresh_period]["last_successful_run"] = now_ts
+                cf.config_value["scheduled_sync"][refresh_period]["next_run"] = (cf.config_value["scheduled_sync"][refresh_period]["next_run"].blank? ? now_ts : DateTime.parse(cf.config_value["scheduled_sync"][refresh_period]["next_run"])) + CustomConfiguration::PERIOD_TYPE[refresh_period][:time_value]
                 cf.save
             else
                 puts "\n**** scheduler:refresh_salesforce SFDC error **** Cannot establish a Salesforce connection for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"}!"

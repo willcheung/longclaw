@@ -93,8 +93,8 @@ function resetStagesFilter() {
         convert_secs_to_hhmm(86400);  => "24:00"
         convert_secs_to_hhmm(172800); => "48:00"
 */
-function convert_secs_to_hhmm(secs) {
+function convert_secs_to_hhmm(secs, includeHrLabel=false) {
     var hours = Math.floor(secs / 3600);
     var mins = Math.floor((secs - hours*3600) / 60);
-    return hours + ":" + ("00" + mins).slice(-2);
+    return hours + ":" + ("00" + mins).slice(-2) + (includeHrLabel ? (hours > 1 ? " hrs" : " hr") : "" );
 }

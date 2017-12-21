@@ -2,14 +2,14 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def salesforce
     #puts "****** session return_to_path: #{ session[:return_to_path] }"
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
-    set_salesforce_auto_sync_custom_configuration(current_user)
+    set_salesforce_scheduled_sync_custom_configuration(current_user)
     InitialSalesforceLoginsJob.perform_later(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
 
   def salesforcesandbox
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
-    set_salesforce_auto_sync_custom_configuration(current_user)
+    set_salesforce_scheduled_sync_custom_configuration(current_user)
     InitialSalesforceLoginsJob.perform_later(current_user)
     redirect_to (session.delete(:return_to_path) || root_path)
   end
@@ -105,7 +105,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   private
 
-  def set_salesforce_auto_sync_custom_configuration(current_user)
+  def set_salesforce_scheduled_sync_custom_configuration(current_user)
     # If no custom configuration was previously set for this organization, this will create and set the default configuration.
     current_user.organization.set_customconfiguration(user: current_user)
   end

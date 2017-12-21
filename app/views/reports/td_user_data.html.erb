@@ -13,7 +13,7 @@
             <div class="col-md-3 text-center">
                 <div class="metric">
                     <div class="metric-title">
-                        <h4>Closed Won<br>(This Quarter)</h4>
+                        <h4><%= @winning_stage_default_name %><br>(This Quarter)</h4>
                     </div>
                     <div class="metric-content">
                         <h2 style="font-weight:600;font-size:46px;"><% if @closed_won_this_qtr.nil? %> - <% else %>$<%= number_to_human(@closed_won_this_qtr) %><% end %></h2>

@@ -1,16 +1,18 @@
 var barColors = {
-  "Closed Won": '#A1DD36',  // light green
+  <% current_user.organization.get_winning_stages.each do |s| %>
+  "<%= s %>": '#A1DD36',  // light green
+  <% end %>
   "Closed Lost": '#DDC3C3', // greyish pink
   default: "#7CB5EC",   // "CS" light blue
 };
 
-var closed_won_amount = large_number_to_human_signif_digits(<%= @lost_won_totals.present? && @lost_won_totals.find{|k,v| k == "Closed Won"}.present? ? @lost_won_totals.find{|k,v| k == "Closed Won"}.second.to_i : 0 %>);
+var closed_won_amount = large_number_to_human_signif_digits(<%= @lost_won_totals.present? && @lost_won_totals.find{|k,v| k == @winning_stage_default_name}.present? ? @lost_won_totals.find{|k,v| k == @winning_stage_default_name}.second.to_i : 0 %>);
 <% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
 <% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
 // var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";
 $("#closedwon-box").html(
   "<div class='ibox-title'>" +
-  "    <h5>Closed Won</h5>" +
+  "    <h5><%= @winning_stage_default_name.present? ? @winning_stage_default_name : current_user.organization.get_winning_stages.first %></h5>" +
   "</div>" +
   "<div class='ibox-content' style='height:220px;padding-bottom:0;padding-top:20px;'>" +
   "    <h1><strong>$" + closed_won_amount + "</strong></h1>" +
