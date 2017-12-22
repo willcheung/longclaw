@@ -319,7 +319,7 @@ function resetFilters() {
   var forecastSelection = $('#forecast-chart').highcharts().getSelectedPoints();
   forecastSelection.forEach(function (point) { point.select(false) });
   var $chosenFilters = $('#type-filter, #owner-filter');
-  $chosenFilters.val('');
+  $chosenFilters.val(null);
   $chosenFilters.trigger('chosen:updated');
 };
 

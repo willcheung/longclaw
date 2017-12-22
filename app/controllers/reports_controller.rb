@@ -42,6 +42,7 @@ class ReportsController < ApplicationController
 
     top_dash_projects = projects
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
+    projects = projects.where(forecast: params[:forecast]) if params[:forecast].present?
 
     @this_qtr_range = Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
 
