@@ -65,12 +65,13 @@
             </optgroup>
           </select>
           <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" onclick="setFilterParamsAndReloadPage();"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
+          <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Reset stages filter" onclick="resetFilters();"><strong>Reset all filters&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
         </div>
 
         <div class="col-lg-4">
           <div class="ibox float-e-margins m-b-none m-t">
             <div class='ibox-title'>
-              <h5>Deals by Forecast</h5>
+              <h5>Deals by Forecast <small>(Click bar to filter)</small></h5>
             </div>
             <div id="forecast-chart" class="ibox-content forecast-chart" style="height:150px;padding-bottom:0"></div>
           </div>
@@ -79,10 +80,7 @@
         <div class="col-lg-8">
           <div class="ibox float-e-margins m-b-none m-t">
             <div class='ibox-title'>
-              <h5>
-                Deals by Stage <small>(Click bar to filter)</small>
-                <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset stages filter" onclick="resetStagesFilter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
-              </h5>
+              <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
             </div>
             <div id="stage-chart" class="ibox-content stage-chart" style="height:150px;padding-bottom:0"></div>
           </div>
@@ -160,13 +158,6 @@ $(function () {
     },
     title: {
       text: ''
-//                text: 'Deals by Forecast',
-//                style: {
-//                    color: '#676a6c',
-//                    fontSize: '14px',
-//                    fontFamily: 'Roboto'
-//                },
-//                align: 'left'
     },
     credits: {
       enabled: false
@@ -222,7 +213,14 @@ $(function () {
       series: {
         pointPadding: 0.1,
         groupPadding: 0,
-        borderWidth: 0
+        borderWidth: 0,
+        point: {
+          events: {
+            click: function () {
+              this.select(!this.selected, true);
+            }
+          }
+        }
       }
     }
   });
@@ -233,13 +231,6 @@ $(function () {
     },
     title: {
       text: ''
-//                text: 'Deals by Stage',
-//                style: {
-//                    color: '#676a6c',
-//                    fontSize: '14px',
-//                    fontFamily: 'Roboto'
-//                },
-//                align: 'left'
     },
     credits: {
       enabled: false
@@ -303,21 +294,6 @@ $(function () {
           events: {
             click: function () {
               this.select(!this.selected, true);
-              // let params = {};
-              // if (this.selected) {
-              //   // params.stage = this.category;
-              //   params.stage = getSelectedStages();
-              // }
-              // if ($('#type-filter').val()) {
-              //   params.type = $('#type-filter').val();
-              // }
-              // if ($('#owner-filter').val()) {
-              //   params.owner = $('#owner-filter').val();
-              // }
-              // if ($('#close-date-filter').val()) {
-              //   params.close_date = $('#close-date-filter').val();
-              // }
-              // window.location.search = $.param(params);
             }
           }
         }

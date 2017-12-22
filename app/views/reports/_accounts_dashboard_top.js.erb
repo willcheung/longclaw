@@ -43,14 +43,18 @@ while(chart_stage.series.length > 0) {
 
 <% if @forecast_chart_data.present? || @stage_chart_data.present? %>
   <% forecast_chart_data_cats = @forecast_chart_data.map {|d| d.forecast_category_name} %>
+  <% selected_indexes = forecast_chart_data_cats.map{|s| params[:forecast].present? && (params[:forecast].include? s)} %>
   chart_forecast.xAxis[0].setCategories(<%= forecast_chart_data_cats.to_json.html_safe %>, false);
   <% forecast_chart_data_cats.each_with_index do |c, i| %>
     chart_forecast.addSeries({
       name: "<%= c %>",
       color: (barColors["<%= c %>"] ? barColors["<%= c %>"] : barColors["default"]),
-      data: [ 
-      <% @forecast_chart_data.each do |d| %>
-        <%= d.forecast_category_name == c ? d.total_amount : 0 %>,
+      data: [
+      <% @forecast_chart_data.each_with_index do |d, j| %>
+        {
+          <%= 'selected: true,' if selected_indexes && (i == j && selected_indexes[j]) %> // i == j to select only ONCE!
+          y: <%= d.forecast_category_name == c ? d.total_amount : 0 %>
+        },
       <% end if @forecast_chart_data.present? %>
       ]
     }, true);
@@ -63,7 +67,7 @@ while(chart_stage.series.length > 0) {
     chart_stage.addSeries({
       name: "<%= s %>",
       color: (barColors["<%= s %>"] ? barColors["<%= s %>"] : barColors["default"]),
-      data: [ 
+      data: [
       <% @stage_chart_data.each_with_index do |d, j| %>
         {
           <%= 'selected: true,' if selected_indexes && (i == j && selected_indexes[j]) %> // i == j to select only ONCE!

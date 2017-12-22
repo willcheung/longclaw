@@ -33,7 +33,6 @@ class ProjectsController < ApplicationController
     @categories = @activities_by_category_date.keys
     @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
     @ns_activity = @project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
-    # @ns_updated_at = ns_activity.blank? ? '' : ns_activity.last_sent_date.in_time_zone(current_user.time_zone)
   end
 
   def filter_timeline
@@ -307,6 +306,7 @@ class ProjectsController < ApplicationController
 
     projects = projects.where(category: params[:type]) if params[:type].present? && (!params[:type].include? "0")
     projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "Any")
+    projects = projects.where(forecast: params[:forecast]) if params[:forecast].present? && (!params[:forecast].include? "Any")
 
     # searching
     projects = projects.where('LOWER(projects.name) LIKE LOWER(:search) OR LOWER(projects.stage) LIKE LOWER(:search) OR LOWER(projects.forecast) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
@@ -524,6 +524,11 @@ class ProjectsController < ApplicationController
       cookies[:project_stage] = {value: params[:stage]}
     else
       params[:stage] = cookies[:project_stage].present? ? cookies[:project_stage].split("&") : []
+    end
+    if params[:forecast]
+      cookies[:project_forecast] = {value: params[:forecast]}
+    else
+      params[:forecast] = cookies[:project_forecast].present? ? cookies[:project_forecast].split("&") : []
     end
     # Default is always "This Quarter"
     # if params[:close_date]

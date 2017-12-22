@@ -57,7 +57,11 @@ $(document).ready(function($) {
       }
       var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
       if (stageSelection.length !== 0) {
-        aoData.push({ name: 'stage', value: getSelectedStages() })
+        aoData.push({ name: 'stage', value: getSelection('#stage-chart') })
+      }
+      var forecastSelection = $('#forecast-chart').highcharts().getSelectedPoints();
+      if (forecastSelection.length !== 0) {
+        aoData.push({ name: 'forecast', value: getSelection('#forecast-chart') })
       }
     },
     sAjaxSource: $('#projects-table').data('source'),
@@ -65,35 +69,8 @@ $(document).ready(function($) {
       // re-initialize sparklines and tooltips for table rows retrieved by server-side pagination
       initSparklines();
       // $('[data-toggle="tooltip"]').tooltip();
-    },
-    rowCallback: function (tr, data, index) {
-      // show all rows by default
-      // var row = projectsIndexTable.row(tr);
-      // row.child(formatNextSteps(row.data()[row.data().length - 1])).show();
-      // $(tr).addClass('child-row');
     }
   });
-
-  // code for opening and closing child rows -- currently unused
-  // $('#projects-table tbody').on('click', 'tr', function () {
-  //   // var tr = $(this).closest('tr');
-  //   var row = projectsIndexTable.row(this);
-  //
-  //   if ( row.child.isShown() ) {
-  //     // This row is already open - close it
-  //     row.child.hide();
-  //     $(this).removeClass('shown');
-  //   }
-  //   else {
-  //     // Open this row
-  //     row.child(formatNextSteps(row.data()[row.data().length - 1])).show();
-  //     $(this).addClass('shown');
-  //   }
-  // });
-
-  // function formatNextSteps (nextSteps) {
-  //   return $('<tr class="child-row"><td colspan="2"></td><td colspan="10"><strong>Next Steps:</strong> ' + nextSteps + '</td></tr>');
-  // }
 
   $('input[type=search]').attr('size', '50');
 
@@ -315,34 +292,35 @@ function initSparklines() {
 }
 
 function setFilterParamsAndReloadPage() {
-  let params = {};
+  var params = {};
   params.type = $('#type-filter').val() ? $('#type-filter').val() : "";
   params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
   params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
-  params.stage = getSelectedStages();
-  // if (!$.isEmptyObject(params))
-  //   console.log( "$.param(params)=" + $.param(params));
+  params.stage = getSelection('#stage-chart');
+  params.forecast = getSelection('#forecast-chart');
 
   window.location.search = $.param(params);
 };
 
-function getSelectedStages() {
-  let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
-  let stages_arr = [];
-  for (var i=0; i < stageSelection.length; i++) {
-    stages_arr.push(stageSelection[i].category)
-  }
-  if (stages_arr.length == 0)
+function getSelection(chartSelector) {
+  var selectedPoints = $(chartSelector).highcharts().getSelectedPoints();
+  var selectedCategories = selectedPoints.map(function (point) { return point.category });
+  if (selectedCategories.length == 0) {
     return ['Any'];
-  else
-    return stages_arr;
+  }
+  else {
+    return selectedCategories;
+  }
 }
 
-function resetStagesFilter() {
-  let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
-  for (var i=0; i < stageSelection.length; i++) {
-    stageSelection[i].select(false); // de-select
-  }
+function resetFilters() {
+  var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+  stageSelection.forEach(function (point) { point.select(false) });
+  var forecastSelection = $('#forecast-chart').highcharts().getSelectedPoints();
+  forecastSelection.forEach(function (point) { point.select(false) });
+  var $chosenFilters = $('#type-filter, #owner-filter');
+  $chosenFilters.val('');
+  $chosenFilters.trigger('chosen:updated');
 };
 
 // Copied from notifications.js for displaying notifications per project
