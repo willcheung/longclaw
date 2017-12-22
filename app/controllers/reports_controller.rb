@@ -155,8 +155,8 @@ class ReportsController < ApplicationController
 
   def team_dashboard
     users = current_user.organization.users
-    @departments = users.registered.pluck(:department).compact.uniq
-    @titles = users.registered.pluck(:title).compact.uniq
+    @departments = users.registered.pluck(:department).reject(&:blank?).uniq
+    @titles = users.registered.pluck(:title).reject(&:blank?).uniq
 
     params[:sort] = TEAM_DASHBOARD_METRIC[:win_rate]
     params[:metric] = TEAM_DASHBOARD_METRIC[:time_spent_last14d]
@@ -205,6 +205,7 @@ class ReportsController < ApplicationController
 
     top_dash_projects = projects
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
+    projects = projects.where(forecast: params[:forecast]) if params[:forecast].present?
 
     return if projects.blank? # quit early if all projects are filtered out
 

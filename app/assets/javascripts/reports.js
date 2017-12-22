@@ -95,7 +95,7 @@ function resetFilters() {
   stageSelection.forEach(function (point) { point.select(false) });
   var forecastSelection = $('#forecast-chart').highcharts().getSelectedPoints();
   forecastSelection.forEach(function (point) { point.select(false) });
-  var $chosenFilters = $('#owner-filter');
+  var $chosenFilters = $('#owner-filter, #team-filter, #title-filter');
   $chosenFilters.val(null);
   $chosenFilters.trigger('chosen:updated');
 };
