@@ -66,20 +66,38 @@ function reset_subtitles_on_chart(chart) {
     });
 };
 
-function getSelectedStages() {
-    let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
-    let stages_arr = [];
-    for (var i=0; i < stageSelection.length; i++) {
-        stages_arr.push(stageSelection[i].category)
-    }
-    return stages_arr;
-}
 
-function resetStagesFilter() {
-    let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
-    for (var i=0; i < stageSelection.length; i++) {
-        stageSelection[i].select(false); // de-select
-    }
+// function resetStagesFilter() {
+//     let stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+//     for (var i=0; i < stageSelection.length; i++) {
+//         stageSelection[i].select(false); // de-select
+//     }
+// };
+
+// function setFilterParamsAndReloadPage() {
+//   var params = {};
+//   params.type = $('#type-filter').val() ? $('#type-filter').val() : "";
+//   params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
+//   params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
+//   params.stage = getSelection('#stage-chart');
+//   params.forecast = getSelection('#forecast-chart');
+//
+//   window.location.search = $.param(params);
+// };
+
+function getSelection(chartSelector) {
+  var selectedPoints = $(chartSelector).highcharts().getSelectedPoints();
+  var selectedCategories = selectedPoints.map(function (point) { return point.category });
+  return selectedCategories;
+}
+function resetFilters() {
+  var stageSelection = $('#stage-chart').highcharts().getSelectedPoints();
+  stageSelection.forEach(function (point) { point.select(false) });
+  var forecastSelection = $('#forecast-chart').highcharts().getSelectedPoints();
+  forecastSelection.forEach(function (point) { point.select(false) });
+  var $chosenFilters = $('#owner-filter, #team-filter, #title-filter');
+  $chosenFilters.val(null);
+  $chosenFilters.trigger('chosen:updated');
 };
 
 /*

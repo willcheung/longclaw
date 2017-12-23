@@ -12,7 +12,7 @@
         <form class="col-md-6" method='get' id='multiselect-filter-form' style="padding: 0 6px 0 0px">
             <!-- Team -->
             <select id="team-filter" class="category_filter" multiple data-placeholder="  Select Team" style="width: 49.5%">
-                <option></option> <!-- no filter -->
+                <option value="(None)"></option> <!-- no filter -->
                 <% @departments.each do |d| %>
                 <option value="<%=d %>"  <% if params[:team] == d  %> selected   <% end %> ><%=d %></option>
                 <% end %>
@@ -20,7 +20,7 @@
             </select>
             <!-- Title -->
             <select id="title-filter" class="category_filter" multiple data-placeholder="  Select Title" style="width: 49.5%">
-                <option></option> <!-- no filter -->
+                <option value="(None)"></option> <!-- no filter -->
                 <% @titles.each do |t| %>
                 <option value="<%=t %>"  <% if params[:title] == t  %> selected   <% end %> ><%=t %></option>
                 <% end %>
@@ -45,6 +45,7 @@
             </optgroup>
         </select>
       <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" onclick="setFilterParamsAndRefreshData();"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
+      <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Reset stages filter" onclick="resetFilters();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
     </div>
 
     <!-- Top Dashboard Panel: (3) Salesforce-linked Forecast and Stage reports -->
@@ -58,7 +59,7 @@
       <div class="col-lg-3">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
-                  <h5>Deals by Forecast</h5>
+                  <h5>Deals by Forecast <small>(Click bar to filter)</small></h5>
               </div>
               <div id="forecast-chart" class="ibox-content forecast-chart" style="height:220px;padding-bottom:0"></div>
           </div>
@@ -67,10 +68,7 @@
       <div class="col-lg-6">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
-                    <h5>
-                        Deals by Stage <small>(Click bar to filter)</small>
-                        <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset stages filter" onclick="resetStagesFilter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
-                    </h5>
+                    <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
               </div>
               <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
           </div>
@@ -153,15 +151,6 @@
             title: {
                 text: ''
             },
-//            title: {
-//                text: 'Deals by Forecast',
-//                style: {
-//                    color: '#676a6c',
-//                    fontSize: '14px',
-//                    fontFamily: 'Roboto'
-//                },
-//                align: 'left'
-//            },
             credits: {
                 enabled: false
             },
@@ -216,7 +205,17 @@
                  series: {
                     pointPadding: 0.1,
                     groupPadding: 0,
-                    borderWidth: 0
+                    borderWidth: 0,
+                    point: {
+                        events: {
+                            click: function () {
+                                $('#user-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar/label to see details about the rep.</h3></div>");
+
+                                this.select(!this.selected, true);
+                                // setFilterParamsAndRefreshData();
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -228,15 +227,6 @@
             title: {
                 text: ''
             },
-//            title: {
-//                text: 'Deals by Stage',
-//                style: {
-//                    color: '#676a6c',
-//                    fontSize: '14px',
-//                    fontFamily: 'Roboto'
-//                },
-//                align: 'left'
-//            },
             credits: {
                 enabled: false
             },
@@ -414,7 +404,8 @@
         params.team = $('#team-filter').val() ? $('#team-filter').val() : "";
         params.title = $('#title-filter').val() ? $('#title-filter').val() : "";
         params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
-        params.stage = getSelectedStages();
+        params.stage = getSelection('#stage-chart');
+        params.forecast = getSelection('#forecast-chart');
 
         var url = "td_sort_data/" + encodeURIComponent($('#sort-type').val()) + "/" + encodeURIComponent($('#metric-type').val()) + "?" + $.param(params);
         $.getScript(url)

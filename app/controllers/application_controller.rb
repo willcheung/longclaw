@@ -128,4 +128,36 @@ class ApplicationController < ActionController::Base
     @opportunity_forecast_categories = SalesforceOpportunity.get_sfdc_opp_forecast_categories(organization: current_user.organization).map{|s| s.first}
   end
 
+
+  # Sets the necessary data to be used in the top forecast category and stage reports.
+  # Parameters:   project_ids (required) - list of CS opportunity id's to filter on.
+  #               user_ids (optional) - list of CS user id's on which to filter project owners.
+  def set_top_dashboard_data(project_ids: , user_ids: nil)
+    if user_ids.present?
+      forecast_chart_result = Project.select("COALESCE(projects.forecast, '-Undefined-')").where("projects.id IN (?) AND projects.owner_id IN (?)", project_ids, user_ids).group("COALESCE(projects.forecast, '-Undefined-')").sum("projects.amount").sort
+      stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?) AND projects.owner_id IN (?)", project_ids, user_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("COALESCE(projects.amount,0)").sort
+    else
+      forecast_chart_result = Project.select("COALESCE(projects.forecast, '-Undefined-')").where("projects.id IN (?)", project_ids).group("COALESCE(projects.forecast, '-Undefined-')").sum("projects.amount").sort
+      stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", project_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
+    end
+
+    winning_stages = stage_chart_result.select{|s,t| current_user.organization.get_winning_stages.include? s}
+    @winning_stage_default_name = winning_stages.first[0] if winning_stages.present?
+    @lost_won_totals = [[@winning_stage_default_name, winning_stages.sum{|s,t| t}], stage_chart_result.select{|s,t| ['Closed Lost'].include? s}]
+
+    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
+    @forecast_chart_data = forecast_chart_result.map do |f, a|
+      Hashie::Mash.new({ forecast_category_name: f, total_amount: a })
+    end
+    @stage_chart_data = stage_chart_result.sort do |x,y|
+      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
+      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
+      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
+      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
+      stage_name_x <=> stage_name_y  # unmatched stage names are sorted to the left of everything
+    end.map do |s, a|
+      Hashie::Mash.new({ stage_name: s, total_amount: a })
+    end
+  end
+
 end
