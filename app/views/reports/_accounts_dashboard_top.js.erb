@@ -7,12 +7,14 @@ var barColors = {
 };
 
 var closed_won_amount = large_number_to_human_signif_digits(<%= @lost_won_totals.present? && @lost_won_totals.find{|k,v| k == @winning_stage_default_name}.present? ? @lost_won_totals.find{|k,v| k == @winning_stage_default_name}.second.to_i : 0 %>);
-<% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
-<% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
+<% unless @no_progress %>
+  <% days_remaining_in_qtr = (@this_qtr_range.last.to_date - Time.current.end_of_day.to_date).to_i + 1 %>
+  <% progress_pct = (1 - (days_remaining_in_qtr + 0.0) / (@this_qtr_range.last.to_date - @this_qtr_range.first.to_date).to_i) * 100 %>
+<% end %>
 // var closed_won_amount = "$<%= number_to_human(@data.present? ? @data.map(&:deal_size).compact.sum : 0)  %>";
 $("#closedwon-box").html(
   "<div class='ibox-title'>" +
-  "    <h5><%= @winning_stage_default_name %></h5>" +
+  "    <h5><%= @winning_stage_default_name.present? ? @winning_stage_default_name : current_user.organization.get_winning_stages.first %></h5>" +
   "</div>" +
   "<div class='ibox-content' style='height:220px;padding-bottom:0;padding-top:20px;'>" +
   "    <h1><strong>$" + closed_won_amount + "</strong></h1>" +
@@ -41,14 +43,18 @@ while(chart_stage.series.length > 0) {
 
 <% if @forecast_chart_data.present? || @stage_chart_data.present? %>
   <% forecast_chart_data_cats = @forecast_chart_data.map {|d| d.forecast_category_name} %>
+  <% selected_indexes = forecast_chart_data_cats.map{|s| params[:forecast].present? && (params[:forecast].include? s)} %>
   chart_forecast.xAxis[0].setCategories(<%= forecast_chart_data_cats.to_json.html_safe %>, false);
   <% forecast_chart_data_cats.each_with_index do |c, i| %>
     chart_forecast.addSeries({
       name: "<%= c %>",
       color: (barColors["<%= c %>"] ? barColors["<%= c %>"] : barColors["default"]),
-      data: [ 
-      <% @forecast_chart_data.each do |d| %>
-        <%= d.forecast_category_name == c ? d.total_amount : 0 %>,
+      data: [
+      <% @forecast_chart_data.each_with_index do |d, j| %>
+        {
+          <%= 'selected: true,' if selected_indexes && (i == j && selected_indexes[j]) %> // i == j to select only ONCE!
+          y: <%= d.forecast_category_name == c ? d.total_amount : 0 %>
+        },
       <% end if @forecast_chart_data.present? %>
       ]
     }, true);
@@ -61,7 +67,7 @@ while(chart_stage.series.length > 0) {
     chart_stage.addSeries({
       name: "<%= s %>",
       color: (barColors["<%= s %>"] ? barColors["<%= s %>"] : barColors["default"]),
-      data: [ 
+      data: [
       <% @stage_chart_data.each_with_index do |d, j| %>
         {
           <%= 'selected: true,' if selected_indexes && (i == j && selected_indexes[j]) %> // i == j to select only ONCE!

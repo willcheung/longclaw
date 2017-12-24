@@ -33,7 +33,6 @@ class ProjectsController < ApplicationController
     @categories = @activities_by_category_date.keys
     @categories << Activity::CATEGORY[:Pinned] if @pinned_activities.present?
     @ns_activity = @project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
-    # @ns_updated_at = ns_activity.blank? ? '' : ns_activity.last_sent_date.in_time_zone(current_user.time_zone)
   end
 
   def filter_timeline
@@ -275,23 +274,12 @@ class ProjectsController < ApplicationController
       projects = projects.where(category: params[:type])
     end
 
-    # Stage chart/filter
-    stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", projects.ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
-
-    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
-    @stage_chart_data = stage_chart_result.sort do |x,y|
-      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
-      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
-      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
-      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
-      stage_name_x <=> stage_name_y  # unmatched stage names are sorted to the left of everything
-    end.map do |s, a|
-      Hashie::Mash.new({ stage_name: s, total_amount: a })
-    end
+    set_top_dashboard_data(project_ids: projects.ids)
+    @no_progress = true
   end
 
   def index_json
-    @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
+    # @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
 
     # puts "\n\n\t************ index_json *************\n"
     # puts "\tparams[:type]: #{params[:type]}"
@@ -318,6 +306,7 @@ class ProjectsController < ApplicationController
 
     projects = projects.where(category: params[:type]) if params[:type].present? && (!params[:type].include? "0")
     projects = projects.where(stage: params[:stage]) if params[:stage].present? && (!params[:stage].include? "Any")
+    projects = projects.where(forecast: params[:forecast]) if params[:forecast].present? && (!params[:forecast].include? "Any")
 
     # searching
     projects = projects.where('LOWER(projects.name) LIKE LOWER(:search) OR LOWER(projects.stage) LIKE LOWER(:search) OR LOWER(projects.forecast) LIKE LOWER(:search)', search: "%#{params[:sSearch]}%") if params[:sSearch].present?
@@ -336,7 +325,7 @@ class ProjectsController < ApplicationController
     projects = projects.limit(per_page).offset(per_page * page)
 
     unless projects.empty?
-      @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
+      @project_days_inactive = projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
       @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
       @sparkline = Project.count_activities_by_day_sparkline(projects.ids, current_user.time_zone)
       @days_to_close = Project.days_to_close(projects.ids)
@@ -535,6 +524,11 @@ class ProjectsController < ApplicationController
       cookies[:project_stage] = {value: params[:stage]}
     else
       params[:stage] = cookies[:project_stage].present? ? cookies[:project_stage].split("&") : []
+    end
+    if params[:forecast]
+      cookies[:project_forecast] = {value: params[:forecast]}
+    else
+      params[:forecast] = cookies[:project_forecast].present? ? cookies[:project_forecast].split("&") : []
     end
     # Default is always "This Quarter"
     # if params[:close_date]

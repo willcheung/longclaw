@@ -31,6 +31,8 @@ class EntityFieldsMetadatum < ActiveRecord::Base
   ENTITY_TYPE = { Account: 'Account', Project: 'Opportunity', Contact: 'Contact' }
 
   # Create default mappable entity fields metadata info for a new organization
+  # Note: A stop-gap to create an entry that is not available for an existing org is to use the entity_fields_metadatum's create() method: e.g., org1.entity_fields_metadatum.create(entity_type: "Opportunity", name: "next_steps", default_value: nil, salesforce_field: nil, read_permission_role: "Observer", update_permission_role: "Power user")
+
   def self.create_default_for(organization)
     return if organization.nil?
 

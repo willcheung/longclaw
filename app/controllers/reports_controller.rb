@@ -1,5 +1,5 @@
 class ReportsController < ApplicationController
-  before_action :get_owners_in_org, only: [:accounts_dashboard, :ad_sort_data]
+  before_action :get_current_org_users, only: [:accounts_dashboard, :ad_sort_data]
 
   ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :days_inactive => "Days Inactive", :open_alerts_and_tasks => "Open Alerts & Tasks", :overdue_tasks => "Total Overdue Tasks", :deal_size => "Deal Size", :days_to_close => "Days to Close"} # Removed: :risk_score => "Risk Score"
   TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :closed_won => "Closed Won", :win_rate => "Win Rate", :opportunities => "Opportunities", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks" } # Removed: :new_alerts_and_tasks_last_14d
@@ -42,6 +42,7 @@ class ReportsController < ApplicationController
 
     top_dash_projects = projects
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
+    projects = projects.where(forecast: params[:forecast]) if params[:forecast].present?
 
     @this_qtr_range = Project.get_close_date_range(Project::CLOSE_DATE_RANGE[:ThisQuarter])
 
@@ -119,6 +120,8 @@ class ReportsController < ApplicationController
     @alerts_tasks = @project.notifications.order(:is_complete, :created_at).limit(8)
     # Next Meeting
     @next_meeting = @project.meetings.next_week.last
+    # Next Steps
+    @ns_activity = @project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
 
     # Engagement Volume Chart
     # @activities_moving_avg = @project.activities_moving_average(current_user.time_zone)
@@ -152,8 +155,8 @@ class ReportsController < ApplicationController
 
   def team_dashboard
     users = current_user.organization.users
-    @departments = users.pluck(:department).compact.uniq
-    @titles = users.pluck(:title).compact.uniq
+    @departments = users.registered.pluck(:department).reject(&:blank?).uniq
+    @titles = users.registered.pluck(:title).reject(&:blank?).uniq
 
     params[:sort] = TEAM_DASHBOARD_METRIC[:win_rate]
     params[:metric] = TEAM_DASHBOARD_METRIC[:time_spent_last14d]
@@ -202,6 +205,7 @@ class ReportsController < ApplicationController
 
     top_dash_projects = projects
     projects = projects.where(stage: params[:stage]) if params[:stage].present?
+    projects = projects.where(forecast: params[:forecast]) if params[:forecast].present?
 
     return if projects.blank? # quit early if all projects are filtered out
 
@@ -289,10 +293,6 @@ class ReportsController < ApplicationController
 
   #### Private helper functions ####
   private
-
-  def get_owners_in_org
-    @owners = User.where(organization_id: current_user.organization_id).order('LOWER(first_name) ASC')
-  end
 
   def get_leaderboard_data(metric, users, projects, ordered_by=nil)
     data = []
@@ -408,37 +408,6 @@ class ReportsController < ApplicationController
     # puts categories
 
     [data, categories]
-  end
-
-  # Sets the necessary data to be used in the top forecast category and stage reports.
-  # Parameters:   project_ids (required) - list of CS opportunity id's to filter on.
-  #               user_ids (optional) - list of CS user id's on which to filter project owners.
-  def set_top_dashboard_data(project_ids: , user_ids: nil)
-    if user_ids.present?
-      forecast_chart_result = Project.select("COALESCE(projects.forecast, '-Undefined-')").where("projects.id IN (?) AND projects.owner_id IN (?)", project_ids, user_ids).group("COALESCE(projects.forecast, '-Undefined-')").sum("projects.amount").sort
-      stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?) AND projects.owner_id IN (?)", project_ids, user_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("COALESCE(projects.amount,0)").sort
-    else
-      forecast_chart_result = Project.select("COALESCE(projects.forecast, '-Undefined-')").where("projects.id IN (?)", project_ids).group("COALESCE(projects.forecast, '-Undefined-')").sum("projects.amount").sort
-      stage_chart_result = Project.select("COALESCE(projects.stage, '-Undefined-')").where("projects.id IN (?)", project_ids).group("COALESCE(projects.stage, '-Undefined-')").sum("projects.amount").sort
-    end
-
-    winning_stages = stage_chart_result.select{|s,t| current_user.organization.get_winning_stages.include? s}
-    @winning_stage_default_name = winning_stages.present? ? winning_stages.first[0] : 'Closed Won'  # if no winning stages are present after filter applied, set a default name for display
-    @lost_won_totals = [[@winning_stage_default_name, winning_stages.sum{|s,t| t}], stage_chart_result.select{|s,t| ['Closed Lost'].include? s}]
-
-    stage_name_picklist = SalesforceOpportunity.get_sfdc_opp_stages(organization: current_user.organization)
-    @forecast_chart_data = forecast_chart_result.map do |f, a|
-      Hashie::Mash.new({ forecast_category_name: f, total_amount: a })
-    end
-    @stage_chart_data = stage_chart_result.sort do |x,y|
-      stage_name_x = stage_name_picklist.find{|s| s.first == x.first}
-      stage_name_x = stage_name_x.present? ? stage_name_x.second.to_s : '           '+x.first
-      stage_name_y = stage_name_picklist.find{|s| s.first == y.first}
-      stage_name_y = stage_name_y.present? ? stage_name_y.second.to_s : '           '+y.first
-      stage_name_x <=> stage_name_y  # unmatched stage names are sorted to the left of everything
-    end.map do |s, a|
-      Hashie::Mash.new({ stage_name: s, total_amount: a })
-    end
   end
 
 end

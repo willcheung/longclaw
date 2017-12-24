@@ -40,17 +40,6 @@
                 </div>
             </div>
 
-            <!-- <div class="col-md-3 text-center">
-                <div class="metric <%= risk_color(@risk_score) %>">
-                    <div class="metric-title">
-                        <h4><%= risk_level(@risk_score) %></h4>
-                    </div>
-                    <div class="metric-content">
-                        <h2 style="font-weight:600;font-size:46px"><%= @risk_score %></h2>
-                    </div>
-                </div>
-            </div> -->
-
             <div class="col-md-3 text-center">
                 <div class="metric text-danger">
                     <div class="metric-title">
@@ -92,6 +81,16 @@
             </ul>
             <% else %>
             <p class="text-danger">No Alerts & Tasks.</p>
+            <% end %>
+        </div>
+
+        <div class="row m-t-md">
+            <h3 class="m-t-md"><i class="fa fa-chevron-right"></i>  Next Steps:</h3>
+            <% if @project.next_steps.present? %>
+              <%= simple_format(CGI.escape_html(@project.next_steps)) %>
+              <p class="text-muted"><%= @ns_activity.blank? ? '' : 'Updated ' + time_ago_in_words(Time.zone.at(@ns_activity.last_sent_date).strftime('%b %d, %R%P')) + ' ago' %></p>
+            <% else %>
+              <p class="text-danger">No next steps set yet.</p>
             <% end %>
         </div>
 

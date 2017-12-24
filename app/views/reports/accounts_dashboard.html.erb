@@ -26,12 +26,12 @@
       <form class="col-md-3" method='get' id='multiselect-filter-form' style="padding: 0 5px 0 0px">
         <!-- Owner -->
         <select id="owner-filter" class="category_filter" multiple data-placeholder="  Select Owner" style="width: 100%">
-            <option value=""></option> <!-- no filter -->
+            <option value="None"></option> <!-- no filter -->
             <option value="<%= current_user.id %>" <% if params[:owner].present? && (params[:owner].include? current_user.id) %> selected <% end %> >Me (<%= get_full_name(current_user) %>)</option>
-            <% @owners.each do |u| %>
-                <% if u.id != current_user.id %>
-                    <option value="<%= u.id %>" <% if params[:owner].present? && (params[:owner].include? u.id) %> selected <% end %> >
-                        <%= get_full_name(u) %>
+            <% @users_reverse.each do |u| %>
+                <% if u[0] != current_user.id %>
+                    <option value="<%= u[0] %>" <% if params[:owner].present? && (params[:owner].include? u[0]) %> selected <% end %> >
+                        <%= u[1] %>
                     </option>
                 <% end %>
             <% end %>
@@ -40,8 +40,10 @@
       </form>
       <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
           <option value="Any"></option> <!-- no filter -->
-          <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
-          <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
+          <optgroup label="By Close Date">
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
+          </optgroup>
           <optgroup label="Quarter">
               <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
               <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
@@ -54,6 +56,8 @@
       </select>
       <!-- <div class="col-md-3"></div> -->
       <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" onclick="setFilterParamsAndRefreshData();"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
+      <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Reset filters" onclick="resetFilters();"><strong>Reset filters&nbsp;&nbsp;</strong></button>
+
   </div>
 
   <!-- Top Dashboard Panel: (3) Salesforce-linked Forecast and Stage reports -->
@@ -67,7 +71,7 @@
       <div class="col-lg-3">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
-                  <h5>Deals by Forecast</h5>
+                  <h5>Deals by Forecast <small>(Click bar to filter)</small></h5>
               </div>
               <div id="forecast-chart" class="ibox-content forecast-chart" style="height:220px;padding-bottom:0"></div>
           </div>
@@ -76,10 +80,7 @@
       <div class="col-lg-6">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
-                  <h5>
-                      Deals by Stage <small>(Click bar to filter)</small>
-                      <button style="border-radius: 5px; margin-left: 1em; padding: 3px 6px" title="Reset stages filter" onclick="resetStagesFilter();"><strong>Reset&nbsp;&nbsp;</strong><i class="fa fa-eraser" aria-hidden="true"></i></button>
-                  </h5>
+                  <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
               </div>
               <div id="stage-chart" class="ibox-content stage-chart" style="height:220px;padding-bottom:0"></div>
           </div>
@@ -117,7 +118,7 @@
     $(document).ready(function() {
         $('#sort-type, #close-date-filter').change( function () {
             // Clear Opportunity data ("right") chart
-            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
+            $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar/label to see details about the opportunity.</h3></div>");
             setFilterParamsAndRefreshData();
         });
 
@@ -138,13 +139,6 @@
             },
             title: {
                 text: ''
-//                text: 'Deals by Forecast',
-//                style: {
-//                    color: '#676a6c',
-//                    fontSize: '14px',
-//                    fontFamily: 'Roboto'
-//                },
-//                align: 'left'
             },
             credits: {
                 enabled: false
@@ -200,7 +194,17 @@
                  series: {
                     pointPadding: 0.1,
                     groupPadding: 0,
-                    borderWidth: 0
+                    borderWidth: 0,
+                    point: {
+                        events: {
+                            click: function () {
+                                $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar/label to see details about the opportunity.</h3></div>");
+
+                                this.select(!this.selected, true);
+                                // setFilterParamsAndRefreshData();
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -211,13 +215,6 @@
             },
             title: {
                 text: ''
-//                text: 'Deals by Stage',
-//                style: {
-//                    color: '#676a6c',
-//                    fontSize: '14px',
-//                    fontFamily: 'Roboto'
-//                },
-//                align: 'left'
             },
             credits: {
                 enabled: false
@@ -277,7 +274,7 @@
                     point: {
                        events: {
                            click: function () {
-                               $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar to see details about the opportunity.</h3></div>");
+                               $('#account-data').html("<div class=row style=margin-top:50px;><h3>&larr; Click on a bar/label to see details about the opportunity.</h3></div>");
 
                                this.select(!this.selected, true);
                                // setFilterParamsAndRefreshData();
@@ -376,7 +373,8 @@
         let params = {};
         params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
         params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
-        params.stage = getSelectedStages();
+        params.stage = getSelection('#stage-chart');
+        params.forecast = getSelection('#forecast-chart');
 
         var url = "ad_sort_data/" + encodeURIComponent($('#sort-type').val()) + "?" + $.param(params);
         $.getScript(url);

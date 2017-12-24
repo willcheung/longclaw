@@ -66,7 +66,7 @@ class Notification < ActiveRecord::Base
     days_inactive_setting = RiskSetting.find_by(level: organization, metric: RiskSetting::METRIC[:DaysInactive])
     return unless days_inactive_setting.notify_task
 
-    project_inactive_days = Project.where(account_id: organization.accounts.ids).joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]] }).group('projects.id').maximum('activities.last_sent_date')
+    project_inactive_days = Project.where(account_id: organization.accounts.ids).joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]] }).group('projects.id').maximum('activities.last_sent_date')
     project_inactive_days.each { |pid, last_sent_date| project_inactive_days[pid] = Time.current.to_date.mjd - last_sent_date.to_date.mjd } # convert last_sent_date to days inactive
     project_inactive_days.reject! { |pid, days_inactive| days_inactive < days_inactive_setting.medium_threshold }
 
@@ -79,7 +79,7 @@ class Notification < ActiveRecord::Base
       description = "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days."
 
       # # # # TODO: decide what to display if last_activity is not a Conversation.
-      last_activity = p.activities.where.not(category: Activity::CATEGORY[:Note]).first
+      last_activity = p.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]]).first
       if last_activity.category == Activity::CATEGORY[:Conversation]
         message_id = last_activity.email_messages.last.messageId
         conversation_id = last_activity.backend_id
