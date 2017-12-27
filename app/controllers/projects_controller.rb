@@ -480,11 +480,11 @@ class ProjectsController < ApplicationController
                                     OR (projects.is_public=false AND projects.owner_id = ?) OR ?)', current_user.organization_id, current_user.id, current_user.admin?)
                       .find(params[:id])
     if (@project.present? && @project.is_linked_to_SFDC?)
-      if SalesforceController.get_sfdc_oauthuser(user: current_user).present? # "connected" to SFDC
-        @sfdc_client = SalesforceService.connect_salesforce(user: current_user)
-      else
-        puts "No SFDC connection. Linked Salesforce opportunity won't be updated!" # TODO: Warn the user SFDC opp was not updated!
-      end
+      sfdc_oauthuser = SalesforceController.get_sfdc_oauthuser(user: current_user) || SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)  # Use current user's SFDC login/connection if available; otherwise, use admin's SFDC login/connection regardless of current user's role
+      
+      @sfdc_client = SalesforceService.connect_salesforce(sfdc_oauthuser: sfdc_oauthuser) if sfdc_oauthuser.present?
+
+      puts "****SFDC**** Warning: no SFDC connection is available or can be established. Linked Salesforce opportunity was not updated!" if @sfdc_client.nil? # TODO: Issue a warning to the user that the linked SFDC opp was not updated!
     end
   rescue ActiveRecord::RecordNotFound
     redirect_to root_url, :flash => { :error => "Project not found or is private." }

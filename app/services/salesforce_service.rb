@@ -30,9 +30,9 @@ class SalesforceService
       puts "SalesforceService.connect_salesforce(): Refreshing access token. Client established using Restforce gem.  Accessing user_info... #{ client.user_info }"
     rescue => e
       if e.to_s == "invalid_grant: expired access/refresh token"
-        puts "*** Informational message: SalesforceService cannot establish SFDC connection because access/refresh token for #{(user.email if user.present?) || organization.name} has expired! ***"
+        puts "*** Informational message: SalesforceService cannot establish SFDC connection because access/refresh token for #{(user.email if user.present?) || (organization.name if organization.present?)} has expired! ***"
       else
-        puts "*** SalesforceService error: Salesforce connection error has been detected.  Details: #{ e.to_s } ***"
+        puts "*** SalesforceService error: Salesforce connection error has been detected for#{" user="+user.email if user.present?}#{" organization="+organization.name if organization.present?}#{" oauth_user.id="+sfdc_oauthuser.id.to_s+" oauth_user.organization="+Organization.find(sfdc_oauthuser.organization_id).name+"('"+sfdc_oauthuser.organization_id+"')"+(sfdc_oauthuser.user_id.present? ? "' oauth_user.user_id='"+sfdc_oauthuser.user_id+"'" : "") if sfdc_oauthuser.present?}.  Details: #{ e.to_s } ***"
       end
       return nil
     end
@@ -152,30 +152,22 @@ class SalesforceService
       when "opportunity"
         begin
           opp_id = params[:sObject_meta][:id]
-          update_result = nil
+
+          update_query_str = "client.update!('Opportunity', Id: '#{opp_id}'"
           params[:sObject_fields].each do |sfdc_field, new_val|
-            # TODO: Temporary hack until figure out how to convert string into parameter; which means, currently, we cannot export to any custom SFDC fields!
-            case (sfdc_field)
-            when "Name"
-              update_result = client.update!('Opportunity', Id: opp_id, Name: new_val)
-            when "CloseDate"
-              update_result = client.update!('Opportunity', Id: opp_id, CloseDate: new_val.strftime("%Y-%m-%d"))
-            when "Probability"
-              update_result = client.update!('Opportunity', Id: opp_id, Probability: new_val)
-            when "Amount"
-              update_result = client.update!('Opportunity', Id: opp_id, Amount: new_val) 
-            when "StageName"
-              update_result = client.update!('Opportunity', Id: opp_id, StageName: new_val) 
-            when "ForecastCategoryName"  
-              update_result = client.update!('Opportunity', Id: opp_id, ForecastCategoryName: new_val) 
-            else
-              puts "Cannot update field #{sfdc_field} -- No support for custom fields yet! :("
-            end
+            update_query_str += ", #{sfdc_field}: '#{new_val}'"
           end
+          update_query_str += ")"
+          # puts "Trying: eval(\"#{update_query_str}\")..."
 
-          # params[:sObject_fields] = { name: ... , stage_name: ... , close_date: ... , probability: ... , amount: ... , forecast_category_name: ...  } ????
-
-          result = { status: "SUCCESS", result: update_result, detail: "" }
+          update_result = nil
+          begin
+            update_result = eval(update_query_str)
+            result = { status: "SUCCESS", result: update_result, detail: "" }
+          rescue => e
+            puts "****SFDC**** Error in SalesforceService.update_salesforce while attempting to eval(#{update_query_str})!"
+            result = { status: "ERROR", result: "SalesforceService error on update", detail: "update_query_str: #{update_query_str}" }
+          end
         rescue => e
           detail = "Update Salesforce Opportunity error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
           puts "*** SalesforceService error: #{ detail }"
