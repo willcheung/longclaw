@@ -64,7 +64,7 @@ while(chart.series.length > 0) {
         <% elsif value.type == ReportsController::TEAM_DASHBOARD_METRIC[:closed_won] %>
           tooltip: {
             pointFormatter: function() {
-              return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>$' + this.y + '</b>';
+              return '<span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>$' + numberWithCommas(this.y) + '</b>';
             }
           },
         <% end %>
@@ -74,9 +74,12 @@ while(chart.series.length > 0) {
         <% if value.type == ReportsController::TEAM_DASHBOARD_METRIC[:win_rate] %>
           format: '{y}%',
         <% elsif value.type == ReportsController::TEAM_DASHBOARD_METRIC[:closed_won] %>
-          format: '${y}',
+          formatter: function () {
+            return "$"+numberWithCommas(this.y);
+          },
         <% end %>
           enabled: true,
+          align: '<%= key == "metric" ? "left" : "right" %>',
           style: {
             color: (Highcharts.theme && Highcharts.theme.textColor) || 'white'
           }

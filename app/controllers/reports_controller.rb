@@ -163,7 +163,7 @@ class ReportsController < ApplicationController
     td_sort_data
   end
 
-  # for loading metrics data (left panel) on Team Dashboard
+  # for loading metrics data (left panel) on Leaderboard/Team Dashboard
   def td_sort_data
     # puts "\n\n\t************ td_sort_data *************\n"
     # puts "\tparams[:sort]: #{params[:sort]}"
@@ -220,7 +220,7 @@ class ReportsController < ApplicationController
     @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
   end
 
-  # for loading User details (right panel) on Team Dashboard
+  # for loading User details (right panel) on Leaderboard/Team Dashboard
   def td_user_data
     @user = User.where(organization_id: current_user.organization_id).find(params[:id])
     @error = "Oops, something went wrong. Try again." and return if @user.blank?
@@ -363,7 +363,7 @@ class ReportsController < ApplicationController
                         .joins("LEFT JOIN projects ON projects.owner_id = users.id AND projects.id IN ('#{projects.ids.join("','")}')")
                         .group('users.id').order("win_rate DESC")  # TODO: use new projects.is_won IS TRUE instead of stage
         data = win_rates.map do |u|
-          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.win_rate.round(2) })
+          Hashie::Mash.new({ id: u.id, name: get_full_name(u), y: u.win_rate.round(0) })
         end
       # when TEAM_DASHBOARD_METRIC[:new_alerts_and_tasks_last14d]
       #   new_tasks = users.select("users.*, COUNT(DISTINCT notifications.id) AS task_count")
