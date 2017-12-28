@@ -151,23 +151,13 @@ class SalesforceService
         end
       when "opportunity"
         begin
-          opp_id = params[:sObject_meta][:id]
-
-          update_query_str = "client.update!('Opportunity', Id: '#{opp_id}'"
+          new_sObject_vals = { Id: params[:sObject_meta][:id] }
           params[:sObject_fields].each do |sfdc_field, new_val|
-            update_query_str += ", #{sfdc_field}: '#{new_val}'"
+            new_sObject_vals[sfdc_field] = new_val
           end
-          update_query_str += ")"
-          # puts "Trying: eval(\"#{update_query_str}\")..."
+          update_result = client.update!('Opportunity', new_sObject_vals)
 
-          update_result = nil
-          begin
-            update_result = eval(update_query_str)
-            result = { status: "SUCCESS", result: update_result, detail: "" }
-          rescue => e
-            puts "****SFDC**** Error in SalesforceService.update_salesforce while attempting to eval(#{update_query_str})!"
-            result = { status: "ERROR", result: "SalesforceService error on update", detail: "update_query_str: #{update_query_str}" }
-          end
+          result = { status: "SUCCESS", result: update_result, detail: "" }
         rescue => e
           detail = "Update Salesforce Opportunity error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
           puts "*** SalesforceService error: #{ detail }"
