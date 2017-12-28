@@ -8,7 +8,7 @@
   </div>
   <div class="tab-content">
     <div role="tabpanel" class="tab-pane active m-xs m-b-none" id="next-steps-form">
-      <%= simple_form_for(project, remote: true, html: { class: 'row', style: 'display: flex;' }, url: update_next_steps_project_path(project)) do |f| %>
+      <%= simple_form_for(project, remote: true, html: { class: 'row', style: 'display: flex;' }) do |f| %>
         <div class="col-lg-11">
           <div class="input-group">
             <span class="input-group-btn vtop" style="padding-top:25px;">
@@ -16,8 +16,7 @@
                 <i class="fa fa-chevron-right"></i>
               </button>
             </span>
-            <!--<h4 style="/*font-size: 23px;*/height: 25px;" class="m-l-sm"><strong>Current next steps:</strong> <span id="current-next-steps">< %= project.next_steps.blank? ? '(none)' : project.next_steps %></span></h4>-->
-            <small class="text-muted m-l-sm"><%= @ns_activity.blank? ? '' : 'Updated ' + time_ago_in_words(@ns_activity.last_sent_date.in_time_zone(current_user.time_zone)) + ' ago' %></small>
+            <small id="next-steps-updated-at" class="text-muted m-l-sm"><%= @ns_activity.blank? ? '' : 'Updated ' + time_ago_in_words(@ns_activity.last_sent_date.in_time_zone(current_user.time_zone)) + ' ago' %></small>
             <%= f.input :next_steps, label: false, as: 'text', input_html: { id: 'next-steps-input', class: 'no-border', style: 'resize:none;overflow:hidden;margin-bottom:8px;', rows: 2 }, placeholder: "(none)" %>
           </div>
         </div>

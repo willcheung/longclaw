@@ -1,1 +1,7 @@
+<% if @ns_updated %>
+$('#vertical-timeline').prepend('<%= escape_javascript(render "activities/timeline_block", a: @activity) %>');
+$('.vertical-timeline-block').first().hide().show("blind", {direction: "up"}, 1000);
+$('#next-steps-updated-at').text('Updated just now');
+<% else %>
 window.location.replace("<%= project_path(@project) %>");
+<% end %>
