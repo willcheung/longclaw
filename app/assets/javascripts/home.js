@@ -25,7 +25,7 @@ $(document).ready(function($) {
         params.close_date = $(this).val();
       }
       window.location.search = $.param(params);
-    })
+    });
 
     $('.filter-group').hover(function () {
       $('.chosen-container-single').css('cursor', 'pointer');
