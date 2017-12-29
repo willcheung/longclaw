@@ -335,7 +335,7 @@ class Activity < ActiveRecord::Base
   #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end deletion of SFDC Activities, timestamp inclusive
   # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
   def self.delete_cs_activities(client, sObjectId=nil, type=nil, from_lastmodifieddate=nil, to_lastmodifieddate=nil)
-    delete_tasks_query_stmt = "select Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
+    delete_tasks_query_stmt = "SELECT Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
     delete_tasks_query_stmt += " AND WhatId = '#{sObjectId}'" if sObjectId.present?
     delete_tasks_query_stmt += " AND LastModifiedDate > #{ from_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') }" if from_lastmodifieddate.present?
     delete_tasks_query_stmt += " AND LastModifiedDate <= #{ to_lastmodifieddate.strftime('%Y-%m-%dT%H:%M:%SZ') }" if to_lastmodifieddate.present?

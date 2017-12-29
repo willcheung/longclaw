@@ -176,7 +176,7 @@ function bulkOperation (operation, value) {
 }
 
 function setFilterParamsAndReloadPage() {
-  let params = {};
+  var params = {};
   params.account_type = $('.category_filter').val() ? $('.category_filter').val() : "";
   params.owner = $('.owner_filter').val() ? $('.owner_filter').val() : "";
   // if (!$.isEmptyObject(params))

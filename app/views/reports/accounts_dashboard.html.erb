@@ -316,7 +316,6 @@
                 stackLabels: {
                     enabled: true,
                     formatter: function () {
-                        //return Highcharts.numberFormat(this.total, 0, null, "");
                         return large_number_to_human_signif_digits(this.total);
                     }
                 }
@@ -325,7 +324,12 @@
                 headerFormat:  '',
                 pointFormatter: function() {
                     // this.category = [project_name, deal_size, close_date]
-                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+                    var label = '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>';
+                    if (this.series.name == '<%= ReportsController::ACCOUNT_DASHBOARD_METRIC[:deal_size] %>')
+                      label += '$'+large_number_to_human_signif_digits(this.y)+'</b>';
+                    else
+                      label += this.y+'</b>';
+                    return label;
                 }
             },
             legend: {
@@ -370,7 +374,7 @@
 
     // Build URL for AJAX call for filtered data
     function setFilterParamsAndRefreshData() {
-        let params = {};
+        var params = {};
         params.owner = $('#owner-filter').val() ? $('#owner-filter').val() : "";
         params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";
         params.stage = getSelection('#stage-chart');

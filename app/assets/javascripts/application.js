@@ -164,6 +164,7 @@ function large_number_to_human_signif_digits(number, significant_digits) {
   number = truncPrecision(number, significant_digits);
   return sign + (number / Math.pow(1000, e) + "" + s[e]);
 }
+
 // currently truncates by transforming into a string, removing the decimal point, taking a substring, then putting the decimal point back in the right place
 function truncPrecision(number, significant_digits) {
   var number_str = number + "";
@@ -180,4 +181,9 @@ function truncPrecision(number, significant_digits) {
     var factor_adjust = (decimal_pos >= 3 ? decimal_pos : number_str.length) - significant_digits;
     return number_str_transform * Math.pow(10, factor_adjust);
   }
+}
+
+// Formats a number into a string with commas (,) placed as thousands separators.
+function numberWithCommas(n) {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }

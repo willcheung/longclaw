@@ -400,7 +400,7 @@
 
     // Build URL for AJAX call for filtered data
     function setFilterParamsAndRefreshData() {
-        let params = {};
+        var params = {};
         params.team = $('#team-filter').val() ? $('#team-filter').val() : "";
         params.title = $('#title-filter').val() ? $('#title-filter').val() : "";
         params.close_date = $('#close-date-filter').val() ? $('#close-date-filter').val() : "Any";

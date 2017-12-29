@@ -189,7 +189,7 @@ class SalesforceOpportunity < ActiveRecord::Base
         salesforce_opportunity.update(probability: fields[:probability]) if fields[:probability].present?
         salesforce_opportunity.update(amount: fields[:amount]) if fields[:amount].present?
         salesforce_opportunity.update(forecast_category_name: fields[:forecast_category_name]) if fields[:forecast_category_name].present?
-        # omitted: expected_revenue: fields[:expected_revenue]
+        # omitted: next_steps (does not exist in local sfdc_opp model), expected_revenue: fields[:expected_revenue]
       rescue => e
         return { status: "ERROR", result: "Salesforce opportunity update error", detail: e.to_s }
       end
@@ -202,10 +202,14 @@ class SalesforceOpportunity < ActiveRecord::Base
       # opportunity_custom_fields = CustomFieldsMetadatum.where("organization_id = ? AND entity_type = ? AND salesforce_field is not null", current_user.organization_id, CustomFieldsMetadatum.validate_and_return_entity_type(CustomFieldsMetadatum::ENTITY_TYPE[:Project], true))
 
       sObject_fields = {}
-      opportunity_standard_fields.each {|sfdc_field, cs_field| sObject_fields[sfdc_field] = fields[cs_field] if fields[cs_field].present?}
-      sObject_fields["Name"] = fields[:name] if fields[:name].present?
-      sObject_fields["StageName"] = fields[:stage_name] if fields[:stage_name].present?  #TODO: remove later?
-      sObject_fields["ForecastCategoryName"] = fields[:forecast_category_name] if fields[:forecast_category_name].present?  #TODO: remove later?
+      opportunity_standard_fields.each do |sfdc_field, cs_field|
+        if fields[cs_field].present?
+          fields[cs_field] = fields[cs_field].strftime("%Y-%m-%d") if fields[cs_field].is_a? Date
+          sObject_fields[sfdc_field] = fields[cs_field]
+          # puts "\n\n *****\t CS_field: #{cs_field} \tchanged value=#{fields[cs_field]}\n\t SFDC_field: #{sfdc_field} *****\n\n"
+        end 
+      end
+      # puts "\n\n***** sObject_fields: #{sObject_fields} *****\n\n"
 
       update_result = SalesforceService.update_salesforce(client: client, update_type: "opportunity", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
