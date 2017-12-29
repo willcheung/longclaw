@@ -1,5 +1,0 @@
-// $('#project_next_steps').val("");
-// $('#project_next_steps').height(20);
-// $('#current-next-steps').text(`< %= @project.next_steps.html_safe %>`); // using ` instead of ' or " in case newlines in next_steps
-$('#vertical-timeline').prepend('<%= escape_javascript(render "activities/timeline_block", a: @activity) %>');
-$('.vertical-timeline-block').first().hide().show("blind", {direction: "up"}, 1000);
