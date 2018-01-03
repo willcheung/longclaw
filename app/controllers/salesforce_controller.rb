@@ -80,8 +80,8 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Returns a Salesforce OauthUser object for either a user or an organization suitable to be used to be used by SalesforceService.connect_salesforce.  If a user is specified and the user is not an Admin, this will return the SFDC OauthUser object for an individual login.  If an organization is specified, or if a user with Admin role is passed, then use the login belonging to the "organization".  
-  # Note: If neither user nor organization was provided, or if OauthUser object cannot be found, returns nil.
+  # Returns a Salesforce OauthUser object for either a user or an organization suitable to be used by SalesforceService.connect_salesforce.  If a user is specified and the user is not an Admin, this will look for and return (if found) an individual SFDC OauthUser login object for this user.  If an organization is specified, or if a user with Admin role is passed, then use the login belonging to the "organization".  
+  # Error: If neither user nor organization was provided, or if OauthUser object cannot be found for the parameters provided, returns nil.
   def self.get_sfdc_oauthuser(user: nil, organization: nil)
     if (user.present? && user.admin?) || (organization.present?)
       # Admin connection
@@ -290,7 +290,7 @@ class SalesforceController < ApplicationController
   end
 
   # Import/load a list of SFDC Accounts or SFDC Opportunities (that are of mapped SFDC Accounts) into local CS models, or import SFDC Activities into CS Opportunities. 
-  # For Accounts/Opportunities -- This will also refreshes/updates the standard and custom field values of mapped accounts or opportunities.
+  # For Accounts/Opportunities -- This also refreshes/updates the standard and custom field values of mapped accounts or opportunities.
   # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account.  For all active and confirmed opportunities visible to admin.
   # For Contacts -- TODO: need to reimplement!
   # Note: this will import even if CustomConfig setting is disabled, because we are explicitly importing; if it is enabled, we will save the timestamp when we performed the import.

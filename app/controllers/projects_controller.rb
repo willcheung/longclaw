@@ -1,7 +1,7 @@
 class ProjectsController < ApplicationController
   before_action :check_params_for_valid_dates, only: [:update]
   before_action :set_visible_project, only: [:show, :edit, :tasks_tab, :arg_tab, :lookup, :network_map, :refresh, :filter_timeline, :more_timeline]
-  before_action :set_editable_project, only: [:destroy, :update, :update_next_steps]
+  before_action :set_editable_project, only: [:destroy, :update]
   before_action :get_account_names, only: [:index, :new, :show, :edit] # So "edit" or "new" modal will display all accounts
   before_action :get_current_org_users, only: [:index, :show, :filter_timeline, :more_timeline, :tasks_tab, :arg_tab]
   before_action :get_current_org_opportunity_stages, only: [:show, :tasks_tab, :arg_tab]
@@ -164,6 +164,22 @@ class ProjectsController < ApplicationController
   # PATCH/PUT /projects/1
   # PATCH/PUT /projects/1.json
   def update
+    if project_params['next_steps']
+      @ns_updated = true
+      @activity = @project.activities.create(
+          category: Activity::CATEGORY[:NextSteps],
+          # new next_steps stored in title
+          title: project_params['next_steps'],
+          # old next_steps stored in note
+          note: @project.next_steps.blank? ? '(none)' : @project.next_steps,
+          email_messages: [{ original_next_steps: @project.next_steps.blank? ? '(none)' : @project.next_steps, new_next_steps: project_params['next_steps'] }],
+          posted_by: current_user.id,
+          is_public: true,
+          last_sent_date: Time.now,
+          last_sent_date_epoch: Time.now.to_i
+      )
+    end
+
     respond_to do |format|
       if @project.update(project_params)
         format.html { redirect_to @project, notice: 'Project was successfully updated.' }
@@ -176,35 +192,6 @@ class ProjectsController < ApplicationController
         end
       else
         format.html { render action: 'edit' }
-        format.js { render json: @project.errors, status: :unprocessable_entity }
-        format.json { render json: @project.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
-  def update_next_steps
-    @activity = @project.activities.create(
-        category: Activity::CATEGORY[:NextSteps],
-        # new next_steps stored in title
-        title: project_params['next_steps'],
-        # old next_steps stored in note
-        note: @project.next_steps.blank? ? '(none)' : @project.next_steps,
-        email_messages: [{ original_next_steps: @project.next_steps.blank? ? '(none)' : @project.next_steps, new_next_steps: project_params['next_steps'] }],
-        posted_by: current_user.id,
-        is_public: true,
-        last_sent_date: Time.now,
-        last_sent_date_epoch: Time.now.to_i
-    )
-
-    @project.assign_attributes(project_params)
-
-    respond_to do |format|
-      if @project.save
-        # respond_to js (for remote form in projects#show)
-        format.js
-        # respond_to json (for best_in_place in projects#index or home#index)
-        format.json { respond_with_bip(@project) }
-      else
         format.js { render json: @project.errors, status: :unprocessable_entity }
         format.json { render json: @project.errors, status: :unprocessable_entity }
       end
@@ -480,11 +467,11 @@ class ProjectsController < ApplicationController
                                     OR (projects.is_public=false AND projects.owner_id = ?) OR ?)', current_user.organization_id, current_user.id, current_user.admin?)
                       .find(params[:id])
     if (@project.present? && @project.is_linked_to_SFDC?)
-      if SalesforceController.get_sfdc_oauthuser(user: current_user).present? # "connected" to SFDC
-        @sfdc_client = SalesforceService.connect_salesforce(user: current_user)
-      else
-        puts "No SFDC connection. Linked Salesforce opportunity won't be updated!" # TODO: Warn the user SFDC opp was not updated!
-      end
+      sfdc_oauthuser = SalesforceController.get_sfdc_oauthuser(user: current_user) || SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)  # Use current user's SFDC login/connection if available; otherwise, use admin's SFDC login/connection regardless of current user's role
+      
+      @sfdc_client = SalesforceService.connect_salesforce(sfdc_oauthuser: sfdc_oauthuser) if sfdc_oauthuser.present?
+
+      puts "****SFDC**** Warning: no SFDC connection is available or can be established. Linked Salesforce opportunity was not updated!" if @sfdc_client.nil? # TODO: Issue a warning to the user that the linked SFDC opp was not updated!
     end
   rescue ActiveRecord::RecordNotFound
     redirect_to root_url, :flash => { :error => "Project not found or is private." }

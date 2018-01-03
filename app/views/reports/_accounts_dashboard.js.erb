@@ -35,6 +35,12 @@ while(chart.series.length > 0) {
       ]
     }, false)
     <% end unless @categories.blank? %>
+
+    // Show legend for specific metric and valid series
+    for (var i=0; i < chart.series.length; i++) {
+      if (chart.series[i].name !== 'NoActivity')
+      chart.series[i].update({ showInLegend: true });
+    }
   <% else %>
     chart.addSeries({
       name: "<%= @metric.html_safe %>",
@@ -48,16 +54,31 @@ while(chart.series.length > 0) {
       <% end if @data.present? %> 
       ]
     }, false);
-  <% end %>
-
-  <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:activities_last14d] %>
-    // Show legend for specific metric and valid series
+    // Hide legend
     for (var i=0; i < chart.series.length; i++) {
-      if (chart.series[i].name !== 'NoActivity')
-      chart.series[i].update({ showInLegend: true });
+      chart.series[i].update({ showInLegend: false });
     }
   <% end %>
 
+  <% if @metric == ReportsController::ACCOUNT_DASHBOARD_METRIC[:deal_size] %>
+    chart.yAxis[0].update({
+      stackLabels: {
+        enabled: true,
+        formatter: function () {
+          return "$"+large_number_to_human_signif_digits(this.total);
+        }
+      }
+    });
+  <% else %>
+    chart.yAxis[0].update({
+      stackLabels: {
+        enabled: true,
+        formatter: function () {
+          return this.total;
+        }
+      }
+    });
+  <% end %>
 <% end %> // if @data.present? 
 
 chart.setSize(undefined, 50 + Math.min(1150, <%= @data.present? ? @data.size : 0 %> * 90));

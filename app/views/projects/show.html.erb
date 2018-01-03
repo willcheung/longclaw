@@ -192,14 +192,14 @@
                     <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["amount"] %>:</strong>
                         <span class="pull-right">
-                            <%=best_in_place @project, :amount, :as => :input, :place_holder => '-', :activator => "#project-amount-activator" %>
+                            <%=best_in_place @project, :amount, :as => :input, :place_holder => '-', :display_with => Proc.new{|p| p.nil? ? "-" : "$"+number_to_human(p)}, :activator => "#project-amount-activator" %>
                                 <i id="project-amount-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
                         </span>
                     </li>
                     <li class="list-group-item m-b-sm">
                         <strong><%= Project::MAPPABLE_FIELDS_META["expected_revenue"] %>:</strong>
                         <span class="pull-right">
-                            <%=best_in_place @project, :expected_revenue, :as => :input, :place_holder => '-', :activator => "#project-expected-revenue-activator" %>
+                            <%=best_in_place @project, :expected_revenue, :as => :input, :place_holder => '-', :display_with => Proc.new{|p| p.nil? ? "-" : "$"+number_to_human(p)}, :activator => "#project-expected-revenue-activator" %>
                                 <i id="project-expected-revenue-activator" class="fa fa-pencil bip_activator text-mute-gray"></i>
                         </span>
                     </li>

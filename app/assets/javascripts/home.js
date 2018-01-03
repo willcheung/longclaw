@@ -20,12 +20,12 @@ $(document).ready(function($) {
   $('#close-date-filter')
     .chosen({ disable_search: true, allow_single_deselect: true})
     .change( function () {
-      let params = {};
+      var params = {};
       if ($(this).val()) {
         params.close_date = $(this).val();
       }
       window.location.search = $.param(params);
-    })
+    });
 
     $('.filter-group').hover(function () {
       $('.chosen-container-single').css('cursor', 'pointer');
