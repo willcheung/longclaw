@@ -107,7 +107,7 @@
                     }  %>
                     &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
                   <% unless params[:action] == "daily_summary" %>
-                    &sdot; <a class="tasks-link-<%= a.id %>" <%= "style=color:red" if has_open_alerts %> >Alerts (<span id="tasks-count-<%= a.id %>"><%= a.notifications.size %></span>)
+                    &sdot; <a class="tasks-link-<%= a.id %>" <%= "style=color:red;font-weight:bold" if has_open_alerts %> >Alerts (<span id="tasks-count-<%= a.id %>"><%= a.notifications.size %></span>)
                       </a>
                   <% end %>
                 </div>
