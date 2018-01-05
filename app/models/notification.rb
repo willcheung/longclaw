@@ -79,7 +79,7 @@ class Notification < ActiveRecord::Base
       description = "Days Inactive for #{p.name} exceeded #{level} Threshold at #{days_inactive} days."
 
       # # # # TODO: decide what to display if last_activity is not a Conversation.
-      last_activity = p.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]]).first
+      last_activity = p.activities.where.not(category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:NextSteps]]).first
       if last_activity.category == Activity::CATEGORY[:Conversation]
         message_id = last_activity.email_messages.last.messageId
         conversation_id = last_activity.backend_id
