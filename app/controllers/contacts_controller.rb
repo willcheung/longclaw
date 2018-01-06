@@ -30,7 +30,16 @@ class ContactsController < ApplicationController
       if account.organization_id == current_user.organization_id && @contact.save
         format.html { redirect_to @contact, notice: 'Contact was successfully created.' }
         # format.json { render action: 'show', status: :created, location: @contact }
-        format.js 
+        format.js
+
+        set_sfdc_client if @contact.account.is_linked_to_SFDC?
+
+        if @sfdc_client
+          export_result = @contact.export_cs_contact(@sfdc_client, @contact.account.salesforce_accounts.first.salesforce_account_id)
+          puts "*** SFDC error: Error in ContactsController.create during creation of a contact in linked SFDC account. Detail: #{export_result[:detail]} ***" if export_result[:status] == "ERROR" # TODO: Warn the user that the contact in the linked SFDC account was not created.
+        else
+          puts "****SFDC**** Warning: no SFDC connection is available or can be established. Contact in linked Salesforce account was not created!"  # TODO: Warn the user that the contact in the linked SFDC account was not created.
+        end
       else
         format.html { render action: 'new' }
         format.js { render json: @contact.errors, status: :unprocessable_entity }
@@ -49,6 +58,11 @@ class ContactsController < ApplicationController
         format.html { redirect_to :back, notice: 'Contact was successfully updated.' }
         format.json { respond_with_bip(@contact) }
         format.js
+
+        if @sfdc_client
+          export_result = @contact.export_cs_contact(@sfdc_client, @contact.account.salesforce_accounts.first.salesforce_account_id)
+          puts "*** SFDC error: Error in ContactsController.update during update of contact in linked SFDC account. Detail: #{export_result[:detail]} ***" if export_result[:status] == "ERROR" # TODO: Warn the user that the contact in the linked SFDC account was not updated.
+        end
       else
         format.html { render action: 'edit' }
         format.json { respond_with_bip(@contact) }
@@ -69,13 +83,24 @@ class ContactsController < ApplicationController
 
   private
     # Use callbacks to share common setup or constraints between actions.
+
     def set_contact
       begin
         @contact = Contact.visible_to(current_user).find(params[:id])
+
+        set_sfdc_client if @contact.account.is_linked_to_SFDC?
+
+        puts "****SFDC**** Warning: no SFDC connection is available or can be established. Contact in linked Salesforce account was not updated!" if @sfdc_client.nil? # TODO: Issue a warning to the user that the linked SFDC opp was not updated!
       rescue ActiveRecord::RecordNotFound
         # redirect_to root_url, :flash => { :error => "Contact not found or is private." }
         redirect_to :back, :flash => { :error => "Contact not found or is private." }
       end
+    end
+
+    def set_sfdc_client
+      sfdc_oauthuser = SalesforceController.get_sfdc_oauthuser(user: current_user) || SalesforceController.get_sfdc_oauthuser(organization: current_user.organization)  # Use current user's SFDC login/connection if available; otherwise, use admin's SFDC login/connection regardless of current user's role
+
+      @sfdc_client = SalesforceService.connect_salesforce(sfdc_oauthuser: sfdc_oauthuser) if sfdc_oauthuser.present?
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

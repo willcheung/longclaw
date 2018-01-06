@@ -42,6 +42,7 @@ class SalesforceService
       puts "*** Informational message: SalesforceService was unable to get Daily SFDC API Requests limits (#{ e.to_s }). However, the SFDC connection was successfully established! ***" if client.present?
     end
 
+    #TODO: It would be nice if we returned the connection error back to caller instead of just nil.
     client
   end
 
@@ -123,26 +124,10 @@ class SalesforceService
       case (params[:update_type])
       when "account"
         begin
-          acct_id = params[:sObject_meta][:id]
-          update_result = nil
-          params[:sObject_fields].each do |sfdc_field, new_val| 
-            # TODO: Temporary hack until figure out how to convert string into parameter; which means, currently, we cannot export to any custom SFDC fields!
-            case (sfdc_field)
-            when "Name"
-              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Name: new_val)
-            # TODO: Fix 'JSON_PARSER_ERROR: Cannot deserialize instance of BillingAddress from VALUE_STRING value' error on export!
-            #when "BillingAddress"
-              #update_result = client.update!('Account', Id: params[:sObject_meta][:id], BillingAddress: new_val)
-            when "Description"
-              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Description: new_val)
-            when "Phone"
-              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Phone: new_val)
-            when "Website"
-              update_result = client.update!('Account', Id: params[:sObject_meta][:id], Website: new_val)
-            else
-              puts "Cannot update field #{sfdc_field} -- No support for custom fields yet! :("
-            end
-          end
+          new_sObject_vals = { Id: params[:sObject_meta][:id] }
+          params[:sObject_fields].each {|sfdc_field, new_val| new_sObject_vals[sfdc_field] = new_val}
+          update_result = client.update!('Account', new_sObject_vals)
+
           result = { status: "SUCCESS", result: update_result, detail: "" }
         rescue => e
           detail = "Update Salesforce Account error. (#{ e.to_s }) sObject_meta: #{ params[:sObject_meta] }, sObject_fields: #{ params[:sObject_fields] }"
@@ -152,9 +137,7 @@ class SalesforceService
       when "opportunity"
         begin
           new_sObject_vals = { Id: params[:sObject_meta][:id] }
-          params[:sObject_fields].each do |sfdc_field, new_val|
-            new_sObject_vals[sfdc_field] = new_val
-          end
+          params[:sObject_fields].each {|sfdc_field, new_val| new_sObject_vals[sfdc_field] = new_val}
           update_result = client.update!('Opportunity', new_sObject_vals)
 
           result = { status: "SUCCESS", result: update_result, detail: "" }

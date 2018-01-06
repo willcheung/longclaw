@@ -168,8 +168,16 @@ class SalesforceAccount < ActiveRecord::Base
       account_standard_fields = EntityFieldsMetadatum.get_sfdc_fields_mapping_for(organization_id: current_user.organization_id, entity_type: EntityFieldsMetadatum::ENTITY_TYPE[:Account])
 
       sObject_fields = {}
-      account_standard_fields.each {|sfdc_field, cs_field| sObject_fields[sfdc_field] = fields[cs_field] if fields[cs_field].present?}
-      sObject_fields["Name"] = fields[:salesforce_account_name] if fields[:salesforce_account_name].present?  #TODO: remove later?
+      account_standard_fields.each do |sfdc_field, cs_field|
+        if fields[cs_field].present?
+          fields[cs_field] = fields[cs_field].strftime("%Y-%m-%d") if fields[cs_field].is_a? Date
+          
+          # TODO: Cannot map to compound SFDC field of type 'Address' such as "BillingAddress" or "ShippingAddress" -- 'JSON_PARSER_ERROR: Cannot deserialize instance of BillingAddress from VALUE_STRING value' error on export! Warn the user!
+          sObject_fields[sfdc_field] = fields[cs_field]
+          # puts "\n\n *****\t CS_field: #{cs_field} \tchanged value=#{fields[cs_field]}\n\t SFDC_field: #{sfdc_field} *****\n\n"
+        end
+      end
+      sObject_fields["Name"] = fields[:salesforce_account_name] if fields[:salesforce_account_name].present?  #TODO: Workaround not needed after fixing edit/update account form to use standard REST-ful routes in extension!
 
       update_result = SalesforceService.update_salesforce(client: client, update_type: "account", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 

@@ -292,7 +292,7 @@ class Contact < ActiveRecord::Base
     result
   end
 
-  # For a valid contact, creates a new SFDC contact or updates fields of linked SFDC Contact (does NOT update the CS copy of contact)
+  # For a valid contact, creates a new SFDC contact or updates fields of linked SFDC Contact (Note: does NOT update the CS copy of contact)
   # Parameters: client - connection to Salesforce
   #             sfdc_account_id - id of SFDC account to which this exports/update the contact 
   #             contact - the contact to export to SFDC

@@ -57,6 +57,10 @@ class Account < ActiveRecord::Base
     CATEGORY = { Competitor: 'Competitor', Customer: 'Customer', Investor: 'Investor', Integrator: 'Integrator', Partner: 'Partner', Press: 'Press', Prospect: 'Prospect', Reseller: 'Reseller', Vendor: 'Vendor', Other: 'Other' }
     MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "website" => "Website", "phone" => "Phone", "address" => "Address" }  # "notes" => "Notes", "revenue_potential" => "Revenue Potential"
 
+    def is_linked_to_SFDC?
+        self.salesforce_accounts.present?
+    end
+
     # Copy all contacts from source account into this account.  If contact exists, attempt a merge of the two contacts. 
     # Parameters:   acct - source account to merge from
     def merge(acct)
