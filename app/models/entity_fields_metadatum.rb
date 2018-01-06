@@ -70,7 +70,7 @@ class EntityFieldsMetadatum < ActiveRecord::Base
       # Map the CS Account field to the SFDC Account field. The following lines may need to change if Account::MAPPABLE_FIELDS_META changes
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "name").update(salesforce_field: "Name") if sfdc_account_fields.include? "Name"
       #organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "revenue_potential").update(salesforce_field: "AnnualRevenue") if sfdc_account_fields.include? "AnnualRevenue"
-      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "address").update(salesforce_field: "BillingAddress") if sfdc_account_fields.include? "BillingAddress"
+      organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "address").update(salesforce_field: "BillingStreet") if sfdc_account_fields.include? "BillingStreet"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "description").update(salesforce_field: "Description") if sfdc_account_fields.include? "Description"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "phone").update(salesforce_field: "Phone") if sfdc_account_fields.include? "Phone"
       organization.entity_fields_metadatum.find_by(entity_type: ENTITY_TYPE[:Account], name: "website").update(salesforce_field: "Website") if sfdc_account_fields.include? "Website"
