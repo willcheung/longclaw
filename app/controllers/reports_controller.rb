@@ -16,12 +16,7 @@ class ReportsController < ApplicationController
 
   # for loading metrics data (left panel) on Accounts Opportunities Dashboard
   def ad_sort_data
-    # puts "\n\n\t************ ad_sort_data *************\n"
-    # puts "\tparams[:sort]: #{params[:sort]}"
-    # puts "\tparams[:owner]: #{params[:owner]}"
-    # puts "\tparams[:close_date]: #{params[:close_date]}"
-    # puts "\tparams[:stage]: #{params[:stage]}"
-    # puts "\n\n"
+    # puts "\n\n\t************ ad_sort_data *************\n params: #{params}\n\n"
 
     @metric = params[:sort]
 
@@ -107,7 +102,7 @@ class ReportsController < ApplicationController
     @data = @data.take(25)  # TODO: real left chart pagination
   end
 
-  # for loading "account" details (right panel) on Opportunities Dashboard ("account" in this case is an opportunities, internally known as a project)
+  # for loading opportunity drill-down (right panel) on Opportunities Dashboard ("account" in this case is an opportunities, internally known as a project)
   def ad_account_data
     @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
 
@@ -165,14 +160,7 @@ class ReportsController < ApplicationController
 
   # for loading metrics data (left panel) on Leaderboard/Team Dashboard
   def td_sort_data
-    # puts "\n\n\t************ td_sort_data *************\n"
-    # puts "\tparams[:sort]: #{params[:sort]}"
-    # puts "\tparams[:metric]: #{params[:metric]}"
-    # puts "\tparams[:team]: #{params[:team]}"
-    # puts "\tparams[:title]: #{params[:title]}"
-    # puts "\tparams[:close_date]: #{params[:close_date]}"
-    # puts "\tparams[:stage]: #{params[:stage]}"
-    # puts "\n\n"
+    # puts "\n\n\t************ td_sort_data *************\n params: #{params}\n\n"
 
     # NOTE: `sort` and `sort_by` are keywords for Hash, would have used these as keys for @dashboard_data but can't due to this conflict!
     @dashboard_data = Hashie::Mash.new(sorted_by: { type: params[:sort] }, metric: { type: params[:metric] })
@@ -217,10 +205,10 @@ class ReportsController < ApplicationController
     end
 
     @dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories = get_leaderboard_data(@dashboard_data.sorted_by.type, users, projects)
-    @dashboard_data.metric.data, @dashboard_data.metric.categories = get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)
+    @dashboard_data.metric.data, @dashboard_data.metric.categories = (@dashboard_data.sorted_by.type == @dashboard_data.metric.type) ? [@dashboard_data.sorted_by.data, @dashboard_data.sorted_by.categories] : get_leaderboard_data(@dashboard_data.metric.type, users, projects, @dashboard_data.sorted_by.data)  ## reuse previous result of type is the same!
   end
 
-  # for loading User details (right panel) on Leaderboard/Team Dashboard
+  # for loading User drill-down (right panel) on Leaderboard/Team Dashboard
   def td_user_data
     @user = User.where(organization_id: current_user.organization_id).find(params[:id])
     @error = "Oops, something went wrong. Try again." and return if @user.blank?

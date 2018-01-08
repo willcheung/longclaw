@@ -129,7 +129,7 @@ class ApplicationController < ActionController::Base
   end
 
 
-  # Sets the necessary data to be used in the top forecast category and stage reports.
+  # Sets the necessary data to be used in the top forecast category and stage reports (in ReportsController and ProjectsController).
   # Parameters:   project_ids (required) - list of CS opportunity id's to filter on.
   #               user_ids (optional) - list of CS user id's on which to filter project owners.
   def set_top_dashboard_data(project_ids: , user_ids: nil)
