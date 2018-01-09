@@ -164,9 +164,10 @@ a.btn.oauth, button.btn.oauth {
   -webkit-font-smoothing: auto;
   font-weight: 500;
   width: 100%;
-  max-width: 280px;
-  font-size: 20px;
-  margin: 25px 25px 10px 25px;
+  max-width: 370px;
+  padding: 20px 0;
+  font-size: 25px;
+  margin: 15px 0px;
 }
 h1.oauth {
   font-size: 35px;
@@ -187,6 +188,11 @@ a.oauth.logo {
   background-size: 250px;
   display:block;
 }
+
+.google-oauth-btn:hover {
+  opacity: .9;
+}
+
 .vertical-timeline-content.highlight {
   border-color: #777;
 }

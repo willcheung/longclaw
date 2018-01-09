@@ -41,7 +41,7 @@
 
             <div class="row well text-center reminder" style="margin-top: 30px;">
             <p>Please grant us additional permissions to sync your emails and contacts:<br>
-              <a class="btn btn-primary" style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="popupCenter(this.href, 'Sign in', 400, 600); $('.reminder').remove(); return false;"><i class="fa fa-google oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Click Here</span></a>
+              <a style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="popupCenter(this.href, 'Sign in', 400, 600); $('.reminder').remove(); return false;"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/btn_google_signin_dark_normal_web_custom.png" title="Click here"></a>
             </p>
             </div>
         <% end %>

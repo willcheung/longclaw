@@ -52,7 +52,7 @@
                         <a class="btn btn-lg btn-primary oauth" href="https://mail.google.com"><i class="fa fa-envelope-o oauth"></i>&nbsp;&nbsp;&nbsp;<span class="bold">Go to Gmail</span></a>
                     <% else %>
                         <% role = User::ROLE[:Biz] if params[:c] %>
-                        <%= render "users/form_login", button_text: "Sign Up", role: role %>
+                        <%= render "users/form_login", button_text: "Sign up", role: role %>
                         
                     <% end %>
                 </div>
