@@ -164,7 +164,7 @@ class ReportsController < ApplicationController
 
     # NOTE: `sort` and `sort_by` are keywords for Hash, would have used these as keys for @dashboard_data but can't due to this conflict!
     @dashboard_data = Hashie::Mash.new(sorted_by: { type: params[:sort] }, metric: { type: params[:metric] })
-    users = current_user.organization.users.registered.onboarded.non_alias
+    users = current_user.organization.users.registered.onboarded
 
     # Incrementally apply filters
     if params[:team].present?
