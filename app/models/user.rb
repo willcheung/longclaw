@@ -407,7 +407,7 @@ class User < ActiveRecord::Base
       SELECT date(time_series.days) AS days, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
       FROM time_series
       LEFT JOIN (SELECT (messages ->> 'sentDate')::integer AS sent_date,
-                        messages ->> 'messageId'::text AS message_id,
+                       messages ->> 'messageId'::text AS message_id,
                        jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
                        CASE
                          WHEN messages -> 'to' IS NULL THEN NULL
