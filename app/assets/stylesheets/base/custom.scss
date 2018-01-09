@@ -190,7 +190,10 @@ a.oauth.logo {
 }
 
 .google-oauth-btn:hover {
-  opacity: .9;
+  opacity: .95;
+  box-shadow: 0 0 1px rgba(33,33,33,.4);
+  -webkit-box-shadow: 0 0 1px rgba(33,33,33,.4);
+  -moz-box-shadow: 0 0 1px rgba(33,33,33,.4);
 }
 
 .vertical-timeline-content.highlight {
