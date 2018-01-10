@@ -406,8 +406,8 @@ class User < ActiveRecord::Base
       (
       SELECT date(time_series.days) AS days, '#{Activity::CATEGORY[:Conversation]}' AS category, COUNT(DISTINCT emails.message_id) AS num_activities
       FROM time_series
-      LEFT JOIN (SELECT to_timestamp((messages ->> 'sentDate')::integer) AS sent_date,
-                        messages ->> 'messageId'::text AS message_id,
+      LEFT JOIN (SELECT (messages ->> 'sentDate')::integer AS sent_date,
+                       messages ->> 'messageId'::text AS message_id,
                        jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
                        CASE
                          WHEN messages -> 'to' IS NULL THEN NULL
@@ -423,7 +423,7 @@ class User < ActiveRecord::Base
                 AND project_id IN ('#{array_of_project_ids.join("','")}')
                 AND (messages ->> 'sentDate')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}
           ) AS emails
-        ON (date_trunc('day', emails.sent_date AT TIME ZONE '#{time_zone}') = time_series.days)
+        ON (date_trunc('day', to_timestamp(emails.sent_date) AT TIME ZONE '#{time_zone}') = time_series.days)
         AND #{User.sanitize(self.email)} IN (emails.from, emails.to, emails.cc)
       GROUP BY days, category
       ORDER BY days ASC

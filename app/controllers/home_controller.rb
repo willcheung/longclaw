@@ -2,6 +2,9 @@ class HomeController < ApplicationController
   layout 'empty', only: 'access_denied'
   before_action :check_user_onboarding, only: :index
   before_action :get_current_org_users, only: :index
+  before_action :get_current_org_opportunity_stages, only: :index
+  before_action :get_current_org_opportunity_forecast_categories, only: :index
+  before_action :get_current_org_users, only: :index
 
   def index
     # @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip

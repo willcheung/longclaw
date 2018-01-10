@@ -109,17 +109,18 @@
                                     <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
                                     <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
                                 </td>
-                                <td style="width: 120px"><%= p.stage.blank? ? '-' : p.stage %></td>
-                                <td style="width: 120px"><%= (p.amount.nil?) ? "-" : "$"+number_to_human(p.amount) %></td>
-                                <td><%= p.forecast.blank? ? '-' : p.forecast %></td>
-                                <td><div><%= get_full_name(p.project_owner) %></div></td>
+                                <td class="editable-field project-editable-field project-stage-td-<%= p.id %>"><%= best_in_place p, :stage, :as => :select, :collection => @opportunity_stages.map {|s| [s,s]}, inner_class: 'bip-select-input', activator: '.project-stage-td-'+p.id %>&nbsp;&nbsp;<i class="fa fa-pencil editable-field-activator"></i> </td>
+                                <td class="editable-field project-editable-field project-amount-td-<%= p.id %>"><%= best_in_place p, :amount, display_with: lambda { |v| v.blank? ? '-' : '$' + number_to_human(v) }, inner_class: 'bip-text-input', activator: '.project-amount-td-'+p.id %>&nbsp;&nbsp;<i class="fa fa-pencil editable-field-activator"></i> </td>
+                                <td class="editable-field project-editable-field project-forecast-td-<%= p.id %>"><%= best_in_place p, :forecast, :as => :select, :collection => @opportunity_forecast_categories.map {|s| [s,s]}, inner_class: 'bip-select-input', activator: '.project-forecast-td-'+p.id %>&nbsp;&nbsp;<i class="fa fa-pencil editable-field-activator"></i> </td>
+                                <td class="editable-field project-editable-field project-owner-td-<%= p.id %>"><% if (p.owner_id.nil? || p.owner_id == current_user.id) || current_user.admin? %>
+                                    <%= best_in_place p, :owner_id, :as => :select, :collection => @users_reverse, inner_class: 'bip-select-input', activator: '.project-owner-td-'+p.id %>&nbsp;&nbsp;<i class="fa fa-pencil editable-field-activator"></i>
+                                  <% else %>
+                                    <%= get_full_name(p.project_owner) %>
+                                  <% end %></td>
                                 <td style="width: 40px">
-                                <% all_members = p.users + p.contacts %>
-                                <!-- < % members = all_members.first(@MEMBERS_LIST_LIMIT) %>
-                                < %= " data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" data-original-title=\"<strong>People:</strong><br/> #{ (members.collect {|m| get_full_name(m)}).sort_by{|m| m.upcase}.join('<br/>') } #{ ("<br/><span style='font-style: italic'>and " + (all_members.size - @MEMBERS_LIST_LIMIT).to_s + " more...</span>") if all_members.size > @MEMBERS_LIST_LIMIT } \"".html_safe unless all_members.size == 0 %> -->
-                                <span><i class="fa fa-users" style="color:#888"></i> <%= all_members.size %></span></td>
-                                <!-- <td style="text-align: center;" class="< %= risk_color(@risk_scores[p.id]) %>">< %= @risk_scores[p.id] %></td> -->
-                                <td><%= simple_format(truncate(word_wrap(CGI.escape_html(p.next_steps.blank? ? '(none)' : p.next_steps), line_width: 160), length: 300, separator: '\n') ) %></td>
+                                <% all_members_size = p.users.count + p.contacts.count %>
+                                <span><i class="fa fa-users" style="color:#888"></i> <%= all_members_size %></span></td>
+                                <td class="editable-field project-editable-field project-next-steps-td-<%= p.id %>"><%= best_in_place p, :next_steps, as: :textarea, ok_button: 'Ok', ok_button_class: 'btn btn-xs btn-primary', inner_class: 'bip-textarea-input', display_with: lambda { |v| simple_format(truncate(word_wrap(CGI.escape_html(v.blank? ? '(none)' : v), line_width: 160), length: 300, separator: '\n') ) }, activator: '.project-next-steps-td-'+p.id %>&nbsp;&nbsp;<i class="fa fa-pencil editable-field-activator"></i> </td>
                                 <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%l:%M%p on %B %-d') %>
                                 <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].to_i %>
                                 <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
