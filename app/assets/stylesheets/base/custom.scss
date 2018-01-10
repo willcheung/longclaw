@@ -292,6 +292,11 @@ span.best_in_place.btn {
   margin: -.8em -1em 0 -1em;
   padding: .8em 1em 0 1em;
 }
+
+.editable-field.project-editable-field {
+  cursor: pointer;
+}
+
 .project-people .member .delete-member a,
 .timeline-note .delete-note,
 .social-comment .delete-comment,
