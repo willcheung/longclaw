@@ -1,6 +1,15 @@
-/* Main search bar */
-
-/* Used for making sure fa-search is still on top */
 .opp-chart {
-   height: 18em;
+  height: 18em;
+}
+
+.bip-select-input {
+  width: 100px;
+}
+
+.bip-text-input {
+  width: 70px;
+}
+
+.bip-textarea-input {
+  width: 100%;
 }
