@@ -31,4 +31,8 @@ $(document).ready(function($) {
       $('.chosen-container-single').css('cursor', 'pointer');
       $('.chosen-single').css('cursor', 'pointer');
     });
+
+  $('#projects-table tbody').on('ajax:success', '.best_in_place', function () {
+    $(this).closest('tr').effect('highlight');
+  });
 });
