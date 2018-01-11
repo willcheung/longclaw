@@ -534,6 +534,7 @@ class ProjectsController < ApplicationController
       end
     end
   end
+
   # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
   def check_params_for_valid_dates
     params["project"][:close_date] = parse_date(params["project"][:close_date]) if params["project"][:close_date].present?
