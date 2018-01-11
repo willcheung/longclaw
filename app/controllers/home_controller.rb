@@ -134,13 +134,9 @@ class HomeController < ApplicationController
 
   def home_filter_state
     if params[:close_date]
-      cookies[:home_controller_close_date] = {value: params[:close_date]}
+      cookies[:home_close_date] = {value: params[:close_date]}
     else
-      if cookies[:home_controller_close_date]
-        params[:close_date] = cookies[:home_controller_close_date]
-      else
-        params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter]  # initial default value
-      end
+      params[:close_date] = cookies[:home_close_date] ? cookies[:home_close_date] : Project::CLOSE_DATE_RANGE[:ThisQuarter]
     end
   end
 end

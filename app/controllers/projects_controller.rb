@@ -507,31 +507,27 @@ class ProjectsController < ApplicationController
     if params[:type]
       cookies[:project_type] = {value: params[:type]}
     else
-      params[:type] = cookies[:project_type].present? ? cookies[:project_type].split("&") : []
+      params[:type] = cookies[:project_type] ? cookies[:project_type].split("&") : []
     end
     if params[:owner]
       cookies[:project_owner] = {value: params[:owner]}
     else
-      params[:owner] = cookies[:project_owner].present? ? cookies[:project_owner].split("&") : []
+      params[:owner] = cookies[:project_owner] ? cookies[:project_owner].split("&") : []
     end
     if params[:stage]
       cookies[:project_stage] = {value: params[:stage]}
     else
-      params[:stage] = cookies[:project_stage].present? ? cookies[:project_stage].split("&") : []
+      params[:stage] = cookies[:project_stage] ? cookies[:project_stage].split("&") : []
     end
     if params[:forecast]
       cookies[:project_forecast] = {value: params[:forecast]}
     else
-      params[:forecast] = cookies[:project_forecast].present? ? cookies[:project_forecast].split("&") : []
+      params[:forecast] = cookies[:project_forecast] ? cookies[:project_forecast].split("&") : []
     end
     if params[:close_date]
       cookies[:project_close_date] = {value: params[:close_date]}
     else
-      if cookies[:project_close_date]
-        params[:close_date] = cookies[:project_close_date]
-      else
-        params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter]  # initial default value
-      end
+      params[:close_date] = cookies[:project_close_date] ? cookies[:project_close_date] : Project::CLOSE_DATE_RANGE[:ThisQuarter]
     end
   end
 
