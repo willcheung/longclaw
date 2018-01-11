@@ -362,11 +362,11 @@
             }
         });
 
-        // Highcharts.setOptions({
-        //     global: {
-        //         timezoneOffset: <%= @time_zone_offset_min %>
-        //     }
-        // });
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
 
         <%= render partial: "reports/accounts_dashboard_top.js" %>
         <%= render partial: "reports/accounts_dashboard.js" %>
