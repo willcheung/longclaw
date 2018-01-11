@@ -183,7 +183,7 @@ class ProjectsController < ApplicationController
     respond_to do |format|
       begin
         raise unless @project.update(project_params)
-        # puts "\n\n\t @project.previous_changes!!!! :( #{@project.previous_changes}\n\n"
+        
         if @sfdc_client
           update_result = SalesforceOpportunity.update_all_salesforce(client: @sfdc_client, salesforce_opportunity: @project.salesforce_opportunity, fields: project_params, current_user: current_user) 
           if update_result[:status] == "ERROR" # TODO: changes roll back if SFDC was not updated!
@@ -194,7 +194,7 @@ class ProjectsController < ApplicationController
             raise
           end
         end
-
+        
         format.html { redirect_to @project, notice: 'Project was successfully updated.' }
         format.js
         format.json { respond_with_bip(@project) }

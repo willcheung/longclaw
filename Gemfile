@@ -4,7 +4,7 @@ ruby "2.2.3"
 gem 'rails', '4.2.3'
 gem 'bootstrap-sass', '~> 3.3.6'
 gem 'simple_form', '~> 3.1.0'			# run 'rails generate simple_form:install --bootstrap' after installing gem
-gem 'pg' 													# Use postgresql as the database for ActiveRecord
+gem 'pg', '~> 0.21.0' 						# Use postgresql as the database for ActiveRecord
 gem 'sass-rails', '~>5.0.4'       # Use SCSS for stylesheets
 # gem 'turbolinks' 									# Turbolinks makes following links in your web application faster.
                                     # (creates some weird caching issues so don't include it unless absolutely necessary)
