@@ -38,7 +38,7 @@ class ContactsController < ApplicationController
           export_result = @contact.export_cs_contact(@sfdc_client, @contact.account.salesforce_accounts.first.salesforce_account_id)
           puts "*** SFDC error: Error in ContactsController.create during creation of a contact in linked SFDC account. Detail: #{export_result[:detail]} ***" if export_result[:status] == "ERROR" # TODO: Warn the user that the contact in the linked SFDC account was not created.
         else
-          puts "****SFDC**** Warning: no SFDC connection is available or can be established. Contact in linked Salesforce account was not created!"  # TODO: Warn the user that the contact in the linked SFDC account was not created.
+          puts "****SFDC**** Warning: no SFDC connection is available or can be established for user=#{current_user.email}, organization=#{current_user.organization.name}. Contact in linked Salesforce account was not created!"  # TODO: Warn the user that the contact in the linked SFDC account was not created.
         end
       else
         format.html { render action: 'new' }
@@ -90,7 +90,7 @@ class ContactsController < ApplicationController
 
         set_sfdc_client if @contact.account.is_linked_to_SFDC?
 
-        puts "****SFDC**** Warning: no SFDC connection is available or can be established. Contact in linked Salesforce account was not updated!" if @sfdc_client.nil? # TODO: Issue a warning to the user that the linked SFDC opp was not updated!
+        puts "****SFDC**** Warning: no SFDC connection is available or can be established for user=#{current_user.email}, organization=#{current_user.organization.name}. Contact in linked Salesforce account was not updated!" if @sfdc_client.nil? # TODO: Issue a warning to the user that the linked SFDC opp was not updated!
       rescue ActiveRecord::RecordNotFound
         # redirect_to root_url, :flash => { :error => "Contact not found or is private." }
         redirect_to :back, :flash => { :error => "Contact not found or is private." }
