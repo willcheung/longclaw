@@ -202,8 +202,8 @@ GEM
       omniauth (~> 1.0)
       omniauth-oauth2 (~> 1.0)
     orm_adapter (0.5.0)
-    pg (0.18.4)
-    pg (0.18.4-x86-mingw32)
+    pg (0.21.0)
+    pg (0.21.0-x86-mingw32)
     pg_search (1.0.5)
       activerecord (>= 3.1)
       activesupport (>= 3.1)
@@ -338,7 +338,7 @@ DEPENDENCIES
   omniauth-microsoft_v2_auth!
   omniauth-oauth2 (~> 1.4)
   omniauth-salesforce
-  pg
+  pg (~> 0.21.0)
   pg_search
   puma
   rack-cors
@@ -355,6 +355,9 @@ DEPENDENCIES
   thin
   tzinfo-data
   uglifier (>= 1.3.0)
+
+RUBY VERSION
+   ruby 2.2.3p173
 
 BUNDLED WITH
    1.15.4
