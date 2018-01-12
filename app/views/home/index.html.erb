@@ -95,10 +95,10 @@
                             <th></th>
                             <th>Next Steps</th>
                             <th>Next Meeting</th>
+                            <th>Close Date</th>
                             <th>Alerts & Tasks</th>
                             <th>Last 7d Activity</th>
                             <th>Days Inactive</th>
-                            <th>Days to Close</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -123,14 +123,14 @@
                                 <% ns_activity = p.activities.where(category: Activity::CATEGORY[:NextSteps]).first
                                    ns_updated_at = ns_activity.blank? ? '' : '<small class="text-muted">Updated '.html_safe + time_ago_in_words(ns_activity.last_sent_date.in_time_zone(current_user.time_zone)) + ' ago</small>'.html_safe %>
                                 <td class="editable-field project-editable-field project-next-steps-td-<%= p.id %>"><%= best_in_place p, :next_steps, as: :textarea, ok_button: 'Ok', ok_button_class: 'btn btn-xs btn-primary', inner_class: 'bip-textarea-input', display_with: lambda { |v| simple_format(truncate(word_wrap(CGI.escape_html(v.blank? ? '(none)' : v), line_width: 160), length: 300, separator: '\n') ) }, activator: '.project-next-steps-td-'+p.id %><%= ns_updated_at %>&nbsp;&nbsp;<i class="fa fa-pencil editable-field-activator"></i></td>
-                                <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%l:%M%p on %B %-d') %>
+                                <% next_meeting = @next_meetings[p.id].nil? ? "-" : @next_meetings[p.id].strftime('%B %-d (%a) %l:%M%P') %>
                                 <% next_meeting_ts = @next_meetings[p.id].nil? ? 0 : @next_meetings[p.id].to_i %>
                                 <td data-order="<%= next_meeting_ts %>" style="text-align:center"><%= next_meeting %></td>
+                                <td style="text-align:center;<%= 'color:red;' if p.close_date.present? && p.close_date < Time.current %>" title="<%= p.close_date if p.close_date.present? %>"><%= p.close_date.strftime('%b %-d') if p.close_date.present? %></td>
                                 <td style="text-align:center;" class="<%= @open_risk_count[p.id] > 0 ? 'text-danger' : '' %>"><%=@open_risk_count[p.id].to_s %></td>
                                 <td data-sparkline="<%= @sparkline[p.id].join(', ') %>; column"></td>
 
                                 <td style="text-align:center"><%= @project_days_inactive[p.id].nil? ? "-" : @project_days_inactive[p.id] %></td>
-                                <td style="text-align:center;" class=""><%= @days_to_close[p.id].nil? ? "-" : @days_to_close[p.id].to_s %></td>
 
                                 <td style="width: 120px">
                                     <span data-toggle="tooltip" data-placement="left" data-original-title="Subscribe to daily updates and alerts." data-delay='{"show":"300"}'>
