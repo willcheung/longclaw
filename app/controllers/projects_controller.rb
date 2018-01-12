@@ -336,7 +336,7 @@ class ProjectsController < ApplicationController
         members_html = "<span><i class=\"fa fa-users\" style=\"color:#888\"></i> #{all_members}</span>"
         ns_activity = project.activities.where(category: Activity::CATEGORY[:NextSteps]).first
         ns_updated_at = ns_activity.blank? ? '' : '<p class="m-b-none"><small class="text-muted">Updated '.html_safe + vc.time_ago_in_words(ns_activity.last_sent_date.in_time_zone(current_user.time_zone)) + ' ago</small></p>'.html_safe
-        close_date_html = "<span style='#{'color:red;' if project.close_date.present? && project.close_date < Time.current}' title='#{project.close_date if project.close_date.present?}'>#{project.close_date.strftime('%B %-d') if project.close_date.present?}</span>"
+        close_date_html = "<span #{'class="text-danger"' if project.close_date.present? && project.close_date < Time.current} title='#{project.close_date if project.close_date.present?}'>#{project.close_date.present? ? project.close_date.strftime('%b %-d') : '-'}</span>"
         [
           ("<input type=\"checkbox\" class=\"bulk-project\" value=\"#{project.id}\">" if current_user.admin?),
           vc.link_to(project.name, project) + '<br><small>'.html_safe + vc.link_to(project.account.name, project.account, class: 'link-muted') + '</small>'.html_safe,
@@ -346,8 +346,7 @@ class ProjectsController < ApplicationController
           get_full_name(project.project_owner),
           members_html,
           vc.simple_format(vc.truncate(vc.word_wrap(CGI.escape_html(project.next_steps.blank? ? '(none)' : project.next_steps)), length: 300, separator: '\n') ) + ns_updated_at, # pass next steps to dataTables as hidden column, use word_wrap + truncate to ensure only 2 lines shown TODO: implement show more link
-          @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].in_time_zone(current_user.time_zone).strftime('%B %-d (%a) %l:%M%P'),
-          # (project.close_date.strftime('%B %-d') if project.close_date.present?),
+          @next_meetings[project.id].nil? ? "-" : @next_meetings[project.id].in_time_zone(current_user.time_zone).strftime('%b %-d (%a) %l:%M%P'),
           close_date_html,
           "<span class='#{@open_risk_count[project.id].present? && @open_risk_count[project.id] > 0 ? 'text-danger' : ''}'>#{@open_risk_count[project.id].to_s}</span>",
           "<div data-sparkline=\"#{@sparkline[project.id].join(', ') if @sparkline[project.id].present?}; column\"></div>",

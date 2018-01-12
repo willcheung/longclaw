@@ -95,20 +95,20 @@
             <select class="bulk-action col-sm-3" data-placeholder="Change Category" id="bulk-category" disabled>
               <option value="0"></option>
               <% @opportunity_types.each do |k,v| %>
-              <option value="<%=v %>" ><%=v %></option>
+              <option value="<%= v %>" ><%= v %></option>
               <% end %>
             </select>
             <select class="bulk-action col-sm-3" data-placeholder="Change Owner" id="bulk-owner" disabled>
               <option value="0"></option>
-              <% @owners.each do |u|    %>
-              <option value="<%=u.id %>" ><%= get_full_name(u) %></option>
-               <% end %>
+              <% @owners.each do |u| %>
+              <option value="<%= u.id %>" ><%= get_full_name(u) %></option>
+              <% end %>
             </select>
             <select class="bulk-action col-sm-3" data-placeholder="Change Status" id="bulk-status" disabled>
               <option value="0"></option>
-              <% Project::STATUS.each do |s|    %>
-              <option value="<%=s %>" ><%=s %></option>
-               <% end %>
+              <% Project::STATUS.each do |s| %>
+              <option value="<%= s %>" ><%= s %></option>
+              <% end %>
             </select>
         </div>
     </div>
