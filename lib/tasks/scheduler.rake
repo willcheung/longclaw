@@ -226,7 +226,7 @@ namespace :scheduler do
             end
 
             if sfdc_client.present?
-                puts "\n[ scheduler:refresh_salesforce ] - Refreshing Salesforce for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"} (frequency=#{refresh_period}, last_successful_run=#{cf.config_value["scheduled_sync"][refresh_period]["last_successful_run"].present? ? cf.config_value["scheduled_sync"][refresh_period]["last_successful_run"] : "never" })."
+                puts "\n[ scheduler:refresh_salesforce ] - Refreshing Salesforce for Organization=#{cf.organization.name} User=#{user.present? && !user.admin? ? user.email : "Admin user"} (frequency=#{refresh_period}, last_successful_run='#{cf.config_value["scheduled_sync"][refresh_period]["last_successful_run"].present? ? cf.config_value["scheduled_sync"][refresh_period]["last_successful_run"] : "never" }')."
                 # SalesforceAccount.load_accounts(sfdc_client, (user.organization_id if user.present?) || organization.id)
                 if user.present?
                     SalesforceController.import_and_create_contextsmith(client: sfdc_client, user: user, for_periodic_refresh: true)
