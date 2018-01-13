@@ -80,7 +80,8 @@
         </tr>
         <tr>
           <td style="padding-bottom:7px;text-align:center;">
-            <strong style="font-size:13px;color:#3D8DC5">NEXT STEPS: <span style="font-size:14px;color:darkblue"><%= p.next_steps.blank? ? "&emsp;-&emsp;".html_safe : p.next_steps %></span></strong>
+            <% ns_activity = p.activities.where(category: Activity::CATEGORY[:NextSteps]).first %>
+            <strong style="font-size:13px;color:#AAA">NEXT STEPS: <span style="font-size:14px;color:grey"><%= p.next_steps.blank? ? "&emsp;-&emsp;".html_safe : p.next_steps %></span></strong> <small style="font-size:12px;color:#AAA;"><%= "(updated #{time_ago_in_words(ns_activity.last_sent_date.in_time_zone(@user.time_zone))} ago)" if p.next_steps.present? %></small>
           </td>
         </tr>
       </tbody>
@@ -359,7 +360,7 @@
       <tbody style="width:100%;display:table;">
         <tr>
           <td style="vertical-align:middle;">
-            <span style="color:green;font-weight:bold;">Alerts & Next Steps:</span>
+            <span style="font-size:15px;font-weight:bold;">Alerts & Tasks:</span>
           </td>
           <td class="expander"></td>
           <td style="padding:6px;text-align:right;">
