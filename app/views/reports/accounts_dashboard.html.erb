@@ -27,15 +27,15 @@
         <!-- Owner -->
         <select id="owner-filter" class="category_filter" multiple data-placeholder="  Select Owner" style="width: 100%">
             <option value="None"></option> <!-- no filter -->
-            <option value="<%= current_user.id %>" <% if params[:owner].present? && (params[:owner].include? current_user.id) %> selected <% end %> >Me (<%= get_full_name(current_user) %>)</option>
+            <option value="<%= current_user.id %>" <% if params[:owner].include? current_user.id %> selected <% end %> >Me (<%= get_full_name(current_user) %>)</option>
             <% @users_reverse.each do |u| %>
                 <% if u[0] != current_user.id %>
-                    <option value="<%= u[0] %>" <% if params[:owner].present? && (params[:owner].include? u[0]) %> selected <% end %> >
+                    <option value="<%= u[0] %>" <% if params[:owner].include? u[0] %> selected <% end %> >
                         <%= u[1] %>
                     </option>
                 <% end %>
             <% end %>
-            <option value="None" <% if params[:owner]=="None" %> selected  <% end %> >Unassigned</option>
+            <option value="None" <% if params[:owner].include? "None" %> selected  <% end %> >Unassigned</option>
         </select>
       </form>
       <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
@@ -362,11 +362,11 @@
             }
         });
 
-        // Highcharts.setOptions({
-        //     global: {
-        //         timezoneOffset: <%= @time_zone_offset_min %>
-        //     }
-        // });
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
 
         <%= render partial: "reports/accounts_dashboard_top.js" %>
         <%= render partial: "reports/accounts_dashboard.js" %>

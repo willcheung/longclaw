@@ -181,16 +181,24 @@ class ProjectsController < ApplicationController
     end
 
     respond_to do |format|
-      if @project.update(project_params)
+      begin
+        raise unless @project.update(project_params)
+        
+        if @sfdc_client
+          update_result = SalesforceOpportunity.update_all_salesforce(client: @sfdc_client, salesforce_opportunity: @project.salesforce_opportunity, fields: project_params, current_user: current_user) 
+          if update_result[:status] == "ERROR" # TODO: changes roll back if SFDC was not updated!
+            puts "*** SFDC error: Error in ProjectsController.update during update of linked SFDC opportunity. Detail: #{update_result[:detail]} ***"
+
+            @project.previous_changes.each{|k,v| @project[k] = v[0] } # manually "rollback" to old values
+            @project.save
+            raise
+          end
+        end
+        
         format.html { redirect_to @project, notice: 'Project was successfully updated.' }
         format.js
         format.json { respond_with_bip(@project) }
-
-        if @sfdc_client
-          update_result = SalesforceOpportunity.update_all_salesforce(client: @sfdc_client, salesforce_opportunity: @project.salesforce_opportunity, fields: project_params, current_user: current_user) 
-          puts "*** SFDC error: Error in ProjectsController.update during update of linked SFDC opportunity. Detail: #{update_result[:detail]} ***" if update_result[:status] == "ERROR" # TODO: Warn the user SFDC opp was not updated!
-        end
-      else
+      rescue
         format.html { render action: 'edit' }
         format.js { render json: @project.errors, status: :unprocessable_entity }
         format.json { render json: @project.errors, status: :unprocessable_entity }
@@ -246,7 +254,6 @@ class ProjectsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply filters to determine the projects to be used in the Stage filter
-    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
 
     if params[:owner].present? && (!params[:owner].include? "0")
@@ -500,32 +507,30 @@ class ProjectsController < ApplicationController
     if params[:type]
       cookies[:project_type] = {value: params[:type]}
     else
-      params[:type] = cookies[:project_type].present? ? cookies[:project_type].split("&") : []
+      params[:type] = cookies[:project_type] ? cookies[:project_type].split("&") : []
     end
     if params[:owner]
       cookies[:project_owner] = {value: params[:owner]}
     else
-      params[:owner] = cookies[:project_owner].present? ? cookies[:project_owner].split("&") : []
+      params[:owner] = cookies[:project_owner] ? cookies[:project_owner].split("&") : []
     end
     if params[:stage]
       cookies[:project_stage] = {value: params[:stage]}
     else
-      params[:stage] = cookies[:project_stage].present? ? cookies[:project_stage].split("&") : []
+      params[:stage] = cookies[:project_stage] ? cookies[:project_stage].split("&") : []
     end
     if params[:forecast]
       cookies[:project_forecast] = {value: params[:forecast]}
     else
-      params[:forecast] = cookies[:project_forecast].present? ? cookies[:project_forecast].split("&") : []
+      params[:forecast] = cookies[:project_forecast] ? cookies[:project_forecast].split("&") : []
     end
-    # Default is always "This Quarter"
-    # if params[:close_date]
-    #   cookies[:project_close_date] = {value: params[:close_date]}
-    # else
-    #   if cookies[:project_close_date]
-    #     params[:close_date] = cookies[:project_close_date]
-    #   end
-    # end
+    if params[:close_date]
+      cookies[:project_close_date] = {value: params[:close_date]}
+    else
+      params[:close_date] = cookies[:project_close_date] ? cookies[:project_close_date] : Project::CLOSE_DATE_RANGE[:ThisQuarter]
+    end
   end
+
   # Allows smooth update of close_date and renewal_date using jQuery Datepicker widget.  In particular because of an different/incompatible Date format sent by widget to this controller to update a field of a non-timestamp (simple Date) type.
   def check_params_for_valid_dates
     params["project"][:close_date] = parse_date(params["project"][:close_date]) if params["project"][:close_date].present?

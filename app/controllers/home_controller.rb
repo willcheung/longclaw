@@ -5,13 +5,13 @@ class HomeController < ApplicationController
   before_action :get_current_org_opportunity_stages, only: :index
   before_action :get_current_org_opportunity_forecast_categories, only: :index
   before_action :get_current_org_users, only: :index
+  before_action :home_filter_state, only: [:index]
 
   def index
     # @MEMBERS_LIST_LIMIT = 8 # Max number of Opportunity members to show in mouse-over tooltip
 
     # Load all projects/opportunities visible to user, belongs to user, and to which user is subscribed
     visible_projects = Project.visible_to(current_user.organization_id, current_user.id)
-    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     visible_projects = visible_projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
     subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
@@ -132,4 +132,11 @@ class HomeController < ApplicationController
     end
   end
 
+  def home_filter_state
+    if params[:close_date]
+      cookies[:home_close_date] = {value: params[:close_date]}
+    else
+      params[:close_date] = cookies[:home_close_date] ? cookies[:home_close_date] : Project::CLOSE_DATE_RANGE[:ThisQuarter]
+    end
+  end
 end

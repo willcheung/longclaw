@@ -1,5 +1,7 @@
 class ReportsController < ApplicationController
   before_action :get_current_org_users, only: [:accounts_dashboard, :ad_sort_data]
+  before_action :ad_filter_state, only: [:accounts_dashboard, :ad_sort_data]
+  before_action :td_filter_state, only: [:team_dashboard, :td_sort_data]
 
   ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :days_inactive => "Days Inactive", :open_alerts_and_tasks => "Open Alerts & Tasks", :overdue_tasks => "Total Overdue Tasks", :deal_size => "Deal Size", :days_to_close => "Days to Close"} # Removed: :risk_score => "Risk Score"
   TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :closed_won => "Closed Won", :win_rate => "Win Rate", :opportunities => "Opportunities", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks" } # Removed: :new_alerts_and_tasks_last_14d
@@ -23,7 +25,6 @@ class ReportsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply any filters
-    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     users_emails = current_user.organization.users.pluck(:email)
 
@@ -188,7 +189,6 @@ class ReportsController < ApplicationController
     return if users.blank? # quit early if all users are filtered out
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
-    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
 
     top_dash_projects = projects
@@ -225,12 +225,12 @@ class ReportsController < ApplicationController
     # compute Tasks Trend Data for this user on the fly, this may be done better with a materialized view in the future
     day_range = 14
     @tasks_trend_data = Hashie::Mash.new({total_open: Array.new(day_range + 1, 0), new_open: Array.new(day_range + 1, 0), new_closed: Array.new(day_range + 1, 0)})
-    tasks_by_open_date = @user.notifications.where("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') >= '#{15.days.ago.midnight.utc}'").group("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
-    tasks_by_complete_date = @user.notifications.where("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') >= '#{15.days.ago.midnight}'").group("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
+    tasks_by_open_date = @user.notifications.where("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') BETWEEN date_trunc('day', now() AT TIME ZONE '#{current_user.time_zone}' - interval '#{day_range} day') AND date_trunc('day', now() AT TIME ZONE '#{current_user.time_zone}') + time '23:59:59'").group("date(created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
+    tasks_by_complete_date = @user.notifications.where("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') BETWEEN date_trunc('day', now() AT TIME ZONE '#{current_user.time_zone}' - interval '#{day_range} day') AND date_trunc('day', now() AT TIME ZONE '#{current_user.time_zone}') + time '23:59:59'").group("date(complete_date AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}')").count
     # count all new tasks on new_open and total_open trend lines
     tasks_by_open_date.each do |date, opened_tasks|
       date_index = date.mjd - day_range.days.ago.to_date.mjd
-      @tasks_trend_data.new_open[date_index] += opened_tasks if date_index >= 0 && date_index <= 14
+      @tasks_trend_data.new_open[date_index] += opened_tasks
       @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
         date_index <= i ? num_tasks + opened_tasks : num_tasks
       end
@@ -239,7 +239,7 @@ class ReportsController < ApplicationController
     tasks_by_complete_date.each do |date, completed_tasks|
       next if date.nil?
       date_index = date.mjd - day_range.days.ago.to_date.mjd
-      @tasks_trend_data.new_closed[date_index] += completed_tasks if date_index >= 0 && date_index <= 14
+      @tasks_trend_data.new_closed[date_index] += completed_tasks
       @tasks_trend_data.total_open.map!.with_index do |num_tasks, i|
         date_index <= i ? num_tasks - completed_tasks : num_tasks
       end
@@ -397,4 +397,34 @@ class ReportsController < ApplicationController
     [data, categories]
   end
 
+  def ad_filter_state
+    if params[:owner]
+      cookies[:reports_ad_owner] = {value: params[:owner]}
+    else
+      params[:owner] = cookies[:reports_ad_owner] ? cookies[:reports_ad_owner].split("&") : []
+    end
+    if params[:close_date]
+      cookies[:reports_ad_close_date] = {value: params[:close_date]}
+    else
+      params[:close_date] = cookies[:reports_ad_close_date] ? cookies[:reports_ad_close_date] : Project::CLOSE_DATE_RANGE[:ThisQuarter]
+    end
+  end
+
+  def td_filter_state
+    if params[:team]
+      cookies[:reports_td_team] = {value: params[:team]}
+    else
+      params[:team] = cookies[:reports_td_team] ? cookies[:reports_td_team].split("&") : []
+    end
+    if params[:title]
+      cookies[:reports_td_title] = {value: params[:title]}
+    else
+      params[:title] = cookies[:reports_td_title] ? cookies[:reports_td_title].split("&") : []
+    end
+    if params[:close_date]
+      cookies[:reports_td_close_date] = {value: params[:close_date]}
+    else
+      params[:close_date] = cookies[:reports_td_close_date] ? cookies[:reports_td_close_date] : Project::CLOSE_DATE_RANGE[:ThisQuarter]
+    end
+  end
 end
