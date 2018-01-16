@@ -9,6 +9,7 @@
 #  updated_at :datetime         not null
 #  user_id    :uuid
 #  status     :integer          default(1), not null
+#  buyer_role :string
 #
 # Indexes
 #
