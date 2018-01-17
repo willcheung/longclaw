@@ -257,7 +257,7 @@ $(function () {
     var force = d3.layout.force();
 
     var lookupURL = '/projects/<%=project_id%>/lookup.json';
-    var networkURL = '/projects/<%=project_id%>/network_map.json';
+    var networkURL = '/projects/<%=project_id%>/network_map.json';  // TODO: may use ".../network_map.json?start_date=12345"
     // d3.json("lookup.json", function (error, lookup) {
     d3.json(lookupURL, function (error, lookup) {
         if (error) throw error;
