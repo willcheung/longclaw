@@ -7,12 +7,13 @@
           <thead>
           <tr>
             <th>Name</th>
+            <th>Buyer Role</th>
             <th>Last Reply</th>
             <th>Last Touch</th>
             <th>Last Sent</th>
             <th>Last Meeting</th>
             <th>Next Meeting</th>
-            <!--<th>Buyer role</th>-->
+            <th>Notes</th>
           </tr>
           </thead>
           <tbody>
@@ -26,6 +27,11 @@
                   <% end %>
                 </div>
                 <div class="m-t-xs"><small><%= contact.title %></small></div>
+              </td>
+              <td class="editable-field pm-buyer-role-td-<%= contact.id %>">
+                <%= best_in_place ProjectMember.new(id: contact.project_member_id, buyer_role: contact.buyer_role), :buyer_role, url: project_member_path(contact.project_member_id), as: :select, collection: ProjectMember::BUYER_ROLE.values.map { |r| [r,r] }, inner_class: 'bip-select-input', activator: '.pm-buyer-role-td-'+contact.id %>
+                &nbsp;&nbsp;
+                <i class="fa fa-pencil editable-field-activator"></i>
               </td>
               <td title="<%= Time.zone.at(contact.last_reply_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_reply_date.present? %>" data-order="<%= contact.last_reply_date.to_i %>">
                 <% if contact.last_reply_date.present? %>
@@ -53,7 +59,8 @@
               </td>
               <td title="<%= Time.zone.at(contact.last_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_meeting_date.present? %>" data-order="<%= contact.last_meeting_date.to_i %>"><%= Time.zone.at(contact.last_meeting_date).strftime('%b %e') if contact.last_meeting_date.present? %></td>
               <td title="<%= Time.zone.at(contact.next_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.next_meeting_date.present? %>" data-order="<%= contact.next_meeting_date.to_i %>"><%= Time.zone.at(contact.next_meeting_date).strftime('%b %e') if contact.next_meeting_date.present? %></td>
-              <!--<td>< %= contact.buyer_role %></td>-->
+              <% @BGINFO_PREV_LEN_MAX = 35 %>
+              <td class="editable-field contact-bg-info-td-<%= contact.id %>"><i class="fa fa-sticky-note-o">&nbsp;</i><%= best_in_place contact, :background_info, :as => 'textarea', :place_holder => "&nbsp;", :display_with => lambda { |v| v.present? && v.respond_to?(:to_s) && v.to_s.length > @BGINFO_PREV_LEN_MAX ? v[0...@BGINFO_PREV_LEN_MAX] + "..." : v }, :activator => '.contact-bg-info-td-'+contact.id %><i class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
             </tr>
           <% end %>
           </tbody>
@@ -67,9 +74,9 @@ $(function () {
   $('#contacts-table').DataTable({
     responsive: true,
     "columnDefs": [
-      { "orderable": false, "targets": 2 }
+      { "orderable": false, "targets": 3 }
     ],
-    "order": [[3, "desc"]],
+    "order": [[4, "desc"]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
     "dom": ' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
     "language": {
@@ -244,8 +251,8 @@ $(function () {
     // Configure force layout
     var force = d3.layout.force();
 
-    var lookupURL = '/projects/<%=project_id%>/lookup.json'
-    var networkURL = '/projects/<%=project_id%>/network_map.json'
+    var lookupURL = '/projects/<%=project_id%>/lookup.json';
+    var networkURL = '/projects/<%=project_id%>/network_map.json';
     // d3.json("lookup.json", function (error, lookup) {
     d3.json(lookupURL, function (error, lookup) {
         if (error) throw error;
@@ -253,7 +260,7 @@ $(function () {
             if (error) throw error;
             ready(lookup, links);
         })
-    })
+    });
 
     function ready(lookup, links){
         // The 'lookup' variable refers to data from the lookup.txt file
@@ -422,7 +429,8 @@ $(function () {
                 email: person.email,
                 name: person.name || "(none)",
                 title: person.title || "(none)",
-                domain: person.domain, 
+                buyer_role: person.buyer_role || "(none)",
+                domain: person.domain,
                 meetings: person.meetings,
                 key_activities: person.key_activities,
                 inbound: 0,
@@ -441,6 +449,7 @@ $(function () {
                     email: email,
                     name: email.split("@")[0],
                     title: "(none)",
+                    buyer_role: "(none)",
                     domain: email.split("@")[1],
                     meetings: 0,
                     key_activities: 0,
@@ -448,8 +457,8 @@ $(function () {
                     outbound: 0
                 }
             }
-            nodesByEmail[email].inbound += inbound   
-            nodesByEmail[email].outbound += outbound   
+            nodesByEmail[email].inbound += inbound;
+            nodesByEmail[email].outbound += outbound;
             return nodesByEmail[email];
         }
 
@@ -525,7 +534,7 @@ $(function () {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
+                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + "<br>Buyer Role: " + d.buyer_role /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
                         .style("top", (nodeHighlighted?"190px":"70px"));
                   }
               })
@@ -592,7 +601,7 @@ $(function () {
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>" /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>Buyer Role: " + clickedOn.buyer_role /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
