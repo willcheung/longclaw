@@ -358,9 +358,53 @@ class Project < ActiveRecord::Base
     result = Activity.find_by_sql(query)
   end
 
+  def arg_lookup
+    pinned = self.conversations.pinned
+    meetings = self.meetings
+    members = self.project_members_all
+      .joins('LEFT JOIN users ON users.id = project_members.user_id LEFT JOIN contacts ON contacts.id = project_members.contact_id')
+      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, project_members.status, project_members.buyer_role')
+      .where(status: [ProjectMember::STATUS[:Confirmed], ProjectMember::STATUS[:Pending]])
+
+    members.map do |m|
+      pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
+      meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
+      suggested = m.status == ProjectMember::STATUS[:Pending] ? ' *' : ''
+      {
+        name: get_full_name(m) + suggested,
+        domain: get_domain(m.email),
+        email: m.email,
+        title: m.title,
+        buyer_role: m.buyer_role,
+        key_activities: pin.length,
+        meetings: meet.length
+      }
+    end.compact
+
+    # all_members = @project.project_members_all
+    # suggested_members = all_members.pending.map { |pm| pm.user_id || pm.contact_id }
+    # rejected_members = all_members.rejected.map { |pm| pm.user_id || pm.contact_id }
+    # buyer_roles = all_members.group(:id)
+    # (@project.users_all + @project.contacts_all).map do |m|
+    #   next if rejected_members.include?(m.id)
+    #   pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
+    #   meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
+    #   suggested = suggested_members.include?(m.id) ? ' *' : ''
+    #   {
+    #     name: get_full_name(m) + suggested,
+    #     domain: get_domain(m.email),
+    #     email: m.email,
+    #     title: m.title,
+    #     key_activities: pin.length,
+    #     meetings: meet.length
+    #   }
+    # end.compact
+  end
+
   def contact_relationship_metrics
   #   name
   #   title
+  #   buyer_role
   #   last sent by
   #   last sent
   #   last reply
@@ -393,11 +437,15 @@ class Project < ActiveRecord::Base
         LATERAL jsonb_array_elements(email_messages) messages
         WHERE project_id = '#{self.id}' AND category = '#{Activity::CATEGORY[:Conversation]}'
       )
-      SELECT contacts.email,
+      SELECT contacts.id,
+             contacts.email,
              contacts.first_name,
              contacts.last_name,
              contacts.title,
+             contacts.background_info,
+             project_members.id AS project_member_id,
              project_members.status,
+             project_members.buyer_role,
              received_emails.from_address AS last_sent_by_address,
              received_emails.from_personal AS last_sent_by_personal,
              received_emails.max_sent_date AS last_sent_date,
@@ -446,7 +494,7 @@ class Project < ActiveRecord::Base
       ) AS received_emails
       ON contacts.email = received_emails.recipient
       WHERE projects.id = '#{self.id}'
-      GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+      GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
       ORDER BY last_sent_date DESC
     SQL
 

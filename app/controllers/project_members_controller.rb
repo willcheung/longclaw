@@ -14,13 +14,21 @@ class ProjectMembersController < ApplicationController
   end
 
   def update
-    project = @project_member.project
-    @project_member.status = ProjectMember::STATUS[:Confirmed]
-    @project_member.save
-    respond_to do |format|
-      format.html { redirect_to project_url(project) }
-      format.json { head :no_content }
-      format.js
+    if params['project_member'].blank?
+      project = @project_member.project
+      @project_member.status = ProjectMember::STATUS[:Confirmed]
+      @project_member.save
+      respond_to do |format|
+        format.html { redirect_to project_url(project) }
+        format.json { head :no_content }
+        format.js
+      end
+    else
+      @project_member.buyer_role = params['project_member']['buyer_role']
+      @project_member.save
+      respond_to do |format|
+        format.json { respond_with_bip(@project_member) }
+      end
     end
   end
 

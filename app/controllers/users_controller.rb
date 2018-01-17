@@ -10,7 +10,7 @@ class UsersController < ApplicationController
   end
 
   def me
-    @user = current_user.slice(:first_name, :last_name, :email, :image_url, :time_zone, :title)
+    @user = current_user.slice(:first_name, :last_name, :email, :image_url, :time_zone, :title, :id)
 
     render json: @user
   end
