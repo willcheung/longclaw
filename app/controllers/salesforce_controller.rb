@@ -95,7 +95,7 @@ class SalesforceController < ApplicationController
     sfdc_oauthuser
   end
 
-  # Load SFDC Accounts and new SFDC Opportunities and update values in mapped (standard and custom) fields.  For linked CS accts, if import SFDC contacts is enabled, then import SFDC contacts into CS.  For linked CS opps, if import/export SFDC activities is enabled and this is running for a periodic refresh task (e.g., "daily refresh"), then sychronize (import/export) SFDC and CS activities.
+  # Load SFDC Accounts and new SFDC Opportunities and update values in mapped (standard and custom) fields.  For linked CS accts, if import SFDC contacts is enabled, then import SFDC contacts into CS.  For linked CS opps, if import/export SFDC activities is enabled *and* this is running for a periodic refresh task (e.g., "daily refresh"), then sychronize (import/export) SFDC and CS activities.
   # For individual (non-admin, e.g., "Pro") users: create CS opportunities and corresponding accts for open and unlinked SFDC opps owned by user, link the CS Acct and Opps to the corresponding SFDC entity, and create account Contacts.
   # Parameters:     client - a valid SFDC connection
   #                 user - the user making the request, admin or individual (non-admin)
@@ -164,7 +164,7 @@ class SalesforceController < ApplicationController
     SalesforceAccount.refresh_fields(client, user)
     SalesforceOpportunity.refresh_fields(client, user)
 
-    # Import/upsert contacts into all linked accts (from SFDC into ContextSmith) if contacts import is enabled?
+    # Import contacts into all linked accts (from SFDC into ContextSmith) if contacts import is enabled
     sfdc_oauthuser = SalesforceController.get_sfdc_oauthuser(user: user)
     if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
       # organization
@@ -194,7 +194,9 @@ class SalesforceController < ApplicationController
         end
       end if user.organization.salesforce_accounts.present? # End: user.organization.salesforce_accounts.is_linked.each do |sfa|
 
-      unless error_occurred
+      if error_occurred
+        puts "****SFDC**** Automatic import of SFDC contacts for user_id=#{user.id} of organization_id=#{user.organization_id} failed. (Import started: #{new_import_ts})"
+      else
         # puts "****SFDC**** Automatic import of SFDC contacts for user_id=#{user.id} of organization_id=#{user.organization_id} was successful."
         import_contacts_sfdc_refresh_config.config_value['contacts']['import'] = new_import_ts
         import_contacts_sfdc_refresh_config.save
@@ -213,7 +215,7 @@ class SalesforceController < ApplicationController
     if for_periodic_refresh && sync_sfdc_act_config.present?  # run during a periodic refresh + import OR export SFDC activities is enabled
       sync_result = sync_sfdc_activities(client: client, user: user)  # sync and update import/export timestamps
       if sync_result[:status] == "ERROR"
-        sync_error_detail = sync_result[:detail].map do |m| 
+        sync_error_detail = sync_result[:detail][:sync_result_messages].map do |m| 
           if m[:sfdc_account].present?
             sfdc_entity_detail = "'#{m[:sfdc_account][:name]}'(account sObject Id=#{m[:sfdc_account][:id]})"
           else
@@ -222,7 +224,7 @@ class SalesforceController < ApplicationController
 
           (m[:status] == "ERROR" ? "x Failure:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:opportunity][:name]}'(opportunity id=#{m[:opportunity][:id]}) <-> (SFDC)#{sfdc_entity_detail}  detail: #{m[:detail]}"
         end.join("\n\n")
-        puts "****SFDC**** Error at SalesforceController.sync_sfdc_activities() in #{method_name} during sync of activities for user=#{ user.email } org=#{ user.organization.name }. Details: #{ sync_error_detail }"
+        puts "****SFDC**** Error at SalesforceController.sync_sfdc_activities() in #{method_name} during sync of activities for user=#{ user.admin? ? "Admin" : user.email } org=#{ user.organization.name } at sync_timestamp='#{sync_result[:detail][:sync_timestamp]}'. Details: \n#{ sync_error_detail }"
       end
     end
   end
@@ -679,14 +681,14 @@ class SalesforceController < ApplicationController
         sync_result = SalesforceController.sync_sfdc_activities(client: sfdc_client, user: current_user, filter_predicates_h: filter_predicates_h)  # sync and update import/export timestamps
         # sync_result = { status: "ERROR", result: nil, detail: [{opportunity: {name: "fake CS opp", id: "xxxxxxxx-made-upup-csid-xxxxxxxx"}, sfdc_account: {name: "fake SFDC acct", id: "00xxxxxxxxxxxxfake"}, status: "ERROR", failure_method_location: "some fictional location"}] }  # Simulate sync error
         if sync_result[:status] == "ERROR"
-          render_internal_server_error(method_name, "(see listing)", sync_result[:detail].map do |m| 
+          render_internal_server_error(method_name, "(see listing)", sync_result[:detail][:sync_result_messages].map do |m| 
               if m[:sfdc_account].present?
                 sfdc_entity_detail = "'#{m[:sfdc_account][:name]}'(account sObject Id=#{m[:sfdc_account][:id]})"
               else
                 sfdc_entity_detail = "'#{m[:sfdc_opportunity][:name]}'(opportunity sObject Id=#{m[:sfdc_opportunity][:id]})"
               end
 
-              (m[:status] == "ERROR" ? "x Failure:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:opportunity][:name]}'(opportunity id=#{m[:opportunity][:id]}) <-> (SFDC)#{sfdc_entity_detail}  detail: #{m[:detail]}"
+              (m[:status] == "ERROR" ? "x Failure:  Error at #{m[:failure_method_location]}." : "✓ Success: ") + " '#{m[:opportunity][:name]}'(opportunity id=#{m[:opportunity][:id]}) <-> (SFDC)#{sfdc_entity_detail} at sync_timestamp:'#{sync_result[:detail][:sync_timestamp]}' detail: #{m[:detail]}"
             end.join("\n\n"))
           return
         end
@@ -1151,7 +1153,7 @@ class SalesforceController < ApplicationController
 
       # puts "\n\n==> Sync result messages: #{sync_result_messages}\n\n"
       if error_occurred
-        return { status: "ERROR", result: "SFDC sync error", detail: sync_result_messages }
+        return { status: "ERROR", result: "SFDC sync error", detail: {sync_timestamp: new_sync_ts, sync_result_messages: sync_result_messages} }
       else
         # Update the import/export activities timestamp
         sync_sfdc_act_config.config_value['activities']['import'] = new_sync_ts if !sync_sfdc_act_config.config_value['activities']['import'].nil? # import SFDC activities is enabled

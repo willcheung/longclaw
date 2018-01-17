@@ -14,17 +14,17 @@
             <select id="team-filter" class="category_filter" multiple data-placeholder="  Select Team" style="width: 49.5%">
                 <option value="(None)"></option> <!-- no filter -->
                 <% @departments.each do |d| %>
-                <option value="<%=d %>"  <% if params[:team] == d  %> selected   <% end %> ><%=d %></option>
+                <option value="<%= d %>" <% if params[:team].include? d %> selected <% end %> ><%= d %></option>
                 <% end %>
-                <option value="(None)">(No Team)</option>
+                <option value="(None)" <% if params[:team].include? "(None)" %> selected <% end %> >(No Team)</option>
             </select>
             <!-- Title -->
             <select id="title-filter" class="category_filter" multiple data-placeholder="  Select Title" style="width: 49.5%">
                 <option value="(None)"></option> <!-- no filter -->
                 <% @titles.each do |t| %>
-                <option value="<%=t %>"  <% if params[:title] == t  %> selected   <% end %> ><%=t %></option>
+                <option value="<%= t %>" <% if params[:title].include? t %> selected <% end %> ><%= t %></option>
                 <% end %>
-                <option value="(None)">(No Title)</option>
+                <option value="(None)" <% if params[:title].include? "(None)" %> selected <% end %> >(No Title)</option>
             </select>
             <input type="submit" hidden onclick="setFilterParamsAndRefreshData()"></input>
         </form>

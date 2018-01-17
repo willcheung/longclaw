@@ -1,5 +1,7 @@
 class ReportsController < ApplicationController
   before_action :get_current_org_users, only: [:accounts_dashboard, :ad_sort_data]
+  before_action :ad_filter_state, only: [:accounts_dashboard, :ad_sort_data]
+  before_action :td_filter_state, only: [:team_dashboard, :td_sort_data]
 
   ACCOUNT_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :days_inactive => "Days Inactive", :open_alerts_and_tasks => "Open Alerts & Tasks", :overdue_tasks => "Total Overdue Tasks", :deal_size => "Deal Size", :days_to_close => "Days to Close"} # Removed: :risk_score => "Risk Score"
   TEAM_DASHBOARD_METRIC = { :activities_last14d => "Activities (Last 14d)", :time_spent_last14d => "Time Spent (Last 14d)", :closed_won => "Closed Won", :win_rate => "Win Rate", :opportunities => "Opportunities", :closed_alerts_and_tasks_last14d => "Closed Alerts & Tasks (Last 14d)", :open_alerts_and_tasks => "Open Alerts & Tasks" } # Removed: :new_alerts_and_tasks_last_14d
@@ -23,7 +25,6 @@ class ReportsController < ApplicationController
     projects = Project.visible_to(current_user.organization_id, current_user.id)
 
     # Incrementally apply any filters
-    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
     users_emails = current_user.organization.users.pluck(:email)
 
@@ -188,7 +189,6 @@ class ReportsController < ApplicationController
     return if users.blank? # quit early if all users are filtered out
 
     projects = Project.visible_to(current_user.organization_id, current_user.id).is_confirmed
-    params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?
     projects = projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
 
     top_dash_projects = projects
@@ -397,4 +397,34 @@ class ReportsController < ApplicationController
     [data, categories]
   end
 
+  def ad_filter_state
+    if params[:owner]
+      cookies[:reports_ad_owner] = {value: params[:owner]}
+    else
+      params[:owner] = cookies[:reports_ad_owner] ? cookies[:reports_ad_owner].split("&") : []
+    end
+    if params[:close_date]
+      cookies[:reports_ad_close_date] = {value: params[:close_date]}
+    else
+      params[:close_date] = cookies[:reports_ad_close_date] ? cookies[:reports_ad_close_date] : Project::CLOSE_DATE_RANGE[:ThisQuarter]
+    end
+  end
+
+  def td_filter_state
+    if params[:team]
+      cookies[:reports_td_team] = {value: params[:team]}
+    else
+      params[:team] = cookies[:reports_td_team] ? cookies[:reports_td_team].split("&") : []
+    end
+    if params[:title]
+      cookies[:reports_td_title] = {value: params[:title]}
+    else
+      params[:title] = cookies[:reports_td_title] ? cookies[:reports_td_title].split("&") : []
+    end
+    if params[:close_date]
+      cookies[:reports_td_close_date] = {value: params[:close_date]}
+    else
+      params[:close_date] = cookies[:reports_td_close_date] ? cookies[:reports_td_close_date] : Project::CLOSE_DATE_RANGE[:ThisQuarter]
+    end
+  end
 end
