@@ -7,12 +7,12 @@
           <thead>
           <tr>
             <th>Name</th>
+            <th>Buyer Role</th>
             <th>Last Reply</th>
             <th>Last Touch</th>
             <th>Last Sent</th>
             <th>Last Meeting</th>
             <th>Next Meeting</th>
-            <!--<th>Buyer role</th>-->
           </tr>
           </thead>
           <tbody>
@@ -27,6 +27,7 @@
                 </div>
                 <div class="m-t-xs"><small><%= contact.title %></small></div>
               </td>
+              <td><%= contact.buyer_role %></td>
               <td title="<%= Time.zone.at(contact.last_reply_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_reply_date.present? %>" data-order="<%= contact.last_reply_date.to_i %>">
                 <% if contact.last_reply_date.present? %>
                   <%= Time.zone.at(contact.last_reply_date).strftime('%b %e') %>
@@ -53,7 +54,6 @@
               </td>
               <td title="<%= Time.zone.at(contact.last_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_meeting_date.present? %>" data-order="<%= contact.last_meeting_date.to_i %>"><%= Time.zone.at(contact.last_meeting_date).strftime('%b %e') if contact.last_meeting_date.present? %></td>
               <td title="<%= Time.zone.at(contact.next_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.next_meeting_date.present? %>" data-order="<%= contact.next_meeting_date.to_i %>"><%= Time.zone.at(contact.next_meeting_date).strftime('%b %e') if contact.next_meeting_date.present? %></td>
-              <!--<td>< %= contact.buyer_role %></td>-->
             </tr>
           <% end %>
           </tbody>
@@ -244,8 +244,8 @@ $(function () {
     // Configure force layout
     var force = d3.layout.force();
 
-    var lookupURL = '/projects/<%=project_id%>/lookup.json'
-    var networkURL = '/projects/<%=project_id%>/network_map.json'
+    var lookupURL = '/projects/<%=project_id%>/lookup.json';
+    var networkURL = '/projects/<%=project_id%>/network_map.json';
     // d3.json("lookup.json", function (error, lookup) {
     d3.json(lookupURL, function (error, lookup) {
         if (error) throw error;
@@ -253,7 +253,7 @@ $(function () {
             if (error) throw error;
             ready(lookup, links);
         })
-    })
+    });
 
     function ready(lookup, links){
         // The 'lookup' variable refers to data from the lookup.txt file
@@ -422,7 +422,8 @@ $(function () {
                 email: person.email,
                 name: person.name || "(none)",
                 title: person.title || "(none)",
-                domain: person.domain, 
+                buyer_role: person.buyer_role || "(none)",
+                domain: person.domain,
                 meetings: person.meetings,
                 key_activities: person.key_activities,
                 inbound: 0,
@@ -441,6 +442,7 @@ $(function () {
                     email: email,
                     name: email.split("@")[0],
                     title: "(none)",
+                    buyer_role: "(none)",
                     domain: email.split("@")[1],
                     meetings: 0,
                     key_activities: 0,
@@ -448,8 +450,8 @@ $(function () {
                     outbound: 0
                 }
             }
-            nodesByEmail[email].inbound += inbound   
-            nodesByEmail[email].outbound += outbound   
+            nodesByEmail[email].inbound += inbound;
+            nodesByEmail[email].outbound += outbound;
             return nodesByEmail[email];
         }
 
@@ -525,7 +527,7 @@ $(function () {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
+                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + "<br>Buyer Role: " + d.buyer_role /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
                         .style("top", (nodeHighlighted?"190px":"70px"));
                   }
               })
@@ -592,7 +594,7 @@ $(function () {
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>" /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>Buyer Role: " + clickedOn.buyer_role /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
