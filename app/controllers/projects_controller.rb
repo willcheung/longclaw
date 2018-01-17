@@ -58,6 +58,7 @@ class ProjectsController < ApplicationController
   end
 
   def network_map
+    # puts "\n\n **** params: #{params} \n\n" if params
     respond_to do |format|
       format.json { render json: @project.network_map }
     end
