@@ -241,21 +241,26 @@ $(function () {
     var height = 500;
     var width = 0;
 
+    var linkStrokeWidthMin = 1;  // node edge will be no smaller than this width
+    var linkStrokeWidthMax = 7;  // node edge will be no larger than this width
+
     // Configure force layout
     var force = d3.layout.force();
 
     var lookupURL = '/projects/<%=project_id%>/lookup.json'
-    var networkURL = '/projects/<%=project_id%>/network_map.json'
+    var networkURL = '/projects/<%=project_id%>/network_map.json'  // TODO: may use ".../network_map.json?start_date=12345"
     // d3.json("lookup.json", function (error, lookup) {
     d3.json(lookupURL, function (error, lookup) {
         if (error) throw error;
         d3.json(networkURL, function (error, links) {
             if (error) throw error;
-            ready(lookup, links);
+            var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { min: (a < m.min || !m.min ? a : m.min), max: (a > m.max || !m.max ? a : m.max)}; }, { min: undefined, max: undefined })
+            // links.forEach(function(l){ console.log("source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
+            ready(lookup, links, { count_min: metadata.min, count_max: metadata.max });
         })
     })
 
-    function ready(lookup, links){
+    function ready(lookup, links, metadata) {
         // The 'lookup' variable refers to data from the lookup.txt file
         // The 'links' variable refers to data from the map.txt file
         
@@ -336,7 +341,7 @@ $(function () {
 
         //Initialize SVG
         var graph = d3.select("#force-graph").append("svg")
-          .append("g")
+            .append("g")
             .attr("class", "graph");
             // .on("mousedown", function(){
             //     mousePos = d3.mouse(this);
@@ -503,6 +508,7 @@ $(function () {
         var link = vis.selectAll(".link")
               .data(links)
             .enter().append("line")
+              .attr("stroke-width", function(d) { return (d.count - metadata.count_min)/(metadata.count_max - metadata.count_min) * linkStrokeWidthMax || linkStrokeWidthMin; })
               .attr("class", "link");
 
         // Create the node circles.
