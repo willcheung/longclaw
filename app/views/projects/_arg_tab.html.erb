@@ -431,7 +431,6 @@ $(function () {
         // Add node info for each opportunity member
         lookup.forEach(function(person) {
             nodesByEmail[person.email] = {
-                // id: encodeURIComponent(person.email).replace(".","%2E"),
                 email: person.email,
                 name: person.name || "(none)",
                 title: person.title || "(none)",
@@ -439,7 +438,6 @@ $(function () {
                 domain: person.domain,
                 meetings: person.meetings,
                 key_activities: person.key_activities,
-                is_external: person.is_external,
                 inbound: 0,
                 outbound: 0
             };
@@ -453,7 +451,6 @@ $(function () {
             // Dynamically create nodes with dummy info when e-mail address in e-mail data not added as project member
             if (!nodesByEmail[email]) {
                 nodesByEmail[email] = {
-                    // id: encodeURIComponent(email).replace(".","%2E"),
                     email: email,
                     name: email.split("@")[0],
                     title: "(none)",
@@ -461,7 +458,6 @@ $(function () {
                     domain: email.split("@")[1],
                     meetings: 0,
                     key_activities: 0,
-                    // is_external: undefined,
                     inbound: 0,
                     outbound: 0
                 }
@@ -471,8 +467,6 @@ $(function () {
             return nodesByEmail[email];
         }
 
-        console.log("nodesByEmail");
-        console.log(nodesByEmail);
         // Extract the array of nodes from the hash by email.
         var nodes = d3.values(nodesByEmail);
         // Extract all unique domains from the nodes to use for filter
