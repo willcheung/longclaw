@@ -29,5 +29,7 @@ class ProjectMember < ActiveRecord::Base
   scope :rejected, -> { where status: STATUS[:Rejected] }
   scope :confirmed, -> { where status: STATUS[:Confirmed] }
 
-  STATUS = { Pending: 0, Rejected: -1, Confirmed: 1 }
+  STATUS = { Pending: 0, Rejected: -1, Confirmed: 1 }.freeze
+  BUYER_ROLE = { Economic: 'Economic', Technical: 'Technical', Champion: 'Champion', DecisionMaker: 'Decision Maker', Influencer: 'Influencer', User: 'User', Blocker: 'Blocker', Other: 'Other' }.freeze
+
 end

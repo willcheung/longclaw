@@ -441,6 +441,7 @@ class Project < ActiveRecord::Base
              contacts.first_name,
              contacts.last_name,
              contacts.title,
+             project_members.id,
              project_members.status,
              project_members.buyer_role,
              received_emails.from_address AS last_sent_by_address,
@@ -491,11 +492,11 @@ class Project < ActiveRecord::Base
       ) AS received_emails
       ON contacts.email = received_emails.recipient
       WHERE projects.id = '#{self.id}'
-      GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+      GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
       ORDER BY last_sent_date DESC
     SQL
 
-    Contact.find_by_sql(query)
+    ProjectMember.find_by_sql(query)
   end
 
   # generate options for Person Filter on Timeline, from activities visible to user with user_email
