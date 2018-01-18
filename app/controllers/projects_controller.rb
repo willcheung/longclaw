@@ -53,6 +53,7 @@ class ProjectsController < ApplicationController
   def arg_tab # Account Relationship Graph
     @data = @project.activities.where(category: %w(Conversation Meeting)).ids
     @contacts = @project.contact_relationship_metrics
+    @contacts_pm = @project.project_members_all.where.not(status: ProjectMember::STATUS[:Rejected]).group_by { |pm| pm.contact_id }
 
     render "show"
   end
