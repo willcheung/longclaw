@@ -376,9 +376,9 @@ $(function () {
             .style("fill", "none")
             .style("pointer-events", "all")
             // .style("cursor", "move")
-            .on("click", function(){
+            .on("click", function(){  // clicking an empty space on the graph
                 if (d3.event.defaultPrevented) return;
-                showAllNodes();
+                showAllNodes(true);
             });
 
         // Create a group that will hold all content to be zoomed
@@ -438,10 +438,10 @@ $(function () {
         lookup.forEach(function(person) {
             nodesByEmail[person.email] = {
                 email: person.email,
-                name: person.name || "(none)",
-                title: person.title || "(none)",
-                buyer_role: person.buyer_role || "(none)",
-                team: person.team || "(none)",
+                name: person.name || "(None)",
+                title: person.title || "(No title)",
+                buyer_role: person.buyer_role || (!person.is_external ? undefined : "(No buyer role)"),
+                team: person.team || (person.is_external == undefined || person.is_external ? undefined : "(No team)"),
                 domain: person.domain,
                 meetings: person.meetings,
                 key_activities: person.key_activities,
@@ -461,9 +461,9 @@ $(function () {
                 nodesByEmail[email] = {
                     email: email,
                     name: email.split("@")[0],
-                    title: "(none)",
-                    buyer_role: "(none)",
-                    team: "(none)",
+                    title: undefined,
+                    buyer_role: undefined,  //cannot determine w/o knowing if external/internal
+                    team: undefined,        //cannot determine w/o knowing if external/internal
                     domain: email.split("@")[1],
                     meetings: 0,
                     key_activities: 0,
@@ -484,10 +484,10 @@ $(function () {
             .filter(function (domain, i, arr) { return arr.indexOf(domain) === i; });
         var buyerRoles = nodes.filter(function (obj, i, arr) { return obj.is_external; })
             .map(function (obj) { return obj.buyer_role; })
-            .filter(function (role, i, arr) { return arr.indexOf(role) === i; });
+            .filter(function (buyer_role, i, arr) { return arr.indexOf(buyer_role) === i && buyer_role != undefined; });
         var teams = nodes.filter(function (obj, i, arr) { return !obj.is_external; })
             .map(function (obj) { return obj.team; })
-            .filter(function (team, i, arr) { return arr.indexOf(team) === i; });
+            .filter(function (team, i, arr) { return arr.indexOf(team) === i && team != undefined; });
         var legendValues = domains.concat(buyerRoles).concat(teams);
 
         // Linear size scale
@@ -583,7 +583,7 @@ $(function () {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + (d.is_external != undefined && d.is_external == true ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && d.is_external == false ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
+                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + (d.is_external ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && !d.is_external ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities /*+ "<br>** external? " + d.is_external + "**"*/)
                         .style("top", (nodeHighlighted?"190px":"70px"));
                   }
               })
@@ -641,7 +641,7 @@ $(function () {
             nodeHighlighted = true;
             d3.selectAll("g.cell").classed("active", false); // Clear filters
             if (d3.select(nodeClicked).classed("baseNode")){ // Base node was clicked, show all
-                showAllNodes();
+                showAllNodes(false);
                 return;
             }
             force.stop(); // Stop moving
@@ -649,7 +649,7 @@ $(function () {
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>Buyer Role: " + clickedOn.buyer_role /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + (clickedOn.is_external ? "<br>Buyer Role: " + clickedOn.buyer_role : "") + (clickedOn.is_external != undefined && !clickedOn.is_external ? "<br>Team: " + clickedOn.team : "") /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities /*+ "<br>** external? " + clickedOn.is_external + "**"*/) // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
@@ -719,17 +719,17 @@ $(function () {
                 nameSelected = true;
                 allShowing = false;
             }
-            else {
+            else { // deselect a selected filter
                 d3.select(gObject).classed("active", false);
                 showAllNodes();
-
             }
         }
 
-        // Unselected & show all nodes + reset fixed node positions on any click in empty space
-        function showAllNodes(){
+        // Unselected + show all nodes; resume_force - resets fixed node positions 
+        function showAllNodes(resume_force=false){
             if(d3.event.stopPropagation){d3.event.stopPropagation();}
-            force.resume();
+            if (resume_force)
+                force.resume();
             //Put them back to opacity=1
             node
                 .style("stroke-opacity", 1)
