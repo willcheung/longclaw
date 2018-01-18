@@ -7,12 +7,13 @@
           <thead>
           <tr>
             <th>Name</th>
+            <th>Buyer Role</th>
             <th>Last Reply</th>
             <th>Last Touch</th>
             <th>Last Sent</th>
             <th>Last Meeting</th>
             <th>Next Meeting</th>
-            <!--<th>Buyer role</th>-->
+            <th>Notes</th>
           </tr>
           </thead>
           <tbody>
@@ -26,6 +27,11 @@
                   <% end %>
                 </div>
                 <div class="m-t-xs"><small><%= contact.title %></small></div>
+              </td>
+              <td class="editable-field pm-buyer-role-td-<%= contact.id %>">
+                <%= best_in_place @contacts_pm[contact.id].first, :buyer_role, as: :select, collection: ProjectMember::BUYER_ROLE.values.map { |r| [r,r] }, inner_class: 'bip-select-input', activator: '.pm-buyer-role-td-'+contact.id %>
+                &nbsp;&nbsp;
+                <i class="fa fa-pencil editable-field-activator"></i>
               </td>
               <td title="<%= Time.zone.at(contact.last_reply_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_reply_date.present? %>" data-order="<%= contact.last_reply_date.to_i %>">
                 <% if contact.last_reply_date.present? %>
@@ -53,7 +59,8 @@
               </td>
               <td title="<%= Time.zone.at(contact.last_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_meeting_date.present? %>" data-order="<%= contact.last_meeting_date.to_i %>"><%= Time.zone.at(contact.last_meeting_date).strftime('%b %e') if contact.last_meeting_date.present? %></td>
               <td title="<%= Time.zone.at(contact.next_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.next_meeting_date.present? %>" data-order="<%= contact.next_meeting_date.to_i %>"><%= Time.zone.at(contact.next_meeting_date).strftime('%b %e') if contact.next_meeting_date.present? %></td>
-              <!--<td>< %= contact.buyer_role %></td>-->
+              <% @BGINFO_PREV_LEN_MAX = 35 %>
+              <td class="editable-field contact-bg-info-td-<%= contact.id %>"><i class="fa fa-sticky-note-o">&nbsp;</i><%= best_in_place contact, :background_info, :as => 'textarea', :place_holder => "&nbsp;", :display_with => lambda { |v| v.present? && v.respond_to?(:to_s) && v.to_s.length > @BGINFO_PREV_LEN_MAX ? v[0...@BGINFO_PREV_LEN_MAX] + "..." : v }, :activator => '.contact-bg-info-td-'+contact.id %><i class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
             </tr>
           <% end %>
           </tbody>
@@ -67,9 +74,9 @@ $(function () {
   $('#contacts-table').DataTable({
     responsive: true,
     "columnDefs": [
-      { "orderable": false, "targets": 2 }
+      { "orderable": false, "targets": 3 }
     ],
-    "order": [[3, "desc"]],
+    "order": [[4, "desc"]],
     "lengthMenu": [[50, 100, -1], [50, 100, "All"]],
     "dom": ' <"col-sm-4 row"f><"top">rt<"col-sm-5"l><"col-sm-5"p><"bottom"i><"clear">',
     "language": {
@@ -191,6 +198,9 @@ $(function () {
     .legendContainer {
         padding: 0;
     }
+    .legendCells circle.swatch {
+        stroke: #999;
+    }
 
     .activeNode {
         cursor: pointer;
@@ -241,21 +251,28 @@ $(function () {
     var height = 500;
     var width = 0;
 
+    var linkStrokeWidthMin = 1;  // node edge will be no smaller than this width
+    var linkStrokeWidthMax = 7;  // node edge will be no larger than this width
+
     // Configure force layout
     var force = d3.layout.force();
 
-    var lookupURL = '/projects/<%=project_id%>/lookup.json'
-    var networkURL = '/projects/<%=project_id%>/network_map.json'
+    var lookupURL = '/projects/<%=project_id%>/lookup.json';
+    var networkURL = '/projects/<%=project_id%>/network_map.json';  // TODO: may use ".../network_map.json?start_date=12345"
     // d3.json("lookup.json", function (error, lookup) {
     d3.json(lookupURL, function (error, lookup) {
         if (error) throw error;
         d3.json(networkURL, function (error, links) {
             if (error) throw error;
-            ready(lookup, links);
+            var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
+            // *** For debug ***
+            // lookup.forEach(function(l){ console.log(" email: " + l.email + ", is_external: " + l.is_external + ", buyer_role: " + l.buyer_role) + "..." + l; });
+            // links.forEach(function(l){ console.log(" source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
+            ready(lookup, links, metadata);
         })
-    })
+    });
 
-    function ready(lookup, links){
+    function ready(lookup, links, metadata) {
         // The 'lookup' variable refers to data from the lookup.txt file
         // The 'links' variable refers to data from the map.txt file
         
@@ -336,7 +353,7 @@ $(function () {
 
         //Initialize SVG
         var graph = d3.select("#force-graph").append("svg")
-          .append("g")
+            .append("g")
             .attr("class", "graph");
             // .on("mousedown", function(){
             //     mousePos = d3.mouse(this);
@@ -372,7 +389,7 @@ $(function () {
             .attr("class", "arg-tooltip pinned")
             .style("right", "40px")
             .style("top", "70px")
-            .style("opacity", 0);
+            .style("opacity", "0");
 
         // Tooptip in top right corner
         var tooltip = d3.select("#force-graph").append("div")
@@ -422,9 +439,12 @@ $(function () {
                 email: person.email,
                 name: person.name || "(none)",
                 title: person.title || "(none)",
-                domain: person.domain, 
+                buyer_role: person.buyer_role || "(none)",
+                team: person.team || "(none)",
+                domain: person.domain,
                 meetings: person.meetings,
                 key_activities: person.key_activities,
+                is_external: person.is_external,
                 inbound: 0,
                 outbound: 0
             };
@@ -441,15 +461,18 @@ $(function () {
                     email: email,
                     name: email.split("@")[0],
                     title: "(none)",
+                    buyer_role: "(none)",
+                    team: "(none)",
                     domain: email.split("@")[1],
                     meetings: 0,
                     key_activities: 0,
+                    is_external: undefined,
                     inbound: 0,
                     outbound: 0
                 }
             }
-            nodesByEmail[email].inbound += inbound   
-            nodesByEmail[email].outbound += outbound   
+            nodesByEmail[email].inbound += inbound;
+            nodesByEmail[email].outbound += outbound;
             return nodesByEmail[email];
         }
 
@@ -458,21 +481,39 @@ $(function () {
         // Extract all unique domains from the nodes to use for filter
         var domains = nodes.map(function (obj) { return obj.domain; })
             .filter(function (domain, i, arr) { return arr.indexOf(domain) === i; });
+        var buyerRoles = nodes.filter(function (obj, i, arr) { return obj.is_external; })
+            .map(function (obj) { return obj.buyer_role; })
+            .filter(function (role, i, arr) { return arr.indexOf(role) === i; });
+        var teams = nodes.filter(function (obj, i, arr) { return !obj.is_external; })
+            .map(function (obj) { return obj.team; })
+            .filter(function (team, i, arr) { return arr.indexOf(team) === i; });
+        var legendValues = domains.concat(buyerRoles).concat(teams);
 
         // Linear size scale
         // var linearSize = d3.scale.linear().domain([0,1]).range([smallCircleSize, largeCircleSize]);
 
-
-        // Create a legend for domains
+        // Create a legend for legendValues
         legendContainer.append("g")
             .attr("class", "legendOrdinal")
             .attr("transform", "translate("+ (xMargin+10) + ", 70)");
 
         // Initialize Ordinal Colour Scale
+        var availColors = ["#003366", "#009933", "#ff9933", "#ff0000", "#996633", "#ff66ff", "#0000cc", "#ffcccc", "#00ccff"];
+        var colorScale = [];
+        domains.forEach(function (c,i) { colorScale.push(availColors[i % availColors.length]); });
         var color = d3.scale.ordinal()
         // TODO: redo the scale to make dynamic
-            .domain(domains)
-            .range(["#003366", "#009933", "#ff9933", "#ff0000", "#996633", "#ff66ff", "#0000cc", "#ffcccc", "#00ccff"].slice(0, domains.length));
+            .domain(legendValues)
+            .range(colorScale.concat(fillArray("#EFEFEF", domains.length + buyerRoles.length + teams.length - 3)));
+
+        // Helper to repeat colors
+        function fillArray(value, len) {
+          var arr = [];
+          for (var i = 0; i < len; i++) {
+            arr.push(value);
+          }
+          return arr;
+        }
 
         var legendOrdinal = d3.legend.color()
             .shape("circle")
@@ -482,9 +523,19 @@ $(function () {
         var domainLegend = legendContainer.select(".legendOrdinal")
             .call(legendOrdinal);
 
-        // Filtering by domain or size
+        // Hack to put spaces in between domains/buyer_roles/teams
         d3.selectAll("g.cell")
-            .on("click", function(d){
+            .each(function(d,i) {
+                var adjust = 0;
+                if (i >= domains.length) adjust += 15;
+                if (i >= domains.length + buyerRoles.length) adjust += 15;
+                d3.select(this).attr("transform", "translate(0," + (i*25 + adjust) + ")");
+            });
+
+
+        // Filtering
+        d3.selectAll("g.cell")
+            .on("click", function(val, i){
                 if (d3.event.defaultPrevented) return;
                 var self = this;
                 var activeLegends = d3.selectAll("g.cell");
@@ -495,14 +546,19 @@ $(function () {
                 pinnedTooltip.style("opacity", 0);
             //    zoomer.translate([20, 0]);
 
-                searchNode(d, this);
+                if (i >= domains.length && i < domains.length + buyerRoles.length)
+                    searchNode("buyer_role", val, this);
+                else if (i >= domains.length + buyerRoles.length && i < domains.length + buyerRoles.length + teams.length)
+                    searchNode("team", val, this);
+                else
+                    searchNode("domain", val, this);
             });
-
 
         // Create the link lines.
         var link = vis.selectAll(".link")
               .data(links)
             .enter().append("line")
+              .attr("stroke-width", function(d) { return (d.count - metadata.count_min)/(metadata.count_max - metadata.count_min) * linkStrokeWidthMax || linkStrokeWidthMin; })
               .attr("class", "link");
 
         // Create the node circles.
@@ -512,6 +568,7 @@ $(function () {
               .attr("class", "node-group")
               .style("fill", "black");
 
+        // node - group of all nodes
         var node = nodeGroup.append("circle")
               .attr("class", "node")
               .attr("r", function(d) {
@@ -525,7 +582,7 @@ $(function () {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
+                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + (d.is_external != undefined && d.is_external == true ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && d.is_external == false ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
                         .style("top", (nodeHighlighted?"190px":"70px"));
                   }
               })
@@ -571,7 +628,6 @@ $(function () {
         };
         links.forEach(function (d) {
             linkedByIndex[d.source.index + "," + d.target.index] = 1;
-
         });
 
         //This function looks up whether a pair are neighbours
@@ -592,7 +648,7 @@ $(function () {
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>" /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>Buyer Role: " + clickedOn.buyer_role /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
@@ -619,16 +675,24 @@ $(function () {
         }
 
         // Change opacity to highlight nodes when applying filter
-        function searchNode(searchVal, gObject) {
-//            console.log('hi');
+        function searchNode(searchType, searchVal, gObject) {
             nodeHighlighted = false;
-            var searchNode = d3.selectAll(".node");
-            var notSelectedNodes = searchNode.filter(function (d, i){
-                return nodesByEmail[d.email].domain != searchVal
+            var allNodes = d3.selectAll(".node");
+            var notSelectedNodes = allNodes.filter(function (d, i){
+                if (searchType == "domain")
+                    return nodesByEmail[d.email].domain != searchVal;
+                else if (searchType == "buyer_role")
+                    return nodesByEmail[d.email].buyer_role != searchVal;
+                else
+                    return nodesByEmail[d.email].team != searchVal;
             });
-
-            var selectedNodes = searchNode.filter(function (d, i){
-                return nodesByEmail[d.email].domain == searchVal
+            var selectedNodes = allNodes.filter(function (d, i){
+                if (searchType == "domain")
+                    return nodesByEmail[d.email].domain == searchVal;
+                else if (searchType == "buyer_role")
+                    return nodesByEmail[d.email].buyer_role == searchVal;
+                else
+                    return nodesByEmail[d.email].team == searchVal;
             });
 
             var link = d3.selectAll(".link");
@@ -649,6 +713,7 @@ $(function () {
                     .style("opacity", 0.1);
 
                 link.style("stroke-opacity", 0.1);
+
                 d3.select(gObject).classed("active", true);
                 nameSelected = true;
                 allShowing = false;

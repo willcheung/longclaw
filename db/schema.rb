@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171201015348) do
+ActiveRecord::Schema.define(version: 20180116222940) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -285,6 +285,7 @@ ActiveRecord::Schema.define(version: 20171201015348) do
     t.datetime "updated_at",                       null: false
     t.uuid     "user_id"
     t.integer  "status",     limit: 2, default: 1, null: false
+    t.string   "buyer_role"
   end
 
   add_index "project_members", ["contact_id"], name: "index_project_members_on_contact_id", using: :btree
@@ -376,7 +377,6 @@ ActiveRecord::Schema.define(version: 20171201015348) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
-    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -386,6 +386,7 @@ ActiveRecord::Schema.define(version: 20171201015348) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.string   "forecast_category_name"
     t.string   "owner_id"
   end

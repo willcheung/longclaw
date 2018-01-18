@@ -53,38 +53,21 @@ class ProjectsController < ApplicationController
   def arg_tab # Account Relationship Graph
     @data = @project.activities.where(category: %w(Conversation Meeting)).ids
     @contacts = @project.contact_relationship_metrics
+    @contacts_pm = @project.project_members_all.where.not(status: ProjectMember::STATUS[:Rejected]).group_by { |pm| pm.contact_id }
 
     render "show"
   end
 
   def network_map
+    # puts "\n\n **** params: #{params} \n\n" if params
     respond_to do |format|
       format.json { render json: @project.network_map }
     end
   end
 
   def lookup
-    pinned = @project.conversations.pinned
-    meetings = @project.meetings
-    all_members = @project.project_members_all
-    suggested_members = all_members.pending.map { |pm| pm.user_id || pm.contact_id }
-    rejected_members = all_members.rejected.map { |pm| pm.user_id || pm.contact_id }
-    members = (@project.users_all + @project.contacts_all).map do |m|
-      next if rejected_members.include?(m.id)
-      pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
-      meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
-      suggested = suggested_members.include?(m.id) ? ' *' : ''
-      {
-        name: get_full_name(m) + suggested,
-        domain: get_domain(m.email),
-        email: m.email,
-        title: m.title,
-        key_activities: pin.length,
-        meetings: meet.length
-      }
-    end.compact
     respond_to do |format|
-      format.json { render json: members }
+      format.json { render json: @project.arg_lookup }
     end
   end
 
