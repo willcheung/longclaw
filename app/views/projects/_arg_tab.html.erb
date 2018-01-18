@@ -347,7 +347,7 @@ $(function () {
                 }
 
                 d3.select(this).classed("dragging", false);
-                // if(!shortDrag){force.resume();} // Resume force layout only if not a short drag
+                // if(!shortDrag) {force.resume();} // Resume force layout only if not a short drag
                 isDrag = false;
             }
         }
@@ -588,9 +588,7 @@ $(function () {
                   }
               })
               .on("mouseout", function(d){
-                  // if(!isDrag && !nodeHighlighted){
-                  //       force.resume();  // resumes when node is moused-out
-                  // }
+                  // if (!isDrag && !nodeHighlighted) { force.resume(); } // resumes when node is moused-out
                   tooltip.transition()
                         .duration(500)
                         .style("opacity", 0);
@@ -728,8 +726,8 @@ $(function () {
         // Unselected + show all nodes; resume_force - resets fixed node positions 
         function showAllNodes(resume_force=false){
             if(d3.event.stopPropagation){d3.event.stopPropagation();}
-            if (resume_force)
-                force.resume();
+            if (resume_force) { force.resume(); }
+
             //Put them back to opacity=1
             node
                 .style("stroke-opacity", 1)
