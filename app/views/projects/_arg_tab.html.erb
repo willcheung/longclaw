@@ -29,7 +29,7 @@
                 <div class="m-t-xs"><small><%= contact.title %></small></div>
               </td>
               <td class="editable-field pm-buyer-role-td-<%= contact.id %>">
-                <%= best_in_place ProjectMember.new(id: contact.project_member_id, buyer_role: contact.buyer_role), :buyer_role, url: project_member_path(contact.project_member_id), as: :select, collection: ProjectMember::BUYER_ROLE.values.map { |r| [r,r] }, inner_class: 'bip-select-input', activator: '.pm-buyer-role-td-'+contact.id %>
+                <%= best_in_place @contacts_pm[contact.id].first, :buyer_role, as: :select, collection: ProjectMember::BUYER_ROLE.values.map { |r| [r,r] }, inner_class: 'bip-select-input', activator: '.pm-buyer-role-td-'+contact.id %>
                 &nbsp;&nbsp;
                 <i class="fa fa-pencil editable-field-activator"></i>
               </td>
