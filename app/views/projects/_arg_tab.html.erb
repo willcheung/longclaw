@@ -312,6 +312,7 @@ $(function () {
         var getMousePos;
 
         function dragstarted(d){
+            d3.select(this).classed("fixed", d.fixed = false);
             if(d3.select(this).classed("activeNode")){
                 getMousePos = d3.mouse(vis.node());
                 mousePos[0] = getMousePos[0];
@@ -346,7 +347,7 @@ $(function () {
                 }
 
                 d3.select(this).classed("dragging", false);
-                if(!shortDrag){force.resume();} // Resume force layout only if not a short drag
+                // if(!shortDrag){force.resume();} // Resume force layout only if not a short drag
                 isDrag = false;
             }
         }
@@ -587,9 +588,9 @@ $(function () {
                   }
               })
               .on("mouseout", function(d){
-                  if(!isDrag && !nodeHighlighted){
-                        force.resume();
-                  }
+                  // if(!isDrag && !nodeHighlighted){
+                  //       force.resume();  // resumes when node is moused-out
+                  // }
                   tooltip.transition()
                         .duration(500)
                         .style("opacity", 0);
@@ -725,7 +726,7 @@ $(function () {
             }
         }
 
-        // Show all nodes on click in empty space
+        // Unselected & show all nodes + reset fixed node positions on any click in empty space
         function showAllNodes(){
             if(d3.event.stopPropagation){d3.event.stopPropagation();}
             force.resume();
