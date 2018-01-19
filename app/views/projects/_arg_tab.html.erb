@@ -216,6 +216,15 @@ $(function () {
     svg {
         fill: white;
     }
+    .profile-pic {
+        width: 56px;
+        height: 56px;
+        border-radius: 56px;
+        margin-right: 5px;
+        border: 2px solid <%= get_contextsmith_blue %>;
+        font-size: 22px;
+        line-height: 47px;
+    }
 </style>
 <script type="text/javascript">
     // Function for moving nodes to front
@@ -266,7 +275,7 @@ $(function () {
             if (error) throw error;
             var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
             // *** For debug ***
-            // lookup.forEach(function(l){ console.log(" email: " + l.email + ", is_external: " + l.is_external + ", buyer_role: " + l.buyer_role) + "..." + l; });
+            // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external) + "..." + l; });
             // links.forEach(function(l){ console.log(" source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
             ready(lookup, links, metadata);
         })
@@ -312,6 +321,7 @@ $(function () {
         var getMousePos;
 
         function dragstarted(d){
+            d3.select(this).classed("fixed", d.fixed = false);
             if(d3.select(this).classed("activeNode")){
                 getMousePos = d3.mouse(vis.node());
                 mousePos[0] = getMousePos[0];
@@ -346,7 +356,7 @@ $(function () {
                 }
 
                 d3.select(this).classed("dragging", false);
-                if(!shortDrag){force.resume();} // Resume force layout only if not a short drag
+                // if(!shortDrag) {force.resume();} // Resume force layout only if not a short drag
                 isDrag = false;
             }
         }
@@ -375,9 +385,9 @@ $(function () {
             .style("fill", "none")
             .style("pointer-events", "all")
             // .style("cursor", "move")
-            .on("click", function(){
+            .on("click", function(){  // clicking an empty space on the graph
                 if (d3.event.defaultPrevented) return;
-                showAllNodes();
+                showAllNodes(true);
             });
 
         // Create a group that will hold all content to be zoomed
@@ -437,10 +447,11 @@ $(function () {
         lookup.forEach(function(person) {
             nodesByEmail[person.email] = {
                 email: person.email,
-                name: person.name || "(none)",
-                title: person.title || "(none)",
-                buyer_role: person.buyer_role || "(none)",
-                team: person.team || "(none)",
+                name: person.name || "(None)",
+                title: person.title || "(No title)",
+                profile_img_url: person.profile_img_url,
+                buyer_role: person.buyer_role || (!person.is_external ? undefined : "(No buyer role)"),
+                team: person.team || (person.is_external == undefined || person.is_external ? undefined : "(No team)"),
                 domain: person.domain,
                 meetings: person.meetings,
                 key_activities: person.key_activities,
@@ -460,9 +471,10 @@ $(function () {
                 nodesByEmail[email] = {
                     email: email,
                     name: email.split("@")[0],
-                    title: "(none)",
-                    buyer_role: "(none)",
-                    team: "(none)",
+                    title: undefined,
+                    profile_img_url: undefined,
+                    buyer_role: undefined,  //cannot determine w/o knowing if external/internal
+                    team: undefined,        //cannot determine w/o knowing if external/internal
                     domain: email.split("@")[1],
                     meetings: 0,
                     key_activities: 0,
@@ -483,10 +495,10 @@ $(function () {
             .filter(function (domain, i, arr) { return arr.indexOf(domain) === i; });
         var buyerRoles = nodes.filter(function (obj, i, arr) { return obj.is_external; })
             .map(function (obj) { return obj.buyer_role; })
-            .filter(function (role, i, arr) { return arr.indexOf(role) === i; });
+            .filter(function (buyer_role, i, arr) { return arr.indexOf(buyer_role) === i && buyer_role != undefined; });
         var teams = nodes.filter(function (obj, i, arr) { return !obj.is_external; })
             .map(function (obj) { return obj.team; })
-            .filter(function (team, i, arr) { return arr.indexOf(team) === i; });
+            .filter(function (team, i, arr) { return arr.indexOf(team) === i && team != undefined; });
         var legendValues = domains.concat(buyerRoles).concat(teams);
 
         // Linear size scale
@@ -523,7 +535,7 @@ $(function () {
         var domainLegend = legendContainer.select(".legendOrdinal")
             .call(legendOrdinal);
 
-        // Hack to put spaces in between domains/buyer_roles/teams
+        // Hack to put spaces in between domains/buyer_roles/teams in the legend
         d3.selectAll("g.cell")
             .each(function(d,i) {
                 var adjust = 0;
@@ -577,19 +589,19 @@ $(function () {
               .style("fill", function(d) {return color(nodesByEmail[d.email].domain);})
               .classed("activeNode", true)
               .on("mouseover", function(d){
+                  var profile_img_html = (d.is_external != undefined && d.profile_img_url != undefined) ? "<img src='" + d.profile_img_url + "' class='profile-pic' title='profile pic'>" : "";
+
                   if(d3.select(this).classed("activeNode") && !d3.select(this).classed("baseNode")){
                     force.stop();
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html("<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + (d.is_external != undefined && d.is_external == true ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && d.is_external == false ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities)
-                        .style("top", (nodeHighlighted?"190px":"70px"));
+                    tooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + (d.is_external ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && !d.is_external ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities /*+ "<br>** external? " + d.is_external + "**"*/)
+                        .style("top", (nodeHighlighted?"225px":"70px"));
                   }
               })
               .on("mouseout", function(d){
-                  if(!isDrag && !nodeHighlighted){
-                        force.resume();
-                  }
+                  // if (!isDrag && !nodeHighlighted) { force.resume(); } // resumes when node is moused-out
                   tooltip.transition()
                         .duration(500)
                         .style("opacity", 0);
@@ -617,9 +629,9 @@ $(function () {
             .on("mouseleave", function(){
                 force.stop();
             })
-            .on("mouseenter", function(){
-                force.resume();
-            });
+            // .on("mouseenter", function(){
+            //     force.resume();
+            // });
 
         //Create an array logging what is connected to what
         var linkedByIndex = {};
@@ -640,15 +652,17 @@ $(function () {
             nodeHighlighted = true;
             d3.selectAll("g.cell").classed("active", false); // Clear filters
             if (d3.select(nodeClicked).classed("baseNode")){ // Base node was clicked, show all
-                showAllNodes();
+                showAllNodes(false);
                 return;
             }
             force.stop(); // Stop moving
             tooltip.style("opacity", 0); // Clear unpinned tooltip (because it is the same as the pinned)
+
+            var profile_img_html = (clickedOn.is_external != undefined && clickedOn.profile_img_url != undefined) ? "<img src='" + clickedOn.profile_img_url + "' class='profile-pic' title='profile pic'>" : "";
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html("<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + "<br>Buyer Role: " + clickedOn.buyer_role /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + (clickedOn.is_external ? "<br>Buyer Role: " + clickedOn.buyer_role : "") + (clickedOn.is_external != undefined && !clickedOn.is_external ? "<br>Team: " + clickedOn.team : "") /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities /*+ "<br>** external? " + clickedOn.is_external + "**"*/) // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
@@ -718,17 +732,17 @@ $(function () {
                 nameSelected = true;
                 allShowing = false;
             }
-            else {
+            else { // deselect a selected filter
                 d3.select(gObject).classed("active", false);
                 showAllNodes();
-
             }
         }
 
-        // Show all nodes on click in empty space
-        function showAllNodes(){
+        // Unselected + show all nodes; resume_force - resets fixed node positions 
+        function showAllNodes(resume_force=false){
             if(d3.event.stopPropagation){d3.event.stopPropagation();}
-            force.resume();
+            if (resume_force) { force.resume(); }
+
             //Put them back to opacity=1
             node
                 .style("stroke-opacity", 1)
