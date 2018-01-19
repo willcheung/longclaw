@@ -363,7 +363,7 @@ class Project < ActiveRecord::Base
     meetings = self.meetings
     members = self.project_members_all
       .joins('LEFT JOIN users ON users.id = project_members.user_id LEFT JOIN contacts ON contacts.id = project_members.contact_id')
-      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, users.image_url AS profile_img_url, project_members.status, project_members.buyer_role, users.department AS team, users.id IS NULL AS is_external')
+      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, users.image_url AS profile_img_url, project_members.status, project_members.buyer_role, users.department AS team, users.id IS NULL AS is_external').where("users.email IS NOT NULL OR contacts.email IS NOT NULL")
       .where(status: [ProjectMember::STATUS[:Confirmed], ProjectMember::STATUS[:Pending]])
 
     members.map do |m|
