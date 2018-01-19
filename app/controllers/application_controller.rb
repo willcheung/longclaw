@@ -158,4 +158,10 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def current_resource_owner
+    if params['_json'] && params['controller'] == 'ahoy/events' && params['_json'][0] && params['_json'][0]['properties']
+      userid = params['_json'][0]['properties']['user_id']
+      User.find(userid) if userid
+    end
+  end
 end
