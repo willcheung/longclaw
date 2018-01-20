@@ -363,10 +363,11 @@ class Project < ActiveRecord::Base
     meetings = self.meetings
     members = self.project_members_all
       .joins('LEFT JOIN users ON users.id = project_members.user_id LEFT JOIN contacts ON contacts.id = project_members.contact_id')
-      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, project_members.status, project_members.buyer_role')
+      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, users.image_url AS profile_img_url, project_members.status, project_members.buyer_role, users.department AS team, users.id IS NULL AS is_external')
       .where(status: [ProjectMember::STATUS[:Confirmed], ProjectMember::STATUS[:Pending]])
 
     members.map do |m|
+      profile = Profile.find_or_create_by_email(m.email)
       pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       suggested = m.status == ProjectMember::STATUS[:Pending] ? ' *' : ''
@@ -375,9 +376,12 @@ class Project < ActiveRecord::Base
         domain: get_domain(m.email),
         email: m.email,
         title: m.title,
+        profile_img_url: m.profile_img_url || (profile.profileimg_url if profile.present?),
         buyer_role: m.buyer_role,
+        team: m.team,
         key_activities: pin.length,
-        meetings: meet.length
+        meetings: meet.length,
+        is_external: m.is_external
       }
     end.compact
 

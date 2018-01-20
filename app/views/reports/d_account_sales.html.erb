@@ -190,14 +190,31 @@
                 </div>
                 <!-- end id="account-header" -->
 
+
                 <div id="account-charts" style="display:none;">
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-12" id="heatmap-chart" style="height:350px"></div>
+                            <!-- <div class="col-lg-6" id="top-contributors" style="height:200px;"></div> -->
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12" id="activities-breakdown" style="height:350px"></div>
+                            <!-- <div class="col-lg-6" id="top-contributors" style="height:200px;"></div> -->
+                        </div>
+
+                        <div class="row m-t-lg text-center">
+                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/arg" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
+                        </div>
+                    </div>
+
                     <div id="charts-container" class="ibox-content">
                         <div class="row m-t-md">
                             <h3><i class="fa fa-bell-o"></i> Alerts & Tasks</h3>
                             <ul class="todo-list m-t">
                                 <li>
                                     <a href="#" class="check-link"><i class="fa fa-square-o"></i> </a>
-                                    <span class="m-l-xs">Inactive for 35 days</span>
+                                    <span class="m-l-xs">Inactive for 25 days</span>
                                     <small class="label label-danger"> Alert</small>
                                 </li>
                                 <li>
@@ -239,16 +256,6 @@
                         </div>
                     </div>
 
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-lg-12" id="activities-breakdown" style="height:350px"></div>
-                            <!-- <div class="col-lg-6" id="top-contributors" style="height:200px;"></div> -->
-                        </div>
-
-                        <div class="row m-t-lg text-center">
-                            <h3><a href="https://app.contextsmith.com/projects/502b8160-0536-48da-9021-1561b957434e/arg" class="btn btn-outline btn-primary btn-xs">See Account Relationship Graph &rarr;</a></h3>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -572,7 +579,7 @@
                 type: 'bar'
             },
             title: {
-                text: 'Top Buyer Engagement (Last 14 days)',
+                text: 'Top Buyer Engagement (Last 30 days)',
                 margin: 10,
                 style: {
                     color: '#555555',
@@ -804,6 +811,68 @@
             }]
         });
 */
+
+        
+        
+
+        $('#heatmap-chart').highcharts({
+
+            chart: {
+                type: 'heatmap',
+                marginTop: 40,
+                marginBottom: 80,
+                plotBorderWidth: 1
+            },
+            credits: {
+                enabled: false
+            },
+
+            title: {
+                text: 'Account Coverage (Last 30 days)',
+                style: {
+                        color: '#555555',
+                        fontSize: '16px'
+                    }
+            },
+
+            xAxis: {
+                categories: ['Marketing', 'Business Development', 'Field Sales', 'Technical Sales', 'Customer Success', 'Other']
+            },
+
+            yAxis: {
+                categories: ['Influencer', 'Champion', 'Decision Maker', 'Technical Buyer', 'Economic Buyer'],
+                title: null
+            },
+
+            colorAxis: {
+                min: 0,
+                minColor: '#FFFFFF',
+                maxColor: Highcharts.getOptions().colors[0]
+            },
+
+            legend: {
+                enabled: false
+            },
+
+            tooltip: {
+                formatter: function () {
+                    return '<b>' + this.series.xAxis.categories[this.point.x] + '</b> had <br><b>' +
+                        this.point.value + '</b> activities with <br><b>' + this.series.yAxis.categories[this.point.y] + '</b>';
+                }
+            },
+
+            series: [{
+                name: '',
+                borderWidth: 1,
+                data: [[0, 0, 0], [0, 1, 0], [0, 2, 3], [0, 3, 5], [0, 4, 2], [1, 0, 0], [1, 1, 0], [1, 2, 0], [1, 3, 2], [1, 4, 1], [2, 0, 5], [2, 1, 15], [2, 2, 21], [2, 3, 8], [2, 4, 1], [3, 0, 1], [3, 1, 1], [3, 2, 0], [3, 3, 19], [3, 4, 0], [4, 0, 0], [4, 1, 0], [4, 2, 0], [4, 3, 1], [4, 4, 0], [5, 0, 0], [5, 1, 6], [5, 2, 12], [5, 3, 6], [5, 4, 0]],
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000'
+                }
+            }]
+
+        });
+
         $('#activities-chart').highcharts({
             chart: {
                 events:{
@@ -817,7 +886,7 @@
                 enabled: false
             },
             title: {
-                text: "Activities (Last 14 days)",
+                text: "Activities (Last 30 days)",
                     align: 'left',
                     margin: 0,
                     x: 35,
