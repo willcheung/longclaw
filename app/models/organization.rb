@@ -90,8 +90,16 @@ class Organization < ActiveRecord::Base
     return customlists
   end
 
-  # TODO: To consider custom "Closed Won"/"Closed Lost" stages, use native SFDC fields is_closed and is_won instead
+  ### TODO: To consider custom "Closed Won"/"Closed Lost" stages, use native SFDC fields is_closed and is_won instead
   def get_winning_stages
     ['Closed Won', 'Closed and Signed']  # hard-coded until we do it dynamically from SFDC data
+  end
+
+  def get_losing_stages
+    ['Closed Lost'] # hard-coded until we do it dynamically from SFDC data
+  end
+
+  def get_closed_stages
+    get_winning_stages + get_losing_stages
   end
 end

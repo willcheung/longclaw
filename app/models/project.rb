@@ -140,7 +140,7 @@ class Project < ActiveRecord::Base
   CATEGORY = { Expansion: 'Expansion', Services: 'Services', NewBusiness: 'New Business', Pilot: 'Pilot', Support: 'Support', Other: 'Other' }
   MAPPABLE_FIELDS_META = { "name" => "Name", "category" => "Type", "description" => "Description", "renewal_date" => "Renewal Date", "amount" => "Deal Size", "stage" => "Stage", "close_date" => "Close Date", "expected_revenue" => "Expected Revenue", "probability" => "Probability", "forecast" => "Forecast", "next_steps" => "Next Steps" }  # format: backend field name => display name;  Unused: "contract_arr" => "Contract ARR", "contract_start_date" => "Contract Start Date", "contract_end_date" => "Contract End Date", "has_case_study" => "Has Case Study", "is_referenceable" => "Is Referenceable", "renewal_count" => "Renewal Count",
   RAGSTATUS = { Red: "Red", Amber: "Amber", Green: "Green" }
-  CLOSE_DATE_RANGE = { ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'Before Today', Open: 'Today and After' }
+  CLOSE_DATE_RANGE = { ThisQuarterOpen: 'This Quarter - Open Opportunities', ThisQuarter: 'This Quarter', NextQuarter: 'Next Quarter', LastQuarter: 'Last Quarter', QTD: 'QTD', YTD: 'YTD', Closed: 'Before Today', Open: 'Today and After' }
 
   attr_accessor :num_activities_prev, :pct_from_prev
 
@@ -363,7 +363,7 @@ class Project < ActiveRecord::Base
     meetings = self.meetings
     members = self.project_members_all
       .joins('LEFT JOIN users ON users.id = project_members.user_id LEFT JOIN contacts ON contacts.id = project_members.contact_id')
-      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, users.image_url AS profile_img_url, project_members.status, project_members.buyer_role, users.department AS team, users.id IS NULL AS is_external')
+      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, users.image_url AS profile_img_url, project_members.status, project_members.buyer_role, users.department AS team, users.id IS NULL AS is_external').where("users.email IS NOT NULL OR contacts.email IS NOT NULL")
       .where(status: [ProjectMember::STATUS[:Confirmed], ProjectMember::STATUS[:Pending]])
 
     members.map do |m|
@@ -1344,7 +1344,7 @@ class Project < ActiveRecord::Base
 
   def self.get_close_date_range(range_description)
     case range_description
-      when CLOSE_DATE_RANGE[:ThisQuarter]
+      when CLOSE_DATE_RANGE[:ThisQuarter], CLOSE_DATE_RANGE[:ThisQuarterOpen]
         date = Time.current
         (date.beginning_of_quarter...date.end_of_quarter)
       when CLOSE_DATE_RANGE[:NextQuarter]
