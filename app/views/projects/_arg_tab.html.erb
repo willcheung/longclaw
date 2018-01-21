@@ -321,7 +321,6 @@ $(function () {
         var getMousePos;
 
         function dragstarted(d){
-            d3.select(this).classed("fixed", d.fixed = false);
             if(d3.select(this).classed("activeNode")){
                 getMousePos = d3.mouse(vis.node());
                 mousePos[0] = getMousePos[0];
@@ -401,7 +400,7 @@ $(function () {
             .style("top", "70px")
             .style("opacity", "0");
 
-        // Tooptip in top right corner
+        // Tooltip in top right corner
         var tooltip = d3.select("#force-graph").append("div")
             .attr("class", "arg-tooltip")
             .style("right", "40px")
@@ -516,7 +515,7 @@ $(function () {
         var color = d3.scale.ordinal()
         // TODO: redo the scale to make dynamic
             .domain(legendValues)
-            .range(colorScale.concat(fillArray("#EFEFEF", domains.length + buyerRoles.length + teams.length - 3)));
+            .range(colorScale.concat(fillArray("#EFEFEF", buyerRoles.length + teams.length)));
 
         // Helper to repeat colors
         function fillArray(value, len) {
@@ -559,11 +558,11 @@ $(function () {
             //    zoomer.translate([20, 0]);
 
                 if (i >= domains.length && i < domains.length + buyerRoles.length)
-                    searchNode("buyer_role", val, this);
+                    filterNode("buyer_role", val, this);
                 else if (i >= domains.length + buyerRoles.length && i < domains.length + buyerRoles.length + teams.length)
-                    searchNode("team", val, this);
+                    filterNode("team", val, this);
                 else
-                    searchNode("domain", val, this);
+                    filterNode("domain", val, this);
             });
 
         // Create the link lines.
@@ -625,13 +624,14 @@ $(function () {
             .on("tick", function(){tick();})
             .start();
 
-        graph
-            .on("mouseleave", function(){
-                force.stop();
-            })
-            // .on("mouseenter", function(){
-            //     force.resume();
-            // });
+        // TODO: Uncomment if performance is bad.
+        // graph
+        //     .on("mouseleave", function(){
+        //         force.stop();
+        //     })
+        //     .on("mouseenter", function(){
+        //         force.resume();
+        //     });
 
         //Create an array logging what is connected to what
         var linkedByIndex = {};
@@ -647,7 +647,7 @@ $(function () {
             return linkedByIndex[a.index + "," + b.index];
         }
 
-        // Change opacity to highlight connected nodes when node is clicked
+        // Change opacity to "highlight" connected nodes when a node is clicked
         function connectedNodes(clickedOn, firstClick, nodeClicked) {
             nodeHighlighted = true;
             d3.selectAll("g.cell").classed("active", false); // Clear filters
@@ -688,8 +688,8 @@ $(function () {
             nameSelected = false;
         }
 
-        // Change opacity to highlight nodes when applying filter
-        function searchNode(searchType, searchVal, gObject) {
+        // Change opacity to "highlight" all relevant nodes when applying filter
+        function filterNode(searchType, searchVal, gObject) {
             nodeHighlighted = false;
             var allNodes = d3.selectAll(".node");
             var notSelectedNodes = allNodes.filter(function (d, i){
@@ -720,10 +720,10 @@ $(function () {
                     .style("fill-opacity", 0.1)
                     .classed("activeNode", false);
                 // selected names
-                d3.selectAll(".node.activeNode + .node-name")
+                d3.selectAll(".node.activeNode").select(function(){ return (this.nextSibling || this.previousSibling); })
                     .style("opacity", 1);
                 // not selected names
-                d3.selectAll(".node:not(.activeNode) + .node-name")
+                d3.selectAll(".node:not(.activeNode)").select(function(){ return (this.nextSibling || this.previousSibling); })
                     .style("opacity", 0.1);
 
                 link.style("stroke-opacity", 0.1);
