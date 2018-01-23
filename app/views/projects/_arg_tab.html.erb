@@ -55,7 +55,7 @@
               <td title="<%= Time.zone.at(contact.last_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_meeting_date.present? %>" data-order="<%= contact.last_meeting_date.to_i %>"><%= Time.zone.at(contact.last_meeting_date).strftime('%b %e') if contact.last_meeting_date.present? %></td>
               <td title="<%= Time.zone.at(contact.next_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.next_meeting_date.present? %>" data-order="<%= contact.next_meeting_date.to_i %>"><%= Time.zone.at(contact.next_meeting_date).strftime('%b %e') if contact.next_meeting_date.present? %></td>
               <% @BGINFO_PREV_LEN_MAX = 35 %>
-              <td class="editable-field contact-bg-info-td-<%= contact.id %>"><i class="fa fa-sticky-note-o">&nbsp;</i><%= best_in_place contact, :background_info, :as => 'textarea', :place_holder => "&nbsp;", :display_with => lambda { |v| v.present? && v.respond_to?(:to_s) && v.to_s.length > @BGINFO_PREV_LEN_MAX ? v[0...@BGINFO_PREV_LEN_MAX] + "..." : v }, :activator => '.contact-bg-info-td-'+contact.id %><i class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+              <td class="editable-field contact-bg-info-td-<%= contact.id %>"><%= best_in_place contact, :background_info, :as => 'textarea', :place_holder => "&nbsp;", :display_with => lambda { |v| v.present? && v.respond_to?(:to_s) && v.to_s.length > @BGINFO_PREV_LEN_MAX ? v[0...@BGINFO_PREV_LEN_MAX] + "..." : v }, :activator => '.contact-bg-info-td-'+contact.id %><i class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
             </tr>
           <% end %>
           </tbody>
