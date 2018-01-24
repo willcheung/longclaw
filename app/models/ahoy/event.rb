@@ -62,7 +62,7 @@ module Ahoy
 							ahoy_events.properties->'page' as page, 
 							count(ahoy_events.properties->'page') as count 
 				from ahoy_events join users on users.id=ahoy_events.user_id 
-				where not properties @> '{"page":"/settings/user_analytics"}' and time >= current_date - interval '7' day and email not like '%contextsmith.com' 
+				where not properties @> '{"page":"/settings/user_analytics"}' and not ahoy_events.name = 'gmail-extension-used' and time >= current_date - interval '7' day and email not like '%contextsmith.com' 
 				group by to_char("time", 'MM/DD'), users.email, action, page 
 				order by "date" desc;
       SQL
@@ -76,7 +76,7 @@ module Ahoy
 							users.email, 
 							count(ahoy_events.properties->'page') as count 
 				from ahoy_events join users on users.id=ahoy_events.user_id 
-				where not properties @> '{"page":"/settings/user_analytics"}' and time >= current_date - interval '14' day and email not like '%contextsmith.com' 
+				where not properties @> '{"page":"/settings/user_analytics"}' and not ahoy_events.name = 'gmail-extension-used' and time >= current_date - interval '14' day and email not like '%contextsmith.com' 
 				group by to_char("time", 'MM/DD'), users.email
 				order by "date" desc;
       SQL
