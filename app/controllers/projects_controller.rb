@@ -76,7 +76,7 @@ class ProjectsController < ApplicationController
       end
     end
     respond_to do |format|
-      format.json { render json: @project.network_map(current_user.time_zone, time_from, time_to) }
+      format.json { render json: @project.network_map(time_from, time_to, current_user.time_zone) }
     end
   end
 
