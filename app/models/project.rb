@@ -323,8 +323,7 @@ class Project < ActiveRecord::Base
   end
 
   # query to generate Account Relationship Graph from DB entries
-  def network_map(time_zone="UTC", start_day=nil, end_day=nil)
-    time_zone = "UTC" if time_zone.nil?
+  def network_map(start_day=nil, end_day=nil, time_zone="UTC")
     if start_day
       if end_day
         conversation_date_pred = "AND (messages ->> 'sentDate')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}"
