@@ -60,8 +60,23 @@ class ProjectsController < ApplicationController
 
   def network_map
     # puts "\n\n **** params: #{params} \n\n" if params
+    if params
+      time_to = Time.current.utc if params[:time] # applies to all params[:time], including 'ALL_DATES'
+      case params[:time]
+      when "LAST_14d"
+        time_from = 14.days.ago.midnight.utc
+      when "LAST_30d"
+        time_from = 30.days.ago.midnight.utc
+      when "LAST_60d"
+        time_from = 60.days.ago.midnight.utc
+      when "LAST_90d"
+        time_from = 90.days.ago.midnight.utc
+      when "LAST_180d"
+        time_from = 180.days.ago.midnight.utc
+      end
+    end
     respond_to do |format|
-      format.json { render json: @project.network_map }
+      format.json { render json: @project.network_map(time_from, time_to, current_user.time_zone) }
     end
   end
 
