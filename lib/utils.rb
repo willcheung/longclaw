@@ -114,11 +114,12 @@ module Utils
                         '(.)*yahoo\.com', 'yahoo\.(.)*', 
                         # other servers or domains
                         '(.)*calendar(.)*\.google\.com',
-                        '(.)*serverdata\.net', 
                         '(.)*comcastbiz\.net', 
+                        '(.)*serverdata\.net', 
+                        '(.)*ywsync\.com',
                         '(.)*\.salesforce\.com', 
-                        '(.)*\.zendesk\.com', 
-                       ]
+                        '(.)*\.zendesk\.com'
+                       ]#1595: Add Yesware domain ywsync.com to our list of invalid domains.
     return false if domain.length > 64
     bl_regex_patterns.none? { |p| Regexp.new(p, Regexp::IGNORECASE).match(domain) }
   end
