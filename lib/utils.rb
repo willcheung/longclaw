@@ -45,7 +45,8 @@ module Utils
 	  bool ? 'Yes' : 'No'
 	end
 
-	# The first three of the following example "emails" are valid, but the rest are invalid: "will-cheung@contextsmith.com", "chicago.o'hare@us-airports.com", "unusual@subdomain.domain.com", "", "invalid@@bad.com", "invalid@also'bad.com", "invalid"
+	# The following are VALID e-mails:  "will-cheung@contextsmith.com", "chicago.o'hare@us-airports.com", "unusual@subdomain.domain.com"
+	# The following are INVALID e-mails:  "invalid@@bad.com", "invalid@also'bad.com", "invalid", ""
 	def valid_email?(email)
 		(email =~ /\A[\w+\-.']+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i) == 0
 	end
@@ -103,7 +104,8 @@ module Utils
     score < 0.0 ? 0 : score
   end
 
-  # Compares domain to our blacklist and returns true if valid (i.e., does not match any blacklisted pattern; is correct length), false otherwise
+  # Compares domain to a blacklist and returns true if valid (i.e., does not match any blacklisted pattern; is correct length), false otherwise.
+  # This is generally used to identify invalid e-mail addresses or those with a domain that is too general to be used as a way to associate an (contact) address to an account (and its domain) unambiguously and with confidence.
   def valid_domain?(domain)
     bl_regex_patterns =[
                         # e-mail servers
