@@ -225,7 +225,7 @@ $(function () {
         height: 56px;
         border-radius: 56px;
         margin-right: 5px;
-        border: 2px solid <%= get_contextsmith_blue %>;
+        border: 2px solid <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
         font-size: 22px;
         line-height: 47px;
     }
@@ -274,7 +274,7 @@ $(function () {
     var networkURL = '/projects/<%=project_id%>/network_map.json';  // TODO: may use ".../network_map.json?start_date=12345"
 
     // Display refresh animation while loading data
-    d3.select("#force-graph").append("div").attr("style", "padding: "+(height/2 - 16)+"px 42%; color: <%=get_contextsmith_blue%>").append("i").attr("class", "fa fa-refresh fa-3x fa-spin")
+    d3.select("#force-graph").append("div").attr("style", "padding: "+(height/2 - 16)+"px 42%; color: <%=ApplicationHelper::CONTEXTSMITH_BLUE%>").append("i").attr("class", "fa fa-refresh fa-3x fa-spin")
     d3.select("#force-graph").selectAll("div").append("p").html("Loading data...").attr("style", "display: inline; margin-left: 8px");
 
     // Initial graph (all dates)
@@ -802,7 +802,7 @@ $(function () {
         d3.select("#force-graph").selectAll("*").remove(); // clear graph
 
         // Display refresh animation while loading data
-        d3.select("#force-graph").append("div").attr("style", "padding: "+(height/2 - 16)+"px 42%; color: <%=get_contextsmith_blue%>").append("i").attr("class", "fa fa-refresh fa-3x fa-spin")
+        d3.select("#force-graph").append("div").attr("style", "padding: "+(height/2 - 16)+"px 42%; color: <%=ApplicationHelper::CONTEXTSMITH_BLUE%>").append("i").attr("class", "fa fa-refresh fa-3x fa-spin")
         d3.select("#force-graph").selectAll("div").append("p").html("Loading data...").attr("style", "display: inline; margin-left: 8px");
 
         if (this.id == "ALL_DATES")
