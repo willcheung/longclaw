@@ -1,5 +1,17 @@
 <% if @data.present? %>
-<div id="force-graph" class="m-l white-bg header-box"></div>
+<div class="m-l white-bg header-box">
+    <div id="force-graph"></div>
+    <div style="padding: 1em 25%;">
+        <span>
+            <input id="LAST_14d" type="button" value="Last 14 days">
+            <input id="LAST_30d" type="button" value="Last 30 days">
+            <input id="LAST_60d" type="button" value="Last 60 days">
+            <input id="LAST_90d" type="button" value="Last 90 days">
+            <input id="LAST_180d" type="button" value="Last 180 days">
+            <input id="ALL_DATES" type="button" value="All">
+        </span>
+    </div>
+</div>
 <div class="panel blank-panel">
     <div class="panel-body">
       <div class="ibox-content">
@@ -260,11 +272,17 @@ $(function () {
 
     var lookupURL = '/projects/<%=project_id%>/lookup.json';
     var networkURL = '/projects/<%=project_id%>/network_map.json';  // TODO: may use ".../network_map.json?start_date=12345"
-    // d3.json("lookup.json", function (error, lookup) {
+
+    // Display refresh animation while loading data
+    d3.select("#force-graph").append("div").attr("style", "padding: "+(height/2 - 16)+"px 42%; color: <%=get_contextsmith_blue%>").append("i").attr("class", "fa fa-refresh fa-3x fa-spin")
+    d3.select("#force-graph").selectAll("div").append("p").html("Loading data...").attr("style", "display: inline; margin-left: 8px");
+
+    // Initial graph (all dates)
     d3.json(lookupURL, function (error, lookup) {
         if (error) throw error;
         d3.json(networkURL, function (error, links) {
             if (error) throw error;
+            d3.select("#force-graph").selectAll("*").remove(); // clear animation
             var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
             // *** For debug ***
             // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external) + "..." + l; });
@@ -763,7 +781,6 @@ $(function () {
             nodeGroup.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
         }
 
-
         resize();
         d3.select(window).on("resize", resize);
 
@@ -779,7 +796,37 @@ $(function () {
             legendContainer.moveToFront();
             tick();
         }
-    }
+    } // function ready(...)
+
+    $("#LAST_14d, #LAST_30d, #LAST_60d, #LAST_90d, #LAST_180d, #ALL_DATES").click(function(){
+        d3.select("#force-graph").selectAll("*").remove(); // clear graph
+
+        // Display refresh animation while loading data
+        d3.select("#force-graph").append("div").attr("style", "padding: "+(height/2 - 16)+"px 42%; color: <%=get_contextsmith_blue%>").append("i").attr("class", "fa fa-refresh fa-3x fa-spin")
+        d3.select("#force-graph").selectAll("div").append("p").html("Loading data...").attr("style", "display: inline; margin-left: 8px");
+
+        if (this.id == "ALL_DATES")
+            networkURL = "/projects/<%=project_id%>/network_map.json";
+        else
+            networkURL = "/projects/<%=project_id%>/"+this.id+"/network_map.json";
+        console.log("this.id=" + this.id);
+        console.log("networkURL=" + networkURL);
+
+        var force = d3.layout.force();
+        d3.json(lookupURL, function (error, lookup) {
+            if (error) throw error;
+            d3.json(networkURL, function (error, links) {
+                if (error) throw error;
+                d3.select("#force-graph").selectAll("*").remove(); // clear animation
+                var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
+                // *** For debug ***
+                // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external) + "..." + l; });
+                // links.forEach(function(l){ console.log(" source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
+                ready(lookup, links, metadata);
+            })
+        });
+    });
+
 </script>
 <% else %>
   <div class="p-m m-l white-bg header-box">
