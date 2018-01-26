@@ -1,5 +1,5 @@
 <style>
-    * {
+    *, .gray-bg {
         background-color: white;
     }
 </style>
@@ -8,19 +8,21 @@
     <div class = "ibox-content">
         <div class="row">
             <% if !current_user.superadmin? %>
-                <h2 style="">Tracking Reports (coming soon)</h2>
                 <div>
+                    <h2>Tracking Reports (coming soon)</h2>
                     <!-- <input type="button" value="Upgrade now!" style="margin: 0 45%;">
                     <img src="/assets/images/extension-dash-example.jpg" title="Dashboard Sample (screenshot)" style="width:75%; height:75%; margin: 0 12%; display:block;">
                     <input type="button" value="Start 14 Day Free Trial!" style="margin: 0 42.5%;"> -->
                 </div>
             <% else %>
-                <h2 style="">Tracking Reports</h2>
-                <!-- Daily trend (last month, sent and opens) -->
-                <div id="activity-container" style="min-width: 400px; height: 450px; margin: 0 auto"></div>
+                <div>
+                    <h2>Tracking Reports</h2>
+                    <!-- Daily trend (last month, sent and opens) -->
+                    <div id="activity-container" style="min-width: 400px; height: 450px; margin: 0 auto"></div>
 
-                <!-- Day of the Week and Hourly trend (last month, opens) -->
-                <div id="punchcard-container" style="min-width: 800px; height: 450px; margin: 0 auto"></div>
+                    <!-- Day of the Week and Hourly trend (last month, opens) -->
+                    <div id="punchcard-container" style="min-width: 800px; height: 450px; margin: 0 auto"></div>
+                </div>
             <% end %>
         </div>
     </div>
@@ -33,6 +35,7 @@
 <%= javascript_include_tag "https://code.highcharts.com/stock/highstock.js" %>
 <%= javascript_include_tag "https://code.highcharts.com/highcharts-more.js" %>
 <%= javascript_include_tag "https://code.highcharts.com/modules/exporting.js" %>
+
 <script>
     Highcharts.chart('activity-container', {
         chart: {
@@ -52,6 +55,7 @@
             backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
         },
         xAxis: {
+            //type: 'datetime',
             categories: <%= @event_dates.to_json.html_safe %>,
             tickInterval: 2
         },
@@ -62,6 +66,7 @@
             minTickInterval: 1
         }],
         tooltip: {
+            //xDateFormat: '%b %e',
             shared: true
         },
         credits: {
@@ -107,7 +112,8 @@
                 text: 'Day of the Week'
             },
             min: 0,
-            categories: DAYOFWEEK
+            categories: DAYOFWEEK,
+            //reversed: true
         },
         plotOptions: {
             bubble: {
