@@ -386,7 +386,7 @@ class Project < ActiveRecord::Base
       WHERE "to" IS NOT NULL
       GROUP BY 1,2;
     SQL
-    result = Activity.find_by_sql(query)
+    result = Activity.find_by_sql(query).select{|r| valid_domain?(get_domain(r.source)) && valid_domain?(get_domain(r.target))}  # Note: this will also filter out any addresses in the result that contain domains too general to match to an account, e.g., @gmail.com, @hotmail.com, @yahoo.com
   end
 
   def arg_lookup
