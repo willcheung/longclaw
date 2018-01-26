@@ -27,7 +27,7 @@
 </div
 
 
-<% if !current_user.superadmin? %>
+<% if current_user.superadmin? %>
 
 <%= javascript_include_tag "https://code.highcharts.com/highcharts.js" %>
 <%= javascript_include_tag "https://code.highcharts.com/stock/highstock.js" %>
@@ -118,7 +118,7 @@
         tooltip: {
             headerFormat:  '',
             pointFormatter: function() {
-                return '<span style="color: ' + this.color + ';">\u25CF</span> ' + this.series.name + '<br>' + DAYOFWEEK[this.y] + ' ' + this.category + ': <b>' + this.z + '</b>' ;
+                return DAYOFWEEK[this.y] + ' ' + this.category + '<br><span style="color: ' + this.color + ';">\u25CF</span> ' + this.series.name + ': <b>' + this.z + '</b>' ;
             }
         },
         series: [{
@@ -129,4 +129,4 @@
     });
 </script>
 
-<% end #!current_user.superadmin? %>
+<% end # if current_user.superadmin? %>

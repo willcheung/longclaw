@@ -203,7 +203,6 @@ class ExtensionController < ApplicationController
     @emails_daily_hourly_opened_lastmonth = []
     (0..23).map do |h|
       (0..6).map do |d|
-        puts "h=#{h}, d=#{d} tracking_events_daily_hourly_pastmo_h[[h,d]]=#{tracking_events_daily_hourly_pastmo_h[[h,d]]}" 
         @emails_daily_hourly_opened_lastmonth << [h, d, (tracking_events_daily_hourly_pastmo_h[[h,d]] ? tracking_events_daily_hourly_pastmo_h[[h,d]] : nil)]
       end
     end
