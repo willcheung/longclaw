@@ -146,6 +146,7 @@ Longclaw::Application.routes.draw do
       get 'project_error'
       get 'salesforce'
       post 'create_account'
+      get 'dashboard'
     end
 
     scope "tracking", controller: :tracking, as: 'tracking' do
