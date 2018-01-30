@@ -6,7 +6,7 @@ class ExtensionController < ApplicationController
 
   before_action :filter_params
   before_action :set_salesforce_user
-  before_action :set_account_and_project, only: [:account, :salesforce]
+  before_action :set_account_and_project, only: [:account, :salesforce, :company]
   before_action :get_current_org_opportunity_stages, only: [:salesforce]
   before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
   before_action :get_account_types, only: :no_account
@@ -143,6 +143,11 @@ class ExtensionController < ApplicationController
   def salesforce
     @salesforce_account = @account.salesforce_accounts.first if @account.present?
     @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
+  end
+
+  def company
+    @SOCIAL_BIO_TEXT_LENGTH_MAX = 192
+    @company = CompanyProfile.find_or_create_by_domain(@account.domain) if @account.present?
   end
 
   # def alerts_tasks

@@ -1,0 +1,121 @@
+<style type="text/css">
+  span.disabled {  /* social icons */
+    opacity: .3;
+    pointer-events: none;
+    display: inline-block;
+  }
+
+  .company-section {
+    font-size: 13px;
+  }
+
+  .description-section {
+    font-size: 12px;
+  }
+
+  .key-people-section {
+    font-size: 12px;
+  }
+  .profile-pic {
+    width: 56px;
+    height: 56px;
+    border-radius: 56px;
+    margin: 2px 6px;
+    border: 2px solid <%= get_contextsmith_blue %>;
+    font-size: 22px;
+    line-height: 47px;
+  }
+  .contact-info {
+    font-size: 12px;
+    color: #999;
+    font-weight: normal;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    height: 60px;
+  }
+
+  .contact-name {
+    font-size: 14px;
+  }
+
+  .section-header {
+    font-size: 14px;
+    font-weight: bold;
+    /*color: black;*/
+    /*padding: 1em 0;*/
+  }
+
+  hr.divider {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+  .linkedin-icon {
+    color: #0077b5; /* LinkedIn blue */
+  }
+  .twitter-icon {
+    color: #31b8f0; /* Twitter blue */
+  }
+  .fb-icon {
+    color: #3b5998; /* Facebook blue */
+  }
+</style>
+<% if @company %>
+<section class="company-section">
+  <h2><extrastrong><%= @company.name %></extrastrong></h2>
+  <p><span <%= 'class=disabled' if @company.website.blank? %>><a href="<%= @company.website %>" target="_blank" title="Open this company's webpage in a new window"><i class="fa fa-globe"></i> <%= @company.website %></a></span></p>
+  <p><i class="fa fa-map-marker"></i> <%= @company.location %></p>
+  <p><i class="fa fa-user"></i> <%= @company.employees %> Employees</p>
+  <!-- SOCIALS -->
+  <span <%= 'class=disabled' if @company.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
+    <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
+    <% if @company.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
+    data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+    <% end %>
+    ></i></a>
+  </span>
+  <span <%= 'class=disabled' if @company.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
+    <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
+    <% if @company.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
+    data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+    <% end %>
+    ></i></a>
+  </span>
+  <span <%= 'class=disabled' if @company.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
+    <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
+    <% if @company.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
+    data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
+    <% end %>
+    ></i></a>
+  </span>
+</section>
+
+
+<hr class="divider">
+<section class="description-section">
+  <p class="section-header">DESCRIPTION</p>
+  <p><%= @company.bio %></p>
+  <% if @company.date_founded.present? %>
+  <p>Founded: <%= @company.date_founded %></p>
+  <% end %>
+</section>
+
+<hr class="divider">
+<section class="key-people-section">
+  <p class="section-header">KEY PEOPLE</p>
+  <% if @company.key_people.present? %>
+    <% @company.key_people.each do |kp| %>
+      <div class="contact-info">
+        <%= get_rounded_initials_from_name(kp.fullName, "profile-pic") %>
+        <div class="pull-left m-t-sm">
+          <extrastrong class="contact-name"><%= kp.fullName %></extrastrong>
+          <p><%= kp.title %></p>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    None found.
+  <% end %>
+</section>
+<% else %>
+<h3 style="margin:1em;">Unidentified company!</h3>
+<% end %>

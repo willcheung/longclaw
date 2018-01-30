@@ -135,7 +135,8 @@ Longclaw::Application.routes.draw do
       get 'test'
       get 'share'
       get 'account'
-      get 'alerts_tasks'
+      get 'company'
+      # get 'alerts_tasks'
       get 'contacts'
       get 'settings'
       post 'save_settings'
@@ -192,7 +193,8 @@ Longclaw::Application.routes.draw do
   scope "hooks", controller: :hooks, as: 'hooks' do
     post "jira"
     post "zendesk"
-    post 'fullcontact'
+    post 'fullcontact_person'
+    post 'fullcontact_company'
     post 'load_emails_since_yesterday'
     post 'load_events_since_yesterday'
   end
