@@ -24,6 +24,7 @@ Longclaw::Application.routes.draw do
         get "filter" => 'projects#filter_timeline'
         get "more" => 'projects#more_timeline'
         get "network_map"
+        get "/:time/network_map" => 'projects#network_map'
         get "lookup"
         post "refresh"
       end
@@ -146,6 +147,7 @@ Longclaw::Application.routes.draw do
       get 'project_error'
       get 'salesforce'
       post 'create_account'
+      get 'dashboard'
     end
 
     scope "tracking", controller: :tracking, as: 'tracking' do

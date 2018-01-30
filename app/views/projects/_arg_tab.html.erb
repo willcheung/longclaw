@@ -1,5 +1,17 @@
 <% if @data.present? %>
-<div id="force-graph" class="m-l white-bg header-box"></div>
+<div class="m-l white-bg header-box">
+    <div id="force-graph"></div>
+    <div style="padding: 1em 20%;">
+        <span>
+            <input id="LAST_14d" type="button" value="Last 14 days">
+            <input id="LAST_30d" type="button" value="Last 30 days">
+            <input id="LAST_60d" type="button" value="Last 60 days">
+            <input id="LAST_90d" type="button" value="Last 90 days">
+            <input id="LAST_180d" type="button" value="Last 180 days">
+            <input id="ALL_DATES" type="button" value="All">
+        </span>
+    </div>
+</div>
 <div class="panel blank-panel">
     <div class="panel-body">
       <div class="ibox-content">
@@ -55,7 +67,7 @@
               <td title="<%= Time.zone.at(contact.last_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.last_meeting_date.present? %>" data-order="<%= contact.last_meeting_date.to_i %>"><%= Time.zone.at(contact.last_meeting_date).strftime('%b %e') if contact.last_meeting_date.present? %></td>
               <td title="<%= Time.zone.at(contact.next_meeting_date).strftime('%l:%M%p on %B %-d %Y') if contact.next_meeting_date.present? %>" data-order="<%= contact.next_meeting_date.to_i %>"><%= Time.zone.at(contact.next_meeting_date).strftime('%b %e') if contact.next_meeting_date.present? %></td>
               <% @BGINFO_PREV_LEN_MAX = 35 %>
-              <td class="editable-field contact-bg-info-td-<%= contact.id %>"><i class="fa fa-sticky-note-o">&nbsp;</i><%= best_in_place contact, :background_info, :as => 'textarea', :place_holder => "&nbsp;", :display_with => lambda { |v| v.present? && v.respond_to?(:to_s) && v.to_s.length > @BGINFO_PREV_LEN_MAX ? v[0...@BGINFO_PREV_LEN_MAX] + "..." : v }, :activator => '.contact-bg-info-td-'+contact.id %><i class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
+              <td class="editable-field contact-bg-info-td-<%= contact.id %>"><%= best_in_place contact, :background_info, :as => 'textarea', :place_holder => "&nbsp;", :display_with => lambda { |v| v.present? && v.respond_to?(:to_s) && v.to_s.length > @BGINFO_PREV_LEN_MAX ? v[0...@BGINFO_PREV_LEN_MAX] + "..." : v }, :activator => '.contact-bg-info-td-'+contact.id %><i class="fa fa-pencil bip_activator m-l-xs editable-field-activator"></i></td>
             </tr>
           <% end %>
           </tbody>
@@ -213,7 +225,7 @@ $(function () {
         height: 56px;
         border-radius: 56px;
         margin-right: 5px;
-        border: 2px solid <%= get_contextsmith_blue %>;
+        border: 2px solid <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
         font-size: 22px;
         line-height: 47px;
     }
@@ -260,11 +272,17 @@ $(function () {
 
     var lookupURL = '/projects/<%=project_id%>/lookup.json';
     var networkURL = '/projects/<%=project_id%>/network_map.json';  // TODO: may use ".../network_map.json?start_date=12345"
-    // d3.json("lookup.json", function (error, lookup) {
+
+    // Display refresh animation while loading data
+    d3.select("#force-graph").append("div").attr("style", "padding: "+(height/2 - 16)+"px 42%; color: <%=ApplicationHelper::CONTEXTSMITH_BLUE%>").append("i").attr("class", "fa fa-refresh fa-3x fa-spin")
+    d3.select("#force-graph").selectAll("div").append("p").html("Loading data...").attr("style", "display: inline; margin-left: 8px");
+
+    // Initial graph (all dates)
     d3.json(lookupURL, function (error, lookup) {
         if (error) throw error;
         d3.json(networkURL, function (error, links) {
             if (error) throw error;
+            d3.select("#force-graph").selectAll("*").remove(); // clear animation
             var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
             // *** For debug ***
             // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external) + "..." + l; });
@@ -313,7 +331,6 @@ $(function () {
         var getMousePos;
 
         function dragstarted(d){
-            d3.select(this).classed("fixed", d.fixed = false);
             if(d3.select(this).classed("activeNode")){
                 getMousePos = d3.mouse(vis.node());
                 mousePos[0] = getMousePos[0];
@@ -393,7 +410,7 @@ $(function () {
             .style("top", "70px")
             .style("opacity", "0");
 
-        // Tooptip in top right corner
+        // Tooltip in top right corner
         var tooltip = d3.select("#force-graph").append("div")
             .attr("class", "arg-tooltip")
             .style("right", "40px")
@@ -508,7 +525,7 @@ $(function () {
         var color = d3.scale.ordinal()
         // TODO: redo the scale to make dynamic
             .domain(legendValues)
-            .range(colorScale.concat(fillArray("#EFEFEF", domains.length + buyerRoles.length + teams.length - 3)));
+            .range(colorScale.concat(fillArray("#EFEFEF", buyerRoles.length + teams.length)));
 
         // Helper to repeat colors
         function fillArray(value, len) {
@@ -551,11 +568,11 @@ $(function () {
             //    zoomer.translate([20, 0]);
 
                 if (i >= domains.length && i < domains.length + buyerRoles.length)
-                    searchNode("buyer_role", val, this);
+                    filterNode("buyer_role", val, this);
                 else if (i >= domains.length + buyerRoles.length && i < domains.length + buyerRoles.length + teams.length)
-                    searchNode("team", val, this);
+                    filterNode("team", val, this);
                 else
-                    searchNode("domain", val, this);
+                    filterNode("domain", val, this);
             });
 
         // Create the link lines.
@@ -617,13 +634,14 @@ $(function () {
             .on("tick", function(){tick();})
             .start();
 
-        graph
-            .on("mouseleave", function(){
-                force.stop();
-            })
-            // .on("mouseenter", function(){
-            //     force.resume();
-            // });
+        // TODO: Uncomment if performance is bad.
+        // graph
+        //     .on("mouseleave", function(){
+        //         force.stop();
+        //     })
+        //     .on("mouseenter", function(){
+        //         force.resume();
+        //     });
 
         //Create an array logging what is connected to what
         var linkedByIndex = {};
@@ -639,7 +657,7 @@ $(function () {
             return linkedByIndex[a.index + "," + b.index];
         }
 
-        // Change opacity to highlight connected nodes when node is clicked
+        // Change opacity to "highlight" connected nodes when a node is clicked
         function connectedNodes(clickedOn, firstClick, nodeClicked) {
             nodeHighlighted = true;
             d3.selectAll("g.cell").classed("active", false); // Clear filters
@@ -680,8 +698,8 @@ $(function () {
             nameSelected = false;
         }
 
-        // Change opacity to highlight nodes when applying filter
-        function searchNode(searchType, searchVal, gObject) {
+        // Change opacity to "highlight" all relevant nodes when applying filter
+        function filterNode(searchType, searchVal, gObject) {
             nodeHighlighted = false;
             var allNodes = d3.selectAll(".node");
             var notSelectedNodes = allNodes.filter(function (d, i){
@@ -712,10 +730,10 @@ $(function () {
                     .style("fill-opacity", 0.1)
                     .classed("activeNode", false);
                 // selected names
-                d3.selectAll(".node.activeNode + .node-name")
+                d3.selectAll(".node.activeNode").select(function(){ return (this.nextSibling || this.previousSibling); })
                     .style("opacity", 1);
                 // not selected names
-                d3.selectAll(".node:not(.activeNode) + .node-name")
+                d3.selectAll(".node:not(.activeNode)").select(function(){ return (this.nextSibling || this.previousSibling); })
                     .style("opacity", 0.1);
 
                 link.style("stroke-opacity", 0.1);
@@ -763,7 +781,6 @@ $(function () {
             nodeGroup.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
         }
 
-
         resize();
         d3.select(window).on("resize", resize);
 
@@ -779,7 +796,37 @@ $(function () {
             legendContainer.moveToFront();
             tick();
         }
-    }
+    } // function ready(...)
+
+    $("#LAST_14d, #LAST_30d, #LAST_60d, #LAST_90d, #LAST_180d, #ALL_DATES").click(function(){
+        d3.select("#force-graph").selectAll("*").remove(); // clear graph
+
+        // Display refresh animation while loading data
+        d3.select("#force-graph").append("div").attr("style", "padding: "+(height/2 - 16)+"px 42%; color: <%=ApplicationHelper::CONTEXTSMITH_BLUE%>").append("i").attr("class", "fa fa-refresh fa-3x fa-spin")
+        d3.select("#force-graph").selectAll("div").append("p").html("Loading data...").attr("style", "display: inline; margin-left: 8px");
+
+        if (this.id == "ALL_DATES")
+            networkURL = "/projects/<%=project_id%>/network_map.json";
+        else
+            networkURL = "/projects/<%=project_id%>/"+this.id+"/network_map.json";
+        console.log("this.id=" + this.id);
+        console.log("networkURL=" + networkURL);
+
+        var force = d3.layout.force();
+        d3.json(lookupURL, function (error, lookup) {
+            if (error) throw error;
+            d3.json(networkURL, function (error, links) {
+                if (error) throw error;
+                d3.select("#force-graph").selectAll("*").remove(); // clear animation
+                var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
+                // *** For debug ***
+                // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external) + "..." + l; });
+                // links.forEach(function(l){ console.log(" source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
+                ready(lookup, links, metadata);
+            })
+        });
+    });
+
 </script>
 <% else %>
   <div class="p-m m-l white-bg header-box">

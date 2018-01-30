@@ -1,0 +1,138 @@
+<style>
+    *, .gray-bg {
+        background-color: white;
+    }
+</style>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class = "ibox-content">
+        <div class="row">
+            <% if !current_user.superadmin? %>
+                <div>
+                    <h2>Tracking Reports (coming soon)</h2>
+                    <!-- <input type="button" value="Upgrade now!" style="margin: 0 45%;">
+                    <img src="/assets/images/extension-dash-example.jpg" title="Dashboard Sample (screenshot)" style="width:75%; height:75%; margin: 0 12%; display:block;">
+                    <input type="button" value="Start 14 Day Free Trial!" style="margin: 0 42.5%;"> -->
+                </div>
+            <% else %>
+                <div>
+                    <h2>Tracking Reports</h2>
+                    <!-- Daily trend (last month, sent and opens) -->
+                    <div id="activity-container" style="min-width: 400px; height: 450px; margin: 0 auto"></div>
+
+                    <!-- Day of the Week and Hourly trend (last month, opens) -->
+                    <div id="punchcard-container" style="min-width: 800px; height: 450px; margin: 0 auto"></div>
+                </div>
+            <% end %>
+        </div>
+    </div>
+</div
+
+
+<% if current_user.superadmin? %>
+
+<%= javascript_include_tag "https://code.highcharts.com/highcharts.js" %>
+<%= javascript_include_tag "https://code.highcharts.com/stock/highstock.js" %>
+<%= javascript_include_tag "https://code.highcharts.com/highcharts-more.js" %>
+<%= javascript_include_tag "https://code.highcharts.com/modules/exporting.js" %>
+
+<script>
+    Highcharts.chart('activity-container', {
+        chart: {
+            type: 'areaspline'
+        },
+        title: {
+            text: 'Total Messages Sent/opened (past month)'
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'left',
+            verticalAlign: 'top',
+            x: 50,
+            y: 20,
+            floating: true,
+            borderWidth: 1,
+            backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+        },
+        xAxis: {
+            //type: 'datetime',
+            categories: <%= @event_dates.to_json.html_safe %>,
+            tickInterval: 2
+        },
+        yAxis: [{
+            title: {
+                text: 'Total Messages'
+            },
+            minTickInterval: 1
+        }],
+        tooltip: {
+            //xDateFormat: '%b %e',
+            shared: true
+        },
+        credits: {
+            enabled: false
+        },
+        plotOptions: {
+            areaspline: {
+                fillOpacity: 0.5
+            }
+        },
+        series: [{
+            color: '#1ab394',
+            name: 'Sent',
+            data: <%= @emails_sent_lastmonth.to_json.html_safe %>
+        },{
+            color: '<%= ApplicationHelper::CONTEXTSMITH_BLUE %>',
+            name: 'Opened',
+            yAxis: 0,
+            data: <%= @emails_opened_lastmonth.to_json.html_safe %>
+        }]
+    });
+
+    var HOUROFDAY = ["12a", "1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12p", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p"];
+    var DAYOFWEEK = ['Sun', 'Mon', 'Tue', 'Wed', "Thu", "Fri", "Sat"];
+    Highcharts.chart('punchcard-container', {
+        chart: {
+            type: 'bubble',
+            zoomType: 'xy'
+        },
+
+        title: {
+            text: 'Total Messages Opened by Day of the Week, Hour (past month)'
+        },
+        xAxis: {
+            title: {
+                text: 'Hour of Day'
+            },
+            min: 0,
+            categories: HOUROFDAY
+        },
+        yAxis: {
+            title: {
+                text: 'Day of the Week'
+            },
+            min: 0,
+            categories: DAYOFWEEK,
+            //reversed: true
+        },
+        plotOptions: {
+            bubble: {
+                minSize: 2,
+                maxSize: 40
+            }
+        },
+        tooltip: {
+            headerFormat:  '',
+            pointFormatter: function() {
+                return DAYOFWEEK[this.y] + ' ' + this.category + '<br><span style="color: ' + this.color + ';">\u25CF</span> ' + this.series.name + ': <b>' + this.z + '</b>' ;
+            }
+        },
+        series: [{
+            color: '<%= ApplicationHelper::CONTEXTSMITH_BLUE %>',
+            name: 'Opened',
+            data: <%= @emails_daily_hourly_opened_lastmonth.to_json.html_safe %>
+        }]
+    });
+</script>
+
+<% end # if current_user.superadmin? %>

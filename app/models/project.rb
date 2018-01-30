@@ -323,11 +323,25 @@ class Project < ActiveRecord::Base
   end
 
   # query to generate Account Relationship Graph from DB entries
-  def network_map
+  def network_map(start_day=nil, end_day=nil, time_zone="UTC")
+    if start_day
+      if end_day
+        conversation_date_pred = "AND (messages ->> 'sentDate')::integer BETWEEN #{start_day.to_i} AND #{end_day.to_i}"
+        meeting_date_pred = "AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') BETWEEN #{start_day.to_i} AND #{end_day.to_i}"
+      else
+        conversation_date_pred = "AND (messages ->> 'sentDate')::integer >= #{start_day.to_i}"
+        meeting_date_pred = "AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') >= #{start_day.to_i}"
+      end
+    elsif end_day
+      conversation_date_pred = "AND (messages ->> 'sentDate')::integer <= #{end_day.to_i}"
+      meeting_date_pred = "AND EXTRACT(EPOCH FROM last_sent_date AT TIME ZONE 'UTC' AT TIME ZONE '#{time_zone}') <= #{end_day.to_i}"
+    end
+
     query = <<-SQL
-      WITH email_activities AS
+      WITH email_and_meeting_activities AS
         (
-          SELECT messages ->> 'messageId'::text AS message_id,
+          SELECT category,
+                 messages ->> 'messageId'::text AS message_id,
                  jsonb_array_elements(messages -> 'from') ->> 'address' AS from,
                  CASE
                    WHEN messages -> 'to' IS NULL THEN NULL
@@ -339,23 +353,40 @@ class Project < ActiveRecord::Base
                  END AS cc
           FROM activities,
           LATERAL jsonb_array_elements(email_messages) messages
-          WHERE category IN ('#{Activity::CATEGORY[:Conversation]}','#{Activity::CATEGORY[:Meeting]}')
+          WHERE category = '#{Activity::CATEGORY[:Conversation]}'
           AND project_id = '#{self.id}'
-          GROUP BY 1,2,3,4
+          #{conversation_date_pred}
+          GROUP BY 1,2,3,4,5
+          UNION ALL
+          SELECT category,
+                 backend_id AS message_id,
+                 jsonb_array_elements("from") ->> 'address' AS from,
+                 jsonb_array_elements("to") ->> 'address' AS to,
+                 CASE  
+                    WHEN jsonb_array_length(cc) = 0 THEN NULL
+                    ELSE jsonb_array_elements(cc) ->> 'address' 
+                 END AS cc
+          FROM activities
+          WHERE category = '#{Activity::CATEGORY[:Meeting]}'
+          AND project_id = '#{self.id}'
+          #{meeting_date_pred}
+          GROUP BY 1,2,3,4,5
         )
       SELECT "from" AS source,
              "to" AS target,
              COUNT(DISTINCT message_id) AS count
       FROM
         (SELECT "from", "to", message_id
-          FROM email_activities
+          FROM email_and_meeting_activities
+          WHERE "from" <> "to"
           UNION ALL
           SELECT "from", cc AS "to", message_id
-          FROM email_activities) t
+          FROM email_and_meeting_activities
+          WHERE "from" <> cc) t
       WHERE "to" IS NOT NULL
       GROUP BY 1,2;
     SQL
-    result = Activity.find_by_sql(query)
+    result = Activity.find_by_sql(query).select{|r| valid_domain?(get_domain(r.source)) && valid_domain?(get_domain(r.target))}  # Note: this will also filter out any addresses in the result that contain domains too general to match to an account, e.g., @gmail.com, @hotmail.com, @yahoo.com
   end
 
   def arg_lookup
@@ -363,7 +394,7 @@ class Project < ActiveRecord::Base
     meetings = self.meetings
     members = self.project_members_all
       .joins('LEFT JOIN users ON users.id = project_members.user_id LEFT JOIN contacts ON contacts.id = project_members.contact_id')
-      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, users.image_url AS profile_img_url, project_members.status, project_members.buyer_role, users.department AS team, users.id IS NULL AS is_external')
+      .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, users.image_url AS profile_img_url, project_members.status, project_members.buyer_role, users.department AS team, users.id IS NULL AS is_external').where("users.email IS NOT NULL OR contacts.email IS NOT NULL")
       .where(status: [ProjectMember::STATUS[:Confirmed], ProjectMember::STATUS[:Pending]])
 
     members.map do |m|
