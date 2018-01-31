@@ -1,16 +1,14 @@
 <% if @data.present? %>
 <div class="m-l white-bg header-box">
     <div id="force-graph"></div>
-    <div style="padding: 1em 20%;">
-        <span>
-            <input id="LAST_14d" type="button" value="Last 14 days">
-            <input id="LAST_30d" type="button" value="Last 30 days">
-            <input id="LAST_60d" type="button" value="Last 60 days">
-            <input id="LAST_90d" type="button" value="Last 90 days">
-            <input id="LAST_180d" type="button" value="Last 180 days">
-            <input id="ALL_DATES" type="button" value="All">
-        </span>
-    </div>
+    <span style="display: block; width: 50%; margin: 0 auto; padding: 10px;">
+        <input id="LAST_14d" type="button" value="Last 14 days">
+        <input id="LAST_30d" type="button" value="Last 30 days">
+        <input id="LAST_60d" type="button" value="Last 60 days">
+        <input id="LAST_90d" type="button" value="Last 90 days">
+        <input id="LAST_180d" type="button" value="Last 180 days">
+        <input id="ALL_DATES" type="button" value="All" class="selected">
+    </span>
 </div>
 <div class="panel blank-panel">
     <div class="panel-body">
@@ -228,6 +226,11 @@ $(function () {
         border: 2px solid <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
         font-size: 22px;
         line-height: 47px;
+    }
+    input.selected {
+        color: white;
+        background: linear-gradient(to bottom, <%= ApplicationHelper::CONTEXTSMITH_BLUE %>,<%= ApplicationHelper::CONTEXTSMITH_DARKBLUE %>);
+        border: 2px solid <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
     }
 </style>
 <script type="text/javascript">
@@ -799,6 +802,9 @@ $(function () {
     } // function ready(...)
 
     $("#LAST_14d, #LAST_30d, #LAST_60d, #LAST_90d, #LAST_180d, #ALL_DATES").click(function(){
+        $("#LAST_14d, #LAST_30d, #LAST_60d, #LAST_90d, #LAST_180d, #ALL_DATES").attr("class", "");
+        $("#"+this.id).attr("class", "selected");
+        $("#"+this.id).blur();
         d3.select("#force-graph").selectAll("*").remove(); // clear graph
 
         // Display refresh animation while loading data
@@ -809,8 +815,6 @@ $(function () {
             networkURL = "/projects/<%=project_id%>/network_map.json";
         else
             networkURL = "/projects/<%=project_id%>/"+this.id+"/network_map.json";
-        console.log("this.id=" + this.id);
-        console.log("networkURL=" + networkURL);
 
         var force = d3.layout.force();
         d3.json(lookupURL, function (error, lookup) {

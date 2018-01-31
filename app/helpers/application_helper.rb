@@ -1,6 +1,7 @@
 module ApplicationHelper
   include Utils
-  CONTEXTSMITH_BLUE = "#7cb5ec".freeze  # "CS blue" / light blue
+  CONTEXTSMITH_BLUE = "#7cb5ec".freeze      # (lighter) standard blue
+  CONTEXTSMITH_DARKBLUE = "#3c8dc5".freeze  # darker blue
 
   def is_active_controller(controller_name)
     params[:controller] == controller_name ? "active" : nil
