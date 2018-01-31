@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180116222940) do
+ActiveRecord::Schema.define(version: 20180123235214) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -112,6 +112,16 @@ ActiveRecord::Schema.define(version: 20180116222940) do
   add_index "comments", ["commentable_id"], name: "index_comments_on_commentable_id", using: :btree
   add_index "comments", ["commentable_type"], name: "index_comments_on_commentable_type", using: :btree
   add_index "comments", ["user_id"], name: "index_comments_on_user_id", using: :btree
+
+  create_table "company_profiles", force: :cascade do |t|
+    t.string   "domain",     default: "", null: false
+    t.datetime "expires_at"
+    t.jsonb    "data"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+  end
+
+  add_index "company_profiles", ["domain"], name: "index_company_profiles_on_domain", using: :btree
 
   create_table "contacts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.uuid     "account_id"
@@ -377,6 +387,7 @@ ActiveRecord::Schema.define(version: 20180116222940) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -386,7 +397,6 @@ ActiveRecord::Schema.define(version: 20180116222940) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
-    t.decimal  "amount",                    precision: 14, scale: 2
     t.string   "forecast_category_name"
     t.string   "owner_id"
   end

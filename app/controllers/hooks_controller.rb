@@ -59,7 +59,7 @@ class HooksController < ApplicationController
     render nothing: true
   end
 
-  def fullcontact
+  def fullcontact_person
     data = Hashie::Mash.new(JSON.parse(request.body.read))
     data.webhookId = JSON.parse(data.webhookId)
     profile = Profile.find_by_id(data.webhookId.id) || Profile.find_by_email(data.webhookId.email)
@@ -67,6 +67,33 @@ class HooksController < ApplicationController
       profile.update(data: data.result)
     else
       puts "** Caution: FullContact webhook tried to update a Profile with id=#{data.webhookId.id} or email=#{data.webhookId.email}, but it could not be found! **"
+    end
+
+    render nothing: true
+  end
+
+  def fullcontact_company_v2
+    data = Hashie::Mash.new(JSON.parse(request.body.read))
+    data.webhookId = JSON.parse(data.webhookId)
+    company = CompanyProfile.find_by_id(data.webhookId.id) || CompanyProfile.find_by_domain(data.webhookId.domain)
+    if company.present?
+      company.update(data: data.result)
+    else
+      puts "** Caution: FullContact webhook tried to update a CompanyProfile with id=#{data.webhookId.id} or domain=#{data.webhookId.domain}, but it could not be found! **"
+    end
+
+    render nothing: true
+  end
+
+  def fullcontact_company_v3
+    data = Hashie::Mash.new(JSON.parse(request.body.read))
+    # data.webhookId = JSON.parse(data.webhookId)
+    company = CompanyProfile.find_by_id(params['id']) || CompanyProfile.find_by_domain(params['domain'])
+    if company.present?
+      data.result.status = 200 unless data.result.status?
+      company.update(data: data.result)
+    else
+      puts "** Caution: FullContact webhook tried to update a CompanyProfile with id=#{params['id']} or domain=#{params['domain']}, but it could not be found! **"
     end
 
     render nothing: true
@@ -83,5 +110,7 @@ class HooksController < ApplicationController
 
     render nothing: true
   end
+
+  alias_method :fullcontact_company, :fullcontact_company_v3
 
 end
