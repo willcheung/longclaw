@@ -20,9 +20,9 @@
 #
 
 class Note < ActiveRecord::Base
-	belongs_to :noteable, polymorphic: true, foreign_key: "noteable_uuid"
+  belongs_to :noteable, polymorphic: true, foreign_key: "noteable_uuid"
 
   default_scope -> { order('created_at ASC') }
 
-	belongs_to :user, foreign_key: "user_uuid"
+  belongs_to :user, foreign_key: "user_uuid"
 end

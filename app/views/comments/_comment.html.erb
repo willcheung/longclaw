@@ -7,11 +7,11 @@
     <%= best_in_place_if c.user == current_user, c, :comment, :as => 'textarea', :place_holder => '(Add text)', :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#comm-#{c.id}-activator" %>
 		<div class="m-t-xs">
 			<small class="text-muted"><%= time_ago_in_words(c.created_at) %> ago</small>
-			<span class="pull-right" style="margin-right: 1em;">
-            <!-- <% if c.user == current_user %>
-                <%= best_in_place_if c.user == current_user, c, :is_public, as: :checkbox, collection: {false: "<span class='eye-slash' title='Click to set to Public'><i class='fa fa-eye-slash'></i>&nbsp;Private</span>".html_safe, true: "<span class='eye' title='Click to set to Private'><i class='fa fa-eye'></i>&nbsp;Public</span>".html_safe} %>
-            <% end %> -->
-			</span>
+      <span class="pull-right" style="margin-right: 1em;">
+        <!-- <% if c.user == current_user %>
+            <%= best_in_place_if c.user == current_user, c, :is_public, as: :checkbox, collection: {false: "<span class='eye-slash' title='Click to set to Public'><i class='fa fa-eye-slash'></i>&nbsp;Private</span>".html_safe, true: "<span class='eye' title='Click to set to Private'><i class='fa fa-eye'></i>&nbsp;Public</span>".html_safe} %>
+        <% end %> -->
+      </span>
 		</div>
 	</div>
 <% if (c.user == current_user) %>

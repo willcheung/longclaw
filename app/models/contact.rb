@@ -38,7 +38,7 @@ class Contact < ActiveRecord::Base
   has_many   :projects, through: "project_members"
   has_many   :visible_projects, -> { is_active.is_confirmed }, through: "project_members", source: :project
   has_many   :projects_all, through: "project_members_all", source: :project
-  has_many   :notes, as: :noteable, foreign_key: "noteable_uuid", dependent: :destroy # functions as "acts_as_commentable"
+  has_many   :notes, as: :noteable, foreign_key: "noteable_uuid", dependent: :destroy
 
 	validates :email, presence: true, uniqueness: { scope: :account, message: "There's already a contact with the same email." }
   validates_format_of :email,:with => Devise::email_regexp

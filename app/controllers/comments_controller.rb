@@ -72,11 +72,11 @@ class CommentsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_comment
       @comment = Comment.find(params[:id])
-      @comment = nil unless @comment.commentable.project.account.organization == current_user.organization
+      # @comment = nil unless @comment.commentable.project.account.organization == current_user.organization
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def comment_params
-      params.require(:comment).permit(:comment, :user_id, :commentable_type, :commentable_id, :title, :commentable_uuid, :is_public)
+      params.require(:comment).permit(:comment, :user_id, :commentable_type, :commentable_id, :title, :is_public)
     end
 end
