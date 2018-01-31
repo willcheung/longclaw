@@ -147,7 +147,26 @@ class ExtensionController < ApplicationController
 
   def company
     @SOCIAL_BIO_TEXT_LENGTH_MAX = 192
-    @company = CompanyProfile.find_or_create_by_domain(@account.domain) if @account.present?
+    # puts '***********', @account.present?
+    # puts @account.domain.present? if @account.present?
+    # puts @account.domain if @account.present?
+    # puts @project.present?
+    # puts @project.name if @project.present?
+    # p @params
+    # use account domain as company domain
+    domain = if @account.present? && @account.domain.present?
+               @account.domain
+             # get the most frequent external domain out of email people to use as company domain
+             elsif @params[:external].present?
+               external_emails = @params[:external].map { |person| URI.unescape(person.second, '%2E') }
+               freq_domain_email = external_emails.group_by { |email| get_domain(email) }.values.max_by(&:size).first
+               get_domain(freq_domain_email)
+             # if no external people, use internal domain
+             elsif @params[:internal].present?
+               current_user.organization.domain
+             end
+    @company = CompanyProfile.find_or_create_by_domain(domain) if domain
+    # @company = CompanyProfile.find_or_create_by_domain(@account.domain) if @account.present? && @account.domain.present?
   end
 
   # def alerts_tasks
@@ -398,7 +417,7 @@ class ExtensionController < ApplicationController
         accounts = Account.where(domain: domains, organization: current_user.organization).order(order_domain_frequency)
         # If no accounts are found that match our external email domains at this point stop (don't create a new account)
         return if accounts.blank?
-          
+
         @account = accounts.first
       end # end: if contacts.blank?
     end
