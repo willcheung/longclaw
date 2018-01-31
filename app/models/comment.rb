@@ -11,6 +11,7 @@
 #  role             :string           default("comments")
 #  created_at       :datetime
 #  updated_at       :datetime
+#  is_public        :boolean          default(TRUE)
 #
 # Indexes
 #

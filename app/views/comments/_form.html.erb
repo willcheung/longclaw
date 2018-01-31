@@ -1,9 +1,23 @@
-<%= simple_form_for([activity, activity.comments.new], remote: true) do |f| %>
+<%= simple_form_for([activity, activity.comments.new(is_public: true)], remote: true) do |f| %>
   <div class="form-inputs">
-	  <%= f.input :comment, as: 'text', label: false, input_html: {style: 'resize:none;border:none;overflow:hidden;', :rows => 3, :data => "autoresize"}, wrapper_html: { style: 'margin-bottom:5px;' }, :placeholder => 'Write a comment...' %>
+        <%= f.input :comment, as: 'text', label: false, input_html: {style: 'resize:none;border:none;overflow:hidden;', :rows => 3, :data => "autoresize"}, wrapper_html: { style: 'margin-bottom:5px;' }, :placeholder => 'Write a comment...' %>
   </div>
 
-  <div class="form-actions">
-    <%= f.button :submit, "Comment", class: "btn btn-xs btn-primary" %>
+  <div class="form-actions pull-right">
+    <!-- <div style="display: inline; padding-right: 1em;">
+        <%= f.radio_button :is_public, false, :checked => true, :id => "comment_"+activity.id.to_s+"_is_public" %>&nbsp;&nbsp;
+        <%= f.label :is_public, "<i class='fa fa-eye-slash' title='Private'></i>".html_safe, :for => "comment_"+activity.id.to_s+"_is_public" %>&nbsp;&nbsp;
+        <%= f.radio_button :is_public, true, :id => "comment_"+activity.id.to_s+"_is_private"  %>&nbsp;&nbsp;
+        <%= f.label :is_public, "<i class='fa fa-eye' title='Public'></i>".html_safe, :for => "comment_"+activity.id.to_s+"_is_private" %>&nbsp;&nbsp;
+    </div> -->
+    <%= f.button :submit, "Comment", class: "btn btn-xs btn-primary pull-right" %>
   </div>
 <% end %>
+<style>
+  i.fa-eye {
+    color: <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
+  }
+  i.fa-eye-slash {
+    color: red;
+  }
+</style>
