@@ -1,12 +1,18 @@
 <div class="social-comment row <%= c.id.to_s + c.role %>">
-	
 	<div class="col-sm-2">
 		<%= get_profile_pic(get_full_name(c.user), c.user.email, "pull-left m-r-sm") %>
 		<div style="margin-top:10px"><%=get_full_name(c.user)%></div>
 	</div>
 	<div class="col-sm-9">
     <%= best_in_place_if c.user == current_user, c, :comment, :as => 'textarea', :place_holder => '(Add text)', :display_with => :simple_format, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#comm-#{c.id}-activator" %>
-		<div class="m-t-xs"><small class="text-muted"><%= time_ago_in_words(c.created_at) %> ago</small></div>
+		<div class="m-t-xs">
+			<small class="text-muted"><%= time_ago_in_words(c.created_at) %> ago</small>
+      <span class="pull-right" style="margin-right: 1em;">
+        <!-- <% if c.user == current_user %>
+            <%= best_in_place_if c.user == current_user, c, :is_public, as: :checkbox, collection: {false: "<span class='eye-slash' title='Click to set to Public'><i class='fa fa-eye-slash'></i>&nbsp;Private</span>".html_safe, true: "<span class='eye' title='Click to set to Private'><i class='fa fa-eye'></i>&nbsp;Public</span>".html_safe} %>
+        <% end %> -->
+      </span>
+		</div>
 	</div>
 <% if (c.user == current_user) %>
   <div class="col-sm-1 m-t-xs delete-comment">
@@ -15,4 +21,3 @@
   </div>
 <% end %>
 </div>
-

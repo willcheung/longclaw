@@ -1,5 +1,5 @@
 class CommentsController < ApplicationController
-  before_action :set_comment, only: [:show, :edit, :update, :destroy]
+  before_action :set_comment, only: [:edit, :update, :destroy]
 
   # GET /comments
   # GET /comments.json
@@ -27,7 +27,7 @@ class CommentsController < ApplicationController
   	if params[:activity_id]
   		@activity = Activity.find_by_id(params[:activity_id])
   		@comment = @activity.comments.new(comment_params.merge(:user_id => current_user.id))
-  	end
+    end
 
     respond_to do |format|
       if @comment.save
@@ -72,10 +72,11 @@ class CommentsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_comment
       @comment = Comment.find(params[:id])
+      # @comment = nil unless @comment.commentable.project.account.organization == current_user.organization
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def comment_params
-      params.require(:comment).permit(:comment, :user_id, :commentable_type, :commentable_id, :title)
+      params.require(:comment).permit(:comment, :user_id, :commentable_type, :commentable_id, :title, :is_public)
     end
 end

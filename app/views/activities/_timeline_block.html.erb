@@ -105,7 +105,7 @@
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
                       true: raw('<a>Mark Private</a>')
                     }  %>
-                    &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                    &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                   <% unless params[:action] == "daily_summary" %>
                     &sdot; <a class="tasks-link-<%= a.id %>" <%= "style=color:red;font-weight:bold" if has_open_alerts %> >Alerts (<span id="tasks-count-<%= a.id %>"><%= a.notifications.size %></span>)
                       </a>
@@ -137,7 +137,7 @@
               <%= best_in_place_if a.user == current_user, a, :note, :as => 'textarea', :place_holder => rag_note(a['rag_score']), :display_as => :note_for_display, :inner_class => 'col-sm-12', :ok_button => 'Ok', :ok_button_class => 'btn btn-primary btn-xs', :cancel_button => 'Cancel', :cancel_button_class => 'btn btn-secondary btn-xs', :activator => "#note-#{a.id}-activator" %>
                 <div class="action-links">
                     <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
-                     &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                     &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                 </div>
             </div>
 
@@ -166,7 +166,7 @@
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
                       true: raw('<a>Mark Private</a>')
                     }  %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                 </div>
             </div> <!-- chat discussion -->
 
@@ -198,7 +198,7 @@
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
                       true: raw('<a>Mark Private</a>')
                     }  %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                   <% if @salesforce_base_URL.present? %>&sdot; <a href="<%= @salesforce_base_URL + "/" + a.backend_id %>" target="_blank">View in Salesforce <i class="fa fa-external-link"></i></a><% end %>
                 </div>
             </div> <!-- chat discussion -->
@@ -251,7 +251,7 @@
                   <div class="action-links">
                         <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
                       
-                        &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                        &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                         &sdot; <a href="<%=a.email_messages.first.html_url%>" target="_blank">View in BaseCamp 2 <i class="fa fa-external-link"></i></a>
                   </div><!-- action-links -->
             </div> <!-- chat discussion -->
@@ -298,7 +298,7 @@
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
                       true: raw('<a>Mark Private</a>')
                     }  %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                   &sdot; <a href="<%= a.email_messages.first.issue.self.sub(/(?<=atlassian\.net\/).*/, "browse/" + a.email_messages.first.issue['key']) %>" target="_blank">View in JIRA <i class="fa fa-external-link"></i></a>
                 </div>
             </div>
@@ -344,7 +344,7 @@
                       false: raw('<strong><a><i class="fa fa-lock"></i> Private</a></strong>'),
                       true: raw('<a>Mark Private</a>')
                     }  %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                   &sdot; <a href="<%= a.email_messages.first.link %>" target="_blank">View in Zendesk <i class="fa fa-external-link"></i></a>
                 </div>
             </div>
@@ -366,7 +366,7 @@
 
                 <div class="action-links">
                   <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                 </div>
             </div>
 
@@ -378,7 +378,7 @@
 
                 <div class="action-links">
                   <%= best_in_place a, :is_pinned, :as => 'checkbox', :data => {:activity => a}, collection: {false: raw("<a id=\"pin-link\">Mark as Key Activity</a>"), true: raw("<strong><a id=\"pin-link\"><i class=\"fa fa-star\"></i> Key Activity</a></strong>")}, :class => 'pin' %>
-                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.size %>)</a>
+                  &sdot; <a class="comment-link-<%= a.id %>">Comments (<%= a.comments.select{|c| c.is_public || c.user == current_user}.size %>)</a>
                 </div>
             </div>
 
@@ -387,7 +387,7 @@
         <div class="content-footer footer-<%= a.id %>" style="display: none;">
 
             <% a.comments.each do |c| %>
-                <% if !(c.nil? or c.user.nil?) %>
+                <% unless (c.nil? || c.user.nil? || (!c.is_public && c.user != current_user)) %>
                     <%= render "comments/comment", :c => c %>
                 <% end %>
             <% end %>
