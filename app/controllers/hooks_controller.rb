@@ -93,7 +93,7 @@ class HooksController < ApplicationController
       data.result.status = 200 unless data.result.status?
       company.update(data: data.result)
     else
-      puts "** Caution: FullContact webhook tried to update a CompanyProfile with id=#{} or domain=#{}, but it could not be found! **"
+      puts "** Caution: FullContact webhook tried to update a CompanyProfile with id=#{params['id']} or domain=#{params['domain']}, but it could not be found! **"
     end
 
     render nothing: true

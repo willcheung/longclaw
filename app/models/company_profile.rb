@@ -60,26 +60,21 @@ class CompanyProfile < ActiveRecord::Base
   end
 
   def key_people
-    data.details.keyPeople if data_is_valid? && data.details?
+    data.details_.keyPeople if data_is_valid?
   end
 
   def website
-    data.website || (data.details.urls.first.value if data.details?) if data_is_valid?
+    data.website || (data.details.urls.first.value if data.details_.urls.present? && data.details.urls.first.present?) if data_is_valid?
   end
 
   def social_url(social_type)
     social_type = get_FullContact_social_profile_type(social_type)
     data.send(social_type) if data_is_valid?
-    # sp = data.social_profiles.find{ |sp| sp.type_id.downcase == social_type } if social_type.present? && data_is_valid? && data.social_profiles.present?
-    # URI.encode(sp.url) if sp.present? && sp.url.present?
   end
 
   def social_bio(social_type)
     social_type = get_FullContact_social_profile_type(social_type, true)
-    if data_is_valid?
-      social_profile = data.details.profiles.send(social_type)
-      social_profile.bio if social_profile
-    end
+    data.details_.profiles_.send("#{social_type}_").bio
   end
 
   private
