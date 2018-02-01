@@ -89,7 +89,7 @@ class Activity < ActiveRecord::Base
   scope :from_lastweek, -> { where last_sent_date: 1.week.ago.midnight..Time.current.yesterday.end_of_day }
   scope :next_week, -> { where last_sent_date: Time.current..1.week.from_now.midnight }
   scope :reverse_chronological, -> { order last_sent_date: :desc }
-  scope :visible_to, -> (user_email) { where "is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
+  scope :visible_to, -> (user_email) { where "activities.is_public IS TRUE OR \"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{user_email}\"}]'::jsonb" }
   scope :latest_rag_score, -> { notes.where.not( rag_score: nil) }
 
   acts_as_commentable

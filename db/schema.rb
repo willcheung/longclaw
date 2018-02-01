@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180123235214) do
+ActiveRecord::Schema.define(version: 20180131001302) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -107,6 +107,7 @@ ActiveRecord::Schema.define(version: 20180123235214) do
     t.string   "role",                        default: "comments"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "is_public",                   default: true
   end
 
   add_index "comments", ["commentable_id"], name: "index_comments_on_commentable_id", using: :btree
@@ -227,6 +228,21 @@ ActiveRecord::Schema.define(version: 20180123235214) do
   end
 
   add_index "integrations", ["oauth_user_id"], name: "index_integrations_on_oauth_user_id", using: :btree
+
+  create_table "notes", force: :cascade do |t|
+    t.string   "title",         limit: 50, default: ""
+    t.text     "note",                                     null: false
+    t.string   "noteable_type",                            null: false
+    t.uuid     "noteable_uuid",                            null: false
+    t.uuid     "user_uuid",                                null: false
+    t.boolean  "is_public",                default: false
+    t.datetime "created_at",                               null: false
+    t.datetime "updated_at",                               null: false
+  end
+
+  add_index "notes", ["noteable_type"], name: "index_notes_on_noteable_type", using: :btree
+  add_index "notes", ["noteable_uuid"], name: "index_notes_on_noteable_uuid", using: :btree
+  add_index "notes", ["user_uuid"], name: "index_notes_on_user_uuid", using: :btree
 
   create_table "notifications", force: :cascade do |t|
     t.string   "category",          default: "To-do", null: false
@@ -387,7 +403,6 @@ ActiveRecord::Schema.define(version: 20180123235214) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
-    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -397,6 +412,7 @@ ActiveRecord::Schema.define(version: 20180123235214) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.string   "forecast_category_name"
     t.string   "owner_id"
   end

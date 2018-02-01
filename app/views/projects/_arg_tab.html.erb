@@ -1,15 +1,18 @@
 <% if @data.present? %>
 <div class="m-l white-bg header-box">
     <div id="force-graph"></div>
-    <span style="display: block; width: 50%; margin: 0 auto; padding: 10px;">
-        <input id="LAST_14d" type="button" value="Last 14 days">
-        <input id="LAST_30d" type="button" value="Last 30 days">
-        <input id="LAST_60d" type="button" value="Last 60 days">
-        <input id="LAST_90d" type="button" value="Last 90 days">
-        <input id="LAST_180d" type="button" value="Last 180 days">
-        <input id="ALL_DATES" type="button" value="All" class="selected">
-    </span>
+    <div style="height: 3em; position: relative">
+        <div style="margin: 0; position: absolute; top: 30%; left: 50%; margin-right: -50%; transform: translate(-50%, -50%)">
+            <input id="LAST_14d" type="button" value="Last 14 days">
+            <input id="LAST_30d" type="button" value="Last 30 days">
+            <input id="LAST_60d" type="button" value="Last 60 days">
+            <input id="LAST_90d" type="button" value="Last 90 days">
+            <input id="LAST_180d" type="button" value="Last 180 days">
+            <input id="ALL_DATES" type="button" value="All" class="selected">
+        </div>
+    </div>
 </div>
+
 <div class="panel blank-panel">
     <div class="panel-body">
       <div class="ibox-content">

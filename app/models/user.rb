@@ -64,7 +64,8 @@ class User < ActiveRecord::Base
   has_many    :events
   has_many    :tracking_requests, dependent: :destroy
   has_one     :tracking_setting, dependent: :destroy
-
+  has_many    :comments, dependent: :destroy
+  has_many    :notes, foreign_key: "user_uuid", dependent: :destroy
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column

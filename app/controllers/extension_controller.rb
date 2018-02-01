@@ -163,9 +163,9 @@ class ExtensionController < ApplicationController
                get_domain(freq_domain_email)
              # if no external people, use internal domain
              elsif @params[:internal].present?
-               current_user.organization.domain
+               get_domain(current_user.email) # don't use organization.domain, could be a gmail user
              end
-    @company = CompanyProfile.find_or_create_by_domain(domain) if domain
+    @company = CompanyProfile.find_or_create_by_domain(domain) if domain && valid_domain?(domain)
     # @company = CompanyProfile.find_or_create_by_domain(@account.domain) if @account.present? && @account.domain.present?
   end
 
