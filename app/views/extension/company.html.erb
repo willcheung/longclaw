@@ -25,13 +25,20 @@
     font-size: 22px;
     line-height: 47px;
   }
+
+  .contact-block {
+    display: flex;
+  }
+
   .contact-info {
     font-size: 12px;
     color: #999;
     font-weight: normal;
     overflow-wrap: break-word;
     word-break: break-all;
-    height: 60px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
   }
 
   .contact-name {
@@ -41,8 +48,6 @@
   .section-header {
     font-size: 14px;
     font-weight: bold;
-    /*color: black;*/
-    /*padding: 1em 0;*/
   }
 
   hr.divider {
@@ -104,11 +109,10 @@
   <p class="section-header">KEY PEOPLE</p>
   <% if @company.key_people.present? %>
     <% @company.key_people.each do |kp| %>
-      <div class="contact-info">
+      <div class="contact-block">
         <%= get_rounded_initials_from_name(kp.fullName, "profile-pic") %>
-        <div class="pull-left m-t-sm">
-          <extrastrong class="contact-name"><%= kp.fullName %></extrastrong>
-          <p><%= kp.title %></p>
+        <div class="contact-info">
+          <span><strong class="contact-name"><%= kp.fullName %></strong><br><%= kp.title %></span>
         </div>
       </div>
     <% end %>
