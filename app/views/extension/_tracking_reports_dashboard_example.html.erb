@@ -14,13 +14,13 @@
         $('#activity-container').highcharts().addSeries({
             color: '#1ab394',
             name: 'Sent',
-            data: <%= @emails_sent_lastmonth.to_json.html_safe %>
+            data: []
         });
         $('#activity-container').highcharts().addSeries({
             color: '<%= ApplicationHelper::CONTEXTSMITH_BLUE %>',
             name: 'Opened',
             yAxis: 0,
-            data: <%= @emails_opened_lastmonth.to_json.html_safe %>
+            data: []
         });
 
         $('#punchcard-container').highcharts().addSeries({
@@ -32,12 +32,12 @@
             // },
             color: "#1ab394",
             name: 'Sent',
-            data: <%= @emails_daily_hourly_sent_lastmonth.to_json.html_safe %>
+            data: []
         });
         $('#punchcard-container').highcharts().addSeries({
             color: '<%= ApplicationHelper::CONTEXTSMITH_BLUE %>',
             name: 'Opened',
-            data: <%= @emails_daily_hourly_opened_lastmonth.to_json.html_safe %>
+            data: []
         });
     });
 </script>
