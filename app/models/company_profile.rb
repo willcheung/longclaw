@@ -59,6 +59,10 @@ class CompanyProfile < ActiveRecord::Base
     data.founded if data_is_valid?
   end
 
+  def logo
+    data.logo if data_is_valid?
+  end
+
   def key_people
     data.details_.keyPeople if data_is_valid?
   end
