@@ -611,7 +611,7 @@ $(function () {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + (d.is_external ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && !d.is_external ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities /*+ "<br>** external? " + d.is_external + "**"*/)
+                    tooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + d.name + "</strong><br>Title: " + d.title + (d.is_external ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && !d.is_external ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities /*+ "<br>** external? " + d.is_external + "**"*/)
                         .style("top", (nodeHighlighted?"225px":"70px"));
                   }
               })
@@ -678,7 +678,7 @@ $(function () {
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + (clickedOn.is_external ? "<br>Buyer Role: " + clickedOn.buyer_role : "") + (clickedOn.is_external != undefined && !clickedOn.is_external ? "<br>Team: " + clickedOn.team : "") /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities /*+ "<br>** external? " + clickedOn.is_external + "**"*/) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>Title: " + clickedOn.title + (clickedOn.is_external ? "<br>Buyer Role: " + clickedOn.buyer_role : "") + (clickedOn.is_external != undefined && !clickedOn.is_external ? "<br>Team: " + clickedOn.team : "") /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities /*+ "<br>** external? " + clickedOn.is_external + "**"*/) // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
