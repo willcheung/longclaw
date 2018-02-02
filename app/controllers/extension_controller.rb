@@ -209,7 +209,7 @@ class ExtensionController < ApplicationController
   end
 
   def dashboard
-    unless !current_user.pro?
+    if current_user.superadmin?  #TODO: change to current_user.plus? 
       # Daily trend (last month, sent and opens)
       tracking_requests_pastmo_h = current_user.tracking_requests.from_lastmonth.group_by{|tr| tr.sent_at.to_date}.map{|d,tr| [d, tr.length]}.to_h
       @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
