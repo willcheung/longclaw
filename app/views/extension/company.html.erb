@@ -8,10 +8,16 @@
   .company-section {
     font-size: 13px;
     padding-top: 1em;
+    overflow-wrap: break-word;
+    word-break: break-all;
   }
 
   .description-section {
     font-size: 12px;
+  }
+
+  .description-section p, .company-section p {
+    margin-bottom: 15px;
   }
 
   .key-people-section {
@@ -52,8 +58,7 @@
   }
 
   hr.divider {
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin: 1.5em 0;
   }
   .linkedin-icon {
     color: #0077b5; /* LinkedIn blue */
@@ -68,7 +73,7 @@
 <% if @company %>
 <section class="company-section">
   <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="<%= @company.logo %>"/>
-  <h3 class="m-b-xs"><%= @company.name %></h3>
+  <h3><%= @company.name %></h3>
   <p><span <%= 'class=disabled' if @company.website.blank? %>><a href="<%= @company.website %>" target="_blank" title="Open this company's webpage in a new window"><i class="fa fa-globe"></i> <%= @company.website %></a></span></p>
   <p><i class="fa fa-map-marker"></i> <%= @company.location %></p>
   <p><i class="fa fa-user"></i> <%= @company.employees %> Employees</p>
