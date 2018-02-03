@@ -401,9 +401,9 @@ class Project < ActiveRecord::Base
       profile = Profile.find_or_create_by_email(m.email)
       pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
-      suggested = m.status == ProjectMember::STATUS[:Pending] ? ' *' : ''
+      is_suggested = m.status == ProjectMember::STATUS[:Pending]
       {
-        name: get_full_name(m) + suggested,
+        name: get_full_name(m),
         domain: get_domain(m.email),
         email: m.email,
         title: m.title,
@@ -412,7 +412,8 @@ class Project < ActiveRecord::Base
         team: m.team,
         key_activities: pin.length,
         meetings: meet.length,
-        is_external: m.is_external
+        is_external: m.is_external,
+        is_suggested: is_suggested
       }
     end.compact
 
