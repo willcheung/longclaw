@@ -1,5 +1,6 @@
 class PlansController < ApplicationController
   layout 'empty'
+  protect_from_forgery :except => :webhook
 
   def index
     @subscription = Hashie::Mash.new({plan: {name: 'Basic', id: 'basic'}})
@@ -15,10 +16,12 @@ class PlansController < ApplicationController
   end
 
   def create
+    token = params[:stripeToken]
+    token = token == '' ? nil : token
     customer = if current_user.stripe_customer_id
-                 find_or_create_customer(current_user, current_user.email, params[:stripeToken])
+                 find_or_create_customer(current_user, current_user.email, token)
                else
-                 create_customer(current_user, current_user.email, params[:stripeToken])
+                 create_customer(current_user, current_user.email, token)
                end
     params.require(:plan)
     plan = params[:plan]
@@ -37,7 +40,9 @@ class PlansController < ApplicationController
     )
     puts "Subscription created: #{subscription}"
     logger.info "Subscription created: #{subscription}"
-    current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-')
+    current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-') && !current_user.pro?
+    current_user.upgrade(:Plus) if subscription && subscription.plan.id.start_with?('plus-') && !current_user.plus?
+
     if subscription && subscription.plan.id.start_with?('biz-')
       if customer.subscriptions
         existing_pro_subscription = customer.subscriptions.data.select{|s| s.plan.id.start_with?('pro-')}
@@ -61,6 +66,28 @@ class PlansController < ApplicationController
 
   def upgrade
     # sign_out current_user
+    customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, expand: 'subscriptions')
+    if customer.subscriptions.data
+      @sub = customer.subscriptions.data[0]
+      @trial_end = Time.at(@sub.trial_end)
+    end
+  end
+
+  def webhook
+    # data = Hashie::Mash.new(JSON.parse(request.body.read))
+    if params[:id] == 'evt_00000000000000'
+      puts 'Test webhook data received'
+      render nothing: true, status: 201
+      return
+    end
+    if params[:type] == 'customer.subscription.trial_will_end'
+      event = Stripe::Event.retrieve(params[:id]) # this makes an extra request but ensures the id and event is valid!
+      puts "Event received #{event}"
+    end
+    render nothing: true, status: 201
+  rescue Stripe::APIConnectionError, Stripe::StripeError => e
+    puts e
+    render nothing: true, status: 400
   end
 
   private

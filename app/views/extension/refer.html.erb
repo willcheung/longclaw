@@ -1,0 +1,119 @@
+<div class="text-center loginscreen animated">
+  <style>
+    ul {
+      list-style: none;
+      margin-left: 0;
+      padding-left: 0;
+    }
+
+    ul:last-child {
+      margin-bottom: 10px;
+    }
+
+    li {
+      padding-left: 1em;
+      text-indent: -1em;
+    }
+
+    li:before {
+      content: "➤";
+      padding-right: 5px;
+    }
+
+    li li:before {
+      content: "-";
+      padding-right: 5px;
+    }
+
+      .step2 {
+        margin-top: 30px;
+      }
+  </style>
+  <div>
+    <a href="http://www.contextsmith.com" class="oauth logo"><!-- LOGO --></a>
+    <div class="row">
+      <div class="">
+        <div class="step1">
+          <h1 class="logo-name oauth" style="font-size:19px;">
+            <%= current_user ? "You are signed in as #{current_user.email}" : "Sign up for ContextSmith" %>
+          </h1>
+          <% if current_user %>
+
+          <% else %>
+              <a href="<%= user_omniauth_authorize_path(:google_oauth2_basic, extension: true, ref: params[:ref]) %>"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png" style="margin-top: 1em" title="Sign in using Google"></a>
+          <% end %>
+        </div>
+        <div id="step2">
+          <h1 class="logo-name oauth" style="font-size:19px;">Install the Chrome extension to get started</h1>
+          <div><button class="btn btn-primary btn-lg install-button">Install</button></div>
+        </div>
+        <script>
+          if (chrome && chrome.app.isInstalled) {
+              document.getElementById('step2').style.display = 'none';
+          } else {
+              $('.install-button').click(function (f) {
+                  if (chrome) {
+                      chrome.webstore.install(null, function(success){console.log("installed")}, function(error){ console.log(error); });
+                  }
+              });
+          }
+        </script>
+      </div>
+      <!--<div class="col-xs-6">
+        <div class="narrative text-center"><h3>Track who opens your emails and get insights about your contacts</h3>
+        </div>
+        <div class="tracking-image"><%= image_tag "tracking.png", class: 'img-rounded img-responsive' %></div>
+        <div class="narrative text-left">
+          <p>Manage sales and customer relationships without leaving Gmail.
+            ContextSmith email tracking for Gmail is FREE to use, forever, with UNLIMITED tracking.</p>
+          <ul>
+            <li>Track email opens
+              <ul>
+                <li>See which emails were read. Find out when, where they were read and on what device.</li>
+                <li>Filter emails that have been 'read' or 'not read'</li>
+                <li> Stop asking if your colleagues read your emails</li>
+              </ul>
+            <li>See detailed information about your contacts
+              <ul>
+                <li>Open a thread to see a full profile of the sender including photo, job title, location, and social
+                  links
+                </li>
+              </ul>
+            </li>
+            <li>Automatically send emails to your CRM system via BCC</li>
+
+          </ul>
+
+          <p>Additional features for Sales Teams and Account Managers:</p>
+          <ul>
+            <li>Sync emails, contacts, and meetings with Salesforce, automatically
+              <ul>
+                <li>Sync contacts, emails (both sent and received), and meetings with Salesforce
+                <li>Never create a contact in Salesforce again. Never forward or bcc an email to Salesforce again.
+                <li>Spend less time entering data and more time selling
+              </ul>
+            <li>Collaborative team selling, servicing and upselling
+              <ul>
+                <li>Unify cross-departmental customer touch points
+                <li>Retain customer knowledge and create a single source of truth detailing all customer communications
+                </li>
+              </ul>
+
+            <li>Discover more contacts and opportunities
+              <ul>
+                <li>Get notified of new contacts buried in your email threads and track their engagement over time
+              </ul>
+            </li>
+
+            <li>Contacts and opportunities management
+              <ul>
+                <li>Share contacts and opportunities with teams
+                </li>
+              </ul>
+          </ul>
+        </div>
+      </div>-->
+    </div>
+
+  </div>
+</div>

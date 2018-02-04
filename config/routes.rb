@@ -1,5 +1,6 @@
 Longclaw::Application.routes.draw do
   unauthenticated do
+    get "extension/refer" => "onboarding#refer"
     get "extension" => "extension#new"
     get "extension/account" => "extension#new"
     # resources :plans
@@ -133,6 +134,7 @@ Longclaw::Application.routes.draw do
 
     scope "extension", controller: :extension, as: 'extension' do
       get '/' => 'extension#index'
+      get 'refer'
       get 'test'
       get 'share'
       get 'account'
@@ -200,6 +202,9 @@ Longclaw::Application.routes.draw do
     post 'load_emails_since_yesterday'
     post 'load_events_since_yesterday'
   end
+
+  # Stripe callback
+  post 'stripe/event' => 'plans#webhook'
 
   #scope 'tracking', controller: :tracking, as: 'tracking' do
   #  get 'view/:tracking_id' => 'tracking#view'

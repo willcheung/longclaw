@@ -22,7 +22,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 	def google_oauth2
     auth = request.env["omniauth.auth"]
     request_params = request.env['omniauth.params']
-    @user = User.find_for_oauth2(auth, (cookies[:timezone] || 'UTC'))
+    @user = User.find_for_oauth2(auth, (cookies[:timezone] || 'UTC'), auth.info, request_params['ref'])
 
     if @user.persisted?
     	session["devise.google_data"] = auth
