@@ -822,9 +822,9 @@ $(function () {
             // Temporary hack: Dynamically wrap a long list of filter items (once) over to the other side (right edge) of the window
             d3.selectAll("g.cell")
                 .each(function(d,i) {
-                    var t = d3.select(this).attr("transform");
-                    var x = t.split(",")[0].substring(10);
-                    var y = t.split(",")[1].substring(0,t.split(",")[1].indexOf(")"));
+                    var t = d3.transform(d3.select(this).attr("transform"));
+                    var x = t.translate[0];
+                    var y = t.translate[1];
 
                     if (x > 0) {
                         x = width - 150;
