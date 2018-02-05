@@ -264,8 +264,10 @@ $(function () {
     var xMargin = 20;
 
     var yMargin = 40;
-    var legendSizePadding = 10;
-    var legendDomainPadding = 5;
+    //var legendSizePadding = 10;
+    var legendDomainPadding = 5;  // legend element
+    var legendElementCircleSize = 8;  // radius
+    var legendGroupMargin = 15;  // space between filter groups
 
     var height = 500;
     var width = 0;
@@ -548,14 +550,29 @@ $(function () {
         var domainLegend = legendContainer.select(".legendOrdinal")
             .call(legendOrdinal);
 
-        // Hack to put spaces in between domains/buyer_roles/teams in the legend
+        d3.selectAll("circle.swatch")
+            .each(function(d,i) {
+                d3.select(this).attr("r", legendElementCircleSize);
+            });
+
+        // Temporary hack: put spaces in between domains/buyer_roles/teams in the legend
+        var clientWidth = d3.select('#force-graph').node().clientWidth;
         d3.selectAll("g.cell")
             .each(function(d,i) {
                 var adjust = 0;
-                if (i >= domains.length) adjust += 15;
-                if (i >= domains.length + buyerRoles.length) adjust += 15;
-                if (i >= domains.length + buyerRoles.length + teams.length) adjust += 15;
-                d3.select(this).attr("transform", "translate(0," + (i*25 + adjust) + ")");
+                if (i >= domains.length) adjust += legendGroupMargin;
+                if (i >= domains.length + buyerRoles.length) adjust += legendGroupMargin;
+                if (i >= domains.length + buyerRoles.length + teams.length) adjust += legendGroupMargin;
+
+                // Temporary hack: wrap filter selection to the other side of the graph
+                var x = 0;
+                var y = (i * (legendElementCircleSize * 2 + 4) + adjust);
+                if (y >= 430) {
+                    y = y - 430;
+                    x = clientWidth - 150;
+                }
+
+                d3.select(this).attr("transform", "translate(" + x + "," + y + ")");
             });
 
 
@@ -797,12 +814,23 @@ $(function () {
 
         function resize() {
             var graphContainer = d3.select('#force-graph').node();
-            width = graphContainer.clientWidth
+            width = graphContainer.clientWidth;
             // height = graphContainer.clientHeight;
             d3.select("svg").attr("width", width).attr("height", height);
             force.size([width, height]).resume();
 
-            rect.attr("x", legendWidth);
+            // Temporary hack: Dynamically wrap a long list of filter items (once) over to the other side (right edge) of the window
+            d3.selectAll("g.cell")
+                .each(function(d,i) {
+                    var t = d3.select(this).attr("transform");
+                    var x = t.split(",")[0].substring(10);
+                    var y = t.split(",")[1].substring(0,t.split(",")[1].indexOf(")"));
+
+                    if (x > 0) {
+                        x = width - 150;
+                        d3.select(this).attr("transform", "translate(" + x + "," + y + ")");
+                    }
+                });
 
             legendContainer.moveToFront();
             tick();
