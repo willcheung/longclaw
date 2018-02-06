@@ -10,6 +10,13 @@ class OnboardingController < ApplicationController
     start_new_user
   end
 
+  def refer
+    @referral = true
+    puts params[:ref]
+    @referral_user = PlansService.referral_user(params[:ref])
+    render 'onboarding/extension_tutorial', layout: false
+  end
+
   def extension_tutorial
     render layout: false
     start_new_user(Utils::ONBOARDING[:onboarded])

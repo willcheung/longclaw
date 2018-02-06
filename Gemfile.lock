@@ -140,6 +140,7 @@ GEM
     faraday_middleware (0.11.0.1)
       faraday (>= 0.7.4, < 1.0)
     ffaker (2.1.0)
+    friendly_code (2.0.1)
     fullcontact (0.15.0)
       faraday (~> 0.9.0)
       faraday_middleware (>= 0.9)
@@ -326,6 +327,7 @@ DEPENDENCIES
   email_validator
   exception_notification
   ffaker
+  friendly_code
   fullcontact
   geocoder
   graphql

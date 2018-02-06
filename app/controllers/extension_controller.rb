@@ -18,6 +18,12 @@ class ExtensionController < ApplicationController
   end
 
   def share
+    referral_code = PlansService.referral_code(current_user)
+    @referral_url = url_for(controller: 'extension', action: 'refer') + "?ref=#{referral_code}"
+    render layout: 'empty'
+  end
+
+  def refer
     render layout: 'empty'
   end
 
