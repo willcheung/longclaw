@@ -201,10 +201,10 @@ Longclaw::Application.routes.draw do
     post 'fullcontact_company'
     post 'load_emails_since_yesterday'
     post 'load_events_since_yesterday'
+    post 'stripe'
+
   end
 
-  # Stripe callback
-  post 'stripe/event' => 'plans#webhook'
 
   #scope 'tracking', controller: :tracking, as: 'tracking' do
   #  get 'view/:tracking_id' => 'tracking#view'

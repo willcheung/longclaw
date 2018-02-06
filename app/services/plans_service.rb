@@ -6,8 +6,7 @@ class PlansService
   def self.referral(code)
     puts "Referral code #{code} used"
     bonus = Rails.configuration.stripe[:bonus]
-    ts = TrackingSetting.find_by_referral(code)
-    user = ts.user unless ts.nil?
+    user = referral_user(code)
     unless user.nil?
       customer = if user.stripe_customer_id
                    find_or_create_customer(user, user.email)
