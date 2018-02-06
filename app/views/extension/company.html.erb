@@ -9,7 +9,11 @@
     font-size: 13px;
     padding-top: 1em;
     overflow-wrap: break-word;
-    word-break: break-all;
+  }
+
+  .company-name {
+    color: #424b5d;
+    font-weight: 500;
   }
 
   .description-section {
@@ -72,8 +76,8 @@
 </style>
 <% if @company %>
 <section class="company-section">
-  <img class="pull-left m-r-sm" style="max-height:55px;max-width:55px" src="<%= @company.logo %>"/>
-  <h3><%= @company.name %></h3>
+  <img class="pull-left m-r-sm" style="max-height:65px;max-width:65px" src="<%= @company.logo %>"/>
+  <h3 class="company-name"><%= @company.name %></h3>
   <p><span <%= 'class=disabled' if @company.website.blank? %>><a href="<%= @company.website %>" target="_blank" title="Open this company's webpage in a new window"><i class="fa fa-globe"></i> <%= @company.website %></a></span></p>
   <p><i class="fa fa-map-marker"></i> <%= @company.location %></p>
   <p><i class="fa fa-user"></i> <%= @company.employees %> Employees</p>

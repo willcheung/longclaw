@@ -291,7 +291,7 @@ $(function () {
             d3.select("#force-graph").selectAll("*").remove(); // clear animation
             var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
             // *** For debug ***
-            // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external) + "..." + l; });
+            // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external + ", is_suggested: " + l.is_suggested) + "..." + l; });
             // links.forEach(function(l){ console.log(" source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
             ready(lookup, links, metadata);
         })
@@ -434,12 +434,6 @@ $(function () {
             .style("fill", "black")
             .text("Account Relationship Graph");
 
-        var asteriskLabel = legendContainer.append("text")
-            .attr("x", xMargin)
-            .attr("y", height - 10)
-            .style("fill", "black")
-            .text("* = Suggested Person");
-
         // // Create a legend for big/small nodes
         // legendContainer.append("g")
         //     .attr("class", "legendSize")
@@ -460,9 +454,10 @@ $(function () {
         var nodesByEmail = {};
         // Add node info for each opportunity member
         lookup.forEach(function(person) {
+            var suggested = person.is_suggested ? " *" : ""
             nodesByEmail[person.email] = {
                 email: person.email,
-                name: person.name || "(None)",
+                name: (person.name+suggested) || "(None)",
                 title: person.title || "(No title)",
                 profile_img_url: person.profile_img_url,
                 buyer_role: person.buyer_role || (!person.is_external ? undefined : "(No buyer role)"),
@@ -471,6 +466,7 @@ $(function () {
                 meetings: person.meetings,
                 key_activities: person.key_activities,
                 is_external: person.is_external,
+                is_suggested: person.is_suggested,
                 inbound: 0,
                 outbound: 0
             };
@@ -494,6 +490,7 @@ $(function () {
                     meetings: 0,
                     key_activities: 0,
                     is_external: undefined,
+                    is_suggested: undefined,
                     inbound: 0,
                     outbound: 0
                 }
@@ -514,7 +511,8 @@ $(function () {
         var teams = nodes.filter(function (obj, i, arr) { return !obj.is_external; })
             .map(function (obj) { return obj.team; })
             .filter(function (team, i, arr) { return arr.indexOf(team) === i && team != undefined; });
-        var legendValues = domains.concat(buyerRoles).concat(teams);
+        var additionalFilters = ["Suggested People *"];
+        var legendValues = domains.concat(buyerRoles).concat(teams).concat(additionalFilters);
 
         // Linear size scale
         // var linearSize = d3.scale.linear().domain([0,1]).range([smallCircleSize, largeCircleSize]);
@@ -531,7 +529,7 @@ $(function () {
         var color = d3.scale.ordinal()
         // TODO: redo the scale to make dynamic
             .domain(legendValues)
-            .range(colorScale.concat(fillArray("#EFEFEF", buyerRoles.length + teams.length)));
+            .range(colorScale.concat(fillArray("#EFEFEF", legendValues.length - domains.length)));
 
         // Helper to repeat colors
         function fillArray(value, len) {
@@ -556,6 +554,7 @@ $(function () {
                 var adjust = 0;
                 if (i >= domains.length) adjust += 15;
                 if (i >= domains.length + buyerRoles.length) adjust += 15;
+                if (i >= domains.length + buyerRoles.length + teams.length) adjust += 15;
                 d3.select(this).attr("transform", "translate(0," + (i*25 + adjust) + ")");
             });
 
@@ -573,12 +572,14 @@ $(function () {
                 pinnedTooltip.style("opacity", 0);
             //    zoomer.translate([20, 0]);
 
-                if (i >= domains.length && i < domains.length + buyerRoles.length)
+                if (i < domains.length)
+                    filterNode("domain", val, this);
+                else if (i >= domains.length && i < domains.length + buyerRoles.length)
                     filterNode("buyer_role", val, this);
                 else if (i >= domains.length + buyerRoles.length && i < domains.length + buyerRoles.length + teams.length)
                     filterNode("team", val, this);
                 else
-                    filterNode("domain", val, this);
+                    filterNode("suggested", val, this);
             });
 
         // Create the link lines.
@@ -611,7 +612,7 @@ $(function () {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + d.name + "</strong><br>" + d.email + "<br>Title: " + d.title + (d.is_external ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && !d.is_external ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities /*+ "<br>** external? " + d.is_external + "**"*/)
+                    tooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + d.name + "</strong><br>Title: " + d.title + (d.is_external ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && !d.is_external ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities /*+ "<br>** external? " + d.is_external + "**"*/)
                         .style("top", (nodeHighlighted?"225px":"70px"));
                   }
               })
@@ -678,7 +679,7 @@ $(function () {
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>" + clickedOn.email + "<br>Title: " + clickedOn.title + (clickedOn.is_external ? "<br>Buyer Role: " + clickedOn.buyer_role : "") + (clickedOn.is_external != undefined && !clickedOn.is_external ? "<br>Team: " + clickedOn.team : "") /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities /*+ "<br>** external? " + clickedOn.is_external + "**"*/) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>Title: " + clickedOn.title + (clickedOn.is_external ? "<br>Buyer Role: " + clickedOn.buyer_role : "") + (clickedOn.is_external != undefined && !clickedOn.is_external ? "<br>Team: " + clickedOn.team : "") /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities /*+ "<br>** external? " + clickedOn.is_external + "**"*/) // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
@@ -713,16 +714,20 @@ $(function () {
                     return nodesByEmail[d.email].domain != searchVal;
                 else if (searchType == "buyer_role")
                     return nodesByEmail[d.email].buyer_role != searchVal;
-                else
+                else if (searchType == "team")
                     return nodesByEmail[d.email].team != searchVal;
+                else // searchType == "suggested"
+                    return !nodesByEmail[d.email].is_suggested;
             });
             var selectedNodes = allNodes.filter(function (d, i){
                 if (searchType == "domain")
                     return nodesByEmail[d.email].domain == searchVal;
                 else if (searchType == "buyer_role")
                     return nodesByEmail[d.email].buyer_role == searchVal;
-                else
+                else if (searchType == "team")
                     return nodesByEmail[d.email].team == searchVal;
+                else // searchType == "suggested"
+                    return nodesByEmail[d.email].is_suggested;
             });
 
             var link = d3.selectAll(".link");
@@ -827,7 +832,7 @@ $(function () {
                 d3.select("#force-graph").selectAll("*").remove(); // clear animation
                 var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
                 // *** For debug ***
-                // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external) + "..." + l; });
+                // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external + ", is_suggested: " + l.is_suggested) + "..." + l; });
                 // links.forEach(function(l){ console.log(" source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
                 ready(lookup, links, metadata);
             })
