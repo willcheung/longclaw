@@ -113,7 +113,7 @@ class User < ActiveRecord::Base
     visible_projects = Project.visible_to(organization_id, id)
 
     meetings_in_cs = Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current..1.day.from_now), project_id: visible_projects.ids)
-      .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{email}\"}]'::jsonb").order(:last_sent_date)
+      .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{User.sanitize(email)[1..-2]}\"}]'::jsonb").order(:last_sent_date)
     return meetings_in_cs unless registered?
 
     # time adjustments for repeating meetings which have last_sent_date as the creation time of the meeting
