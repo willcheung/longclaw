@@ -155,12 +155,21 @@ $(function () {
         stroke-width: 1.5px;
     }
 
+    /*.sfdc-icon {
+        color: #e8941a;
+        width: 1.5em;
+    }*/
+
+    .light {
+        color: #f3c98c;
+    }
+
     div.arg-tooltip {
         position: absolute;
         text-align: center;
         line-height: 1;
         padding: 12px;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.85);
         color: #fff;
         border-radius: 2px;
         pointer-events: none;
@@ -169,6 +178,9 @@ $(function () {
         color: #e8941a;
         position: absolute;
         z-index: 9999;
+    }
+    div.pinned hr {
+        border-color: #e8941a;
     }
     g.cell {
         cursor: pointer;
@@ -235,6 +247,26 @@ $(function () {
         background: linear-gradient(to bottom, <%= ApplicationHelper::CONTEXTSMITH_BLUE %>,<%= ApplicationHelper::CONTEXTSMITH_DARKBLUE %>);
         border: 2px solid <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
     }
+    .member-tooltip-opp-table {
+        width: 22em;
+    }
+    .member-tooltip-opp-table tr td:first-child {  /* opp "name" column */
+        width: 45%;
+    }
+    .member-tooltip-opp-table tr td:nth-child(2) { /* "stage" col */
+        width: 35%;
+    }
+    .member-tooltip-opp-table tr td:nth-child(3) { /* "deal size" col */
+        width: 20%;
+    }
+    .member-tooltip-opp-table tr td {
+        padding: 0 5px;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+    }
 </style>
 <script type="text/javascript">
     // Function for moving nodes to front
@@ -253,6 +285,9 @@ $(function () {
     //         }
     //     });
     // };
+
+    var showMemberOppsToolipLimit = 3;  // num. of opps to (truncate the list) then show in selected/rollover member tooltip
+    var showMemberAcctsToolipLimit = 1; // num. of accts to (truncate) then show in the tooltip
 
     var scaleFactor = 1;
     var translation = [0,0];
@@ -293,7 +328,7 @@ $(function () {
             d3.select("#force-graph").selectAll("*").remove(); // clear animation
             var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
             // *** For debug ***
-            // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external + ", is_suggested: " + l.is_suggested) + "..." + l; });
+            // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external + ", is_suggested: " + l.is_suggested + ", opps:" + l.opportunities + "accts:" + l.accounts) + "..." + l; });
             // links.forEach(function(l){ console.log(" source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
             ready(lookup, links, metadata);
         })
@@ -466,7 +501,9 @@ $(function () {
                 team: person.team || (person.is_external == undefined || person.is_external ? undefined : "(No team)"),
                 domain: person.domain,
                 meetings: person.meetings,
-                key_activities: person.key_activities,
+                // key_activities: person.key_activities,
+                opportunities: person.opportunities,
+                accounts: person.accounts,
                 is_external: person.is_external,
                 is_suggested: person.is_suggested,
                 inbound: 0,
@@ -490,7 +527,9 @@ $(function () {
                     team: undefined,        //cannot determine w/o knowing if external/internal
                     domain: email.split("@")[1],
                     meetings: 0,
-                    key_activities: 0,
+                    // key_activities: 0,
+                    opportunities: undefined,
+                    accounts: undefined,
                     is_external: undefined,
                     is_suggested: undefined,
                     inbound: 0,
@@ -595,7 +634,7 @@ $(function () {
                     filterNode("buyer_role", val, this);
                 else if (i >= domains.length + buyerRoles.length && i < domains.length + buyerRoles.length + teams.length)
                     filterNode("team", val, this);
-                else
+                else // if (i >= domains.length + buyerRoles.length + teams.length && i < domains.length + buyerRoles.length + teams.length + additionalFilters.length)
                     filterNode("suggested", val, this);
             });
 
@@ -622,15 +661,13 @@ $(function () {
               .style("fill", function(d) {return color(nodesByEmail[d.email].domain);})
               .classed("activeNode", true)
               .on("mouseover", function(d){
-                  var profile_img_html = (d.is_external != undefined && d.profile_img_url != undefined) ? "<img src='" + d.profile_img_url + "' class='profile-pic' title='profile pic'>" : "";
-
                   if(d3.select(this).classed("activeNode") && !d3.select(this).classed("baseNode")){
                     force.stop();
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", 0.9);
-                    tooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + d.name + "</strong><br>Title: " + d.title + (d.is_external ? "<br>Buyer Role: " + d.buyer_role : "") + (d.is_external != undefined && !d.is_external ? "<br>Team: " + d.team : "") /*+ "<br>Outbound: " + d.outbound + "<br>Inbound: " + d.inbound*/ + "<br>Meetings: " + d.meetings + "<br>Key Activities: " + d.key_activities /*+ "<br>** external? " + d.is_external + "**"*/)
-                        .style("top", (nodeHighlighted?"225px":"70px"));
+                    tooltip.html(getMemberProfileTooltipHTML(d))
+                        .style("top", (nodeHighlighted ? ($(".arg-tooltip.pinned").height()+100)+"px":"70px"));
                   }
               })
               .on("mouseout", function(d){
@@ -692,11 +729,10 @@ $(function () {
             force.stop(); // Stop moving
             tooltip.style("opacity", 0); // Clear unpinned tooltip (because it is the same as the pinned)
 
-            var profile_img_html = (clickedOn.is_external != undefined && clickedOn.profile_img_url != undefined) ? "<img src='" + clickedOn.profile_img_url + "' class='profile-pic' title='profile pic'>" : "";
             pinnedTooltip.transition()
                 .duration(200)
                 .style("opacity", 0.9);
-            pinnedTooltip.html(profile_img_html + "<strong style=\"font-size:16px;\">" + clickedOn.name + "</strong><br>Title: " + clickedOn.title + (clickedOn.is_external ? "<br>Buyer Role: " + clickedOn.buyer_role : "") + (clickedOn.is_external != undefined && !clickedOn.is_external ? "<br>Team: " + clickedOn.team : "") /*+ "<br>Outbound: " + clickedOn.outbound + "<br>Inbound: " + clickedOn.inbound*/ + "<br>Meetings: " + clickedOn.meetings + "<br>Key Activities: " + clickedOn.key_activities /*+ "<br>** external? " + clickedOn.is_external + "**"*/) // Pin tooltip with name of clicked on node
+            pinnedTooltip.html(getMemberProfileTooltipHTML(clickedOn));  // Pin tooltip with name of clicked on node
             pinnedTooltip.moveToFront();
             node.each(function(d){ // Allow for clicking back on previous baseNodes
                 d3.select(this).classed("baseNode", false);
@@ -723,6 +759,7 @@ $(function () {
         }
 
         // Change opacity to "highlight" all relevant nodes when applying filter
+        // Parameter: gObject - the d3 filter element on which that was clicked
         function filterNode(searchType, searchVal, gObject) {
             nodeHighlighted = false;
             var allNodes = d3.selectAll(".node");
@@ -733,7 +770,7 @@ $(function () {
                     return nodesByEmail[d.email].buyer_role != searchVal;
                 else if (searchType == "team")
                     return nodesByEmail[d.email].team != searchVal;
-                else // searchType == "suggested"
+                else // if (searchType == "suggested")
                     return !nodesByEmail[d.email].is_suggested;
             });
             var selectedNodes = allNodes.filter(function (d, i){
@@ -743,7 +780,7 @@ $(function () {
                     return nodesByEmail[d.email].buyer_role == searchVal;
                 else if (searchType == "team")
                     return nodesByEmail[d.email].team == searchVal;
-                else // searchType == "suggested"
+                else // if (searchType == "suggested")
                     return nodesByEmail[d.email].is_suggested;
             });
 
@@ -835,6 +872,42 @@ $(function () {
             legendContainer.moveToFront();
             tick();
         }
+
+        // Generates the HTML code for the user/contact tooltip.
+        // Parameter: node - the node clicked
+        function getMemberProfileTooltipHTML(node) {
+            var profile_img_html = (node.is_external != undefined && node.profile_img_url != undefined) ? "<img src='" + node.profile_img_url + "' class='profile-pic' title='profile pic'>" : "";
+
+            // TODO: Replace fake demo data with real data
+            var profile_social_html = ((node.is_external && node.opportunities && Object.keys(node.opportunities).length > 0) ? "<table class='social-group' style='min-width: 75px; margin: 5px auto;'><tbody><tr style='padding: 1em'>" +
+                // "<td><img src='/assets/images/salesforce.png' class='sfdc-icon' title='Salesforce'/></td>" +
+                "<td><i class='fa fa-linkedin-square' aria-hidden='true'></i></td>" +
+                "<td><i class='fa fa-twitter' aria-hidden='true'></i></td>" +
+                "<td><i class='fa fa-facebook-square' aria-hidden='true'></i></td>" +
+                "<td><i class='fa fa-globe' aria-hidden='true'></i></td>" +
+                "</tr></table>" : "");
+
+            var opportunitiesHTML = "";
+            if (node.opportunities && Object.keys(node.opportunities).length > 0) {
+                opportunitiesHTML = "<hr style='margin: 6px 0'> <table class='member-tooltip-opp-table'><tbody>";
+                Object.keys(node.opportunities).slice(0, showMemberOppsToolipLimit).forEach(function(k){ 
+                    opportunitiesHTML += "<tr><td class='light'><span>" + node.opportunities[k].name + "</span></td><td class=''>" + (node.opportunities[k].stage ? " "+node.opportunities[k].stage : "") + "</td><td class=''>" + (node.opportunities[k].dealSize ? " $"+large_number_to_human_signif_digits(node.opportunities[k].dealSize) : "") + "</td><tr>";
+                });
+                opportunitiesHTML += "</tbody></table>";
+            };
+
+            var otherAccountsHTML= "";
+            if (node.accounts && Object.keys(node.accounts).length > 0) {
+                otherAccountsHTML = "<hr style='margin: 6px 0'> <i class='fa fa-users' style='margin-right: 7px;'></i><span style='text-align: left;'>Found in <span class='light'>"
+                var otherAccountsHTMLArr = [];
+                Object.keys(node.accounts).slice(0, showMemberAcctsToolipLimit).forEach(function(k){ 
+                    otherAccountsHTMLArr.push(node.accounts[k].name);
+                });
+                otherAccountsHTML += otherAccountsHTMLArr.join("</span>, <span class='light'>") + "</span> account" + (otherAccountsHTMLArr.length > 1 ? "s": "") + ".</span>";
+            };
+
+            return "<table><tbody><tr><td><table style='width: 100%'><tbody><tr><td>" + profile_img_html + "</td><td><table><tbody><tr><td><strong style=\"font-size: 16px;\">" + node.name + "</strong></td></tr><tr><td>" + node.title + "</td></tr></tbody></table></td></tr></table>"+ (node.is_external ? node.buyer_role + "<br>" : "") + (node.is_external != undefined && !node.is_external ? node.team + "<br>" : "") + "Meetings: " + node.meetings + "<br>" /*+ "Outbound: " + node.outbound + "<br>Inbound: " + node.inbound + "<br>" + "<br>** external? " + node.is_external + "**"*/ + profile_social_html + opportunitiesHTML + otherAccountsHTML;
+        }
     } // function ready(...)
 
     $("#LAST_14d, #LAST_30d, #LAST_60d, #LAST_90d, #LAST_180d, #ALL_DATES").click(function(){
@@ -860,7 +933,7 @@ $(function () {
                 d3.select("#force-graph").selectAll("*").remove(); // clear animation
                 var metadata = links.map(function(l){ return l.count;}).reduce(function(m, a) { return { count_min: (a < m.count_min || !m.count_min ? a : m.count_min), count_max: (a > m.count_max || !m.count_max ? a : m.count_max)}; }, { count_min: undefined, count_max: undefined })
                 // *** For debug ***
-                // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external + ", is_suggested: " + l.is_suggested) + "..." + l; });
+                // lookup.forEach(function(l){ console.log(" email: " + l.email + ", buyer_role: " + l.buyer_role + ", team: " + l.team + ", profile_img_url: " + l.profile_img_url + ", is_external: " + l.is_external + ", is_suggested: " + l.is_suggested + ", opps:" + l.opportunities + "accts:" + l.accounts) + "..." + l; });
                 // links.forEach(function(l){ console.log(" source: " + l.source + ", target: " + l.target + ", count: " + l.count) + "..." + l; });
                 ready(lookup, links, metadata);
             })
