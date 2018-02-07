@@ -228,7 +228,7 @@ class ExtensionController < ApplicationController
       @event_dates = (Date.today-1.month..Date.today).map{|d| d.strftime("%b %e")}
 
       # Day of the Week and Hourly trend (last month, sent and opens)
-      tracking_requests_daily_hourly_pastmo_h = current_user.tracking_requests.from_lastmonth.map{ |tr| tr.sent_at }.group_by{|d,tr| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
+      tracking_requests_daily_hourly_pastmo_h = current_user.tracking_requests.from_lastmonth.map{ |tr| tr.sent_at.in_time_zone(current_user.time_zone) }.group_by{|d,tr| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
       @emails_daily_hourly_sent_lastmonth = []
       (0..23).map do |h|
         (0..6).map do |d|
@@ -237,7 +237,7 @@ class ExtensionController < ApplicationController
       end
 
       tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
-        tr.tracking_events.map{ |te| te.created_at }
+        tr.tracking_events.map{ |te| te.created_at.in_time_zone(current_user.time_zone) }
       end.flatten.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
       @emails_daily_hourly_opened_lastmonth = []
       (0..23).map do |h|

@@ -1,6 +1,9 @@
 <style>
-    *, .gray-bg {
+    *:not(i.fa), .gray-bg {
         background-color: white;
+    }
+    .trend-graph {
+        margin-top: 3em;
     }
 </style>
 
@@ -25,7 +28,7 @@
             type: 'areaspline'
         },
         title: {
-            text: 'Messages Sent/opened (past month)'
+            text: 'Messages Sent/Opened (30d)'
         },
         legend: {
             layout: 'vertical',
@@ -71,7 +74,7 @@
         },
 
         title: {
-            text: 'Messages Sent/opened by Day, Hour (past month)'
+            text: 'Messages Sent/Opened by Day, Hour (30d)'
         },
         xAxis: {
             title: {
@@ -89,6 +92,9 @@
             max: DAYOFWEEK.length - 1,
             categories: DAYOFWEEK,
             reversed: true
+        },
+        credits: {
+            enabled: false
         },
         plotOptions: {
             bubble: {
