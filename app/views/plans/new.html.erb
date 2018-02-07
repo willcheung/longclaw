@@ -28,6 +28,10 @@
     font-size: 40px;
   }
 
+    a.start {
+      margin-right:2px;
+    }
+
 </style>
 
 <div class="container center-block">
@@ -62,12 +66,43 @@
           </div> -->
           <div><h1 class="basic-price">Free</h1></div>
         </div>
-        <p class="muted"><h3>&nbsp;</h3><br>
+        <p class="muted"><h3>&nbsp;</h3><h3>&nbsp;</h3><br>
         </p>
 
         <div class="plan-action">
           <a class="btn btn-primary btn-block btn-large" disabled href="#"><%= (current_user.pro? || current_user.biz?) ? 'Included' : 'Your current plan' %></a>
         </div>
+      </th>
+
+
+
+      <th colspan="2">
+        <h2>Plus</h2>
+
+        <div class="">
+          <div class="btn-group" id="status" data-toggle="buttons">
+            <label class="btn btn-default btn-on btn-sm active plus-yearly">
+              <input type="radio" value="1" name="pro-v1" checked="checked">Yearly</label>
+            <label class="btn btn-default btn-off btn-sm plus-monthly">
+              <input type="radio" value="0" name="plus-monthly-v1">Monthly</label>
+          </div>
+          <div><h1 class="pro-price">$5/mo</h1></div>
+        </div>
+
+        <p class="muted"><h3>14 days free trial</h3><h3>Free month for each referral</h3><br>
+        </p>
+
+        <div class="plan-action">
+          <% if current_user.plus? %>
+          <a class="btn btn-primary btn-block btn-large" disabled href="#">Thanks for upgrading!</a>
+              <% else %>
+              <div class="btn-group">
+                <a class="btn btn-primary btn-large start plus-start" data-amount=42000 data-plan="plus-monthly-v1" href="#">Start Trial</a>
+                <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=42000 data-plan="plus-monthly-v1" href="#">Upgrade Now</a>
+              </div>
+          <% end %>
+        </div>
+
       </th>
 
       <th colspan="2">
@@ -83,64 +118,56 @@
           <div><h1 class="pro-price">$35/mo</h1></div>
         </div>
 
-        <p class="muted"><h3>14 days free trial</h3><br>
+        <p class="muted"><h3>14 days free trial</h3><h3>&nbsp;</h3><br>
         </p>
 
         <div class="plan-action">
           <% if current_user.pro? %>
           <a class="btn btn-primary btn-block btn-large" disabled href="#">Thanks for upgrading!</a>
               <% else %>
+
+              <!-- <a class="btn btn-primary btn-block btn-large start pro-start" data-amount=42000 data-plan="pro-v1" href="#">Start Trial</a> -->
               <a class="btn btn-primary btn-block btn-large upgrade pro-upgrade" data-amount=42000 data-plan="pro-v1" href="#">Upgrade Now</a>
           <% end %>
         </div>
 
       </th>
 
-      <th colspan="2">
-        <h2>Business</h2>
-
-        <div class="">
-          <div class="btn-group" id="status" data-toggle="buttons">
-            <label class="btn btn-default btn-on btn-sm active biz-yearly">
-              <input type="radio" value="1" name="pro-v1" checked="checked">Yearly</label>
-            <label class="btn btn-default btn-off btn-sm biz-monthly">
-              <input type="radio" value="0" name="biz-monthly-v1">Monthly</label>
-          </div>
-          <div><h1 class="biz-price">$85/mo</h1></div>
-        </div>
-
-         <p class="muted"><h3>14 days free trial</h3><br>
-        </p>
-        <div class="plan-action">
-          <% if current_user.biz? %>
-          <a class="btn btn-primary btn-block btn-large" disabled href="#">Thanks for upgrading!</a>
-              <% else %>
-          <a class="btn btn-primary btn-block btn-large upgrade biz-upgrade" data-amount=102000 data-plan="biz-v1" href=
-              "#">Upgrade Now</a>
-          <% end %>
-        </div>
-      </th>
     </tr>
         </thead>
 
         <tbody>
             <tr><td colspan="6" class="header">Google Mail Integration</td></tr>
             <tr>
-              <td colspan="6" class="subheader">Email Tracking</td>
+              <td colspan="6" class="subheader">Email Tracking
+                <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See when and where your email was opened"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
-              <td colspan="6" class="subheader">Profiles</td>
+              <td colspan="6" class="subheader">Profiles
+                <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See profile data of your contacts directly in your inbox"></i>
+              </td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
 
             <tr>
-              <td colspan="6" class="subheader">Auto forward to CRM</td>
+              <td colspan="6" class="subheader">Auto forward to CRM
+                <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See profile data of your contacts directly in your inbox"></i>
+              </td>
               <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="subheader">Tracking Dashboard
+              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Charts on tracking data"></i>
+              </td>
+              <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
@@ -149,29 +176,23 @@
             <tr>
               <td colspan="6" class="subheader">Update Salesforce from Gmail</td>
               <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
               <td colspan="6" class="subheader">Sync Contacts</td>
               <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
               <td colspan="6" class="subheader">Sync Emails</td>
               <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
               <td colspan="6" class="subheader">Sync Meetings</td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
-            <tr>
-              <td colspan="6" class="subheader">Advanced Salesforce Integration</td>
               <td colspan="2"></td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
@@ -184,73 +205,11 @@
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
 
-            <tr><td colspan="6" class="header">Account Management</td></tr>
-             <tr>
-              <td colspan="6" class="subheader">Maximum Users</td>
-              <td colspan="2">Individual</td>
-              <td colspan="2">Individual</td>
-              <td colspan="2">10</td>
-            </tr>
-
-            <tr>
-              <td colspan="6" class="subheader">Shared Account Management</td>
-              <td colspan="2"></td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
-
-            <tr>
-              <td colspan="6" class="subheader">Account Relationship Graph</td>
-              <td colspan="2"></td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
-
-            <tr>
-              <td colspan="6" class="subheader">Sentiment Analysis</td>
-              <td colspan="2"></td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
-
-            <tr>
-              <td colspan="6" class="subheader">Team Scoreboard</td>
-              <td colspan="2"></td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
-
-            <tr>
-              <td colspan="6" class="subheader">Account Dashboard</td>
-              <td colspan="2"></td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
-
-         <tr>
-              <td colspan="6" class="subheader">Intelligent Forecasting</td>
-              <td colspan="2"></td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
-
-            <tr>
-              <td colspan="6" class="subheader">Smart Alerts</td>
-              <td colspan="2"></td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
-
-            <tr>
-              <td colspan="6" class="header">Priority Support</td>
-              <td colspan="2"></td>
-              <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
-            </tr>
 
         </tbody>
   </table>
   </div>
+    <h3>Business or Enterprise, <a href="https://www.contextsmith.com/demo/">contact us</a></h3>
   </div>
 
 </div>
@@ -296,6 +255,12 @@
         }
     });
 
+    $('.start').click(function(evt) {
+        evt.preventDefault();
+        $('input#plan').val(evt.target.dataset.plan);
+        $('form#upgrade').submit();
+    });
+
     $('.upgrade').click(function(evt) {
         evt.preventDefault();
         $('input#plan').val(evt.target.dataset.plan);
@@ -309,5 +274,6 @@
         handler.close();
     });
 
+    $('[data-toggle="tooltip"]').tooltip({'placement': 'right'});
 
 </script>

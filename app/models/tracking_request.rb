@@ -4,15 +4,15 @@
 #
 #  id          :integer          not null, primary key
 #  user_id     :uuid
-#  tracking_id :string
-#  message_id  :string(255)
-#  subject     :string
+#  message_id  :string
 #  recipients  :text             default([]), is an Array
 #  status      :string
 #  sent_at     :datetime
-#  email_id    :string
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
+#  tracking_id :string
+#  subject     :string
+#  email_id    :string
 #
 # Indexes
 #
