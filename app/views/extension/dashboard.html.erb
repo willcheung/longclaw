@@ -6,7 +6,7 @@
 
 <div class = "ibox-content">
     <div class="row" style="width: 95%; margin: 0;">
-        <% if current_user.superadmin? %>
+        <% if current_user.plus? %>
             <%= render partial: 'extension/tracking_reports_dashboard' %>
         <% else %>
             <%= render partial: 'extension/tracking_reports_dashboard_example' %>
@@ -17,7 +17,7 @@
 <%= javascript_include_tag "https://code.highcharts.com/highcharts.js" %>
 <%= javascript_include_tag "https://code.highcharts.com/stock/highstock.js" %>
 <%= javascript_include_tag "https://code.highcharts.com/highcharts-more.js" %>
-<%= javascript_include_tag "https://code.highcharts.com/modules/exporting.js" if current_user.superadmin? %>
+<%= javascript_include_tag "https://code.highcharts.com/modules/exporting.js" if current_user.plus? %>
 
 <script>
     Highcharts.chart('activity-container', {

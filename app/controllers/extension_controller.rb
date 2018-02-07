@@ -215,7 +215,7 @@ class ExtensionController < ApplicationController
   end
 
   def dashboard
-    if current_user.superadmin?  #TODO: change to current_user.plus? 
+    if current_user.plus?
       # Daily trend (last month, sent and opens)
       tracking_requests_pastmo_h = current_user.tracking_requests.from_lastmonth.group_by{|tr| tr.sent_at.to_date}.map{|d,tr| [d, tr.length]}.to_h
       @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
@@ -245,6 +245,8 @@ class ExtensionController < ApplicationController
           @emails_daily_hourly_opened_lastmonth << [h, d, (tracking_events_daily_hourly_pastmo_h[[h,d]] ? tracking_events_daily_hourly_pastmo_h[[h,d]] : nil)]
         end
       end
+    else
+      @event_dates = ["Jan 7", "Jan 8", "Jan 9", "Jan 10", "Jan 11", "Jan 12", "Jan 13", "Jan 14", "Jan 15", "Jan 16", "Jan 17", "Jan 18", "Jan 19", "Jan 20", "Jan 21", "Jan 22", "Jan 23", "Jan 24", "Jan 25", "Jan 26", "Jan 27", "Jan 28", "Jan 29", "Jan 30", "Jan 31", "Feb 1", "Feb 2", "Feb 3", "Feb 4", "Feb 5", "Feb 6", "Feb 7"]
     end
 
     render layout: 'empty'
