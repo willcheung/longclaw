@@ -1,7 +1,14 @@
 <div class="container">
   <div class="jumbotron text-center">
   <div class="row"><h1>Thanks for upgrading!</h1></div>
-  <div class="row"><h3>In order to sync your emails and contacts, sign in again below</h3></div>
-  <div class="row"><a style="margin: 25px 0 35px;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/btn_google_signin_dark_normal_web_custom.png" style="margin: 30px 0px" title="Sign in using Google"></a></div>
+    <% if current_user.pro? %>
+        <div class="row"><h3>In order to sync your emails and contacts, sign in again below</h3></div>
+        <div class="row"><a style="margin: 25px 0 35px;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/btn_google_signin_dark_normal_web_custom.png" style="margin: 30px 0px" title="Sign in using Google"></a></div>
+    <% end %>
+    <% if Time.now > @trial_end %>
+        <div>Your trial has ended.</div>
+    <% else %>
+        <div>Your trial ends in <%= time_ago_in_words(@trial_end) %></div>
+    <% end %>
   </div>
 </div>
