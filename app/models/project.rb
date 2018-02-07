@@ -398,7 +398,7 @@ class Project < ActiveRecord::Base
       .where(status: [ProjectMember::STATUS[:Confirmed], ProjectMember::STATUS[:Pending]])
 
     # TODO: For Demo Only
-    if ENV['demo_opp_ids'].present? && ENV['demo_opp_ids'].split(' ').include?(self.id) && ENV['demo_contact_ids'].present?
+    if ENV['demo_opp_ids'].present? && ENV['demo_opp_ids'].split(' ').include?(self.id) && ENV['demo_contact_emails'].present?
       demo_opps_percontact_h = {}
       demo_accts_percontact_h = {}
 
@@ -411,7 +411,7 @@ class Project < ActiveRecord::Base
       demo_accts_h = {}
       demo_accts_h["c8332e16-5922-4469-ad1f-aaaaaaaaaaaA"] = {id: "c8332e16-5922-4469-ad1f-aaaaaaaaaaaA", name: "GoodData Corporation", category: "Customer"}
 
-      ENV['demo_contact_ids'].split(' ').each do |email|
+      ENV['demo_contact_emails'].split(' ').each do |email|
         c = Contact.find_by(email: email)
         demo_opps_percontact_h[c.id] = demo_opps_h
         demo_accts_percontact_h[c.id] = demo_accts_h
