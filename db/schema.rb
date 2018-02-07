@@ -403,7 +403,6 @@ ActiveRecord::Schema.define(version: 20180131001302) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
-    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -413,6 +412,7 @@ ActiveRecord::Schema.define(version: 20180131001302) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.string   "forecast_category_name"
     t.string   "owner_id"
   end
@@ -437,15 +437,15 @@ ActiveRecord::Schema.define(version: 20180131001302) do
 
   create_table "tracking_requests", force: :cascade do |t|
     t.uuid     "user_id"
-    t.string   "message_id"
-    t.text     "recipients",  default: [],              array: true
+    t.string   "tracking_id"
+    t.string   "message_id",  limit: 255
+    t.string   "subject"
+    t.text     "recipients",              default: [],              array: true
     t.string   "status"
     t.datetime "sent_at"
-    t.datetime "created_at",               null: false
-    t.datetime "updated_at",               null: false
-    t.string   "tracking_id"
-    t.string   "subject"
     t.string   "email_id"
+    t.datetime "created_at",                           null: false
+    t.datetime "updated_at",                           null: false
   end
 
   add_index "tracking_requests", ["tracking_id"], name: "index_tracking_requests_on_tracking_id", using: :btree
