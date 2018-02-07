@@ -412,7 +412,7 @@ class Project < ActiveRecord::Base
       demo_accts_h["c8332e16-5922-4469-ad1f-aaaaaaaaaaaA"] = {id: "c8332e16-5922-4469-ad1f-aaaaaaaaaaaA", name: "GoodData Corporation", category: "Customer"}
 
       ENV['demo_contact_emails'].split(',').each do |email|
-        c = Contact.find_by(email: email.strip)
+        c = self.account.contacts.find_by(email: email.strip) #|| Contact.find_by(email: email.strip)
         demo_opps_percontact_h[c.id] = demo_opps_h
         demo_accts_percontact_h[c.id] = demo_accts_h
       end
