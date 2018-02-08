@@ -48,7 +48,7 @@
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
                 <span style="width:100px; display:inline-block">
-                    <a href="<%= ([User::ROLE[:Basic],User::ROLE[:Pro]].include? current_user.role) ? "http://www.contextsmith.com" : root_path %>" target="_blank" class="navbar-brand">
+                    <a href="<%= current_user.biz? ? root_path : "http://www.contextsmith.com" %>" target="_blank" class="navbar-brand">
                         <span class="clear">
                             <div class="block logo">&nbsp;</div>
                         </span>
@@ -70,7 +70,7 @@
               </ul></div>
             </div>
 
-            <% if @project %>
+            <% if current_user.biz? && @project %>
             <div class="nav" style="padding: 1em 0">
                 <div>
                     <h3 style="margin-bottom: 9px" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="
