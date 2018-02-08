@@ -39,6 +39,7 @@ gem 'stripe', :git => 'https://github.com/stripe/stripe-ruby'
 gem 'email_validator'
 gem 'sucker_punch', '~>2.0'
 gem 'kaminari'
+gem 'google-api-client'
 
 # Gems used only for assets and not required
 # in production environments by default.

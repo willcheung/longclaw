@@ -98,7 +98,8 @@
             <div>
                 <ul class="nav nav-tabs">
                     <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>"><i class="fa fa-users"></i>&nbsp;People</a></li>
-                    <li role="presentation" class="<%= is_active_action('company') %>"><a href="<%= extension_company_path(internal: params[:internal], external: params[:external]) %>"><i class="fa fa-building"></i>&nbsp;Company&nbsp;&nbsp;<span class="label label-info label-xs">New!</span></a></li>
+                    <li role="presentation" class="<%= is_active_action('company') %>"><a href="<%= extension_company_path(internal: params[:internal], external: params[:external]) %>"><i class="fa fa-building"></i>&nbsp;Company</a></li>
+                    <li role="presentation" class="<%= is_active_action('attachments') %>"><a href="<%= extension_attachments_path(internal: params[:internal], external: params[:external]) %>"><i class="fa fa-paperclip fa-rotate-90"></i>&nbsp;Files&nbsp;<i class="fa fa-info-circle"></i></a></li>
                     <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
                     <!--<li role="presentation" data-toggle="tooltip" data-placement="bottom" data-html="true" class="<%= is_active_action('salesforce') %>"-->
                     <!--<% if @salesforce_user.present? %>-->

@@ -1,0 +1,10 @@
+<p>attachments view</p>
+
+<% if current_user.pro? # && signed in %>
+  <p>yay my attachments are here!!</p>
+<% elsif false # non signed in user %>
+  <p>hey, let us read your inbox!</p>
+<% else %>
+  <p>booo no attachments</p>
+  <button>Upgrade Now!</button> or <button>Start a free trial!</button>
+<% end %>

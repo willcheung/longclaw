@@ -1,4 +1,8 @@
+require 'google/api_client/client_secrets'
+require 'google/apis/gmail_v1'
+
 class ExtensionController < ApplicationController
+  Gmail = Google::Apis::GmailV1 # Alias the module
   NUM_ACCOUNT_CONTACT_SHOW_LIMIT = 10  # How many Account Contacts to show
   NUM_PARAM_LIST_LIMIT = 128  # Number of external and internal contacts to limit 
   
@@ -167,6 +171,33 @@ class ExtensionController < ApplicationController
              end
     @company = CompanyProfile.find_or_create_by_domain(domain) if domain && valid_domain?(domain)
     # @company = CompanyProfile.find_or_create_by_domain(@account.domain) if @account.present? && @account.domain.present?
+  end
+
+  def attachments
+    if current_user.pro? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
+      # connect to Gmail
+      secrets = Google::APIClient::ClientSecrets.new(
+        {
+          "web" =>
+            {
+              "access_token" => current_user.oauth_access_token,
+              "refresh_token" => current_user.oauth_refresh_token,
+              "client_id" => ENV['google_client_id'],
+              "client_secret" => ENV['google_client_secret']
+            }
+        }
+      )
+      service = Gmail::GmailService.new
+      service.authorization = secrets.to_authorization
+
+      messages = service.list_user_messages('me') do |result, error|
+        p result
+        p error
+      end
+      p messages
+    else
+      # tell user to upgrade or start free trial!
+    end
   end
 
   # def alerts_tasks
