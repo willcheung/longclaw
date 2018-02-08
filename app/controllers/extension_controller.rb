@@ -281,7 +281,7 @@ class ExtensionController < ApplicationController
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
 
-    @salesforce_user = SalesforceController.get_sfdc_oauthuser(user: current_user) if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?)
+    @salesforce_user = SalesforceController.get_sfdc_oauthuser(user: current_user) if current_user.pro?
   end
 
   # Old before_action helper -- FOR REFERENCE ONLY!
@@ -384,14 +384,12 @@ class ExtensionController < ApplicationController
     
     @all_members = @project.users + @project.contacts
     @members = @all_members.first(NUM_ACCOUNT_CONTACT_SHOW_LIMIT)
-
-    @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # (New) before_action helper to determine a matching account+opportunity from the set of recipients (the external contacts in params). i.e., if no external contacts exist, no account or opportunity is returned.
+  # (New) before_action helper: For users belonging to at least the "Plus" plan, this determines a matching account+opportunity from the set of recipients (the external contacts from the active e-mail) to facilitate Contacts management. i.e., if no external contacts exist, no account or opportunity is returned.
   # Note: E-mail domains that are typically "invalid" such as "gmail.com", "yahoo.com", "hotmail.com" may be used to identify a "matching" account if we can find the Contact with the e-mail.  Otherwise, we stop and do not attempt to identify a matching account using "invalid" domains, because these domains are too general and can easily match the wrong account.
   def set_account_and_project
-    return if @params[:external].blank?
+    return if @params[:external].blank? || !current_user.plus?
 
     external = @params[:external].map { |person| person.map { |info| URI.unescape(info, '%2E') } }
     ex_emails = external.map(&:second)
@@ -441,7 +439,6 @@ class ExtensionController < ApplicationController
     end
     @account ||= contacts.first.account
     @project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
-    @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
   # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact emails; returns nil if one cannot be determined.
