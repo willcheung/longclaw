@@ -46,7 +46,7 @@
 <body>
     <div class="white-bg">
         <div>
-            <% if current_user.role != User::ROLE[:Basic] || current_user.superadmin? %>
+            <% if current_user.pro? %>
                 <% if @salesforce_user.nil? %>
                     <div class="ibox-content text-center">
                         <div class="m-b-sm" style="margin: 60% 0">
