@@ -2,6 +2,17 @@
 
 <% if current_user.pro? # && signed in %>
   <p>yay my attachments are here!!</p>
+
+<% @messages.each do |msg| %>
+    <p><%= msg.from %></p>
+    <p><%= msg.message_id %></p>
+    <% msg.attachments.each do |att| %>
+      <ol>
+        <li><a href="/extension/download?<%= { id: msg.id, attachment_id: att.attachment_id, filename: att.filename, mime_type: att.mime_type }.to_param %>"><%= att.filename %></a></li>
+        <li><%= att.mime_type %></li>
+      </ol>
+    <% end %>
+<% end %>
 <% elsif false # non signed in user %>
   <p>hey, let us read your inbox!</p>
 <% else %>

@@ -180,7 +180,7 @@ class ExtensionController < ApplicationController
         {
           "web" =>
             {
-              "access_token" => current_user.oauth_access_token,
+              "access_token" => current_user.fresh_token,
               "refresh_token" => current_user.oauth_refresh_token,
               "client_id" => ENV['google_client_id'],
               "client_secret" => ENV['google_client_secret']
@@ -190,14 +190,54 @@ class ExtensionController < ApplicationController
       service = Gmail::GmailService.new
       service.authorization = secrets.to_authorization
 
-      messages = service.list_user_messages('me') do |result, error|
-        p result
-        p error
+      # p '***********************``````` GMAIL API REQUEST STARTS HERE ````````~~~~~~~~~~~~~~~~~~~~~~`'
+      message_list = service.list_user_messages('me', q: 'has:attachment -in:chats -filename:ics', max_results: 100) # { |message_list, error| message_list = message_list unless error }
+      # BATCH REQUEST
+      @messages = []
+      service.batch do |service|
+        message_list.messages.each do |msg|
+          service.get_user_message('me', msg.id) do |m, error| #messages << m unless error }
+            next if error || m.blank?
+            next if m.payload.mime_type != 'multipart/mixed'
+            parts = m.payload.parts
+            headers = m.payload.headers
+            from = headers.find { |h| h.name == 'From' }.value
+            message_id = headers.find { |h| h.name == 'Message-ID' }.value
+            atts = parts[1..parts.length]
+            attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
+                              .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id } }
+            next if attachments.blank?
+            @messages << Hashie::Mash.new({ from: from, message_id: message_id, id: m.id, attachments: attachments })
+          end
+        end
       end
-      p messages
+
+      p @messages
+
+      # p '***********************``````` GMAIL API REQUEST ENDS HERE ````````~~~~~~~~~~~~~~~~~~~~~~`'
     else
       # tell user to upgrade or start free trial!
     end
+  end
+
+  def download
+    # init gmail service....
+
+    secrets = Google::APIClient::ClientSecrets.new(
+        {
+            "web" =>
+                {
+                    "access_token" => current_user.fresh_token,
+                    "refresh_token" => current_user.oauth_refresh_token,
+                    "client_id" => ENV['google_client_id'],
+                    "client_secret" => ENV['google_client_secret']
+                }
+        }
+    )
+    service = Gmail::GmailService.new
+    service.authorization = secrets.to_authorization
+
+    service.get_user_message_attachment('me', params['id'], params['attachment_id']) { |attachment| send_data attachment.data, filename: params['filename'], type: params['mime_type'] }
   end
 
   # def alerts_tasks
