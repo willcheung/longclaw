@@ -27,7 +27,7 @@
     <% else %>
         <div class="row text-center" style="margin-top: 140px; font-size: 120%">
           <div>
-            <button title="Get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-primary">
+            <button title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-default btn-outline btn-primary">
               <i class="fa fa-gift"></i> Refer a friend!
             </button>
             <div>(Free upgrade for each referral)</div>
@@ -80,12 +80,12 @@
 
         $('.share-action').click(e => {
             e.preventDefault();
-            popupCenter('/extension/share', 'Share the goodness', 600, 400);
+            popupCenter('/extension/share', 'Share the goodness', 700, 500);
         });
-        $('.invite-action').click(e => {
-            e.preventDefault();
-            parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
-        });
+        // $('.invite-action').click(e => {
+        //     e.preventDefault();
+        //     parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
+        // });
 
         function popupCenter(url, title, w, h) {
             var left = (screen.width / 2) - (w / 2);
