@@ -14,7 +14,9 @@
   <div class="container">
     <h2 class="text-center">Tell your friends about ContextSmith and receive $5 credit for every referral.</h2>
     <p></p>
-    <div class="text-center" id="share"></div>
+    <div class="text-center" id="share">
+        <i class='fa fa-envelope'></i>
+    </div>
   </div>
 </div>
 <div class="copier">
@@ -22,29 +24,49 @@
 </div>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
 <script>
-    var copyToClipboard = (function () {
-        var _dataString = null;
-        document.addEventListener("copy", function (e) {
-            if (_dataString !== null) {
-                try {
-                    e.clipboardData.setData("text/plain", _dataString);
-                    e.preventDefault();
-                } finally {
-                    _dataString = null;
-                }
-            }
-        });
-        return function (data) {
-            _dataString = data;
-            document.execCommand("copy");
-            $('.jssocials-share.jssocials-share-copy > a > span').text("Copied!");
-        };
-    })();
+    // var copyToClipboard = (function () {
+    //     var _dataString = null;
+    //     document.addEventListener("copy", function (e) {
+    //         if (_dataString !== null) {
+    //             try {
+    //                 e.clipboardData.setData("text/plain", _dataString);
+    //                 e.preventDefault();
+    //             } finally {
+    //                 _dataString = null;
+    //             }
+    //         }
+    //     });
+    //     return function (data) {
+    //         _dataString = data;
+    //         document.execCommand("copy");
+    //         $('.jssocials-share.jssocials-share-copy > a > span').text("Copied!");
+    //     };
+    // })();
 
-    jsSocials.shares.copy = {
-        label: 'Clipboard',
-        logo: 'fa fa-clipboard',
-        shareUrl: 'javascript:(function() { copyToClipboard(\'{url}\'); return false; })()',
+    var openGmailComposeWithReferralURL = function (referral_url, strTarget) {
+        var popupWindowRef = null;
+        var prevPopup = null;
+        var emailSubject = "Join me?";
+        var emailBody = "I've been using ContextSmith's email tracker to see when my emails are being opened. I love it because I can see if my recipients read my emails and get a detailed profile about them (picture, job title, social media links). %0A%0ABest of all, it's free. %0A%0AI thought you might enjoy it: " + referral_url + " %0A";
+        var strUrl = "https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&su=" + emailSubject + "&body=" + emailBody;
+        var strOptions = "width=700,height=500";
+        if (popupWindowRef == null || popupWindowRef.closed) {
+          popupWindowRef = window.open(strUrl, strTarget, strOptions);
+    }
+    else if (prevPopup != strUrl) {   
+        popupWindowRef = window.open(strUrl, strTarget, strOptions);
+        popupWindowRef.focus();
+    }
+    else {
+        popupWindowRef.focus();
+    }
+        prevPopup = strUrl;
+    };
+
+    jsSocials.shares.email = {
+        label: 'Refer a friend',
+        logo: 'fa fa-envelope',
+        shareUrl: "javascript:(function() { openGmailComposeWithReferralURL(\'{url}\', 'GmailCompose'); return false; })()",
         countUrl: ''
     };
 
@@ -54,10 +76,10 @@
         showCount: true,
         showLabel: true,
         shareIn: 'self',
-        shares: ['twitter', 'facebook', 'linkedin', 'copy']
+        shares: ['twitter', 'facebook', 'linkedin', 'email']
     });
     $('.jssocials-shares').css({'font-size': '16pt'});
-    $('.jssocials-share.jssocials-share-facebook > a > span').text("Share")
+    $('.jssocials-share.jssocials-share-facebook > a > span').text("Share");
 </script>
 </body>
 </html>
