@@ -10,11 +10,102 @@
 
 </head>
 <body>
+
+<style type="text/css">
+    .bs-wizard {margin: 30px 0;}
+
+    /*Form Wizard*/
+    .bs-wizard > .bs-wizard-step {padding: 0; position: relative;}
+    .bs-wizard > .bs-wizard-step + .bs-wizard-step {}
+    .bs-wizard > .bs-wizard-step .bs-wizard-stepnum {color: #595959; font-size: 13px; margin-bottom: 5px;}
+    .bs-wizard > .bs-wizard-step .bs-wizard-info {color: #999; font-size: 12px;}
+    .bs-wizard > .bs-wizard-step > .bs-wizard-dot {position: absolute; width: 30px; height: 30px; display: block; background: #77afd7; top: 45px; left: 50%; margin-top: -15px; margin-left: -15px; border-radius: 50%;} 
+    .bs-wizard > .bs-wizard-step > .bs-wizard-dot:after {content: ' '; width: 14px; height: 14px; background: #3c6bc5; border-radius: 50px; position: absolute; top: 8px; left: 8px; } 
+    .bs-wizard > .bs-wizard-step > .progress {position: relative; border-radius: 0px; height: 8px; box-shadow: none; margin: 20px 0;}
+    .bs-wizard > .bs-wizard-step > .progress > .progress-bar {width:0px; box-shadow: none; background: #77afd7;}
+    .bs-wizard > .bs-wizard-step.complete > .progress > .progress-bar {width:100%;}
+    .bs-wizard > .bs-wizard-step.active > .progress > .progress-bar {width:50%;}
+    .bs-wizard > .bs-wizard-step:first-child.active > .progress > .progress-bar {width:0%;}
+    .bs-wizard > .bs-wizard-step:last-child.active > .progress > .progress-bar {width: 100%;}
+    .bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot {background-color: #f5f5f5;}
+    .bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot:after {opacity: 0;}
+    .bs-wizard > .bs-wizard-step:first-child  > .progress {left: 50%; width: 50%;}
+    .bs-wizard > .bs-wizard-step:last-child  > .progress {width: 50%;}
+    .bs-wizard > .bs-wizard-step.disabled a.bs-wizard-dot{ pointer-events: none; }
+    /*END Form Wizard*/
+
+    .referralUrl-box {
+        width: 100%;
+        margin: 30px auto;
+    }
+
+    .referralUrl-box > div {
+        height: 2em; 
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        margin: 0;
+        vertical-align: middle;
+    }
+    .btn-group {
+        color: black;
+        background-color: white;
+        border: 1px solid black;
+        border-radius: 5px;
+        margin: 0;
+        top: 30%;
+        left: 50%;
+        margin-right: -50%;
+        transform: translate(-50%, -50%);
+    }
+    .btn-group > span {
+        font-size: 11pt;
+        margin: 0.7em 10px;
+        float: left;
+    }
+    .btn-default {
+        height: 3em;
+    }
+</style>
+
 <div class="gray-bg jumbotron center-block">
   <div class="container">
-    <h2 class="text-center">Tell your friends about ContextSmith and receive credits for free upgrades!</h2>
-    <p></p>
+    <h2 class="text-center">Tell your friends about ContextSmith and receive $5 credit for each referral who signs up.</h2>
+    <div class="row bs-wizard">
+      <div class="col-xs-4 bs-wizard-step complete">
+        <div class="text-center bs-wizard-stepnum">1. Invite your friends</div>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <span class="bs-wizard-dot"></span>
+        <div class="bs-wizard-info text-center"></div>
+      </div>
+
+      <div class="col-xs-4 bs-wizard-step complete">
+        <div class="text-center bs-wizard-stepnum">2. They sign up</div>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <span class="bs-wizard-dot"></span>
+        <div class="bs-wizard-info text-center"></div>
+      </div>
+            
+      <div class="col-xs-4 bs-wizard-step active">
+        <div class="text-center bs-wizard-stepnum">3. You earn $5!</div>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <span class="bs-wizard-dot"></span>
+        <div class="bs-wizard-info text-center"></div>
+      </div>
+    </div>     
     <div class="text-center" id="share"></div>
+    <div class="referralUrl-box">
+      <h2 class="text-center" style="padding-bottom: 0.5em;">Or just copy and share this link</h2>
+      <div style="position: relative">
+        <div class="btn-group">
+          <span style="display: inline-block;"><%= @referral_url %></span>
+          <button class="btn btn-default" title="Copy to clipboard">Copy link</i></button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div class="copier">
@@ -37,14 +128,37 @@
         return function (data) {
             _dataString = data;
             document.execCommand("copy");
-            $('.jssocials-share.jssocials-share-copy > a > span').text("Copied!");
+            $('.btn-group').attr("style", "background-color: #AFA;");
+            $('.btn-group > button').attr("style", "background-color: green;");
+            $('.btn-group > button').html("Copied!");
         };
     })();
 
-    jsSocials.shares.copy = {
-        label: 'Clipboard',
-        logo: 'fa fa-clipboard',
-        shareUrl: 'javascript:(function() { copyToClipboard(\'{url}\'); return false; })()',
+    var popupWindowRef = null;
+    var prevPopup = null;
+
+    var openGmailComposePopupWithReferralURL = function (referral_url, strTarget) {
+        var emailSubject = "Join me?";
+        var emailBody = "I've been using ContextSmith's email tracker to see when my emails are being opened. I love it because I can see if my recipients read my emails and get a detailed profile about them (picture, job title, social media links). %0A%0ABest of all, it's free. %0A%0AI thought you might enjoy it: " + referral_url + " %0A";
+        var strUrl = "https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&su=" + emailSubject + "&body=" + emailBody;
+        var strOptions = "width=700,height=500";
+        if (popupWindowRef == null || popupWindowRef.closed) {
+          popupWindowRef = window.open(strUrl, strTarget, strOptions);
+    }
+    else if (prevPopup != strUrl) {   
+        popupWindowRef = window.open(strUrl, strTarget, strOptions);
+        popupWindowRef.focus();
+    }
+    else {
+        popupWindowRef.focus();
+    }
+        prevPopup = strUrl;
+    };
+
+    jsSocials.shares.email = {
+        label: 'Refer a friend',
+        logo: 'fa fa-envelope',
+        shareUrl: "javascript:(function() { openGmailComposePopupWithReferralURL(\'{url}\', 'GmailCompose'); return false; })()",
         countUrl: ''
     };
 
@@ -54,9 +168,17 @@
         showCount: true,
         showLabel: true,
         shareIn: 'self',
-        shares: ['twitter', 'facebook', 'linkedin', 'copy']
+        shares: ['twitter', 'facebook', 'linkedin', 'email']
     });
-    $('.jssocials-shares').css({'font-size': '16pt'});
+    $('.jssocials-shares').css({'font-size': '14pt'});
+    $('.jssocials-share.jssocials-share-facebook > a > span').text("Share");
+
+    $(".btn-group > button").click(function(){
+        (function() {
+            copyToClipboard('<%= @referral_url %>');
+            return false; 
+        })();
+    });
 </script>
 </body>
 </html>
