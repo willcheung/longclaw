@@ -1,9 +1,7 @@
 <style type="text/css">
   .attachment-container {
     width: 225px;
-  }
-  .attachment-date {
-    text-align: right;
+    margin-left: 40px;
   }
   .attachment-group {
     display: flex;
@@ -17,7 +15,7 @@
   }
   .message-bubble {
     padding: 5px;
-    max-width: 200px;
+    max-width: 195px;
     border-radius: 5px;
     color: black;
   }
@@ -35,19 +33,19 @@
     <p class="m-t-sm">Attachments between <%= @emails.join(', ') %> and you:</p>
     <div class="attachment-container m-t-sm">
     <% @messages.each.with_index do |msg, i| %>
-        <span class="pull-right m-r-n-xl attachment-date">
+        <span class="pull-left m-l-n-xl">
           <%= Time.zone.at(msg.internal_date/1000).strftime('%b %d') %>
           <br>
           <%= Time.zone.at(msg.internal_date/1000).strftime('%l:%M%P') %>
         </span>
-        <div class="attachment-group <%= msg.internal ? 'right' : 'left' %>">
+        <div class="attachment-group m-l-xs <%= msg.internal ? 'right' : 'left' %>">
           <div class="message-bubble m-b-sm">
-            <p class="m-b-none"><strong><%= msg.internal ? 'You' : get_address_first_names([msg.from]) %></strong> to <%= msg.internal ? get_attachment_member_names(msg.to) : 'You, ' + get_attachment_member_names(msg.to, 'other', 1) %></p>
+            <p class="m-b-none"><strong><%= msg.internal ? 'You' : get_address_first_names([msg.from]) %></strong> to <%= get_attachment_member_names(msg.to) %></p>
             <hr class="message-divider">
             <% msg.attachments.each do |att| %>
               <p class="m-b-none m-t-xs">
                 <a href="/extension/download?<%= { id: msg.id, attachment_id: att.attachment_id, filename: att.filename, mime_type: att.mime_type }.to_param %>">
-                  <i class="fa <%= file_type_icon(att.mime_type, att.filename) %>"></i>
+                  <i class="fa fa-lg <%= file_type_icon(att.mime_type, att.filename) %>"></i>
                   <%= att.filename %>
                 </a>
                 &nbsp;(<%= number_to_human_size(att.file_size, precision: 2) %>)
