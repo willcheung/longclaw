@@ -30,7 +30,7 @@ class TrackingController < ApplicationController
     @trackings = TrackingRequest.includes(:tracking_events)
                      .where(user_id: current_user.id)
                      .page(page)
-                     .order('tracking_events.date DESC, sent_at DESC')
+                     .order('tracking_events.date DESC NULLS LAST').order('sent_at DESC');
     json = {requests: @trackings.as_json(include: { tracking_events: { methods: :client }}),
             settings: get_tracking_setting }
     render json: json
@@ -183,4 +183,5 @@ class TrackingController < ApplicationController
       te = TrackingEvent.where(date: threshold.seconds.ago(date)..date, tracking_id: tracking_id).first
     end
   end
+
 end

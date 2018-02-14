@@ -48,7 +48,7 @@
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
                 <span style="width:100px; display:inline-block">
-                    <a href="<%= ([User::ROLE[:Basic],User::ROLE[:Pro]].include? current_user.role) ? "http://www.contextsmith.com" : root_path %>" target="_blank" class="navbar-brand">
+                    <a href="<%= current_user.biz? ? root_path : "http://www.contextsmith.com" %>" target="_blank" class="navbar-brand">
                         <span class="clear">
                             <div class="block logo">&nbsp;</div>
                         </span>
@@ -58,8 +58,7 @@
                 <li class="dropdown pull-right" style="margin-left:-30px">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i style="font-size: 15px; color: #777;" class="fa fa-ellipsis-v"></i></a>
                   <ul class="dropdown-menu">
-                    <li><a href="#" class="invite-action"><i class="fa fa-envelope-o"></i> Invite</a></li>
-                    <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Share</a></li>
+                    <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Refer a friend</a></li>
                     <li role="separator" class="divider"></li>
                     <li><%= link_to  '/plans/new', target: "_blank" do %>
                         <i class="fa fa-star"></i> Upgrade
@@ -70,7 +69,7 @@
               </ul></div>
             </div>
 
-            <% if @project %>
+            <% if current_user.biz? && @project %>
             <div class="nav" style="padding: 1em 0">
                 <div>
                     <h3 style="margin-bottom: 9px" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="
@@ -123,11 +122,7 @@
         $('[data-toggle="tooltip"]').tooltip();
         $('.share-action').click(e => {
             e.preventDefault();
-            popupCenter('/extension/share','Share the goodness', 600, 400);
-        });
-        $('.invite-action').click(e => {
-            e.preventDefault();
-            parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
+            popupCenter('/extension/share','Share the goodness', 700, 500);
         });
         // $("#salesforce-entity-search").selectize({
         //     closeAfterSelect: true,

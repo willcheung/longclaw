@@ -49,6 +49,10 @@
       padding: 15px 0;
     }
 
+      .free {
+        color: #eee;
+      }
+
   </style>
 </head>
 <body>
@@ -70,7 +74,13 @@
 <section id="first_section" class="extension-tutorial">
   <div class="container">
     <div class="rowsample" style="margin-bottom: 50px;margin-top:50px;">
-      <h4>Thank you for signing up, <%= current_user.first_name.present? ? current_user.first_name : "my friend" %></h4>
+      <% if current_user %>
+          <h4>Thank you for signing up, <%= current_user.first_name.present? ? current_user.first_name : "my friend" %></h4>
+      <% elsif @referral_user %>
+          <h4><%= @referral_user.first_name.present? ? @referral_user.first_name : @referral_user.email %> would like you to sign up for ContextSmith</h4>
+      <% else %>
+      Welcome to the free ContextSmith Google Mail add-on!
+      <% end %>
       <h4>Get to know ContextSmith in 3 simple steps.</h4>
     </div>
 
@@ -148,7 +158,16 @@
         Click on any email to see profiles about your contacts and how engaged they are.</h3>
       <img class="img-responsive display-inline" src="/assets/images/tutorial/step3.png" alt="See Contact Information">
       <div class="text-center">
-        <a href="<%= extension_path(login: true) %>"><button class="btn btn-default first-btn">Get Started</button></a>
+        <% if current_user %>
+            <a href="<%= extension_path(login: true) %>"><button class="btn btn-default first-btn">Get Started</button></a>
+        <% else %>
+            <a href="<%= user_omniauth_authorize_path(:google_oauth2_basic, extension: true, ref: params[:ref]) %>">
+              <img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/2x/btn_google_signin_dark_normal_web@2x.png" style="margin-top: 1em" title="Sign up using Google"></a>
+            <br><span class="free">It's free!</span>
+            <p class="oauth" style="font-size:10px;margin-top:5em;">By clicking this button, you agree to our
+              <br><a href="https://www.contextsmith.com/terms/" style="color: #eee;" target="_blank">Terms of Service</a>.</p>
+
+        <% end %>
       </div>
 
     </div>

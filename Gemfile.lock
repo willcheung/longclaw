@@ -144,6 +144,7 @@ GEM
     ffaker (2.8.1)
     ffi (1.9.21)
     ffi (1.9.21-x86-mingw32)
+    friendly_code (2.0.1)
     fullcontact (0.18.0)
       faraday (~> 0.11.0)
       faraday_middleware (>= 0.10)
@@ -375,6 +376,7 @@ DEPENDENCIES
   email_validator
   exception_notification
   ffaker
+  friendly_code
   fullcontact (~> 0.18)
   geocoder
   google-api-client (~> 0.19)
@@ -413,4 +415,4 @@ RUBY VERSION
    ruby 2.2.3p173
 
 BUNDLED WITH
-   1.16.1
+   1.15.4

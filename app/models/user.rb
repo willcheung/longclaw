@@ -64,7 +64,8 @@ class User < ActiveRecord::Base
   has_many    :events
   has_many    :tracking_requests, dependent: :destroy
   has_one     :tracking_setting, dependent: :destroy
-
+  has_many    :comments, dependent: :destroy
+  has_many    :notes, foreign_key: "user_uuid", dependent: :destroy
 
   ### project_members/projects relations have 2 versions
   # v1: only shows confirmed, similar to old logic without project_members.status column
@@ -93,7 +94,7 @@ class User < ActiveRecord::Base
 
   PROFILE_COLOR = %w[#3C8DC5 #7D8087 #A1C436 #3cc5b9 #e58646 #1ab394 #1c84c6 #23c6c8 #f8ac59 #ed5565].freeze
   ROLE = { Admin: 'Admin', Poweruser: 'Power user', Contributor: 'Contributor', Observer: 'Observer',
-           Basic: 'Basic', Pro: 'Professional', Biz: 'Business', Unregistered: 'Unregistered' }.freeze
+           Basic: 'Basic', Plus: 'Plus', Pro: 'Professional', Biz: 'Business', Unregistered: 'Unregistered' }.freeze
   OTHER_ROLE = { Trial: 'Trial', Chromeuser: 'Chrome user' }.freeze # TODO: remove "Chrome user"
   AUTH_TYPE = { GmailBasic: 'google_oauth2_basic', Gmail: 'google_oauth2', Exchange: 'exchange_pwd', Office365: 'microsoft_v2_auth' }.freeze
   FREE_EMAIL_PROVIDERS = ENV['FREE_EMAIL_PROVIDERS'] || %w[yahoo.com gmail.com zoho.com outlook.com aol.com verizon.net comcast.net earthlink.net].freeze
@@ -112,7 +113,7 @@ class User < ActiveRecord::Base
     visible_projects = Project.visible_to(organization_id, id)
 
     meetings_in_cs = Activity.where(category: Activity::CATEGORY[:Meeting], last_sent_date: (Time.current..1.day.from_now), project_id: visible_projects.ids)
-      .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{email}\"}]'::jsonb").order(:last_sent_date)
+      .where("\"from\" || \"to\" || \"cc\" @> '[{\"address\":\"#{User.sanitize(email)[1..-2]}\"}]'::jsonb").order(:last_sent_date)
     return meetings_in_cs unless registered?
 
     # time adjustments for repeating meetings which have last_sent_date as the creation time of the meeting
@@ -192,7 +193,7 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.find_for_oauth2(auth, time_zone='UTC', info=auth.info)
+  def self.find_for_oauth2(auth, time_zone='UTC', info=auth.info, referral_code=nil)
 
     credentials = auth.credentials
 
@@ -228,6 +229,9 @@ class User < ActiveRecord::Base
       puts "Creating user #{user}"
       puts basic_attributes
       user = new_user(oauth_attributes.merge(basic_attributes))
+      if referral_code
+        PlansService.referral(referral_code)
+      end
     end
 
     user.maybe_upgrade # do we have to upgrade the user as the organization plan is available
@@ -938,7 +942,7 @@ class User < ActiveRecord::Base
   # Roles have cascading effect, e.g. if you're an "admin", then you also have access to what other roles have.  
   # Note: The member helpers below is used to determine if the user has access to the appropriate features of that role level ("has_rolelevel_access?".  e.g., "admin?" means user has access to the appropriate features of the Admin role level ("has_admin_access?"); similarly, "power_user?" = user has access to features that a power user may access ("has_power_user_access?"), which implies admin also can access this too.
   def superadmin?
-    ENV['super_admins'] ? ENV['super_admins'].split(' ').include?(self.email) : false
+    ENV['super_admins'] ? ENV['super_admins'].split(',').include?(self.email) : false
   end
 
   def admin?
@@ -965,8 +969,12 @@ class User < ActiveRecord::Base
     self.role == ROLE[:Pro] || self.biz?
   end
 
+  def plus?
+    self.role == ROLE[:Plus] || self.pro?
+  end
+
   def basic?
-    self.role == ROLE[:Basic] || self.pro?
+    self.role == ROLE[:Basic] || self.plus?
   end
 
   def trial?

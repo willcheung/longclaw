@@ -25,7 +25,7 @@ development:
   fullcontact_api_key: Sq2rBc0BbT5ncMMqVAIGAdDsWsf5OgXo
   AZURE_APPLICATION_CLIENT_ID: 9a63b245-f4f3-4284-b71d-d040c85c6058
   AZURE_APPLICATION_CLIENT_SECRET: wgkwjSRA816##_+jbMNEC62
-  super_admins: wcheung@contextsmith.com will@context-smith.com beders@contextsmith.com klu@contextsmith.com vluong@contextsmith.com syong@contextsmith.com chobbs@contextsmith.com craig@context-smith.com churst@contextsmith.com
+  super_admins: wcheung@contextsmith.com,will@context-smith.com,beders@contextsmith.com,klu@contextsmith.com,vluong@contextsmith.com,syong@contextsmith.com,chobbs@contextsmith.com,craig@context-smith.com,churst@contextsmith.com
   read_timeout: 300
 
 test:

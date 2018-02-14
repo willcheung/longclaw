@@ -99,6 +99,23 @@ class HooksController < ApplicationController
     render nothing: true
   end
 
+  def stripe
+    # data = Hashie::Mash.new(JSON.parse(request.body.read))
+    if params[:id] == 'evt_00000000000000'
+      puts 'Test webhook data received'
+      render nothing: true, status: 201
+      return
+    end
+    if params[:type] == 'customer.subscription.trial_will_end'
+      event = Stripe::Event.retrieve(params[:id]) # this makes an extra request but ensures the id and event is valid!
+      puts "Event received #{event}"
+    end
+    render nothing: true, status: 201
+  rescue Stripe::APIConnectionError, Stripe::StripeError => e
+    puts e
+    render nothing: true, status: 400
+  end
+
   def load_emails_since_yesterday
     LoadEmailsSinceYesterdayJob.perform_later
 

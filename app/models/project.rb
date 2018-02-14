@@ -390,29 +390,53 @@ class Project < ActiveRecord::Base
   end
 
   def arg_lookup
-    pinned = self.conversations.pinned
+    # pinned = self.conversations.pinned
     meetings = self.meetings
     members = self.project_members_all
       .joins('LEFT JOIN users ON users.id = project_members.user_id LEFT JOIN contacts ON contacts.id = project_members.contact_id')
       .select('COALESCE(users.id, contacts.id) AS id, COALESCE(users.email, contacts.email) AS email, COALESCE(users.first_name, contacts.first_name) as first_name, COALESCE(users.last_name, contacts.last_name) AS last_name, COALESCE(users.title, contacts.title) AS title, users.image_url AS profile_img_url, project_members.status, project_members.buyer_role, users.department AS team, users.id IS NULL AS is_external').where("users.email IS NOT NULL OR contacts.email IS NOT NULL")
       .where(status: [ProjectMember::STATUS[:Confirmed], ProjectMember::STATUS[:Pending]])
 
+    # TODO: For Demo Only
+    if ENV['demo_opp_ids'].present? && ENV['demo_opp_ids'].split(',').include?(self.id) && ENV['demo_contact_emails'].present?
+      demo_opps_percontact_h = {}
+      demo_accts_percontact_h = {}
+
+      demo_opps_h = {}
+      demo_opps_h["f0798e45-bb46-4fe0-bc3e-xxxxxxxxxxxX"] = {name: "Wayne Global Enterprises", dealSize: 500000, stage: "Proposal", closeDate: Date.tomorrow + 100.days}
+
+      demo_opps_h["f0798e45-5922-4fe0-bc3e-yyyyyyyyyyyY"] = {name: "Frost Intl.", dealSize: 225000, stage: "Proposal", closeDate: Date.tomorrow + 1.months}
+      demo_opps_h["f0798e45-bb46-4469-bc3e-zzzzzzzzzzzZ"] = {name: "Xavier SGY Ltd.", dealSize: 50000, stage: "Prospecting", closeDate: Date.tomorrow + 2.months}
+
+      demo_accts_h = {}
+      demo_accts_h["c8332e16-5922-4469-ad1f-aaaaaaaaaaaA"] = {id: "c8332e16-5922-4469-ad1f-aaaaaaaaaaaA", name: "GoodData Corporation", category: "Customer"}
+
+      ENV['demo_contact_emails'].split(',').each do |email|
+        c = self.account.contacts.find_by(email: email.strip) #|| Contact.find_by(email: email.strip)
+        demo_opps_percontact_h[c.id] = demo_opps_h
+        demo_accts_percontact_h[c.id] = demo_accts_h
+      end
+    end
+
     members.map do |m|
       profile = Profile.find_or_create_by_email(m.email)
-      pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
+      #pin = pinned.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
       meet = meetings.select { |p| p.from.first.address == m.email || p.posted_by == m.id }
-      suggested = m.status == ProjectMember::STATUS[:Pending] ? ' *' : ''
+      is_suggested = m.status == ProjectMember::STATUS[:Pending]
       {
-        name: get_full_name(m) + suggested,
+        name: get_full_name(m),
         domain: get_domain(m.email),
         email: m.email,
         title: m.title,
         profile_img_url: m.profile_img_url || (profile.profileimg_url if profile.present?),
         buyer_role: m.buyer_role,
         team: m.team,
-        key_activities: pin.length,
+        #key_activities: pin.length,
         meetings: meet.length,
-        is_external: m.is_external
+        is_external: m.is_external,
+        is_suggested: is_suggested,
+        opportunities: demo_opps_percontact_h && (demo_opps_percontact_h.keys.include? m.id) ? demo_opps_percontact_h[m.id] : {},
+        accounts: demo_accts_percontact_h && (demo_accts_percontact_h.keys.include? m.id) ? demo_accts_percontact_h[m.id] : {}
       }
     end.compact
 

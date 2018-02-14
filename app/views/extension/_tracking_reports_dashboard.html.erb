@@ -1,0 +1,39 @@
+<div>
+    <!-- Daily trend (last month, sent and opens) -->
+    <div class="trend-graph" id="activity-container" style="height: 300px"></div>
+    <!-- Day of the Week and Hourly trend (last month, opens) -->
+    <div class="trend-graph" id="punchcard-container" style="height: 420px"></div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#activity-container').highcharts().addSeries({
+            color: '#1ab394',
+            name: 'Sent',
+            data: <%= @emails_sent_lastmonth.to_json.html_safe %>
+        });
+        $('#activity-container').highcharts().addSeries({
+            color: '<%= ApplicationHelper::CONTEXTSMITH_BLUE %>',
+            name: 'Opened',
+            yAxis: 0,
+            data: <%= @emails_opened_lastmonth.to_json.html_safe %>
+        });
+
+        $('#punchcard-container').highcharts().addSeries({
+            // marker: { 
+            //     fillColor: "#1ab394",
+            //     fillOpacity: 0.1,
+            //     lineWidth: 3,
+            //     lineColor: '#1ab394'
+            // },
+            color: "#1ab394",
+            name: 'Sent',
+            data: <%= @emails_daily_hourly_sent_lastmonth.to_json.html_safe %>
+        });
+        $('#punchcard-container').highcharts().addSeries({
+            color: '<%= ApplicationHelper::CONTEXTSMITH_BLUE %>',
+            name: 'Opened',
+            data: <%= @emails_daily_hourly_opened_lastmonth.to_json.html_safe %>
+        });
+    });
+</script>

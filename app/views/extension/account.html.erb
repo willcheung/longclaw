@@ -311,7 +311,7 @@
                                                         <%= get_rounded_initials_from_name(fullname, "profile-pic") %>
                                                     <% end %></td></tr>
                                                     <tr style="width:60px"><td style="padding-left: 10px">
-                                                    <% if current_user.role != User::ROLE[:Basic] || current_user.superadmin? %>
+                                                    <% if current_user.plus? %>
                                                         <% if contact.present? %>
                                                             <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
@@ -362,7 +362,7 @@
                             <table class="social-group">
                                <tbody>
                                     <tr style="margin-left: auto; margin-right: auto; width: 100px">
-                                        <% if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?) && @salesforce_base_URL.present? && contact.present? && contact.source == 'Salesforce' %>
+                                        <% if current_user.pro? && @salesforce_base_URL.present? && contact.present? && contact.source == 'Salesforce' %>
                                             <td>
                                                 <a href="<%= @salesforce_base_URL + "/" + contact.external_source_id %>" target="_blank"><img src="/assets/images/salesforce.png" class="sfdc-icon" title="Open Salesforce page in new window"/></a>
                                             </td>

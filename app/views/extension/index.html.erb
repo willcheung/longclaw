@@ -4,7 +4,7 @@
   </div>
   <div class="container-fluid">
 
-    <h1 class="text-center m-b-md">Welcome!</h1>
+    <h1 class="text-center m-b-md"></h1>
     <h4 class="text-center">You're logged in as <%= current_user.email %></h4>
 
     <script>
@@ -25,7 +25,15 @@
           </div>
         </div>
     <% else %>
-        <div class="row text-center" style="margin-top: 50px;">
+        <div class="row text-center" style="margin-top: 140px; font-size: 120%">
+          <div>
+            <button title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-default btn-outline btn-primary">
+              <i class="fa fa-gift"></i> Refer a friend!
+            </button>
+            <div>(Free upgrade for each referral)</div>
+          </div>
+        </div>
+        <!-- <div class="row text-center" style="margin-top: 50px;">
           <div class="" role="group" aria-label="...">
             <button type="button" class="invite-action btn btn-default btn-sm btn-outline">
               <i class="fa fa-envelope-o"></i> Invite
@@ -35,7 +43,7 @@
             </button>
             <a class="btn btn-default btn-sm btn-outline" href="https://contextsmith.zendesk.com/hc/en-us/categories/115000211594-Chrome-Email-Tracker" target="_blank">Support</a>
           </div>
-        </div>
+        </div> -->
 
         <% if current_user.pro? && current_user.oauth_provider == 'google_oauth2_basic' %>
 
@@ -45,15 +53,16 @@
             </p>
             </div>
         <% end %>
-        <div class="row text-center" style="margin-top: 50px;">
+        <div class="row text-center" style="margin-top: 150px;">
           <div class="" role="group" aria-label="...">
             <%= link_to  'plans/new',  class: 'btn btn-default btn-sm btn-outline', target: "_blank" do %>
                 <i class="fa fa-star"></i> Upgrade
             <% end %>
+            <a class="btn btn-default btn-sm btn-outline" href="https://contextsmith.zendesk.com/hc/en-us/categories/115000211594-Chrome-Email-Tracker" target="_blank">Support</a>
           </div>
         </div>
 
-        <h4 class="text-center middle-box" style="margin-top: 100px">Click on an email or hover over<br>the sender to
+        <h4 class="text-center middle-box" style="margin-top: 20px">Click on an email or hover over<br>the sender to
           see contact profile here.</h4>
         <img class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
         </div>
@@ -71,12 +80,12 @@
 
         $('.share-action').click(e => {
             e.preventDefault();
-            popupCenter('/extension/share', 'Share the goodness', 600, 400);
+            popupCenter('/extension/share', 'Share the goodness', 700, 500);
         });
-        $('.invite-action').click(e => {
-            e.preventDefault();
-            parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
-        });
+        // $('.invite-action').click(e => {
+        //     e.preventDefault();
+        //     parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
+        // });
 
         function popupCenter(url, title, w, h) {
             var left = (screen.width / 2) - (w / 2);

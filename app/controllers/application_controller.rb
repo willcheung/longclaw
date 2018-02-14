@@ -35,6 +35,8 @@ class ApplicationController < ActionController::Base
           onboarding_extension_tutorial_path
         elsif origin.start_with? 'plans'
           plans_path(welcome: true)
+        elsif request_origin && request_origin.include?('/refer') # callback from sign up based on a referral
+          extension_refer_path
         else
           extension_path(login: true)
         end

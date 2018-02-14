@@ -23,6 +23,12 @@ class ExtensionController < ApplicationController
   end
 
   def share
+    referral_code = PlansService.referral_code(current_user)
+    @referral_url = url_for(controller: 'extension', action: 'refer') + "?ref=#{referral_code}"
+    render layout: 'empty'
+  end
+
+  def refer
     render layout: 'empty'
   end
 
@@ -242,26 +248,38 @@ class ExtensionController < ApplicationController
   end
 
   def dashboard
-    # Daily trend (last month, sent and opens)
-    tracking_requests_pastmo_h = current_user.tracking_requests.from_lastmonth.group_by{|tr| tr.sent_at.to_date}.map{|d,tr| [d, tr.length]}.to_h
-    @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
+    if current_user.plus?
+      # Daily trend (last month, sent and opens)
+      tracking_requests_pastmo_h = current_user.tracking_requests.from_lastmonth.group_by{|tr| tr.sent_at.to_date}.map{|d,tr| [d, tr.length]}.to_h
+      @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
 
-    tracking_events_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
-      tr.tracking_events.map{ |te| te.created_at.to_date }
-    end.flatten.group_by{|d| d}.map{|d,c| [d, c.length]}.to_h
-    @emails_opened_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_events_pastmo_h[d] ? tracking_events_pastmo_h[d] : 0)]}
+      tracking_events_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
+        tr.tracking_events.map{ |te| te.created_at.to_date }
+      end.flatten.group_by{|d| d}.map{|d,c| [d, c.length]}.to_h
+      @emails_opened_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_events_pastmo_h[d] ? tracking_events_pastmo_h[d] : 0)]}
 
-    @event_dates = @emails_sent_lastmonth.map{|d,c| d.strftime("%b %e")}
+      @event_dates = (Date.today-1.month..Date.today).map{|d| d.strftime("%b %e")}
 
-    # Day of the Week and Hourly trend (last month, opens)
-    tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
-      tr.tracking_events.map{ |te| te.created_at }
-    end.flatten.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
-    @emails_daily_hourly_opened_lastmonth = []
-    (0..23).map do |h|
-      (0..6).map do |d|
-        @emails_daily_hourly_opened_lastmonth << [h, d, (tracking_events_daily_hourly_pastmo_h[[h,d]] ? tracking_events_daily_hourly_pastmo_h[[h,d]] : nil)]
+      # Day of the Week and Hourly trend (last month, sent and opens)
+      tracking_requests_daily_hourly_pastmo_h = current_user.tracking_requests.from_lastmonth.map{ |tr| tr.sent_at.in_time_zone(current_user.time_zone) }.group_by{|d,tr| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
+      @emails_daily_hourly_sent_lastmonth = []
+      (0..23).map do |h|
+        (0..6).map do |d|
+          @emails_daily_hourly_sent_lastmonth << [h, d, (tracking_requests_daily_hourly_pastmo_h[[h,d]] ? tracking_requests_daily_hourly_pastmo_h[[h,d]] : nil)]
+        end
       end
+
+      tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
+        tr.tracking_events.map{ |te| te.created_at.in_time_zone(current_user.time_zone) }
+      end.flatten.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
+      @emails_daily_hourly_opened_lastmonth = []
+      (0..23).map do |h|
+        (0..6).map do |d|
+          @emails_daily_hourly_opened_lastmonth << [h, d, (tracking_events_daily_hourly_pastmo_h[[h,d]] ? tracking_events_daily_hourly_pastmo_h[[h,d]] : nil)]
+        end
+      end
+    else
+      @event_dates = ["Jan 7", "Jan 8", "Jan 9", "Jan 10", "Jan 11", "Jan 12", "Jan 13", "Jan 14", "Jan 15", "Jan 16", "Jan 17", "Jan 18", "Jan 19", "Jan 20", "Jan 21", "Jan 22", "Jan 23", "Jan 24", "Jan 25", "Jan 26", "Jan 27", "Jan 28", "Jan 29", "Jan 30", "Jan 31", "Feb 1", "Feb 2", "Feb 3", "Feb 4", "Feb 5", "Feb 6", "Feb 7"]
     end
 
     render layout: 'empty'
@@ -296,7 +314,7 @@ class ExtensionController < ApplicationController
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
 
-    @salesforce_user = SalesforceController.get_sfdc_oauthuser(user: current_user) if (current_user.role != User::ROLE[:Basic] || current_user.superadmin?)
+    @salesforce_user = SalesforceController.get_sfdc_oauthuser(user: current_user) if current_user.pro?
   end
 
   # Old before_action helper -- FOR REFERENCE ONLY!
@@ -399,14 +417,12 @@ class ExtensionController < ApplicationController
     
     @all_members = @project.users + @project.contacts
     @members = @all_members.first(NUM_ACCOUNT_CONTACT_SHOW_LIMIT)
-
-    @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
-  # (New) before_action helper to determine a matching account+opportunity from the set of recipients (the external contacts in params). i.e., if no external contacts exist, no account or opportunity is returned.
+  # (New) before_action helper: For users belonging to at least the "Plus" plan, this determines a matching account+opportunity from the set of recipients (the external contacts from the active e-mail) to facilitate Contacts management. i.e., if no external contacts exist, no account or opportunity is returned.
   # Note: E-mail domains that are typically "invalid" such as "gmail.com", "yahoo.com", "hotmail.com" may be used to identify a "matching" account if we can find the Contact with the e-mail.  Otherwise, we stop and do not attempt to identify a matching account using "invalid" domains, because these domains are too general and can easily match the wrong account.
   def set_account_and_project
-    return if @params[:external].blank?
+    return if @params[:external].blank? || !current_user.plus?
 
     external = @params[:external].map { |person| person.map { |info| URI.unescape(info, '%2E') } }
     ex_emails = external.map(&:second)
@@ -456,7 +472,6 @@ class ExtensionController < ApplicationController
     end
     @account ||= contacts.first.account
     @project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
-    @clearbit_domain = @account.domain? ? @account.domain : (@account.contacts.present? ? @account.contacts.first.email.split("@").last : "")
   end
 
   # Find and return the external sfdc_id of the most likely SFDC Account given an array of contact emails; returns nil if one cannot be determined.

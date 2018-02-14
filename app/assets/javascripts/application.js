@@ -187,3 +187,8 @@ function truncPrecision(number, significant_digits) {
 function numberWithCommas(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+// Truncate a string if it is longer than the maxlength, and append ellipses to the end. If it is shorter, then return the string with no change.
+function truncateWithEllipsis(string, maxlength) {
+  return string.substring(0,maxlength) + (string.length > maxlength ? "…" : "");
+}
