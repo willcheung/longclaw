@@ -375,7 +375,7 @@ DEPENDENCIES
   email_validator
   exception_notification
   ffaker
-  fullcontact
+  fullcontact (~> 0.18)
   geocoder
   google-api-client (~> 0.19)
   graphql
