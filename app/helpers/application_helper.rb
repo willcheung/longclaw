@@ -135,6 +135,21 @@ module ApplicationHelper
     end
   end
 
+  def get_address_first_names(mail_addresses)
+    mail_addresses.map do |ma|
+      ma.name.present? ? get_first_name(ma.name) : ma.address
+    end.join(', ')
+  end
+
+  def get_attachment_member_names(to, trailing_text="other", size_limit=2)
+    if to.size <= size_limit
+      get_address_first_names(to)
+    elsif trailing_text == 'other'
+      get_address_first_names(to[0,2]) + ' and ' + pluralize(to.size - size_limit, 'other')
+    else
+      'All'
+    end
+  end
 
   def get_first_names(from, to, cc)
       a = []
@@ -316,6 +331,61 @@ module ApplicationHelper
   # Returns date as string formatted as "Mmm dd" if it is less than a year into the future; otherwise, if it is more than year away from today or is in the past, returns date as "Mmm dd Yyyy" (used to shorten display of a date if space is limited)
   def get_formatted_date(date)
     (date - DateTime.now) <= 365 && date >= DateTime.now ? date.strftime('%b %d') : date.strftime('%b %d %Y')
+  end
+
+  def file_type_icon(mime_type=nil, filename=nil)
+    fa_prefix = 'fa-file'
+    if mime_type.present?
+      case mime_type.split('/').first
+        when 'image'
+          fa_prefix + '-image-o'
+        when 'video'
+          fa_prefix + '-video-o'
+        when 'audio'
+          fa_prefix + '-audio-o'
+        when 'application'
+          mime_subtype = mime_type.split('/').second
+          if mime_subtype.include?('zip') || mime_subtype.include?('compressed')
+            fa_prefix + '-archive-o'
+          elsif mime_subtype.include?('pdf')
+            fa_prefix + '-pdf-o'
+          elsif mime_subtype.include?('msword') || mime_subtype.include?('wordprocessingml')
+            fa_prefix + '-word-o'
+          elsif mime_subtype.include?('ms-powerpoint') || mime_subtype.include?('presentationml')
+            fa_prefix + '-powerpoint-o'
+          elsif mime_subtype.include?('ms-excel') || mime_subtype.include?('spreadsheetnml')
+            fa_prefix + '-excel-o'
+          else
+            fa_prefix + '-o'
+          end
+        else
+          fa_prefix + '-o'
+      end
+    elsif filename.present?
+      file_extension = filename.split('.').last
+      case file_extension.downcase
+        when 'jpeg', 'jpg', 'jpe', 'png', 'tiff', 'gif', 'bmp'
+          fa_prefix + '-image-o'
+        when 'zip', 'tar', 'gz', '7z'
+          fa_prefix + '-archive-o'
+        when 'pdf'
+          fa_prefix + '-pdf-o'
+        when 'doc', 'docx'
+          fa_prefix + '-word-o'
+        when 'xls', 'xlsx', 'csv'
+          fa_prefix + '-excel-o'
+        when 'ppt', 'pptx'
+          fa_prefix + '-powerpoint-o'
+        when 'avi', 'flv', 'wmv', 'mov', 'mp4'
+          fa_prefix + '-video-o'
+        when 'pcm', 'aac', 'wma', 'mp3', 'wav', 'aiff', 'flac'
+          fa_prefix + '-audio-o'
+        else
+          fa_prefix + '-o'
+      end
+    else
+      fa_prefix + '-o'
+    end
   end
 
 end

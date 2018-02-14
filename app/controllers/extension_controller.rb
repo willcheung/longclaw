@@ -8,6 +8,7 @@ class ExtensionController < ApplicationController
   
   layout "extension", except: [:test, :new]
 
+  before_action :get_google_service, only: [:attachments, :download]
   before_action :filter_params
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce, :company]
@@ -174,83 +175,44 @@ class ExtensionController < ApplicationController
   end
 
   def attachments
-    if current_user.pro? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
-      # connect to Gmail
-      secrets = Google::APIClient::ClientSecrets.new(
-        {
-          "web" =>
-            {
-              "access_token" => current_user.fresh_token,
-              "refresh_token" => current_user.oauth_refresh_token,
-              "client_id" => ENV['google_client_id'],
-              "client_secret" => ENV['google_client_secret']
-            }
-        }
-      )
-      service = Gmail::GmailService.new
-      service.authorization = secrets.to_authorization
-
-      # p '***********************``````` GMAIL API REQUEST STARTS HERE ````````~~~~~~~~~~~~~~~~~~~~~~`'
-      message_list = service.list_user_messages('me', q: 'has:attachment -in:chats -filename:ics', max_results: 100) # { |message_list, error| message_list = message_list unless error }
-      # BATCH REQUEST
-      @messages = []
-      service.batch do |service|
-        message_list.messages.each do |msg|
-          service.get_user_message('me', msg.id) do |m, error| #messages << m unless error }
-            next if error || m.blank?
-            next if m.payload.mime_type != 'multipart/mixed'
-            parts = m.payload.parts
-            headers = m.payload.headers
-            from = headers.find { |h| h.name == 'From' }.value
-            message_id = headers.find { |h| h.name == 'Message-ID' }.value
-            atts = parts[1..parts.length]
-            attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
-                              .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id } }
-            next if attachments.blank?
-            @messages << Hashie::Mash.new({ from: from, message_id: message_id, id: m.id, attachments: attachments })
-          end
+    return unless @service
+    @emails = @params[:external].map { |person| URI.unescape(person.second, '%2E') } if @params[:external].present?
+    @emails = @params[:internal].map { |person| URI.unescape(person.second, '%2E') }.reject { |email| email == current_user.email } if @emails.blank?
+    email_filter_string = @emails.map { |email| "from:#{email} OR to:#{email}" }.join(' OR ')
+    message_list = @service.list_user_messages('me', q: email_filter_string + ' has:attachment -in:chats -in:draft -filename:ics', max_results: 300) # { |message_list, error| message_list = message_list unless error }
+    # BATCH REQUEST
+    @messages = []
+    @service.batch do |service|
+      message_list.messages.each do |msg|
+        service.get_user_message('me', msg.id) do |m, error|
+          next if error || m.blank? || m.payload.mime_type != 'multipart/mixed'
+          parts = m.payload.parts
+          headers = m.payload.headers
+          from = parse_email(headers.find { |h| h.name == 'From' }.value)
+          # boolean for deciding whether attachment was sent or received
+          internal = from.address == current_user.email || from.name == get_full_name(current_user)
+          to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| val.split(',') }.flatten.map { |email| parse_email(email) }
+          to.reject { |email| email.address == current_user.email || email.name == get_full_name(current_user) } if internal
+          message_id = headers.find { |h| h.name == 'Message-ID' }.value
+          atts = parts[1..parts.length]
+          attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
+                            .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id, file_size: att.body.size } }
+          next if attachments.blank?
+          @messages << Hashie::Mash.new({ from: from, to: to, message_id: message_id, internal: internal, internal_date: m.internal_date, id: m.id, attachments: attachments })
         end
       end
-
-      p @messages
-
-      # p '***********************``````` GMAIL API REQUEST ENDS HERE ````````~~~~~~~~~~~~~~~~~~~~~~`'
-    else
-      # tell user to upgrade or start free trial!
     end
   end
 
   def download
-    # init gmail service....
-
-    secrets = Google::APIClient::ClientSecrets.new(
-        {
-            "web" =>
-                {
-                    "access_token" => current_user.fresh_token,
-                    "refresh_token" => current_user.oauth_refresh_token,
-                    "client_id" => ENV['google_client_id'],
-                    "client_secret" => ENV['google_client_secret']
-                }
-        }
-    )
-    service = Gmail::GmailService.new
-    service.authorization = secrets.to_authorization
-
-    service.get_user_message_attachment('me', params['id'], params['attachment_id']) { |attachment| send_data attachment.data, filename: params['filename'], type: params['mime_type'] }
+    @service.get_user_message_attachment('me', params['id'], params['attachment_id']) { |attachment| send_data attachment.data, filename: params['filename'], type: params['mime_type'] }
   end
-
-  # def alerts_tasks
-  #   @notifications = @project.notifications.order(:is_complete).take(15)
-  # end
 
   # def contacts
   #   @project_members = @project.project_members
   #   @suggested_members = @project.project_members_all.pending
   # end
 
-  # def metrics
-  # end
 
   # Note: params[:external] and params[:internal] is forwarded to extension_account_path unfiltered
   def create_account
@@ -677,10 +639,39 @@ class ExtensionController < ApplicationController
     params.require(:account).permit(:name, :website, :phone, :description, :address, :category, :domain)
   end
 
+  def parse_email(email)
+    begin
+      Mail::Address.new(email)
+    rescue StandardError => e
+      # email probably has non-ascii characters, try to extract just the e-mail address
+      email.match(/.*<(.*)>/) do |match|
+        Hashie::Mash(address: match[1])
+      end
+    end
+  end
+
   def get_tracking_setting
     ts = TrackingSetting.where(user: current_user).first_or_create do |ts|
       ts.last_seen = DateTime.now
     end
     ts
+  end
+
+  def get_google_service
+    return unless current_user.pro? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
+    # connect to Gmail
+    secrets = Google::APIClient::ClientSecrets.new(
+        {
+            "web" =>
+                {
+                    "access_token" => current_user.fresh_token,
+                    "refresh_token" => current_user.oauth_refresh_token,
+                    "client_id" => ENV['google_client_id'],
+                    "client_secret" => ENV['google_client_secret']
+                }
+        }
+    )
+    @service = Gmail::GmailService.new
+    @service.authorization = secrets.to_authorization
   end
 end

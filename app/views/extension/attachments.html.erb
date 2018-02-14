@@ -1,21 +1,69 @@
-<p>attachments view</p>
+<style type="text/css">
+  .attachment-container {
+    width: 225px;
+  }
+  .attachment-date {
+    text-align: right;
+  }
+  .attachment-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .attachment-group.left {
+    align-items: flex-start;
+  }
+  .attachment-group.right {
+    align-items: flex-end;
+  }
+  .message-bubble {
+    padding: 5px;
+    max-width: 200px;
+    border-radius: 5px;
+    color: black;
+  }
 
-<% if current_user.pro? # && signed in %>
-  <p>yay my attachments are here!!</p>
+  .attachment-group.left > .message-bubble {
+    background-color: #eff1f1;
+  }
+  .attachment-group.right > .message-bubble {
+    background-color: #F0F6FB;
+  }
 
-<% @messages.each do |msg| %>
-    <p><%= msg.from %></p>
-    <p><%= msg.message_id %></p>
-    <% msg.attachments.each do |att| %>
-      <ol>
-        <li><a href="/extension/download?<%= { id: msg.id, attachment_id: att.attachment_id, filename: att.filename, mime_type: att.mime_type }.to_param %>"><%= att.filename %></a></li>
-        <li><%= att.mime_type %></li>
-      </ol>
+</style>
+<% if current_user.pro? && @service %>
+  <% if @messages.present? %>
+    <p class="m-t-sm">Attachments between <%= @emails.join(', ') %> and you:</p>
+    <div class="attachment-container m-t-sm">
+    <% @messages.each.with_index do |msg, i| %>
+        <span class="pull-right m-r-n-xl attachment-date">
+          <%= Time.zone.at(msg.internal_date/1000).strftime('%b %d') %>
+          <br>
+          <%= Time.zone.at(msg.internal_date/1000).strftime('%l:%M%P') %>
+        </span>
+        <div class="attachment-group <%= msg.internal ? 'right' : 'left' %>">
+          <div class="message-bubble m-b-sm">
+            <p class="m-b-none"><strong><%= msg.internal ? 'You' : get_address_first_names([msg.from]) %></strong> to <%= msg.internal ? get_attachment_member_names(msg.to) : 'You, ' + get_attachment_member_names(msg.to, 'other', 1) %></p>
+            <hr class="message-divider">
+            <% msg.attachments.each do |att| %>
+              <p class="m-b-none m-t-xs">
+                <a href="/extension/download?<%= { id: msg.id, attachment_id: att.attachment_id, filename: att.filename, mime_type: att.mime_type }.to_param %>">
+                  <i class="fa <%= file_type_icon(att.mime_type, att.filename) %>"></i>
+                  <%= att.filename %>
+                </a>
+                &nbsp;(<%= number_to_human_size(att.file_size, precision: 2) %>)
+              </p>
+            <% end %>
+          </div>
+        </div>
     <% end %>
-<% end %>
-<% elsif false # non signed in user %>
-  <p>hey, let us read your inbox!</p>
+    </div>
+  <% else %>
+  <p>No attachments found between you and these people.</p>
+  <% end %>
+<% elsif @service.blank? %>
+  <p>Please allow us to read your inbox to your Attachments here!</p>
+  <button>Sign in again</button>
 <% else %>
-  <p>booo no attachments</p>
+  <p>This feature is only for Plus users or above.</p>
   <button>Upgrade Now!</button> or <button>Start a free trial!</button>
 <% end %>
