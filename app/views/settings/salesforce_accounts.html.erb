@@ -98,7 +98,7 @@
                             <td class="col-lg-2"><%= a.account.name %></td>
                             <td class="col-lg-5"><%= a.salesforce_account_name %></td>
                             <td class="col-lg-5">
-                              <ul><%= a.salesforce_opportunities.limit(10).sort { |a,b| b.close_date <=> a.close_date  }.map { |o| "<li> <strong>" + o.name + "</strong>, " + (o.amount.present? ? "$" + number_to_human(o.amount, precision: 1, significant: false) : "(Amount unspecified)") + ", " + o.stage_name + ", isClosed: #{o.is_closed}, isWon: #{o.is_won}, close_date: #{o.close_date}" + "</li>"}.join("").html_safe %></ul>
+                              <ul><%= a.salesforce_opportunities.limit(10).sort { |a,b| b.close_date <=> a.close_date  }.map { |o| "<li> <strong>" + o.name + "</strong>, " + (o.amount.present? ? "$" + number_to_human(o.amount, precision: 1, significant: false) : "(Amount unspecified)") + ", " + (o.stage_name.present? ? o.stage_name : "(No stage)") + ", isClosed: #{o.is_closed}, isWon: #{o.is_won}, close_date: #{o.close_date}" + "</li>"}.join("").html_safe %></ul>
                             </td>
                             <td class="col-lg-2"><ul><%= a.account.contacts.source_from_salesforce.sort_by { |c| get_full_name(c).upcase }.take(10).map { |c| "<li><strong> #{ (c.first_name.blank? && c.last_name.blank?) ? 'Anonymous' : get_full_name(c) } </strong> (#{ c.email })" }.join("").html_safe %></ul></td>
                             <td><a href="/delete_salesforce_account/<%=a.id%>" data-method="delete"><i class="fa fa-trash-o pull-right text-mute-gray" style="font-size:14px;"></i></a></td>

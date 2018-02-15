@@ -44,7 +44,7 @@ class Contact < ActiveRecord::Base
   validates_format_of :email,:with => Devise::email_regexp
 
   scope  :source_from_salesforce, -> { where source: 'Salesforce' }
-  scope  :not_source_from_salesforce, -> { where("source != 'Salesforce' OR source is null") }
+  scope  :source_not_from_salesforce, -> { where("source != 'Salesforce' OR source is null") }
 
   # TODO: Create a general visible_to scope for a general "role" checker
   scope :visible_to, -> (user) {
@@ -217,8 +217,8 @@ class Contact < ActiveRecord::Base
         end
       end
       # puts "**** Result of SFDC query \"#{query_statement}\":"
-      # puts "-> # of rows UPSERTed into Contacts = #{val.count} total ****"
-      result = { status: "SUCCESS", result: "Rows imported from SFDC into CS Contacts = #{val.count}", detail: "#{ query_result[:detail] }" }
+      # puts "-> # of contacts/records UPSERTed into Contacts = #{val.count} total ****"
+      result = { status: "SUCCESS", result: "Contacts imported from SFDC into CS Contacts = #{val.count}", detail: "#{ query_result[:detail] }" }
     else  # SFDC query failure
       result = { status: "ERROR", result: query_result[:result], detail: "#{ query_result[:detail] } Query: #{ query_statement }" }
     end
@@ -283,7 +283,8 @@ class Contact < ActiveRecord::Base
     sObject_fields[:external_sfdc_id] = self.external_source_id if self.is_source_from_salesforce?
     result = SalesforceService.update_salesforce(client: client, update_type: "contact", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
-    # if result[:status] == "SUCCESS"
+    # if result[:status] == "SUCCESS" # unless failed Salesforce update
+    #   # TODO: To count number of contacts updated to SFDC (note: could already exist), each time this code is executed is one successful contact updated.
     #   puts "-> a SFDC Contact (#{self.last_name}, #{self.first_name}, #{self.email}) was created/updated from a ContextSmith contact. Contact sObject Id='#{ result[:result] }'."
     # else  # Salesforce query failure
     #   puts "** #{ result[:result] } Details: #{ result[:detail] }."
