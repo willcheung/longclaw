@@ -197,7 +197,7 @@ class ExtensionController < ApplicationController
           from = parse_email(headers.find { |h| h.name == 'From' }.value)
           # boolean for deciding whether attachment was sent or received
           internal = from.address == current_user.email || from.name == get_full_name(current_user)
-          to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| val.split(',') }.flatten.map { |email| parse_email(email) }
+          to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| Mail::AddressList.new(val) }.map(&:addresses).flatten
           to.reject { |email| email.address == current_user.email || email.name == get_full_name(current_user) } if internal
           message_id = headers.find { |h| h.name == 'Message-ID' }.value
           atts = parts[1..parts.length]
@@ -654,16 +654,16 @@ class ExtensionController < ApplicationController
     params.require(:account).permit(:name, :website, :phone, :description, :address, :category, :domain)
   end
 
-  def parse_email(email)
-    begin
-      Mail::Address.new(email)
-    rescue StandardError => e
-      # email probably has non-ascii characters, try to extract just the e-mail address
-      email.match(/.*<(.*)>/) do |match|
-        Hashie::Mash(address: match[1])
-      end
-    end
-  end
+  # def parse_email(email)
+  #   begin
+  #     Mail::Address.new(email)
+  #   rescue StandardError => e
+  #     # email probably has non-ascii characters, try to extract just the e-mail address
+  #     email.match(/.*<(.*)>/) do |match|
+  #       Hashie::Mash(address: match[1])
+  #     end
+  #   end
+  # end
 
   def get_tracking_setting
     ts = TrackingSetting.where(user: current_user).first_or_create do |ts|
