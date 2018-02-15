@@ -77,7 +77,7 @@
       <% if current_user %>
           <h4>Thank you for signing up, <%= current_user.first_name.present? ? current_user.first_name : "my friend" %></h4>
       <% elsif @referral_user %>
-          <h4><%= @referral_user.first_name.present? ? @referral_user.first_name : @referral_user.email %> would like you to sign up for ContextSmith</h4>
+          <h2><%= @referral_user.first_name.present? ? @referral_user.first_name : @referral_user.email %> would like you to sign up for ContextSmith</h2>
       <% else %>
       Welcome to the free ContextSmith Google Mail add-on!
       <% end %>
