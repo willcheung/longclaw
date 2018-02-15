@@ -11,7 +11,7 @@ class PlansService
       customer = if user.stripe_customer_id
                    find_or_create_customer(user, user.email)
                  else
-                   create_customer(current_user, current_user.email)
+                   create_customer(user, user.email)
                  end
       customer[:account_balance] -= bonus
       customer.save
@@ -37,7 +37,7 @@ class PlansService
     ts.save
   end
 
-  def self.find_or_create_customer(user, stripe_email, source: nil)
+  def self.find_or_create_customer(user, stripe_email, source = nil)
     customer = Stripe::Customer.retrieve(user.stripe_customer_id, :expand => 'subscriptions')
     customer[:deleted] ? create_customer(user, stripe_email, source) : customer
   rescue Stripe::StripeError => e
@@ -49,12 +49,11 @@ class PlansService
     end
   end
 
-  def self.create_customer(user, stripe_email, source: nil)
+  def self.create_customer(user, stripe_email, source = nil)
     customer = Stripe::Customer.create(
-      email: stripe_email,
-      metadata: { user_id: user.id },
-      source: source
-    )
+        email: stripe_email,
+        metadata: { user_id: user.id },
+        source: source)
     user.billing_email = stripe_email
     user.stripe_customer_id = customer.id
     user.save

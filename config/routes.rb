@@ -139,6 +139,8 @@ Longclaw::Application.routes.draw do
       get 'share'
       get 'account'
       get 'company'
+      get 'attachments'
+      get 'download'
       # get 'alerts_tasks'
       get 'contacts'
       get 'settings'
