@@ -33,13 +33,14 @@ gem 'device_detector'
 gem 'geocoder'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'graphql'
-gem 'fullcontact'
+gem 'fullcontact', '~>0.18'
 gem 'mail', :git => 'https://github.com/mikel/mail.git'
 gem 'mini_mime'
 gem 'stripe', :git => 'https://github.com/stripe/stripe-ruby'
 gem 'email_validator'
 gem 'sucker_punch', '~>2.0'
 gem 'kaminari'
+gem 'google-api-client', '~>0.19'
 
 # Gems used only for assets and not required
 # in production environments by default.

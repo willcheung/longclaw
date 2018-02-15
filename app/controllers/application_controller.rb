@@ -11,8 +11,8 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :null_session, only: Proc.new { |c| c.request.format.json? }
   layout :layout_by_resource
   before_action :restrict_access, if: :current_user
+  before_action :check_google_oauth_valid_token, if: :current_user
   around_action :set_time_zone, if: :current_user
-  around_action :check_google_oauth_valid_token, if: :current_user
 
   def after_sign_in_path_for(resource)
 
@@ -110,7 +110,6 @@ class ApplicationController < ActionController::Base
       session[:redirect_to] = request.referer
       redirect_to session[:redirect_to] || root_path
     end
-    yield
   end
 
   # returns array of users (user=[user id, user's full name]) of an organization who are registered with CS
