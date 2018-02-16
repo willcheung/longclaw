@@ -106,6 +106,9 @@
         </div>
       </div>
     </div>
+    <div class="text-center" style="border-top: 1px solid lightgray;">
+        <h2 class="text-center"><%= current_user.first_name.present? ? current_user.first_name + ", you" : "You" %> currently have a <strong style="color: #3c6bc5"><%= @account_balance %></strong> <%= @credit_or_balance %>.</div></h2>
+    </div>
   </div>
 </div>
 <div class="copier">
