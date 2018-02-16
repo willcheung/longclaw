@@ -31,7 +31,7 @@
   }
 
 </style>
-<% if current_user.pro? && @service %>
+<% if current_user.plus? && @service %>
   <% if @messages.present? %>
     <p class="m-t-sm m-b">Attachments between <%= @emails.join(', ') %> and you:</p>
     <div class="attachment-container m-t-sm">
