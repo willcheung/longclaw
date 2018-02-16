@@ -1,3 +1,5 @@
+include ActionView::Helpers::DateHelper  #for distance_of_time_in_words_to_now
+
 class PlansController < ApplicationController
   layout 'empty'
   protect_from_forgery :except => :webhook
