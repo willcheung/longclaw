@@ -37,7 +37,7 @@ class SalesforceOpportunity < ActiveRecord::Base
 
   validates :name, :close_date, presence: true
 
-  # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.
+  # This class method finds SFDC opportunities and creates a local model out of all opportunities associated with each SFDC-linked CS account.  Only minimal, essential fields (Id, Name, AccountId, OwnerId, IsWon, IsClosed, StageName, and CloseDate) are saved.
   # -> For Admin users, speicfy organization, this will get all SFDC opportunities belonging to linked CS/SFDC accounts, and is Open or was Closed within the last year.  
   # -> For individual users, this will get all SFDC opportunities belonging to the current_user's SFDC User, and is Open or was Closed within the last year.
   # Params:    client - a valid SFDC connection
@@ -58,7 +58,7 @@ class SalesforceOpportunity < ActiveRecord::Base
       sfdc_accounts = SalesforceAccount.where(contextsmith_organization_id: organization.id).is_linked
 
       sfdc_accounts.each do |a|
-        query_statement = "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')}))"
+        query_statement = "SELECT Id, OwnerId, AccountId, Name, IsClosed, IsWon, StageName, CloseDate from Opportunity where AccountId = '#{a.salesforce_account_id}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')}))"
 
         query_result = SalesforceService.query_salesforce(client, query_statement)
         # puts "query_statement: #{ query_statement }" 
@@ -74,20 +74,16 @@ class SalesforceOpportunity < ActiveRecord::Base
                     '#{opp.OwnerId}', 
                     '#{opp.AccountId}', 
                     #{SalesforceOpportunity.sanitize(opp.Name)}, 
-                    #{SalesforceOpportunity.sanitize(opp.Description)}, 
-                    #{opp.Amount.nil? ? "0.00" : opp.Amount}, 
                     #{opp.IsClosed}, 
                     #{opp.IsWon}, 
-                    #{SalesforceOpportunity.sanitize(opp.StageName)},
+                    #{SalesforceOpportunity.sanitize(opp.StageName)}, 
                     '#{opp.CloseDate}',
-                    #{SalesforceOpportunity.sanitize(opp.Probability)},
-                    #{SalesforceOpportunity.sanitize(opp.ForecastCategoryName)},
                     '#{Time.now}', '#{Time.now}')"
           end
         end
 
-        insert = 'INSERT INTO "salesforce_opportunities" ("salesforce_opportunity_id", "owner_id", "salesforce_account_id", "name", "description", "amount", "is_closed", "is_won", "stage_name", "close_date", "probability", "forecast_category_name", "created_at", "updated_at") VALUES'
-        on_conflict = 'ON CONFLICT (salesforce_opportunity_id) DO UPDATE SET owner_id = EXCLUDED.owner_id, salesforce_account_id = EXCLUDED.salesforce_account_id, name = EXCLUDED.name, description = EXCLUDED.description, amount = EXCLUDED.amount, is_closed = EXCLUDED.is_closed, is_won = EXCLUDED.is_won, stage_name = EXCLUDED.stage_name, close_date = EXCLUDED.close_date, probability = EXCLUDED.probability, forecast_category_name = EXCLUDED.forecast_category_name, updated_at = EXCLUDED.updated_at'
+        insert = 'INSERT INTO "salesforce_opportunities" ("salesforce_opportunity_id", "owner_id", "salesforce_account_id", "name", "is_closed", "is_won", "stage_name", "close_date", "created_at", "updated_at") VALUES'
+        on_conflict = 'ON CONFLICT (salesforce_opportunity_id) DO UPDATE SET owner_id = EXCLUDED.owner_id, salesforce_account_id = EXCLUDED.salesforce_account_id, name = EXCLUDED.name, is_closed = EXCLUDED.is_closed, is_won = EXCLUDED.is_won, stage_name = EXCLUDED.stage_name, close_date = EXCLUDED.close_date, updated_at = EXCLUDED.updated_at'
         values = val.join(', ')
 
         if val.present?
@@ -102,8 +98,8 @@ class SalesforceOpportunity < ActiveRecord::Base
     elsif user.present?  # single SFDC user
       sfdc_userid = SalesforceService.get_salesforce_user_uuid(user.organization_id, user.id)
       query_statements = []
-      query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')}))"  # "Closed within the last year & all Open Opps"
-      # query_statements << "SELECT Id, AccountId, OwnerId, Name, Amount, Description, IsWon, IsClosed, StageName, CloseDate, Probability, ForecastCategoryName from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = FALSE ORDER BY CloseDate DESC LIMIT 10" # "recent 10 Open Opps"
+      query_statements << "SELECT Id, OwnerId, AccountId, Name, IsClosed, IsWon, StageName, CloseDate from Opportunity where OwnerId = '#{sfdc_userid}' AND ((IsClosed = FALSE) OR (IsClosed = TRUE and CloseDate > #{(Time.now - 1.year).utc.strftime('%Y-%m-%d')}))"  # "Owned by this user, Closed within the last year & all Open Opps"
+      # query_statements << "SELECT Id, OwnerId, AccountId, Name, IsClosed, IsWon, CloseDate from Opportunity where OwnerId = '#{sfdc_userid}' AND IsClosed = FALSE ORDER BY CloseDate DESC LIMIT 10" # "recent 10 Open Opps"
 
       query_statements.each do |query_statement|
         query_result = SalesforceService.query_salesforce(client, query_statement)
@@ -117,22 +113,18 @@ class SalesforceOpportunity < ActiveRecord::Base
                     '#{opp.OwnerId}', 
                     '#{opp.AccountId}', 
                     #{SalesforceOpportunity.sanitize(opp.Name)}, 
-                    #{SalesforceOpportunity.sanitize(opp.Description)}, 
-                    #{opp.Amount.nil? ? "0.00" : opp.Amount}, 
                     #{opp.IsClosed}, 
                     #{opp.IsWon}, 
-                    #{SalesforceOpportunity.sanitize(opp.StageName)},
+                    #{SalesforceOpportunity.sanitize(opp.StageName)}, 
                     '#{opp.CloseDate}',
-                    #{SalesforceOpportunity.sanitize(opp.Probability)},
-                    #{SalesforceOpportunity.sanitize(opp.ForecastCategoryName)},
                     '#{Time.now}', '#{Time.now}')"
           end
           total_opportunities += query_result[:result].length
         end
       end # End: query_statements.each do |query_statement|
 
-      insert = 'INSERT INTO "salesforce_opportunities" ("salesforce_opportunity_id", "owner_id", "salesforce_account_id", "name", "description", "amount", "is_closed", "is_won", "stage_name", "close_date", "probability", "forecast_category_name", "created_at", "updated_at") VALUES'
-      on_conflict = 'ON CONFLICT (salesforce_opportunity_id) DO UPDATE SET owner_id = EXCLUDED.owner_id, salesforce_account_id = EXCLUDED.salesforce_account_id, name = EXCLUDED.name, description = EXCLUDED.description, amount = EXCLUDED.amount, is_closed = EXCLUDED.is_closed, is_won = EXCLUDED.is_won, stage_name = EXCLUDED.stage_name, close_date = EXCLUDED.close_date, probability = EXCLUDED.probability, forecast_category_name = EXCLUDED.forecast_category_name, updated_at = EXCLUDED.updated_at'
+      insert = 'INSERT INTO "salesforce_opportunities" ("salesforce_opportunity_id", "owner_id", "salesforce_account_id", "name", "is_closed", "is_won", "stage_name", "close_date", "created_at", "updated_at") VALUES'
+      on_conflict = 'ON CONFLICT (salesforce_opportunity_id) DO UPDATE SET owner_id = EXCLUDED.owner_id, salesforce_account_id = EXCLUDED.salesforce_account_id, name = EXCLUDED.name, is_closed = EXCLUDED.is_closed, is_won = EXCLUDED.is_won, stage_name = EXCLUDED.stage_name, close_date = EXCLUDED.close_date, updated_at = EXCLUDED.updated_at'
       values = val.join(', ')
 
       if val.present?

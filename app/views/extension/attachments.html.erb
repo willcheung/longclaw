@@ -1,0 +1,70 @@
+<style type="text/css">
+  .attachment-container {
+    width: 225px;
+    margin-left: 40px;
+  }
+  .attachment-date {
+    font-size: 9px;
+  }
+  .attachment-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .attachment-group.left {
+    align-items: flex-start;
+  }
+  .attachment-group.right {
+    align-items: flex-end;
+  }
+  .message-bubble {
+    padding: 5px;
+    max-width: 200px;
+    border-radius: 5px;
+    color: black;
+  }
+
+  .attachment-group.left > .message-bubble {
+    background-color: #eff1f1;
+  }
+  .attachment-group.right > .message-bubble {
+    background-color: #F0F6FB;
+  }
+
+</style>
+<% if current_user.plus? && @service %>
+  <% if @messages.present? %>
+    <p class="m-t-sm m-b">Attachments between <%= @emails.join(', ') %> and you:</p>
+    <div class="attachment-container m-t-sm">
+    <% @messages.each.with_index do |msg, i| %>
+        <span class="pull-left m-l-n-xl attachment-date">
+          <%= Time.zone.at(msg.internal_date/1000).strftime('%b %d') %>
+          <br>
+          <%= Time.zone.at(msg.internal_date/1000).strftime('%l:%M%P') %>
+        </span>
+        <div class="attachment-group <%= msg.internal ? 'right' : 'left' %>">
+          <div class="message-bubble m-b-sm">
+            <p class="m-b-none"><strong><%= msg.internal ? 'You' : get_address_first_names([msg.from]) %></strong> to <%= get_attachment_member_names(msg.to) %></p>
+            <hr class="message-divider">
+            <% msg.attachments.each do |att| %>
+              <p class="m-b-none m-t-xs">
+                <a href="/extension/download?<%= { id: msg.id, attachment_id: att.attachment_id, filename: att.filename, mime_type: att.mime_type }.to_param %>">
+                  <i class="fa fa-lg <%= file_type_icon(att.mime_type, att.filename) %>"></i>
+                  <%= att.filename %>
+                </a>
+                &nbsp;(<%= number_to_human_size(att.file_size, precision: 2) %>)
+              </p>
+            <% end %>
+          </div>
+        </div>
+    <% end %>
+    </div>
+  <% else %>
+  <p>No attachments found between you and these people.</p>
+  <% end %>
+<% elsif @service.blank? %>
+  <p>Please allow us to read your inbox to see your Attachments here!</p>
+  <button>Sign in again</button>
+<% else %>
+  <p>This feature is only for Plus users or above.</p>
+  <button>Upgrade Now!</button> or <button>Start a free trial!</button>
+<% end %>

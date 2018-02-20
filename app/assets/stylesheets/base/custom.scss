@@ -610,9 +610,23 @@ a.suggested-action:hover, a.suggested-action:focus {
 }
 
 /** Chrome Extension **/
+.extension-sidebar ul.nav-tabs li {
+  width: 33%;
+}
+
 .extension-sidebar ul.nav.nav-tabs li a {
   font-size: 11px;
   padding: 8px 12px;
+  //text-align: center;
+  //width: 33%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.extension-sidebar .nav > li > a i {
+  margin-right: 0;
+  margin-bottom: 5px;
 }
 
 .extension-sidebar ul.nav.nav-tabs {

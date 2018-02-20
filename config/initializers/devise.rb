@@ -255,6 +255,8 @@ Devise.setup do |config|
     skip_jwt: true,
     include_granted_scopes: true
   }
+  # GET NEW REFRESH TOKEN EVERY LOGIN (FOR DEVS WITH MULTIPLE TEST ENVIRONMENTS)
+  google_oauth2_options[:prompt] = 'consent' if Rails.env.test?
 
   google_oauth2_basic_options = {
     ### access_type is already "offline" by default

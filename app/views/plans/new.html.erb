@@ -57,7 +57,7 @@
         <h2>Basic</h2>
 
         <div class="" >
-          <div style="height: 30px;"></div>
+          <div style="height: 30px; width: 13em"></div>
           <!--<div class="btn-group" id="status" data-toggle="buttons">
             <label class="btn btn-default btn-on btn-sm active basic-yearly">
               <input type="radio" value="1" name="basic-v1" checked="checked">Yearly</label>
@@ -70,35 +70,45 @@
         </p>
 
         <div class="plan-action">
-          <a class="btn btn-primary btn-block btn-large" disabled href="#"><%= (current_user.pro? || current_user.biz?) ? 'Included' : 'Your current plan' %></a>
+          <a class="btn btn-primary btn-block btn-large" disabled href="#"><%= (current_user.plus? || current_user.pro?) ? 'Included' : 'Your current plan' %></a>
         </div>
       </th>
-
 
 
       <th colspan="2">
         <h2>Plus</h2>
 
         <div class="">
-          <div class="btn-group" id="status" data-toggle="buttons">
+          <div style="height: 30px;"></div>
+          <!-- <div class="btn-group" id="status" data-toggle="buttons">
             <label class="btn btn-default btn-on btn-sm active plus-yearly">
-              <input type="radio" value="1" name="pro-v1" checked="checked">Yearly</label>
+              <input type="radio" value="1" name="plus-v1" checked="checked">Yearly</label>
             <label class="btn btn-default btn-off btn-sm plus-monthly">
               <input type="radio" value="0" name="plus-monthly-v1">Monthly</label>
-          </div>
-          <div><h1 class="pro-price">$5/mo</h1></div>
+          </div> -->
+          <div><h1 class="plus-price">$5/mo</h1></div>
         </div>
 
-        <p class="muted"><h3>14 days free trial</h3><h3>Free month for each referral</h3><br>
+        <p class="muted"><h3>14 days free trial</h3><h3>$5 credit for each referral</h3><br>
         </p>
 
         <div class="plan-action">
-          <% if current_user.plus? %>
-          <a class="btn btn-primary btn-block btn-large" disabled href="#">Thanks for upgrading!</a>
-              <% else %>
+          <% if current_user.pro? %>
+              <a class="btn btn-primary btn-block btn-large" disabled href="#">Included</a>
+          <% else %>
               <div class="btn-group">
-                <a class="btn btn-primary btn-large start plus-start" data-amount=42000 data-plan="plus-monthly-v1" href="#">Start Trial</a>
-                <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=42000 data-plan="plus-monthly-v1" href="#">Upgrade Now</a>
+                <a class="share-action btn btn-primary btn-large btn-outline"><i class="fa fa-gift"></i> Refer a friend!</a>
+                <% if !current_user.plus? %>
+                    <a class="btn btn-primary btn-large start plus-start" data-amount=0 data-plan="plus-monthly-v1" href="#">Start Free Trial</a>
+                <% else %>
+                    <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
+                        <a class="btn btn-primary btn-large" disabled href="#"><%= @time_remaining_until_expiration_str %> remaining in free trial</a>
+                    <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
+                        <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
+                    <% else %>
+                        <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Upgrade Now</a>
+                    <% end %>
+                <% end %>
               </div>
           <% end %>
         </div>
@@ -118,16 +128,27 @@
           <div><h1 class="pro-price">$35/mo</h1></div>
         </div>
 
-        <p class="muted"><h3>14 days free trial</h3><h3>&nbsp;</h3><br>
+        <p class="muted"><h3>(coming soon)</h3><h3>&nbsp;</h3><br>
         </p>
 
         <div class="plan-action">
-          <% if current_user.pro? %>
-          <a class="btn btn-primary btn-block btn-large" disabled href="#">Thanks for upgrading!</a>
-              <% else %>
-
-              <!-- <a class="btn btn-primary btn-block btn-large start pro-start" data-amount=42000 data-plan="pro-v1" href="#">Start Trial</a> -->
-              <a class="btn btn-primary btn-block btn-large upgrade pro-upgrade" data-amount=42000 data-plan="pro-v1" href="#">Upgrade Now</a>
+          <% if current_user.biz? %>
+              <a class="btn btn-primary btn-block btn-large" disabled href="#">Included</a>
+          <% else %>
+              <div class="btn-group">
+                <a class="share-action btn btn-primary btn-large btn-outline"><i class="fa fa-gift"></i> Refer a friend!</a>
+                <!-- <% if !current_user.pro? %>
+                    <a class="btn btn-primary btn-large start pro-start" data-amount=42000 data-plan="pro-v1" href="#">Start Free Trial</a>
+                <% else %>
+                    <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
+                        <a class="btn btn-primary btn-large" disabled href="#"><%= @time_remaining_until_expiration_str %> remaining in free trial</a>
+                    <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
+                        <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
+                    <% else %>
+                        <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=42000 data-plan="pro-v1" href="#">Upgrade Now</a>
+                    <% end %>
+                <% end %> -->
+              </div>
           <% end %>
         </div>
 
@@ -137,9 +158,9 @@
         </thead>
 
         <tbody>
-            <tr><td colspan="6" class="header">Google Mail Integration</td></tr>
+            <tr><td colspan="12" class="header">Google Mail Integration</td></tr>
             <tr>
-              <td colspan="6" class="subheader">Email Tracking
+              <td colspan="6" class="subheader">Email tracking
                 <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See when and where your email was opened"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
@@ -153,7 +174,6 @@
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
-
             <tr>
               <td colspan="6" class="subheader">Auto forward to CRM
                 <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See profile data of your contacts directly in your inbox"></i>
@@ -163,16 +183,35 @@
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
 
+            <tr><td colspan="12" class="header">Productivity</td></tr>
             <tr>
-              <td colspan="6" class="subheader">Tracking Dashboard
+              <td colspan="6" class="subheader">Tracking dashboard
               <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Charts on tracking data"></i>
               </td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
+            <tr>
+              <td colspan="6" class="subheader">Contacts management</td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="subheader">Add notes to contacts (coming soon)</td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
+            <tr>
+              <td colspan="6" class="subheader">Auto-organize email attachments (coming soon)</td>
+              <td colspan="2"></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><i class="fa fa-check"></i></td>
+            </tr>
 
-            <tr><td colspan="6" class="header">Salesforce Integration</td></tr>
+            <tr><td colspan="12" class="header">Salesforce Integration</td></tr>
             <tr>
               <td colspan="6" class="subheader">Update Salesforce from Gmail</td>
               <td colspan="2"></td>
@@ -232,10 +271,10 @@
         });
     }
 
+    // togglePrice('.plus-yearly', '.plus-price', '.plus-upgrade', 5, 500, 'plus-v1');
+    // togglePrice('.plus-monthly', '.plus-price', '.plus-upgrade', 5, 500, 'plus-monthly-v1');
     togglePrice('.pro-yearly', '.pro-price', '.pro-upgrade', 35, 42000, 'pro-v1');
     togglePrice('.pro-monthly', '.pro-price', '.pro-upgrade', 39, 3900, 'pro-monthly-v1');
-    togglePrice('.biz-yearly', '.biz-price', '.biz-upgrade', 85, 102000, 'biz-v1');
-    togglePrice('.biz-monthly', '.biz-price', '.biz-upgrade', 89, 8900, 'biz-monthly-v1');
     //$('.stripe-button-el span').attr('style', null);
     //$('.stripe-button-el').removeClass('stripe-button-el').addClass('btn btn-primary btn-block btn-large')
 
@@ -273,6 +312,17 @@
     $(window).on('popstate', function() {
         handler.close();
     });
+
+    $('.share-action').click(e => {
+        e.preventDefault();
+        popupCenter('/extension/share', 'Share the goodness', 700, 500);
+    });
+
+    function popupCenter(url, title, w, h) {
+        var left = (screen.width / 2) - (w / 2);
+        var top = (screen.height / 2) - (h / 2);
+        return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+    }
 
     $('[data-toggle="tooltip"]').tooltip({'placement': 'right'});
 

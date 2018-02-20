@@ -55,7 +55,7 @@ class SalesforceAccount < ActiveRecord::Base
   # 
   # 
   ################################################################################################## 
-  # This class method finds all SFDC accounts accessible through client (connection) and creates a local model.
+  # This class method finds all SFDC accounts accessible through client (connection) and creates a local model.  Only minimal, essential fields (Id, Name, OwnerId, and LastModifiedDate) are saved.
   # Params:    client - a valid SFDC connection
   #            organization_id - the organization to upsert the SFDC accounts
   #            query_range_limit - the number of rows to "splice" while processing SFDC query request.

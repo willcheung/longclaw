@@ -58,8 +58,7 @@
                 <li class="dropdown pull-right" style="margin-left:-30px">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i style="font-size: 15px; color: #777;" class="fa fa-ellipsis-v"></i></a>
                   <ul class="dropdown-menu">
-                    <li><a href="#" class="invite-action"><i class="fa fa-envelope-o"></i> Invite</a></li>
-                    <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Share</a></li>
+                    <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Refer a friend</a></li>
                     <li role="separator" class="divider"></li>
                     <li><%= link_to  '/plans/new', target: "_blank" do %>
                         <i class="fa fa-star"></i> Upgrade
@@ -97,8 +96,25 @@
 
             <div>
                 <ul class="nav nav-tabs">
-                    <li role="presentation" class="<%= is_active_action('account') %>"><a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>"><i class="fa fa-users"></i>&nbsp;People</a></li>
-                    <li role="presentation" class="<%= is_active_action('company') %>"><a href="<%= extension_company_path(internal: params[:internal], external: params[:external]) %>"><i class="fa fa-building"></i>&nbsp;Company&nbsp;&nbsp;<span class="label label-info label-xs">New!</span></a></li>
+                    <li role="presentation" class="<%= is_active_action('account') %>">
+                      <a href="<%= extension_account_path(internal: params[:internal], external: params[:external]) %>">
+                        <i class="fa fa-users fa-2x"></i>
+                        <span>People</span>
+                      </a>
+                    </li>
+                    <li role="presentation" class="<%= is_active_action('company') %>">
+                      <a href="<%= extension_company_path(internal: params[:internal], external: params[:external]) %>">
+                        <i class="fa fa-building fa-2x"></i>
+                        <span>Company</span>
+                      </a>
+                    </li>
+                    <li role="presentation" class="<%= is_active_action('attachments') %>">
+                      <a href="<%= extension_attachments_path(internal: params[:internal], external: params[:external]) %>">
+                        <span class="label label-info label-xs pull-right" style="position: absolute; left: 55px;">New!</span>
+                        <i class="fa fa-paperclip fa-2x fa-rotate-90"></i>
+                        <span>Attachments</span>
+                      </a>
+                    </li>
                     <!-- <li role="presentation" class="<%= is_active_action('contacts') %>"><a href="<%= extension_contacts_path(internal: params[:internal], external: params[:external]) %>">Contacts</a></li> -->
                     <!--<li role="presentation" data-toggle="tooltip" data-placement="bottom" data-html="true" class="<%= is_active_action('salesforce') %>"-->
                     <!--<% if @salesforce_user.present? %>-->
@@ -122,11 +138,7 @@
         $('[data-toggle="tooltip"]').tooltip();
         $('.share-action').click(e => {
             e.preventDefault();
-            popupCenter('/extension/share','Share the goodness', 600, 400);
-        });
-        $('.invite-action').click(e => {
-            e.preventDefault();
-            parent.parent.postMessage({type: 'cs-invite'}, 'https://mail.google.com');
+            popupCenter('/extension/share','Share the goodness', 700, 500);
         });
         // $("#salesforce-entity-search").selectize({
         //     closeAfterSelect: true,
