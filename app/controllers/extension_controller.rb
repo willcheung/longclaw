@@ -187,7 +187,7 @@ class ExtensionController < ApplicationController
   def attachments
     return unless @service
     @emails = @params[:external].map { |person| URI.unescape(person.second, '%2E') } if @params[:external].present?
-    @emails = @params[:internal].map { |person| URI.unescape(person.second, '%2E') }.reject { |email| email == current_user.email } if @emails.blank?
+    @emails = @params[:internal].map { |person| URI.unescape(person.second, '%2E') }.reject { |email| email == current_user.email } if @emails.blank? && @params[:internal].present?
     email_filter_string = @emails.map { |email| "from:#{email} OR to:#{email}" }.join(' OR ')
     message_list = @service.list_user_messages('me', q: email_filter_string + ' has:attachment -in:chats -in:draft -filename:ics', max_results: 300) # { |message_list, error| message_list = message_list unless error }
     # BATCH REQUEST
@@ -658,16 +658,16 @@ class ExtensionController < ApplicationController
     params.require(:account).permit(:name, :website, :phone, :description, :address, :category, :domain)
   end
 
-  # def parse_email(email)
-  #   begin
-  #     Mail::Address.new(email)
-  #   rescue StandardError => e
-  #     # email probably has non-ascii characters, try to extract just the e-mail address
-  #     email.match(/.*<(.*)>/) do |match|
-  #       Hashie::Mash(address: match[1])
-  #     end
-  #   end
-  # end
+  def parse_email(email)
+    begin
+      Mail::Address.new(email)
+    rescue StandardError => e
+      # email probably has non-ascii characters, try to extract just the e-mail address
+      email.match(/.*<(.*)>/) do |match|
+        Hashie::Mash(address: match[1])
+      end
+    end
+  end
 
   def get_tracking_setting
     ts = TrackingSetting.where(user: current_user).first_or_create do |ts|
@@ -677,7 +677,7 @@ class ExtensionController < ApplicationController
   end
 
   def get_google_service
-    return unless current_user.pro? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
+    return unless current_user.plus? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
     # connect to Gmail
     secrets = Google::APIClient::ClientSecrets.new(
         {
