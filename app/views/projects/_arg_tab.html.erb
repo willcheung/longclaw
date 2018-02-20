@@ -172,7 +172,6 @@ $(function () {
         background: rgba(0, 0, 0, 0.85);
         color: #fff;
         border-radius: 2px;
-        pointer-events: none;
     }
     div.pinned {
         color: #e8941a;
@@ -614,7 +613,6 @@ $(function () {
                 d3.select(this).attr("transform", "translate(" + x + "," + y + ")");
             });
 
-
         // Filtering
         d3.selectAll("g.cell")
             .on("click", function(val, i){
@@ -891,19 +889,19 @@ $(function () {
             if (node.opportunities && Object.keys(node.opportunities).length > 0) {
                 opportunitiesHTML = "<hr style='margin: 6px 0'> <table class='member-tooltip-opp-table'><tbody>";
                 Object.keys(node.opportunities).slice(0, showMemberOppsToolipLimit).forEach(function(k){ 
-                    opportunitiesHTML += "<tr><td class='light'><span>" + node.opportunities[k].name + "</span></td><td class=''>" + (node.opportunities[k].stage ? " "+node.opportunities[k].stage : "") + "</td><td class=''>" + (node.opportunities[k].dealSize ? " $"+large_number_to_human_signif_digits(node.opportunities[k].dealSize) : "") + "</td><tr>";
+                    opportunitiesHTML += "<tr><td class='light'><a href='/projects/"+node.opportunities[k].id+"' target='_blank'>" + node.opportunities[k].name + "</a></td><td class=''>" + (node.opportunities[k].stage ? " "+node.opportunities[k].stage : "") + "</td><td class=''>" + (node.opportunities[k].dealSize ? " $"+large_number_to_human_signif_digits(node.opportunities[k].dealSize) : "") + "</td><tr>";
                 });
                 opportunitiesHTML += "</tbody></table>";
             };
 
             var otherAccountsHTML= "";
             if (node.accounts && Object.keys(node.accounts).length > 0) {
-                otherAccountsHTML = "<hr style='margin: 6px 0'> <i class='fa fa-users' style='margin-right: 7px;'></i><span style='text-align: left;'>Found in <span class='light'>"
-                var otherAccountsHTMLArr = [];
+                otherAccountsHTML = "<hr style='margin: 6px 0'> <i class='fa fa-users' style='margin-right: 7px;'></i><span style='text-align: left;'>Found in "
                 Object.keys(node.accounts).slice(0, showMemberAcctsToolipLimit).forEach(function(k){ 
-                    otherAccountsHTMLArr.push(node.accounts[k].name);
+                    // node.accounts[k].name
+                    otherAccountsHTML += "<span class='light'><a href='/accounts/"+node.accounts[k].id+"' target='_blank'>" + node.accounts[k].name + "</a></span>";
                 });
-                otherAccountsHTML += otherAccountsHTMLArr.join("</span>, <span class='light'>") + "</span> account" + (otherAccountsHTMLArr.length > 1 ? "s": "") + ".</span>";
+                otherAccountsHTML +=  " account" + (Object.keys(node.accounts).length > 1 ? "s": "") + ".</span>";
             };
 
             return "<table><tbody><tr><td><table style='margin: 0 auto'><tbody><tr><td>" + profile_img_html + "</td><td><table><tbody><tr><td><strong style=\"font-size: 16px;\">" + node.name + "</strong></td></tr><tr><td>" + node.title + "</td></tr></tbody></table></td></tr></table>"+ (node.is_external ? node.buyer_role + "<br>" : "") + (node.is_external != undefined && !node.is_external ? node.team + "<br>" : "") + "Meetings: " + node.meetings + "<br>" /*+ "Outbound: " + node.outbound + "<br>Inbound: " + node.inbound + "<br>" + "<br>** external? " + node.is_external + "**"*/ + profile_social_html + opportunitiesHTML + otherAccountsHTML;

@@ -25,6 +25,10 @@ class ExtensionController < ApplicationController
   def share
     referral_code = PlansService.referral_code(current_user)
     @referral_url = url_for(controller: 'extension', action: 'refer') + "?ref=#{referral_code}"
+
+    customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions') if current_user.stripe_customer_id # @customer.account_balance
+    @account_balance = (customer ? "$"+(customer.account_balance).abs.to_s : "0")
+    @credit_or_balance = (customer && customer.account_balance < 0 ? "credit" : "balance")
     render layout: 'empty'
   end
 
