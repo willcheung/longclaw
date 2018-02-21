@@ -188,9 +188,10 @@ class ExtensionController < ApplicationController
     return unless @service
     @emails = @params[:external].map { |person| URI.unescape(person.second, '%2E') } if @params[:external].present?
     @emails = @params[:internal].map { |person| URI.unescape(person.second, '%2E') }.reject { |email| email == current_user.email } if @emails.blank? && @params[:internal].present?
+    return if @emails.blank?
     email_filter_string = @emails.map { |email| "from:#{email} OR to:#{email}" }.join(' OR ')
-    message_list = @service.list_user_messages('me', q: email_filter_string + ' has:attachment -in:chats -in:draft -filename:ics', max_results: 300) # { |message_list, error| message_list = message_list unless error }
-    # BATCH REQUEST
+    message_list = @service.list_user_messages('me', q: email_filter_string + ' has:attachment -in:chats -in:draft -filename:ics', max_results: 300)
+    return if message_list.messages.blank?
     @messages = []
     @service.batch do |service|
       message_list.messages.each do |msg|
@@ -680,15 +681,14 @@ class ExtensionController < ApplicationController
     return unless current_user.plus? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
     # connect to Gmail
     secrets = Google::APIClient::ClientSecrets.new(
-        {
-            "web" =>
-                {
-                    "access_token" => current_user.fresh_token,
-                    "refresh_token" => current_user.oauth_refresh_token,
-                    "client_id" => ENV['google_client_id'],
-                    "client_secret" => ENV['google_client_secret']
-                }
+      {
+        "web" => {
+          "access_token" => current_user.fresh_token,
+          "refresh_token" => current_user.oauth_refresh_token,
+          "client_id" => ENV['google_client_id'],
+          "client_secret" => ENV['google_client_secret']
         }
+      }
     )
     @service = Gmail::GmailService.new
     @service.authorization = secrets.to_authorization
