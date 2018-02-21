@@ -1,9 +1,12 @@
 
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="row m-b-sm filter-group">
-        <!-- Empty div here to push close date filter to right side -->
-        <div class="col-sm-9"></div>
-        <select id="close-date-filter" class="col-sm-3" data-placeholder="Filter by Close Date">
+        <!-- Empty div here to push warning and filter to right side -->
+        <div class="col-sm-3"></div>
+        <div class="col-sm-6" style="width: 50%; height: 10%; padding-top: 9px">
+            <% if @current_user_projects.blank? %> <span style="float: right"><i class="fa fa-info-circle fa-lg" style="color: orange"></i>&nbsp;The current filter setting has filtered out all opportunities.</span><% end %>
+        </div>
+        <select id="close-date-filter" class="col-sm-3" data-placeholder="Filter by Close Date" style="width: 24%">
             <option value="Any"></option> <!-- no filter -->
             <optgroup label="By Close Date">
                 <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
