@@ -184,6 +184,8 @@ video {
 
 #page-wrapper.extension-sidebar {
   padding: 5px;
+  display: flex;
+  flex-direction: column;
 
   .navbar-header {
     display: block;
