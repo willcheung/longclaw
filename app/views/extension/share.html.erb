@@ -73,7 +73,7 @@
 
 <div class="gray-bg jumbotron center-block">
   <div class="container">
-    <h2 class="text-center m-b-xl">Tell your friends about ContextSmith. <br>Get a <u style="white-space:nowrap">free month</u> Plus Plan for each referral who signs up.</h2>
+    <h2 class="text-center m-b-xl">Tell your friends about ContextSmith. <br>Get a <u style="white-space:nowrap">free month</u> of Plus Plan for each referral who signs up.</h2>
     <div class="row bs-wizard">
       <div class="col-xs-4 bs-wizard-step complete">
         <div class="text-center bs-wizard-stepnum">1. Invite your friends</div>
@@ -107,7 +107,7 @@
       </div>
     </div>
     <div class="text-center m-t-xl" style="border-top: 1px solid lightgray;">
-        <h2 class="text-center"><%= current_user.first_name.present? ? current_user.first_name + ", you" : "You" %> currently have a <span style="color: #3c6bc5"><%= @account_balance %></span> <%= @credit_or_balance %>.</div></h2>
+        <h2 class="text-center"><%= current_user.first_name.present? ? current_user.first_name + ", you" : "You" %> have earned <span style="color: #3c6bc5"><%= @months_of_plusplan_earned %> months</span> of Plus Plan.</div></h2>
     </div>
   </div>
 </div>
