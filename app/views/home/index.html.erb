@@ -4,7 +4,7 @@
         <!-- Empty div here to push warning and filter to right side -->
         <div class="col-sm-3"></div>
         <div class="col-sm-6" style="width: 50%; height: 10%; padding-top: 9px">
-            <% if @current_user_projects.blank? %> <span style="float: right"><i class="fa fa-info-circle fa-lg" style="color: orange"></i>&nbsp;The current filter setting has filtered out all opportunities.</span><% end %>
+            <% if @current_user_projects.blank? %> <span style="float: right"><i class="fa fa-info-circle fa-lg" style="color: <%= ApplicationHelper::CONTEXTSMITH_DARKBLUE %>"></i>&nbsp;The current filter setting has filtered out all opportunities.</span><% end %>
         </div>
         <select id="close-date-filter" class="col-sm-3" data-placeholder="Filter by Close Date" style="width: 24%">
             <option value="Any"></option> <!-- no filter -->
