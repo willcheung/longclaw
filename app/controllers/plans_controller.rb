@@ -54,7 +54,9 @@ class PlansController < ApplicationController
     end
 
     current_user.save
-    if subscription
+    if params[:refresh] == 'true'
+      redirect_to :back
+    elsif subscription
       redirect_to action: 'upgrade'
     end
   rescue RuntimeError, Stripe::StripeError => e
