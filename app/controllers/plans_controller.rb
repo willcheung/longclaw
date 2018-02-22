@@ -16,7 +16,7 @@ class PlansController < ApplicationController
     # check if customer already on a plan
     #redirect_to action: 'index' if current_user.pro?
     @customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions') if current_user.stripe_customer_id
-    if @customer.present? && @customer.subscriptions && @customer.subscriptions.data
+    if @customer.present? && @customer.subscriptions.present? && @customer.subscriptions.data.present?
       @trial_expiration_time = Time.at(@customer.subscriptions.data.first.trial_end) if @customer.subscriptions.data.first.trial_end.present?
       @subscription_expiration_time = Time.at(@customer.subscriptions.data.first.current_period_end) if @customer.subscriptions.data.first.current_period_end.present?
       @time_remaining_until_expiration_str = (@subscription_expiration_time < Time.now) ? "Expired" : (@subscription_expiration_time - Time.now < 86400 ? "< 1 day" : distance_of_time_in_words_to_now(@subscription_expiration_time)) if @subscription_expiration_time.present?

@@ -31,9 +31,10 @@
   }
 
 </style>
-<% if current_user.plus? && @service %>
+<div class="m-t-sm">
+<% if @service # @service presence implies current_user.plus? && current_user.oauth_provider == AUTH_TYPE[:Gmail] %>
   <% if @messages.present? %>
-    <p class="m-t-sm m-b">Attachments between <%= @emails.join(', ') %> and you:</p>
+    <p class="m-b">Attachments between <%= @emails.join(', ') %> and you:</p>
     <div class="attachment-container m-t-sm">
     <% @messages.each.with_index do |msg, i| %>
         <span class="pull-left m-l-n-xl attachment-date">
@@ -56,15 +57,66 @@
             <% end %>
           </div>
         </div>
-    <% end %>
+      <% end %>
     </div>
   <% else %>
-  <p>No attachments found between you and these people.</p>
+    <p>No attachments found between you and these people.</p>
   <% end %>
-<% elsif @service.blank? %>
-  <p>Please allow us to read your inbox to see your Attachments here!</p>
-  <button>Sign in again</button>
+<% elsif current_user.oauth_provider == User::AUTH_TYPE[:GmailBasic] %>
+    <div class="row well text-center reminder" style="margin-top: 30px;">
+      <p>Please grant us access to your inbox so we can organize attachments for you here:<br>
+        <a style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); $('.reminder').remove(); return false;"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png" title="Grant permissions using Google"></a>
+      </p>
+    </div>
 <% else %>
-  <p>This feature is only for Plus users or above.</p>
-  <button>Upgrade Now!</button> or <button>Start a free trial!</button>
+  <h3 class="text-center">You could be viewing attachments relevant to the contacts in your email right here.</h3>
+  <p class="text-center"><strong>It's a special feature for users who have upgraded to Plus or above!</strong></p>
+  <p class="text-center m-t-lg">
+    <%= link_to new_plan_path,  class: 'btn btn-default btn-outline m-b-sm', target: "_blank" do %>
+      <i class="fa fa-star"></i> Upgrade Now!
+    <% end %>
+    <br>
+    (Not sure? Try 14 days for <%= link_to 'free.', new_plan_path %>)
+  </p>
+  <p class="text-center">
+    <button title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-default btn-outline btn-primary m-b-sm">
+      <i class="fa fa-gift"></i> Refer a friend!
+    </button>
+    <br>
+    (You'll get one month of Plus on us.)
+  </p>
 <% end %>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+
+  $('.share-action').click(e => {
+    e.preventDefault();
+    popupCenter('/extension/share', 'Share the goodness', 700, 500);
+  });
+
+  var popupWindowRef = null;
+
+  function popupCenter(url, title, w, h) {
+    var left = (screen.width / 2) - (w / 2);
+    var top = (screen.height / 2) - (h / 2);
+    return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+  }
+
+  var openSignInPopup = function (strUrl, strTarget) {
+    // var strOptions = "width=700,height=700";
+    if (popupWindowRef == null || popupWindowRef.closed) {
+      popupWindowRef = popupCenter(strUrl, strTarget, 400, 600);
+      // Poll popup window, refresh this page when it is closed
+      var pollPopupClosed = window.setInterval(function() {
+        if (popupWindowRef.closed) {
+          window.clearInterval(pollPopupClosed);
+          window.location.reload(true)
+        }
+      }, 200);
+    }
+    else {
+      popupWindowRef.focus();
+    }
+  }
+</script>

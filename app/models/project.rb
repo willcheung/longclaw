@@ -403,13 +403,13 @@ class Project < ActiveRecord::Base
       demo_accts_percontact_h = {}
 
       demo_opps_h = {}
-      demo_opps_h["f0798e45-bb46-4fe0-bc3e-xxxxxxxxxxxX"] = {name: "Wayne Global Enterprises", dealSize: 500000, stage: "Proposal", closeDate: Date.tomorrow + 100.days}
+      demo_opps_h["348fe645-47e4-4151-996b-5cfd2adf31c8"] = {id: "348fe645-47e4-4151-996b-5cfd2adf31c8", name: "Wayne Global Enterprises", dealSize: 500000, stage: "Proposal", closeDate: Date.tomorrow + 100.days}
 
-      demo_opps_h["f0798e45-5922-4fe0-bc3e-yyyyyyyyyyyY"] = {name: "Frost Intl.", dealSize: 225000, stage: "Proposal", closeDate: Date.tomorrow + 1.months}
-      demo_opps_h["f0798e45-bb46-4469-bc3e-zzzzzzzzzzzZ"] = {name: "Xavier SGY Ltd.", dealSize: 50000, stage: "Prospecting", closeDate: Date.tomorrow + 2.months}
+      demo_opps_h["856a7a3b-75da-4ebb-a515-0b7dea1d03c0"] = {id: "856a7a3b-75da-4ebb-a515-0b7dea1d03c0", name: "Frost Intl.", dealSize: 225000, stage: "Qualification", closeDate: Date.tomorrow + 1.months}
+      demo_opps_h["ec713f6c-2931-4be9-9fd5-8b1122bf6dec"] = {id: "ec713f6c-2931-4be9-9fd5-8b1122bf6dec", name: "Xavier SGY", dealSize: 50000, stage: "Prospecting", closeDate: Date.tomorrow + 2.months}
 
       demo_accts_h = {}
-      demo_accts_h["c8332e16-5922-4469-ad1f-aaaaaaaaaaaA"] = {id: "c8332e16-5922-4469-ad1f-aaaaaaaaaaaA", name: "GoodData Corporation", category: "Customer"}
+      demo_accts_h["f0b73a71-29d5-4d9c-846d-32e895dec5c8"] = {id: "f0b73a71-29d5-4d9c-846d-32e895dec5c8", name: "Wakanda", category: "Customer"}
 
       ENV['demo_contact_emails'].split(',').each do |email|
         c = self.account.contacts.find_by(email: email.strip) #|| Contact.find_by(email: email.strip)
@@ -427,7 +427,7 @@ class Project < ActiveRecord::Base
         name: get_full_name(m),
         domain: get_domain(m.email),
         email: m.email,
-        title: m.title,
+        title: (m.title if m.title.present?) || (profile.title if profile.present?),
         profile_img_url: m.profile_img_url || (profile.profileimg_url if profile.present?),
         buyer_role: m.buyer_role,
         team: m.team,

@@ -50,14 +50,16 @@
     <thead>
     <tr>
       <th colspan="6">
-        <h2>Features</h2>
+        
       </th>
 
       <th colspan="2">
         <h2>Basic</h2>
+        <h5 class="text-muted">For frequent emailers</h5>
 
         <div class="" >
-          <div style="height: 30px; width: 13em"></div>
+          <hr>
+          <div style="width: 13em"></div>
           <!--<div class="btn-group" id="status" data-toggle="buttons">
             <label class="btn btn-default btn-on btn-sm active basic-yearly">
               <input type="radio" value="1" name="basic-v1" checked="checked">Yearly</label>
@@ -77,9 +79,10 @@
 
       <th colspan="2">
         <h2>Plus</h2>
+        <h5 class="text-muted">For people managing customers</h5>
 
         <div class="">
-          <div style="height: 30px;"></div>
+          <hr>
           <!-- <div class="btn-group" id="status" data-toggle="buttons">
             <label class="btn btn-default btn-on btn-sm active plus-yearly">
               <input type="radio" value="1" name="plus-v1" checked="checked">Yearly</label>
@@ -89,7 +92,7 @@
           <div><h1 class="plus-price">$5/mo</h1></div>
         </div>
 
-        <p class="muted"><h3>14 days free trial</h3><h3>$5 credit for each referral</h3><br>
+        <p class="muted"><h3>14 days free trial</h3><h3>One month free for each referral</h3><br>
         </p>
 
         <div class="plan-action">
@@ -117,14 +120,15 @@
 
       <th colspan="2">
         <h2>Pro</h2>
-
+        <h5 class="text-muted">For professionals using Salesforce</h5>
+        <hr>
         <div class="">
-          <div class="btn-group" id="status" data-toggle="buttons">
+<!--           <div class="btn-group" id="status" data-toggle="buttons">
             <label class="btn btn-default btn-on btn-sm active pro-yearly">
               <input type="radio" value="1" name="pro-v1" checked="checked">Yearly</label>
             <label class="btn btn-default btn-off btn-sm pro-monthly">
               <input type="radio" value="0" name="pro-monthly-v1">Monthly</label>
-          </div>
+          </div> -->
           <div><h1 class="pro-price">$35/mo</h1></div>
         </div>
 
@@ -158,7 +162,7 @@
         </thead>
 
         <tbody>
-            <tr><td colspan="12" class="header">Google Mail Integration</td></tr>
+            <tr><td colspan="12" class="header">Gmail Integration</td></tr>
             <tr>
               <td colspan="6" class="subheader">Email tracking
                 <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See when and where your email was opened"></i></td>
@@ -168,7 +172,7 @@
             </tr>
             <tr>
               <td colspan="6" class="subheader">Profiles
-                <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See profile data of your contacts directly in your inbox"></i>
+                <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See job title, social media profiles, and company data of your contacts"></i>
               </td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
@@ -176,7 +180,7 @@
             </tr>
             <tr>
               <td colspan="6" class="subheader">Auto forward to CRM
-                <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See profile data of your contacts directly in your inbox"></i>
+                <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Automatically forward emails to your CRM, so you don't have to do it manually"></i>
               </td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
@@ -185,53 +189,66 @@
 
             <tr><td colspan="12" class="header">Productivity</td></tr>
             <tr>
-              <td colspan="6" class="subheader">Tracking dashboard
-              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Charts on tracking data"></i>
+              <td colspan="6" class="subheader"><i class="fa fa-bar-chart" style="color: green"></i> Tracking dashboard
+              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="See when are the popular times that your contacts were opening your emails"></i>
               </td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
-              <td colspan="6" class="subheader">Contacts management</td>
+              <td colspan="6" class="subheader">Auto-organize email attachments
+              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Attachments buried in email threads? We organize them for you in one place"></i>
+              </td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
-              <td colspan="6" class="subheader">Add notes to contacts (coming soon)</td>
+              <td colspan="6" class="subheader">Contacts management
+              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Save, edit, and search your contacts"></i>
+              </td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
-              <td colspan="6" class="subheader">Auto-organize email attachments (coming soon)</td>
+              <td colspan="6" class="subheader">Add notes to contacts (coming soon)
+                <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Add notes to your contacts, so you never forget their birthdays or kids' names"></i></td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
 
-            <tr><td colspan="12" class="header">Salesforce Integration</td></tr>
+            <tr><td colspan="12" class="header">Salesforce Integration with Gmail</td></tr>
             <tr>
-              <td colspan="6" class="subheader">Update Salesforce from Gmail</td>
+              <td colspan="6" class="subheader">Update Salesforce with spreadsheet-like grid
+              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Edit Opportunities and Contacts fields directly from Gmail"></i>
+              </td>
               <td colspan="2"></td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
-              <td colspan="6" class="subheader">Sync Contacts</td>
+              <td colspan="6" class="subheader">Sync Contacts
+              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Automatically enrich contacts and add them to Salesforce. Never manually create a contact again"></i>
+            </td>
               <td colspan="2"></td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
-              <td colspan="6" class="subheader">Sync Emails</td>
+              <td colspan="6" class="subheader">Sync Emails and Meetings
+              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Automatically sync email and meeting activities to Salesforce Accounts"></i>
+            </td>
               <td colspan="2"></td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
             </tr>
             <tr>
-              <td colspan="6" class="subheader">Sync Meetings</td>
+              <td colspan="6" class="subheader"><i class="fa fa-bar-chart" style="color: green"></i> Bookings, forecast, and productivity dashboard
+              <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Get real-time data on how you're trending and hitting your target, and where you're spending time across customers"></i>
+            </td>
               <td colspan="2"></td>
               <td colspan="2"></td>
               <td colspan="2"><i class="fa fa-check"></i></td>
@@ -241,14 +258,14 @@
               <td colspan="6" class="header">Exchange Online and Office365 Integration</td>
               <td colspan="2"></td>
               <td colspan="2"></td>
-              <td colspan="2"><i class="fa fa-check"></i></td>
+              <td colspan="2"><a href="https://www.contextsmith.com/demo/">Contact Us</a></td>
             </tr>
 
 
         </tbody>
   </table>
   </div>
-    <h3>Business or Enterprise, <a href="https://www.contextsmith.com/demo/">contact us</a></h3>
+    <h2 class="text-center m-b-xl m-t-xl">Looking for Business or Enterprise plans? Please <a href="https://www.contextsmith.com/demo/">contact us</a>.</h2>
   </div>
 
 </div>
@@ -273,8 +290,8 @@
 
     // togglePrice('.plus-yearly', '.plus-price', '.plus-upgrade', 5, 500, 'plus-v1');
     // togglePrice('.plus-monthly', '.plus-price', '.plus-upgrade', 5, 500, 'plus-monthly-v1');
-    togglePrice('.pro-yearly', '.pro-price', '.pro-upgrade', 35, 42000, 'pro-v1');
-    togglePrice('.pro-monthly', '.pro-price', '.pro-upgrade', 39, 3900, 'pro-monthly-v1');
+    // togglePrice('.pro-yearly', '.pro-price', '.pro-upgrade', 35, 42000, 'pro-v1');
+    // togglePrice('.pro-monthly', '.pro-price', '.pro-upgrade', 39, 3900, 'pro-monthly-v1');
     //$('.stripe-button-el span').attr('style', null);
     //$('.stripe-button-el').removeClass('stripe-button-el').addClass('btn btn-primary btn-block btn-large')
 
