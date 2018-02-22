@@ -1,5 +1,11 @@
 <style type="text/css">
-  .attachment-container {
+  .attachment-main-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .attachment-group-container {
     width: 225px;
     margin-left: 40px;
   }
@@ -30,12 +36,32 @@
     background-color: #F0F6FB;
   }
 
+  .attachment-teaser {
+    background: linear-gradient( rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5) ), url("/assets/images/attachments_teaser.png") no-repeat center;
+    background-size: contain;
+    color: white;
+    margin: -10px -5px;
+    flex: 1;
+  }
+
+  .attachment-teaser .btn {
+    color: #676a6c;
+  }
+
+  .attachment-teaser .btn.btn-outline {
+    color: white;
+  }
+
+  .links-light {
+    color: lightblue;
+  }
+
 </style>
-<div class="m-t-sm">
+<div class="m-t-sm attachment-main-container">
 <% if @service # @service presence implies current_user.plus? && current_user.oauth_provider == AUTH_TYPE[:Gmail] %>
   <% if @messages.present? %>
     <p class="m-b">Attachments between <%= @emails.join(', ') %> and you:</p>
-    <div class="attachment-container m-t-sm">
+    <div class="attachment-group-container m-t-sm">
     <% @messages.each.with_index do |msg, i| %>
         <span class="pull-left m-l-n-xl attachment-date">
           <%= Time.zone.at(msg.internal_date/1000).strftime('%b %d') %>
@@ -62,33 +88,47 @@
   <% else %>
     <p>No attachments found between you and these people.</p>
   <% end %>
-<% elsif current_user.oauth_provider == User::AUTH_TYPE[:GmailBasic] %>
+<% elsif current_user.plus? && current_user.oauth_provider == User::AUTH_TYPE[:GmailBasic] %>
+    <h3 class="m-t-xl text-center">Thanks for upgrading!</h3>
     <div class="row well text-center reminder" style="margin-top: 30px;">
-      <p>Please grant us access to your inbox so we can organize attachments for you here:<br>
-        <a style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); $('.reminder').remove(); return false;"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png" title="Grant permissions using Google"></a>
-      </p>
+      <p>Please grant us access to your inbox so we can organize attachments for you here:</p>
+      <a style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); $('.reminder').remove(); return false;"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png" title="Grant permissions using Google"></a>
     </div>
 <% else %>
-  <h3 class="text-center">You could be viewing attachments relevant to the contacts in your email right here.</h3>
-  <p class="text-center"><strong>It's a special feature for users who have upgraded to Plus or above!</strong></p>
-  <p class="text-center m-t-lg">
-    <%= link_to new_plan_path,  class: 'btn btn-default btn-outline m-b-sm', target: "_blank" do %>
-      <i class="fa fa-star"></i> Upgrade Now!
+    <%= form_tag plans_path, :id => 'upgrade' do %>
+      <input type="hidden" name="plan" id="plan" value="">
+      <input type="hidden" name="stripeToken" id="stripeToken">
+      <input type="hidden" name="refresh" value="true">
     <% end %>
-    <br>
-    (Not sure? Try 14 days for <%= link_to 'free.', new_plan_path %>)
-  </p>
-  <p class="text-center">
-    <button title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-default btn-outline btn-primary m-b-sm">
-      <i class="fa fa-gift"></i> Refer a friend!
-    </button>
-    <br>
-    (You'll get one month of Plus on us.)
-  </p>
+  <div class="attachment-teaser text-center">
+    <h3 class="m-t-xl">Attachments buried in email threads? See them organized here.</h3>
+    <p class="m-t-xl">
+      <!--< %= link_to new_plan_path,  class: 'btn btn-lg btn-white m-b-sm', target: "_blank" do %>-->
+        <!--<i class="fa fa-star"></i> Try Now!-->
+      <!--< % end %>-->
+      <a class="btn btn-white btn-lg m-b-sm start plus-start" data-amount=42000 data-plan="plus-monthly-v1" href="#"><i class="fa fa-star"></i> Try Now!</a>
+      <br>
+      14 days free on <%= link_to 'Plus Plan.', new_plan_path, class: 'links-light', target: '_blank' %>
+      <br>
+      No credit card required.
+    </p>
+    <p class="m-t-xl">
+      <button title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-sm btn-white btn-outline m-b-sm">
+        <i class="fa fa-gift"></i> Refer a friend!
+      </button>
+      <br>
+      You'll get one month of Plus on us.
+    </p>
+  </div>
 <% end %>
 </div>
 
 <script type="text/javascript" charset="utf-8">
+  $('.start').click(function(evt) {
+    evt.preventDefault();
+    $('input#plan').val(evt.target.dataset.plan);
+    $('form#upgrade').submit();
+  });
 
   $('.share-action').click(e => {
     e.preventDefault();
