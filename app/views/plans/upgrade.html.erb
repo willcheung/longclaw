@@ -9,7 +9,7 @@
     <% if Time.now > @trial_end %>
         <div>Your trial has ended.</div>
     <% else %>
-        <div>Your trial ends in <%= time_ago_in_words(@trial_end) %></div>
+        <div>Your trial will end in <%= time_ago_in_words(@trial_end) %>. <br>If you have free referral credit, you will be upgraded automatically to Plus Plan after trial ends.</div>
     <% end %>
   </div>
 </div>
