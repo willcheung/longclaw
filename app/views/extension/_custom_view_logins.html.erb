@@ -1,0 +1,87 @@
+<div class="white-bg">
+    <div>
+        <p style="margin: 0.5em;">
+            <div>
+                <div>
+                    <h2>Upgrade to Professional Plan and use Salesforce inside your Gmail.</h2>
+                    <h3>
+                        <ul>
+                            <li>Update Opportunity fields like a spreadsheet.</li>
+                            <li>Sync emails and meetings automatically. Never forward an email again.</li>
+                            <li>Automatically sync contacts. Never manually create a contact again. </li>
+                            <li>Get dashboards about where you're spending your time and how to achieve your goals.</li>
+                        </ul>
+                    </h3>
+                </div>
+            </div>
+        </p>
+    </div>
+    <div class="text-center">
+        <h2><% if current_user.pro? %><i class="fa fa-check"></i><% end %>1. Upgrade to Professional Plan</h2>
+        <% if !current_user.pro? %>
+            <%= form_tag plans_path, :id => 'upgrade' do %>
+                <input type="hidden" name="plan" id="plan" value="">
+                <input type="hidden" name="stripeToken" id="stripeToken">
+                <input type="hidden" name="refresh" value="true">
+            <% end %>
+            <h3>
+                <a class="btn btn-white btn-lg m-b-sm start pro-start" data-amount=35000 data-plan="pro-monthly-v1" href="#"><i class="fa fa-star"></i> Try Now!</a>
+                <br>
+                14 days free on <%= link_to 'Pro Plan.', new_plan_path, target: '_blank' %>
+                <br>
+                No credit card required.
+            </h3>
+        <% end %>
+
+        <% if current_user.pro? %>
+        <div>
+        <% else %>
+        <hr class="m-t-md m-b-md">
+        <h3><i class="fa fa-info-circle"></i>&nbsp;Sign up for Pro Plan before completing following steps.</h3>
+        <div class="element-disabled">
+        <% end %>
+        <h2><% if @salesforce_user.present? %><i class="fa fa-check"></i><% end %>2. Login to Salesforce</h2>
+        <% if @salesforce_user.nil? %>
+            <img src="/assets/images/salesforce.png" style="height:75px;"/>
+            <div style="margin: 1.5em 0">
+                <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a><br/>
+            </div>
+        <% end %>
+ 
+        <h2><% if current_user.oauth_provider == User::AUTH_TYPE[:Gmail] %><i class="fa fa-check"></i><% end %>3. Login to ContextSmith</h2>
+        <% if current_user.oauth_provider == User::AUTH_TYPE[:GmailBasic] %>
+            <div>
+              <a style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); $('.reminder').remove(); return false;"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png" title="Grant permissions using Google"></a>
+            </div>
+        <% end %>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var update_sfdc_button_html = "Update&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/>";
+
+    var popupWindowRef = null;
+    var openSignInPopup = function (strUrl, strTarget) {
+        var strOptions = "width=700,height=700";
+        if (popupWindowRef == null || popupWindowRef.closed) {
+            popupWindowRef = window.open(strUrl, strTarget, strOptions);
+            // Poll popup window, refresh this page when it is closed
+            var pollPopupClosed = window.setInterval(function() {
+                if (popupWindowRef.closed) {
+                    window.clearInterval(pollPopupClosed);
+                    window.location.reload(true)
+                }
+            }, 200);
+        }
+        else {
+            popupWindowRef.focus();
+        }
+    };
+
+    $('.start').click(function(evt) {
+        evt.preventDefault();
+        $('input#plan').val(evt.target.dataset.plan);
+        $('form#upgrade').submit();
+    });
+</script>

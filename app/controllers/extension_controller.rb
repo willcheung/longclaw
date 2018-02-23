@@ -12,8 +12,8 @@ class ExtensionController < ApplicationController
   before_action :filter_params
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce, :company]
-  before_action :get_current_org_opportunity_stages, only: [:salesforce]
-  before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
+  # before_action :get_current_org_opportunity_stages, only: [:salesforce]
+  # before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
   before_action :get_account_types, only: :no_account
   # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
   # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
@@ -154,9 +154,14 @@ class ExtensionController < ApplicationController
     # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
-  def salesforce
-    @salesforce_account = @account.salesforce_accounts.first if @account.present?
-    @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
+  # def salesforce
+  #   @salesforce_account = @account.salesforce_accounts.first if @account.present?
+  #   @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
+  #   render layout: 'empty'
+  # end
+
+  def custom_view
+    render layout: 'empty'
   end
 
   def company
@@ -251,6 +256,7 @@ class ExtensionController < ApplicationController
     end
   end
 
+  # Tracking Dashboard tab opened by the Tracking button  
   def dashboard
     if current_user.plus?
       # Daily trend (last month, sent and opens)
