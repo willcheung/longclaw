@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <% if current_user.power_or_trial_only? %>
+    <% if !current_user.admin? %>
         <h1>My Integrations </h1>
         <div class="row">
             <div class="ibox-content text-center">

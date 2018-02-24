@@ -12,11 +12,14 @@ class ExtensionController < ApplicationController
   before_action :filter_params
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce, :company]
-  before_action :get_current_org_opportunity_stages, only: [:salesforce]
-  before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
+  # before_action :get_current_org_opportunity_stages, only: [:salesforce]
+  # before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
   before_action :get_account_types, only: :no_account
   # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
   # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
+  before_action :get_current_org_users, only: :custom_view
+  before_action :get_current_org_opportunity_stages, only: :custom_view
+  before_action :get_current_org_opportunity_forecast_categories, only: :custom_view
 
   def test
     render layout: 'empty'
@@ -154,9 +157,69 @@ class ExtensionController < ApplicationController
     # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
-  def salesforce
-    @salesforce_account = @account.salesforce_accounts.first if @account.present?
-    @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
+  # def salesforce
+  #   @salesforce_account = @account.salesforce_accounts.first if @account.present?
+  #   @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
+  #   render layout: 'empty'
+  # end
+
+  def custom_view
+    if current_user.pro? && @salesforce_user.present? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
+      visible_projects = Project.visible_to(current_user.organization_id, current_user.id)
+      visible_projects = visible_projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
+      visible_projects = visible_projects.where.not(stage: current_user.organization.get_closed_stages) if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarterOpen]
+      @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
+      subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
+
+      # Load data for the 3 dashboards at the top of page
+      unless @current_user_projects.blank?
+        project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, [current_user.email], 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
+        if project_engagement_7d.blank?
+          @data_left = [] and @categories = []
+        else
+          @data_left = project_engagement_7d.map do |pid, activities|
+            proj = @current_user_projects.find { |p| p.id == pid }
+            Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: activities, total: activities.inject(0){|sum,a| sum += (a.num_activities.present? ? a.num_activities : 0)} }) if proj.present?  # else nil
+          end
+        end
+        @data_left.compact!
+        @data_left.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+
+        @data_center = @data_left.sort{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d1.total <=> d2.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+
+        @categories = @data_left.inject([]) do |memo, d|
+          d.y.each {|a| memo = memo | [a.category]}
+          memo
+        end  # get only categories that have data
+      end
+
+      # Load notifications for "My Alerts & Tasks"
+      unless @current_user_projects.blank?
+        project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
+        @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
+        # Need these to show project name and user name instead of pid and uid
+        @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
+      end
+
+      # Load project data for "My Opportunities"
+      @projects = (subscribed_projects + @current_user_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
+      unless @projects.empty?
+        project_ids_a = @projects.map(&:id)
+
+        @sparkline = Project.count_activities_by_day_sparkline(project_ids_a, current_user.time_zone)
+        @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
+        @open_risk_count = Project.open_risk_count(project_ids_a)
+        # @days_to_close = Project.days_to_close(project_ids_a)
+        @project_days_inactive = visible_projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
+        @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
+        @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: project_ids_a).group("project_id")
+        @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
+
+        #@rag_status = Project.current_rag_score(project_ids_a)
+      end
+    end
+
+    render layout: 'empty'
   end
 
   def company
@@ -251,6 +314,7 @@ class ExtensionController < ApplicationController
     end
   end
 
+  # Tracking Dashboard tab opened by the Tracking button  
   def dashboard
     if current_user.plus?
       # Daily trend (last month, sent and opens)

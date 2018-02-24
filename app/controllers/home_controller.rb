@@ -4,7 +4,6 @@ class HomeController < ApplicationController
   before_action :get_current_org_users, only: :index
   before_action :get_current_org_opportunity_stages, only: :index
   before_action :get_current_org_opportunity_forecast_categories, only: :index
-  before_action :get_current_org_users, only: :index
   before_action :home_filter_state, only: [:index]
 
   def index

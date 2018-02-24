@@ -1,4 +1,31 @@
+<style type="text/css">
+    body {
+        background-color: white !important; 
+    } 
+</style>
+
 <div class="wrapper wrapper-content animated fadeInRight">
+     <div class="row">
+        <div class="col-sm-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h3>Forecast</h3>
+                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with most activity during the last 7 days."></i> -->
+                </div>
+                <div id="forecast-chart" class="ibox-content opp-chart"></div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h3>Stages</h3>
+                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with least activity during the last 7 days."></i> -->
+                </div>
+                <div id="stages-chart" class="ibox-content opp-chart"></div>
+            </div>
+        </div>
+    </div>
+    <hr>
     <div class="row m-b-sm filter-group">
         <!-- Empty div here to push warning and filter to right side -->
         <div class="col-sm-3"></div>
@@ -25,7 +52,7 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-4">
+        <div class="col-sm-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h2>Most Active (7d)</h2>
@@ -34,7 +61,7 @@
                 <div id="chart-left" class="ibox-content opp-chart"></div>
             </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-sm-4">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h2>Least Active (7d)</h2>
@@ -43,39 +70,10 @@
                 <div id="chart-center" class="ibox-content opp-chart"></div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h2>Most Open Alerts & Tasks</h2>
-                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with the most open Alerts & Tasks"></i> -->
-                </div>
-                <div id="chart-right" class="ibox-content opp-chart"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Metrics -->
-    <div class="row ibox float-e-margins">
-        <div class="col-lg-12">
-            <div class="ibox-title">
-                <h2>My Alerts & Tasks</h2>
-            </div>
-            <div class="ibox-content">
-                <!-- <h2>Open and Alerts</h2> -->
-                    <div class="col-lg-12 m-b-md">
-                        <% if @open_total_tasks.blank? %>
-                            <p>Great, no open tasks on your Opportunities.</p>
-                        <% else %>
-                            <%= render "notifications/table", :notifications => @open_total_tasks %>
-                        <% end %>
-                    </div>
-                <p><a href="<%= notifications_path %>/?type=incomplete&assignee=me">See more Alerts & Tasks &raquo;</a>
-            </div>
-        </div>
     </div>
 
     <div class="row ibox float-e-margins">
-        <div class="col-lg-12">
+        <div class="col-sm-12">
             <div class="ibox-title">
                 <table>
                     <tbody>
@@ -173,6 +171,15 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+        $('#close-date-filter')
+          .chosen({ disable_search: true, allow_single_deselect: true})
+          .change( function () {
+            var params = {};
+            if ($(this).val()) {
+              params.close_date = $(this).val();
+            }
+            window.location.search = $.param(params);
+          });
 
         $('#chart-left').highcharts({
             chart: {
@@ -323,81 +330,6 @@
             }
         });
 
-        $('#chart-right').highcharts({
-            chart: {
-                type: 'bar'
-            },
-            title: {
-                text: ''
-            },
-            // subtitle: {
-            //     text: ' ',
-            //     align: 'center',
-            //     y: 40
-            // },
-            xAxis: {
-                max: undefined,
-                crosshair: true,
-                labels: {
-                    style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
-                    formatter: function () {
-                        // this.value = [project_name, deal_size, close_date, project_id]
-                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
-                    }
-                }
-            },
-            yAxis: {
-                min: 0,
-                // max: 100,
-                opposite: true,
-                title: {
-                    text: ''
-                },
-                gridLineWidth: 0,
-                labels: {
-                    enabled: false
-                },
-                stackLabels: {
-                    enabled: true
-                }
-            },
-            tooltip: {
-                headerFormat:  '',
-                pointFormatter: function() {
-                    // this.category = [project_name, deal_size, close_date]
-                    //return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
-                    return this.category[0];
-                }
-            },
-            legend: {
-              enabled: false,
-              // verticalAlign: 'top',
-              // itemStyle: {
-              //     fontWeight: 'light',
-              //     fontSize: 12         
-              // }
-            },
-            plotOptions: {
-                series: {
-                    stacking: 'normal',
-                    cursor: 'pointer',
-                    pointWidth: 33,
-                    //maxPointWidth: 75,
-                    point: {
-                        events: {
-                            click: function () {
-                                window.location.assign("/projects/"+ this.options.id);
-                            }
-                        }
-                    }
-                },
-                allowPointSelect: false
-            },
-            credits: {
-                enabled: false
-            }
-        });
-
         <%= render partial: "home/top_dashboard.js" %>
 
         // handle clicking on all parts of the opportunity label
@@ -407,3 +339,4 @@
 
     });
 </script>
+
