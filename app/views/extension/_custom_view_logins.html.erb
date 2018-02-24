@@ -1,14 +1,19 @@
+<style>
+    .fw-300 {
+        font-weight: 300
+    }
+</style>
+
 <div class="white-bg">
-    <div>
+    <div style="width: 665px; margin: 0 auto 3em">
         <p style="margin: 0.5em;">
             <div>
                 <div>
-                    <h2>Upgrade to Professional Plan and use Salesforce inside your Gmail.</h2>
+                    <h2>Upgrade to <%= link_to 'Pro Plan.', new_plan_path, target: '_blank' %> and use Salesforce inside your Gmail.</h2>
                     <h3>
-                        <ul>
+                        <ul class="fw-300">
                             <li>Update Opportunity fields like a spreadsheet.</li>
-                            <li>Sync emails and meetings automatically. Never forward an email again.</li>
-                            <li>Automatically sync contacts. Never manually create a contact again. </li>
+                            <li>Sync contacts, email, and meetings automatically. No more data entry on weekends.</li>
                             <li>Get dashboards about where you're spending your time and how to achieve your goals.</li>
                         </ul>
                     </h3>
@@ -17,7 +22,7 @@
         </p>
     </div>
     <div class="text-center">
-        <h2><% if current_user.pro? %><i class="fa fa-check"></i><% end %>1. Upgrade to Professional Plan</h2>
+        <h2>1. Upgrade to Pro Plan</h2>
         <% if !current_user.pro? %>
             <%= form_tag plans_path, :id => 'upgrade' do %>
                 <input type="hidden" name="plan" id="plan" value="">
@@ -25,34 +30,39 @@
                 <input type="hidden" name="refresh" value="true">
             <% end %>
             <h3>
-                <a class="btn btn-white btn-lg m-b-sm start pro-start" data-amount=35000 data-plan="pro-monthly-v1" href="#"><i class="fa fa-star"></i> Try Now!</a>
+                <a class="btn btn-primary btn-lg m-b-sm start pro-start" data-amount=35000 data-plan="pro-monthly-v1" href="#"><i class="fa fa-star"></i> Try Now!</a>
                 <br>
-                14 days free on <%= link_to 'Pro Plan.', new_plan_path, target: '_blank' %>
+                <span class="fw-300">14 days free on <%= link_to 'Pro Plan.', new_plan_path, target: '_blank' %>
                 <br>
-                No credit card required.
+                No credit card required.</span>
             </h3>
+        <% else %>
+           <i class="fa fa-check fa-4x text-success"></i>
         <% end %>
 
         <% if current_user.pro? %>
         <div>
         <% else %>
         <hr class="m-t-md m-b-md">
-        <h3><i class="fa fa-info-circle"></i>&nbsp;Sign up for Pro Plan before completing following steps.</h3>
+        <h3><i class="fa fa-info-circle"></i><span class="fw-300">&nbsp;Sign up for Pro Plan before completing following steps.</span></h3>
         <div class="element-disabled">
         <% end %>
-        <h2><% if @salesforce_user.present? %><i class="fa fa-check"></i><% end %>2. Login to Salesforce</h2>
+        <h2>2. Login to Salesforce</h2>
         <% if @salesforce_user.nil? %>
-            <img src="/assets/images/salesforce.png" style="height:75px;"/>
             <div style="margin: 1.5em 0">
-                <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a><br/>
+                <a class="btn btn-white btn-lg" style="font-size:14px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce", source: "chrome" ) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); return false;"><img src="/assets/images/salesforce.png" class="m-r-sm" style="height:22px;"/><strong>Log in to Salesforce</strong></a><a class="btn btn-white btn-lg" style="font-size:14px; display: none" href="/users/auth/salesforcesandbox"><strong> Log in to Salesforce Sandbox</strong></a><br/>
             </div>
+        <% else %>
+           <i class="fa fa-check fa-4x text-success"></i>
         <% end %>
  
-        <h2><% if current_user.oauth_provider == User::AUTH_TYPE[:Gmail] %><i class="fa fa-check"></i><% end %>3. Login to ContextSmith</h2>
+        <h2>3. Login to ContextSmith</h2>
         <% if current_user.oauth_provider == User::AUTH_TYPE[:GmailBasic] %>
             <div>
               <a style="margin: 25px 0;" href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true) %>" target="SignIn" onclick="openSignInPopup(this.href, this.target); $('.reminder').remove(); return false;"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png" title="Grant permissions using Google"></a>
             </div>
+        <% else %>
+           <i class="fa fa-check fa-4x text-success"></i>  
         <% end %>
         </div>
     </div>

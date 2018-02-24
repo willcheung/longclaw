@@ -943,6 +943,7 @@ class User < ActiveRecord::Base
   # Note: The member helpers below is used to determine if the user has access to the appropriate features of that role level ("has_rolelevel_access?".  e.g., "admin?" means user has access to the appropriate features of the Admin role level ("has_admin_access?"); similarly, "power_user?" = user has access to features that a power user may access ("has_power_user_access?"), which implies admin also can access this too.
   def superadmin?
     ENV['super_admins'] ? ENV['super_admins'].split(',').include?(self.email) : false
+    false
   end
 
   def admin?
