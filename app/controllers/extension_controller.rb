@@ -290,7 +290,7 @@ class ExtensionController < ApplicationController
 
   # Filter params[:external] and params[:internal] passed from the Chrome extension by converting to lowercase, validating email addresses, and removing duplicates; params[:bcc_email] and params[:email] are validated and converted to lowercase.
   # Returns a filtered list in @params.
-  def filter_params 
+  def filter_params
     @params = {}
     external = []
     if params[:external].present?
