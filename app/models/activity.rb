@@ -446,6 +446,7 @@ class Activity < ActiveRecord::Base
       update_result = SalesforceService.update_salesforce(client: client, update_type: "activity", sObject_meta: sObject_meta, sObject_fields: sObject_fields)
 
       if update_result[:status] == "SUCCESS"  # unless failed Salesforce query
+        # TODO: To count number of activities exported to SFDC, each time this code is executed is one successful activity inserted.
         puts "-> a SFDC Task was created from a ContextSmith activity. New Task Id='#{ update_result[:result] }'."
         # Don't set result[:status] back to SUCCESS if the export of a previous activity had an ERROR!
         result[:result] << update_result[:result]

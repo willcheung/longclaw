@@ -15,7 +15,10 @@
 #  idx_custom_configurations  (organization_id,user_id,config_type) UNIQUE
 #
 
-# This is for saving configurations that are not directly accessible in the User's Settings page
+##################################################################################################
+# CustomConfiguration is for saving configurations that are not directly accessible in the User's Settings page
+##################################################################################################
+
 class CustomConfiguration < ActiveRecord::Base
   store :config_value, coder: JSON
 

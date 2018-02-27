@@ -80,7 +80,7 @@ class SalesforceController < ApplicationController
     end
   end
 
-  # Returns a Salesforce OauthUser object for either a user or an organization suitable to be used by SalesforceService.connect_salesforce.  If a user is specified and the user is not an Admin, this will look for and return (if found) an individual SFDC OauthUser login object for this user.  If an organization is specified, or if a user with Admin role is passed, then use the login belonging to the "organization".  
+  # Returns a Salesforce OauthUser object for either a user or an organization suitable to be used by SalesforceService.connect_salesforce.  If a user is specified and the user is not an Admin, this will look for and return (if found) an individual SFDC OauthUser login object for this user.  If an organization is specified, or if a user with Admin role is passed, then use a login belonging to the "organization" (no user specified).  
   # Error: If neither user nor organization was provided, or if OauthUser object cannot be found for the parameters provided, returns nil.
   def self.get_sfdc_oauthuser(user: nil, organization: nil)
     if (user.present? && user.admin?) || (organization.present?)
@@ -396,7 +396,7 @@ class SalesforceController < ApplicationController
     render plain: ''
   end
 
-  # Export CS Activity into the mapped SFDC Account (or Opportunity)
+  # Export CS Activity into the mapped SFDC Account or Opportunity.
   # For Activities -- use the explicit (primary) mapping of SFDC and CS Opportunities, or the implicit parent/child relation of CS opportunity to a SFDC Account through mapping of SFDC Account to CS Account.  For all active and confirmed opportunities visible to admin.
   # For Contacts -- TODO: may *NOT* need to reimplement
   # Note: this will export even if CustomConfig setting is disabled, because we are explicitly exporting; if it is enabled, we will save the timestamp when we performed the export.
@@ -757,7 +757,8 @@ class SalesforceController < ApplicationController
                   sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, failure_method_location: failure_method_location, detail: export_result[:detail] }
                   error_occurred = true
                 else # export_result[:status] == SUCCESS
-                  sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id } } 
+                  #TODO: To count number of new contacts created in SFDC, test export_result[:detail]
+                  sync_result_messages << { status: export_result[:status], account: { name: a.name, id: a.id }, sfdc_account: { name: sfa.salesforce_account_name, id: sfa.salesforce_account_id }, detail: export_result[:detail] } 
                 end
               end
             end #end: account_mapping.each

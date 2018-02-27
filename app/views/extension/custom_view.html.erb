@@ -1,0 +1,11 @@
+<style type="text/css">
+    body {
+        background-color: white !important; 
+    } 
+</style>
+
+<% if current_user.pro? && @salesforce_user.present? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail] %>
+    <%= render partial: 'extension/salesforce_dashboard' %>
+<% else %>
+    <%= render partial: 'extension/custom_view_logins' %>
+<% end %>

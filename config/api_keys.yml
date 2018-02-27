@@ -26,6 +26,8 @@ development:
   AZURE_APPLICATION_CLIENT_ID: 9a63b245-f4f3-4284-b71d-d040c85c6058
   AZURE_APPLICATION_CLIENT_SECRET: wgkwjSRA816##_+jbMNEC62
   super_admins: wcheung@contextsmith.com,will@context-smith.com,beders@contextsmith.com,klu@contextsmith.com,vluong@contextsmith.com,syong@contextsmith.com,chobbs@contextsmith.com,craig@context-smith.com,churst@contextsmith.com
+  demo_opp_ids: f0798e45-bb46-4fe0-bc3e-adf6841aea08
+  demo_contact_emails: charlie@plugandplaytechcenter.com,shelby@plugandplaytechcenter.com,peter@plugandplaytechcenter.com
   read_timeout: 300
 
 test:
