@@ -115,10 +115,10 @@
     });
 
     function hideDrilldown(hide) {
-        if (hide == true) {
+        if (hide === true) {
             $("#drilldown-div").hide();
             drilldownIsLoading = false; 
-        } else if (hide == false) {
+        } else if (hide === false) {
             $("#drilldown-div").show();
             drilldownIsLoading = true;
         } else {
@@ -139,7 +139,7 @@
             method: "GET",
             // data: { "entity_type": entity_type },
             beforeSend: function () {
-                $("#content").html("<i class='fa fa-spinner fa-3x fa-pulse' style='margin: 5% 50%'></i>");
+                $("#content").html("<i class='fa fa-spinner fa-3x fa-pulse' style='margin: 0 50% 10px'></i>");
             },
             success: function(data) {
                 var responseTextHtml;
