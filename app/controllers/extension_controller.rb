@@ -321,8 +321,8 @@ class ExtensionController < ApplicationController
       tracking_requests_pastmo_h = current_user.tracking_requests.from_lastmonth.group_by{|tr| tr.sent_at.to_date}.map{|d,tr| [d, tr.length]}.to_h
       @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
 
-      tracking_events_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
-        tr.tracking_events.map{ |te| te.created_at.to_date }
+      tracking_events_pastmo_h = current_user.tracking_requests.map do |tr|
+        tr.tracking_events.from_lastmonth.map{ |te| te.created_at.to_date }
       end.flatten.group_by{|d| d}.map{|d,c| [d, c.length]}.to_h
       @emails_opened_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_events_pastmo_h[d] ? tracking_events_pastmo_h[d] : 0)]}
 
@@ -337,9 +337,9 @@ class ExtensionController < ApplicationController
         end
       end
 
-      tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
-        tr.tracking_events.map{ |te| te.created_at.in_time_zone(current_user.time_zone) }
-      end.flatten.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
+      tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.map do |tr|
+        tr.tracking_events.from_lastmonth.map{ |te| te.created_at.in_time_zone(current_user.time_zone) }
+      end.flatten.compact.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
       @emails_daily_hourly_opened_lastmonth = []
       (0..23).map do |h|
         (0..6).map do |d|
@@ -351,6 +351,50 @@ class ExtensionController < ApplicationController
     end
 
     render layout: 'empty'
+  end
+
+  def dashboard_drilldown
+    start_date = Time.at(params[:startDate].to_i).utc if params[:startDate].present?
+    end_date = Time.at(params[:endDate].to_i).utc if params[:endDate].present?
+    if params[:type] == 'Sent'
+      reqs_result = current_user.tracking_requests.from_lastmonth
+
+      reqs_result = reqs_result.where(sent_at: start_date..end_date) if (start_date && end_date)
+      reqs_result = reqs_result.where("EXTRACT(DOW FROM sent_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:dayOfWeek]) if params[:dayOfWeek].present?
+      reqs_result = reqs_result.where("EXTRACT(HOUR FROM sent_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:hourOfDay]) if params[:hourOfDay].present?
+
+      result = reqs_result.order("sent_at DESC").map do |tr|
+        { recipients: tr.recipients, sent_at: tr.sent_at, subject: tr.subject, email_id: tr.email_id }
+      end
+    else # params[:type] == 'Opened'
+      # evnts_result = current_user.tracking_requests.map do |tr|
+      #   tr.tracking_events.select { |te| te.created_at.to_date }
+      #   # tr.tracking_events.from_lastmonth.map{ |te| te.created_at.to_date }
+      # end
+      evnts_result = current_user.tracking_requests.select("tracking_requests.*, tracking_events.*, tracking_requests.id AS tracking_request_id, tracking_events.created_at AS opened_at").joins(:tracking_events).where(tracking_events: {created_at: 1.month.ago.midnight..Time.current})
+
+      evnts_result = evnts_result.where(tracking_events: {created_at: start_date..end_date}) if (start_date && end_date)
+      evnts_result = evnts_result.where("EXTRACT(DOW FROM tracking_events.created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:dayOfWeek]) if params[:dayOfWeek].present?
+      evnts_result = evnts_result.where("EXTRACT(HOUR FROM tracking_events.created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:hourOfDay]) if params[:hourOfDay].present?
+
+      # Grouped by e-mail sent
+      # evnts_result_h = {}
+      # evnts_result.order("opened_at DESC").each do |r|
+      #   evnts_result_h[r.tracking_request_id] = Hashie::Mash.new({ id: r.tracking_request_id, recipients: r.recipients, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id, last_opened_at: r.opened_at, tracking_requests: []}) if evnts_result_h[r.tracking_request_id].blank?
+      #   evnts_result_h[r.tracking_request_id].tracking_requests += [{ opened_at: r.opened_at, user_agent: r.user_agent, place_name: r.place_name, event_type: r.event_type, domain: r.domain }]
+      # end
+      # result = evnts_result_h.sort_by {|k, r| r.last_opened_at}.reverse.map do |k, r|
+      #   { last_opened_at: r.last_opened_at, recipients: r.recipients.to_a, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id, tracking_requests: r.tracking_requests.to_a }
+      # end
+
+      result = evnts_result.order("opened_at DESC").map do |r|
+        { recipients: r.recipients.to_a, last_opened_at: r.opened_at, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id }
+      end.flatten
+    end
+
+    # puts "result....." 
+    # puts result
+    render json: { type: params[:type], result: result }
   end
 
   private

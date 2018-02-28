@@ -41,7 +41,7 @@ class CustomConfiguration < ActiveRecord::Base
   def self.set_customconfiguration(user: nil, organization: nil, key: nil, newValue: nil, setDefault: false)
     return if (organization.blank? && user.blank?) || (user.present? && organization.present? && user.organization != organization)
 
-    default_vals = { "scheduled_sync" => {PERIOD_TYPE["Daily"][:name] => {"last_successful_run":"", "next_run":""}}, "activities"=> {"import"=>""}, "contacts"=> {"import"=>""} }  # by default, we do not auto-export activities or contacts
+    default_vals = { "scheduled_sync" => {PERIOD_TYPE["Daily"][:name] => {"last_successful_run":"", "next_run":""}}, "activities"=> {"export"=>""}, "contacts"=> {"import"=>""} }  # by default, we do not auto-export activities or contacts
     # default_vals = { "scheduled_sync" => {PERIOD_TYPE["Daily"][:name] => {"last_successful_run":"", "next_run":""}}, "activities"=> {"import"=>"","export"=>""}, "contacts"=> {"import"=>"","export"=>""} }
 
     if user.blank? || user.admin?
