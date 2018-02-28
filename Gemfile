@@ -18,7 +18,7 @@ gem 'hashie', '~> 3.4.3'
 gem "jquery-rails"
 gem 'friendly_code'
 gem 'best_in_place', '~> 3.1.0'
-gem 'ahoy_email'
+gem 'ahoy_email', '~> 1.6.1'
 gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankane/ahoy
 gem 'puma'                        # Web server
 gem 'acts_as_commentable'
