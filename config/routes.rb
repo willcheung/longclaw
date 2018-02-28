@@ -154,7 +154,7 @@ Longclaw::Application.routes.draw do
       get 'salesforce_dashboard'
       post 'create_account'
       get 'dashboard'
-      get 'query_tracking'
+      get 'dashboard_drilldown'
     end
 
     scope "tracking", controller: :tracking, as: 'tracking' do

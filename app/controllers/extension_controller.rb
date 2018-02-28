@@ -353,7 +353,7 @@ class ExtensionController < ApplicationController
     render layout: 'empty'
   end
 
-  def query_tracking
+  def dashboard_drilldown
     start_date = Time.at(params[:startDate].to_i).utc if params[:startDate].present?
     end_date = Time.at(params[:endDate].to_i).utc if params[:endDate].present?
     if params[:type] == 'Sent'

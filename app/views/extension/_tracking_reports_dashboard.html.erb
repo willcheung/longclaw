@@ -131,7 +131,7 @@
     // hourOfDay - (int) 24-hour clock (i.e., hour "0" is 12am and hour "23" is 11pm)
     function queryTracking(type, dayOfWeek, hourOfDay, startDate, endDate) {
         var params = { "type": type, "dayOfWeek": dayOfWeek, "hourOfDay": hourOfDay, "startDate": startDate, "endDate": endDate };
-        var path = "<%= extension_query_tracking_path() %>?" + $.param(params);
+        var path = "<%= extension_dashboard_drilldown_path() %>?" + $.param(params);
         // console.log("path: " + path);
 
         $.ajax(path, {
