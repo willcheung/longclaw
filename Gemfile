@@ -19,7 +19,7 @@ gem "jquery-rails"
 gem 'friendly_code'
 gem 'best_in_place', '~> 3.1.0'
 gem 'ahoy_email'
-gem 'ahoy_matey'                  # Analytics for Rails https://github.com/ankane/ahoy
+gem 'ahoy_matey','~> 1.6.1'       # Analytics for Rails https://github.com/ankane/ahoy
 gem 'puma'                        # Web server
 gem 'acts_as_commentable'
 gem 'pg_search'
