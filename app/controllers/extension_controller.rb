@@ -171,7 +171,9 @@ class ExtensionController < ApplicationController
       @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
       subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
 
-      # Load data for the 3 dashboards at the top of page
+      # Load data for the 3 charts at the top of page
+      # TODO: Adapt the Most Active 7d chart (@data_left) for Pro users for 30d range
+      # TODO: Change the Least Active 7d chart (@data_center) to Time Spent chart for 30d range
       unless @current_user_projects.blank?
         project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, [current_user.email], 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
         if project_engagement_7d.blank?
@@ -194,12 +196,15 @@ class ExtensionController < ApplicationController
       end
 
       # Load notifications for "My Alerts & Tasks"
-      unless @current_user_projects.blank?
-        project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
-        @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
-        # Need these to show project name and user name instead of pid and uid
-        @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
-      end
+      # unless @current_user_projects.blank?
+      #   project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
+      #   @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
+      #   # Need these to show project name and user name instead of pid and uid
+      #   @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
+      # end
+
+      set_top_dashboard_data(project_ids: @current_user_projects.ids)
+      @no_progress = true
 
       # Load project data for "My Opportunities"
       @projects = (subscribed_projects + @current_user_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
@@ -207,7 +212,7 @@ class ExtensionController < ApplicationController
         project_ids_a = @projects.map(&:id)
 
         @sparkline = Project.count_activities_by_day_sparkline(project_ids_a, current_user.time_zone)
-        @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
+        # @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
         @open_risk_count = Project.open_risk_count(project_ids_a)
         # @days_to_close = Project.days_to_close(project_ids_a)
         @project_days_inactive = visible_projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
@@ -378,6 +383,7 @@ class ExtensionController < ApplicationController
   end 
 
   def set_salesforce_user
+    # @salesforce_user = true
     return if @salesforce_user.present? || current_user.nil?
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)

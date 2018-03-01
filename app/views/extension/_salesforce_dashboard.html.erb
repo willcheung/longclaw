@@ -5,12 +5,59 @@
 </style>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-     <div class="row">
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h2>Most Active (30d)</h2>
+                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with most activity during the last 7 days."></i> -->
+                </div>
+                <div id="chart-left" class="ibox-content opp-chart"></div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h2>Time Spent (30d)</h2>
+                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with least activity during the last 7 days."></i> -->
+                </div>
+                <div id="chart-center" class="ibox-content opp-chart"></div>
+            </div>
+        </div>
+      <!-- TODO: refactor home/top_dashboard.js so that we don't need a div#chart-right here to avoid javascript error -->
+        <div id="chart-right"></div>
+    </div>
+
+  <div class="row m-b-sm filter-group">
+      <!-- Empty div here to push warning and filter to right side -->
+      <div class="col-sm-3"></div>
+      <div class="col-sm-6" style="width: 50%; height: 10%; padding-top: 9px">
+          <% if @current_user_projects.blank? %> <span style="float: right"><i class="fa fa-exclamation-triangle fa-lg" style="color: <%= ApplicationHelper::CONTEXTSMITH_DARKBLUE %>"></i>&nbsp;The current filter setting has filtered out all opportunities.</span><% end %>
+      </div>
+      <select id="close-date-filter" class="col-sm-3" data-placeholder="Filter by Close Date" style="width: 24%">
+          <option value="Any"></option> <!-- no filter -->
+          <optgroup label="By Close Date">
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
+          </optgroup>
+          <optgroup label="Quarter">
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarterOpen] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarterOpen] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:NextQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:NextQuarter] %></option>
+          </optgroup>
+          <optgroup label="x-To-Date">
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:QTD] %> ><%= Project::CLOSE_DATE_RANGE[:QTD] %></option>
+              <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
+          </optgroup>
+      </select>
+    </div>
+
+    <div class="row">
         <div class="col-sm-6">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h3>Forecast</h3>
-                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with most activity during the last 7 days."></i> -->
                 </div>
                 <div id="forecast-chart" class="ibox-content opp-chart"></div>
             </div>
@@ -19,55 +66,8 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h3>Stages</h3>
-                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with least activity during the last 7 days."></i> -->
                 </div>
-                <div id="stages-chart" class="ibox-content opp-chart"></div>
-            </div>
-        </div>
-    </div>
-    <hr>
-    <div class="row m-b-sm filter-group">
-        <!-- Empty div here to push warning and filter to right side -->
-        <div class="col-sm-3"></div>
-        <div class="col-sm-6" style="width: 50%; height: 10%; padding-top: 9px">
-            <% if @current_user_projects.blank? %> <span style="float: right"><i class="fa fa-exclamation-triangle fa-lg" style="color: <%= ApplicationHelper::CONTEXTSMITH_DARKBLUE %>"></i>&nbsp;The current filter setting has filtered out all opportunities.</span><% end %>
-        </div>
-        <select id="close-date-filter" class="col-sm-3" data-placeholder="Filter by Close Date" style="width: 24%">
-            <option value="Any"></option> <!-- no filter -->
-            <optgroup label="By Close Date">
-                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Open] %> ><%= Project::CLOSE_DATE_RANGE[:Open] %></option>
-                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:Closed] %> ><%= Project::CLOSE_DATE_RANGE[:Closed] %></option>
-            </optgroup>
-            <optgroup label="Quarter">
-                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarterOpen] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarterOpen] %></option>
-                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:ThisQuarter] %></option>
-                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:LastQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:LastQuarter] %></option>
-                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:NextQuarter] %> ><%= Project::CLOSE_DATE_RANGE[:NextQuarter] %></option>
-            </optgroup>
-            <optgroup label="x-To-Date">
-                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:QTD] %> ><%= Project::CLOSE_DATE_RANGE[:QTD] %></option>
-                <option <%= 'selected' if params[:close_date] == Project::CLOSE_DATE_RANGE[:YTD] %> ><%= Project::CLOSE_DATE_RANGE[:YTD] %></option>
-            </optgroup>
-        </select>
-    </div>
-
-    <div class="row">
-        <div class="col-sm-4">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h2>Most Active (7d)</h2>
-                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with most activity during the last 7 days."></i> -->
-                </div>
-                <div id="chart-left" class="ibox-content opp-chart"></div>
-            </div>
-        </div>
-        <div class="col-sm-4">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h2>Least Active (7d)</h2>
-                    <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with least activity during the last 7 days."></i> -->
-                </div>
-                <div id="chart-center" class="ibox-content opp-chart"></div>
+                <div id="stage-chart" class="ibox-content opp-chart"></div>
             </div>
         </div>
     </div>
@@ -166,20 +166,12 @@
 
    
 </div>
-
-<%= javascript_include_tag "notifications_table" %>
+<!-- Load home.js for now to initialize DataTable and render sparklines -->
+<!-- TODO: See if we need to move this to extension.js file to make some changes -->
+<%= javascript_include_tag "home" %>
 
 <script type="text/javascript">
     $(document).ready(function() {
-        $('#close-date-filter')
-          .chosen({ disable_search: true, allow_single_deselect: true})
-          .change( function () {
-            var params = {};
-            if ($(this).val()) {
-              params.close_date = $(this).val();
-            }
-            window.location.search = $.param(params);
-          });
 
         $('#chart-left').highcharts({
             chart: {
@@ -330,7 +322,157 @@
             }
         });
 
+        $('#forecast-chart').highcharts({
+          chart: {
+            type: 'column'
+          },
+          title: {
+            text: ''
+          },
+          credits: {
+            enabled: false
+          },
+          xAxis: {
+            crosshair: true,
+            labels: {
+              style: {
+                fontSize: '9px'
+              }
+            }
+          },
+          yAxis: {
+            min: 0,
+            title: {
+              text: ''
+            },
+            labels: {
+              enabled: false
+            },
+            stackLabels: {
+              enabled: true,
+              formatter: function () {
+                return "$"+large_number_to_human_signif_digits(this.total);
+              },
+              style: {
+                color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+              }
+            }
+          },
+          tooltip: {
+            enabled: true,
+            formatter: function () {
+              return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
+            }
+          },
+          legend: {
+            enabled: false
+          },
+          plotOptions: {
+            column: {
+              stacking: 'normal',
+              pointPadding: 0.2,
+              borderWidth: 0,
+              dataLabels: {
+                enabled: false,
+                format: '${y}',
+                style: {
+                  color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                }
+              }
+            },
+            series: {
+              pointPadding: 0.1,
+              groupPadding: 0,
+              borderWidth: 0,
+              point: {
+                events: {
+                  click: function () {
+                    this.select(!this.selected, true);
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        $('#stage-chart').highcharts({
+          chart: {
+            type: 'column'
+          },
+          title: {
+            text: ''
+          },
+          credits: {
+            enabled: false
+          },
+          xAxis: {
+            crosshair: true,
+            labels: {
+              style: {
+                fontSize: '9px'
+              }
+            }
+          },
+          yAxis: {
+            min: 0,
+            title: {
+              text: ''
+            },
+            labels: {
+              enabled: false
+            },
+            stackLabels: {
+              enabled: true,
+              formatter: function () {
+                //return Highcharts.numberFormat(this.total, 0, null, "");
+                return "$"+large_number_to_human_signif_digits(this.total);
+              },
+              style: {
+                color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+              }
+            }
+          },
+          tooltip: {
+            enabled: true,
+            formatter: function () {
+              return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
+            }
+          },
+          legend: {
+            enabled: false
+          },
+          series: [{
+
+          }],
+          plotOptions: {
+            column: {
+              stacking: 'normal',
+              pointPadding: 0.2,
+              borderWidth: 0,
+              dataLabels: {
+                format: '${y}',
+                style: {
+                  color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                }
+              }
+            },
+            series: {
+              pointPadding: 0.1,
+              groupPadding: 0.1,
+              borderWidth: 0,
+              point: {
+                events: {
+                  click: function () {
+                    this.select(!this.selected, true);
+                  }
+                }
+              }
+            }
+          }
+        });
+
         <%= render partial: "home/top_dashboard.js" %>
+        <%= render partial: "reports/accounts_dashboard_top.js" %>
 
         // handle clicking on all parts of the opportunity label
         $('.highcharts-xaxis-labels text').click(function() {
