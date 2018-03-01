@@ -266,17 +266,33 @@ class ExtensionController < ApplicationController
           next if error || m.blank? || m.payload.mime_type != 'multipart/mixed'
           parts = m.payload.parts
           headers = m.payload.headers
-          from = parse_email(headers.find { |h| h.name == 'From' }.value)
-          # boolean for deciding whether attachment was sent or received
-          internal = from.address == current_user.email || from.name == get_full_name(current_user)
-          to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| Mail::AddressList.new(val) }.map(&:addresses).flatten
-          to.reject { |email| email.address == current_user.email || email.name == get_full_name(current_user) } if internal
-          message_id = headers.find { |h| h.name == 'Message-ID' }.value
-          atts = parts[1..parts.length]
-          attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
-                            .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id, file_size: att.body.size } }
-          next if attachments.blank?
-          @messages << Hashie::Mash.new({ from: from, to: to, message_id: message_id, internal: internal, internal_date: m.internal_date, id: m.id, attachments: attachments })
+          begin
+            from = parse_email(headers.find { |h| h.name == 'From' }.value)
+            # boolean for deciding whether attachment was sent or received
+            internal = from.address == current_user.email || from.name == get_full_name(current_user)
+            to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| Mail::AddressList.new(val) }.map(&:addresses).flatten
+            to.reject { |email| email.address == current_user.email || email.name == get_full_name(current_user) } if internal
+            message_id = headers.find { |h| h.name == 'Message-ID' }.value
+            atts = parts[1..parts.length]
+            attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
+                              .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id, file_size: att.body.size } }
+            next if attachments.blank?
+            @messages << Hashie::Mash.new({ from: from, to: to, message_id: message_id, internal: internal, internal_date: m.internal_date, id: m.id, attachments: attachments })
+          rescue NoMethodError
+            puts '~~~~~~~~~~ Some headers missing from this email with attachment ~~~~~~~~~~~'
+            from = headers.find { |h| h.name == 'From' }
+            puts 'From: ' + (from ? from.value : '(n/a)')
+            to = headers.find { |h| h.name == 'To' }
+            puts 'To: ' + (to ? to.value : '(n/a)')
+            cc = headers.find { |h| h.name == 'Cc' }
+            puts 'CC: ' + (cc ? cc.value : '(n/a)')
+            bcc = headers.find { |h| h.name == 'Bcc' }
+            puts 'BCC: ' + (bcc ? bcc.value : '(n/a)')
+            message_id = headers.find { |h| h.name == 'Message-ID' }
+            puts 'Message-ID: ' + (message_id ? message_id.value : '(n/a)')
+            content_disposition = headers.find { |h| h.name == 'Content-Disposition' }
+            puts 'Content-Disposition: ' + (content_disposition ? content_disposition.value : '(n/a)')
+          end
         end
       end
     end
