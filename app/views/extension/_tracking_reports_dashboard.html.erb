@@ -152,31 +152,29 @@
                     responseTextHtml = "<h2>No results matching criteria!</h2>";
                 } else {
                     responseTextHtml = "<ul class='list-group'>";
-                    for (k in Object.keys(result)) {
-                        var te = result[k];
+                    for (let tevts of result) {
                         responseTextHtml += "<li class='list-group-item'>";
 
                         if (data.type == "Sent") {
                             responseTextHtml += "<div>" +
-                                "<div class='pull-right'><button class='btn btn-default btn-sm btn-outline' onclick=sendShowMessage('" + te.email_id + "')>Show</button></div>" +
-                                "<div>Message <strong>" + te.subject + "</strong> to <strong>" + te.recipients + "</strong></div>" +
-                                "<div>was sent <span class='tr-time'>" + te.sent_at + "</span></div>" +
+                                "<div class='pull-right'><button class='btn btn-default btn-sm btn-outline' onclick=sendShowMessage('" + tevts.email_id + "')>Show</button></div>" +
+                                "<div>Message <strong>" + tevts.subject + "</strong> to <strong>" + tevts.recipients + "</strong></div>" +
+                                "<div>was sent <span class='tr-time'>" + tevts.sent_at + "</span></div>" +
                                 "</div>";
                         } else { // data.type == "Opened"
-                            // te.tracking_requests => [{ opened_at: tr.opened_at, user_agent: tr.user_agent, place_name: tr.place_name, event_type: tr.event_type, domain: tr.domain }]
+                            var treqs = tevts.tracking_requests;
+                            // treqs => [{ opened_at: tr.opened_at, user_agent: tr.user_agent, place_name: tr.place_name, event_type: tr.event_type, domain: tr.domain }]
                             responseTextHtml += "<div>" +
-                                "<div class='pull-right'><button class='btn btn-default btn-sm btn-outline' onclick=sendShowMessage('" + te.email_id + "')>Show</button></div>" +
-                                "<div><strong>" + te.recipients + "</strong> opened your message <span class='tr-time'>" + te.last_opened_at + "</span></div>" +
-                                "<div><strong>" + te.subject + "</strong> that you sent <span class='tr-time'>" + te.sent_at + "</span></div>" +
-                                "<div>" + getTrackingEventPlacenameAndDomainHtml(te.tracking_requests[0].place_name, te.tracking_requests[0].domain) + "</div>" +
-                                "<div class='text-muted'><a src='#' class='tr-show-more'>Opened " + te.tracking_requests.length + " time" + (te.tracking_requests.length > 1 ? "s" : "") + ".<i class='fa fa-angle-double-down tr-show-more-icon'></i><i class='fa fa-angle-double-up tr-show-more-icon hidden'></i></a></div>";
+                                "<div class='pull-right'><button class='btn btn-default btn-sm btn-outline' onclick=sendShowMessage('" + tevts.email_id + "')>Show</button></div>" +
+                                "<div><strong>" + tevts.recipients + "</strong> opened your message <span class='tr-time'>" + tevts.last_opened_at + "</span></div>" +
+                                "<div><strong>" + tevts.subject + "</strong> that you sent <span class='tr-time'>" + tevts.sent_at + "</span></div>" +
+                                "<div>" + getTrackingEventPlacenameAndDomainHtml(treqs[0].place_name, treqs[0].domain) + "</div>" +
+                                "<div class='text-muted'><a src='#' class='tr-show-more'>Opened " + treqs.length + " time" + (treqs.length > 1 ? "s" : "") + ".<i class='fa fa-angle-double-down tr-show-more-icon'></i><i class='fa fa-angle-double-up tr-show-more-icon hidden'></i></a></div>";
 
                             responseTextHtml += "<div class='tr-all-events hidden'>";
-                            var treqs = te.tracking_requests;
-                            for (tr in treqs) {
-                                var data = treqs[tr];
+                            for (let data of treqs) {
                                 // console.log("data.opened_at="  + data.opened_at + "data.place_name=" + data.place_name + "data.domain=" + data.domain);
-                                responseTextHtml += "<div><span class='tr-all-events-time'>" + data.opened_at + "</span>&nbsp;&nbsp;";
+                                responseTextHtml += "<div><span class='text-muted tr-all-events-time'>" + data.opened_at + "</span>&nbsp;&nbsp;";
                                 responseTextHtml += getTrackingEventPlacenameAndDomainHtml(data.place_name, data.domain) + "</div>";
                             };
                             responseTextHtml += "</div>"; // .tr-all-events
