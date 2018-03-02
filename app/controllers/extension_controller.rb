@@ -12,11 +12,14 @@ class ExtensionController < ApplicationController
   before_action :filter_params
   before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce, :company]
-  before_action :get_current_org_opportunity_stages, only: [:salesforce]
-  before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
+  # before_action :get_current_org_opportunity_stages, only: [:salesforce]
+  # before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
   before_action :get_account_types, only: :no_account
   # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
   # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
+  before_action :get_current_org_users, only: :custom_view
+  before_action :get_current_org_opportunity_stages, only: :custom_view
+  before_action :get_current_org_opportunity_forecast_categories, only: :custom_view
 
   def test
     render layout: 'empty'
@@ -154,9 +157,69 @@ class ExtensionController < ApplicationController
     # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
 
-  def salesforce
-    @salesforce_account = @account.salesforce_accounts.first if @account.present?
-    @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
+  # def salesforce
+  #   @salesforce_account = @account.salesforce_accounts.first if @account.present?
+  #   @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
+  #   render layout: 'empty'
+  # end
+
+  def custom_view
+    if current_user.pro? && @salesforce_user.present? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
+      visible_projects = Project.visible_to(current_user.organization_id, current_user.id)
+      visible_projects = visible_projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
+      visible_projects = visible_projects.where.not(stage: current_user.organization.get_closed_stages) if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarterOpen]
+      @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
+      subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
+
+      # Load data for the 3 dashboards at the top of page
+      unless @current_user_projects.blank?
+        project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, [current_user.email], 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
+        if project_engagement_7d.blank?
+          @data_left = [] and @categories = []
+        else
+          @data_left = project_engagement_7d.map do |pid, activities|
+            proj = @current_user_projects.find { |p| p.id == pid }
+            Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: activities, total: activities.inject(0){|sum,a| sum += (a.num_activities.present? ? a.num_activities : 0)} }) if proj.present?  # else nil
+          end
+        end
+        @data_left.compact!
+        @data_left.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+
+        @data_center = @data_left.sort{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d1.total <=> d2.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+
+        @categories = @data_left.inject([]) do |memo, d|
+          d.y.each {|a| memo = memo | [a.category]}
+          memo
+        end  # get only categories that have data
+      end
+
+      # Load notifications for "My Alerts & Tasks"
+      unless @current_user_projects.blank?
+        project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
+        @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
+        # Need these to show project name and user name instead of pid and uid
+        @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
+      end
+
+      # Load project data for "My Opportunities"
+      @projects = (subscribed_projects + @current_user_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
+      unless @projects.empty?
+        project_ids_a = @projects.map(&:id)
+
+        @sparkline = Project.count_activities_by_day_sparkline(project_ids_a, current_user.time_zone)
+        @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
+        @open_risk_count = Project.open_risk_count(project_ids_a)
+        # @days_to_close = Project.days_to_close(project_ids_a)
+        @project_days_inactive = visible_projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
+        @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
+        @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: project_ids_a).group("project_id")
+        @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
+
+        #@rag_status = Project.current_rag_score(project_ids_a)
+      end
+    end
+
+    render layout: 'empty'
   end
 
   def company
@@ -251,14 +314,15 @@ class ExtensionController < ApplicationController
     end
   end
 
+  # Tracking Dashboard tab opened by the Tracking button  
   def dashboard
     if current_user.plus?
       # Daily trend (last month, sent and opens)
       tracking_requests_pastmo_h = current_user.tracking_requests.from_lastmonth.group_by{|tr| tr.sent_at.to_date}.map{|d,tr| [d, tr.length]}.to_h
       @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
 
-      tracking_events_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
-        tr.tracking_events.map{ |te| te.created_at.to_date }
+      tracking_events_pastmo_h = current_user.tracking_requests.map do |tr|
+        tr.tracking_events.from_lastmonth.map{ |te| te.created_at.to_date }
       end.flatten.group_by{|d| d}.map{|d,c| [d, c.length]}.to_h
       @emails_opened_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_events_pastmo_h[d] ? tracking_events_pastmo_h[d] : 0)]}
 
@@ -273,9 +337,9 @@ class ExtensionController < ApplicationController
         end
       end
 
-      tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.from_lastmonth.map do |tr|
-        tr.tracking_events.map{ |te| te.created_at.in_time_zone(current_user.time_zone) }
-      end.flatten.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
+      tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.map do |tr|
+        tr.tracking_events.from_lastmonth.map{ |te| te.created_at.in_time_zone(current_user.time_zone) }
+      end.flatten.compact.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
       @emails_daily_hourly_opened_lastmonth = []
       (0..23).map do |h|
         (0..6).map do |d|
@@ -289,11 +353,51 @@ class ExtensionController < ApplicationController
     render layout: 'empty'
   end
 
+  def dashboard_drilldown
+    start_date = Time.at(params[:startDate].to_i).utc if params[:startDate].present?
+    end_date = Time.at(params[:endDate].to_i).utc if params[:endDate].present?
+    if params[:type] == 'Sent'
+      reqs_result = current_user.tracking_requests.from_lastmonth
+
+      reqs_result = reqs_result.where(sent_at: start_date..end_date) if (start_date && end_date)
+      reqs_result = reqs_result.where("EXTRACT(DOW FROM sent_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:dayOfWeek]) if params[:dayOfWeek].present?
+      reqs_result = reqs_result.where("EXTRACT(HOUR FROM sent_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:hourOfDay]) if params[:hourOfDay].present?
+
+      result = reqs_result.order("sent_at DESC").map do |tr|
+        { recipients: tr.recipients, sent_at: tr.sent_at, subject: tr.subject, email_id: tr.email_id }
+      end
+    else # params[:type] == 'Opened'
+      # evnts_result = current_user.tracking_requests.map do |tr|
+      #   tr.tracking_events.select { |te| te.created_at.to_date }
+      #   # tr.tracking_events.from_lastmonth.map{ |te| te.created_at.to_date }
+      # end
+      evnts_result = current_user.tracking_requests.select("tracking_requests.*, tracking_events.*, tracking_requests.id AS tracking_request_id, tracking_events.created_at AS opened_at").joins(:tracking_events).where(tracking_events: {created_at: 1.month.ago.midnight..Time.current})
+
+      evnts_result = evnts_result.where(tracking_events: {created_at: start_date..end_date}) if (start_date && end_date)
+      evnts_result = evnts_result.where("EXTRACT(DOW FROM tracking_events.created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:dayOfWeek]) if params[:dayOfWeek].present?
+      evnts_result = evnts_result.where("EXTRACT(HOUR FROM tracking_events.created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:hourOfDay]) if params[:hourOfDay].present?
+
+      # Grouped by e-mail sent
+      evnts_result_h = {}
+      evnts_result.order("opened_at DESC").each do |r|
+        evnts_result_h[r.tracking_request_id] = Hashie::Mash.new({ id: r.tracking_request_id, recipients: r.recipients, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id, last_opened_at: r.opened_at, tracking_requests: []}) if evnts_result_h[r.tracking_request_id].blank?
+        evnts_result_h[r.tracking_request_id].tracking_requests += [{ opened_at: r.opened_at, user_agent: r.user_agent, place_name: r.place_name, event_type: r.event_type, domain: r.domain }]
+      end
+      result = evnts_result_h.sort_by {|k, r| r.last_opened_at}.reverse.map do |k, r|
+        { last_opened_at: r.last_opened_at, recipients: r.recipients.to_a, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id, tracking_requests: r.tracking_requests.to_a }
+      end
+    end
+
+    # puts "\n\nResult=" 
+    # puts result
+    render json: { type: params[:type], result: result }
+  end
+
   private
 
   # Filter params[:external] and params[:internal] passed from the Chrome extension by converting to lowercase, validating email addresses, and removing duplicates; params[:bcc_email] and params[:email] are validated and converted to lowercase.
   # Returns a filtered list in @params.
-  def filter_params 
+  def filter_params
     @params = {}
     external = []
     if params[:external].present?

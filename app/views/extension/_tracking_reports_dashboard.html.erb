@@ -1,11 +1,43 @@
-<div>
+<style>
+    .tr-time {
+        font-weight: bold;
+    }
+    div.pull-right {
+        padding-right: 2.5%;
+    }
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        word-break: break-all;
+    }
+    a.page-nav {
+        text-decoration: underline;
+        margin: 0 5px;
+    }
+</style>
+
+<%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js" %>
+
+<div id="top">
     <!-- Daily trend (last month, sent and opens) -->
     <div class="trend-graph" id="activity-container" style="height: 300px"></div>
     <!-- Day of the Week and Hourly trend (last month, opens) -->
     <div class="trend-graph" id="punchcard-container" style="height: 420px"></div>
+    <div id="drilldown-div" class="row" style="width: 110%; min-height: 100px; display: none">
+        <div style="margin: 0 3.5% 12px 14px">
+            <p>Return to:&nbsp;&nbsp;[<a class="page-nav" href="#activity-container">Messages Sent/Opened" graph</a>|<a class="page-nav" href="#punchcard-container"> "Messages Sent/Opened by Day, Hour" graph</a>|<a href="#top">Top</a>]</p>
+            <div style="font-size: 18px; font-weight: bold">
+                Messages <span id="drilldown-header-period"></span>
+                <span style="cursor: pointer; float: right"><i class="fa fa-window-close" onclick="hideDrilldown(true);" title="Close report"></i></span>
+            </div>
+        </div>
+        <div id="content" style="width: 100%; overflow: auto"></div>
+    </div>
 </div>
 
 <script>
+    var drilldownIsLoading = false;
+
     $(document).ready(function() {
         $('#activity-container').highcharts().addSeries({
             color: '#1ab394',
@@ -18,7 +50,56 @@
             yAxis: 0,
             data: <%= @emails_opened_lastmonth.to_json.html_safe %>
         });
+        $('#activity-container').highcharts().update({
+            plotOptions:{
+                series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function() {
+                                if (drilldownIsLoading) {
+                                    alert("Please wait until current report is finished loading before trying to retrieve a new one.")
+                                } else if (this.y > 0) { // We can ignore this request if we do not expect any results!
+                                    // this.series.name - "Opened" / "Sent" (string)
+                                    // this.name - Date (string)
+                                    queryTracking(this.series.name, undefined, undefined, moment(new Date(this.name + " 00:00:00")).unix(), moment(new Date(this.name + " 00:00:00")).add(1,"days").unix());
 
+                                    $("#drilldown-header-period").html(this.series.name + ": " + DAYOFWEEK_LONG[moment(new Date(this.name + " 00:00:00")).day()] + " " + this.category);
+                                    hideDrilldown(false);  // show report
+                                    window.location.href = "#drilldown-div";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        $('#punchcard-container').highcharts().update({
+            plotOptions:{
+                series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function() {
+                                if (drilldownIsLoading) {
+                                    alert("Please wait until current report is finished loading before trying to retrieve a new one.")
+                                } else {
+                                    // this.series.name - "Opened" / "Sent" (string)
+                                    // this.y - Day of week (int)
+                                    // this.x - Hour of day (int)
+                                    queryTracking(this.series.name, this.y, this.x, undefined, undefined);
+
+                                    $("#drilldown-header-period").html(this.series.name + ": " + DAYOFWEEK_LONG[this.y] + "s " + this.category + " (30d)");
+                                    hideDrilldown(false);  // show report
+                                    window.location.href = "#drilldown-div";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
         $('#punchcard-container').highcharts().addSeries({
             // marker: { 
             //     fillColor: "#1ab394",
@@ -35,5 +116,132 @@
             name: 'Opened',
             data: <%= @emails_daily_hourly_opened_lastmonth.to_json.html_safe %>
         });
-    });
+    }); // $(document).ready
+
+    function hideDrilldown(hide) {
+        if (hide === true) {
+            $("#drilldown-div").hide();
+            drilldownIsLoading = false; 
+        } else if (hide === false) {
+            $("#drilldown-div").show();
+            drilldownIsLoading = true;
+        } else {
+            $("#drilldown-div").toggle();
+        }
+    };
+
+    // type - "Opened" / "Sent"
+    // dayOfWeek - (int) 0 is Sunday, and 6 is Saturday
+    // hourOfDay - (int) 24-hour clock (i.e., hour "0" is 12am and hour "23" is 11pm)
+    function queryTracking(type, dayOfWeek, hourOfDay, startDate, endDate) {
+        var params = { "type": type, "dayOfWeek": dayOfWeek, "hourOfDay": hourOfDay, "startDate": startDate, "endDate": endDate };
+        var path = "<%= extension_dashboard_drilldown_path() %>?" + $.param(params);
+        // console.log("path: " + path);
+
+        $.ajax(path, {
+            async: true,
+            method: "GET",
+            // data: { "entity_type": entity_type },
+            beforeSend: function() {
+                $("#content").html("<i class='fa fa-spinner fa-3x fa-pulse' style='margin: 0 50%'></i>");
+            },
+            success: function(data) {
+                var responseTextHtml;
+                var result = data.result;
+                if (data == undefined || !result || result.length == 0) { 
+                    responseTextHtml = "<h2>No results matching criteria!</h2>";
+                } else {
+                    responseTextHtml = "<ul class='list-group'>";
+                    for (let tevts of result) {
+                        responseTextHtml += "<li class='list-group-item'>";
+
+                        if (data.type == "Sent") {
+                            responseTextHtml += "<div>" +
+                                "<div class='pull-right'><button class='btn btn-default btn-sm btn-outline' onclick=sendShowMessage('" + tevts.email_id + "')>Show</button></div>" +
+                                "<div>Message <strong>" + tevts.subject + "</strong> to <strong>" + tevts.recipients + "</strong></div>" +
+                                "<div>was sent <span class='tr-time'>" + tevts.sent_at + "</span></div>" +
+                                "</div>";
+                        } else { // data.type == "Opened"
+                            var treqs = tevts.tracking_requests;
+                            // treqs => [{ opened_at: tr.opened_at, user_agent: tr.user_agent, place_name: tr.place_name, event_type: tr.event_type, domain: tr.domain }]
+                            responseTextHtml += "<div>" +
+                                "<div class='pull-right'><button class='btn btn-default btn-sm btn-outline' onclick=sendShowMessage('" + tevts.email_id + "')>Show</button></div>" +
+                                "<div><strong>" + tevts.recipients + "</strong> opened your message <span class='tr-time'>" + tevts.last_opened_at + "</span></div>" +
+                                "<div><strong>" + tevts.subject + "</strong> that you sent <span class='tr-time'>" + tevts.sent_at + "</span></div>" +
+                                "<div>" + getTrackingEventPlacenameAndDomainHtml(treqs[0].place_name, treqs[0].domain) + "</div>" +
+                                "<div class='text-muted'><a src='#' class='tr-show-more'>Opened " + treqs.length + " time" + (treqs.length > 1 ? "s" : "") + ".<i class='fa fa-angle-double-down tr-show-more-icon'></i><i class='fa fa-angle-double-up tr-show-more-icon hidden'></i></a></div>";
+
+                            responseTextHtml += "<div class='tr-all-events hidden'>";
+                            for (let data of treqs) {
+                                // console.log("data.opened_at="  + data.opened_at + "data.place_name=" + data.place_name + "data.domain=" + data.domain);
+                                responseTextHtml += "<div><span class='text-muted tr-all-events-time'>" + data.opened_at + "</span>&nbsp;&nbsp;";
+                                responseTextHtml += getTrackingEventPlacenameAndDomainHtml(data.place_name, data.domain) + "</div>";
+                            };
+                            responseTextHtml += "</div>"; // .tr-all-events
+
+                            responseTextHtml += "</div>";
+                        };
+                        responseTextHtml += "</li>";
+                    }
+                    responseTextHtml += "</ul>";
+                }
+                // console.log("responseTextHtml...." + responseTextHtml);
+                $("#content").html(responseTextHtml);
+
+                // Convert timestamps into a human readable date format
+                $('.tr-time').each(function() {
+                    this.textContent = moment(this.textContent).fromNow() + ' (' + moment(this.textContent).format('MMM D, h:mm A') + ')';
+                });
+                // Convert timestamps into a human readable date format (no timestamp)
+                $('.tr-all-events-time').each(function() {
+                    this.textContent = moment(this.textContent).fromNow();
+                });
+
+                // Allow collapsible/exandable controls
+                $('.tr-show-more').click(function() {
+                    $(this).find('.tr-show-more-icon').toggleClass('hidden');
+                    $(this).parent().siblings('.tr-all-events').toggleClass('hidden');
+                });
+            },
+            error: function(data) {
+                var res = data.result;
+                console.log(buttonTxtStr + " error\n\n" + "-".repeat(50) + "\nStatus:\n" + "-".repeat(50) + "\n" + res.error);
+                alert("There was an error, but it has been logged and our team will get right on it shortly to resolve it!");
+            },
+            // statusCode: {
+            //     500: function() {
+            //     },
+            //     503: function() {
+            //     },
+            // },
+            complete: function() {
+                drilldownIsLoading = false; 
+                window.location.href = "#drilldown-div";
+                // $('html,body').animate({scrollTop: $("#drilldown-div").offset().top}, 0); // scroll drilldown div to the "top"
+            }
+        });
+    }
+
+    function sendShowMessage(email_id) {
+        parent.parent.postMessage({type: 'cs-show-message', email_id: email_id}, "https://mail.google.com");
+        return false;
+    }
+
+    function getTrackingEventPlacenameAndDomainHtml(place_name, domain) {
+        var html = "<span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;";
+        var place_name_is_nice = (place_name !== 'Unknown' && place_name !== 'Gmail')
+
+        if (place_name_is_nice)
+            html += "<a target='_blank' href='https://maps.google.com/?q=" + place_name + "'>" + place_name + "</a>";
+        else
+            html += place_name;
+
+        html += "</span><span class='text-muted'>&nbsp;";
+        //<i class='fa <!%= device_class %>'></i>&nbsp;<!%= device.name %> <!%= device.os_name %> <!%= device.device_name %>
+        if (domain)
+            html += "on " + domain + " network";
+        html += "</span>"
+
+        return html;          
+    }
 </script>
