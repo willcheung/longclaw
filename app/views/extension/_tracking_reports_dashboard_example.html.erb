@@ -1,33 +1,90 @@
-<div>
+<style>
+    .tr-time {
+        font-weight: bold;
+    }
+    div.pull-right {
+        padding-right: 2.5%;
+    }
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        word-break: break-all;
+    }
+    a.page-nav {
+        text-decoration: underline;
+        margin: 0 5px;
+    }
+    .referral {
+        display: inline-block; 
+        vertical-align: top;
+        width: 200px;
+        max-width: 220px;
+        min-width: 220px;
+    }
+    .referral > p {
+        font-size: 16px;
+        font-weight: 300;
+        margin: 12px;
+    }
+    .referral .btn {
+        font-size: 18px;
+    }
+</style>
+
+<%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js" %>
+
+<div id="top">
     <h2 style="margin: 0.5em;">
         <div style="text-align: center">
             <div>
                 <span>Get access to your Tracking Dashboard:</span><br>
                 <small>
                     <i class="fa fa-star-o"></i>&nbsp;&nbsp;Track when you send emails and when your customers open them<br>
-                    <i class="fa fa-star-o"></i>&nbsp;&nbsp;Ability to drill down and see which e-mails were sent/opened by a single click on the graph.<br>
-                    <i class="fa fa-star-o"></i>&nbsp;&nbsp;Refer a friend and get 1 month free<br>
-                    <i class="fa fa-star-o"></i>&nbsp;&nbsp;No credit card is required!
+                    <i class="fa fa-star-o"></i>&nbsp;&nbsp;Ability to drill down and see which emails were sent/opened using a single click.<br>
                 </small>
             </div>
             <br>
-            <span>
-                <button title="Get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-primary"><i class="fa fa-gift"></i> Refer a friend!</button>&nbsp;<%= link_to  '/plans/new',  class: 'btn btn-default', target: "_blank" do %>
-                <i class="fa fa-star"></i> Upgrade to Plus
-            <% end %>
-            </span>
+            <div>
+                <span class='referral'>
+                    <button title="get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-primary btn-big"><i class="fa fa-gift"></i> Refer a friend!</button>
+                    <p>You'll get one free month of Plus for each sign-up.</p>
+                </span>
+                <span class='referral'>
+                    <%= link_to  '/plans/new',  class: 'btn btn-default', target: "_blank" do %>
+                        <i class="fa fa-star"></i> Try Now!
+                    <% end %>
+                    <p>14 days free on Plus Plan.<br>No credit card required.</p>
+                </span>
+            </div>
         </div>
     </h2>
     <!-- Daily trend (last month, sent and opens) -->
     <div class="trend-graph" id="activity-container" style="height: 300px"></div>
     <!-- Day of the Week and Hourly trend (last month, opens) -->
     <div class="trend-graph" id="punchcard-container" style="height: 420px"></div>
+    <div id="drilldown-div" class="row" style="width: 110%; min-height: 100px; display: none">
+        <div style="margin: 0 3.5% 12px 14px">
+            <p>Return to:&nbsp;&nbsp;[<a href="#activity-container">Messages Sent/Opened" graph</a>|<a href="#punchcard-container"> "Messages Sent/Opened by Day, Hour" graph</a>|<a href="#top">Top</a>]</p>
+            <div style="font-size: 18px; font-weight: bold">
+                Messages <span id="drilldown-header-period"></span>
+                <span style="cursor: pointer; float: right"><i class="fa fa-window-close" onclick="hideDrilldown(true);" title="Close report"></i></span>
+            </div>
+        </div>
+        <div id="content" style="width: 100%; overflow: auto"></div>
+    </div>
     <div style="text-align: center">
-        <h2 style="margin-bottom: 0.5em"><i class="fa fa-heart" style="color:#C00;"></i> what you see?</h2>
+        <h2 style="margin: 1em"><i class="fa fa-heart" style="color:#C00;"></i> what you see?</h2>
         <div>
-            <button title="Get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-primary"><i class="fa fa-gift"></i> Refer a friend!</button>&nbsp;<%= link_to  '/plans/new',  class: 'btn btn-default', target: "_blank" do %>
-                <i class="fa fa-star"></i> Upgrade to Plus
-            <% end %>
+            <span class='referral'>
+                <button title="get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-primary btn-big"><i class="fa fa-gift"></i> Refer a friend!</button>
+                <p>You'll get one free month of Plus for each sign-up.</p>
+            </span>
+            <span class='referral'>
+                <%= link_to  '/plans/new',  class: 'btn btn-default', target: "_blank" do %>
+                    <i class="fa fa-star"></i> Try Now!
+                <% end %>
+                <p>14 days free on Plus Plan.<br>No credit card required.</p>
+            </span>
         </div>
     </div>
 </div>
@@ -42,14 +99,34 @@
         $('#activity-container').highcharts().addSeries({
             color: '#1ab394',
             name: 'Sent',
-            data: [["2018-01-07",0],["2018-01-08",17],["2018-01-09",37],["2018-01-10",21],["2018-01-11",24],["2018-01-12",20],["2018-01-13",15],["2018-01-14",3],["2018-01-15",14],["2018-01-16",36],["2018-01-17",24],["2018-01-18",37],["2018-01-19",9],["2018-01-20",4],["2018-01-21",0],["2018-01-22",31],["2018-01-23",24],["2018-01-24",38],["2018-01-25",13],["2018-01-26",47],["2018-01-27",34],["2018-01-28",16],["2018-01-29",30],["2018-01-30",35],["2018-01-31",40],["2018-02-01",14],["2018-02-02",23],["2018-02-03",7],["2018-02-04",35],["2018-02-05",23],["2018-02-06",51],["2018-02-07",37]]
+            data: [["<%= @event_dates[0] %>",0],["<%= @event_dates[1] %>",17],["<%= @event_dates[2] %>",37],["<%= @event_dates[3] %>",21],["<%= @event_dates[4] %>",24],["<%= @event_dates[5] %>",20],["<%= @event_dates[6] %>",15],["<%= @event_dates[7] %>",3],["<%= @event_dates[8] %>",14],["<%= @event_dates[9] %>",36],["<%= @event_dates[10] %>",24],["<%= @event_dates[11] %>",37],["<%= @event_dates[12] %>",9],["<%= @event_dates[13] %>",4],["<%= @event_dates[14] %>",0],["<%= @event_dates[15] %>",31],["<%= @event_dates[16] %>",24],["<%= @event_dates[17] %>",38],["<%= @event_dates[18] %>",13],["<%= @event_dates[19] %>",47],["<%= @event_dates[20] %>",34],["<%= @event_dates[21] %>",16],["<%= @event_dates[22] %>",30],["<%= @event_dates[23] %>",35],["<%= @event_dates[24] %>",40],["<%= @event_dates[25] %>",14],["<%= @event_dates[26] %>",23],["<%= @event_dates[27] %>",7],["<%= @event_dates[28] %>",35],["<%= @event_dates[29] %>",23],["<%= @event_dates[30] %>",51],["<%= @event_dates[31] %>",37]]
         });
-
         $('#activity-container').highcharts().addSeries({
             color: '<%= ApplicationHelper::CONTEXTSMITH_BLUE %>',
             name: 'Opened',
             yAxis: 0,
-            data: [["2018-01-07",0],["2018-01-08",9],["2018-01-09",11],["2018-01-10",11],["2018-01-11",6],["2018-01-12",6],["2018-01-13",2],["2018-01-14",1],["2018-01-15",5],["2018-01-16",11],["2018-01-17",10],["2018-01-18",9],["2018-01-19",2],["2018-01-20",1],["2018-01-21",1],["2018-01-22",22],["2018-01-23",10],["2018-01-24",6],["2018-01-25",1],["2018-01-26",12],["2018-01-27",0],["2018-01-28",0],["2018-01-29",4],["2018-01-30",8],["2018-01-31",4],["2018-02-01",3],["2018-02-02",6],["2018-02-03",1],["2018-02-04",3],["2018-02-05",5],["2018-02-06",12],["2018-02-07",6]]
+            data: [["<%= @event_dates[0] %>",0],["<%= @event_dates[1] %>",9],["<%= @event_dates[2] %>",11],["<%= @event_dates[3] %>",11],["<%= @event_dates[4] %>",6],["<%= @event_dates[5] %>",6],["<%= @event_dates[6] %>",2],["<%= @event_dates[7] %>",1],["<%= @event_dates[8] %>",5],["<%= @event_dates[9] %>",11],["<%= @event_dates[10] %>",10],["<%= @event_dates[11] %>",9],["<%= @event_dates[12] %>",2],["<%= @event_dates[13] %>",1],["<%= @event_dates[14] %>",1],["<%= @event_dates[15] %>",22],["<%= @event_dates[16] %>",10],["<%= @event_dates[17] %>",6],["<%= @event_dates[18] %>",1],["<%= @event_dates[19] %>",12],["<%= @event_dates[20] %>",0],["<%= @event_dates[21] %>",0],["<%= @event_dates[22] %>",4],["<%= @event_dates[23] %>",8],["<%= @event_dates[24] %>",4],["<%= @event_dates[25] %>",3],["<%= @event_dates[26] %>",6],["<%= @event_dates[27] %>",1],["<%= @event_dates[28] %>",3],["<%= @event_dates[29] %>",5],["<%= @event_dates[30] %>",12],["<%= @event_dates[31] %>",6]]
+        });
+        $('#activity-container').highcharts().update({
+            plotOptions:{
+                series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function() {
+                                if (this.y > 0) {
+                                    $("#drilldown-header-period").html(this.series.name + ": " + DAYOFWEEK_LONG[moment(new Date(this.name + " 00:00:00")).day()] + " " + this.category);
+                                    generateAndSetMockContentHtml((new Date(this.name+", 2018")), this.series.name, undefined);
+
+                                    hideDrilldown(false);  // show report
+                                    window.location.href = "#drilldown-div";
+                                    // $('html,body').animate({scrollTop: $("#drilldown-div").offset().top}, 0); // scroll drilldown div to the "top"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         $('#punchcard-container').highcharts().update({
@@ -73,16 +150,106 @@
             name: 'Opened',
             data: [[0,0,2],[0,1,5],[0,2,5],[0,3,3],[0,4,null],[0,5,2],[0,6,null],[1,0,3],[1,1,3],[1,2,1],[1,3,3],[1,4,null],[1,5,null],[1,6,1],[2,0,null],[2,1,null],[2,2,null],[2,3,3],[2,4,null],[2,5,3],[2,6,1],[3,0,null],[3,1,null],[3,2,1],[3,3,1],[3,4,1],[3,5,3],[3,6,null],[4,0,null],[4,1,3],[4,2,3],[4,3,6],[4,4,null],[4,5,null],[4,6,null],[5,0,null],[5,1,1],[5,2,3],[5,3,3],[5,4,null],[5,5,null],[5,6,null],[6,0,null],[6,1,2],[6,2,1],[6,3,1],[6,4,6],[6,5,2],[6,6,2],[7,0,3],[7,1,5],[7,2,1],[7,3,11],[7,4,6],[7,5,3],[7,6,null],[8,0,3],[8,1,4],[8,2,8],[8,3,9],[8,4,6],[8,5,7],[8,6,null],[9,0,1],[9,1,7],[9,2,9],[9,3,13],[9,4,5],[9,5,4],[9,6,null],[10,0,4],[10,1,13],[10,2,7],[10,3,17],[10,4,9],[10,5,5],[10,6,6],[11,0,3],[11,1,4],[11,2,14],[11,3,12],[11,4,5],[11,5,2],[11,6,7],[12,0,4],[12,1,5],[12,2,8],[12,3,4],[12,4,2],[12,5,7],[12,6,2],[13,0,5],[13,1,17],[13,2,22],[13,3,17],[13,4,3],[13,5,13],[13,6,1],[14,0,3],[14,1,7],[14,2,27],[14,3,14],[14,4,3],[14,5,4],[14,6,1],[15,0,2],[15,1,14],[15,2,7],[15,3,6],[15,4,6],[15,5,6],[15,6,2],[16,0,4],[16,1,19],[16,2,13],[16,3,12],[16,4,8],[16,5,11],[16,6,1],[17,0,4],[17,1,6],[17,2,9],[17,3,8],[17,4,5],[17,5,5],[17,6,1],[18,0,2],[18,1,10],[18,2,4],[18,3,4],[18,4,7],[18,5,3],[18,6,6],[19,0,3],[19,1,8],[19,2,1],[19,3,1],[19,4,4],[19,5,6],[19,6,4],[20,0,1],[20,1,10],[20,2,null],[20,3,2],[20,4,3],[20,5,5],[20,6,3],[21,0,6],[21,1,4],[21,2,5],[21,3,5],[21,4,5],[21,5,3],[21,6,1],[22,0,1],[22,1,4],[22,2,9],[22,3,2],[22,4,5],[22,5,2],[22,6,3],[23,0,4],[23,1,5],[23,2,6],[23,3,2],[23,4,1],[23,5,2],[23,6,2]]
         });
+        $('#punchcard-container').highcharts().update({
+            plotOptions:{
+                series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function() {
+                                $("#drilldown-header-period").html(this.series.name + ": " + DAYOFWEEK_LONG[this.y] + "s " + this.category + " (30d)");
+
+                                var date = new Date("2018-01-21 00:00:00"); // day 0: Sunday
+                                generateAndSetMockContentHtml(new Date(date.setDate(date.getDate()+this.y)), this.series.name, this.x);
+                                
+                                hideDrilldown(false);  // show report
+                                window.location.href = "#drilldown-div";
+                                // $('html,body').animate({scrollTop: $("#drilldown-div").offset().top}, 0); // scroll drilldown div to the "top"
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         $('.share-action').click(e => {
             e.preventDefault();
             popupCenter('/extension/share', 'Share the goodness', 775, 525);
         });
-
-        function popupCenter(url, title, w, h) {
-            var left = (screen.width / 2) - (w / 2);
-            var top = (screen.height / 2) - (h / 2);
-            return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
-        }
     });
+
+    function popupCenter(url, title, w, h) {
+        var left = (screen.width / 2) - (w / 2);
+        var top = (screen.height / 2) - (h / 2);
+        return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+    };
+
+    function hideDrilldown(hide) {
+        if (hide === true) {
+            $("#drilldown-div").hide();
+            drilldownIsLoading = false; 
+        } else if (hide === false) {
+            $("#drilldown-div").show();
+            drilldownIsLoading = true;
+        } else {
+            $("#drilldown-div").toggle();
+        }
+    };
+
+    function generateAndSetMockContentHtml(dateStr, seriesType, clickedHour) {
+        dateStr = dateStr.toISOString().substr(0,10);
+        var dayIsOdd = parseInt(dateStr.substr(8,2)) % 2 == 1;
+        if (clickedHour == 0) clickedHour = "00";
+
+        if (dayIsOdd) {
+            recipients1 = "jon@winterfell.com,sansa@winterfell.com";
+            subject1 = "Re: Winter is com...";
+            senthour1 = "T" + returnPaddedNum(clickedHour || 17);
+            openhour1a = "T" + returnPaddedNum(clickedHour || 19);;
+            openhour1b = "T" + returnPaddedNum(clickedHour+1 || 18);;
+            recipients2 = "thor@bilskirnir.org";
+            subject2 = "Re: Hammer repair";
+            senthour2 = "T" + returnPaddedNum(clickedHour || 15);
+            openhour2a = "T" + returnPaddedNum(clickedHour || 20);
+            openhour2b = "T" + returnPaddedNum(clickedHour+2 || 19);
+        } else {
+            recipients1 = "tony@stark.com,natasha@stark.com";
+            subject1 = "Re: HQ Security Outline rev...";
+            senthour1 = "T" + returnPaddedNum(clickedHour || 11);
+            openhour1a = "T" + returnPaddedNum(clickedHour || 18);
+            openhour1b = "T" + returnPaddedNum(clickedHour+1 || 17);
+            recipients2 = "cersei.lannister@kingslanding.com";
+            subject2 = "Re: Throne room upgra...";
+            senthour2 = "T" + returnPaddedNum(clickedHour || 13);
+            openhour2a = "T" + returnPaddedNum(clickedHour || 15);
+            openhour2b = "T" + returnPaddedNum(clickedHour+2 || 14);
+        };
+
+        if (seriesType == 'Sent') {
+            $("#content").html("<ul class='list-group'><li class='list-group-item'><div><div class='pull-right'><button class='btn btn-default btn-sm btn-outline'>Show</button></div><div>Message <strong>"+subject1+"</strong> to <strong>"+recipients1+"</strong></div><div>was sent <span class='tr-time'>"+dateStr+senthour1+":04:10.000</span></div></div></li><li class='list-group-item'><div><div class='pull-right'><button class='btn btn-default btn-sm btn-outline'>Show</button></div><div>Message <strong>"+subject2+"</strong> to <strong>"+recipients2+"</strong></div><div>was sent <span class='tr-time'>"+dateStr+senthour2+":50:00.000</span></div></div></li></ul>");
+        } else { // this.series.name == 'Opened'
+            $("#content").html("<ul class='list-group'><li class='list-group-item'><div><div class='pull-right'><button class='btn btn-default btn-sm btn-outline'>Show</button></div><div><strong>"+recipients1+"</strong> opened your message <span class='tr-time'>"+dateStr+openhour1a+":58:56.229</span></div><div><strong>"+subject1+"</strong> that you sent <span class='tr-time'>"+dateStr+senthour1+":01:11.000</span></div><div><span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;Mobile</span><span class='text-muted'>&nbsp;on Mobile-Telecom network</span></div><div class='text-muted'><a src='#' class='tr-show-more'>Opened 4 times.<i class='fa fa-angle-double-down tr-show-more-icon'></i><i class='fa fa-angle-double-up tr-show-more-icon hidden'></i></a></div><div class='tr-all-events hidden'><div><span class='tr-all-events-time'>"+dateStr+openhour1a+":58:56.229</span>&nbsp;&nbsp;<span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;Mobile</span><span class='text-muted'>&nbsp;on Mobile-Telecom network</span></div><div><span class='tr-all-events-time'>"+dateStr+openhour1a+":37:01.198</span>&nbsp;&nbsp;<span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;Gmail</span><span class='text-muted'>&nbsp;on google.com network</span></div><div><span class='tr-all-events-time'>"+dateStr+openhour1b+":49:31.376</span>&nbsp;&nbsp;<span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;Gmail</span><span class='text-muted'>&nbsp;on google.com network</span></div><div><span class='tr-all-events-time'>"+dateStr+openhour1b+":33:59.331</span>&nbsp;&nbsp;<span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;Gmail</span><span class='text-muted'>&nbsp;on google.com network</span></div></div></div></li><li class='list-group-item'><div><div class='pull-right'><button class='btn btn-default btn-sm btn-outline'>Show</button></div><div><strong>"+recipients2+"</strong> opened your message <span class='tr-time'>"+dateStr+openhour2a+":39:39.000</span></div><div><strong>Intro between Varian and Joe</strong> that you sent <span class='tr-time'>"+dateStr+senthour2+":23:15.000</span></div><div><span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;Gmail</span><span class='text-muted'>&nbsp;</span></div><div class='text-muted'><a src='#' class='tr-show-more'>Opened 1 time.<i class='fa fa-angle-double-down tr-show-more-icon'></i><i class='fa fa-angle-double-up tr-show-more-icon hidden'></i></a></div><div class='tr-all-events hidden'><div><span class='tr-all-events-time'>"+dateStr+openhour2a+":39:39.000</span>&nbsp;&nbsp;<span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;Gmail</span><span class='text-muted'>&nbsp;</span></div></div></div></li></ul>");
+        };
+
+        // Convert timestamps into a human readable date format
+        $('.tr-time').each(function () {
+            this.textContent = moment(this.textContent).fromNow() + ' (' + moment(this.textContent).format('MMM D, h:mm A') + ')';
+        });
+        // Convert timestamps into a human readable date format (no timestamp)
+        $('.tr-all-events-time').each(function() {
+            this.textContent = moment(this.textContent).fromNow();
+        });
+        // Allow collapsible/exandable controls
+        $('.tr-show-more').click(function() {
+            $(this).find('.tr-show-more-icon').toggleClass('hidden');
+            $(this).parent().siblings('.tr-all-events').toggleClass('hidden');
+        });
+
+        return;
+    };
+
+    // Works with 2 digit, positive numbers
+    function returnPaddedNum(num) {
+        return ("0"+num).substr(-2);
+    }
 </script>

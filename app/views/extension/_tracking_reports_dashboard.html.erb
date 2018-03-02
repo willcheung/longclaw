@@ -23,7 +23,7 @@
     <div class="trend-graph" id="activity-container" style="height: 300px"></div>
     <!-- Day of the Week and Hourly trend (last month, opens) -->
     <div class="trend-graph" id="punchcard-container" style="height: 420px"></div>
-    <div id="drilldown-div" class="row" style="width: 110%; max-height: 460px; display: none;">
+    <div id="drilldown-div" class="row" style="width: 110%; min-height: 100px; display: none">
         <div style="margin: 0 3.5% 12px 14px">
             <p>Return to:&nbsp;&nbsp;[<a class="page-nav" href="#activity-container">Messages Sent/Opened" graph</a>|<a class="page-nav" href="#punchcard-container"> "Messages Sent/Opened by Day, Hour" graph</a>|<a href="#top">Top</a>]</p>
             <div style="font-size: 18px; font-weight: bold">
@@ -142,7 +142,7 @@
             async: true,
             method: "GET",
             // data: { "entity_type": entity_type },
-            beforeSend: function () {
+            beforeSend: function() {
                 $("#content").html("<i class='fa fa-spinner fa-3x fa-pulse' style='margin: 0 50%'></i>");
             },
             success: function(data) {
@@ -155,6 +155,7 @@
                     for (k in Object.keys(result)) {
                         var te = result[k];
                         responseTextHtml += "<li class='list-group-item'>";
+
                         if (data.type == "Sent") {
                             responseTextHtml += "<div>" +
                                 "<div class='pull-right'><button class='btn btn-default btn-sm btn-outline' onclick=sendShowMessage('" + te.email_id + "')>Show</button></div>" +
@@ -178,7 +179,7 @@
                                 responseTextHtml += "<div><span class='tr-all-events-time'>" + data.opened_at + "</span>&nbsp;&nbsp;";
                                 responseTextHtml += getTrackingEventPlacenameAndDomainHtml(data.place_name, data.domain) + "</div>";
                             };
-                            responseTextHtml += "</div>";
+                            responseTextHtml += "</div>"; // .tr-all-events
 
                             responseTextHtml += "</div>";
                         };
@@ -190,11 +191,11 @@
                 $("#content").html(responseTextHtml);
 
                 // Convert timestamps into a human readable date format
-                $('.tr-time').each(function () {
+                $('.tr-time').each(function() {
                     this.textContent = moment(this.textContent).fromNow() + ' (' + moment(this.textContent).format('MMM D, h:mm A') + ')';
                 });
                 // Convert timestamps into a human readable date format (no timestamp)
-                $('.tr-all-events-time').each(function () {
+                $('.tr-all-events-time').each(function() {
                     this.textContent = moment(this.textContent).fromNow();
                 });
 
