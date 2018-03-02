@@ -6,10 +6,6 @@
     .trend-graph {
         margin-top: 3em;
     }
-    a {
-        text-decoration: underline;
-        margin: 0 5px;
-    }
 </style>
 
 <div class = "ibox-content">
@@ -34,6 +30,9 @@
         },
         title: {
             text: 'Messages Sent/Opened (30d)'
+        },
+        subtitle: {
+            text: '(Click to see emails)'
         },
         legend: {
             layout: 'vertical',
@@ -78,9 +77,11 @@
             type: 'bubble',
             zoomType: 'xy'
         },
-
         title: {
             text: 'Messages Sent/Opened by Day, Hour (30d)'
+        },
+        subtitle: {
+            text: '(Click to see emails)'
         },
         xAxis: {
             title: {

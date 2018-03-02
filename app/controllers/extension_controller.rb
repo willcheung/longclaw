@@ -378,21 +378,17 @@ class ExtensionController < ApplicationController
       evnts_result = evnts_result.where("EXTRACT(HOUR FROM tracking_events.created_at AT TIME ZONE 'UTC' AT TIME ZONE '#{current_user.time_zone}') = " + params[:hourOfDay]) if params[:hourOfDay].present?
 
       # Grouped by e-mail sent
-      # evnts_result_h = {}
-      # evnts_result.order("opened_at DESC").each do |r|
-      #   evnts_result_h[r.tracking_request_id] = Hashie::Mash.new({ id: r.tracking_request_id, recipients: r.recipients, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id, last_opened_at: r.opened_at, tracking_requests: []}) if evnts_result_h[r.tracking_request_id].blank?
-      #   evnts_result_h[r.tracking_request_id].tracking_requests += [{ opened_at: r.opened_at, user_agent: r.user_agent, place_name: r.place_name, event_type: r.event_type, domain: r.domain }]
-      # end
-      # result = evnts_result_h.sort_by {|k, r| r.last_opened_at}.reverse.map do |k, r|
-      #   { last_opened_at: r.last_opened_at, recipients: r.recipients.to_a, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id, tracking_requests: r.tracking_requests.to_a }
-      # end
-
-      result = evnts_result.order("opened_at DESC").map do |r|
-        { recipients: r.recipients.to_a, last_opened_at: r.opened_at, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id }
-      end.flatten
+      evnts_result_h = {}
+      evnts_result.order("opened_at DESC").each do |r|
+        evnts_result_h[r.tracking_request_id] = Hashie::Mash.new({ id: r.tracking_request_id, recipients: r.recipients, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id, last_opened_at: r.opened_at, tracking_requests: []}) if evnts_result_h[r.tracking_request_id].blank?
+        evnts_result_h[r.tracking_request_id].tracking_requests += [{ opened_at: r.opened_at, user_agent: r.user_agent, place_name: r.place_name, event_type: r.event_type, domain: r.domain }]
+      end
+      result = evnts_result_h.sort_by {|k, r| r.last_opened_at}.reverse.map do |k, r|
+        { last_opened_at: r.last_opened_at, recipients: r.recipients.to_a, sent_at: r.sent_at, subject: r.subject, email_id: r.email_id, tracking_requests: r.tracking_requests.to_a }
+      end
     end
 
-    # puts "result....." 
+    # puts "\n\nResult=" 
     # puts result
     render json: { type: params[:type], result: result }
   end
