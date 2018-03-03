@@ -1,7 +1,7 @@
 <style type="text/css">
-    body {
-        background-color: white !important; 
-    } 
+  .opp-chart {
+    height: 18em;
+  }
 </style>
 
 <div class="wrapper wrapper-content animated fadeInRight">
@@ -21,7 +21,7 @@
                     <h2>Time Spent (30d)</h2>
                     <!-- <i class="fa fa-question-circle m-l-xs m-t-xs" data-toggle="tooltip" data-placement="top" data-original-title="Opportunities with least activity during the last 7 days."></i> -->
                 </div>
-                <div id="chart-center" class="ibox-content opp-chart"></div>
+                <div id="customers-interaction-chart" class="ibox-content opp-chart"></div>
             </div>
         </div>
       <!-- TODO: refactor home/top_dashboard.js so that we don't need a div#chart-right here to avoid javascript error -->
@@ -189,10 +189,11 @@
                 max: undefined,
                 crosshair: true,
                 labels: {
-                    style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
+                    // style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
                     formatter: function () {
                         // this.value = [project_name, deal_size, close_date, project_id]
-                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                        // return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+                      return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
                     }
                 }
             },
@@ -232,14 +233,14 @@
                     cursor: 'pointer',
                     pointWidth: 33,
                     //maxPointWidth: 75,
-                    point: {
-                        events: {
-                            click: function () {
-                                window.location.assign("/projects/"+ this.options.id);
-                                //window.open("/projects/"+ this.options.id);
-                            }
-                        }
-                    }
+                    // point: {
+                    //     events: {
+                    //         click: function () {
+                    //             window.location.assign("/projects/"+ this.options.id);
+                    //             //window.open("/projects/"+ this.options.id);
+                    //         }
+                    //     }
+                    // }
                 },
                 allowPointSelect: false
             },
@@ -248,152 +249,381 @@
             }
         });
 
-        $('#chart-center').highcharts({
-            chart: {
-                type: 'bar'
-            },
-            title: {
-                text: ''
-            },
-            // subtitle: {
-            //     text: ' ',
-            //     align: 'center',
-            //     y: 40
-            // },
-            xAxis: {
-                max: undefined,
-                crosshair: true,
-                labels: {
-                    style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
-                    formatter: function () {
-                        // this.value = [project_name, deal_size, close_date, project_id]
-                        return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
-                    }
-                }
-            },
-            yAxis: {
-                min: 0,
-                // max: 100,
-                opposite: true,
-                title: {
-                    text: ''
-                },
-                gridLineWidth: 0,
-                labels: {
-                    enabled: false
-                },
-                stackLabels: {
-                    enabled: true
-                }
-            },
-            tooltip: {
-                headerFormat:  '',
-                pointFormatter: function() {
-                    // this.category = [project_name, deal_size, close_date]
-                    return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
-                }
-            },
-            legend: {
-              enabled: false,
-              // verticalAlign: 'top',
-              // itemStyle: {
-              //     fontWeight: 'light',
-              //     fontSize: 12         
-              // }
-            },
-            plotOptions: {
-                series: {
-                    stacking: 'normal',
-                    cursor: 'pointer',
-                    pointWidth: 33,
-                    //maxPointWidth: 75,
-                    point: {
-                        events: {
-                            click: function () {
-                                window.location.assign("/projects/"+ this.options.id);
-                            }
-                        }
-                    }
-                },
-                allowPointSelect: false
-            },
-            credits: {
-                enabled: false
-            }
-        });
+        // $('#chart-center').highcharts({
+        //     chart: {
+        //         type: 'bar'
+        //     },
+        //     title: {
+        //         text: ''
+        //     },
+        //     // subtitle: {
+        //     //     text: ' ',
+        //     //     align: 'center',
+        //     //     y: 40
+        //     // },
+        //     xAxis: {
+        //         max: undefined,
+        //         crosshair: true,
+        //         labels: {
+        //             style: {"cursor": "pointer"}, // whiteSpace: 'nowrap', textOverflow: 'none'
+        //             formatter: function () {
+        //                 // this.value = [project_name, deal_size, close_date, project_id]
+        //                 return '<a href="/projects/' + this.value[3] + '">' + this.value[0] + '</a><br/>' + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+        //             }
+        //         }
+        //     },
+        //     yAxis: {
+        //         min: 0,
+        //         // max: 100,
+        //         opposite: true,
+        //         title: {
+        //             text: ''
+        //         },
+        //         gridLineWidth: 0,
+        //         labels: {
+        //             enabled: false
+        //         },
+        //         stackLabels: {
+        //             enabled: true
+        //         }
+        //     },
+        //     tooltip: {
+        //         headerFormat:  '',
+        //         pointFormatter: function() {
+        //             // this.category = [project_name, deal_size, close_date]
+        //             return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + this.y + '</b>';
+        //         }
+        //     },
+        //     legend: {
+        //       enabled: false,
+        //       // verticalAlign: 'top',
+        //       // itemStyle: {
+        //       //     fontWeight: 'light',
+        //       //     fontSize: 12
+        //       // }
+        //     },
+        //     plotOptions: {
+        //         series: {
+        //             stacking: 'normal',
+        //             cursor: 'pointer',
+        //             pointWidth: 33,
+        //             //maxPointWidth: 75,
+        //             point: {
+        //                 events: {
+        //                     click: function () {
+        //                         window.location.assign("/projects/"+ this.options.id);
+        //                     }
+        //                 }
+        //             }
+        //         },
+        //         allowPointSelect: false
+        //     },
+        //     credits: {
+        //         enabled: false
+        //     }
+        // });
 
-        $('#forecast-chart').highcharts({
-          chart: {
-            type: 'column'
-          },
+      /*
+        Formats seconds into h:mm format
+        e.g., convert_secs_to_hhmm(59)      => "0:00"
+              convert_secs_to_hhmm(60)      => "0:01"
+              convert_secs_to_hhmm(61)      => "0:01"
+              convert_secs_to_hhmm(3599);   => "0:59"
+              convert_secs_to_hhmm(3600);   => "1:00"
+              convert_secs_to_hhmm(86399);  => "23:59"
+              convert_secs_to_hhmm(86400);  => "24:00"
+              convert_secs_to_hhmm(172800); => "48:00"
+      */
+      function convert_secs_to_hhmm(secs, includeHrLabel) {
+        var hours = Math.floor(secs / 3600);
+        var mins = Math.floor((secs - hours*3600) / 60);
+        return hours + ":" + ("00" + mins).slice(-2) + (includeHrLabel ? (hours > 1 ? " hrs" : " hr") : "" );
+      }
+      $('#customers-interaction-chart').highcharts({
+        chart: {
+          type: 'bar',
+          marginRight: 25
+        },
+        credits: false,
+        title: {
+          // text: 'Time Spent (Last 14 days)',
+          // align: 'left',
+          // style: {
+          //   color: '#777777',
+          //   fontSize: '16px'
+          // }
+          text: ''
+        },
+        subtitle: {
+          text: '(in hh:mm)',
+          align: 'left'
+        },
+        tooltip: {
+          headerFormat: '',
+          pointFormatter: function() {
+            return '<span style="font-size: 10px">' + this.category[0] + '</span><br/><span style="color:' + this.color + '">\u25CF</span>  ' + this.series.name + ': <b>' + convert_secs_to_hhmm(this.y) + '</b>';
+          }
+        },
+        xAxis: {
+          categories: <%= @interaction_time_per_account.map { |it| [it.name, (it.deal_size.nil? ? "" : "$"+number_to_human(it.deal_size)), (it.close_date.nil? ? "" : it.close_date.strftime('%b%e')), it.id] }.to_json.html_safe %>,
+          labels: {
+            formatter: function () {
+              // this.value = [project_name, deal_size, close_date, project_id]
+              return "<b>" + this.value[0] + "</b><br/>" + this.value[1] + (this.value[1] != "" && this.value[2] != "" ? ", " : "" ) + this.value[2];
+            }
+          }
+        },
+        yAxis: {
+          min: 0,
+          minTickInterval: 60,
+          // tickAmount: 5,
+          startOnTick: true,
           title: {
             text: ''
           },
-          credits: {
-            enabled: false
-          },
-          xAxis: {
-            crosshair: true,
-            labels: {
-              style: {
-                fontSize: '9px'
-              }
+          labels: {
+            formatter: function() {
+              return convert_secs_to_hhmm(this.value);
             }
           },
-          yAxis: {
-            min: 0,
-            title: {
-              text: ''
-            },
-            labels: {
-              enabled: false
-            },
-            stackLabels: {
-              enabled: true,
-              formatter: function () {
-                return "$"+large_number_to_human_signif_digits(this.total);
-              },
-              style: {
-                color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
-              }
-            }
-          },
-          tooltip: {
+          stackLabels: {
             enabled: true,
             formatter: function () {
-              return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
-            }
-          },
-          legend: {
-            enabled: false
-          },
-          plotOptions: {
-            column: {
-              stacking: 'normal',
-              pointPadding: 0.2,
-              borderWidth: 0,
-              dataLabels: {
-                enabled: false,
-                format: '${y}',
-                style: {
-                  color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
-                }
-              }
+              return convert_secs_to_hhmm(this.total);
             },
-            series: {
-              pointPadding: 0.1,
-              groupPadding: 0,
-              borderWidth: 0,
-              point: {
-                events: {
-                  click: function () {
-                    this.select(!this.selected, true);
-                  }
-                }
-              }
+            style: {
+              color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
             }
           }
-        });
+        },
+        legend: {
+          reversed: true
+        },
+        plotOptions: {
+          series: {
+            // cursor: 'pointer',
+            // point: {
+            //   events: {
+            //     click: function () {
+            //       $.get("ad_account_data/" + this.options.id, function (data) {
+            //         $("#opportunity-profile").html(data);
+            //         $('#opportunity-modal').modal('show')
+            //         renderProjectCharts(this.y);
+            //       });
+            //     }
+            //   }
+            // },
+            stacking: 'normal'
+          }
+        },
+        series: [
+          <% %i(Meetings Attachments Read\ E-mails Sent\ E-mails).each do |category| %>
+          {
+            name: '<%= category %>',
+            color: "<%= highcharts_series_color(category.to_s) %>",
+            data: [
+              <% @interaction_time_per_account.each do |it| %>
+              {
+                y: <%= it.send(category) %>,
+                id: "<%= it.id %>"
+              },
+              <% end if @interaction_time_per_account.present? %>
+            ]
+          },
+          <% end %>
+        ]
+      });
+
+        // $('#forecast-chart').highcharts({
+        //   chart: {
+        //     type: 'column'
+        //   },
+        //   title: {
+        //     text: ''
+        //   },
+        //   credits: {
+        //     enabled: false
+        //   },
+        //   xAxis: {
+        //     crosshair: true,
+        //     labels: {
+        //       style: {
+        //         fontSize: '9px'
+        //       }
+        //     }
+        //   },
+        //   yAxis: {
+        //     min: 0,
+        //     title: {
+        //       text: ''
+        //     },
+        //     labels: {
+        //       enabled: false
+        //     },
+        //     stackLabels: {
+        //       enabled: true,
+        //       formatter: function () {
+        //         return "$"+large_number_to_human_signif_digits(this.total);
+        //       },
+        //       style: {
+        //         color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+        //       }
+        //     }
+        //   },
+        //   tooltip: {
+        //     enabled: true,
+        //     formatter: function () {
+        //       return '$' + large_number_to_human_signif_digits(this.total) + ' in ' + this.x;
+        //     }
+        //   },
+        //   legend: {
+        //     enabled: false
+        //   },
+        //   plotOptions: {
+        //     column: {
+        //       stacking: 'normal',
+        //       pointPadding: 0.2,
+        //       borderWidth: 0,
+        //       dataLabels: {
+        //         enabled: false,
+        //         format: '${y}',
+        //         style: {
+        //           color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+        //         }
+        //       }
+        //     },
+        //     series: {
+        //       pointPadding: 0.1,
+        //       groupPadding: 0,
+        //       borderWidth: 0,
+        //       point: {
+        //         events: {
+        //           click: function () {
+        //             this.select(!this.selected, true);
+        //           }
+        //         }
+        //       }
+        //     }
+        //   }
+        // });
+      $('#forecast-chart').highcharts({
+        chart: {
+          type: 'area'
+        },
+        credits: {
+          enabled: false
+        },
+        title: {
+          text: ''
+        },
+        xAxis: {
+          type: 'datetime',
+          dateTimeLabelFormats: { // don't display the dummy year
+            month: '%e. %b',
+            year: '%b'
+          },
+          title: {
+            text: ''
+          }
+        },
+        yAxis: {
+          title: {
+            text: 'Amount'
+          },
+          min: 0,
+          labels: {
+            formatter: function() {
+              return '$'+this.value / 1000000 + 'M';
+            }
+          }
+        },
+        tooltip: {
+          //headerFormat: '<b>{series.name}</b><br>'
+          //pointFormat: '{point.x:%e. %b}: {point.y:.2f} m'
+          pointFormat: '${point.y}'
+        },
+
+        legend: {
+          layout: 'vertical',
+          align: 'left',
+          verticalAlign: 'top',
+          x: 70,
+          y: 0,
+          floating: true
+        },
+        series: [{
+          name: 'Closed Won',
+          step: true,
+          color: 'rgb(85,222,210)',
+          data: [
+            [Date.UTC(2018, 3, 2), 600000],
+            [Date.UTC(2018, 3, 10), 925000],
+            [Date.UTC(2018, 3, 15), 1538000],
+            [Date.UTC(2018, 3, 27), 1550300],
+            [Date.UTC(2018, 3, 30), 1810000],
+            [Date.UTC(2018, 4, 1), 2160000],
+            [Date.UTC(2018, 4, 5), 2450000],
+            [Date.UTC(2018, 4, 9), 2700000],
+            [Date.UTC(2018, 4, 12), 3600500],
+            [Date.UTC(2018, 4, 20), 3907800],
+            [Date.UTC(2018, 4, 29), 4507800]
+          ]
+        }, {
+          name: 'Commit',
+          step: true,
+          type: 'line',
+          color: 'gray',
+          data: [
+            [Date.UTC(2018, 4, 29), 4507800],
+            [Date.UTC(2018, 5, 3), 5156000],
+            [Date.UTC(2018, 5, 9), 5456000],
+            [Date.UTC(2018, 5, 14), 6050000],
+            [Date.UTC(2018, 5, 15), 6300000],
+            [Date.UTC(2018, 5, 16), 6350000],
+            [Date.UTC(2018, 5, 21), 6400200],
+            [Date.UTC(2018, 5, 25), 6520000],
+            [Date.UTC(2018, 5, 26), 6620000],
+            [Date.UTC(2018, 5, 29), 8020000],
+            [Date.UTC(2018, 5, 30), 8020000]
+          ]
+        }, {
+          name: 'Best Case',
+          step: true,
+          type: 'line',
+          color: 'rgb(124,181,236)',
+          data: [
+            [Date.UTC(2018, 4, 29), 4507800],
+            [Date.UTC(2018, 5, 3), 5556000],
+            [Date.UTC(2018, 5, 9), 5956000],
+            [Date.UTC(2018, 5, 14), 6650000],
+            [Date.UTC(2018, 5, 15), 6950000],
+            [Date.UTC(2018, 5, 21), 7000200],
+            [Date.UTC(2018, 5, 25), 7120000],
+            [Date.UTC(2018, 5, 26), 7520000],
+            [Date.UTC(2018, 5, 29), 8720000],
+            [Date.UTC(2018, 5, 30), 8720000]
+          ]
+        }, {
+          name: 'Most Likely',
+          step: true,
+          type: 'line',
+          color: 'orange',
+          data: [
+            [Date.UTC(2018, 4, 29), 4507800],
+            [Date.UTC(2018, 5, 3), 5856000],
+            [Date.UTC(2018, 5, 9), 6556000],
+            [Date.UTC(2018, 5, 14), 6850000],
+            [Date.UTC(2018, 5, 15), 7350000],
+            [Date.UTC(2018, 5, 21), 7400200],
+            [Date.UTC(2018, 5, 23), 7520000],
+            [Date.UTC(2018, 5, 24), 7630200],
+            [Date.UTC(2018, 5, 25), 7920000],
+            [Date.UTC(2018, 5, 26), 8480000],
+            [Date.UTC(2018, 5, 29), 9620000],
+            [Date.UTC(2018, 5, 30), 9620000]
+          ]
+        }]
+      });
 
         $('#stage-chart').highcharts({
           chart: {
@@ -460,24 +690,24 @@
               pointPadding: 0.1,
               groupPadding: 0.1,
               borderWidth: 0,
-              point: {
-                events: {
-                  click: function () {
-                    this.select(!this.selected, true);
-                  }
-                }
-              }
+              // point: {
+              //   events: {
+              //     click: function () {
+              //       this.select(!this.selected, true);
+              //     }
+              //   }
+              // }
             }
           }
         });
 
         <%= render partial: "home/top_dashboard.js" %>
-        <%= render partial: "reports/accounts_dashboard_top.js" %>
+        <%= render partial: "reports/stage_chart.js" %>
 
         // handle clicking on all parts of the opportunity label
-        $('.highcharts-xaxis-labels text').click(function() {
-            $(this).children(0)[0].onclick(); // use the first tspan's onclick() method
-        });
+        // $('.highcharts-xaxis-labels text').click(function() {
+        //     $(this).children(0)[0].onclick(); // use the first tspan's onclick() method
+        // });
 
     });
 </script>

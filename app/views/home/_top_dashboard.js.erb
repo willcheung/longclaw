@@ -91,9 +91,11 @@ var chart_right = $('#chart-right').highcharts();
 <% end %>
 
 chart_left.redraw();
-chart_center.redraw();
+// chart_center.redraw();
 if (chart_right) {
   chart_right.redraw();
+}if (chart_center) {
+  chart_center.redraw();
 }
 
 // Ensure opportunity name is bold, any additional info isn't

@@ -876,7 +876,7 @@ class User < ActiveRecord::Base
     Project.find_by_sql(query)
   end
 
-  def self.sent_attachments_count(array_of_project_ids, array_of_user_emails, start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
+  def self.sent_attachments_count(array_of_project_ids, array_of_user_emails, start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc)
     query = <<-SQL
       WITH user_attachments AS (
         SELECT message_id, description::jsonb->'from'->0->>'address' AS sender
@@ -894,7 +894,7 @@ class User < ActiveRecord::Base
     find_by_sql(query)
   end
 
-  def sent_attachments_by_project(array_of_project_ids=Project.visible_to(self.organization_id, self.id).pluck(:id), start_day=13.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc) # array_of_user_emails
+  def sent_attachments_by_project(array_of_project_ids=Project.visible_to(self.organization_id, self.id).pluck(:id), start_day=14.days.ago.midnight.utc, end_day=Time.current.end_of_day.utc) # array_of_user_emails
     query = <<-SQL
       SELECT projects.id, projects.name, projects.amount, projects.close_date, COUNT(DISTINCT message_id) AS attachment_count
       FROM projects
