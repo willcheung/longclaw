@@ -171,13 +171,13 @@ class ExtensionController < ApplicationController
       @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
       subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
 
-      # Load data for the 3 dashboards at the top of page
+      # Load data for the Most Active chart
       unless @current_user_projects.blank?
-        project_engagement_7d = Project.count_activities_by_category(@current_user_projects.pluck(:id), current_user.organization.domain, [current_user.email], 7.days.ago.midnight.utc, Time.current.end_of_day.utc).group_by { |p| p.id }
-        if project_engagement_7d.blank?
+        project_engagement_30d = Project.count_activities_by_category(@current_user_projects.ids, current_user.organization.domain, [current_user.email], 30.days.ago.midnight.utc).group_by { |p| p.id }
+        if project_engagement_30d.blank?
           @data_left = [] and @categories = []
         else
-          @data_left = project_engagement_7d.map do |pid, activities|
+          @data_left = project_engagement_30d.map do |pid, activities|
             proj = @current_user_projects.find { |p| p.id == pid }
             Hashie::Mash.new({ id: proj.id, name: proj.name, deal_size: proj.amount, close_date: proj.close_date, y: activities, total: activities.inject(0){|sum,a| sum += (a.num_activities.present? ? a.num_activities : 0)} }) if proj.present?  # else nil
           end
@@ -185,7 +185,40 @@ class ExtensionController < ApplicationController
         @data_left.compact!
         @data_left.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
 
-        @data_center = @data_left.sort{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d1.total <=> d2.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+        # @data_center = @data_left.sort{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d1.total <=> d2.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
+
+        # compute Interaction Time per Account for this user on the fly
+        email_time = current_user.email_time_by_project(@current_user_projects.ids, 30.days.ago.midnight.utc)
+        # email_time = current_user.email_time_by_project
+        meeting_time = current_user.meeting_time_by_project(@current_user_projects.ids, 30.days.ago.midnight.utc)
+        # meeting_time = current_user.meeting_time_by_project(@current_user_projects.ids)
+        attachment_time = current_user.sent_attachments_by_project(@current_user_projects.ids, 30.days.ago.midnight.utc)
+        # attachment_time = current_user.sent_attachments_by_project
+        @interaction_time_per_account = email_time.map do |p|
+          Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': 0, 'Attachments': 0, 'Sent E-mails': p.outbound, 'Read E-mails': p.inbound, total: p.inbound + p.outbound)
+        end
+        meeting_time.each do |p|
+          i_t = @interaction_time_per_account.find { |it| it.id == p.id }
+          if i_t.nil?
+            @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': p.total_meeting_hours, 'Attachments': 0, 'Sent E-mails': 0, 'Read E-mails': 0, total: p.total_meeting_hours)
+          else
+            i_t.Meetings = p.total_meeting_hours
+            i_t.total += p.total_meeting_hours
+          end
+        end
+        attachment_time.each do |p|
+          attachment_t = p.attachment_count * User::ATTACHMENT_TIME_SEC
+          i_t = @interaction_time_per_account.find { |it| it.id == p.id }
+          if i_t.nil?
+            @interaction_time_per_account << Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': 0, 'Attachments': attachment_t, 'Sent E-mails': 0, 'Read E-mails': 0, total: attachment_t)
+          else
+            i_t.Attachments = attachment_t
+            i_t.total += attachment_t
+          end
+        end
+        @interaction_time_per_account.sort_by! { |it| it.total.to_f }.reverse!
+        # take the top 5 interaction time per account, currently allotted space only fits about 5 categories on xAxis before labels are cut off
+        @interaction_time_per_account = @interaction_time_per_account.take(5)
 
         @categories = @data_left.inject([]) do |memo, d|
           d.y.each {|a| memo = memo | [a.category]}
@@ -194,12 +227,15 @@ class ExtensionController < ApplicationController
       end
 
       # Load notifications for "My Alerts & Tasks"
-      unless @current_user_projects.blank?
-        project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
-        @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
-        # Need these to show project name and user name instead of pid and uid
-        @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
-      end
+      # unless @current_user_projects.blank?
+      #   project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
+      #   @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
+      #   # Need these to show project name and user name instead of pid and uid
+      #   @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
+      # end
+
+      set_top_dashboard_data(project_ids: @current_user_projects.ids)
+      @no_progress = true
 
       # Load project data for "My Opportunities"
       @projects = (subscribed_projects + @current_user_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
@@ -207,7 +243,7 @@ class ExtensionController < ApplicationController
         project_ids_a = @projects.map(&:id)
 
         @sparkline = Project.count_activities_by_day_sparkline(project_ids_a, current_user.time_zone)
-        @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
+        # @risk_scores = Project.new_risk_score(project_ids_a, current_user.time_zone)
         @open_risk_count = Project.open_risk_count(project_ids_a)
         # @days_to_close = Project.days_to_close(project_ids_a)
         @project_days_inactive = visible_projects.joins(:activities).where.not(activities: { category: [Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]] }).where('activities.last_sent_date <= ?', Time.current).maximum("activities.last_sent_date") # get last_sent_date
@@ -261,17 +297,33 @@ class ExtensionController < ApplicationController
           next if error || m.blank? || m.payload.mime_type != 'multipart/mixed'
           parts = m.payload.parts
           headers = m.payload.headers
-          from = parse_email(headers.find { |h| h.name == 'From' }.value)
-          # boolean for deciding whether attachment was sent or received
-          internal = from.address == current_user.email || from.name == get_full_name(current_user)
-          to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| Mail::AddressList.new(val) }.map(&:addresses).flatten
-          to.reject { |email| email.address == current_user.email || email.name == get_full_name(current_user) } if internal
-          message_id = headers.find { |h| h.name == 'Message-ID' }.value
-          atts = parts[1..parts.length]
-          attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
-                            .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id, file_size: att.body.size } }
-          next if attachments.blank?
-          @messages << Hashie::Mash.new({ from: from, to: to, message_id: message_id, internal: internal, internal_date: m.internal_date, id: m.id, attachments: attachments })
+          begin
+            from = parse_email(headers.find { |h| h.name == 'From' }.value)
+            # boolean for deciding whether attachment was sent or received
+            internal = from.address == current_user.email || from.name == get_full_name(current_user)
+            to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| Mail::AddressList.new(val) }.map(&:addresses).flatten
+            to.reject { |email| email.address == current_user.email || email.name == get_full_name(current_user) } if internal
+            message_id = headers.find { |h| h.name == 'Message-ID' }.value
+            atts = parts[1..parts.length]
+            attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
+                              .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id, file_size: att.body.size } }
+            next if attachments.blank?
+            @messages << Hashie::Mash.new({ from: from, to: to, message_id: message_id, internal: internal, internal_date: m.internal_date, id: m.id, attachments: attachments })
+          rescue NoMethodError
+            puts '~~~~~~~~~~ Some headers missing from this email with attachment ~~~~~~~~~~~'
+            from = headers.find { |h| h.name == 'From' }
+            puts 'From: ' + (from ? from.value : '(n/a)')
+            to = headers.find { |h| h.name == 'To' }
+            puts 'To: ' + (to ? to.value : '(n/a)')
+            cc = headers.find { |h| h.name == 'Cc' }
+            puts 'CC: ' + (cc ? cc.value : '(n/a)')
+            bcc = headers.find { |h| h.name == 'Bcc' }
+            puts 'BCC: ' + (bcc ? bcc.value : '(n/a)')
+            message_id = headers.find { |h| h.name == 'Message-ID' }
+            puts 'Message-ID: ' + (message_id ? message_id.value : '(n/a)')
+            content_disposition = headers.find { |h| h.name == 'Content-Disposition' }
+            puts 'Content-Disposition: ' + (content_disposition ? content_disposition.value : '(n/a)')
+          end
         end
       end
     end
@@ -418,6 +470,7 @@ class ExtensionController < ApplicationController
   end 
 
   def set_salesforce_user
+    # @salesforce_user = true
     return if @salesforce_user.present? || current_user.nil?
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
