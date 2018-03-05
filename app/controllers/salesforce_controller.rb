@@ -169,7 +169,7 @@ class SalesforceController < ApplicationController
     if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
       # organization
       import_contacts_sfdc_refresh_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'contacts')::jsonb ?| array[:keys] AND user_id IS NULL", keys: ['import']).find_by(organization_id: user.organization_id)
-    else
+    else #elsif sfdc_oauthuser.present?
       # individual
       import_contacts_sfdc_refresh_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'contacts')::jsonb ?| array[:keys]", keys: ['import']).find_by(organization_id: user.organization_id, user_id: user.id)
     end
@@ -207,7 +207,7 @@ class SalesforceController < ApplicationController
     if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
       # organization
       sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys] AND user_id IS NULL", keys: ['import','export']).find_by(organization_id: user.organization_id)
-    else
+    else #elsif sfdc_oauthuser.present?
       # individual
       sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys]", keys: ['import','export']).find_by(organization_id: user.organization_id, user_id: user.id)
     end
@@ -1059,7 +1059,7 @@ class SalesforceController < ApplicationController
     if sfdc_oauthuser.present? && sfdc_oauthuser.user_id.blank? 
       # organization
       sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys] AND user_id IS NULL", keys: ['import','export']).find_by(organization_id: user.organization_id)
-    else
+    else #elsif sfdc_oauthuser.present?
       # individual
       sync_sfdc_act_config = CustomConfiguration.salesforce_sync.where("((config_value::jsonb)->>'activities')::jsonb ?| array[:keys]", keys: ['import','export']).find_by(organization_id: user.organization_id, user_id: user.id)
     end
