@@ -13,7 +13,7 @@ gem 'devise', '~> 3.4.1' 					# User Authentication
 gem "omniauth-google-oauth2", :git => 'https://github.com/zquestz/omniauth-google-oauth2', :branch => 'master'
 gem 'omniauth-microsoft_v2_auth', path: './omniauth-microsoft_v2_auth'
 gem 'oauth2', '~> 1.0'
-gem 'omniauth-oauth2', '~> 1.4' 
+gem 'omniauth-oauth2', '~> 1.4'
 gem 'hashie', '~> 3.4.3'
 gem "jquery-rails"
 gem 'friendly_code'
