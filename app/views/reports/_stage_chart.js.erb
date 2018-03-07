@@ -1,7 +1,11 @@
 var barColors = {
-  "Closed Won": '#A1DD36',  // light green
-  "Closed Lost": '#DDC3C3', // greyish pink
-  default: "#7CB5EC",   // "CS" light blue
+  <% current_user.organization.get_winning_stages.each do |s| %>
+  "<%= s %>": '#A1DD36',  // light green
+  <% end %>
+  <% current_user.organization.get_losing_stages.each do |s| %>
+  "<%= s %>": '#DDC3C3', // greyish pink
+  <% end %>
+  default: "#7CB5EC"   // "CS" light blue
 };
 
 var chart_stage = $('#stage-chart').highcharts();
@@ -11,7 +15,7 @@ while(chart_stage.series.length > 0) {
 }
 
 <% stage_chart_data_stages = @stage_chart_data.map {|d| d.stage_name} %>
-<% selected_indexes = stage_chart_data_stages.map{|s| params[:stage].include? s} %>
+<% selected_indexes = stage_chart_data_stages.map{|s| params[:stage].present? && params[:stage].include?(s) } %>
 chart_stage.xAxis[0].setCategories(<%= stage_chart_data_stages.to_json.html_safe %>, false);
 <% stage_chart_data_stages.each_with_index do |s, i| %>
 chart_stage.addSeries({
@@ -20,7 +24,7 @@ chart_stage.addSeries({
   data: [
     <% @stage_chart_data.each_with_index do |d, j| %>
     {
-      <%= 'selected: true,' if (i == j && selected_indexes[j]) %> // i == j to select only ONCE!
+      <%= 'selected: true,' if selected_indexes && (i == j && selected_indexes[j]) %> // i == j to select only ONCE!
       y: <%= d.stage_name == s ? d.total_amount : 0 %>
     },
     <% end if @stage_chart_data.present? %>
