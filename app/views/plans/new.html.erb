@@ -68,7 +68,7 @@
           </div> -->
           <div><h1 class="basic-price">Free</h1></div>
         </div>
-        <p class="text-muted"><h3>&nbsp;</h3><h3>&nbsp;</h3><br>
+        <p class="text-muted"><h4>&nbsp;</h4><h4>&nbsp;</h4><br>
         </p>
 
         <div class="plan-action">
@@ -142,10 +142,7 @@
                   <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Upgrade Now</a>
               <% end %>
           <% else %>
-              <div class="btn-group">
-                <% if !current_user.pro? %>
-                    <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Start Free Trial</a>
-                <% end %>
+                  <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Start Free Trial</a>
               </div>
           <% end %>
         </div>
