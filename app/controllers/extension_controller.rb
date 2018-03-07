@@ -226,16 +226,65 @@ class ExtensionController < ApplicationController
         end  # get only categories that have data
       end
 
-      # Load notifications for "My Alerts & Tasks"
-      # unless @current_user_projects.blank?
-      #   project_tasks = Notification.where(project_id: @current_user_projects.pluck(:id))
-      #   @open_total_tasks = project_tasks.open.where("assign_to='#{current_user.id}'").sort_by{|t| t.original_due_date.blank? ? Time.at(0) : t.original_due_date }.reverse
-      #   # Need these to show project name and user name instead of pid and uid
-      #   @projects_reverse = @current_user_projects.map { |p| [p.id, p.name] }.to_h
-      # end
-
-      set_top_dashboard_data(project_ids: @current_user_projects.ids)
+      # get data for Stages chart
+      set_top_dashboard_data(project_ids: @current_user_projects.ids, user_ids: [current_user.id])
       @no_progress = true
+
+      # get data for Forecast chart
+      forecast_result = @current_user_projects.order(:close_date).pluck(:forecast, :close_date, :amount, :stage)
+      @forecast_data = {
+          closed_won: { values: [], total: 0 },
+          commit: { values: [], total: 0 },
+          best_case: { values: [], total: 0 },
+          # most_likely: { values: [], total: 0 }
+      }
+      forecast_result.each do |fr|
+        case fr[0] # forecast
+          when 'Closed'
+            if current_user.organization.get_winning_stages.include? fr[3] # stage
+              @forecast_data[:closed_won][:total] += fr[2] # amount
+              @forecast_data[:commit][:total] += fr[2] # amount
+              @forecast_data[:best_case][:total] += fr[2] # amount
+              # @forecast_data[:most_likely][:total] += fr[2] # amount
+              @forecast_data[:closed_won][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
+            end
+          when 'Commit'
+            @forecast_data[:commit][:total] += fr[2] # amount
+            @forecast_data[:best_case][:total] += fr[2] # amount
+            # @forecast_data[:most_likely][:total] += fr[2] # amount
+            @forecast_data[:commit][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:commit][:total].to_i] ]
+            @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
+            # @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
+          when 'Best Case'
+            @forecast_data[:best_case][:total] += fr[2] # amount
+            # @forecast_data[:most_likely][:total] += fr[2] # amount
+            @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
+            # @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
+          # when 'Most Likely'
+          #   @forecast_data[:most_likely][:total] += fr[2] # amount
+          #   @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
+        end
+      end
+      # Add 'ends' for the data (e.g. begin at start of quarter, stop at end of quarter, connect data at current date)
+      date_range = Project.get_close_date_range(params[:close_date])
+      start = @forecast_data[:closed_won][:values].first.first
+      if date_range.first.to_i < start
+        @forecast_data[:closed_won][:values] = [ [date_range.first.to_i * 1000, 0] ] + @forecast_data[:closed_won][:values]
+      end
+      ends = @forecast_data[:closed_won][:values].last.first
+      if Date.current.to_datetime.to_i * 1000 > ends
+        @forecast_data[:closed_won][:values] += [ [Date.current.to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
+      end
+      [@forecast_data[:commit], @forecast_data[:best_case]].each do |fd|
+        start = fd[:values].first.first
+        if Date.current.to_datetime.to_i * 1000 < start
+          fd[:values] = [ [Date.current.to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ] + fd[:values]
+        end
+        ends = fd[:values].last.first
+        if date_range.last.to_i > ends
+          fd[:values] += [ [date_range.last.to_i * 1000, fd[:total].to_i] ]
+        end
+      end
 
       # Load project data for "My Opportunities"
       @projects = (subscribed_projects + @current_user_projects).uniq(&:id).sort_by{|p| p.name.upcase} # projects/opportunities user owns or to which user is subscribed
@@ -250,8 +299,6 @@ class ExtensionController < ApplicationController
         @project_days_inactive.each { |pid, last_sent_date| @project_days_inactive[pid] = Time.current.to_date.mjd - last_sent_date.in_time_zone.to_date.mjd } # convert last_sent_date to days inactive
         @next_meetings = Activity.meetings.next_week.select("project_id, min(last_sent_date) as next_meeting").where(project_id: project_ids_a).group("project_id")
         @next_meetings = Hash[@next_meetings.map { |p| [p.project_id, p.next_meeting] }]
-
-        #@rag_status = Project.current_rag_score(project_ids_a)
       end
     end
 
