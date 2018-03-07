@@ -65,7 +65,6 @@
                     time<%= 's' if tr.tracking_events.length > 1 %>.
                     <i class="fa fa-angle-double-down tr-show-more-icon"></i>
                     <i class="fa fa-angle-double-up tr-show-more-icon hidden"></i>
-
                   </a>
                   </div>
                   <div class="tr-all-events hidden">
@@ -137,7 +136,6 @@
       $('.tr-show-more').click(function () {
           $(this).find('.tr-show-more-icon').toggleClass('hidden');
           $(this).parent().siblings('.tr-all-events').toggleClass('hidden');
-
       })
 
       function sendShowMessage(email_id) {

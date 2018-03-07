@@ -327,13 +327,14 @@ class Activity < ActiveRecord::Base
     result
   end
 
-  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory on Salesfroce).
+  # Bulk delete CS Activities found in a SFDC Account or Opportunity (in its ActivityHistory on Salesforce).
   # Parameters:   client - SFDC connection
   #               sObjectId (optional) - the SFDC Id that identifies the entity 'Account' or 'Opportunity' on SFDC
   #               type (optional) - the SFDC entity type: 'Account' or 'Opportunity'
   #               from_lastmodifieddate (optional) - the minimum LastModifiedDate to begin deletion of SFDC Activities, timestamp exclusive
   #               to_lastmodifieddate (optional) - the maximum LastModifiedDate to end deletion of SFDC Activities, timestamp inclusive
   # Notes:  SFDC type formats:  dateTime = "2018-01-01T00:00:00z",  date = "2018-01-01"
+  # Warning: Will likely get a timeout if attempt to only specify client, with no sObjectId or type!  At minimum, at least specify these 3 parameters. 
   def self.delete_cs_activities(client, sObjectId=nil, type=nil, from_lastmodifieddate=nil, to_lastmodifieddate=nil)
     delete_tasks_query_stmt = "SELECT Id FROM Task WHERE TaskSubType = 'Task' AND Status = 'Completed' AND (#{ get_CS_export_prefix_SOQL_predicate_string })"
     delete_tasks_query_stmt += " AND WhatId = '#{sObjectId}'" if sObjectId.present?
@@ -344,10 +345,17 @@ class Activity < ActiveRecord::Base
     #tasks = client.query(delete_tasks_query_stmt)
 
     if query_result[:status] == "SUCCESS"
-      query_result[:result].each { |t| t.destroy }
-      puts "Deletion completed!"
+      error_during_deletion = false
+      query_result[:result].each do |t| 
+        error_during_deletion = true if !t.destroy 
+      end
+      if error_during_deletion
+        puts "**** SFDC error **** Unknown failure occured while attempting to delete SFDC activities" + (type.present? ? ", of type #{type}" : "") + (sObjectId.present? ? ", sObjectId=\"#{sObjectId}\"" : "") + (from_lastmodifieddate.present? ? ", from_lastmodifieddate=\"#{from_lastmodifieddate}\"" : "") + (to_lastmodifieddate.present? ? ", to_lastmodifieddate=\"#{to_lastmodifieddate}\"" : "") + ". (Note: Non-admin users may not have permission to delete activities!)"  # proprogate query to caller
+      else
+        puts "Deletion successfully completed!"
+      end
     else  # SFDC query failure
-      puts "Error occured while attempted to delete SFDC Tasks on Salesforce.  #{ query_result[:result] } Detail: #{ query_result[:detail] } "  # proprogate query to caller
+      puts "**** SFDC error **** Error occured while attempting to delete SFDC Tasks on Salesforce.  #{ query_result[:result] } Detail: #{ query_result[:detail] } "  # proprogate query to caller
     end
   end
 
@@ -356,33 +364,34 @@ class Activity < ActiveRecord::Base
   #               project - the CS opportunity from which to export
   #               sfdc_id - the id of the SFDC Account/Opportunity to which this exports the CS activity
   #               type (optional) - to specify exporting into an SFDC "Account" or "Opportunity"; default: 'Account'
-  #               from_updatedat (optional) - the minimum updated_at date to begin export of Activities, timestamp exclusive; default, export with no minimum updated_at
-  #               to_updatedat (optional) - the maximum updated_at date to end export of Activities, timestamp inclusive; default, export with no maximum updated_at
+  #               from_activitydate (optional) - the minimum activity date to begin export of Activities, timestamp exclusive; default, export with no minimum activity date
+  #               to_activitydate (optional) - the maximum activity date to end export of Activities, timestamp inclusive; default, export with no maximum activity date
   # Returns:   A hash that represents the execution status/result. Consists of:
   #             status - "SUCCESS" if operation is successful with no errors (activities exported or no activities to export); "ERROR" if any error occurred during the operation (including partial successes)
   #             result - a list of sObject SFDC id's that were successfully created in SFDC, or an empty list if none were created.
   #             detail - a list of errors or informational/warning messages.
-  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_updatedat=nil, to_updatedat=nil)
+  def self.export_cs_activities(client, project, sfdc_id, type="Account", from_activitydate=nil, to_activitydate=nil)
     result = { status: "SUCCESS", result: [], detail: [] }
     # return { status: "ERROR", result: "Simulated SFDC error", detail: "Simulated detail" }
 
     project_activities = project.activities.where.not(category: [Activity::CATEGORY[:Salesforce], Activity::CATEGORY[:Note]])
-    project_activities = project_activities.where("updated_at > :from_updatedat", from_updatedat: from_updatedat) if from_updatedat.present?
-    project_activities = project_activities.where("updated_at <= :to_updatedat", to_updatedat: to_updatedat) if to_updatedat.present?
+    project_activities = project_activities.where("updated_at > :from_activitydate", from_activitydate: from_activitydate) if from_activitydate.present?
+    project_activities = project_activities.where("updated_at <= :to_activitydate", to_activitydate: to_activitydate) if to_activitydate.present?
 
     project_activities.each do |a|
       # First, put together all the fields of the activity, for preparation of creating a (completed) SFDC Task.
       subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " " + a.category + ": "+ a.title
       description = a.category + " activity (imported from ContextSmith) ——\n"
       activity_date = Time.zone.at(a.last_sent_date).strftime("%Y-%m-%d")
-      if a.category == Activity::CATEGORY[:Conversation]
+      if a.category == Activity::CATEGORY[:Conversation] 
+          next if (from_activitydate.present? && a.last_sent_date <= from_activitydate) || (to_activitydate.present? && a.last_sent_date > to_activitydate) # test here, separate from prev 'if-block', for readability
           subject = CS_ACTIVITY_SFDC_EXPORT_SUBJ_PREFIX + " " + EMAIL_STR + ": "+ a.title
           description = EMAIL_STR + " activity #{CS_ACTIVITY_SFDC_EXPORT_DESC_PREFIX}\n"
           #activity_date = Time.zone.at(m.sentDate).strftime("%b %d")
           description += "Subject:  \"#{ a.title }:\" between #{ get_conversation_member_names(a.from, a.to, a.cc) }"
           description += !a.is_public ? "  (private)\n" : "\n"
           a.email_messages.each do |m|
-            if (from_updatedat.blank? || Time.zone.at(m.sentDate) > from_updatedat) && (to_updatedat.blank? || Time.zone.at(m.sentDate) <= to_updatedat) # if a min or max date is specified, limit output to messages in the thread that fall within that range
+            if (from_activitydate.blank? || Time.zone.at(m.sentDate) > from_activitydate) && (to_activitydate.blank? || Time.zone.at(m.sentDate) <= to_activitydate) # if a min or max date is specified, limit output to messages in the thread that fall within that range
               description += "—————————————————————————\n"
               description += "Sender/Recipients: " + (m.from[0].personal.nil? ? m.from[0].address : m.from[0].personal) + " to " + get_conversation_member_names([], m.to, m.cc, 'All') + "\n"
               description += "Sent: " + Time.zone.at(m.sentDate).strftime("%b %d, %l:%M%P") +"\n"
@@ -431,7 +440,7 @@ class Activity < ActiveRecord::Base
       #     description += "Description:  #{ self.get_full_name(a.user) } wrote:\n"
       #     description += a.note.present? ? a.note : self.rag_note(a.rag_score.to_i)
       else
-          next # if any other Activity type (e.g., Salesforce), skip to the next Activity!
+          next # if any other Activity type (e.g., Salesforce, Next Steps), skip to the next Activity!
       end
 
       description = description.first(ACTIVITY_DESCRIPTION_TEXT_LENGTH_MAX) # if description is too long, truncate the end of the description (note: long e-mail conversations/threads were already truncated above)

@@ -96,7 +96,7 @@
         </p>
 
         <div class="plan-action">
-          <% if current_user.pro? %>
+          <% if current_user.plus? %>
               <a class="btn btn-primary btn-block btn-large" disabled href="#">Included</a>
           <% else %>
               <div class="btn-group">
@@ -129,29 +129,28 @@
             <label class="btn btn-default btn-off btn-sm pro-monthly">
               <input type="radio" value="0" name="pro-monthly-v1">Monthly</label>
           </div> -->
-          <div><h1 class="pro-price">$35/mo</h1></div>
+          <div><h1 class="pro-price">$39/mo</h1></div>
         </div>
 
-        <p class="muted"><h3>(coming soon)</h3><h3>&nbsp;</h3><br>
+        <p class="muted"><h3>14 days free trial</h3><h3>&nbsp;</h3><br>
         </p>
 
         <div class="plan-action">
-          <% if current_user.biz? %>
+          <% if current_user.pro? %>
               <a class="btn btn-primary btn-block btn-large" disabled href="#">Included</a>
           <% else %>
               <div class="btn-group">
-                <a class="share-action btn btn-primary btn-large btn-outline"><i class="fa fa-gift"></i> Refer a friend!</a>
-                <!-- <% if !current_user.pro? %>
-                    <a class="btn btn-primary btn-large start pro-start" data-amount=42000 data-plan="pro-v1" href="#">Start Free Trial</a>
+                <% if !current_user.pro? %>
+                    <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Start Free Trial</a>
                 <% else %>
                     <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
                         <a class="btn btn-primary btn-large" disabled href="#"><%= @time_remaining_until_expiration_str %> remaining in free trial</a>
                     <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
                         <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
                     <% else %>
-                        <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=42000 data-plan="pro-v1" href="#">Upgrade Now</a>
+                        <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Upgrade Now</a>
                     <% end %>
-                <% end %> -->
+                <% end %>
               </div>
           <% end %>
         </div>
