@@ -171,7 +171,7 @@ class ExtensionController < ApplicationController
       @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
       subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
 
-      # Load data for the Most Active chart
+      # Load data for the charts if current user owns any projects with current filters
       unless @current_user_projects.blank?
         project_engagement_30d = Project.count_activities_by_category(@current_user_projects.ids, current_user.organization.domain, [current_user.email], 30.days.ago.midnight.utc).group_by { |p| p.id }
         if project_engagement_30d.blank?
@@ -224,65 +224,65 @@ class ExtensionController < ApplicationController
           d.y.each {|a| memo = memo | [a.category]}
           memo
         end  # get only categories that have data
-      end
 
-      # get data for Stages chart
-      set_top_dashboard_data(project_ids: @current_user_projects.ids, user_ids: [current_user.id])
-      @no_progress = true
+        # get data for Stages chart
+        set_top_dashboard_data(project_ids: @current_user_projects.ids, user_ids: [current_user.id])
+        @no_progress = true
 
-      # get data for Forecast chart
-      forecast_result = @current_user_projects.order(:close_date).pluck(:forecast, :close_date, :amount, :stage)
-      @forecast_data = {
-          closed_won: { values: [], total: 0 },
-          commit: { values: [], total: 0 },
-          best_case: { values: [], total: 0 },
-          # most_likely: { values: [], total: 0 }
-      }
-      forecast_result.each do |fr|
-        case fr[0] # forecast
-          when 'Closed'
-            if current_user.organization.get_winning_stages.include? fr[3] # stage
-              @forecast_data[:closed_won][:total] += fr[2] # amount
+        # get data for Forecast chart
+        forecast_result = @current_user_projects.order(:close_date).pluck(:forecast, :close_date, :amount, :stage)
+        @forecast_data = {
+            closed_won: { values: [], total: 0 },
+            commit: { values: [], total: 0 },
+            best_case: { values: [], total: 0 },
+            # most_likely: { values: [], total: 0 }
+        }
+        forecast_result.each do |fr|
+          case fr[0] # forecast
+            when 'Closed'
+              if current_user.organization.get_winning_stages.include? fr[3] # stage
+                @forecast_data[:closed_won][:total] += fr[2] # amount
+                @forecast_data[:commit][:total] += fr[2] # amount
+                @forecast_data[:best_case][:total] += fr[2] # amount
+                # @forecast_data[:most_likely][:total] += fr[2] # amount
+                @forecast_data[:closed_won][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
+              end
+            when 'Commit'
               @forecast_data[:commit][:total] += fr[2] # amount
               @forecast_data[:best_case][:total] += fr[2] # amount
               # @forecast_data[:most_likely][:total] += fr[2] # amount
-              @forecast_data[:closed_won][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
-            end
-          when 'Commit'
-            @forecast_data[:commit][:total] += fr[2] # amount
-            @forecast_data[:best_case][:total] += fr[2] # amount
-            # @forecast_data[:most_likely][:total] += fr[2] # amount
-            @forecast_data[:commit][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:commit][:total].to_i] ]
-            @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
-            # @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
-          when 'Best Case'
-            @forecast_data[:best_case][:total] += fr[2] # amount
-            # @forecast_data[:most_likely][:total] += fr[2] # amount
-            @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
-            # @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
-          # when 'Most Likely'
-          #   @forecast_data[:most_likely][:total] += fr[2] # amount
-          #   @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
+              @forecast_data[:commit][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:commit][:total].to_i] ]
+              @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
+              # @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
+            when 'Best Case'
+              @forecast_data[:best_case][:total] += fr[2] # amount
+              # @forecast_data[:most_likely][:total] += fr[2] # amount
+              @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
+              # @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
+            # when 'Most Likely'
+            #   @forecast_data[:most_likely][:total] += fr[2] # amount
+            #   @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
+          end
         end
-      end
-      # Add 'ends' for the data (e.g. begin at start of quarter, stop at end of quarter, connect data at current date)
-      date_range = Project.get_close_date_range(params[:close_date])
-      start = @forecast_data[:closed_won][:values].first.first
-      if date_range.first.to_i < start
-        @forecast_data[:closed_won][:values] = [ [date_range.first.to_i * 1000, 0] ] + @forecast_data[:closed_won][:values]
-      end
-      ends = @forecast_data[:closed_won][:values].last.first
-      if Date.current.to_datetime.to_i * 1000 > ends
-        @forecast_data[:closed_won][:values] += [ [Date.current.to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
-      end
-      [@forecast_data[:commit], @forecast_data[:best_case]].each do |fd|
-        start = fd[:values].first.first
-        if Date.current.to_datetime.to_i * 1000 < start
-          fd[:values] = [ [Date.current.to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ] + fd[:values]
+        # Add 'ends' for the data (e.g. begin at start of quarter, stop at end of quarter, connect data at current date)
+        date_range = Project.get_close_date_range(params[:close_date])
+        start = @forecast_data[:closed_won][:values].first.first
+        if date_range.first.to_i < start
+          @forecast_data[:closed_won][:values] = [ [date_range.first.to_i * 1000, 0] ] + @forecast_data[:closed_won][:values]
         end
-        ends = fd[:values].last.first
-        if date_range.last.to_i > ends
-          fd[:values] += [ [date_range.last.to_i * 1000, fd[:total].to_i] ]
+        ends = @forecast_data[:closed_won][:values].last.first
+        if Date.current.to_datetime.to_i * 1000 > ends
+          @forecast_data[:closed_won][:values] += [ [Date.current.to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
+        end
+        [@forecast_data[:commit], @forecast_data[:best_case]].each do |fd|
+          start = fd[:values].first.first
+          if Date.current.to_datetime.to_i * 1000 < start
+            fd[:values] = [ [Date.current.to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ] + fd[:values]
+          end
+          ends = fd[:values].last.first
+          if date_range.last.to_i > ends
+            fd[:values] += [ [date_range.last.to_i * 1000, fd[:total].to_i] ]
+          end
         end
       end
 
@@ -338,38 +338,41 @@ class ExtensionController < ApplicationController
     message_list = @service.list_user_messages('me', q: email_filter_string + ' has:attachment -in:chats -in:draft -filename:ics', max_results: 300)
     return if message_list.messages.blank?
     @messages = []
-    @service.batch do |service|
-      message_list.messages.each do |msg|
-        service.get_user_message('me', msg.id) do |m, error|
-          next if error || m.blank? || m.payload.mime_type != 'multipart/mixed'
-          parts = m.payload.parts
-          headers = m.payload.headers
-          begin
-            from = parse_email(headers.find { |h| h.name == 'From' }.value)
-            # boolean for deciding whether attachment was sent or received
-            internal = from.address == current_user.email || from.name == get_full_name(current_user)
-            to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| Mail::AddressList.new(val) }.map(&:addresses).flatten
-            to.reject { |email| email.address == current_user.email || email.name == get_full_name(current_user) } if internal
-            message_id = headers.find { |h| h.name == 'Message-ID' }.value
-            atts = parts[1..parts.length]
-            attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
-                              .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id, file_size: att.body.size } }
-            next if attachments.blank?
-            @messages << Hashie::Mash.new({ from: from, to: to, message_id: message_id, internal: internal, internal_date: m.internal_date, id: m.id, attachments: attachments })
-          rescue NoMethodError
-            puts '~~~~~~~~~~ Some headers missing from this email with attachment ~~~~~~~~~~~'
-            from = headers.find { |h| h.name == 'From' }
-            puts 'From: ' + (from ? from.value : '(n/a)')
-            to = headers.find { |h| h.name == 'To' }
-            puts 'To: ' + (to ? to.value : '(n/a)')
-            cc = headers.find { |h| h.name == 'Cc' }
-            puts 'CC: ' + (cc ? cc.value : '(n/a)')
-            bcc = headers.find { |h| h.name == 'Bcc' }
-            puts 'BCC: ' + (bcc ? bcc.value : '(n/a)')
-            message_id = headers.find { |h| h.name == 'Message-ID' }
-            puts 'Message-ID: ' + (message_id ? message_id.value : '(n/a)')
-            content_disposition = headers.find { |h| h.name == 'Content-Disposition' }
-            puts 'Content-Disposition: ' + (content_disposition ? content_disposition.value : '(n/a)')
+    # make batched GET requests for attachment emails
+    message_list.messages.each_slice(100) do |msg_list_slice|
+      @service.batch do |service|
+        msg_list_slice.each do |msg|
+          service.get_user_message('me', msg.id) do |m, error|
+            next if error || m.blank? || m.payload.mime_type != 'multipart/mixed'
+            parts = m.payload.parts
+            headers = m.payload.headers
+            begin
+              from = parse_email(headers.find { |h| h.name == 'From' }.value)
+              # boolean for deciding whether attachment was sent or received
+              internal = from.address == current_user.email || from.name == get_full_name(current_user)
+              to = headers.select { |h| h.name == 'To' || h.name == 'Cc' || h.name == 'Bcc' }.compact.map(&:value).map { |val| Mail::AddressList.new(val) }.map(&:addresses).flatten
+              to.reject { |email| email.address == current_user.email || email.name == get_full_name(current_user) } if internal
+              message_id = headers.find { |h| h.name == 'Message-ID' }.value
+              atts = parts[1..parts.length]
+              attachments = atts.reject { |att| att.filename.blank? || att.headers.find { |h| h.name == 'Content-Disposition' }.value.start_with?('inline') }
+                                .map { |att| { filename: att.filename, part_id: att.part_id, mime_type: att.mime_type, attachment_id: att.body.attachment_id, file_size: att.body.size } }
+              next if attachments.blank?
+              @messages << Hashie::Mash.new({ from: from, to: to, message_id: message_id, internal: internal, internal_date: m.internal_date, id: m.id, attachments: attachments })
+            rescue NoMethodError
+              puts '~~~~~~~~~~ Some headers missing from this email with attachment ~~~~~~~~~~~'
+              from = headers.find { |h| h.name == 'From' }
+              puts 'From: ' + (from ? from.value : '(n/a)')
+              to = headers.find { |h| h.name == 'To' }
+              puts 'To: ' + (to ? to.value : '(n/a)')
+              cc = headers.find { |h| h.name == 'Cc' }
+              puts 'CC: ' + (cc ? cc.value : '(n/a)')
+              bcc = headers.find { |h| h.name == 'Bcc' }
+              puts 'BCC: ' + (bcc ? bcc.value : '(n/a)')
+              message_id = headers.find { |h| h.name == 'Message-ID' }
+              puts 'Message-ID: ' + (message_id ? message_id.value : '(n/a)')
+              content_disposition = headers.find { |h| h.name == 'Content-Disposition' }
+              puts 'Content-Disposition: ' + (content_disposition ? content_disposition.value : '(n/a)')
+            end
           end
         end
       end
@@ -477,6 +480,7 @@ class ExtensionController < ApplicationController
   end 
 
   def set_salesforce_user
+    @salesforce_user = true
     return if @salesforce_user.present? || current_user.nil?
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)

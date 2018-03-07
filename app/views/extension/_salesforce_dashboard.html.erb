@@ -561,19 +561,19 @@
           name: 'Closed Won',
           step: true,
           color: 'rgb(85,222,210)',
-          data: <%= @forecast_data[:closed_won][:values].to_json.html_safe %>
+          data: <%= @forecast_data[:closed_won][:values].to_json.html_safe if @forecast_data.present? %>
         }, {
           name: 'Commit',
           step: true,
           type: 'line',
           color: 'gray',
-          data: <%= @forecast_data[:commit][:values].to_json.html_safe %>
+          data: <%= @forecast_data[:commit][:values].to_json.html_safe if @forecast_data.present? %>
         }, {
           name: 'Best Case',
           step: true,
           type: 'line',
           color: 'rgb(124,181,236)',
-          data: <%= @forecast_data[:best_case][:values].to_json.html_safe %>
+          data: <%= @forecast_data[:best_case][:values].to_json.html_safe if @forecast_data.present? %>
         // }, {
         //   name: 'Most Likely',
         //   step: true,
