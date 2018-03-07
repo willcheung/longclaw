@@ -477,7 +477,6 @@ class ExtensionController < ApplicationController
   end 
 
   def set_salesforce_user
-    # @salesforce_user = true
     return if @salesforce_user.present? || current_user.nil?
 
     @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
