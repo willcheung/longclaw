@@ -388,7 +388,7 @@ class ExtensionController < ApplicationController
       end
     end
 
-    # puts "\n\nResult=" 
+    # puts "\n\nResult="
     # puts result
     render json: { type: params[:type], result: result }
   end

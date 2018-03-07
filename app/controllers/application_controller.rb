@@ -31,7 +31,9 @@ class ApplicationController < ActionController::Base
 
       # check if sign in from extension, multiple redundancies to make sure extension users stay in extension
       if auth_params['extension'] == 'true' || origin == 'extension' || (location && location.start_with?('extension','plans'))
-        if resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
+        if request_origin && request_origin.include?('/refer') # callback from sign up based on a referral
+          extension_refer_path
+        elsif resource.onboarding_step == Utils::ONBOARDING[:fill_in_info]
           onboarding_extension_tutorial_path
         elsif origin.start_with? 'plans'
           plans_path(welcome: true)
