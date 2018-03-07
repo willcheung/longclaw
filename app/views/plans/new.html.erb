@@ -68,7 +68,7 @@
           </div> -->
           <div><h1 class="basic-price">Free</h1></div>
         </div>
-        <p class="muted"><h3>&nbsp;</h3><h3>&nbsp;</h3><br>
+        <p class="text-muted"><h4>&nbsp;</h4><h4>&nbsp;</h4><br>
         </p>
 
         <div class="plan-action">
@@ -92,26 +92,23 @@
           <div><h1 class="plus-price">$5/mo</h1></div>
         </div>
 
-        <p class="muted"><h3>14 days free trial</h3><h3>One month of Plus free for each referral</h3><br>
-        </p>
+        <h4 class="text-muted" style="font-weight: 300">14 days free trial</h4><h4 class="text-muted" style="font-weight: 300">No credit card required</h4>
+
 
         <div class="plan-action">
           <% if current_user.plus? %>
-              <a class="btn btn-primary btn-block btn-large" disabled href="#">Included</a>
+              <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
+                  <a class="btn btn-primary btn-large" disabled href="#"><%= @time_remaining_until_expiration_str %> remaining in free trial</a>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
+                  <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
+              <% else %>
+                  <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has expired.</small></p>
+                  <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Upgrade Now</a>
+              <% end %>
           <% else %>
               <div class="btn-group">
                 <a class="share-action btn btn-primary btn-large btn-outline"><i class="fa fa-gift"></i> Refer a friend!</a>
-                <% if !current_user.plus? %>
-                    <a class="btn btn-primary btn-large start plus-start" data-amount=0 data-plan="plus-monthly-v1" href="#">Start Free Trial</a>
-                <% else %>
-                    <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
-                        <a class="btn btn-primary btn-large" disabled href="#"><%= @time_remaining_until_expiration_str %> remaining in free trial</a>
-                    <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
-                        <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
-                    <% else %>
-                        <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Upgrade Now</a>
-                    <% end %>
-                <% end %>
+                <a class="btn btn-primary btn-large start plus-start" data-amount=0 data-plan="plus-monthly-v1" href="#">Start Free Trial</a>
               </div>
           <% end %>
         </div>
@@ -132,25 +129,20 @@
           <div><h1 class="pro-price">$39/mo</h1></div>
         </div>
 
-        <p class="muted"><h3>14 days free trial</h3><h3>&nbsp;</h3><br>
-        </p>
+        <h4 class="text-muted" style="font-weight: 300">14 days free trial</h4><h4 class="text-muted" style="font-weight: 300">No credit card required</h4>
 
         <div class="plan-action">
           <% if current_user.pro? %>
-              <a class="btn btn-primary btn-block btn-large" disabled href="#">Included</a>
+              <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
+                  <a class="btn btn-primary btn-large" disabled href="#"><%= @time_remaining_until_expiration_str %> remaining in free trial</a>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
+                  <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
+              <% else %>
+                  <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has expired.</small></p>
+                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Upgrade Now</a>
+              <% end %>
           <% else %>
-              <div class="btn-group">
-                <% if !current_user.pro? %>
-                    <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Start Free Trial</a>
-                <% else %>
-                    <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
-                        <a class="btn btn-primary btn-large" disabled href="#"><%= @time_remaining_until_expiration_str %> remaining in free trial</a>
-                    <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
-                        <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
-                    <% else %>
-                        <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Upgrade Now</a>
-                    <% end %>
-                <% end %>
+                  <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Start Free Trial</a>
               </div>
           <% end %>
         </div>
@@ -302,7 +294,7 @@
         locale: 'auto',
         name: 'ContextSmith',
         description: 'Secured by Stripe',
-        panelLabel: 'Pay {amount} after 14 days',
+        panelLabel: 'Pay {amount} per month',
 
         token: function(token) {
             $('input#stripeToken').val(token.id);
