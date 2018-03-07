@@ -354,10 +354,10 @@
           // }
           text: ''
         },
-        subtitle: {
-          text: '(in hh:mm)',
-          align: 'left'
-        },
+        // subtitle: {
+        //   text: '(in hh:mm)',
+        //   align: 'left'
+        // },
         tooltip: {
           headerFormat: '',
           pointFormatter: function() {
@@ -365,7 +365,7 @@
           }
         },
         xAxis: {
-          categories: <%= @interaction_time_per_account.map { |it| [it.name, (it.deal_size.nil? ? "" : "$"+number_to_human(it.deal_size)), (it.close_date.nil? ? "" : it.close_date.strftime('%b%e')), it.id] }.to_json.html_safe %>,
+          categories: <%= @interaction_time_per_account.map { |it| [it.name, (it.deal_size.nil? ? "" : "$"+number_to_human(it.deal_size)), (it.close_date.nil? ? "" : it.close_date.strftime('%b%e')), it.id] }.to_json.html_safe if @interaction_time_per_account.present? %>,
           labels: {
             formatter: function () {
               // this.value = [project_name, deal_size, close_date, project_id]
@@ -397,7 +397,7 @@
           }
         },
         legend: {
-          reversed: true
+          enabled: false
         },
         plotOptions: {
           series: {
@@ -528,21 +528,27 @@
         },
         yAxis: {
           title: {
-            text: 'Amount'
+            text: 'Amount ($)'
           },
           min: 0,
-          labels: {
-            formatter: function() {
-              return '$'+this.value / 1000000 + 'M';
-            }
-          }
+          // labels: {
+          //   formatter: function() {
+          //     return '$'+this.value / 1000000 + 'M';
+          //   }
+          // }
         },
         tooltip: {
           //headerFormat: '<b>{series.name}</b><br>'
           //pointFormat: '{point.x:%e. %b}: {point.y:.2f} m'
           pointFormat: '${point.y}'
         },
-
+        plotOptions: {
+          line: {
+            marker: {
+              enabled: false
+            }
+          }
+        },
         legend: {
           layout: 'vertical',
           align: 'left',
@@ -555,73 +561,24 @@
           name: 'Closed Won',
           step: true,
           color: 'rgb(85,222,210)',
-          data: [
-            [Date.UTC(2018, 3, 2), 600000],
-            [Date.UTC(2018, 3, 10), 925000],
-            [Date.UTC(2018, 3, 15), 1538000],
-            [Date.UTC(2018, 3, 27), 1550300],
-            [Date.UTC(2018, 3, 30), 1810000],
-            [Date.UTC(2018, 4, 1), 2160000],
-            [Date.UTC(2018, 4, 5), 2450000],
-            [Date.UTC(2018, 4, 9), 2700000],
-            [Date.UTC(2018, 4, 12), 3600500],
-            [Date.UTC(2018, 4, 20), 3907800],
-            [Date.UTC(2018, 4, 29), 4507800]
-          ]
+          data: <%= @forecast_data[:closed_won][:values].to_json.html_safe %>
         }, {
           name: 'Commit',
           step: true,
           type: 'line',
           color: 'gray',
-          data: [
-            [Date.UTC(2018, 4, 29), 4507800],
-            [Date.UTC(2018, 5, 3), 5156000],
-            [Date.UTC(2018, 5, 9), 5456000],
-            [Date.UTC(2018, 5, 14), 6050000],
-            [Date.UTC(2018, 5, 15), 6300000],
-            [Date.UTC(2018, 5, 16), 6350000],
-            [Date.UTC(2018, 5, 21), 6400200],
-            [Date.UTC(2018, 5, 25), 6520000],
-            [Date.UTC(2018, 5, 26), 6620000],
-            [Date.UTC(2018, 5, 29), 8020000],
-            [Date.UTC(2018, 5, 30), 8020000]
-          ]
+          data: <%= @forecast_data[:commit][:values].to_json.html_safe %>
         }, {
           name: 'Best Case',
           step: true,
           type: 'line',
           color: 'rgb(124,181,236)',
-          data: [
-            [Date.UTC(2018, 4, 29), 4507800],
-            [Date.UTC(2018, 5, 3), 5556000],
-            [Date.UTC(2018, 5, 9), 5956000],
-            [Date.UTC(2018, 5, 14), 6650000],
-            [Date.UTC(2018, 5, 15), 6950000],
-            [Date.UTC(2018, 5, 21), 7000200],
-            [Date.UTC(2018, 5, 25), 7120000],
-            [Date.UTC(2018, 5, 26), 7520000],
-            [Date.UTC(2018, 5, 29), 8720000],
-            [Date.UTC(2018, 5, 30), 8720000]
-          ]
-        }, {
-          name: 'Most Likely',
-          step: true,
-          type: 'line',
-          color: 'orange',
-          data: [
-            [Date.UTC(2018, 4, 29), 4507800],
-            [Date.UTC(2018, 5, 3), 5856000],
-            [Date.UTC(2018, 5, 9), 6556000],
-            [Date.UTC(2018, 5, 14), 6850000],
-            [Date.UTC(2018, 5, 15), 7350000],
-            [Date.UTC(2018, 5, 21), 7400200],
-            [Date.UTC(2018, 5, 23), 7520000],
-            [Date.UTC(2018, 5, 24), 7630200],
-            [Date.UTC(2018, 5, 25), 7920000],
-            [Date.UTC(2018, 5, 26), 8480000],
-            [Date.UTC(2018, 5, 29), 9620000],
-            [Date.UTC(2018, 5, 30), 9620000]
-          ]
+          data: <%= @forecast_data[:best_case][:values].to_json.html_safe %>
+        // }, {
+        //   name: 'Most Likely',
+        //   step: true,
+        //   type: 'line',
+        //   color: 'orange',
         }]
       });
 

@@ -90,11 +90,14 @@ var chart_right = $('#chart-right').highcharts();
   <% end %>
 <% end %>
 
-chart_left.redraw();
-// chart_center.redraw();
+// some of these charts will be missing in some views where this is included, don't redraw the ones that are not found
+if (chart_left) {
+  chart_left.redraw();
+}
 if (chart_right) {
   chart_right.redraw();
-}if (chart_center) {
+}
+if (chart_center) {
   chart_center.redraw();
 }
 
