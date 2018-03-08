@@ -34,6 +34,11 @@
 <%= javascript_include_tag "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js" %>
 
 <div id="top">
+    <%= form_tag plans_path, :id => 'upgrade' do %>
+      <input type="hidden" name="plan" id="plan" value="plus-monthly-v1">
+      <input type="hidden" name="stripeToken" id="stripeToken">
+      <input type="hidden" name="refresh" value="true">
+    <% end %>
     <h2 style="margin: 0.5em;">
         <div style="text-align: center">
             <div>
@@ -46,14 +51,14 @@
             <br>
             <div>
                 <span class='referral'>
-                    <button title="get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-primary btn-big"><i class="fa fa-gift"></i> Refer a friend!</button>
-                    <p>You'll get one free month of Plus for each sign-up.</p>
-                </span>
-                <span class='referral'>
-                    <%= link_to  '/plans/new',  class: 'btn btn-default', target: "_blank" do %>
+                    <%= link_to  '#',  class: 'btn btn-primary start', target: "_blank" do %>
                         <i class="fa fa-star"></i> Try Now!
                     <% end %>
                     <p>14 days free on Plus Plan.<br>No credit card required.</p>
+                </span>
+                <span class='referral'>
+                    <button title="get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-big"><i class="fa fa-gift"></i> Refer a friend!</button>
+                    <p>You'll get one free month of Plus for each sign-up.</p>
                 </span>
             </div>
         </div>
@@ -76,20 +81,26 @@
         <h2 style="margin: 1em"><i class="fa fa-heart" style="color:#C00;"></i> what you see?</h2>
         <div>
             <span class='referral'>
-                <button title="get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-primary btn-big"><i class="fa fa-gift"></i> Refer a friend!</button>
-                <p>You'll get one free month of Plus for each sign-up.</p>
-            </span>
-            <span class='referral'>
-                <%= link_to  '/plans/new',  class: 'btn btn-default', target: "_blank" do %>
+                <%= link_to  '#',  class: 'btn btn-primary start', target: "_blank" do %>
                     <i class="fa fa-star"></i> Try Now!
                 <% end %>
                 <p>14 days free on Plus Plan.<br>No credit card required.</p>
+            </span>
+            <span class='referral'>
+                <button title="get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-big"><i class="fa fa-gift"></i> Refer a friend!</button>
+                <p>You'll get one free month of Plus for each sign-up.</p>
             </span>
         </div>
     </div>
 </div>
 
 <script>
+
+    $('.start').click(function(evt) {
+        evt.preventDefault();
+        $('form#upgrade').submit();
+    });
+
     $(document).ready(function() {
         $('#activity-container').highcharts().update({
             title: {

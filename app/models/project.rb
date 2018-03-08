@@ -1060,7 +1060,7 @@ class Project < ActiveRecord::Base
                  last_sent_date
           FROM activities
           WHERE project_id IN ('#{array_of_project_ids.join("','")}')
-            AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert]]).join("','")}')
+            AND category in ('#{(Activity::CATEGORY.values - [Activity::CATEGORY[:Conversation], Activity::CATEGORY[:Meeting], Activity::CATEGORY[:Note], Activity::CATEGORY[:Alert], Activity::CATEGORY[:NextSteps]]).join("','")}')
             AND EXTRACT(EPOCH FROM last_sent_date) BETWEEN #{start_day.to_i} AND #{end_day.to_i}
           ) AS a
         ON projects.id = a.project_id
