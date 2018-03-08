@@ -68,7 +68,7 @@
           </div> -->
           <div><h1 class="basic-price">Free</h1></div>
         </div>
-        <p class="text-muted"><h4>&nbsp;</h4><h4>&nbsp;</h4><br>
+        <p class="text-muted"><h4>&nbsp;</h4><h4>&nbsp;</h4>
         </p>
 
         <div class="plan-action">
@@ -102,8 +102,8 @@
               <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
                   <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
               <% else %>
-                  <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has expired.</small></p>
                   <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Upgrade Now</a>
+                  <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has ended.</small></p>
               <% end %>
           <% else %>
               <div class="btn-group">
@@ -138,8 +138,8 @@
               <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
                   <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
               <% else %>
-                  <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has expired.</small></p>
                   <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Upgrade Now</a>
+                  <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has ended.</small></p>
               <% end %>
           <% else %>
                   <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Start Free Trial</a>
