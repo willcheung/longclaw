@@ -257,7 +257,7 @@ class ExtensionController < ApplicationController
         current_date_epoch = Date.current.to_datetime.to_i * 1000
         date_range_end = date_range.last.to_i * 1000
         if @forecast_data[:closed_won][:values].empty?
-          @forecast_data[:closed_won][:values] = [ [date_range_start, 0], [current_date_epoch, @forecast_data[:closed_won][:total].to_i] ]
+          @forecast_data[:closed_won][:values] = [ [date_range_start, 0], [current_date_epoch, 0] ]
         else
           start = @forecast_data[:closed_won][:values].first.first
           if date_range_start < start
@@ -271,7 +271,7 @@ class ExtensionController < ApplicationController
 
         [@forecast_data[:commit], @forecast_data[:best_case]].each do |fd|
           if fd[:values].empty?
-            fd[:values] = [[current_date_epoch, @forecast_data[:closed_won][:total].to_i], [date_range_end, fd[:total].to_i] ]
+            fd[:values] = [ [current_date_epoch, @forecast_data[:closed_won][:total].to_i], [date_range_end, fd[:total].to_i] ]
           else
             start = fd[:values].first.first
             if current_date_epoch < start
