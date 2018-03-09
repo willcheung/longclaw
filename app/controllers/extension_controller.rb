@@ -185,15 +185,10 @@ class ExtensionController < ApplicationController
         @data_left.compact!
         @data_left.sort!{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d2.total <=> d1.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
 
-        # @data_center = @data_left.sort{ |d1, d2| (d1.total == d2.total) ? d1.name.upcase <=> d2.name.upcase : d1.total <=> d2.total } # sort using tiebreaker: opportunity name, case-insensitive in alphabetical order
-
         # compute Interaction Time per Account for this user on the fly
         email_time = current_user.email_time_by_project(@current_user_projects.ids, 30.days.ago.midnight.utc)
-        # email_time = current_user.email_time_by_project
         meeting_time = current_user.meeting_time_by_project(@current_user_projects.ids, 30.days.ago.midnight.utc)
-        # meeting_time = current_user.meeting_time_by_project(@current_user_projects.ids)
         attachment_time = current_user.sent_attachments_by_project(@current_user_projects.ids, 30.days.ago.midnight.utc)
-        # attachment_time = current_user.sent_attachments_by_project
         @interaction_time_per_account = email_time.map do |p|
           Hashie::Mash.new(name: p.name, id: p.id, deal_size: p.amount, close_date: p.close_date, 'Meetings': 0, 'Attachments': 0, 'Sent E-mails': p.outbound, 'Read E-mails': p.inbound, total: p.inbound + p.outbound)
         end
@@ -227,7 +222,7 @@ class ExtensionController < ApplicationController
 
         # get data for Stages chart
         set_top_dashboard_data(project_ids: @current_user_projects.ids, user_ids: [current_user.id])
-        @no_progress = true
+        # @no_progress = true
 
         # get data for Forecast chart
         forecast_result = @current_user_projects.order(:close_date).pluck(:forecast, :close_date, :amount, :stage)
@@ -235,7 +230,6 @@ class ExtensionController < ApplicationController
             closed_won: { values: [], total: 0 },
             commit: { values: [], total: 0 },
             best_case: { values: [], total: 0 },
-            # most_likely: { values: [], total: 0 }
         }
         forecast_result.each do |fr|
           case fr[0] # forecast
@@ -244,44 +238,49 @@ class ExtensionController < ApplicationController
                 @forecast_data[:closed_won][:total] += fr[2] # amount
                 @forecast_data[:commit][:total] += fr[2] # amount
                 @forecast_data[:best_case][:total] += fr[2] # amount
-                # @forecast_data[:most_likely][:total] += fr[2] # amount
                 @forecast_data[:closed_won][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
               end
             when 'Commit'
               @forecast_data[:commit][:total] += fr[2] # amount
               @forecast_data[:best_case][:total] += fr[2] # amount
-              # @forecast_data[:most_likely][:total] += fr[2] # amount
               @forecast_data[:commit][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:commit][:total].to_i] ]
               @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
-              # @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
             when 'Best Case'
               @forecast_data[:best_case][:total] += fr[2] # amount
-              # @forecast_data[:most_likely][:total] += fr[2] # amount
               @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
-              # @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
-            # when 'Most Likely'
-            #   @forecast_data[:most_likely][:total] += fr[2] # amount
-            #   @forecast_data[:most_likely][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:most_likely][:total].to_i] ]
           end
         end
+
         # Add 'ends' for the data (e.g. begin at start of quarter, stop at end of quarter, connect data at current date)
         date_range = Project.get_close_date_range(params[:close_date])
-        start = @forecast_data[:closed_won][:values].first.first
-        if date_range.first.to_i < start
-          @forecast_data[:closed_won][:values] = [ [date_range.first.to_i * 1000, 0] ] + @forecast_data[:closed_won][:values]
-        end
-        ends = @forecast_data[:closed_won][:values].last.first
-        if Date.current.to_datetime.to_i * 1000 > ends
-          @forecast_data[:closed_won][:values] += [ [Date.current.to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
-        end
-        [@forecast_data[:commit], @forecast_data[:best_case]].each do |fd|
-          start = fd[:values].first.first
-          if Date.current.to_datetime.to_i * 1000 < start
-            fd[:values] = [ [Date.current.to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ] + fd[:values]
+        date_range_start = date_range.first.to_i * 1000
+        current_date_epoch = Date.current.to_datetime.to_i * 1000
+        date_range_end = date_range.last.to_i * 1000
+        if @forecast_data[:closed_won][:values].empty?
+          @forecast_data[:closed_won][:values] = [ [date_range_start, 0], [current_date_epoch, 0] ]
+        else
+          start = @forecast_data[:closed_won][:values].first.first
+          if date_range_start < start
+            @forecast_data[:closed_won][:values] = [ [date_range_start, 0] ] + @forecast_data[:closed_won][:values]
           end
-          ends = fd[:values].last.first
-          if date_range.last.to_i > ends
-            fd[:values] += [ [date_range.last.to_i * 1000, fd[:total].to_i] ]
+          ends = @forecast_data[:closed_won][:values].last.first
+          if current_date_epoch > ends
+            @forecast_data[:closed_won][:values] += [ [current_date_epoch, @forecast_data[:closed_won][:total].to_i] ]
+          end
+        end
+
+        [@forecast_data[:commit], @forecast_data[:best_case]].each do |fd|
+          if fd[:values].empty?
+            fd[:values] = [ [current_date_epoch, @forecast_data[:closed_won][:total].to_i], [date_range_end, fd[:total].to_i] ]
+          else
+            start = fd[:values].first.first
+            if current_date_epoch < start
+              fd[:values] = [ [current_date_epoch, @forecast_data[:closed_won][:total].to_i] ] + fd[:values]
+            end
+            ends = fd[:values].last.first
+            if date_range_end > ends
+              fd[:values] += [ [date_range_end, fd[:total].to_i] ]
+            end
           end
         end
       end

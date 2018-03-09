@@ -169,12 +169,12 @@
                                 "<div><strong>" + tevts.recipients + "</strong> opened your message <span class='tr-time'>" + tevts.last_opened_at + "</span></div>" +
                                 "<div><strong>" + tevts.subject + "</strong> that you sent <span class='tr-time'>" + tevts.sent_at + "</span></div>" +
                                 "<div>" + getTrackingEventPlacenameAndDomainHtml(treqs[0].place_name, treqs[0].domain) + "</div>" +
-                                "<div class='text-muted'><a src='#' class='tr-show-more'>Opened " + treqs.length + " time" + (treqs.length > 1 ? "s" : "") + ".<i class='fa fa-angle-double-down tr-show-more-icon'></i><i class='fa fa-angle-double-up tr-show-more-icon hidden'></i></a></div>";
+                                "<div class='text-muted'><a src='#' class='tr-show-more'>Opened " + treqs.length + " time" + (treqs.length > 1 ? "s" : "") + ".&nbsp;<i class='fa fa-angle-double-down tr-show-more-icon'></i><i class='fa fa-angle-double-up tr-show-more-icon hidden'></i></a></div>";
 
                             responseTextHtml += "<div class='tr-all-events hidden'>";
                             for (let data of treqs) {
                                 // console.log("data.opened_at="  + data.opened_at + "data.place_name=" + data.place_name + "data.domain=" + data.domain);
-                                responseTextHtml += "<div><span class='text-muted tr-all-events-time'>" + data.opened_at + "</span>&nbsp;&nbsp;";
+                                responseTextHtml += "<div class='text-muted'><span class='tr-all-events-time'>" + data.opened_at + "</span>&nbsp;&nbsp;";
                                 responseTextHtml += getTrackingEventPlacenameAndDomainHtml(data.place_name, data.domain) + "</div>";
                             };
                             responseTextHtml += "</div>"; // .tr-all-events
@@ -228,19 +228,17 @@
     }
 
     function getTrackingEventPlacenameAndDomainHtml(place_name, domain) {
-        var html = "<span class='text-muted'><i class='fa fa-globe' aria-hidden='true'></i>&nbsp;";
-        var place_name_is_nice = (place_name !== 'Unknown' && place_name !== 'Gmail')
+        var place_name_is_nice = (place_name !== 'Unknown' && place_name !== 'Gmail');
+        var html = "";
 
         if (place_name_is_nice)
-            html += "<a target='_blank' href='https://maps.google.com/?q=" + place_name + "'>" + place_name + "</a>";
+            html += "<i class='fa fa-map-marker' aria-hidden='true'></i>&nbsp;<a target='_blank' href='https://maps.google.com/?q=" + place_name + "'>" + place_name + "</a>";
         else
             html += place_name;
 
-        html += "</span><span class='text-muted'>&nbsp;";
         //<i class='fa <!%= device_class %>'></i>&nbsp;<!%= device.name %> <!%= device.os_name %> <!%= device.device_name %>
         if (domain)
-            html += "on " + domain + " network";
-        html += "</span>"
+            html += " on " + domain + " network";
 
         return html;          
     }

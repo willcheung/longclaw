@@ -264,7 +264,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     return { status: "SUCCESS", result: "Refresh completed." }
   end
 
-  # Create/refresh local custom lists copies of the available SFDC opportunity picklists (i.e., for Stage and Forecast Category) for an organization.
+  # Create/refresh local custom lists copies of the available SFDC opportunity picklists (i.e., for Stage and Forecast Category) for an organization.  Only captures active Stages (i.e., ignores inactive stages).
   # Parameters:   client - a valid SFDC connection client
   #               organization - the organization to search for the picklists
   #               refresh - true, to clear existing values in picklist and then re-insert values; false, to do nothing if there are existing values in the picklist   
@@ -276,7 +276,7 @@ class SalesforceOpportunity < ActiveRecord::Base
     if force_refresh || stages_clm.custom_lists.blank? || forecast_cats_clm.custom_lists.blank?
       puts "Refreshing custom lists of the available SFDC opportunity picklists (force_refresh=#{force_refresh})..."
 
-      query_statement = "SELECT Id, ApiName, ForecastCategoryName, IsClosed, IsWon, Description, DefaultProbability, IsActive FROM OpportunityStage ORDER BY SortOrder"  
+      query_statement = "SELECT Id, ApiName, ForecastCategoryName, IsClosed, IsWon, Description, DefaultProbability, IsActive FROM OpportunityStage WHERE IsActive = TRUE ORDER BY SortOrder"  
       query_result = SalesforceService.query_salesforce(client, query_statement)
       # puts "*** query: \"#{query_statement}\" ***"
       # puts "result (#{ query_result[:result].size if query_result[:result].present? } rows): #{ query_result }"
