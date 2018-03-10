@@ -96,4 +96,12 @@ class UserMailer < ApplicationMailer
     track user: @user # ahoy_email tracker
     mail(to:"support@contextsmith.com", subject: "#{get_full_name(@user)} signed up to ContextSmith")
   end
+
+  def trial_ends_soon(user, plan)
+    @user = user
+    @plan = plan
+
+    track user: @user # ahoy_email tracker
+    mail(to: @user.email, subject: "Your trial of #{@plan} is ending soon")
+  end
 end
