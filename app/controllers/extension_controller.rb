@@ -235,18 +235,18 @@ class ExtensionController < ApplicationController
           case fr[0] # forecast
             when 'Closed'
               if current_user.organization.get_winning_stages.include? fr[3] # stage
-                @forecast_data[:closed_won][:total] += fr[2] # amount
-                @forecast_data[:commit][:total] += fr[2] # amount
-                @forecast_data[:best_case][:total] += fr[2] # amount
+                @forecast_data[:closed_won][:total] += (fr[2] || 0) # amount
+                @forecast_data[:commit][:total] += (fr[2] || 0) # amount
+                @forecast_data[:best_case][:total] += (fr[2] || 0) # amount
                 @forecast_data[:closed_won][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:closed_won][:total].to_i] ]
               end
             when 'Commit'
-              @forecast_data[:commit][:total] += fr[2] # amount
-              @forecast_data[:best_case][:total] += fr[2] # amount
+              @forecast_data[:commit][:total] += (fr[2] || 0) # amount
+              @forecast_data[:best_case][:total] += (fr[2] || 0) # amount
               @forecast_data[:commit][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:commit][:total].to_i] ]
               @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
             when 'Best Case'
-              @forecast_data[:best_case][:total] += fr[2] # amount
+              @forecast_data[:best_case][:total] += (fr[2] || 0) # amount
               @forecast_data[:best_case][:values] += [ [fr[1].to_datetime.to_i * 1000, @forecast_data[:best_case][:total].to_i] ]
           end
         end
