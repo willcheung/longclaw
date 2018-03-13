@@ -107,8 +107,20 @@
                         <% @projects.each do |p| %>
                             <tr>
                                 <td>
-                                    <div><a href="<%= project_path(p) %>"><%= p.name %></a></div>
-                                    <div class="m-t-xs"><small><a class="link-muted" href="<%= account_path(p.account) %>"><%= p.account.name %></a></small></div>
+                                    <div>
+                                        <% if @salesforce_base_URL.present? && p.salesforce_opportunity.present? %>
+                                            <a href="<%= @salesforce_base_URL + "/" + p.salesforce_opportunity.salesforce_opportunity_id %>" target="_blank"><%= p.name %></a>
+                                        <% else %> 
+                                            <%= p.name %>
+                                        <% end %> 
+                                    </div>
+                                    <div class="m-t-xs"><small>
+                                        <% if @salesforce_base_URL.present? && p.salesforce_opportunity.present? && p.salesforce_opportunity.salesforce_account_id.present? %>
+                                            <a class="link-muted" href="<%= @salesforce_base_URL + "/" + p.salesforce_opportunity.salesforce_account_id %>" target="_blank"><%= p.account.name %></a>
+                                        <% else %> 
+                                            <%= p.account.name %>
+                                        <% end %> 
+                                    </small></div>
                                 </td>
                                 <td class="editable-field project-editable-field project-stage-td-<%= p.id %>"><%= best_in_place p, :stage, :as => :select, :collection => @opportunity_stages.map {|s| [s,s]}, inner_class: 'bip-select-input', activator: '.project-stage-td-'+p.id %>&nbsp;&nbsp;<i class="fa fa-pencil editable-field-activator"></i> </td>
                                 <td class="editable-field project-editable-field project-amount-td-<%= p.id %>"><%= best_in_place p, :amount, display_with: lambda { |v| v.blank? ? '-' : '$' + number_to_human(v) }, inner_class: 'bip-text-input', activator: '.project-amount-td-'+p.id %>&nbsp;&nbsp;<i class="fa fa-pencil editable-field-activator"></i> </td>
