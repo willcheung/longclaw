@@ -58,7 +58,7 @@
                     </div>
                 <% else # connected to SFDC %>
                     <div class="text-center" style="padding: 1em;">
-                        <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size: 9px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect <strong><%= truncate_with_ellipsis(@salesforce_user.oauth_user_name, 20) %></strong></a></span>
+                        <span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline" style="font-size: 9px;" href="<%= salesforce_disconnect_path(id: @salesforce_user.id) %>">Disconnect <strong><%= truncate_with_ellipsis(@salesforce_user.oauth_user_name, 20) %></strong></a></span>
                     </div>
                     <% if @salesforce_account.present? %>
                         <%= render 'salesforce/account_form' %>

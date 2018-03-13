@@ -48,7 +48,7 @@
                 <% if @individual_salesforce_user.nil? %>
                     <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce") %>">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
                 <% else %>
-                    <p>Connected as <%= @individual_salesforce_user.oauth_user_name %><span>&nbsp;&nbsp;&nbsp;<a class="btn btn-danger btn-sm btn-outline"  style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @individual_salesforce_user.id) %>">Disconnect!</a></span></p>
+                    <p>Connected as <%= @individual_salesforce_user.oauth_user_name %></p><p><a class="btn btn-danger btn-sm btn-outline" style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @individual_salesforce_user.id) %>">Disconnect!</a></p></p>
                 <% end %>
             </div>
         </div>

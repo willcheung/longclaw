@@ -96,7 +96,7 @@ class SalesforceController < ApplicationController
   end
 
   # Load SFDC Accounts and new SFDC Opportunities and update values in mapped (standard and custom) fields.  For linked CS accts, if import SFDC contacts is enabled, then import SFDC contacts into CS.  For linked CS opps, if import/export SFDC activities is enabled *and* this is running for a periodic refresh task (e.g., "daily refresh"), then sychronize (import/export) SFDC and CS activities.
-  # For individual (non-admin, e.g., "Pro") users: create CS opportunities and corresponding accts for open and unlinked SFDC opps owned by user, link the CS Acct and Opps to the corresponding SFDC entity, and create account Contacts.
+  # For individual (non-admin) users: create CS opps and corresponding CS accts for all unlinked SFDC opps owned by user, link the CS Acct and Opps to the corresponding SFDC entity, and create account Contacts from SFDC account contacts.
   # Parameters:     client - a valid SFDC connection
   #                 user - the user making the request, admin or individual (non-admin)
   #                 for_periodic_refresh - true, import contacts and import/export activities that were updated since the last contacts or activities import/export (by timestamps found in CustomConfiguration, respectively); otherwise, false (default), import all contacts but syncs NO activities
@@ -113,11 +113,11 @@ class SalesforceController < ApplicationController
     # For non-Admin users, create CS Accounts and Opportunities and link them
     if !user.admin?
       sfdc_userid = SalesforceService.get_salesforce_user_uuid(user.organization_id, user.id)
-      open_sfdc_opps = SalesforceOpportunity.is_open.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
+      unlinked_sfdc_opps = SalesforceOpportunity.is_not_linked.where(owner_id: sfdc_userid) #salesforce_account_id, salesforce_opportunity_id, name
 
-      open_sfdc_opps_acct_ids = open_sfdc_opps.map(&:salesforce_account_id).uniq
-      open_sfdc_opps_acct_ids.each do |acct_id|
-        # Find the linked CS account, or create a corresponding CS account, for each SFDC account that is the parent of an open SFDC opportunity; if a new CS account was created, link the CS and SFDC accounts
+      unlinked_sfdc_opps_acct_ids = unlinked_sfdc_opps.map(&:salesforce_account_id).uniq
+      unlinked_sfdc_opps_acct_ids.each do |acct_id|
+        # Find or create a corresponding CS account for each SFDC account that is the parent of an unlinked SFDC opportunity; if a CS account was created, link the SFDC and new CS accounts
         sfa = user.organization.salesforce_accounts.find_by_salesforce_account_id(acct_id)
         if sfa.present? && sfa.contextsmith_account_id.present? # SFDC account is linked
           account = user.organization.accounts.find(sfa.contextsmith_account_id) 
@@ -137,8 +137,8 @@ class SalesforceController < ApplicationController
             puts "Error creating CS Account '#{sfa.salesforce_account_name}'!"
           end
         end
-        # Find each unlinked SFDC opportunity, create a new CS opportunity under the appropriate CS account; if a new CS opportunity was created, link the CS and SFDC opportunities
-        open_sfdc_opps.where(salesforce_account_id: sfa.salesforce_account_id).each do |sfo|
+        # Find each unlinked SFDC opportunity, create a new CS opportunity under the parent CS account, then link the SFDC and the new CS opportunities
+        unlinked_sfdc_opps.where(salesforce_account_id: sfa.salesforce_account_id).each do |sfo|
           if sfo.contextsmith_project_id.blank?  # SFDC opportunity is not linked
             project = user.organization.projects.new(name: sfo.name,
                         status: "Active",
@@ -157,7 +157,7 @@ class SalesforceController < ApplicationController
             end
           end
         end
-      end # end: open_sfdc_opps_acct_ids.each do |acct_id|
+      end # end: unlinked_sfdc_opps_acct_ids.each do |acct_id|
     end # end: if !user.admin?
 
     # Import/update the standard and custom field values of mapped accts and opps
