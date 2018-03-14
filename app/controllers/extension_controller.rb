@@ -165,9 +165,12 @@ class ExtensionController < ApplicationController
 
   def custom_view
     if current_user.pro? && @salesforce_user.present? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
+      params[:close_date] = Project::CLOSE_DATE_RANGE[:ThisQuarter] if params[:close_date].blank?  # Default view is: Close date = 'This Qtr'
+
       visible_projects = Project.visible_to(current_user.organization_id, current_user.id)
       visible_projects = visible_projects.close_date_within(params[:close_date]) unless params[:close_date] == 'Any'
       visible_projects = visible_projects.where.not(stage: current_user.organization.get_closed_stages) if params[:close_date] == Project::CLOSE_DATE_RANGE[:ThisQuarterOpen]
+
       @current_user_projects = visible_projects.owner_of(current_user.id).select("projects.*, false AS daily, false AS weekly")
       subscribed_projects = visible_projects.select("project_subscribers.daily, project_subscribers.weekly").joins(:subscribers).where(project_subscribers: {user_id: current_user.id}).group("project_subscribers.daily, project_subscribers.weekly")
 
