@@ -103,7 +103,7 @@ class UserMailer < ApplicationMailer
     @trial_ends = trial_ends
 
     track user: @user # ahoy_email tracker
-    mail(to: @user.email, subject: "Your trial of #{@plan} is ending soon")
+    mail(to: @user.email, subject: "Your trial of #{@plan} is ending in #{trial_ends}")
   end
 
   def subscription_cancelled(user)
