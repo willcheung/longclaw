@@ -97,11 +97,19 @@ class UserMailer < ApplicationMailer
     mail(to:"support@contextsmith.com", subject: "#{get_full_name(@user)} signed up to ContextSmith")
   end
 
-  def trial_ends_soon(user, plan)
+  def trial_ends_soon(user, plan, trial_ends)
     @user = user
     @plan = plan
+    @trial_ends = trial_ends
 
     track user: @user # ahoy_email tracker
     mail(to: @user.email, subject: "Your trial of #{@plan} is ending soon")
+  end
+
+  def subscription_cancelled(user)
+    @user = user
+
+    track user: @user # ahoy_email tracker
+    mail(to: @user.email, subject: "#{@user.first_name}, your ContextSmith subscription has expired!")
   end
 end
