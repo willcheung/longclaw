@@ -1,3 +1,5 @@
+include ActionView::Helpers::DateHelper  #for time_ago_in_words
+
 class HooksController < ApplicationController
 
   def jira
@@ -112,7 +114,7 @@ class HooksController < ApplicationController
       if event.present?
         user = User.find_by(stripe_customer_id: event.data.object.customer)
         plan = event.data.object.plan.name
-        trial_ends = Time.time_ago_in_words(Time.zone.at(event.data.object.trial_end))
+        trial_ends = time_ago_in_words(Time.zone.at(event.data.object.trial_end))
         UserMailer.trial_ends_soon(user, plan, trial_ends).deliver_later
       end
     elsif params[:type] == 'invoice.payment_failed'
