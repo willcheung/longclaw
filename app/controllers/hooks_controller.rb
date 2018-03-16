@@ -1,4 +1,4 @@
-include ActionView::Helpers::DateHelper  #for time_ago_in_words
+include ActionView::Helpers::DateHelper  #for time_ago_in_words TODO: find another way of fixing this
 
 class HooksController < ApplicationController
 
