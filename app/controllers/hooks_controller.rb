@@ -114,7 +114,7 @@ class HooksController < ApplicationController
       if event.present?
         user = User.find_by(stripe_customer_id: event.data.object.customer)
         plan = event.data.object.plan.name
-        trial_ends = view_context.time_ago_in_words(Time.zone.at(event.data.object.trial_end))
+        trial_ends = event.data.object.trial_end - Time.now.to_i < 86400 ? "1 day" : view_context.time_ago_in_words(Time.zone.at(event.data.object.trial_end)) # any time of 1 day or less (but still any) will be rounded to "1 day"
         UserMailer.trial_ends_soon(user, plan, trial_ends).deliver_later
       end
     elsif params[:type] == 'invoice.payment_failed'

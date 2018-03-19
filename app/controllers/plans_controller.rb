@@ -19,7 +19,7 @@ class PlansController < ApplicationController
     if @customer.present? && !@customer[:deleted] && @customer.respond_to?(:subscriptions) && @customer.subscriptions.respond_to?(:data)
       @trial_expiration_time = Time.at(@customer.subscriptions.data.first.trial_end) if @customer.subscriptions.data.first.trial_end.present?
       @subscription_expiration_time = Time.at(@customer.subscriptions.data.first.current_period_end) if @customer.subscriptions.data.first.current_period_end.present?
-      @time_remaining_until_expiration_str = (@subscription_expiration_time < Time.now) ? "Expired" : (@subscription_expiration_time - Time.now < 86400 ? "1 day" : distance_of_time_in_words_to_now(@subscription_expiration_time)) if @subscription_expiration_time.present?  # any time of 1 day or less (but still some) time will be "rounded" to "1 day"
+      @time_remaining_until_expiration_str = (@subscription_expiration_time < Time.now) ? "Expired" : (@subscription_expiration_time - Time.now < 86400 ? "less than 1 day" : distance_of_time_in_words_to_now(@subscription_expiration_time)) if @subscription_expiration_time.present?  # any time of 1 day or less (but still any) will be displayed as "less than 1 day"
     end
   end
 

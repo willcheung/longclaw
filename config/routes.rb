@@ -3,6 +3,7 @@ Longclaw::Application.routes.draw do
     get "extension/refer" => "onboarding#refer"
     get "extension" => "extension#new"
     get "extension/account" => "extension#new"
+    get "extension/custom_view" => "extension#new"
     # resources :plans
   end
 
