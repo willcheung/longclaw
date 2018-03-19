@@ -1,3 +1,5 @@
+#include ActionView::Helpers::DateHelper  #for time_ago_in_words
+
 class HooksController < ApplicationController
 
   def jira
@@ -107,8 +109,23 @@ class HooksController < ApplicationController
       return
     end
     if params[:type] == 'customer.subscription.trial_will_end'
+      puts "trial_will_end event received: #{params[:id]}"
       event = Stripe::Event.retrieve(params[:id]) # this makes an extra request but ensures the id and event is valid!
-      puts "Event received #{event}"
+      if event.present?
+        user = User.find_by(stripe_customer_id: event.data.object.customer)
+        plan = event.data.object.plan.name
+        trial_ends = event.data.object.trial_end - Time.now.to_i < 86400 ? "1 day" : view_context.time_ago_in_words(Time.zone.at(event.data.object.trial_end)) # any time of 1 day or less (but still any) will be rounded to "1 day"
+        UserMailer.trial_ends_soon(user, plan, trial_ends).deliver_later
+      end
+    elsif params[:type] == 'invoice.payment_failed'
+      puts "invoice.payment_failed event received: #{params[:id]}"
+      event = Stripe::Event.retrieve(params[:id]) # this makes an extra request but ensures the id and event is valid!
+      if event.present?
+        user = User.find_by(stripe_customer_id: event.data.object.customer)
+        # plan = event.data.object.plan.name
+        user.downgrade!
+        UserMailer.subscription_cancelled(user).deliver_later
+      end
     end
     render nothing: true, status: 201
   rescue Stripe::APIConnectionError, Stripe::StripeError => e
