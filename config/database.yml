@@ -20,7 +20,9 @@ test:
 production:
   adapter: postgresql
   encoding: unicode
-  database: ckm_production
-  pool: 12
-  username: ckm
-  password: ckm123
+  pool: 5
+  timeout: 5000
+  username: "postgres"
+  password: "contextsmith123"
+  database: "postgres"
+  host:   "/cloudsql/contextsmith:us-central1:contextsmith-postgres"

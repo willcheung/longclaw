@@ -15,8 +15,8 @@ ActiveRecord::Schema.define(version: 20180131001302) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-  enable_extension "hstore"
   enable_extension "uuid-ossp"
+  enable_extension "hstore"
 
   create_table "accounts", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
     t.string   "name",                                                  default: "",         null: false
@@ -403,6 +403,7 @@ ActiveRecord::Schema.define(version: 20180131001302) do
     t.string   "salesforce_account_id",                              default: "", null: false
     t.string   "name",                                               default: "", null: false
     t.text     "description"
+    t.decimal  "amount",                    precision: 14, scale: 2
     t.boolean  "is_closed"
     t.boolean  "is_won"
     t.string   "stage_name"
@@ -412,7 +413,6 @@ ActiveRecord::Schema.define(version: 20180131001302) do
     t.uuid     "contextsmith_project_id"
     t.decimal  "probability",               precision: 5,  scale: 2
     t.decimal  "expected_revenue",          precision: 14, scale: 2
-    t.decimal  "amount",                    precision: 14, scale: 2
     t.string   "forecast_category_name"
     t.string   "owner_id"
   end
