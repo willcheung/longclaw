@@ -28,9 +28,9 @@ class TrackingController < ApplicationController
 
     # last 30 days of emails sent + their history and emails opened + their history
     sql_where = "tracking_requests.tracking_id in (
-                 select tracking_id from tracking_requests where user_id='#{current_user.id}' and sent_at > NOW() - interval '90' day
+                 select tracking_id from tracking_requests where user_id='#{current_user.id}' and sent_at > NOW() - interval '60' day
                   UNION
-                 select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '90' day and r.user_id='#{current_user.id}')"
+                 select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '60' day and r.user_id='#{current_user.id}')"
 
     @trackings = TrackingRequest.includes(:tracking_events)
                      .where(sql_where)
