@@ -26,8 +26,14 @@ class TrackingController < ApplicationController
   def list
     page = params[:page].present? ? params[:page] : 1
 
+    # last 30 days of emails sent + their history and emails opened + their history
+    sql_where = "tracking_requests.tracking_id in (
+                 select tracking_id from tracking_requests where user_id='#{current_user.id}' and sent_at > NOW() - interval '30' day
+                  UNION
+                 select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '30' day and r.user_id='#{current_user.id}')"
+
     @trackings = TrackingRequest.includes(:tracking_events)
-                     .where(user_id: current_user.id)
+                     .where(sql_where)
                      .page(page)
                      .order('tracking_events.date DESC NULLS LAST').order('sent_at DESC');
     json = {requests: @trackings.as_json(include: { tracking_events: { methods: :client }}),
