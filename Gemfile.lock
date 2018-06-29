@@ -208,8 +208,8 @@ GEM
       omniauth-oauth2 (~> 1.0)
     orm_adapter (0.5.0)
     os (0.9.6)
-    pg (0.21.0)
-    pg (0.21.0-x86-mingw32)
+    pg (0.20.0)
+    pg (0.20.0-x86-mingw32)
     pg_search (2.1.2)
       activerecord (>= 4.2)
       activesupport (>= 4.2)
@@ -368,7 +368,7 @@ DEPENDENCIES
   omniauth-microsoft_v2_auth
   omniauth-oauth2 (~> 1.4)
   omniauth-salesforce
-  pg (~> 0.21.0)
+  pg (~> 0.20.0)
   pg_search
   puma
   rack-cors
