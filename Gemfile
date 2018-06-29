@@ -11,7 +11,7 @@ gem 'sass-rails', '~>5.0.4'       # Use SCSS for stylesheets
                                     # (creates some weird caching issues so don't include it unless absolutely necessary)
 gem 'jbuilder', '~> 1.2' 					# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'devise', '~> 3.4.1' 					# User Authentication
-gem "omniauth-google-oauth2", :git => 'https://github.com/zquestz/omniauth-google-oauth2', :branch => 'master'
+gem "omniauth-google-oauth2"
 gem 'omniauth-microsoft_v2_auth'
 gem 'oauth2', '~> 1.0'
 gem 'omniauth-oauth2', '~> 1.4'
@@ -37,7 +37,7 @@ gem 'graphql'
 gem 'fullcontact', '~>0.18'
 gem 'mail', :git => 'https://github.com/mikel/mail.git'
 gem 'mini_mime'
-gem 'stripe', :git => 'https://github.com/stripe/stripe-ruby'
+gem 'stripe'
 gem 'email_validator'
 gem 'sucker_punch', '~>2.0'
 gem 'kaminari'

@@ -5,23 +5,6 @@ GIT
     mail (2.8.0.edge)
       mini_mime (>= 0.1.1)
 
-GIT
-  remote: https://github.com/stripe/stripe-ruby
-  revision: f6484e3240e9277230702beefbdcecc42d9efda0
-  specs:
-    stripe (3.9.1)
-      faraday (~> 0.10)
-
-GIT
-  remote: https://github.com/zquestz/omniauth-google-oauth2
-  revision: 67a46f93f184936f830cc3ef748c2c5073e447eb
-  branch: master
-  specs:
-    omniauth-google-oauth2 (0.5.3)
-      jwt (>= 1.5)
-      omniauth (>= 1.1.1)
-      omniauth-oauth2 (>= 1.5)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -271,6 +254,10 @@ GEM
     omniauth (1.8.1)
       hashie (>= 3.4.6, < 3.6.0)
       rack (>= 1.6.2, < 3)
+    omniauth-google-oauth2 (0.5.3)
+      jwt (>= 1.5)
+      omniauth (>= 1.1.1)
+      omniauth-oauth2 (>= 1.5)
     omniauth-microsoft_v2_auth (0.1.1)
       omniauth-oauth2
     omniauth-oauth2 (1.5.0)
@@ -390,6 +377,8 @@ GEM
       google-cloud-trace (~> 0.27.0)
     stackdriver-core (1.3.0)
       google-cloud-core (~> 1.2)
+    stripe (3.17.0)
+      faraday (~> 0.10)
     sucker_punch (2.0.4)
       concurrent-ruby (~> 1.0.0)
     thin (1.7.2)
@@ -444,7 +433,7 @@ DEPENDENCIES
   mail!
   mini_mime
   oauth2 (~> 1.0)
-  omniauth-google-oauth2!
+  omniauth-google-oauth2
   omniauth-microsoft_v2_auth
   omniauth-oauth2 (~> 1.4)
   omniauth-salesforce
@@ -460,7 +449,7 @@ DEPENDENCIES
   sdoc
   simple_form (~> 3.1.0)
   slack-notifier
-  stripe!
+  stripe
   sucker_punch (~> 2.0)
   thin
   tzinfo-data
