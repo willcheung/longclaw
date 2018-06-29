@@ -2,6 +2,10 @@ workers Integer(ENV['WEB_CONCURRENCY'] || 2)
 threads_count = Integer(ENV['MAX_THREADS'] || 5)
 threads threads_count, threads_count
 
+# https://stackoverflow.com/questions/30355569/rails-application-deployed-on-elastic-beanstalk-with-puma-fails-502-errors-on
+bind "unix:///var/run/puma/my_app.sock"
+pidfile "/var/run/puma/my_app.sock"
+
 preload_app!
 
 rackup      DefaultRackup
@@ -13,9 +17,5 @@ on_worker_boot do
   # See: https://devcenter.heroku.com/articles/deploying-rails-applications-with-the-puma-web-server#on-worker-boot
   ActiveRecord::Base.establish_connection
 end
-
-# https://stackoverflow.com/questions/30355569/rails-application-deployed-on-elastic-beanstalk-with-puma-fails-502-errors-on
-bind "unix:///var/run/puma/my_app.sock"
-pidfile "/var/run/puma/my_app.sock"
 
 # reference: https://devcenter.heroku.com/articles/deploying-rails-applications-with-the-puma-web-server
