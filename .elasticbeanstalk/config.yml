@@ -2,6 +2,8 @@ branch-defaults:
   develop:
     environment: production
     group_suffix: null
+  master:
+    environment: production
 global:
   application_name: longclaw
   default_ec2_keyname: aws-eb

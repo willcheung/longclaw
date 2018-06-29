@@ -23,10 +23,4 @@ production:
   pool: 12
   timeout: 30000
   username: ckm
-  password: ckm123
-#  pool: 5
-#  timeout: 5000
-#  username: "postgres"
-#  password: "contextsmith123"
-#  database: "postgres"
-#  host:   "/cloudsql/contextsmith:us-central1:contextsmith-postgres"
+  password: ckm123456
