@@ -64,8 +64,6 @@ GEM
     arel (6.0.4)
     attr_encrypted (3.0.3)
       encryptor (~> 3.0.0)
-    autoprefixer-rails (7.2.5)
-      execjs
     bcrypt (3.1.11)
     bcrypt (3.1.11-x86-mingw32)
     best_in_place (3.1.1)
@@ -73,9 +71,6 @@ GEM
       railties (>= 3.2)
     binding_of_caller (0.8.0)
       debug_inspector (>= 0.0.1)
-    bootstrap-sass (3.3.7)
-      autoprefixer-rails (>= 5.2.1)
-      sass (>= 3.3.4)
     browser (2.5.2)
     builder (3.2.3)
     choice (0.2.0)
@@ -407,7 +402,6 @@ DEPENDENCIES
   appengine (~> 0.4.1)
   attr_encrypted (~> 3.0.0)
   best_in_place (~> 3.1.0)
-  bootstrap-sass (~> 3.3.6)
   coffee-rails (~> 4.0.1)
   d3-rails (~> 3.5)
   device_detector
@@ -440,7 +434,7 @@ DEPENDENCIES
   rails-erd
   rails_12factor
   restforce (~> 2.5.0)
-  sass-rails (~> 5.0.4)
+  sass-rails (>= 3.2)
   sdoc
   simple_form (~> 3.1.0)
   slack-notifier
