@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby "2.2.10"
+ruby "2.2.3"
 gem 'rails', '4.2.3'
 # gem 'bootstrap-sass', '~> 3.3.6'
 gem 'simple_form', '~> 3.1.0'			# run 'rails generate simple_form:install --bootstrap' after installing gem

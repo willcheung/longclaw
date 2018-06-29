@@ -1,6 +1,0 @@
-entrypoint: bundle exec rackup --port $PORT
-env: flex
-runtime: ruby
-
-beta_settings:
-  cloud_sql_instances: contextsmith:us-central1:contextsmith-postgres

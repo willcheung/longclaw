@@ -114,7 +114,6 @@ GEM
       faraday (>= 0.7.4, < 1.0)
     ffaker (2.8.1)
     ffi (1.9.21)
-    ffi (1.9.21-x86-mingw32)
     friendly_code (2.0.1)
     fullcontact (0.18.0)
       faraday (~> 0.11.0)
