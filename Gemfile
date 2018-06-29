@@ -5,7 +5,6 @@ gem 'rails', '4.2.3'
 # gem 'bootstrap-sass', '~> 3.3.6'
 gem 'simple_form', '~> 3.1.0'			# run 'rails generate simple_form:install --bootstrap' after installing gem
 gem 'pg', '~> 0.21.0' 						# Use postgresql as the database for ActiveRecord
-gem "appengine", "~> 0.4.1"
 gem 'sass-rails', '>= 3.2'        # Use SCSS for stylesheets
 # gem 'turbolinks' 									# Turbolinks makes following links in your web application faster.
                                     # (creates some weird caching issues so don't include it unless absolutely necessary)
@@ -42,6 +41,7 @@ gem 'email_validator'
 gem 'sucker_punch', '~>2.0'
 gem 'kaminari'
 gem 'google-api-client', '~>0.19'
+gem 'ffi', '1.9.22'
 
 # Gems used only for assets and not required
 # in production environments by default.
