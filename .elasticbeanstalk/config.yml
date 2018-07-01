@@ -3,7 +3,8 @@ branch-defaults:
     environment: production
     group_suffix: null
   master:
-    environment: production
+    environment: longclaw-prod
+    group_suffix: null
 global:
   application_name: longclaw
   default_ec2_keyname: aws-eb
