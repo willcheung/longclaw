@@ -22,7 +22,7 @@ production:
   encoding: unicode
   pool: 12
   timeout: 30000
-  database: <%= ENV['RDS_DB_NAME'] %>
+  database: ckm
   username: <%= ENV['RDS_USERNAME'] %>
   password: <%= ENV['RDS_PASSWORD'] %>
   host: <%= ENV['RDS_HOSTNAME'] %>
