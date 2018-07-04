@@ -245,7 +245,7 @@ Devise.setup do |config|
     ### access_type is already "offline" by default
     # access_type: "offline",
     ### no value for prompt means that consent page is only shown to user the first time they authorize a given set of scopes
-    # prompt: "consent",
+    prompt: "consent",
     ### scopes starting with 'https://www.googleapis.com/auth/' do not need that prefix specified
     scope: ['gmail.readonly',
             'calendar.readonly',
