@@ -41,10 +41,8 @@ test:
 
 production:
   # Change this back later!!!
-  #google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
-  #google_client_secret: ZbgIgjg6M2LhCUc2RIIOS-TQ
-  google_client_id: 290954624013-o82ebj65g5l6knamiaa06jiu09epo2vk.apps.googleusercontent.com
-  google_client_secret: L2Jt5992udy8Wk3k5oSJz11H
+  google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
+  google_client_secret: ZbgIgjg6M2LhCUc2RIIOS-TQ
   AZURE_APPLICATION_CLIENT_ID: 83cc6ec7-6530-453f-9f98-8093f3dfc9ab
   AZURE_APPLICATION_CLIENT_SECRET: f2XbVMZsGjLdET0HcgdgfbU
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
