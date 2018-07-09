@@ -1,5 +1,5 @@
-workers Integer(ENV['WEB_CONCURRENCY'] || 2)
-threads_count = Integer(ENV['MAX_THREADS'] || 5)
+workers Integer(ENV['WEB_CONCURRENCY'] || 3)
+threads_count = Integer(ENV['MAX_THREADS'] || 4)
 threads threads_count, threads_count
 
 # https://stackoverflow.com/questions/30355569/rails-application-deployed-on-elastic-beanstalk-with-puma-fails-502-errors-on
