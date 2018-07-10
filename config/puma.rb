@@ -2,15 +2,17 @@ workers Integer(ENV['WEB_CONCURRENCY'] || 3)
 threads_count = Integer(ENV['MAX_THREADS'] || 4)
 threads threads_count, threads_count
 
-# https://stackoverflow.com/questions/30355569/rails-application-deployed-on-elastic-beanstalk-with-puma-fails-502-errors-on
-bind "unix:///var/run/puma/my_app.sock"
-pidfile "/var/run/puma/my_app.sock"
-
 preload_app!
 
 rackup      DefaultRackup
 port        ENV['PORT']     || 3000
 environment ENV['RACK_ENV'] || 'development'
+
+before_fork do
+  require 'puma_worker_killer'
+
+  PumaWorkerKiller.enable_rolling_restart(12 * 3600) # 12 hours in seconds
+end
 
 on_worker_boot do
   # Worker specific setup for Rails 4.1+

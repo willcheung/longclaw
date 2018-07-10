@@ -42,6 +42,7 @@ gem 'sucker_punch', '~>2.0'
 gem 'kaminari'
 gem 'google-api-client', '~>0.19'
 gem 'ffi', '1.9.22'
+gem 'puma_worker_killer'
 
 # Gems used only for assets and not required
 # in production environments by default.
@@ -59,7 +60,6 @@ end
 group :development do
   # View schema in models
   gem 'annotate', '~> 2.6.8'
-  gem "rails-erd"                 # run 'brew install graphviz' first, then 'bundle exec erd' to generate erd
   gem 'ffaker'                    # generate fake data
   gem "letter_opener"             # email preview
   gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]  # Time zone info required for running app on Windows environment
