@@ -22,7 +22,7 @@ test:
 production:
   adapter: postgresql
   encoding: unicode
-  pool: 15
+  pool: 18
   timeout: 30000
   database: ckm
   username: <%= ENV['RDS_USERNAME'] %>
