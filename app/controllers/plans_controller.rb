@@ -15,10 +15,10 @@ class PlansController < ApplicationController
   def new
     # check if customer already on a plan
     #redirect_to action: 'index' if current_user.pro?
-    @customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions') if current_user.stripe_customer_id
-    if @customer.present? && !@customer[:deleted] && @customer.respond_to?(:subscriptions) && @customer.subscriptions.respond_to?(:data)
-      @trial_expiration_time = Time.at(@customer.subscriptions.data.first.trial_end) if @customer.subscriptions.data.first.trial_end.present?
-      @subscription_expiration_time = Time.at(@customer.subscriptions.data.first.current_period_end) if @customer.subscriptions.data.first.current_period_end.present?
+    customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions') if current_user.stripe_customer_id
+    if customer.present? && !customer[:deleted] && customer.respond_to?(:subscriptions) && customer.subscriptions.respond_to?(:data) && !customer.subscriptions.data.empty?
+      @trial_expiration_time = Time.at(customer.subscriptions.data.first.trial_end) if customer.subscriptions.data.first.trial_end.present?
+      @subscription_expiration_time = Time.at(customer.subscriptions.data.first.current_period_end) if customer.subscriptions.data.first.current_period_end.present?
       @time_remaining_until_expiration_str = (@subscription_expiration_time < Time.now) ? "Expired" : (@subscription_expiration_time - Time.now < 86400 ? "less than 1 day" : distance_of_time_in_words_to_now(@subscription_expiration_time)) if @subscription_expiration_time.present?  # any time of 1 day or less (but still any) will be displayed as "less than 1 day"
     end
   end

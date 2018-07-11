@@ -51,14 +51,20 @@
             <br>
             <div>
                 <span class='referral'>
-                    <%= link_to  '#',  class: 'btn btn-primary start', target: "_blank" do %>
-                        <i class="fa fa-star"></i> Try Now!
+                    <% if current_user.stripe_customer_id.present? && !Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions').subscriptions.data.empty? %>
+                        <%= link_to  '#',  class: 'btn btn-primary', target: "_blank" do %>
+                            See our plans and upgrade
+                        <% end %>
+                    <% else %>
+                        <%= link_to  '#',  class: 'btn btn-primary start', target: "_blank" do %>
+                            <i class="fa fa-star"></i> Try Now!
+                        <% end %>
+                        <p>14 days free on Plus Plan.<br>No credit card required.</p>
                     <% end %>
-                    <p>14 days free on Plus Plan.<br>No credit card required.</p>
                 </span>
                 <span class='referral'>
                     <button title="get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-big"><i class="fa fa-gift"></i> Refer a friend!</button>
-                    <p>You'll get one free month of Plus for each sign-up.</p>
+                    <p><small>One free month of Plus for each sign-up.<small></p>
                 </span>
             </div>
         </div>
@@ -81,14 +87,19 @@
         <h2 style="margin: 1em"><i class="fa fa-heart" style="color:#C00;"></i> what you see?</h2>
         <div>
             <span class='referral'>
-                <%= link_to  '#',  class: 'btn btn-primary start', target: "_blank" do %>
-                    <i class="fa fa-star"></i> Try Now!
+                <% if current_user.stripe_customer_id.present? && !Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions').subscriptions.data.empty? %>
+                    <%= link_to  '#',  class: 'btn btn-primary', target: "_blank" do %>
+                        See our plans and upgrade
+                    <% end %>
+                <% else %>
+                    <%= link_to  '#',  class: 'btn btn-primary start', target: "_blank" do %>
+                        <i class="fa fa-star"></i> Try Now!
+                    <% end %>
+                    <p>14 days free on Plus Plan.<br>No credit card required.</p>
                 <% end %>
-                <p>14 days free on Plus Plan.<br>No credit card required.</p>
             </span>
             <span class='referral'>
                 <button title="get a month of CS Plus for free!" type="button" class="share-action btn btn-default btn-outline btn-big"><i class="fa fa-gift"></i> Refer a friend!</button>
-                <p>You'll get one free month of Plus for each sign-up.</p>
             </span>
         </div>
     </div>
