@@ -38,7 +38,7 @@
             <%= current_user ? "You are signed in as #{current_user.email}" : "Sign up for ContextSmith" %>
           </h1>
           <% unless current_user %>
-              <a href="<%= user_omniauth_authorize_path(:google_oauth2_basic, extension: true, ref: params[:ref]) %>"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png" style="margin-top: 1em" title="Sign in using Google"></a>
+              <a href="<%= user_omniauth_authorize_path(:google_oauth2, extension: true, ref: params[:ref]) %>"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/1x/btn_google_signin_dark_normal_web.png" style="margin-top: 1em" title="Sign in using Google"></a>
           <% end %>
         </div>
         <div id="step2">

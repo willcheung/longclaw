@@ -263,10 +263,7 @@ Devise.setup do |config|
     # access_type: "offline",
     ### never need to show consent page for default scopes ('email' and 'profile' are default scopes)
     # prompt: "consent",
-    scope: ['gmail.readonly',
-            'calendar.readonly',
-            'plus.me',
-            'email',
+    scope: ['email',
             'profile'],
     skip_jwt: true,
     include_granted_scopes: true
