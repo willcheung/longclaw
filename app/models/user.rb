@@ -23,7 +23,7 @@
 #  oauth_expires_at       :datetime
 #  organization_id        :uuid
 #  department             :string
-#  is_disabled            :boolean          default(FALSE), not null
+#  is_billable            :boolean
 #  created_at             :datetime
 #  updated_at             :datetime
 #  invitation_created_at  :datetime
@@ -33,12 +33,6 @@
 #  cluster_update_date    :datetime
 #  title                  :string
 #  time_zone              :string           default("UTC")
-#  mark_private           :boolean          default(FALSE), not null
-#  role                   :string
-#  refresh_inbox          :boolean          default(TRUE), not null
-#  encrypted_password_iv  :string
-#  billing_email          :string
-#  stripe_customer_id     :string
 #
 # Indexes
 #

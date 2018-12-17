@@ -88,7 +88,7 @@
   <% else %>
     <p>No attachments found between you and these people.</p>
   <% end %>
-<% elsif current_user.plus? && current_user.oauth_provider == User::AUTH_TYPE[:GmailBasic] %>
+<% elsif current_user.oauth_provider == User::AUTH_TYPE[:GmailBasic] %>
     <h3 class="m-t-xl text-center">Thanks for upgrading!</h3>
     <div class="row well text-center reminder" style="margin-top: 30px;">
       <p>Please grant us access to your inbox so we can organize attachments for you here:</p>
