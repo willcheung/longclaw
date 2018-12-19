@@ -86,7 +86,8 @@
       <% end %>
     </div>
   <% else %>
-    <p>No attachments found between you and these people.</p>
+    <h3 class="m-t-xl text-center">No attachments found.</h3>
+    <h4 class="m-t-xl text-center">Attachments buried in email threads? <br/>See them organized here.</h4>
   <% end %>
 <% elsif current_user.oauth_provider == User::AUTH_TYPE[:GmailBasic] %>
     <h3 class="m-t-xl text-center">Thanks for upgrading!</h3>
