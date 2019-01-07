@@ -337,11 +337,11 @@ class ExtensionController < ApplicationController
     @emails = @params[:internal].map { |person| URI.unescape(person.second, '%2E') }.reject { |email| email == current_user.email } if @emails.blank? && @params[:internal].present?
     return if @emails.blank?
     email_filter_string = @emails.map { |email| "from:#{email} OR to:#{email}" }.join(' OR ')
-    message_list = @service.list_user_messages('me', q: email_filter_string + ' has:attachment -in:chats -filename:ics', max_results: 100)
+    message_list = @service.list_user_messages('me', q: email_filter_string + ' has:attachment -in:chats', max_results: 100)
     return if message_list.messages.blank?
     @messages = []
     # make batched GET requests for attachment emails
-    message_list.messages.each_slice(100) do |msg_list_slice|
+    message_list.messages.each_slice(50) do |msg_list_slice|
       @service.batch do |service|
         msg_list_slice.each do |msg|
           service.get_user_message('me', msg.id) do |m, error|

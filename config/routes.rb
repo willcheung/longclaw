@@ -200,7 +200,7 @@ Longclaw::Application.routes.draw do
   get '/users/auth/basecamp2' => 'basecamps#basecamp2'
   get '/users/auth/37signals/callback' => 'settings#basecamp'
 
-  scope "hooks", controller: :hooks, as: 'hooks' do
+  scope "webhook", controller: :hooks, as: 'hooks' do
     post "jira"
     post "zendesk"
     post 'fullcontact_person'
