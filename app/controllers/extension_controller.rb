@@ -420,7 +420,7 @@ class ExtensionController < ApplicationController
 
   # Tracking Dashboard tab opened by the Tracking button  
   def dashboard
-    if true #current_user.plus?
+    if current_user.plus?
       # Daily trend (last month, sent and opens)
       tracking_requests_pastmo_h = current_user.tracking_requests.from_lastmonth.group_by{|tr| tr.sent_at.to_date}.map{|d,tr| [d, tr.length]}.to_h
       @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
@@ -885,9 +885,7 @@ class ExtensionController < ApplicationController
   end
 
   def get_google_service
-    #Removing "plus plan" for attachments and dashboards
-    #return unless current_user.plus? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
-    return unless current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
+    return unless current_user.plus? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
     # connect to Gmail
     secrets = Google::APIClient::ClientSecrets.new(
       {
