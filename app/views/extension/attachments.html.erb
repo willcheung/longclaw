@@ -37,7 +37,7 @@
   }
 
   .attachment-teaser {
-    background: linear-gradient( rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5) ), url("/assets/images/attachments_teaser.png") no-repeat center;
+    background: linear-gradient( rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65) ), url("/assets/images/attachments_teaser.png") no-repeat center;
     background-size: contain;
     color: white;
     margin: -10px -5px;
@@ -56,11 +56,15 @@
     color: lightblue;
   }
 
+  p {
+    font-size:13px;
+  }
+
 </style>
 <div class="m-t-sm attachment-main-container">
 <% if @service # @service presence implies current_user.plus? && current_user.oauth_provider == AUTH_TYPE[:Gmail] %>
   <% if @messages.present? %>
-    <p class="m-b">Attachments between <%= @emails.join(', ') %> and you:</p>
+    <p class="m-b">Click to download attachments</p>
     <div class="attachment-group-container m-t-sm">
     <% @messages.each.with_index do |msg, i| %>
         <span class="pull-left m-l-n-xl attachment-date">
@@ -75,7 +79,7 @@
             <% msg.attachments.each do |att| %>
               <p class="m-b-none m-t-xs">
                 <a href="/extension/download?<%= { id: msg.id, attachment_id: att.attachment_id, filename: att.filename, mime_type: att.mime_type }.to_param %>">
-                  <i class="fa fa-lg <%= file_type_icon(att.mime_type, att.filename) %>"></i>
+                  <i class="fa fa-3x <%= file_type_icon(att.mime_type, att.filename) %>"></i>
                   <%= att.filename %>
                 </a>
                 &nbsp;(<%= number_to_human_size(att.file_size, precision: 2) %>)
@@ -102,7 +106,7 @@
       <input type="hidden" name="refresh" value="true">
     <% end %>
   <div class="attachment-teaser text-center">
-    <h3 class="m-t-xl">Attachments buried in email threads? See them organized here.</h3>
+    <h3 class="m-t-xl">Attachments buried in email threads? <br/>See them organized here.</h3>
     <p class="m-t-xl">
       <!--< %= link_to new_plan_path,  class: 'btn btn-lg btn-white m-b-sm', target: "_blank" do %>-->
         <!--<i class="fa fa-star"></i> Try Now!-->
@@ -114,7 +118,7 @@
       No credit card required.
     </p>
     <p class="m-t-xl">
-      <button title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-sm btn-white btn-outline m-b-sm">
+      <button title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-md btn-white btn-outline m-b-sm">
         <i class="fa fa-gift"></i> Refer a friend!
       </button>
       <br>
