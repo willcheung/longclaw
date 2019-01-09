@@ -10,7 +10,6 @@
       <%= f.input :first_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.first_name } %>
       <%= f.input :last_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.last_name } %>
       <%= f.input :title, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.title } %>
-      <%= f.input :department, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.department } %>
       <%= f.input :email, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.email }, :required => true %>
       <%= f.input :phone, wrapper_html: { class: 'col-md-4', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.phone } %>
 
@@ -19,14 +18,16 @@
       <% else %>
 
       <div class="form-group string required contact_account_id col-md-12" onchange="changedValue('<%= modal_id %>')" old_value="<%= contact.account_id %>">
-        <%= f.label :account %>
+        <%= f.label :account %> <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="top" data-original-title="Account is used to group multiple contacts together, like a company. If this is an individual, we can use email address."></i>
         <select class="contextsmith_account_box" data-placeholder="Select an account" name="contact[account_id]" id="contact_account_id">
-          <% if @accounts.blank?  %>
-            <option value="nil" disabled>--No accounts available--</option>
+          <% if @accounts.blank? %>
+            <option selected value="<%= User::FREE_EMAIL_PROVIDERS.include?(get_domain(contact.email)) ? contact.email : get_domain(contact.email) %>">Create "<%= User::FREE_EMAIL_PROVIDERS.include?(get_domain(contact.email)) ? contact.email : get_domain(contact.email) %>"</option>
           <% else %>
             <% @accounts.each do |a| %>
               <option value="<%= a.id %>" <%= "selected" if a.id == account_id %>><%= a.name %></option>
             <% end %>
+            
+            <option <%= "selected" if !@accounts.detect { |a| a.id == account_id } %> value="<%= User::FREE_EMAIL_PROVIDERS.include?(get_domain(contact.email)) ? contact.email : get_domain(contact.email) %>">Create "<%= User::FREE_EMAIL_PROVIDERS.include?(get_domain(contact.email)) ? contact.email : get_domain(contact.email) %>"</option>
           <% end  %>
         </select>
       </div>

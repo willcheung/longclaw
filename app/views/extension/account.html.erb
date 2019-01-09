@@ -316,10 +316,12 @@
                                                             <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
                                                         <% elsif user.blank? %>
-                                                            <% newcontact = Contact.new(account: @account, last_name: last_name, first_name: first_name, title: profile.title, email: profile.email.downcase, phone: profile.phone, account_id: (@account.present? ? @account.id : nil)) %>
+                                                            <% newcontact = Contact.new(last_name: last_name, first_name: first_name, title: profile.title, email: profile.email.downcase, phone: profile.phone) %>
                                                             <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
                                                             <%= render 'contacts/modal', modal_type: 'extension_new_contact_modal', modal_id: 'extension_new_contact_modal-'+profile.id.to_s, contact: newcontact %>
                                                         <% end %>
+                                                    <% elsif current_user.basic? %>
+                                                            <button type="button" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to save and manage this contact."><span class="text-muted"><i class="fa fa-plus"></i> Add</span></button></i>
                                                     <% end %>
                                                     </td></tr>
                                                 </tbody>

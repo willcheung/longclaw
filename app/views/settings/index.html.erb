@@ -18,9 +18,9 @@
         <div class="ibox-content text-center" style="font-size:18px;">
             <div class="col-md-6">
                 <ul class="list-group clear-list">
-                    <li class="list-group-item first-item"><strong>My Title:</strong> <%= best_in_place current_user, :title, :as => 'input', :place_holder => '(none)', :activator => "#title-activator" %><i id="title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
+<!--                     <li class="list-group-item first-item"><strong>My Title:</strong> <%= best_in_place current_user, :title, :as => 'input', :place_holder => '(none)', :activator => "#title-activator" %><i id="title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
                     <li class="list-group-item"><strong>My Department:</strong> <%= best_in_place current_user, :department, :as => 'input', :place_holder => '(none)', :activator => "#dept-activator" %><i id="dept-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
-                    <li class="list-group-item"><strong>My User Role:</strong> <%= current_user.role %>  <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Only Admin can change this."></i>
+ -->                    <li class="list-group-item"><strong>My Plan:</strong> <%= current_user.role %>  
                         <% if current_user.superadmin? %><i style="color: gold" class="fa fa-star" data-toggle="tooltip" data-placement="top" data-original-title="Superadmin!"></i><% end %>
                     </li>
                     <li class="list-group-item"><strong>Email and calendar refresh:</strong> <%= current_user.refresh_inbox %> <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Whether inbox and calendar are connected. Only Admin can change this."></i></li>
@@ -28,8 +28,7 @@
             </div>
             <div class="col-md-6">
                 <ul class="list-group clear-list">
-                    <li class="list-group-item first-item"><strong>Opportunities I'm a part of: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You own or you contribute to these opportunities."></i></strong> <br> <small><%= @current_user_projects.pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
-                    <li class="list-group-item"><strong>Opportunities I subscribed to: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these active opportunities to receive Daily or Weekly updates."></i></strong><br> <small><%= @current_user_subscriptions.select('projects.name').pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
+                    <li class="list-group-item"><strong>My Opportunities: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these active opportunities to receive Daily or Weekly updates."></i></strong><br> <small><%= @current_user_subscriptions.select('projects.name').pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
                 </ul>
             </div>
             <span>&nbsp;</span>
@@ -39,6 +38,7 @@
     <% if !current_user.admin? %>
         <h1>My Integrations </h1>
         <div class="row">
+            <div class="col-md-4">
             <div class="ibox-content text-center">
                 <h1>Salesforce</h1>
                 <div class="m-b-sm">
@@ -51,6 +51,7 @@
                     <p>Connected as <%= @individual_salesforce_user.oauth_user_name %></p><p><a class="btn btn-danger btn-sm btn-outline" style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @individual_salesforce_user.id) %>">Disconnect!</a></p></p>
                 <% end %>
             </div>
+        </div>
         </div>
     <% end %>
 
@@ -105,6 +106,7 @@
     </div>
 
     <h1>Organization Integrations</h1>
+    <h4>Integrate across your whole organization. Only available for Business plan users.</h4>
     <div class="row">
         <div class="col-md-4">
             <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
@@ -131,19 +133,14 @@
 
         <div class="col-md-4">
             <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
-                <h1>Basecamp 2</h1>
-                <div class="m-b-md">
-                    <img src="assets/images/basecamp2.png"/ style="height:75px;"/>
+                <h1>Zendesk</h1>
+                <div class="m-b-sm">
+                    <img src="assets/images/zendesk.png"/ style="height:70px;"/>
                 </div>
-
+                
                 <% if current_user.admin? %>
-                    <% if @basecamp2_user.nil?%>
-                        <p>Not Connected</p>
-                    <% else %>
-                        <p>Connected</p>
-                    <% end %>
-
-                    <p><a href="<%=settings_basecamp_path%>">Configure settings</a></p>
+                    <p class="m-t-md">Webhook URL: <span class="well well-sm" style="line-height:3">https://<%= request.host %>/hooks/zendesk</span></p>
+                    <p><a href="https://contextsmith.zendesk.com/hc/en-us/articles/235244287" target="_blank">Get connected</a></p>
                 <% else %>
                      <p>Only Admin role can access this page</p>
                 <% end %>
@@ -170,21 +167,6 @@
     </div>
 
     <div class="row m-t-md">
-        <div class="col-md-4">
-            <div class="ibox-content text-center <% if !current_user.admin? %>settings-element-disabled<% end %>">
-                <h1>Zendesk</h1>
-                <div class="m-b-sm">
-                    <img src="assets/images/zendesk.png"/ style="height:70px;"/>
-                </div>
-                
-                <% if current_user.admin? %>
-                    <p class="m-t-md">Webhook URL: <span class="well well-sm" style="line-height:3">https://<%= request.host %>/hooks/zendesk</span></p>
-                    <p><a href="https://contextsmith.zendesk.com/hc/en-us/articles/235244287" target="_blank">Get connected</a></p>
-                <% else %>
-                     <p>Only Admin role can access this page</p>
-                <% end %>
-
-            </div>
-        </div>
+        
     </div>
 </div>

@@ -24,8 +24,8 @@
                     <%= f.submit 'Update Opportunity', class: 'btn btn-primary pull-left form-group' %>
                     <%= link_to "Delete Opportunity", @project, method: :delete, data: {confirm: "All data in this Opportunity will be deleted! Are you sure? \n\n(Pro Tip: You can also archive this opportunity.)"} %>
                 <% else %>  
-                   <%= f.submit 'Create with account contacts', class: 'btn btn-primary pull-left form-group' %>
-                  <%= f.submit 'Blank Opportunity', class: 'btn btn-secondary pull-left' %>
+                   <!--<%= f.submit 'Create with account contacts', class: 'btn btn-primary pull-left form-group' %>-->
+                  <%= f.submit 'Create', class: 'btn btn-primary pull-left form-group' %>
                 <% end %>   
               </div>
         <% end %>

@@ -42,8 +42,8 @@ class ApplicationController < ActionController::Base
         else
           extension_path(login: true)
         end
-      # check if at least biz? level access
-      elsif resource.biz?
+      # check if at least pro? level access
+      elsif resource.pro?
         case resource.onboarding_step
           when Utils::ONBOARDING[:onboarded] # Fully onboarded
             stored_location || root_path
@@ -95,7 +95,7 @@ class ApplicationController < ActionController::Base
     redirect_to home_access_denied_path unless
         %w[extension tracking sessions salesforce omniauth_callbacks plans].include?(params[:controller]) ||
         %w[me access_denied extension_tutorial].include?(params[:action]) ||
-        current_user.biz?
+        current_user.pro?
   end
 
   def set_time_zone(&block)

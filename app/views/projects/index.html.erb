@@ -10,7 +10,7 @@
             </li>
         </ol>
     </div>
-    <% if current_user.power_user? %>
+    <% if current_user.pro? %>
     <div class="col-lg-2">
         <%= link_to '+ New Opportunity', '#new_project_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
     </div>

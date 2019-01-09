@@ -24,8 +24,14 @@ class ContactsController < ApplicationController
   # POST /contacts
   # POST /contacts.json
   def create
-    @contact = Contact.new(contact_params)
-    account = Account.find(@contact.account_id)  # didn't verify account_id!
+    account = Account.find_by(id: contact_params[:account_id])
+    if account.nil? or account.blank? # if account doesn't exist, create new one automatically
+      account = Account.find_by(name: contact_params[:account_id])
+      if account.nil? or account.blank?
+        account = Account.create(name: contact_params[:account_id], organization_id: current_user.organization_id)
+      end
+    end
+    @contact = account.contacts.new(contact_params)
     respond_to do |format|
       if account.organization_id == current_user.organization_id && @contact.save
         format.html { redirect_to @contact, notice: 'Contact was successfully created.' }
