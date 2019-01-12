@@ -13,6 +13,7 @@
 #
 # Indexes
 #
+#  index_salesforce_accounts_on_contextsmith_account_id       (contextsmith_account_id)
 #  index_salesforce_accounts_on_contextsmith_organization_id  (contextsmith_organization_id)
 #  index_salesforce_accounts_on_salesforce_account_id         (salesforce_account_id) UNIQUE
 #

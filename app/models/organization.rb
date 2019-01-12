@@ -2,13 +2,16 @@
 #
 # Table name: organizations
 #
-#  id         :uuid             not null, primary key
-#  name       :string
-#  domain     :string
-#  is_active  :boolean          default(TRUE)
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  owner_id   :uuid
+#  id                 :uuid             not null, primary key
+#  name               :string
+#  domain             :string
+#  is_active          :boolean          default(TRUE)
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  owner_id           :uuid
+#  billing_email      :string
+#  stripe_customer_id :string
+#  plan_id            :string
 #
 
 class Organization < ActiveRecord::Base

@@ -30,6 +30,7 @@
 #  index_activities_on_email_messages                          (email_messages)
 #  index_activities_on_last_sent_date                          (last_sent_date)
 #  index_activities_on_project_id_and_category_and_backend_id  (project_id,category,backend_id) UNIQUE
+#  index_activities_on_sent_date                               (last_sent_date)
 #
 
  # == Schema Information

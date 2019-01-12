@@ -22,6 +22,7 @@
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  score             :float            default(0.0)
+#  activity_id       :integer          default(-1)
 #
 
 class Notification < ActiveRecord::Base

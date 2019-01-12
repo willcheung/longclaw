@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180131001302) do
+ActiveRecord::Schema.define(version: 20190112063451) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -68,6 +68,7 @@ ActiveRecord::Schema.define(version: 20180131001302) do
   add_index "activities", ["category", "project_id", "backend_id"], name: "index_activities_on_category_and_project_id_and_backend_id", unique: true, using: :btree
   add_index "activities", ["email_messages"], name: "index_activities_on_email_messages", using: :gin
   add_index "activities", ["last_sent_date"], name: "index_activities_on_last_sent_date", using: :btree
+  add_index "activities", ["last_sent_date"], name: "index_activities_on_sent_date", order: {"last_sent_date"=>:desc}, using: :btree
   add_index "activities", ["project_id", "category", "backend_id"], name: "index_activities_on_project_id_and_category_and_backend_id", unique: true, using: :btree
 
   create_table "ahoy_events", id: :uuid, default: nil, force: :cascade do |t|
@@ -362,6 +363,7 @@ ActiveRecord::Schema.define(version: 20180131001302) do
   end
 
   add_index "projects", ["account_id"], name: "index_projects_on_account_id", using: :btree
+  add_index "projects", ["close_date"], name: "index_projects_on_close_date", using: :btree
   add_index "projects", ["deleted_at"], name: "index_projects_on_deleted_at", using: :btree
   add_index "projects", ["is_confirmed"], name: "index_projects_on_is_confirmed", using: :btree
   add_index "projects", ["is_public"], name: "index_projects_on_is_public", using: :btree
@@ -395,6 +397,7 @@ ActiveRecord::Schema.define(version: 20180131001302) do
     t.datetime "updated_at",                                null: false
   end
 
+  add_index "salesforce_accounts", ["contextsmith_account_id"], name: "index_salesforce_accounts_on_contextsmith_account_id", using: :btree
   add_index "salesforce_accounts", ["contextsmith_organization_id"], name: "index_salesforce_accounts_on_contextsmith_organization_id", using: :btree
   add_index "salesforce_accounts", ["salesforce_account_id"], name: "index_salesforce_accounts_on_salesforce_account_id", unique: true, using: :btree
 
@@ -420,6 +423,16 @@ ActiveRecord::Schema.define(version: 20180131001302) do
   add_index "salesforce_opportunities", ["contextsmith_project_id"], name: "index_salesforce_opportunities_on_contextsmith_project_id", using: :btree
   add_index "salesforce_opportunities", ["salesforce_account_id"], name: "index_salesforce_opportunities_on_salesforce_account_id", using: :btree
   add_index "salesforce_opportunities", ["salesforce_opportunity_id"], name: "index_salesforce_opportunities_on_salesforce_opportunity_id", unique: true, using: :btree
+
+  create_table "temp0", id: false, force: :cascade do |t|
+    t.uuid    "id"
+    t.string  "name"
+    t.decimal "amount",     precision: 14, scale: 2
+    t.date    "close_date"
+    t.float   "outbound"
+    t.float   "inbound"
+    t.decimal "total"
+  end
 
   create_table "tracking_events", force: :cascade do |t|
     t.string   "tracking_id"
