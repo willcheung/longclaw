@@ -1,6 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
-        <h2>My Settings</h2>
+        <h2>Integration Settings</h2>
         <ol class="breadcrumb">
             <li>
                 <a href="<%= root_path %>">Home</a>
@@ -28,7 +28,7 @@
             </div>
             <div class="col-md-6">
                 <ul class="list-group clear-list">
-                    <li class="list-group-item"><strong>My Opportunities: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these active opportunities to receive Daily or Weekly updates."></i></strong><br> <small><%= @current_user_subscriptions.select('projects.name').pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
+                    <li class="list-group-item"><strong>My Opportunities: <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="You subscribed to these opportunities to receive regular updates."></i></strong><br> <small><%= @current_user_subscriptions.select('projects.name').pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
                 </ul>
             </div>
             <span>&nbsp;</span>
