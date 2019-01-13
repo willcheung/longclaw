@@ -57,22 +57,16 @@
         </div>
     </div>
 
-    <div class="row border-bottom ">
+    <div class="row border-bottom">
         <div class="col-lg-6">
             <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h3>Forecast</h3>
-                </div>
-                <div id="forecast-chart" class="ibox-content forecast-chart" style="height:260px;padding-bottom:0"></div>
+                <div id="forecast-chart" class="ibox-content forecast-chart" style="height:300px;padding-bottom:0;"></div>
             </div>
         </div>
 
         <div class="col-lg-6">
             <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h3>Stages</h3>
-                </div>
-                <div id="stage-chart" class="ibox-content stage-chart" style="height:260px;padding-bottom:0"></div>
+                <div id="stage-chart" class="ibox-content stage-chart" style="height:300px;padding-bottom:0"></div>
             </div>
         </div>
     </div>
@@ -104,7 +98,7 @@
             <!-- RIGHT -->
             <div class="col-lg-7" style="margin-top:45px;">
                 <div id="intro-account-header">
-                    <div class="row" style="margin-top:50px;">
+                    <div class="row" style="margin-top:100px;">
                         <h3>&larr; Click on a bar to see details about the opportunity.</h3>
                     </div>
                 </div>
@@ -251,7 +245,7 @@
             enabled: false
         },
         title: {
-            text: ''
+            text: 'Sales Forecast'
         },
         xAxis: {
             type: 'datetime',
@@ -260,7 +254,7 @@
                 year: '%b'
             },
             title: {
-                text: ''
+                text: 'Forecast'
             }
         },
         yAxis: {
@@ -285,7 +279,7 @@
             align: 'left',
             verticalAlign: 'top',
             x: 70,
-            y: 0,
+            y: 30,
             floating: true
         },
         series: [{
@@ -367,7 +361,7 @@
             type: 'column'
         },
         title: {
-            text: ''
+            text: 'Deal by Stages'
         },
         credits: {
             enabled: false
