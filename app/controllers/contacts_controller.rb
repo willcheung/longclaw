@@ -24,10 +24,10 @@ class ContactsController < ApplicationController
   # POST /contacts
   # POST /contacts.json
   def create
-    account = Account.find_by(id: contact_params[:account_id])
-    if account.nil? or account.blank? # if account doesn't exist, create new one automatically
-      account = Account.find_by(name: contact_params[:account_id])
-      if account.nil? or account.blank?
+    account = Account.find_by(id: contact_params[:account_id], organization_id: current_user.organization_id)
+    if account.nil? or account.blank? 
+      account = Account.find_by(name: contact_params[:account_id], organization_id: current_user.organization_id)
+      if account.nil? or account.blank? # if account doesn't exist, create new one automatically
         account = Account.create(name: contact_params[:account_id], organization_id: current_user.organization_id)
       end
     end

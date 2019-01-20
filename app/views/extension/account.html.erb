@@ -6,7 +6,7 @@
         text-decoration: underline;
     }
     .contact-group {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: bold;
         /*color: #999;*/
         padding: 2em 0;
@@ -132,6 +132,10 @@
     }
     .extension-timeline-content {
         font-size: 12px;
+    }
+    .col-xs-6 {
+        padding-left:4px;
+        padding-right:4px;
     }
 </style>
 
@@ -284,7 +288,7 @@
                     <img style="padding: 5em 0;" class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
                 </div>
             <% elsif n == 1 && contacts_with_profile.present? %>
-                <span class="contact-group"><br/>MORE PEOPLE AT <%= @account.name.upcase %></span>
+                <span class="contact-group"><br/>OTHER CONTACTS AT <%= @account.name.upcase %></span>
             <% end %>
             <% contacts_with_profile.each_with_index do |p, i| %>
                 <% user = p[:user] %>
@@ -310,20 +314,7 @@
                                                     <% else %>
                                                         <%= get_rounded_initials_from_name(fullname, "profile-pic") %>
                                                     <% end %></td></tr>
-                                                    <tr style="width:60px"><td style="padding-left: 10px">
-                                                    <% if current_user.plus? %>
-                                                        <% if contact.present? %>
-                                                            <%= link_to "<button><i class=\"fa fa-pencil\"></i> Edit</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
-                                                            <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
-                                                        <% elsif user.blank? %>
-                                                            <% newcontact = Contact.new(last_name: last_name, first_name: first_name, title: profile.title, email: profile.email.downcase, phone: profile.phone) %>
-                                                            <%= link_to "<button><i class=\"fa fa-plus\"></i> Add</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
-                                                            <%= render 'contacts/modal', modal_type: 'extension_new_contact_modal', modal_id: 'extension_new_contact_modal-'+profile.id.to_s, contact: newcontact %>
-                                                        <% end %>
-                                                    <% elsif current_user.basic? %>
-                                                            <button type="button" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to save and manage this contact."><span class="text-muted"><i class="fa fa-plus"></i> Add</span></button></i>
-                                                    <% end %>
-                                                    </td></tr>
+                                                    
                                                 </tbody>
                                             </table>
                                         </td>
@@ -358,6 +349,39 @@
                                 </tbody>
                             </table>
                         </a>
+                        <div class="container">
+                            <div class="row m-t-xs m-b-sm">
+                            <% if current_user.plus? %>
+                                <% if contact.present? %>
+                                    <div class="col-xs-6">
+                                        <%= link_to "<button class=\"btn-outline btn-xs btn-block\"><i class=\"fa fa-pencil\"></i> Edit contact</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
+                                        <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        +Add Note
+                                    </div>
+                                <% else %>
+                                    <div class="col-xs-6">
+                                        <% newcontact = Contact.new(last_name: last_name, first_name: first_name, title: profile.title, email: profile.email.downcase, phone: profile.phone) %>
+                                        <%= link_to "<button class=\"btn-primary btn-xs btn-block\"><i class=\"fa fa-plus\"></i> Add contact</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <%= link_to "<button class=\"btn-outline btn-xs btn-block\"><i class=\"fa fa-plus\"></i> Add contact</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
+                                    </div>
+                                    
+                                    <%= render 'contacts/modal', modal_type: 'extension_new_contact_modal', modal_id: 'extension_new_contact_modal-'+profile.id.to_s, contact: newcontact %>
+                                <% end %>
+                            <% elsif current_user.basic? %>
+                                    <div class="col-xs-6">
+                                      <button type="button" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to save and manage this contact."><span class="text-muted"><i class="fa fa-plus"></i> Add</span></button></i>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        +Add Note
+                                    </div>
+                            <% end %>
+                            </div>
+                        </div>
+                        
                     </div>
                     <div id="collapseProfile-<%= profile.id %>-<%= n %>" class="panel-collapse collapse <%= "in" if n == 0 && i == 0 %>">
                         <div class="panel-body">

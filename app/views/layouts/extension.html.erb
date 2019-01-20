@@ -8,7 +8,7 @@
     <title>ContextSmith | Email Tracker, Contact Manager, CRM</title>
 
     <!-- Include style per-controller - vendor plugins -->
-    <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" %>
+    <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" %>
     <%= stylesheet_link_tag "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" %>
 
     <!-- Main css styles -->
@@ -33,6 +33,69 @@
     <% end %>
 </head>
 <body>
+     <!-- TODO: Remove this hardcoded CSS workaround -->
+    <style>
+        body {
+          color: #999;
+          font-size: 11px;
+        }
+        extrastrong {
+            font-weight: bold;
+            color: black;
+        }
+        .nav {
+            padding-bottom: 1px;
+        }
+        .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus 
+        {
+            color: #3C8DC5;
+            border: none;
+            border-bottom: 2px solid #3C8DC5;
+            pointer-events: none;
+        }
+        .nav-tabs > li > a:hover, .nav-tabs > li > a:focus {
+            color: <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
+            background-color: transparent;
+            border: none;
+            border-bottom: 2px solid <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
+        }
+        .nav-tabs > li > a {
+            color: #676a6c;
+            border: none;
+            border-bottom: 2px solid white;
+        }
+        .nav-tabs > li.inactive > a {
+            /*border-bottom: 2px solid white;*/
+        }
+        /*.dropdown-menu {
+            border: 1px solid #aaa;
+            z-index: 2003;
+        }*/
+        .selectize-input {
+            height: 1.75em;
+            display: inline-block;
+            padding-top: 0em;
+            overflow: auto;
+        }
+        .selectize-input input, .selectize-input span {
+            padding-top: 0em;
+            font-size: 10px;
+            //text-overflow: ellipsis;
+        }
+        .selectize-control.multi .selectize-input.has-items {
+            padding-top: 0em;
+        }
+        .selectize-control.multi .selectize-input.has-items div {
+            padding-top: 0em;
+            padding-bottom: 0em;
+        }
+        .btn.btn-danger:disabled {  /* update buttons */
+            color: white;
+            opacity: .9;
+            /*pointer-events: none;*/
+        }
+    </style>
+    
     <% if Rails.env.production? %>
         <!-- Google Tag Manager (noscript) -->
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PW3DCFF"
@@ -306,68 +369,6 @@
         </script>
     <% end %>
 
-    <!-- TODO: Remove this hardcoded CSS workaround -->
-    <style>
-        body {
-          color: #999;
-          font-size: 11px;
-        }
-        extrastrong {
-            font-weight: bold;
-            color: black;
-        }
-        .nav {
-            padding-bottom: 1px;
-        }
-        .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus 
-        {
-            color: #3C8DC5;
-            border: none;
-            border-bottom: 2px solid #3C8DC5;
-            pointer-events: none;
-        }
-        .nav-tabs > li > a:hover, .nav-tabs > li > a:focus {
-            color: <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
-            background-color: transparent;
-            border: none;
-            border-bottom: 2px solid <%= ApplicationHelper::CONTEXTSMITH_BLUE %>;
-        }
-        .nav-tabs > li > a {
-            color: #676a6c;
-            border: none;
-            border-bottom: 2px solid white;
-        }
-        .nav-tabs > li.inactive > a {
-            /*border-bottom: 2px solid white;*/
-        }
-        /*.dropdown-menu {
-            border: 1px solid #aaa;
-            z-index: 2003;
-        }*/
-        .selectize-input {
-            height: 1.75em;
-            display: inline-block;
-            padding-top: 0em;
-            overflow: auto;
-        }
-        .selectize-input input, .selectize-input span {
-            padding-top: 0em;
-            font-size: 10px;
-            //text-overflow: ellipsis;
-        }
-        .selectize-control.multi .selectize-input.has-items {
-            padding-top: 0em;
-        }
-        .selectize-control.multi .selectize-input.has-items div {
-            padding-top: 0em;
-            padding-bottom: 0em;
-        }
-        .btn.btn-danger:disabled {  /* update buttons */
-            color: white;
-            opacity: .9;
-            /*pointer-events: none;*/
-        }
-    </style>
 </body>
 </html>
 <!-- End of ContextSmith Chrome extension code -->

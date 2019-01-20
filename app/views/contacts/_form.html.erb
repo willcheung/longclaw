@@ -18,7 +18,7 @@
       <% else %>
 
       <div class="form-group string required contact_account_id col-md-12" onchange="changedValue('<%= modal_id %>')" old_value="<%= contact.account_id %>">
-        <%= f.label :account %> <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="top" data-original-title="Account is used to group multiple contacts together, like a company. If this is an individual, we can use email address."></i>
+        <%= f.label :account %> <i class="fa fa-question-circle" data-toggle="tooltip" data-html="true" data-placement="top" data-original-title="Account is used to group multiple contacts together, like a company. If this is an individual, we can use email address. <br><br> You can change this later in Accounts tab."></i>
         <select class="contextsmith_account_box" data-placeholder="Select an account" name="contact[account_id]" id="contact_account_id">
           <% if @accounts.blank? %>
             <option selected value="<%= User::FREE_EMAIL_PROVIDERS.include?(get_domain(contact.email)) ? contact.email : get_domain(contact.email) %>">Create "<%= User::FREE_EMAIL_PROVIDERS.include?(get_domain(contact.email)) ? contact.email : get_domain(contact.email) %>"</option>
