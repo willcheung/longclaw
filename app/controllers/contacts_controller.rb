@@ -28,7 +28,7 @@ class ContactsController < ApplicationController
     if account.nil? or account.blank? 
       account = Account.find_by(name: contact_params[:account_id], organization_id: current_user.organization_id)
       if account.nil? or account.blank? # if account doesn't exist, create new one automatically
-        account = Account.create(name: contact_params[:account_id], organization_id: current_user.organization_id)
+        account = Account.create(name: contact_params[:account_id], organization_id: current_user.organization_id, domain: get_domain(contact_params[:email]), owner_id: current_user.id, created_by: current_user.id)
       end
     end
     @contact = account.contacts.new(contact_params)
