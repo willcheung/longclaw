@@ -308,27 +308,29 @@ class ExtensionController < ApplicationController
   end
 
   def company
-    @SOCIAL_BIO_TEXT_LENGTH_MAX = 192
-    # puts '***********', @account.present?
-    # puts @account.domain.present? if @account.present?
-    # puts @account.domain if @account.present?
-    # puts @project.present?
-    # puts @project.name if @project.present?
-    # p @params
-    # use account domain as company domain
-    domain = if @account.present? && @account.domain.present?
-               @account.domain
-             # get the most frequent external domain out of email people to use as company domain
-             elsif @params[:external].present?
-               external_emails = @params[:external].map { |person| URI.unescape(person.second, '%2E') }
-               freq_domain_email = external_emails.group_by { |email| get_domain(email) }.values.max_by(&:size).first
-               get_domain(freq_domain_email)
-             # if no external people, use internal domain
-             elsif @params[:internal].present?
-               get_domain(current_user.email) # don't use organization.domain, could be a gmail user
-             end
-    @company = CompanyProfile.find_or_create_by_domain(domain) if domain && valid_domain?(domain)
-    # @company = CompanyProfile.find_or_create_by_domain(@account.domain) if @account.present? && @account.domain.present?
+    if current_user.plus?
+      @SOCIAL_BIO_TEXT_LENGTH_MAX = 192
+      # puts '***********', @account.present?
+      # puts @account.domain.present? if @account.present?
+      # puts @account.domain if @account.present?
+      # puts @project.present?
+      # puts @project.name if @project.present?
+      # p @params
+      # use account domain as company domain
+      domain = if @account.present? && @account.domain.present?
+                 @account.domain
+               # get the most frequent external domain out of email people to use as company domain
+               elsif @params[:external].present?
+                 external_emails = @params[:external].map { |person| URI.unescape(person.second, '%2E') }
+                 freq_domain_email = external_emails.group_by { |email| get_domain(email) }.values.max_by(&:size).first
+                 get_domain(freq_domain_email)
+               # if no external people, use internal domain
+               elsif @params[:internal].present?
+                 get_domain(current_user.email) # don't use organization.domain, could be a gmail user
+               end
+      @company = CompanyProfile.find_or_create_by_domain(domain) if domain && valid_domain?(domain)
+      # @company = CompanyProfile.find_or_create_by_domain(@account.domain) if @account.present? && @account.domain.present?
+    end
   end
 
   def attachments
@@ -639,25 +641,21 @@ class ExtensionController < ApplicationController
     external = @params[:external].map { |person| person.map { |info| URI.unescape(info, '%2E') } }
     ex_emails = external.map(&:second)
 
-    # ex_emails = ["nat.ferrante@451research.com","pauloshan@yahoo.com","sheila.gladhill@browz.com", "romeo.henry@mondo.com", "lzion@liveintent.com","invalid'o@gmail.com"]
-    # group by ex_emails by domain frequency, order by most frequent domain
-    ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
-    order_emails_by_domain_freq = ex_emails.map { |email| "email = #{Contact.sanitize(email)} DESC" }.join(',')
-    # find all contacts within current_user org that match the external emails, in the order of ex_emails
-    contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id }).order(order_emails_by_domain_freq) 
+    contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id })
 
+  
     if contacts.present?
       # Match by account contacts
-      # get all opportunities that these contacts are members of
-      projects = contacts.joins(:visible_projects).includes(:visible_projects).map(&:projects).flatten
-
-      if projects.present?
-        # set most frequent project as opportunity
-        @project = projects.group_by(&:id).values.max_by(&:size).first
-
-        @account = @project.account
-      end
+      @account ||= contacts.first.account
     else
+      # ex_emails = ["nat.ferrante@451research.com","pauloshan@yahoo.com","sheila.gladhill@browz.com", "romeo.henry@mondo.com", "lzion@liveintent.com","invalid'o@gmail.com"]
+      # group by ex_emails by domain frequency, order by most frequent domain
+      ex_emails = ex_emails.group_by { |email| get_domain(email) }.values.sort_by(&:size).flatten 
+      order_emails_by_domain_freq = ex_emails.map { |email| "email = #{Contact.sanitize(email)} DESC" }.join(',')
+      # find all contacts within current_user org that match the external emails, in the order of ex_emails
+      contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id }).order(order_emails_by_domain_freq) 
+
+
       # Match by account domains
       ex_emails = ex_emails.reject { |email| get_domain(email).downcase == current_user.organization.domain.downcase || !valid_domain?(get_domain(email)) } # remove e-mails with domains that are too general
 

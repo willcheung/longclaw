@@ -355,28 +355,28 @@
                                 <% if contact.present? %>
                                     <div class="col-xs-6">
                                         <%= link_to "<button class=\"btn-outline btn-xs btn-block\"><i class=\"fa fa-pencil\"></i> Edit contact</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
-                                        <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
                                     </div>
                                     <div class="col-xs-6">
-                                        +Add Note
+                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Coming soon"><i class="fa fa-plus"></i> Add note</button></i>
                                     </div>
+                                    <%= render 'contacts/modal', modal_type: 'extension_edit_contact_modal', modal_id: 'extension_edit_contact_modal-'+contact.id, contact: contact %>
                                 <% else %>
                                     <div class="col-xs-6">
                                         <% newcontact = Contact.new(last_name: last_name, first_name: first_name, title: profile.title, email: profile.email.downcase, phone: profile.phone) %>
                                         <%= link_to "<button class=\"btn-primary btn-xs btn-block\"><i class=\"fa fa-plus\"></i> Add contact</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
                                     </div>
                                     <div class="col-xs-6">
-                                        <%= link_to "<button class=\"btn-outline btn-xs btn-block\"><i class=\"fa fa-plus\"></i> Add contact</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
+                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Coming soon"><i class="fa fa-plus"></i> Add note</button></i>
                                     </div>
                                     
                                     <%= render 'contacts/modal', modal_type: 'extension_new_contact_modal', modal_id: 'extension_new_contact_modal-'+profile.id.to_s, contact: newcontact %>
                                 <% end %>
-                            <% elsif current_user.basic? %>
+                            <% else %>
                                     <div class="col-xs-6">
-                                      <button type="button" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to save and manage this contact."><span class="text-muted"><i class="fa fa-plus"></i> Add</span></button></i>
+                                        <button type="button" class="btn-primary btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to save and manage this contact."><i class="fa fa-plus"></i> Add contact</button></i>
                                     </div>
                                     <div class="col-xs-6">
-                                        +Add Note
+                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Coming soon."><i class="fa fa-plus"></i> Add note</button></i>
                                     </div>
                             <% end %>
                             </div>
