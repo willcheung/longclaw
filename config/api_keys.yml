@@ -1,8 +1,8 @@
 development:
   google_client_id: 290954624013-nq59r23lvm30ehcl36ihk4h65dpc9rgu.apps.googleusercontent.com
   google_client_secret: 59VJa6QBgrJrIxmLwGLI1_l8
-  mandrill_user_name: wcheung@contextsmith.com
-  mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
+  SES_SMTP_USERNAME: AKIAJPDLO23B7YAO57TA
+  SES_SMTP_PASSWORD: BGaXlkchon2knEXVy1tqQljcIfKRJD+WT9wGV2ykT0Ry
   csback_base_url: http://104.198.4.24:8888
 #  csback_base_url: http://localhost:8888 # to use when running oathkeeper locally
 #  csback_script_base_url: http://localhost:8888
@@ -33,8 +33,8 @@ development:
 test:
   google_client_id: 290954624013-o82ebj65g5l6knamiaa06jiu09epo2vk.apps.googleusercontent.com
   google_client_secret: L2Jt5992udy8Wk3k5oSJz11H
-  mandrill_user_name: wcheung@contextsmith.com
-  mandrill_api_key: QdWI4Lut5CI4AzaWfVFR2g
+  SES_SMTP_USERNAME: AKIAJPDLO23B7YAO57TA
+  SES_SMTP_PASSWORD: BGaXlkchon2knEXVy1tqQljcIfKRJD+WT9wGV2ykT0Ry
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
   csback_base_url: https://104.198.4.24:8888
   csback_script_base_url: https://104.198.4.24:8888
@@ -46,8 +46,8 @@ production:
   AZURE_APPLICATION_CLIENT_ID: 83cc6ec7-6530-453f-9f98-8093f3dfc9ab
   AZURE_APPLICATION_CLIENT_SECRET: f2XbVMZsGjLdET0HcgdgfbU
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
-  mandrill_user_name: wcheung@contextsmith.com
-  mandrill_api_key: wndqLIBQRJbIsA9S3bM-1w
+  SES_SMTP_USERNAME: AKIAI5LBXRYFH5324NAA
+  SES_SMTP_PASSWORD: BLz7orB/OwUut2qsKl3k+stb8YGE1eeB2Qk/RWChs4Hh
   fullcontact_api_key: wsvCZ9dgkUQ5wEPS1BiZQm6k4zgcckBU
   csback_base_url: https://104.198.4.24:80
   csback_script_base_url: https://104.198.4.24:80

@@ -642,7 +642,6 @@ class ExtensionController < ApplicationController
     ex_emails = external.map(&:second)
 
     contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id })
-
   
     if contacts.present?
       # Match by account contacts

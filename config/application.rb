@@ -24,12 +24,11 @@ module Longclaw
 
     self.configure do
         config.action_mailer.smtp_settings = {
-        address:    'smtp.mandrillapp.com',
+        address:    'email-smtp.us-west-2.amazonaws.com',
         port:       587,
-        user_name:  ENV['mandrill_user_name'],
-        password:   ENV['mandrill_api_key'],
-        authentication:  'plain',
-        domain:  'contextsmith.com',
+        user_name:  ENV['SES_SMTP_USERNAME'],
+        password:   ENV['SES_SMTP_PASSWORD'],
+        authentication:  'login',
         enable_starttls_auto: true
         }
     end
