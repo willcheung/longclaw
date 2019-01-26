@@ -25,9 +25,11 @@
           </div>
         </div>
     <% else %>
-        <div class="row text-center" style="margin-top: 140px; font-size: 120%">
+        <div class="row text-center" style="margin-top: 100px; font-size: 120%">
           <div>
-            <button title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-default btn-outline btn-primary">
+            <h2 style="margin: 0 20px">Click on an email to see contacts and tracking history here.</h2>
+            
+            <button style="margin-top: 100px;" title="Get a $5 credit for each referral sign-up!" type="button" class="share-action btn btn-default btn-outline btn-primary">
               <i class="fa fa-gift"></i> Refer a friend!
             </button>
             <h5>(Free month on Plus Plan for each referral)</h5>
@@ -58,7 +60,7 @@
             </p>
             </div>
         <% end %>
-        <div class="row text-center" style="margin-top: 150px;">
+        <div class="row text-center" >
           <div class="" role="group" aria-label="...">
             <%= link_to new_plan_path,  class: 'btn btn-default btn-sm btn-outline', target: "_blank" do %>
                 <i class="fa fa-star"></i> Upgrade
@@ -67,8 +69,6 @@
           </div>
         </div>
 
-        <h4 class="text-center middle-box" style="margin-top: 20px">Click on an email or hover over<br>the sender to
-          see contact profile here.</h4>
         <img class="img-responsive" src="/assets/images/contacts.png" alt="Contact Cards">
         </div>
 
