@@ -78,29 +78,29 @@
 <% if current_user.plus? %>
 
     <section class="company-section">
-      <img class="pull-left m-r-sm" style="max-height:65px;max-width:65px" src="<%= @company.logo %>"/>
+      <img class="pull-left m-r-sm" style="max-height:65px;max-width:65px" src="<%= @company.logo if @company %>"/>
       <h3 class="company-name"><% if @account %><%= @account.name %> <% else %> <%=@company.name %> <% end %></h3>
-      <p><span <%= 'class=disabled' if @company && @company.website.blank? %>><a href="<%= @company.website %>" target="_blank" title="Open this company's webpage in a new window"><i class="fa fa-globe"></i> <%= @company.website %></a></span></p>
+      <p><span <%= 'class=disabled' if @company && !@company.website.blank? %>><a href="<%= @company.website %>" target="_blank" title="Open this company's webpage in a new window"><i class="fa fa-globe"></i> <%= @company.website %></a></span></p>
       
       <% if !@company.location.blank? %><p><i class="fa fa-map-marker"></i> <%= @company.location %></p><% end %>
       <% if !@company.employees.blank? %><p><i class="fa fa-user"></i> <%= @company.employees %> Employees</p><% end %>
 
       <!-- SOCIALS -->
-      <span <%= 'class=disabled' if @company && @company.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
+      <span <%= 'class=disabled' if @company && !@company.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
         <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
         <% if @company.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
         data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
         <% end %>
         ></i></a>
       </span>
-      <span <%= 'class=disabled' if @company && @company.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
+      <span <%= 'class=disabled' if @company && !@company.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
         <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
         <% if @company.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
         data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
         <% end %>
         ></i></a>
       </span>
-      <span <%= 'class=disabled' if @company && @company.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
+      <span <%= 'class=disabled' if @company && !@company.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
         <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
         <% if @company.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
         data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
