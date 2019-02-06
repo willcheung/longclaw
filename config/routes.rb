@@ -112,6 +112,7 @@ Longclaw::Application.routes.draw do
     scope "search", controller: :search, as: 'search' do
       # get "results"
       get "autocomplete_project_name"
+      get "autocomplete_contacts"
       get "autocomplete_project_subs"
       get "autocomplete_project_member"
       get "autocomplete_salesforce_account_name"

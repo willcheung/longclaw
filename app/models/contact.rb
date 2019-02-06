@@ -48,9 +48,9 @@ class Contact < ActiveRecord::Base
 
   # TODO: Create a general visible_to scope for a general "role" checker
   scope :visible_to, -> (user) {
-      select('DISTINCT(contacts.*)')
+      select('contacts.*')
           .joins(:account)
-          .where(accounts: {organization_id: user.organization_id})
+          .where("accounts.organization_id = ?", user.organization_id)
           .group('contacts.id')
   }
 

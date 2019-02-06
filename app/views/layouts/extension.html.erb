@@ -67,33 +67,8 @@
         .nav-tabs > li.inactive > a {
             /*border-bottom: 2px solid white;*/
         }
-        /*.dropdown-menu {
-            border: 1px solid #aaa;
-            z-index: 2003;
-        }*/
-        .selectize-input {
-            height: 1.75em;
-            display: inline-block;
-            padding-top: 0em;
-            overflow: auto;
-        }
-        .selectize-input input, .selectize-input span {
-            padding-top: 0em;
-            font-size: 10px;
-            //text-overflow: ellipsis;
-        }
-        .selectize-control.multi .selectize-input.has-items {
-            padding-top: 0em;
-        }
-        .selectize-control.multi .selectize-input.has-items div {
-            padding-top: 0em;
-            padding-bottom: 0em;
-        }
-        .btn.btn-danger:disabled {  /* update buttons */
-            color: white;
-            opacity: .9;
-            /*pointer-events: none;*/
-        }
+
+  
     </style>
 
     <% if Rails.env.production? %>
@@ -131,7 +106,18 @@
                   </ul>
                 </li>
               </ul></div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <% if current_user.plus? %>
+                            <input name="contact-search" id="contact-search" placeholder="Search contacts...">
+                        <% else %>
+                            <input name="contact-search" id="contact-search" placeholder="Upgrade to share and search contacts">
+                        <% end %>
+                    </div>
+                </div>
             </div>
+
 
             <div>
                 <ul class="nav nav-tabs">
@@ -182,6 +168,60 @@
           $(this).addClass('element-disabled');
           $('.extension-sidebar-main-content').html('<div class="text-center m-t-lg"><i class="fa fa-spinner fa-spin fa-5x"></i></div>');
         });
+
+
+          /* Rendering object for defining how search-*-subs and member-search displays search results */
+          var renderContacts = {
+            item: function(item, escape) {
+              return '<div>' +
+                  (item.name ? '<span class="name">' + escape(item.name) + '</span>' : '') +
+                  (item.account ? '<span class="account">' + escape(item.account) + '</span>' : '') +
+              '</div>';
+            },
+            option: function(item, escape) {
+              var label = item.name || item.account;
+              var caption = item.name ? item.account : null;
+              return '<div>' +
+                  '<span class="label">' + escape(label) + '</span>' +
+                  (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
+              '</div>';
+            }
+          }
+
+             /* Selectize for autocompleting possible members */
+          $("#contact-search").selectize({
+            closeAfterSelect: true,
+            valueField: 'email',
+            labelField: 'name',
+            searchField: ['name','account'],
+            create: false,
+            render: renderContacts,
+            load: function (term, callback) {
+              console.log(term);
+                console.log(callback);
+
+              if (!term.length) return callback()
+              $.getJSON( '/search/autocomplete_contacts.json', { term: encodeURIComponent(term) } )
+                .done( function (data) {
+                    ahoy.track("$search", {term: term, page: "/extension"});
+                    callback(data);
+                })
+                .fail( function () {
+                    callback();
+                })
+
+            },
+            onBlur: function () {
+              // Manually prevent input box from being cleared on blur
+              this.setTextboxValue(this.lastQuery);
+            },
+            onItemAdd: function() {
+                var email = $("#contact-search")[0].selectize.items[0]
+                console.log(email);
+                window.location.href="account?external%5B1%5D%5B%5D=&external%5B1%5D%5B%5D="+encodeURIComponent(email)
+            }
+          })
+
         // $("#salesforce-entity-search").selectize({
         //     closeAfterSelect: true,
         //     valueField: 'id',

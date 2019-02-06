@@ -1,107 +1,50 @@
 /* Main search bar */
-
-/* Used for making sure fa-search is still on top */
-.z-top {
-  z-index: 2001;
-}
-
-.selectize-control.main-search .selectize-input {
+.selectize-control .selectize-input {
   color: inherit;
   display: block;
-  padding: 6px 12px 6px 44px !important;
+  padding: 6px 12px 6px 20px !important;
   transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
-  z-index: 1000;
-  width: 450px;
-  min-height: 36px;
-  margin-top: 12px;
-  margin-left: 20px;
+  margin-bottom: 10px;
   background: #fcfcfc;
   border: 1px solid #aaa;
   border-radius: 20px;
   box-shadow: 0 0 3px #ccc, 0 10px 15px #f3f3f3 inset;
   overflow: visible;
+  text-align: left;
 }
 
-.selectize-control.main-search .selectize-input input {
-  font-size: 15px;
-  margin: 2px 0 0 0 !important;
-}
-
-.selectize-control.main-search .selectize-input > div {
-  text-indent: 0;
-}
-
-.selectize-dropdown.main-search {
-  margin-left: 28px;
-  width: 430px !important;
-}
-
-/* Autocomplete for users and projects */
-.selectize-control.contacts .selectize-input > div,
-.selectize-control.main-search .selectize-input > div {
-  padding: 1px 10px;
-  font-size: 13px;
-  font-weight: normal;
-  -webkit-font-smoothing: auto;
-  color: #f7fbff;
-  text-shadow: 0 1px 0 rgba(8,32,65,0.2);
-  background: #2183f5;
-  background: -moz-linear-gradient(top, #2183f5 0%, #1d77f3 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#2183f5), color-stop(100%,#1d77f3));
-  background: -webkit-linear-gradient(top,  #2183f5 0%,#1d77f3 100%);
-  background: -o-linear-gradient(top,  #2183f5 0%,#1d77f3 100%);
-  background: -ms-linear-gradient(top,  #2183f5 0%,#1d77f3 100%);
-  background: linear-gradient(to bottom,  #2183f5 0%,#1d77f3 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2183f5', endColorstr='#1d77f3',GradientType=0 );
-  border: 1px solid #0f65d2;
-  -webkit-border-radius: 10px;
-  -moz-border-radius: 10px;
-  border-radius: 10px;
-  -webkit-box-shadow: 0 1px 1px rgba(0,0,0,0.15);
-  -moz-box-shadow: 0 1px 1px rgba(0,0,0,0.15);
-  box-shadow: 0 1px 1px rgba(0,0,0,0.15);
-}
-.selectize-control.contacts .selectize-input > div.active,
-.selectize-control.main-search .selectize-input > div.active {
-  background: #0059c7;
-  background: -moz-linear-gradient(top, #0059c7 0%, #0051c1 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#0059c7), color-stop(100%,#0051c1));
-  background: -webkit-linear-gradient(top,  #0059c7 0%,#0051c1 100%);
-  background: -o-linear-gradient(top,  #0059c7 0%,#0051c1 100%);
-  background: -ms-linear-gradient(top,  #0059c7 0%,#0051c1 100%);
-  background: linear-gradient(to bottom,  #0059c7 0%,#0051c1 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0059c7', endColorstr='#0051c1',GradientType=0 );
-  border-color: #0051c1;
-}
-.selectize-control.contacts .selectize-input > div .name,
+.selectize-control .selectize-input > div .name,
 .selectize-control.main-search .selectize-input > div .name {
   display: inline-block;
 }
-.selectize-control.contacts .selectize-input > div .name:after,
+.selectize-control .selectize-input > div .name:after,
 .selectize-control.main-search .selectize-input > div .name:after {
   content: '\00A0';
 }
-.selectize-control.contacts .selectize-input > div .email,
+.selectize-control .selectize-input > div .email,
 .selectize-control.main-search .selectize-input > div .account {
   opacity: 0.8;
 }
-.selectize-control.contacts .selectize-input > div .email:before {
+.selectize-control .selectize-input > div .email:before {
   content: '<';
 }
-.selectize-control.contacts .selectize-input > div .email:after {
+.selectize-control .selectize-input > div .email:after {
   content: '>';
 }
-.selectize-control.contacts .selectize-dropdown .caption,
+.selectize-control .selectize-dropdown .caption,
 .selectize-control.main-search .selectize-dropdown .caption {
   font-size: 12px;
   display: block;
   color: #a0a0a0;
+  text-align: left;
 }
-.selectize-control.contacts .selectize-dropdown .label,
+.selectize-control .selectize-dropdown .label,
 .selectize-control.main-search .selectize-dropdown .label {
   font-size: 13px;
   padding: 0;
   background-color: transparent;
+  text-align: left;
+  display: block;
 }
 .hide-submit-button {
   height: 0;

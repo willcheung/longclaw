@@ -29,6 +29,14 @@ class SearchController < ApplicationController
   	end
   end
 
+  def autocomplete_contacts
+    @contacts = Contact.visible_to(current_user).where("lower(contacts.first_name) like ? or lower(contacts.last_name) like ? or lower(contacts.email) like ?", "#{params[:term]}%", "#{params[:term]}%", "%#{params[:term]}%")
+    
+    respond_to do |format|
+      format.json { render json: @contacts.map { |x| { :id => x.id, :email => x.email, :name => x.first_name + " " + x.last_name, :account => x.account.name } }.to_json }
+    end
+  end
+
   def autocomplete_project_subs
     if (params[:type] == "daily")
       subs = ProjectSubscriber.all.where(project_id: params[:project_id], daily: true).pluck(:user_id)
