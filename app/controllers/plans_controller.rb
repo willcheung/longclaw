@@ -22,7 +22,6 @@ class PlansController < ApplicationController
       @time_remaining_until_expiration_str = (@subscription_expiration_time < Time.now) ? "Expired" : (@subscription_expiration_time - Time.now < 86400 ? "less than 1 day" : distance_of_time_in_words_to_now(@subscription_expiration_time)) if @subscription_expiration_time.present?  # any time of 1 day or less (but still any) will be displayed as "less than 1 day"
     end
 
-    puts @customer.subscriptions.first.latest_invoice
   end
 
   def create
