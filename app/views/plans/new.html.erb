@@ -36,8 +36,8 @@
 
 <div class="container center-block">
   <% if flash[:error].present? %>
-      <div class="well" id="error_explanation">
-        <p><%= flash[:error] %></p>
+      <div class="alert alert-warning m-t-xs" role="alert" id="error_explanation">
+        <h3 class="text-center"><%= flash[:error] %></h3>
       </div>
   <% end %>
   <%= form_tag plans_path, :id => 'upgrade' do %>
@@ -79,7 +79,7 @@
 
       <th colspan="2">
         <h2>Plus</h2>
-        <h5 class="text-muted">For people managing customers</h5>
+        <h5 class="text-muted">For teams who manage customers</h5>
 
         <div class="">
           <hr>
@@ -96,20 +96,23 @@
 
 
         <div class="plan-action">
-          <% if current_user.plus? %>
-              <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
-                  <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Upgrade Now</a>
+          <% if @customer.present? && @customer.subscriptions.present? %>
+              <% if @trial_expiration_time && (@trial_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
+                  <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Purchase</a>
                   <p class="text-muted" style="font-weight:300; color: red"><small><%= @time_remaining_until_expiration_str %> remaining in free trial.</small></p>
-              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
                   <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
+                  <p class="text-muted" style="font-weight:300;"><small>Renews in <%= @time_remaining_until_expiration_str %> </small></p>
               <% else %>
-                  <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Upgrade Now</a>
+                  <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Purchase</a>
+                  <% if @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
                   <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has ended.</small></p>
+                  <% end %>
               <% end %>
           <% else %>
               <div class="btn-group">
                 <a class="share-action btn btn-primary btn-large btn-outline"><i class="fa fa-gift"></i> Refer a friend!</a>
-                <a class="btn btn-primary btn-large start plus-start" data-amount=0 data-plan="plus-monthly-v1" href="#">Start Free Trial</a>
+                <a class="btn btn-primary btn-large start plus-start" data-amount=0 data-plan="plus-monthly-v1" href="#">Try for free</a>
               </div>
           <% end %>
         </div>
@@ -133,18 +136,21 @@
         <h4 class="text-muted" style="font-weight: 300">14 days free trial</h4><h4 class="text-muted" style="font-weight: 300">No credit card required</h4>
 
         <div class="plan-action">
-          <% if current_user.pro? %>
-              <% if @trial_expiration_time && (@trial_expiration_time > Time.now) %>
-                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Upgrade Now</a>
+          <% if @customer.present? && @customer.subscriptions.present? %>
+              <% if @trial_expiration_time && (@trial_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
+                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Purchase</a>
                   <p class="text-muted" style="font-weight:300; color: red"><small><%= @time_remaining_until_expiration_str %> remaining in free trial.</small></p>
-              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) %>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
                   <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
+                  <p class="text-muted" style="font-weight:300;"><small>Renews in <%= @time_remaining_until_expiration_str %> </small></p>
               <% else %>
-                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Upgrade Now</a>
+                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Purchase</a>
+                  <% if @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
                   <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has ended.</small></p>
+                  <% end %>
               <% end %>
           <% else %>
-                  <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Start Free Trial</a>
+                  <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Try for free</a>
               </div>
           <% end %>
         </div>
@@ -331,7 +337,7 @@
     var handler = StripeCheckout.configure({
         key: '<%= Rails.configuration.stripe[:publishable_key] %>',
         email: '<%= current_user.email if current_user %>',
-        allowRememberMe: false,
+        allowRememberMe: true,
         zipCode: true,
         locale: 'auto',
         name: 'ContextSmith',
@@ -344,12 +350,14 @@
         }
     });
 
+    // start free trial
     $('.start').click(function(evt) {
         evt.preventDefault();
         $('input#plan').val(evt.target.dataset.plan);
         $('form#upgrade').submit();
     });
 
+    // purchase upgrade
     $('.upgrade').click(function(evt) {
         evt.preventDefault();
         $('input#plan').val(evt.target.dataset.plan);

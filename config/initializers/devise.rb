@@ -249,9 +249,10 @@ Devise.setup do |config|
     ### scopes starting with 'https://www.googleapis.com/auth/' do not need that prefix specified
     scope: ['gmail.readonly',
             'calendar.readonly',
-            'plus.me',
-            'email',
-            'profile'],
+            'userinfo.email',
+            'userinfo.profile',
+            'profile',
+            'email'],
     skip_jwt: true,
     include_granted_scopes: true
   }
@@ -263,7 +264,9 @@ Devise.setup do |config|
     # access_type: "offline",
     ### never need to show consent page for default scopes ('email' and 'profile' are default scopes)
     # prompt: "consent",
-    scope: ['email',
+    scope: ['userinfo.email',
+            'userinfo.profile',
+            'email',
             'profile'],
     skip_jwt: true,
     include_granted_scopes: true

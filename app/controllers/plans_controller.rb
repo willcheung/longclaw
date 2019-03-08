@@ -15,12 +15,14 @@ class PlansController < ApplicationController
   def new
     # check if customer already on a plan
     #redirect_to action: 'index' if current_user.pro?
-    customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions') if current_user.stripe_customer_id
-    if customer.present? && !customer[:deleted] && customer.respond_to?(:subscriptions) && customer.subscriptions.respond_to?(:data) && !customer.subscriptions.data.empty?
-      @trial_expiration_time = Time.at(customer.subscriptions.data.first.trial_end) if customer.subscriptions.data.first.trial_end.present?
-      @subscription_expiration_time = Time.at(customer.subscriptions.data.first.current_period_end) if customer.subscriptions.data.first.current_period_end.present?
+    @customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions') if current_user.stripe_customer_id
+    if @customer.present? && !@customer[:deleted] && @customer.respond_to?(:subscriptions) && @customer.subscriptions.respond_to?(:data) && !@customer.subscriptions.data.empty?
+      @trial_expiration_time = Time.at(@customer.subscriptions.data.first.trial_end) if @customer.subscriptions.data.first.trial_end.present?
+      @subscription_expiration_time = Time.at(@customer.subscriptions.data.first.current_period_end) if @customer.subscriptions.data.first.current_period_end.present?
       @time_remaining_until_expiration_str = (@subscription_expiration_time < Time.now) ? "Expired" : (@subscription_expiration_time - Time.now < 86400 ? "less than 1 day" : distance_of_time_in_words_to_now(@subscription_expiration_time)) if @subscription_expiration_time.present?  # any time of 1 day or less (but still any) will be displayed as "less than 1 day"
     end
+
+    puts @customer.subscriptions.first.latest_invoice
   end
 
   def create
@@ -33,33 +35,51 @@ class PlansController < ApplicationController
                end
     params.require(:plan)
     plan = params[:plan]
-    raise 'invalid plan' unless Rails.configuration.stripe[:plans].include?(plan)
+    raise 'Invalid plan! Please try again.' unless Rails.configuration.stripe[:plans].include?(plan)
 
-    if customer.subscriptions && customer.subscriptions.data.select{|s| s.plan.id}.include?(plan)
-      raise "You are already subscribed to #{customer.subscriptions.data.collect{|s| s.plan.name}.join(', ')}"
-    end
-    subscription = Stripe::Subscription.create(
-        customer: customer.id,
-        items: [{plan: plan}],
-        trial_period_days: Rails.configuration.stripe[:trial],
-        metadata: {
-            user_id: current_user.id
+    if customer.subscriptions.present? && customer.subscriptions.data.present?
+      puts "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.name}.join(', ')}"
+      logger.info "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.name}.join(', ')}"
+
+      # Update customer's payment source
+      Stripe::Customer.create_source(
+        customer.id,
+        {
+          source: token,
         }
-    )
-    puts "Subscription created: #{subscription}"
-    logger.info "Subscription created: #{subscription}"
+      )
+
+      # If in the middle of a trial
+      # End trial, which will trigger charge/invoice
+      # https://stripe.com/docs/billing/subscriptions/trials
+      Stripe::Subscription.update(
+        customer.subscriptions.first.id,
+        {
+          trial_end: 'now',
+        }
+      )
+
+      # If trial expired already
+      # Create new invoice and charge
+
+
+      raise "Thank you for subscribing to #{customer.subscriptions.data.first.plan.name}! You will receive an email receipt shortly."
+    else
+      # Creates new subscription with 14 day trial
+      subscription = Stripe::Subscription.create(
+          customer: customer.id,
+          items: [{plan: plan}],
+          trial_period_days: Rails.configuration.stripe[:trial],
+          metadata: {
+              user_id: current_user.id
+          }
+      )
+      puts "Subscription created: #{subscription}"
+      logger.info "Subscription created: #{subscription}"
+    end
+
     current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-') && !current_user.pro?
     current_user.upgrade(:Plus) if subscription && subscription.plan.id.start_with?('plus-') && !current_user.plus?
-
-    if subscription && subscription.plan.id.start_with?('biz-')
-      if customer.subscriptions
-        existing_pro_subscription = customer.subscriptions.data.select{|s| s.plan.id.start_with?('pro-')}
-        unless existing_pro_subscription.empty?
-          existing_pro_subscription.each { |s| s.delete}
-        end
-      end
-      current_user.upgrade(:Biz)
-    end
 
     current_user.save
     if params[:refresh] == 'true'
