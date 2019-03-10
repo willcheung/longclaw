@@ -61,10 +61,10 @@ module Longclaw
     # Use Sucker Punch to manage an async queue for jobs in memory
     config.active_job.queue_adapter = :sucker_punch
 
-    FullContact.configure do |config|
-      config.api_key = ENV['fullcontact_api_key']
-      config.auth_type = :header
-    end
+    # FullContact.configure do |config|
+    #   config.api_key = ENV['fullcontact_api_key']
+    #   config.auth_type = :header
+    # end
 
     require 'contextsmith_parser'
     require 'utils'

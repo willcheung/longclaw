@@ -1,4 +1,5 @@
 include ActionView::Helpers::DateHelper  #for distance_of_time_in_words_to_now
+require "stripe"
 
 class PlansController < ApplicationController
   layout 'empty'
@@ -25,6 +26,8 @@ class PlansController < ApplicationController
   end
 
   def create
+    # TODO Need to take care of upgrade/downgrade plans
+
     token = params[:stripeToken]
     token = token == '' ? nil : token
     customer = if current_user.stripe_customer_id
@@ -36,33 +39,58 @@ class PlansController < ApplicationController
     plan = params[:plan]
     raise 'Invalid plan! Please try again.' unless Rails.configuration.stripe[:plans].include?(plan)
 
-    if customer.subscriptions.present? && customer.subscriptions.data.present?
-      puts "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.name}.join(', ')}"
-      logger.info "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.name}.join(', ')}"
+    if customer.subscriptions.present? && customer.subscriptions.data.present? && customer.subscriptions.first.status != 'canceled'
+      puts customer.subscriptions
+      puts "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.nickname}.join(', ')}"
+      logger.info "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.nickname}.join(', ')}"
 
       # Update customer's payment source
-      Stripe::Customer.create_source(
-        customer.id,
-        {
-          source: token,
-        }
-      )
+      if !token.blank?
+        Stripe::Customer.create_source(
+          customer.id,
+          {
+            source: token,
+          }
+        )
+      end
 
       # If in the middle of a trial
-      # End trial, which will trigger charge/invoice
-      # https://stripe.com/docs/billing/subscriptions/trials
-      Stripe::Subscription.update(
-        customer.subscriptions.first.id,
-        {
-          trial_end: 'now',
-        }
-      )
+      if Time.at(customer.subscriptions.data.first.trial_end) > Time.now
+        # End trial, which will trigger charge/invoice
+        # https://stripe.com/docs/billing/subscriptions/trials
+        Stripe::Subscription.update(
+          customer.subscriptions.first.id,
+          {
+            trial_end: 'now',
+          }
+        )
+      else
+        # If trial expired and/or cc payment failed, subscription has 2 states.  "past_due" and "unpaid"
+        
+        if customer.subscriptions.first.status == 'active'
+          puts "On active subscription.  Nothing to do!"
+          logger.info "On active subscription.  Nothing to do!"
+          raise "You're already on an active subscription!" # happy state, do nothing
+        elsif customer.subscriptions.first.status == 'past_due' || customer.subscriptions.first.status == 'unpaid'
+          # Find latest invoice and charge it
+          invoice = Stripe::Invoice.retrieve(customer.subscriptions.first.latest_invoice)
+          puts invoice
 
-      # If trial expired already
-      # Create new invoice and charge
+          Stripe::Invoice.update(
+            invoice,
+            {
+              auto_advance: true,
+            }
+          )
 
+        else # should never come here
+          puts "Subscription in a weird state.  Nothing to do!"
+          logger.info "Subscription in a weird state.  Nothing to do!"
+          raise "Nothing to do!"
+        end
+      end
 
-      raise "Thank you for subscribing to #{customer.subscriptions.data.first.plan.name}! You will receive an email receipt shortly."
+      raise "Thank you for subscribing to #{customer.subscriptions.data.first.plan.nickname}! You will receive an email receipt shortly."
     else
       # Creates new subscription with 14 day trial
       subscription = Stripe::Subscription.create(
@@ -75,6 +103,8 @@ class PlansController < ApplicationController
       )
       puts "Subscription created: #{subscription}"
       logger.info "Subscription created: #{subscription}"
+
+      raise "Great, enjoy our free trial!"
     end
 
     current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-') && !current_user.pro?

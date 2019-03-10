@@ -100,9 +100,14 @@
               <% if @trial_expiration_time && (@trial_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
                   <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Purchase</a>
                   <p class="text-muted" style="font-weight:300; color: red"><small><%= @time_remaining_until_expiration_str %> remaining in free trial.</small></p>
-              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && @customer.subscriptions.first.status == 'active' && @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
                   <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
                   <p class="text-muted" style="font-weight:300;"><small>Renews in <%= @time_remaining_until_expiration_str %> </small></p>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && (@customer.subscriptions.first.status == 'past_due' || @customer.subscriptions.first.status == 'unpaid') && @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
+                  <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Purchase</a>
+                  <% if @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
+                  <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has ended.</small></p>
+                  <% end %>
               <% else %>
                   <a class="btn btn-primary btn-large upgrade plus-upgrade" data-amount=500 data-plan="plus-monthly-v1" href="#">Purchase</a>
                   <% if @customer.subscriptions.data.first.plan.id == 'plus-monthly-v1' %>
@@ -140,9 +145,14 @@
               <% if @trial_expiration_time && (@trial_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
                   <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Purchase</a>
                   <p class="text-muted" style="font-weight:300; color: red"><small><%= @time_remaining_until_expiration_str %> remaining in free trial.</small></p>
-              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && @customer.subscriptions.first.status == 'active' && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
                   <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
                   <p class="text-muted" style="font-weight:300;"><small>Renews in <%= @time_remaining_until_expiration_str %> </small></p>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && (@customer.subscriptions.first.status == 'past_due' || @customer.subscriptions.first.status == 'unpaid') && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
+                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Purchase</a>
+                  <% if @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
+                  <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has ended.</small></p>
+                  <% end %>
               <% else %>
                   <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Purchase</a>
                   <% if @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>

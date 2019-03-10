@@ -12,7 +12,8 @@ gem 'jbuilder', '~> 1.2' 					# Build JSON APIs with ease. Read more: https://gi
 gem 'devise', '~> 3.4.1' 					# User Authentication
 gem "omniauth-google-oauth2"
 gem 'omniauth-microsoft_v2_auth'
-gem 'oauth2', '~> 1.0'
+gem 'oauth2', '~> 1.4.1'
+gem 'faraday', '~> 0.15.3'
 gem 'omniauth-oauth2', '~> 1.4'
 gem 'hashie', '~> 3.4.3'
 gem "jquery-rails"
@@ -33,7 +34,7 @@ gem 'device_detector'
 gem 'geocoder'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'graphql'
-gem 'fullcontact', '~>0.18'
+#gem 'fullcontact', '~>0.18'
 gem 'mail'
 gem 'mini_mime'
 gem 'stripe'

@@ -34,10 +34,11 @@ class Profile < ActiveRecord::Base
     profile = find_by_email(email)
     # No existing profile found, create a new one
     profile = create(emails: [email]) if profile.blank?
-    if profile.data.blank? || [200, 202, 404].exclude?(profile.data.status) # retry if profile has no data or status isn't one of 200, 202 or 404
-      profile.data = FullContactService.find_person(email, profile.id)
-      profile.save
-    end
+    # Not using FullContact
+    # if profile.data.blank? || [200, 202, 404].exclude?(profile.data.status) # retry if profile has no data or status isn't one of 200, 202 or 404
+    #   profile.data = FullContactService.find_person(email, profile.id)
+    #   profile.save
+    # end
     profile
   end
 

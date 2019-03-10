@@ -20,10 +20,11 @@ class CompanyProfile < ActiveRecord::Base
   def self.find_or_create_by_domain(domain)
     company = find_by_domain(domain)
     company = create(domain: domain) if company.blank?
-    if company.data.blank? || [200, 202, 404].exclude?(company.data.status)
-      company.data = FullContactService.find_company(domain, company.id)
-      company.save
-    end
+    # Not using FullContact
+    # if company.data.blank? || [200, 202, 404].exclude?(company.data.status)
+    #   company.data = FullContactService.find_company(domain, company.id)
+    #   company.save
+    # end
     company
   end
 
