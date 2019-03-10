@@ -90,6 +90,10 @@ class PlansController < ApplicationController
         end
       end
 
+      current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-') && !current_user.pro?
+      current_user.upgrade(:Plus) if subscription && subscription.plan.id.start_with?('plus-') && !current_user.plus?
+      current_user.save
+
       raise "Thank you for subscribing to #{customer.subscriptions.data.first.plan.nickname}! You will receive an email receipt shortly."
     else
       # Creates new subscription with 14 day trial
@@ -104,13 +108,13 @@ class PlansController < ApplicationController
       puts "Subscription created: #{subscription}"
       logger.info "Subscription created: #{subscription}"
 
+      current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-') && !current_user.pro?
+      current_user.upgrade(:Plus) if subscription && subscription.plan.id.start_with?('plus-') && !current_user.plus?
+      current_user.save
+
       raise "Great, enjoy our free trial!"
     end
 
-    current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-') && !current_user.pro?
-    current_user.upgrade(:Plus) if subscription && subscription.plan.id.start_with?('plus-') && !current_user.plus?
-
-    current_user.save
     if params[:refresh] == 'true'
       redirect_to :back
     elsif subscription

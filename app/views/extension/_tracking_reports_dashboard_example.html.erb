@@ -52,7 +52,7 @@
             <div>
                 <span class='referral'>
                     <% if current_user.stripe_customer_id.present? && !Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions').subscriptions.data.empty? %>
-                        <%= link_to  '#',  class: 'btn btn-primary', target: "_blank" do %>
+                        <%= link_to  '/plans/new',  class: 'btn btn-primary', target: "_blank" do %>
                             See our plans and upgrade
                         <% end %>
                     <% else %>
@@ -88,7 +88,7 @@
         <div>
             <span class='referral'>
                 <% if current_user.stripe_customer_id.present? && !Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions').subscriptions.data.empty? %>
-                    <%= link_to  '#',  class: 'btn btn-primary', target: "_blank" do %>
+                    <%= link_to  '/plans/new',  class: 'btn btn-primary', target: "_blank" do %>
                         See our plans and upgrade
                     <% end %>
                 <% else %>
