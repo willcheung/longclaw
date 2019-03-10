@@ -112,7 +112,11 @@ class PlansController < ApplicationController
       current_user.upgrade(:Plus) if subscription && subscription.plan.id.start_with?('plus-') && !current_user.plus?
       current_user.save
 
-      raise "Great, enjoy our free trial!"
+      if params[:refresh] == 'true'
+        redirect_to :back
+      else
+        raise "Great, enjoy our free trial!"
+      end
     end
 
     if params[:refresh] == 'true'
