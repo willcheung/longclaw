@@ -54,7 +54,6 @@ class PlansController < ApplicationController
     raise 'Invalid plan! Please try again.' unless Rails.configuration.stripe[:plans].include?(plan)
 
     if customer.subscriptions.present? && customer.subscriptions.data.present? && customer.subscriptions.first.status != 'canceled'
-      puts customer.subscriptions
       logger.info "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.nickname}.join(', ')}"
 
       # If in the middle of a trial
@@ -77,14 +76,25 @@ class PlansController < ApplicationController
           invoice_period_end = invoice.lines.data.first.period.end
           invoice.void_invoice
 
+          # Determine which subscription they're on
+          if customer.subscriptions.first.plan.id.start_with?('pro-')
+            amt = 3900
+          elsif customer.subscriptions.first.plan.id.start_with?('plus-')
+            amt = 500
+          else
+            amt = 500
+          end
+
           Stripe::InvoiceItem.create({
               customer: customer,
               currency: 'usd',
-              amount: (((invoice_period_end.to_f - Time.now.to_f)/(31*24*60*60))*500).to_i,
+              amount: (((invoice_period_end.to_f - Time.now.to_f)/(31*24*60*60))*amt).to_i,
               subscription: customer.subscriptions.first,
               description: 'ContextSmith Plus prorated',
               period: { end: invoice_period_end, start: Time.now.to_i }
           })
+
+          logger.info "Created prorated invoice item."
 
         else # should never come here
           logger.info "Subscription in a weird state.  Nothing to do!"
@@ -93,7 +103,7 @@ class PlansController < ApplicationController
       end
 
       subscription = customer.subscriptions.first
-      flash[:notice] = "Thank you for subscribing to #{customer.subscriptions.data.first.plan.nickname}! You will receive an email receipt shortly."
+      flash[:notice] = "Thank you for subscribing to #{customer.subscriptions.data.first.plan.nickname}!"
     else
       # Creates new subscription with 14 day trial
       subscription = Stripe::Subscription.create(
