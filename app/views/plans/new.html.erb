@@ -35,9 +35,9 @@
 </style>
 
 <div class="container center-block">
-  <% if flash[:error].present? %>
+  <% if flash[:error].present? or flash[:notice].present? %>
       <div class="alert alert-warning m-t-xs" role="alert" id="error_explanation">
-        <h3 class="text-center"><%= flash[:error] %></h3>
+        <h3 class="text-center"><%= flash[:error] %><%= flash[:notice] %></h3>
       </div>
   <% end %>
   <%= form_tag plans_path, :id => 'upgrade' do %>

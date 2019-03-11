@@ -9,7 +9,7 @@ class PlansController < ApplicationController
     @subscription = Hashie::Mash.new({plan: {name: 'Basic', id: 'basic'}})
     if current_user.stripe_customer_id
       customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions')
-      @subscription = customer.subscriptions.data.first if customer.subscriptions.data.first
+      @subscription = customer.subscriptions.first if customer.subscriptions.first
     end
   end
 
@@ -30,29 +30,32 @@ class PlansController < ApplicationController
 
     token = params[:stripeToken]
     token = token == '' ? nil : token
+
+    # Get Stripe customer
     customer = if current_user.stripe_customer_id
                  find_or_create_customer(current_user, current_user.email, token)
                else
                  create_customer(current_user, current_user.email, token)
                end
+
+  # Update customer's payment source
+    if !token.blank?
+      Stripe::Customer.create_source(
+        customer.id,
+        {
+          source: token,
+        }
+      )
+      logger.info "Updated payment method for #{current_user.email}"
+    end
+
     params.require(:plan)
     plan = params[:plan]
     raise 'Invalid plan! Please try again.' unless Rails.configuration.stripe[:plans].include?(plan)
 
     if customer.subscriptions.present? && customer.subscriptions.data.present? && customer.subscriptions.first.status != 'canceled'
       puts customer.subscriptions
-      puts "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.nickname}.join(', ')}"
       logger.info "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.nickname}.join(', ')}"
-
-      # Update customer's payment source
-      if !token.blank?
-        Stripe::Customer.create_source(
-          customer.id,
-          {
-            source: token,
-          }
-        )
-      end
 
       # If in the middle of a trial
       if Time.at(customer.subscriptions.data.first.trial_end) > Time.now
@@ -64,65 +67,62 @@ class PlansController < ApplicationController
             trial_end: 'now',
           }
         )
-      else
-        # If trial expired and/or cc payment failed, subscription has 2 states.  "past_due" and "unpaid"
-        
+      else # If trial expired and/or cc payment failed, subscription has 2 states.  "past_due" and "unpaid"
         if customer.subscriptions.first.status == 'active'
-          puts "On active subscription.  Nothing to do!"
           logger.info "On active subscription.  Nothing to do!"
           raise "You're already on an active subscription!" # happy state, do nothing
         elsif customer.subscriptions.first.status == 'past_due' || customer.subscriptions.first.status == 'unpaid'
-          # Find latest invoice and charge it
+          # Find latest invoice, its period end date and calculate prorated for next invoice
           invoice = Stripe::Invoice.retrieve(customer.subscriptions.first.latest_invoice)
-          puts invoice
+          invoice_period_end = invoice.lines.data.first.period.end
+          invoice.void_invoice
 
-          Stripe::Invoice.update(
-            invoice,
-            {
-              auto_advance: true,
-            }
-          )
+          Stripe::InvoiceItem.create({
+              customer: customer,
+              currency: 'usd',
+              amount: (((invoice_period_end.to_f - Time.now.to_f)/(31*24*60*60))*500).to_i,
+              subscription: customer.subscriptions.first,
+              description: 'ContextSmith Plus prorated',
+              period: { end: invoice_period_end, start: Time.now.to_i }
+          })
 
         else # should never come here
-          puts "Subscription in a weird state.  Nothing to do!"
           logger.info "Subscription in a weird state.  Nothing to do!"
           raise "Nothing to do!"
         end
       end
 
-      current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-') && !current_user.pro?
-      current_user.upgrade(:Plus) if subscription && subscription.plan.id.start_with?('plus-') && !current_user.plus?
-      current_user.save
-
-      raise "Thank you for subscribing to #{customer.subscriptions.data.first.plan.nickname}! You will receive an email receipt shortly."
+      subscription = customer.subscriptions.first
+      flash[:notice] = "Thank you for subscribing to #{customer.subscriptions.data.first.plan.nickname}! You will receive an email receipt shortly."
     else
       # Creates new subscription with 14 day trial
       subscription = Stripe::Subscription.create(
-          customer: customer.id,
+          customer: customer,
           items: [{plan: plan}],
           trial_period_days: Rails.configuration.stripe[:trial],
           metadata: {
               user_id: current_user.id
           }
       )
-      puts "Subscription created: #{subscription}"
       logger.info "Subscription created: #{subscription}"
 
-      current_user.upgrade(:Pro) if subscription && subscription.plan.id.start_with?('pro-') && !current_user.pro?
-      current_user.upgrade(:Plus) if subscription && subscription.plan.id.start_with?('plus-') && !current_user.plus?
-      current_user.save
-
-      if params[:refresh] == 'true'
-        redirect_to :back
-      else
-        raise "Great, enjoy our free trial!"
-      end
+      flash[:notice] = "Great, enjoy our free trial!"
     end
+
+    if subscription.plan.id.start_with?('pro-')
+      current_user.upgrade(:Pro)
+    elsif subscription.plan.id.start_with?('plus-')
+      current_user.upgrade(:Plus)
+    else
+      raise "Invalid plan! Please try again."
+    end
+
+    current_user.save
 
     if params[:refresh] == 'true'
       redirect_to :back
     elsif subscription
-      redirect_to action: 'upgrade'
+      redirect_to new_plan_path
     end
   rescue RuntimeError, Stripe::StripeError => e
     logger.error e
@@ -145,7 +145,6 @@ class PlansController < ApplicationController
 
   def find_or_create_customer(user, stripe_email, source)
     customer = Stripe::Customer.retrieve(user.stripe_customer_id, :expand => 'subscriptions')
-    customer[:deleted] ? create_customer(user, stripe_email, source) : customer
   rescue Stripe::StripeError => e
     if e.http_status == 404
       # can't find the customer, create a new one
