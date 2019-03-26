@@ -58,6 +58,9 @@ module Longclaw
     # Set ActionMailer default return url here, set config var on Heroku per domain
     config.action_mailer.default_url_options = { :host => ENV['BASE_URL'] }
 
+    # Disable IP Spoofing since we have a lot of mobile requests with proxied IP addresses
+    config.action_dispatch.ip_spoofing_check = false
+
     # Use Sucker Punch to manage an async queue for jobs in memory
     config.active_job.queue_adapter = :sucker_punch
 
