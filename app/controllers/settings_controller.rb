@@ -89,7 +89,7 @@ class SettingsController < ApplicationController
 		begin
 			@custom_list_metadata = current_user.organization.custom_lists_metadatum.find(params[:id])
 		rescue ActiveRecord::RecordNotFound
-			redirect_to root_url, :flash => { :error => "Custom List not found or is private." }
+			redirect_to home_path, :flash => { :error => "Custom List not found or is private." }
 		end
 	end
 
@@ -270,7 +270,7 @@ class SettingsController < ApplicationController
 		if current_user.superadmin?
 			yield
 		else
-			redirect_to root_path
+			redirect_to home_path
 		end
 	end
 end

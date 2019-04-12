@@ -71,7 +71,7 @@ class OrganizationsController < ApplicationController
 
   private
     def check_if_super_admin
-      redirect_to root_path and return unless current_user.superadmin?
+      redirect_to home_path and return unless current_user.superadmin?
     end
 
     # Use callbacks to share common setup or constraints between actions.

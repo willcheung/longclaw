@@ -7,12 +7,17 @@ Longclaw::Application.routes.draw do
     # resources :plans
   end
 
+  get 'home/access_denied'
+  get 'home/privacy'
+  get 'home/terms'
+  root :to => "home#landing"
+
   devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
   # You can have the root of your site routed with "root"
 
   authenticate :user do
     # Rails 4 users must specify the 'as' option to give it a unique name
-    root :to => "home#index", :as => "authenticated_root"
+    get 'home/index', as: 'home'
 
     resources :accounts
     post "/account_bulk" => 'accounts#bulk'
@@ -183,7 +188,6 @@ Longclaw::Application.routes.draw do
       get 'fill_in_info'
       get 'extension_tutorial'
     end
-    get 'home/access_denied'
     post "users/:id/fill_in_info_update" => 'users#fill_in_info_update', :as => 'onboarding_fill_in_info_update'
   end
 
@@ -191,15 +195,10 @@ Longclaw::Application.routes.draw do
   post 'onboarding/:user_id/create_clusters' => 'onboarding#create_clusters'
 
   devise_scope :user do # Unauthenticated user
-    # root to: "sessions#new"
-    root to: redirect('/auth/basecamp')
     get '/auth/:provider/callback' => 'setting#basecamp'
     get "/user/omniauth/auth/:provider", to:  "omniauth_callbacks#user_omniauth_auth_helper", as: "user_omniauth_auth_helper"
     get "/users/auth/salesforcesandbox/callback" => 'omniauth_callbacks#salesforcesandbox'
   end
-
-  get '/users/auth/basecamp2' => 'basecamps#basecamp2'
-  get '/users/auth/37signals/callback' => 'settings#basecamp'
 
   scope "webhook", controller: :hooks, as: 'hooks' do
     post "jira"
@@ -212,9 +211,5 @@ Longclaw::Application.routes.draw do
 
   end
 
-
-  #scope 'tracking', controller: :tracking, as: 'tracking' do
-  #  get 'view/:tracking_id' => 'tracking#view'
-  #end
   get "track/:user_email/:tracking_id/:gif" => 'tracking#view'
 end

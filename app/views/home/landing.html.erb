@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ContextSmith Email Tracker and CRM</title>
+
+    <meta name="description" content="Free email tracker - know when and where your emails are opened. Manage contacts and customer relationships with our CRM without leaving Gmail."/>
+    <meta name="robots" content="noodp"/>
+    <link rel="canonical" href="https://www.contextsmith.com/" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Free Email Tracking and CRM | ContextSmith" />
+    <meta property="og:description" content="Free email tracker - know when and where your emails are opened. Manage contacts and customer relationships with our CRM without leaving Gmail." />
+    <meta property="og:url" content="https://www.contextsmith.com/" />
+    <meta property="og:site_name" content="ContextSmith" />
+    <meta property="article:publisher" content="https://www.facebook.com/ContextSmith/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:description" content="Free email tracker - know when and where your emails are opened. Manage contacts and customer relationships with our CRM without leaving Gmail." />
+    <meta name="twitter:title" content="Free Email Tracking and CRM | ContextSmith" />
+    <meta name="twitter:site" content="@contextsmith" />
+    <meta name="twitter:creator" content="@contextsmith" />
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">  
+    <link href="/assets/stylesheets/animate.min.css" rel="stylesheet">
+    <%= stylesheet_link_tag 'landing', media: 'all' %>
+
+</head>
+<body id="page-top" class='  wsite-theme-light'>
+    <div class="navbar-wrapper">
+            <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+                <div class="container">
+                    <div class="navbar-header page-scroll">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="https://www.contextsmith.com"><%= image_tag 'landing/landing_logo.png', :id => "logo" %></a>
+                    </div>
+                    <div id="navbar" class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav navbar-right">
+                            <li><a class="page-scroll" href="#page-top">Home</a></li>
+                            <li><a class="page-scroll" href="#overview">How It Works</a></li>
+                            <li><a class="page-scroll" href="/users/sign_in">Log In</a></li>
+                            <li><btn type="button" class="page-scroll btn btn-warning btn-lg m-t-sm m-l-sm" target="_blank" onClick="window.open('https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop');">Install for free</btn></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+    </div>
+    <div id="inSlider" class="carousel slide carousel-fade">
+        <div class="carousel-inner" role="listbox">
+            <div class="item active">
+                
+                <!-- Set background for slide in css -->
+                <div class="header-back one"></div>
+
+                <div class="container">
+                    <div class="carousel-caption">
+                        <h1>Free email tracker for sales and customer managers</h1>
+                        <h3>Know when and where your emails are opened. Integrate with tools you use everyday to manage your customers.</h3>
+                        <p class="m-t-lg">
+                            <a class="btn btn-lg btn-primary m-t-md" target="_blank" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" role="button">Install for Gmail</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <section class="container logos">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2>USED BY PROFESSIONALS AT</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3">
+                <%= image_tag 'landing/landing_netflix.png' %>
+            </div>
+            <div class="col-sm-3">
+                <%= image_tag 'landing/landing_google.png' %>
+            </div>
+            <div class="col-sm-3">
+                <%= image_tag 'landing/landing_minted.png' %>
+            </div>
+            <div class="col-sm-3">
+                <%= image_tag 'landing/landing_stanford.png' %>
+            </div>
+        </div>
+    </section>
+
+    <section id="overview" class="container features">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <div class="navy-line"></div>
+                <h1>Get more context with every email you send</h1>
+            </div>
+        </div>
+        <div class="row features-block">
+            <div class="col-lg-4 features-text wow fadeInLeft">
+                <h2>Track when and where your emails are read</h2>
+                <p>With unlimited email tracking, you’ll know who opens your every email. It’s all valuable information to help you follow up with your leads or customers with more context.</p>
+                <a target="_blank" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" class="btn btn-primary btn-lg">Install for free</a>
+            </div>
+            <div class="col-lg-8 text-right wow fadeInRight">
+                <%= image_tag 'landing/landing_track.png', :class => "img-responsive pull-right", :alt => "email_tracker" %>
+            </div>
+        </div>
+    </section>
+    <section class="features" style="background-color: #efefef">
+        <div class="row features-block">
+            <div class="col-lg-10 col-lg-offset-1 features-text text-center m-b-lg">
+                <h2>Insights on how your emails are performing</h2>
+            </div>
+            <div class="col-lg-10 col-lg-offset-1 text-left wow fadeInLeft">
+                <%= image_tag 'landing/landing_dashboard.png', :class => "img-responsive", :alt => "email_dashboard" %>
+            </div>
+            <div class="col-lg-12 text-center m-t-xl m-b-xl">
+                <a target="_blank" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" class="btn btn-primary btn-lg">Install for free</a>
+            </div>
+        </div>
+    </section>
+    <section class="container features">
+        <div class="row features-block">
+            <div class="col-lg-10 col-lg-offset-1 features-text text-center m-b-lg">
+                <h2 class="m-l-lg m-r-lg">Track your contacts and automatically organize their emails and attachments in one place</h2>
+            </div>
+            <div class="col-lg-10 col-lg-offset-1 text-left wow fadeInRight">
+                <%= image_tag 'landing/landing_profile.png', :class => "img-responsive", :alt => "email_profiles" %>
+            </div>
+            <div class="col-lg-12 text-center m-t-xl m-b-sm">
+                <a target="_blank" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" class="btn btn-primary btn-lg">Install for free</a>
+            </div>
+        </div>
+    </section>
+    <section class="features" style="background-color: #efefef;padding-top:20px;padding-bottom:40px;margin-top:50px">
+        <div class="row container features-block">
+            <div class="col-lg-4 features-text wow fadeInRight pull-right">
+                <h2>Automatically log emails to any CRM, or use us as your CRM</h2>
+                <p>Automatically BCC to your CRM or any email address.  No more spending weekends logging emails into CRM, and let us take care of that in real-time.</p>
+                <a target="_blank" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" class="btn btn-primary btn-lg">Install for free</a>
+            </div>
+            <div class="col-lg-7 col-lg-offset-1 text-left wow fadeInLeft">
+                <%= image_tag 'landing/landing_bcc.png', :class => "img-responsive pull-left", :alt => "email_bcc" %>
+            </div>
+        </div>
+    </section>
+
+    <section class="navy-section testimonials">
+
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center wow zoomIn">
+                    <h1>
+                        Eliminate guesswork after you click "Send"
+                    </h1>
+                    <a style="padding:16px 34px" class="btn btn-lg btn-success m-t-md" target="_blank" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" role="button">Install for free</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <p class="m-t-sm">
+                        Questions?
+                    </p>
+                    <ul class="list-inline social-icon m-t-sm">
+                        <li><a href="https://twitter.com/contextsmith"><i class="fa fa-twitter"></i></a>
+                        </li>
+                        <li><a href="https://www.facebook.com/ContextSmith"><i class="fa fa-facebook"></i></a>
+                        </li>
+                        <li><a href="mailto:info@contextsmith.com"><i class="fa fa-envelope"></i></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 text-center m-t-lg m-b-lg">
+                    <p><strong><%= link_to "Terms", home_terms_path %> | <%= link_to "Privacy", home_privacy_path %> | ContextSmith, Inc.</strong></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <%= javascript_include_tag 'landing' %>
+
+</body>
+</html>

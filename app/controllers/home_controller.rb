@@ -1,5 +1,5 @@
 class HomeController < ApplicationController
-  layout 'empty', only: 'access_denied'
+  layout false, only: ['landing','privacy','terms']
   before_action :check_user_onboarding, only: :index
   before_action :get_current_org_users, only: :index
   before_action :get_current_org_opportunity_stages, only: :index
@@ -72,12 +72,22 @@ class HomeController < ApplicationController
   end
 
   def access_denied
+    render :layout => 'empty'
     # @extension_downloaded = true
     @extension_downloaded = request.user_agent.downcase.match(/chrome/) && cookies[:chromeNotificationBar] == 'false'
     # in case a Basic user signs up through main page, force sign out here so that they will sign in through extension and trigger onboarding
     if current_user.present? && current_user.onboarding_step == Utils::ONBOARDING[:fill_in_info]
       sign_out current_user
     end
+  end
+
+  def landing
+  end
+
+  def privacy
+  end
+
+  def terms
   end
 
   private

@@ -37,7 +37,7 @@ class OnboardingController < ApplicationController
 		if current_user.onboarding_step == Utils::ONBOARDING[:confirm_projects] and !current_user.cluster_create_date.nil?
 			redirect_to onboarding_confirm_projects_path
 		elsif current_user.onboarding_step == Utils::ONBOARDING[:onboarded]
-			redirect_to root_path
+			redirect_to home_path
 		end
 	end
 
@@ -45,7 +45,7 @@ class OnboardingController < ApplicationController
 	def confirm_projects
 		return_vals = User.confirm_projects_for_user(current_user)
 
-		redirect_to root_path and return if return_vals == -1 
+		redirect_to home_path and return if return_vals == -1 
 
     @overlapping_projects = return_vals[:overlapping_projects]
     @new_projects = return_vals[:new_projects]

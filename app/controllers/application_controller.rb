@@ -46,7 +46,7 @@ class ApplicationController < ActionController::Base
       elsif resource.pro?
         case resource.onboarding_step
           when Utils::ONBOARDING[:onboarded] # Fully onboarded
-            stored_location || root_path
+            stored_location || home_path
           when Utils::ONBOARDING[:confirm_projects]
             if resource.cluster_create_date.nil?
               # Clusters not ready yet
@@ -59,7 +59,7 @@ class ApplicationController < ActionController::Base
           when Utils::ONBOARDING[:fill_in_info]
             onboarding_fill_in_info_path
           else
-            stored_location || root_path
+            stored_location || home_path
         end
       else
         home_access_denied_path
@@ -72,9 +72,9 @@ class ApplicationController < ActionController::Base
 
   def after_sign_out_path_for(resource_or_scope)
     if params[:extension]
-      root_path + 'extension'
+      home_path + 'extension'
     else
-      root_path
+      home_path
     end
   end
 
@@ -94,7 +94,7 @@ class ApplicationController < ActionController::Base
     # whitelist for basic users: extension pages, extension tutorial, extension/tracking related stuff, salesforce login, everything else redirects to access_denied page
     redirect_to home_access_denied_path unless
         %w[extension tracking sessions salesforce omniauth_callbacks plans accounts contacts search].include?(params[:controller]) ||
-        %w[me access_denied extension_tutorial].include?(params[:action]) ||
+        %w[me access_denied extension_tutorial landing privacy terms].include?(params[:action]) ||
         current_user.pro?
   end
 
@@ -110,7 +110,7 @@ class ApplicationController < ActionController::Base
     if current_user.oauth_access_token == "invalid"
       reset_session
       session[:redirect_to] = request.referer
-      redirect_to session[:redirect_to] || root_path
+      redirect_to session[:redirect_to] || home_path
     end
   end
 

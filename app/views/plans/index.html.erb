@@ -9,7 +9,7 @@
     <% if current_user.role == User::ROLE[:Pro] %>
         <p class="muted"><small>You can <a href="#" class="btn btn-xs btn-outline btn-primary" onclick="window.close();">close</a> this window and return to your e-mail client</small></p>
     <% elsif current_user.role == User::ROLE[:Biz] %>
-    <p></p><a href="<%= root_path %>" class="btn btn-lg btn-outline btn-primary">Access Main Application</a>
+    <p></p><a href="<%= home_path %>" class="btn btn-lg btn-outline btn-primary">Access Main Application</a>
     <% end %>
   </div>
 
