@@ -126,3 +126,72 @@ svg text{font-family: 'Raleway', sans-serif;}
 .circled-number {
     margin-top: -0.1em;
 }
+
+
+/* ERROR & LOGIN & LOCKSCREEN */
+
+.middle-box {
+  max-width: 420px;
+  z-index: 100;
+  margin: 0 auto;
+  padding-top: 30px;
+}
+
+.lockscreen.middle-box {
+  width: 450px;
+  padding-top: 300px;
+  max-width:none;
+}
+
+.loginscreen.middle-box {
+  width: 300px;
+}
+
+.loginColumns {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 100px 20px 20px 20px;
+  font-size:15px;
+  font-weight: 300;
+}
+
+.loginColumns label {
+  font-size: 13px;
+}
+
+.passwordBox {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 100px 20px 20px 20px;
+}
+
+.logo-name {
+  color: #e6e6e6;
+  font-size: 35px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.middle-box h1 {
+  font-size: 170px;
+}
+
+.wrapper .middle-box {
+  margin-top: 140px;
+}
+
+.lock-word {
+  z-index: 10;
+  position: absolute;
+  top: 110px;
+  left: 25%;
+  right: 25%;
+  text-align: center;
+}
+
+.lock-word span {
+  font-size: 100px;
+  font-weight: 600;
+  color: #dfdfdf;
+  display: inline-block;
+}
