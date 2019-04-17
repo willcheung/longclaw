@@ -72,7 +72,7 @@ class ApplicationController < ActionController::Base
 
   def after_sign_out_path_for(resource_or_scope)
     if params[:extension]
-      home_path + 'extension'
+      root_path + 'extension'
     else
       home_path
     end

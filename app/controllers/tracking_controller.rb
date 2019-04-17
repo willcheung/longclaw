@@ -4,9 +4,10 @@ require 'resolv'
 
 # controller class for tracking e-mails
 class TrackingController < ApplicationController
-  layout "tracking"
+  layout false
 
   def index
+    # DEPRECATED!
     @device_to_icon = {
         'desktop' => 'fa-desktop',
         'smartphone' => 'fa-mobile',
