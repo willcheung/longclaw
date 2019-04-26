@@ -42,6 +42,7 @@ class TrackingController < ApplicationController
     render json: json
   end
 
+  # create tracking request upon sending email
   def create
     data = Hashie::Mash.new(JSON.parse(request.body.read))
     if current_user.email == data.user_email
@@ -64,9 +65,13 @@ class TrackingController < ApplicationController
   # callback from tracking img tags
   def view
     tracking_id = params[:tracking_id]
-    tr = check_tracking_id(tracking_id)
+    tr = find_tracking_id(tracking_id)
     event_date = DateTime.current
     if tr && not_viewed_by_self(tr) && !within_threshold(tracking_id, event_date)
+      # Whenever there's a new img view, delete cache so event_count will increase
+      Rails.cache.delete("event_count_"+"#{tr.user_id}")
+      Rails.cache.delete("tracking_setting_"+"#{tr.user_id}")
+
       user_agent = request.headers['user-agent']
       start = Time.now
       host_name = Resolv.getname(request.remote_ip) rescue 'Unknown' # timeout 5s
@@ -108,7 +113,11 @@ class TrackingController < ApplicationController
 
   def new_events
     ts = get_tracking_setting
-    event_count = {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
+
+    event_count = Rails.cache.fetch("event_count_"+"#{current_user.id}") do
+      {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
+    end
+
     render json: event_count
   end
 
@@ -124,9 +133,12 @@ class TrackingController < ApplicationController
 
   def seen
     ts = TrackingSetting.where(user: current_user).first_or_create
+    ts.update(last_seen: DateTime.now)
 
-    ts.last_seen = DateTime.now
-    ts.save
+    # Whenever there's a new tracking window view, delete cache so event_count will reset
+    Rails.cache.delete("event_count_"+"#{current_user.id}")
+    Rails.cache.delete("tracking_setting_"+"#{current_user.id}")
+
     result = {status: 'ok'}
     render json: result
   end
@@ -134,10 +146,9 @@ class TrackingController < ApplicationController
   private
 
   def get_tracking_setting
-    ts = TrackingSetting.where(user: current_user).first_or_create do |ts|
-      ts.last_seen = DateTime.now
+    ts = Rails.cache.fetch("tracking_setting_"+"#{current_user.id}") do
+      TrackingSetting.where(user: current_user).first_or_create
     end
-    ts.save
     ts
   end
 
@@ -167,7 +178,7 @@ class TrackingController < ApplicationController
     current_user.nil? || current_user.id != tracking_request.user_id
   end
 
-  def check_tracking_id(tracking_id)
+  def find_tracking_id(tracking_id)
     TrackingRequest.find_by_tracking_id_and_status(tracking_id, 'active')
   end
 
