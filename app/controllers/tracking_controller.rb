@@ -71,6 +71,8 @@ class TrackingController < ApplicationController
       # Whenever there's a new img view, delete cache so event_count will increase
       Rails.cache.delete("event_count_"+"#{tr.user_id}")
       Rails.cache.delete("tracking_setting_"+"#{tr.user_id}")
+      Rails.cache.delete("event_object_tes_"+"#{tr.id}")
+      Rails.cache.delete("event_object_trs_"+"#{tr.id}")
 
       user_agent = request.headers['user-agent']
       start = Time.now
@@ -123,8 +125,15 @@ class TrackingController < ApplicationController
 
   def new_event_objects
     ts = get_tracking_setting
-    tes = TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id})
-    new_trs = TrackingRequest.where(sent_at: ts.last_seen..Time.now, user_id: current_user.id).order("sent_at ASC")
+
+    tes = Rails.cache.fetch("event_object_tes_"+"#{current_user.id}") do
+      tes = TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id})
+    end
+
+    new_trs = Rails.cache.fetch("event_object_trs_"+"#{current_user.id}") do
+      new_trs = TrackingRequest.where(sent_at: ts.last_seen..Time.now, user_id: current_user.id).order("sent_at ASC")
+    end
+
     render json: { new_events: tes.as_json({ methods: :client }),
                    new_requests: new_trs.as_json,
                    settings: get_tracking_setting
@@ -138,6 +147,8 @@ class TrackingController < ApplicationController
     # Whenever there's a new tracking window view, delete cache so event_count will reset
     Rails.cache.delete("event_count_"+"#{current_user.id}")
     Rails.cache.delete("tracking_setting_"+"#{current_user.id}")
+    Rails.cache.delete("event_object_tes_"+"#{current_user.id}")
+    Rails.cache.delete("event_object_trs_"+"#{current_user.id}")
 
     result = {status: 'ok'}
     render json: result
