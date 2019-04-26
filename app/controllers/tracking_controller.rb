@@ -158,7 +158,9 @@ class TrackingController < ApplicationController
 
   def get_tracking_setting
     ts = Rails.cache.fetch("tracking_setting_"+"#{current_user.id}") do
-      TrackingSetting.where(user: current_user).first_or_create
+      ts = TrackingSetting.where(user: current_user).first_or_create
+      ts.update(last_seen: DateTime.now) if ts.last_seen == nil or ts.last_seen == ""
+      ts
     end
     ts
   end
