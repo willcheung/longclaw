@@ -61,9 +61,6 @@ module Longclaw
     # Disable IP Spoofing since we have a lot of mobile requests with proxied IP addresses
     config.action_dispatch.ip_spoofing_check = false
 
-    # Use Sucker Punch to manage an async queue for jobs in memory
-    config.active_job.queue_adapter = :sucker_punch
-
     # FullContact.configure do |config|
     #   config.api_key = ENV['fullcontact_api_key']
     #   config.auth_type = :header

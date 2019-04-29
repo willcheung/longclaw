@@ -39,7 +39,6 @@ gem 'mail'
 gem 'mini_mime'
 gem 'stripe'
 gem 'email_validator'
-gem 'sucker_punch', '~>2.0'
 gem 'kaminari'
 gem 'google-api-client', '~>0.19'
 gem 'ffi', '1.9.22'
@@ -69,6 +68,7 @@ end
 
 group :production do
   gem 'exception_notification'
+  gem 'aws-healthcheck'
 end
 
 group :production, :test do
