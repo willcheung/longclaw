@@ -67,13 +67,14 @@ class TrackingController < ApplicationController
     tracking_id = params[:tracking_id]
     tr = find_tracking_id(tracking_id)
     event_date = DateTime.current
-    if tr && not_viewed_by_self(tr) && !within_threshold(tracking_id, event_date)
-      # Whenever there's a new img view, delete cache so event_count will increase
-      Rails.cache.delete("event_count_"+"#{tr.user_id}")
-      Rails.cache.delete("tracking_setting_"+"#{tr.user_id}")
-      Rails.cache.delete("event_object_tes_"+"#{tr.id}")
-      Rails.cache.delete("event_object_trs_"+"#{tr.id}")
 
+    # Whenever there's a new img view, delete cache so event_count will increase
+    Rails.cache.delete("event_count_"+"#{tr.user_id}")
+    Rails.cache.delete("tracking_setting_"+"#{tr.user_id}")
+    Rails.cache.delete("event_object_tes_"+"#{tr.id}")
+    Rails.cache.delete("event_object_trs_"+"#{tr.id}")
+
+    if tr && not_viewed_by_self(tr) && !within_threshold(tracking_id, event_date)
       user_agent = request.headers['user-agent']
       start = Time.now
       host_name = Resolv.getname(request.remote_ip) rescue 'Unknown' # timeout 5s
