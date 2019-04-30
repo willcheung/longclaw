@@ -43,6 +43,7 @@ gem 'kaminari'
 gem 'google-api-client', '~>0.19'
 gem 'ffi', '1.9.22'
 gem 'puma_worker_killer'
+gem 'aws-healthcheck'
 
 # Gems used only for assets and not required
 # in production environments by default.
@@ -68,7 +69,6 @@ end
 
 group :production do
   gem 'exception_notification'
-  gem 'aws-healthcheck'
 end
 
 group :production, :test do
