@@ -119,7 +119,7 @@ class TrackingController < ApplicationController
   def new_events
     ts = get_tracking_setting
 
-    event_count = Rails.cache.fetch("event_count_"+"#{current_user.id}") do
+    event_count = Rails.cache.fetch("event_count_"+"#{current_user.id}", expires_in: 30.minutes) do
       {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
     end
 
@@ -129,11 +129,11 @@ class TrackingController < ApplicationController
   def new_event_objects
     ts = get_tracking_setting
 
-    tes = Rails.cache.fetch("event_object_tes_"+"#{current_user.id}") do
+    tes = Rails.cache.fetch("event_object_tes_"+"#{current_user.id}", expires_in: 30.minutes) do
       tes = TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id})
     end
 
-    new_trs = Rails.cache.fetch("event_object_trs_"+"#{current_user.id}") do
+    new_trs = Rails.cache.fetch("event_object_trs_"+"#{current_user.id}", expires_in: 30.minutes) do
       new_trs = TrackingRequest.where(sent_at: ts.last_seen..Time.now, user_id: current_user.id).order("sent_at ASC")
     end
 
