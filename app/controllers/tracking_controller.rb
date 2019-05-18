@@ -72,8 +72,8 @@ class TrackingController < ApplicationController
       # Whenever there's a new img view, delete cache so event_count will increase
       Rails.cache.delete("event_count_"+"#{tr.user_id}")
       Rails.cache.delete("tracking_setting_"+"#{tr.user_id}")
-      Rails.cache.delete("event_object_tes_"+"#{tr.id}")
-      Rails.cache.delete("event_object_trs_"+"#{tr.id}")
+      Rails.cache.delete("event_object_tes_"+"#{tr.user_id}")
+      Rails.cache.delete("event_object_trs_"+"#{tr.user_id}")
     end
 
     if tr && not_viewed_by_self(tr) && !within_threshold(tracking_id, event_date)
