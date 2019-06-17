@@ -74,6 +74,7 @@ class TrackingController < ApplicationController
       Rails.cache.delete("tracking_setting_"+"#{tr.user_id}")
       Rails.cache.delete("event_object_tes_"+"#{tr.user_id}")
       Rails.cache.delete("event_object_trs_"+"#{tr.user_id}")
+      Rails.cache.delete("tr_past_month_"+"#{tr.user_id}")
     end
 
     if tr && not_viewed_by_self(tr) && !within_threshold(tracking_id, event_date)
@@ -120,7 +121,7 @@ class TrackingController < ApplicationController
     ts = get_tracking_setting
 
     event_count = Rails.cache.fetch("event_count_"+"#{current_user.id}", expires_in: 30.minutes) do
-      {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
+      event_count = {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
     end
 
     render json: event_count

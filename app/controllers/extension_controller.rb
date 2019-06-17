@@ -10,7 +10,7 @@ class ExtensionController < ApplicationController
 
   before_action :get_google_service, only: [:attachments, :download]
   before_action :filter_params
-  before_action :set_salesforce_user
+  #before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce, :company]
   # before_action :get_current_org_opportunity_stages, only: [:salesforce]
   # before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
@@ -120,7 +120,9 @@ class ExtensionController < ApplicationController
 
     # people_emails = ['joe@plugandplaytechcenter.com']
     # people_emails = ['nat.ferrante@451research.com','pauloshan@yahoo.com','sheila.gladhill@browz.com', 'romeo.henry@mondo.com', 'lzion@liveintent.com']
-    tracking_requests_this_pastmonth = current_user.tracking_requests.find_by_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at DESC") #TODO: This line and the subsequent code is related to issue #1258.
+    tracking_requests_this_pastmonth = Rails.cache.fetch("tr_past_month_#{current_user.id}", expires_in: 24.hours) do
+      tracking_requests_this_pastmonth = current_user.tracking_requests.find_by_any_recipient(people_emails).where(sent_at: 1.month.ago.midnight..Time.current).order("sent_at DESC") #TODO: This line and the subsequent code is related to issue #1258.
+    end
     
     @last_emails_sent_per_person = {}
     @emails_sent_per_person = {}
