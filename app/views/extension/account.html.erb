@@ -355,7 +355,7 @@
                                         <%= link_to "<button class=\"btn-outline btn-xs btn-block\"><i class=\"fa fa-pencil\"></i> Edit contact</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
                                     </div>
                                     <div class="col-xs-6">
-                                        <a href="#"><button id="contact-<%= contact.id %>-background-info-activator" type="button" class="btn-outline btn-xs btn-block"> <%= contact.background_info.blank? ? "<i class=\"fa fa-plus\"></i> Add note".html_safe : "<i class=\"fa fa-pencil\"></i> Edit note".html_safe %> </button></i></a>
+                                        <a href="#"><button id="contact-<%= contact.id %>-background-info-activator" type="button" class="btn-outline btn-xs btn-block"> <%= contact.background_info.blank? ? "<i class=\"fa fa-plus\"></i> Add a note".html_safe : "<i class=\"fa fa-pencil\"></i> Edit note".html_safe %> </button></i></a>
                                     </div>
                                         <div class="col-xs-12 m-t-sm">
                                             <div class="editable-field">
@@ -370,7 +370,7 @@
                                         <%= link_to "<button class=\"btn-primary btn-xs btn-block\"><i class=\"fa fa-plus\"></i> Add contact</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
                                     </div>
                                     <div class="col-xs-6">
-                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Please add contact first"><i class="fa fa-plus"></i> Add note</button></i>
+                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Please add contact first"><i class="fa fa-plus"></i> Add a note</button></i>
                                     </div>
                                     
                                     <%= render 'contacts/modal', modal_type: 'extension_new_contact_modal', modal_id: 'extension_new_contact_modal-'+profile.id.to_s, contact: newcontact %>
@@ -380,7 +380,7 @@
                                         <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to save this contact and manage with teammates."><i class="fa fa-plus"></i> Add contact</button></i>
                                     </div>
                                     <div class="col-xs-6">
-                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to add notes and share with teammates."><i class="fa fa-plus"></i> Add note</button></i>
+                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to add notes and share with teammates."><i class="fa fa-plus"></i> Add a note</button></i>
                                     </div>
                             <% end %>
                             </div>

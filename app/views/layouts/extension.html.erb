@@ -85,7 +85,9 @@
 
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
-                
+            <% if current_user.role == 'Basic' %>
+                <div class="pull-left m-t-xs"><a class="btn btn-primary btn-sm" href="/plans/new"><i class="fa fa-star"></i> Upgrade</a></div>
+            <% end %>
                 <span style="width:100px; display:inline-block">
                     <a href="<%= current_user.pro? ? home_path : root_path %>" target="_blank" class="navbar-brand">
                         <span class="clear">
@@ -102,7 +104,7 @@
                       <% end %></li>
                     <li role="separator" class="divider"></li>
                     <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Refer a friend</a></li>
-                    <li><a href="https://contextsmith.zendesk.com/hc/en-us/categories/115000211594-Chrome-Email-Tracker" target="_blank" class="">Support</a></li>
+                    <li><a href="mailto:support@contextsmith.com" target="_blank" class="">Email Support</a></li>
                   </ul>
                 </li>
               </ul></div>
