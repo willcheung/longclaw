@@ -936,6 +936,7 @@ class User < ActiveRecord::Base
       self.refresh_inbox = true
     end
     self.role = ROLE[role]
+    save
   end
 
   def downgrade!
