@@ -1,6 +1,6 @@
 development:
-  google_client_id: 290954624013-nq59r23lvm30ehcl36ihk4h65dpc9rgu.apps.googleusercontent.com
-  google_client_secret: 59VJa6QBgrJrIxmLwGLI1_l8
+  google_client_id: 9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com
+  google_client_secret: w7MzLs2dd_NYEKUonP99_VWP
   SES_SMTP_USERNAME: AKIAJPDLO23B7YAO57TA
   SES_SMTP_PASSWORD: BGaXlkchon2knEXVy1tqQljcIfKRJD+WT9wGV2ykT0Ry
   csback_base_url: http://104.198.4.24:8888
@@ -31,8 +31,8 @@ development:
   read_timeout: 300
 
 test:
-  google_client_id: 290954624013-o82ebj65g5l6knamiaa06jiu09epo2vk.apps.googleusercontent.com
-  google_client_secret: L2Jt5992udy8Wk3k5oSJz11H
+  google_client_id: 9897521486-100gdg2aif8vkj52sebe1o22u1jo2h0a.apps.googleusercontent.com
+  google_client_secret: w7MzLs2dd_NYEKUonP99_VWP
   SES_SMTP_USERNAME: AKIAJPDLO23B7YAO57TA
   SES_SMTP_PASSWORD: BGaXlkchon2knEXVy1tqQljcIfKRJD+WT9wGV2ykT0Ry
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
@@ -40,7 +40,6 @@ test:
   csback_script_base_url: https://104.198.4.24:8888
 
 production:
-  # Change this back later!!!
   google_client_id: 290954624013-rlf91qpur0fcqteie40prust5kiv9q5t.apps.googleusercontent.com
   google_client_secret: ZbgIgjg6M2LhCUc2RIIOS-TQ
   AZURE_APPLICATION_CLIENT_ID: 83cc6ec7-6530-453f-9f98-8093f3dfc9ab

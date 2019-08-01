@@ -9,9 +9,10 @@
       <span class="help-block" style="color:red"></span>
       <%= f.input :first_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.first_name } %>
       <%= f.input :last_name, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.last_name } %>
-      <%= f.input :title, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.title } %>
       <%= f.input :email, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.email }, :required => true %>
       <%= f.input :phone, wrapper_html: { class: 'col-md-4', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.phone } %>
+      <%= f.input :title, wrapper_html: { class: 'col-md-6', onkeyup: "changedValue('" + modal_id + "')", old_value: contact.title } %>
+
 
       <% if modal_type == 'app_new_contact_modal' %>
         <%= f.input :account_id, as: :hidden, value: account_id %>
