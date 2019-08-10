@@ -101,6 +101,19 @@ class HooksController < ApplicationController
     render nothing: true
   end
 
+  def twilio_sms
+    twiml = Twilio::TwiML::MessagingResponse.new do |r|
+      r.message(body: 'Ahoy! Thanks so much for your message.')
+    end
+
+    respond_to do |format|
+      format.html { render :xml => twiml.to_xml } # this is where the request is handled. note: it has to be XML response.
+      format.xml { render :xml => twiml.to_xml }
+      format.json { render :json => twiml.to_json }
+    end
+
+  end
+
   def stripe
     # data = Hashie::Mash.new(JSON.parse(request.body.read))
     if params[:id] == 'evt_00000000000000'

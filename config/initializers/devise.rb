@@ -247,6 +247,7 @@ Devise.setup do |config|
     ### no value for prompt means that consent page is only shown to user the first time they authorize a given set of scopes
     # prompt: "consent",
     ### scopes starting with 'https://www.googleapis.com/auth/' do not need that prefix specified
+    # 8/9/2019 Not using gmail / cal readonly anymore. Please use "basic" options
     scope: ['gmail.readonly',
             'calendar.readonly',
             'userinfo.email',
@@ -274,7 +275,8 @@ Devise.setup do |config|
 
   # Devise.setup do |config|
   config.omniauth :google_oauth2_basic, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_basic_options
-  config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_options
+  # 8/9/2019 Due to tightening OAuth and of gmail / cal readonly's sensitive scope, we're reverting back to "basic" option
+  config.omniauth :google_oauth2, ENV['google_client_id'], ENV['google_client_secret'], google_oauth2_basic_options
   config.omniauth :microsoft_v2_auth, ENV['AZURE_APPLICATION_CLIENT_ID'], ENV['AZURE_APPLICATION_CLIENT_SECRET'],
                   :scope => "offline_access openid email profile User.Read Calendars.Read Contacts.Read Mail.Read"
                   #:scope => "offline_access openid email profile User.Read Calendars.Read Contacts.Read Mail.Read"

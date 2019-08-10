@@ -208,7 +208,7 @@ Longclaw::Application.routes.draw do
     post 'load_emails_since_yesterday'
     post 'load_events_since_yesterday'
     post 'stripe'
-
+    get 'twilio_sms'
   end
 
   get "track/:user_email/:tracking_id/:gif" => 'tracking#view'

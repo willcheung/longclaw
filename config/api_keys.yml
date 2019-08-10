@@ -6,6 +6,9 @@ development:
   csback_base_url: http://104.198.4.24:8888
 #  csback_base_url: http://localhost:8888 # to use when running oathkeeper locally
 #  csback_script_base_url: http://localhost:8888
+  twilio_account_sid: AC08fc3979e2a0e3f547331cfc29b8e956
+  twilio_auth_token: 83bc0897407469424a66fd5cae2cfa6b
+  twilio_phone_number: +16504828719
   csback_script_base_url: http://104.198.4.24:8888
   mailchimp_api_key: 3cfa7a15477e3cbf657c20ab053c90b2-us13
   mailchimp_email_list_id: 0b8529ba9c
