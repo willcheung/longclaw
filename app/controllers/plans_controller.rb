@@ -6,10 +6,15 @@ class PlansController < ApplicationController
   # protect_from_forgery :except => :webhook
 
   def index
-    @subscription = Hashie::Mash.new({plan: {name: 'Basic', id: 'basic'}})
+    # TEST upgrading/downgrading
+    #current_user.downgrade!
+    #current_user.upgrade(:Plus)
+
     if current_user.stripe_customer_id
       customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions')
       @subscription = customer.subscriptions.first if customer.subscriptions.first
+    else
+      @subscription = Hashie::Mash.new({plan: {name: 'Basic', id: 'basic'}})
     end
   end
 

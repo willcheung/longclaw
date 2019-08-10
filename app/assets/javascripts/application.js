@@ -22,7 +22,8 @@
 //= require d3
 
 /* Ahoy analytics */
-ahoy.trackAll();
+// 8/9/19 temporarily disabling ahoy since we're not using it and might cause db bottleneck
+// ahoy.trackAll();
 
 /* Timezone */
 jQuery(function() {

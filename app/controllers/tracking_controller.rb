@@ -120,9 +120,9 @@ class TrackingController < ApplicationController
   def new_events
     ts = get_tracking_setting
 
-    event_count = Rails.cache.fetch("event_count_"+"#{current_user.id}", expires_in: 30.minutes) do
+    #event_count = Rails.cache.fetch("event_count_"+"#{current_user.id}", expires_in: 30.minutes) do
       event_count = {count: TrackingEvent.joins(:tracking_request).where(date: ts.last_seen..Time.now, tracking_requests: { user_id: current_user.id}).count}
-    end
+    #end
 
     render json: event_count
   end
