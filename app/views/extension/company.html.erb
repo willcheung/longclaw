@@ -104,7 +104,7 @@
       <%= render 'accounts/modal', modal_id: 'edit_account_modal', modal_type: 'extension_edit_account_modal' %>
     <% else %>
       <% @account = Account.new %>
-      <%= link_to '+ New Account', '#new_account_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+      <%= link_to '+ New Account', '#new_account_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg', style: 'width: 100%' %>
       <%= render 'accounts/modal', modal_id: 'new_account_modal', modal_type: 'extension_create_account_modal' %>
     <% end %>
 
