@@ -161,11 +161,11 @@ class TrackingController < ApplicationController
   private
 
   def get_tracking_setting
-    ts = Rails.cache.fetch("tracking_setting_"+"#{current_user.id}", expires_in: 30.minutes) do
+    #ts = Rails.cache.fetch("tracking_setting_"+"#{current_user.id}", expires_in: 30.minutes) do
       ts = TrackingSetting.where(user: current_user).first_or_create
       ts.update(last_seen: DateTime.now) if ts.last_seen == nil or ts.last_seen == ""
       ts
-    end
+    #end
     ts
   end
 

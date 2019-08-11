@@ -41,19 +41,9 @@
 
   <div class="clearfix">&nbsp;</div>
   <% if ['extension_new_contact_modal','extension_edit_contact_modal'].include? modal_type  # from Chrome extension %>
-    <% if @salesforce_user.present? && @account.present? && @account.salesforce_accounts.present? %>
-      <% button_text = (modal_type == 'extension_new_contact_modal') ? "Create" : "Update" %>
-      <button modal_id="<%= modal_id %>" button_text="<%= button_text %>" class="btn btn-primary pull-right form-group update_salesforce" style="width: 100%"><%= button_text %>&nbsp;<img id='sfdc-icon' src='/assets/images/salesforce.png' style='width:30px;'/></button>
-    <% else %>
       <%= f.button :submit, class: 'btn-primary pull-right form-group', style: 'width: 100%' %>
-      <% if @salesforce_user.present? %>
-        <div style="margin-top: 4em">
-          <i class="fa fa-exclamation-circle" aria-hidden="true" style="color: #FA0"></i>&nbsp;<i class="fa fa-chain-broken" aria-hidden="true"></i>&nbsp;This account is not linked to a Salesforce account, therefore this contact will not be <%= (modal_type == 'extension_edit_contact_modal') ? "updated" : "created" %> on Salesforce!
-        </div>
-      <% end %>
-    <% end %>
   <% else %>
-    <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
+      <%= f.button :submit, class: 'btn-primary pull-right form-group' %>
   <% end %>
 
 <% end %>

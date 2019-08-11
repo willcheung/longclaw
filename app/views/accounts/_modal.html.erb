@@ -12,7 +12,7 @@
       <div class="modal-body">
         <div class="row">
           <%# Render the new account form (passing modal => true to enable remote => true) %>
-          <%= render 'accounts/form', remote: true, modal_id: modal_id %>
+          <%= render 'accounts/form', remote: true, modal_id: modal_id, modal_type: modal_type %>
         </div>
       </div>
       <% if modal_id == 'edit_account_modal' %>

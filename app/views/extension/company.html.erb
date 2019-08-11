@@ -22,6 +22,7 @@
 
   .description-section p, .company-section p {
     margin-bottom: 15px;
+    margin-top: 15px;
   }
 
   .key-people-section {
@@ -61,6 +62,11 @@
     font-weight: bold;
   }
 
+  .editable-field {
+    font-size: 13px;
+    color: #666;
+  }
+
   hr.divider {
     margin: 1.5em 0;
   }
@@ -76,55 +82,42 @@
 </style>
 
 <% if current_user.plus? %>
-    <section class="company-section">
-      <img class="pull-left m-r-sm" style="max-height:65px;max-width:65px" src="<%= @company.logo if @company %>"/>
-      <h3 class="company-name"><% if @account %><%= @account.name %> <% else %> <%= @company.name if @company %> <% end %></h3>
-      <% if @company && !@company.website.blank? %><p><span><a href="<%= @company.website %>" target="_blank" title="Open this company's webpage in a new window"><i class="fa fa-globe"></i> <%= @company.website %></a></span></p><% end %>
-      
-      <% if @company && !@company.location.blank? %><p><i class="fa fa-map-marker"></i> <%= @company.location %></p><% end %>
-      <% if @company && !@company.employees.blank? %><p><i class="fa fa-user"></i> <%= @company.employees %> Employees</p><% end %>
+    <div class="company-section">
 
-      <!-- SOCIALS -->
-      <% if @company %>
-          <span <%= 'class=disabled' if !@company.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
-            <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
-            <% if @company.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
-            data-original-title="<b><%= Profile::SOCIAL_TYPE[:Linkedin] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Linkedin]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
-            <% end %>
-            ></i></a>
-          </span>
-          <span <%= 'class=disabled' if !@company.social_url(Profile::SOCIAL_TYPE[:Twitter]).blank? %>>
-            <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Twitter]) %>" target="_blank" title="Open Twitter in new window"><i class="fa fa-twitter fa-2x twitter-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
-            <% if @company.social_bio(Profile::SOCIAL_TYPE[:Twitter]).present? %>
-            data-original-title="<b><%= Profile::SOCIAL_TYPE[:Twitter] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Twitter]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
-            <% end %>
-            ></i></a>
-          </span>
-          <span <%= 'class=disabled' if !@company.social_url(Profile::SOCIAL_TYPE[:Facebook]).blank? %>>
-            <a href="<%= @company.social_url(Profile::SOCIAL_TYPE[:Facebook]) %>" target="_blank" title="Open Facebook in new window"><i class="fa fa-facebook-square fa-2x fb-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true"
-            <% if @company.social_bio(Profile::SOCIAL_TYPE[:Facebook]).present? %>
-            data-original-title="<b><%= Profile::SOCIAL_TYPE[:Facebook] %> bio:</b>  <%= truncate_with_ellipsis(@company.social_bio(Profile::SOCIAL_TYPE[:Facebook]), @SOCIAL_BIO_TEXT_LENGTH_MAX) %>"
-            <% end %>
-            ></i></a>
-          </span>
+      <h3 class="company-name"><% if @account %><%= @account.name %> <% else %> <%= @account.name if @account %> <% end %></h3>
+      <% if @account && !@account.website.blank? %><span class="col-xs-12"><a href="<%= @account.website %>" target="_blank" title="Open this company's webpage in a new window"><i class="fa fa-globe"></i> <%= @account.website %></a></span><% end %>
+      <% if @account && !@account.phone.blank? %><span class="col-xs-12"><i class="fa fa-phone"></i> <%= @account.phone %></span><% end %>
+      <% if @account && !@account.address.blank? %>
+        <a target="_blacnk" href="https://www.google.com/maps/place/<%= @account.address %>"><span class="col-xs-12"><i class="fa fa-map-marker"></i> <%= @account.address %></span>
+        <img class="col-xs-12" src="https://maps.googleapis.com/maps/api/staticmap?center=<%= @account.address %>&zoom=14&markers=color:blue%7Csize:small%7C<%= @account.address %>&scale=2&size=280x160&maptype=roadmap&key=AIzaSyDHbOsgrqZcXvjzltP1bjyBsW_BNxQF-ck"/></a>
       <% end %>
-    </section>
+    </div>
 
-
-    <hr class="divider">
-    <section class="description-section">
-    <% if @company %>
-          <p class="section-header">DESCRIPTION</p>
-          <p><%= @company.bio %></p>
-          <% if @company.date_founded.present? %>
-              <p>Founded: <%= @company.date_founded %></p>
-          <% end %>
+    
+    <% if @account.present? and @account != nil %>
+      <div class="col-xs-6">
+        <%= link_to "<button class=\"btn-outline btn-xs btn-block m-t-md\"><i class=\"fa fa-pencil\"></i> Edit account</button>".html_safe, '#edit_account_modal', 'data-toggle' => 'modal', 'class' => 'edit-account-link' %>
+      </div>
+      <div class="col-xs-6">
+        <a href="#"><button id="account-<%= @account.id %>-background-info-activator" type="button" class="btn-outline btn-xs btn-block m-t-md"> <%= @account.notes.blank? ? "<i class=\"fa fa-plus\"></i> Add a note".html_safe : "<i class=\"fa fa-pencil\"></i> Edit note".html_safe %> </button></i></a>
+      </div>
+      <%= render 'accounts/modal', modal_id: 'edit_account_modal', modal_type: 'extension_edit_account_modal' %>
+    <% else %>
+      <% @account = Account.new %>
+      <%= link_to '+ New Account', '#new_account_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg' %>
+      <%= render 'accounts/modal', modal_id: 'new_account_modal', modal_type: 'extension_create_account_modal' %>
     <% end %>
-    </section>
+
+    <div class="col-xs-12 m-t-sm">
+        <div class="editable-field">
+            <% if !@account.notes.blank? %><i class="fa fa-sticky-note-o m-r-xs" style="vertical-align: top; color:#aaa">&nbsp;</i><% end %>
+            <%= best_in_place @account, :notes, :as => 'textarea', :place_holder => "&nbsp;", :display_with => lambda { |v| v.present? && v.respond_to?(:to_s) ? v.gsub(/[\r\n]+/, '<br>').html_safe : v }, :activator => "#account-#{@account.id}-background-info-activator", :html_attrs => { :cols => '34', :rows => '4', :class => 'best_in_place'} %>
+        </div>
+    </div>
 
 <% else %>
 
-    <h3 class="text-center m-t-md">An <strong>Account</strong> is where you group multiple contacts together, like a company. You can also share and collaborate contacts with coworkers.</h3>
+    <h3 class="text-center m-t-md">An <strong>Account</strong> is where you group multiple contacts together, like a company or team. See them listed here. You can also share and collaborate contacts with coworkers.</h3>
 
     <p class="text-center m-t-xl">
         <a class="btn btn-primary btn-lg m-b-sm start plus-start" data-amount=500 data-plan="plus-monthly-v1" href="/plans/new" target="_blank"> Try now for free</a>
