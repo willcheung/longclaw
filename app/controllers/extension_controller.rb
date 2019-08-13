@@ -10,13 +10,8 @@ class ExtensionController < ApplicationController
 
   before_action :get_google_service, only: [:attachments, :download]
   before_action :filter_params
-  #before_action :set_salesforce_user
   before_action :set_account_and_project, only: [:account, :salesforce, :company]
-  # before_action :get_current_org_opportunity_stages, only: [:salesforce]
-  # before_action :get_current_org_opportunity_forecast_categories, only: [:salesforce]
   before_action :get_account_types, only: :no_account
-  # before_action :set_account_and_project_old, only: [:alerts_tasks, :contacts, :metrics]
-  # before_action :set_sfdc_status_and_accounts, only: [:alerts_tasks, :contacts, :metrics]
   before_action :get_current_org_users, only: :custom_view
   before_action :get_current_org_opportunity_stages, only: :custom_view
   before_action :get_current_org_opportunity_forecast_categories, only: :custom_view
@@ -158,12 +153,6 @@ class ExtensionController < ApplicationController
 
     # puts "emails_total_opened_per_person: #{emails_total_opened_per_person}"
   end
-
-  # def salesforce
-  #   @salesforce_account = @account.salesforce_accounts.first if @account.present?
-  #   @salesforce_opportunity = @project.salesforce_opportunity if @project.present?
-  #   render layout: 'empty'
-  # end
 
   def custom_view
     if current_user.pro? && @salesforce_user.present? && current_user.oauth_provider == User::AUTH_TYPE[:Gmail]
@@ -509,24 +498,23 @@ class ExtensionController < ApplicationController
     @params[:email] = params[:email].downcase if params[:email].present? && valid_email?(params[:email])
   end 
 
-  def set_salesforce_user
-    return if @salesforce_user.present? || current_user.nil?
-
-    @salesforce_base_URL = OauthUser.get_salesforce_instance_url(current_user.organization_id)
-
-    @salesforce_user = SalesforceController.get_sfdc_oauthuser(user: current_user) if current_user.pro?
-  end
-
   # (New) before_action helper: For users belonging to at least the "Plus" plan, this determines a matching account+opportunity from the set of recipients (the external contacts from the active e-mail) to facilitate Contacts management. i.e., if no external contacts exist, no account or opportunity is returned.
   # Note: E-mail domains that are typically "invalid" such as "gmail.com", "yahoo.com", "hotmail.com" may be used to identify a "matching" account if we can find the Contact with the e-mail.  Otherwise, we stop and do not attempt to identify a matching account using "invalid" domains, because these domains are too general and can easily match the wrong account.
   def set_account_and_project
-    return if @params[:external].blank? || !current_user.plus?
+    # This method treats both "internal" and "external" params the same
 
-    external = @params[:external].map { |person| person.map { |info| URI.unescape(info, '%2E') } }
-    ex_emails = external.map(&:second)
+    return if (@params[:external].blank? && @params[:internal].blank?) || !current_user.plus?
+
+    external = []
+    internal = []
+
+    external = @params[:external].map { |person| person.map { |info| URI.unescape(info, '%2E') } } if !@params[:external].blank?
+    internal = @params[:internal].map { |person| person.map { |info| URI.unescape(info, '%2E') } } if !@params[:internal].blank?
+
+    ex_emails = (external+internal).map(&:second)
 
     contacts = Contact.joins(:account).where(email: ex_emails, accounts: { organization_id: current_user.organization_id })
-    
+
     if !contacts.empty?
       @account ||= contacts.first.account
       #@project ||= @account.projects.visible_to(current_user.organization_id, current_user.id).first
