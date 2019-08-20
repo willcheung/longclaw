@@ -56,7 +56,7 @@ Longclaw::Application.configure do
 
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store
-  config.cache_store = :memory_store, { size: 256.megabytes }
+  config.cache_store = :redis_store, "redis://longclaw-cache.f1j5bl.0001.usw2.cache.amazonaws.com:6379", { expires_in: 30.minutes }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.action_controller.asset_host = "http://assets.example.com"
