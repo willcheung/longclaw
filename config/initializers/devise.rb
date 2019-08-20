@@ -281,8 +281,6 @@ Devise.setup do |config|
                   :scope => "offline_access openid email profile User.Read Calendars.Read Contacts.Read Mail.Read"
                   #:scope => "offline_access openid email profile User.Read Calendars.Read Contacts.Read Mail.Read"
 
-  config.omniauth :salesforce, ENV['salesforce_client_id'], ENV['salesforce_client_secret']
-  config.omniauth :salesforce_sandbox, ENV['salesforce_sandbox_client_id'], ENV['salesforce_sandbox_client_secret']
   # end
 
   # ==> Warden configuration
