@@ -106,8 +106,6 @@ GEM
     execjs (2.7.0)
     faraday (0.15.4)
       multipart-post (>= 1.2, < 3)
-    faraday_middleware (0.12.2)
-      faraday (>= 0.7.4, < 1.0)
     ffaker (2.8.1)
     ffi (1.9.22)
     ffi (1.9.22-x86-mingw32)
@@ -204,9 +202,6 @@ GEM
     omniauth-oauth2 (1.6.0)
       oauth2 (~> 1.1)
       omniauth (~> 1.9)
-    omniauth-salesforce (1.0.5)
-      omniauth (~> 1.0)
-      omniauth-oauth2 (~> 1.0)
     orm_adapter (0.5.0)
     os (0.9.6)
     pg (0.20.0)
@@ -260,6 +255,23 @@ GEM
     rb-inotify (0.9.10)
       ffi (>= 0.5.0, < 2)
     rdoc (6.0.1)
+    redis (4.1.2)
+    redis-actionpack (5.0.2)
+      actionpack (>= 4.0, < 6)
+      redis-rack (>= 1, < 3)
+      redis-store (>= 1.1.0, < 2)
+    redis-activesupport (5.0.7)
+      activesupport (>= 3, < 6)
+      redis-store (>= 1.3, < 2)
+    redis-rack (2.0.5)
+      rack (>= 1.5, < 3)
+      redis-store (>= 1.2, < 2)
+    redis-rails (5.0.2)
+      redis-actionpack (>= 5.0, < 6)
+      redis-activesupport (>= 5.0, < 6)
+      redis-store (>= 1.2, < 2)
+    redis-store (1.6.0)
+      redis (>= 2.2, < 5)
     referer-parser (0.3.0)
     representable (3.0.4)
       declarative (< 0.1.0)
@@ -270,11 +282,6 @@ GEM
     responders (2.4.0)
       actionpack (>= 4.2.0, < 5.3)
       railties (>= 4.2.0, < 5.3)
-    restforce (2.5.3)
-      faraday (>= 0.9.0, <= 1.0)
-      faraday_middleware (>= 0.8.8, <= 1.0)
-      hashie (>= 1.2.0, < 4.0)
-      json (>= 1.7.5)
     retriable (3.1.1)
     safely_block (0.2.0)
       errbase
@@ -369,7 +376,6 @@ DEPENDENCIES
   omniauth-google-oauth2
   omniauth-microsoft_v2_auth
   omniauth-oauth2 (~> 1.4)
-  omniauth-salesforce
   pg (~> 0.20.0)
   pg_search
   puma
@@ -377,7 +383,7 @@ DEPENDENCIES
   rack-cors
   rails (= 4.2.3)
   rails_12factor
-  restforce (~> 2.5.0)
+  redis-rails
   sass-rails (>= 3.2)
   sdoc
   simple_form (~> 3.1.0)
@@ -389,7 +395,7 @@ DEPENDENCIES
   uglifier (>= 1.3.0)
 
 RUBY VERSION
-   ruby 2.2.10p489
+   ruby 2.3.8p459
 
 BUNDLED WITH
    1.17.2

@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby "2.2.10"
+ruby "2.3.8"
 gem 'rails', '4.2.3'
 # gem 'bootstrap-sass', '~> 3.3.6'
 gem 'simple_form', '~> 3.1.0'			# run 'rails generate simple_form:install --bootstrap' after installing gem
@@ -26,8 +26,6 @@ gem 'acts_as_commentable'
 gem 'pg_search'
 gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
 # gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
-gem 'omniauth-salesforce'
-gem 'restforce', '~> 2.5.0'  #saleforce REST gem
 gem 'd3-rails', '~> 3.5'          # Use D3 for cool data visualizations
 gem 'slack-notifier'
 gem 'device_detector'
@@ -45,6 +43,7 @@ gem 'google-api-client', '~>0.19'
 gem 'ffi', '1.9.22'
 gem 'puma_worker_killer'
 gem 'aws-healthcheck'
+gem 'redis-rails'
 
 # Gems used only for assets and not required
 # in production environments by default.
