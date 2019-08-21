@@ -153,6 +153,7 @@ class TrackingController < ApplicationController
     Rails.cache.delete("tracking_setting_"+"#{current_user.id}")
     Rails.cache.delete("event_object_tes_"+"#{current_user.id}")
     Rails.cache.delete("event_object_trs_"+"#{current_user.id}")
+    Rails.cache.delete("tr_past_month_"+"#{current_user.id}")
 
     result = {status: 'ok'}
     render json: result
